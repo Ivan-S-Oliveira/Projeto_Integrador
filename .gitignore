@@ -9,10 +9,6 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Dados
-data/treino/*
-data/teste/*
-
 !data/treino/.gitkeep
 !data/teste/.gitkeep
 
