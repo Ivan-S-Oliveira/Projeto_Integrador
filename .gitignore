@@ -14,6 +14,7 @@ env/
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
 
 
 # =========================================================
@@ -27,17 +28,13 @@ __pycache__/
 # Dados
 # =========================================================
 
-# Não versionar datasets
 data/raw/*
 data/processed/*
 data/treino/*
-data/teste/*
 
-# Mantém as pastas no Git
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/treino/.gitkeep
-!data/teste/.gitkeep
 
 
 # =========================================================
@@ -51,15 +48,16 @@ models/*.h5
 models/*.pt
 models/*.pth
 
+!models/.gitkeep
+
 
 # =========================================================
-# Resultados temporários
+# Resultados
 # =========================================================
 
 *.log
 *.tmp
 
-# Arquivos gerados de análise
 reports/figuras/*
 reports/resultados/*
 
@@ -68,7 +66,7 @@ reports/resultados/*
 
 
 # =========================================================
-# Variáveis de ambiente / Secrets
+# Variáveis de ambiente
 # =========================================================
 
 .env
@@ -77,7 +75,7 @@ reports/resultados/*
 
 
 # =========================================================
-# Arquivos do sistema
+# Sistema operacional
 # =========================================================
 
 .DS_Store
@@ -85,17 +83,8 @@ Thumbs.db
 
 
 # =========================================================
-# IDEs / Editores
+# IDEs
 # =========================================================
 
 .vscode/
 .idea/
-
-
-# =========================================================
-# Arquivos Python temporários
-# =========================================================
-
-*.egg-info/
-dist/
-build/
