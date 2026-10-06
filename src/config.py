@@ -10,3 +10,4 @@ COLS = None
 
 GITHUB_REPO = "Ivan-S-Oliveira/Projeto_Integrador"
 DATA_VERSION = "dados-v1"
+PARQUET_NAME = "srag.parquet"
