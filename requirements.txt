@@ -1,3 +1,8 @@
 python-dotenv
 jupyterlab
 pandas
+requests
+numpy
+matplotlib
+seaborn
+scikit-learn

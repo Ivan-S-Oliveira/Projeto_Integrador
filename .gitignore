@@ -1,23 +1,101 @@
+# =========================================================
 # Ambiente virtual
+# =========================================================
+
 .venv/
 venv/
+env/
 
+
+# =========================================================
 # Python
+# =========================================================
+
 __pycache__/
 *.py[cod]
+*$py.class
 
+
+# =========================================================
 # Jupyter
+# =========================================================
+
 .ipynb_checkpoints/
 
+
+# =========================================================
+# Dados
+# =========================================================
+
+# Não versionar datasets
+data/raw/*
+data/processed/*
+data/treino/*
+data/teste/*
+
+# Mantém as pastas no Git
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 !data/treino/.gitkeep
 !data/teste/.gitkeep
 
-# Arquivos de sistema
+
+# =========================================================
+# Modelos treinados
+# =========================================================
+
+models/*.pkl
+models/*.joblib
+models/*.pickle
+models/*.h5
+models/*.pt
+models/*.pth
+
+
+# =========================================================
+# Resultados temporários
+# =========================================================
+
+*.log
+*.tmp
+
+# Arquivos gerados de análise
+reports/figuras/*
+reports/resultados/*
+
+!reports/figuras/.gitkeep
+!reports/resultados/.gitkeep
+
+
+# =========================================================
+# Variáveis de ambiente / Secrets
+# =========================================================
+
+.env
+.env.*
+!.env.example
+
+
+# =========================================================
+# Arquivos do sistema
+# =========================================================
+
 .DS_Store
 Thumbs.db
 
-# Secrets
-.env
 
-# Resultados temporários
-*.log
+# =========================================================
+# IDEs / Editores
+# =========================================================
+
+.vscode/
+.idea/
+
+
+# =========================================================
+# Arquivos Python temporários
+# =========================================================
+
+*.egg-info/
+dist/
+build/

@@ -13,7 +13,7 @@ import pandas as pd
 # Configurações
 # ---------------------------------------------------------------------------
 ROOT_DIR = Path.cwd()                       # ajuste se rodar de outro diretório
-ARQUIVO_ENTRADA = ROOT_DIR / "data" / "treino" / "srag_amostra.csv"
+ARQUIVO_ENTRADA = ROOT_DIR / "data" / "raw" / "srag_amostra.csv"
 PASTA_SAIDA     = ROOT_DIR / "data" / "treino"
 
 COLUNA_DATA = "dt_coleta"                   # coluna usada para separar por ano
