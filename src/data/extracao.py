@@ -4,7 +4,6 @@ import pyarrow.parquet as pq
 
 from src import config as C
 
-
 def csv_to_parquet(csv_path, out_path, chunksize=500_000):
     writer = None
     for chunk in pd.read_csv(
