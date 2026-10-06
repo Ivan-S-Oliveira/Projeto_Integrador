@@ -1,7 +1,7 @@
 """
 Divide o dataset de SRAG em arquivos anuais por data de coleta (dt_coleta).
 
-Entrada : data/treino/srag_amostra.csv
+Entrada : data/raw/srag_amostra.csv
 Saída   : data/treino/srag_YYYY.csv  (um arquivo por ano presente em dt_coleta)
 """
 
