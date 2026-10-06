@@ -1,19 +1,24 @@
-import os, sys
+import os
+import sys
 from pathlib import Path
 
-def _detect():
-    if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
-        return "kaggle"
-    if "google.colab" in sys.modules:
-        return "colab"
-    return "local"
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data"
+RAW = DATA / "raw"
+PROCESSED = DATA / "processed"
+TREINO = DATA / "treino"
+FIGURES = ROOT / "reports" / "figures"
 
-ENV = _detect()
-WORK = {"kaggle": Path("/kaggle/working"), "colab": Path("/content"), "local": Path.cwd()}[ENV]
-RAW = WORK / "data" / "raw"
-PROCESSED = WORK / "data" / "processed"
-RAW.mkdir(parents=True, exist_ok=True)
-PROCESSED.mkdir(parents=True, exist_ok=True)
+for p in (RAW, PROCESSED, TREINO, FIGURES):
+    p.mkdir(parents=True, exist_ok=True)
+
+if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
+    ENV = "kaggle"
+elif "google.colab" in sys.modules:
+    ENV = "colab"
+else:
+    ENV = "local"
+
 
 def get_secret(name):
     if ENV == "colab":
