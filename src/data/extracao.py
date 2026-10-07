@@ -10,176 +10,134 @@ from src.utils import config as C
 
 
 # ---------------------------------------------------------------------------
-# Configuração da API SRAG 2019–2026
+# URL do arquivo Parquet do SRAG 2019–2026 (banco vivo)
 # ---------------------------------------------------------------------------
-
-API_URL = getattr(
+# O link exato muda periodicamente (novas atualizações semanais).
+# Consulte a página do conjunto de dados para obter a URL atualizada:
+#   https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026
+#
+# Padrão observado:
+#   https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2023/INFLUD23-16-10-2023.parquet
+# ---------------------------------------------------------------------------
+SRAG_PARQUET_URL = getattr(
     C,
-    "API_URL",
-    "https://apidadosabertos.saude.gov.br/"
-    "vigilancia-e-meio-ambiente/srag-2019-2026",
+    "SRAG_PARQUET_URL",
+    "https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2023/INFLUD23-16-10-2023.parquet"
 )
 
-PAGE_SIZE = getattr(C, "PAGE_SIZE", 1000)
-N_PAGINAS = getattr(C, "N_PAGINAS", 50)
 HTTP_TIMEOUT = getattr(C, "HTTP_TIMEOUT", 180)
 HTTP_TENTATIVAS = getattr(C, "HTTP_TENTATIVAS", 3)
 
 
-# ---------------------------------------------------------------------------
-# API
-# ---------------------------------------------------------------------------
-
-def baixar_pagina(
-    offset: int,
-    limit: int = PAGE_SIZE,
+def baixar_arquivo(
+    url: str,
+    destino: str | Path,
+    timeout: int = HTTP_TIMEOUT,
     tentativas: int = HTTP_TENTATIVAS,
-) -> list[dict]:
-    """
-    Baixa uma página da API SRAG 2019–2026.
+) -> Path:
+    destino = Path(destino)
+    destino.parent.mkdir(parents=True, exist_ok=True)
 
-    Retorna uma lista de registros.
-    """
+    ultimo_erro: Exception | None = None
 
     for tentativa in range(1, tentativas + 1):
         try:
-            resposta = requests.get(
-                API_URL,
-                params={
-                    "limit": limit,
-                    "offset": offset,
-                },
-                timeout=HTTP_TIMEOUT,
-            )
+            print(f"[baixar_arquivo] tentativa {tentativa}/{tentativas} → {url}")
 
-            resposta.raise_for_status()
+            with requests.get(url, stream=True, timeout=timeout) as r:
+                r.raise_for_status()
 
-            dados = resposta.json()
+                total = int(r.headers.get("content-length", 0))
+                baixado = 0
+                inicio = time.time()
 
-            registros = dados.get(
-                "srag_2019_2026",
-                [],
-            )
+                with open(destino, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1 MB
+                        if chunk:
+                            f.write(chunk)
+                            baixado += len(chunk)
 
-            if not isinstance(registros, list):
-                raise ValueError(
-                    "A chave 'srag_2019_2026' não retornou uma lista."
-                )
+                            if total > 0:
+                                percentual = baixado / total * 100
+                                tempo = time.time() - inicio
+                                print(
+                                    f"\r{percentual:5.1f}% | "
+                                    f"{baixado / 1024**2:,.1f} MB | "
+                                    f"{tempo:.0f}s",
+                                    end="",
+                                    flush=True,
+                                )
 
-            return registros
+            print()  # nova linha após a barra de progresso
+            return destino
 
-        except (requests.RequestException, ValueError) as erro:
-            print(
-                f"[baixar_pagina] offset={offset:,} | "
-                f"tentativa {tentativa}/{tentativas} | "
-                f"erro: {erro}"
-            )
+        except requests.RequestException as e:
+            ultimo_erro = e
+            print(f"[baixar_arquivo] tentativa {tentativa}/{tentativas} falhou: {e}")
+            time.sleep(2 * tentativa)
 
-            if tentativa < tentativas:
-                time.sleep(5 * tentativa)
+    raise RuntimeError(
+        f"Falha ao baixar {url} após {tentativas} tentativas"
+    ) from ultimo_erro
 
-    return []
-
-
-# ---------------------------------------------------------------------------
-# Extração da amostra
-# ---------------------------------------------------------------------------
 
 def coletar_amostra(
-    n_paginas: int = N_PAGINAS,
-    page_size: int = PAGE_SIZE,
+    n_paginas: int | None = None,   # mantido por compatibilidade, não é mais usado
+    url: str = SRAG_PARQUET_URL,
+    page_size: int | None = None,   # mantido por compatibilidade, não é mais usado
 ) -> pd.DataFrame:
-    """
-    Coleta uma amostra paginada da API SRAG 2019–2026.
-
-    Por padrão:
-        50 páginas × 1.000 registros = até 50.000 registros.
-    """
-
-    if n_paginas < 1:
-        raise ValueError("n_paginas deve ser >= 1")
-
-    if page_size < 1:
-        raise ValueError("page_size deve ser >= 1")
-
-    registros = []
-
     inicio = time.time()
 
-    for i in range(n_paginas):
+    # ------------------------------------------------------------------
+    # 1) Define diretório de destino
+    # ------------------------------------------------------------------
+    raw_dir = (
+        Path.cwd().parent / "data" / "raw"
+        if Path.cwd().name == "notebooks"
+        else Path.cwd() / "data" / "raw"
+    )
+    raw_dir.mkdir(parents=True, exist_ok=True)
 
-        offset = i * page_size
+    nome_arquivo = url.split("/")[-1]  # ex: INFLUD23-16-10-2023.parquet
+    destino = raw_dir / nome_arquivo
 
-        bloco = baixar_pagina(
-            offset=offset,
-            limit=page_size,
-        )
+    # ------------------------------------------------------------------
+    # 2) Baixa o arquivo (se ainda não existir)
+    # ------------------------------------------------------------------
+    if destino.exists():
+        print(f"[coletar_amostra] arquivo já existe em {destino}, reutilizando.")
+    else:
+        baixar_arquivo(url, destino)
 
-        registros.extend(bloco)
-
-        print(
-            f"[{i + 1}/{n_paginas}] "
-            f"offset={offset:,} "
-            f"→ {len(bloco):,} registros "
-            f"| acumulado: {len(registros):,}"
-        )
-
-        # Evita fazer requisições muito rapidamente.
-        time.sleep(0.5)
-
-        # Se a API não retornar registros, não há motivo
-        # para continuar avançando.
-        if not bloco:
-            print(
-                "[coletar_amostra] API não retornou registros. "
-                "Encerrando a coleta."
-            )
-            break
+    # ------------------------------------------------------------------
+    # 3) Lê o Parquet e retorna DataFrame
+    # ------------------------------------------------------------------
+    print(f"[coletar_amostra] lendo {destino} …")
+    df = pd.read_parquet(destino)
 
     tempo = time.time() - inicio
-
-    df = pd.DataFrame(registros)
-
     print(
-        f"\n[coletar_amostra] "
-        f"{len(df):,} linhas coletadas em {tempo:.1f}s"
+        f"[coletar_amostra] {len(df):,} linhas em {tempo:.1f}s "
+        f"({df.shape[1]} colunas)"
     )
-
-    if not df.empty:
-        print(
-            f"[coletar_amostra] "
-            f"{df.shape[1]} colunas"
-        )
-
     return df
 
 
 # ---------------------------------------------------------------------------
-# Conversão CSV → Parquet
+# csv_to_parquet permanece inalterado (útil para outros fluxos)
 # ---------------------------------------------------------------------------
-
 def csv_to_parquet(
     csv_path: str | Path,
     out_path: str | Path,
     chunksize: int = 500_000,
 ) -> Path:
-    """
-    Converte um CSV para Parquet em blocos,
-    evitando carregar todo o arquivo na memória.
-    """
-
     csv_path = Path(csv_path)
     out_path = Path(out_path)
 
     if not csv_path.exists():
-        raise FileNotFoundError(
-            f"Arquivo CSV não encontrado: {csv_path}"
-        )
+        raise FileNotFoundError(f"Arquivo CSV não encontrado: {csv_path}")
 
-    out_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
 
     size = csv_path.stat().st_size
 
@@ -189,7 +147,6 @@ def csv_to_parquet(
 
     try:
         with open(csv_path, "rb") as arquivo:
-
             for chunk in pd.read_csv(
                 arquivo,
                 sep=C.CSV_SEP,
@@ -198,7 +155,6 @@ def csv_to_parquet(
                 encoding=C.CSV_ENCODING,
                 low_memory=False,
             ):
-
                 tabela = pa.Table.from_pandas(
                     chunk.astype("string"),
                     preserve_index=False,
@@ -212,14 +168,9 @@ def csv_to_parquet(
                     )
 
                 writer.write_table(tabela)
-
                 total += len(chunk)
 
-                percentual = min(
-                    arquivo.tell() / size * 100,
-                    100,
-                )
-
+                percentual = min(arquivo.tell() / size * 100, 100)
                 tempo = time.time() - inicio
 
                 print(

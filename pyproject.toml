@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths  = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q"
+markers = [
+    "slow: testes que fazem I/O pesado (Parquet, downloads)",
+    "net:  testes que exigem acesso à internet",
+]

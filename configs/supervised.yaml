@@ -1,0 +1,270 @@
+# =============================================================================
+# Configuração do pipeline supervisionado — Projeto Integrador
+# =============================================================================
+#
+# Este arquivo é a fonte única de verdade para C2–C6.
+# Nenhum notebook deve hard-coded hiperparâmetro, fração de split ou limiar.
+#
+# REGRA:
+#   Valores marcados com `null` ou `"TBD"` só podem ser preenchidos
+#   DEPOIS que o gate correspondente for aprovado.
+#   Enquanto estiverem nulos, o loader levanta erro explícito ao tentar usá-los.
+# =============================================================================
+
+version: 1
+run_name_prefix: "supervisionado"
+
+# -----------------------------------------------------------------------------
+# Reprodutibilidade
+# -----------------------------------------------------------------------------
+seed: 42
+
+# -----------------------------------------------------------------------------
+# Alvo
+# -----------------------------------------------------------------------------
+target:
+  coluna: evolucao
+
+  # Valor(es) de `evolucao` que contam como positivo (óbito SRAG).
+  # 1 = cura | 2 = óbito SRAG | 3 = óbito outras causas | 9 = ignorado
+  positivos: [2.0]
+
+  # Se True, descarta linhas com `evolucao == 9` (ignorado).
+  descartar_ignorado: true
+
+# -----------------------------------------------------------------------------
+# Coluna temporal (usada no split)
+# -----------------------------------------------------------------------------
+coluna_tempo: dt_notific
+
+# -----------------------------------------------------------------------------
+# Features
+# -----------------------------------------------------------------------------
+# Estrutura definida agora; lista final consolidada após o gate G1.
+features:
+  numericas:
+    - nu_idade_n
+
+  categoricas:
+    - sg_uf
+    - cs_sexo
+    - tp_gestante
+    - febre
+    - tosse
+    - dispneia
+    - saturacao
+    - internado
+    - utilizouvni
+    - vacina_cov
+
+  # Lista final só é fechada depois do gate G1 (definição do alvo e features).
+  # Enquanto `null`, o loader usa `numericas + categoricas`.
+  final: null
+
+  # Colunas que NUNCA podem entrar em X (vazamento de alvo).
+  # Servem de invariante para o `test_leakage.py`.
+  proibidas:
+    - evolucao
+    - evolucao_covid19
+    - dt_evolucao
+    - dt_encerramento
+    - classificacao_final
+    - criterio_confirmacao
+    - sorologia
+    - pcr
+
+# -----------------------------------------------------------------------------
+# Split temporal
+# -----------------------------------------------------------------------------
+# As datas (`start` / `end`) são preenchidas APÓS o gate G2 (análise descritiva
+# do período coberto pelo dataset). Enquanto nulas, o split é feito por fração.
+temporal:
+  modo: fracao        # "fracao" | "datas"
+  fracao:
+    treino:    0.70
+    validacao: 0.15
+    # holdout é o restante: 1 - 0.70 - 0.15 = 0.15
+
+  # Só usadas se `modo == "datas"`. Deixadas nulas de propósito.
+  datas:
+    treino:
+      start: null
+      end:   null
+    validacao:
+      start: null
+      end:   null
+    holdout:
+      start: null
+      end:   null
+
+  # Trava de segurança: o holdout só é liberado após `concluir_selecao()`.
+  exigir_conclusao_selecao: true
+
+# -----------------------------------------------------------------------------
+# Modelos
+# -----------------------------------------------------------------------------
+# Valores marcados como null serão definidos nos gates:
+#   G3 → baseline (referência fixa, valores já definidos abaixo)
+#   G4 → regressão logística (busca de C e class_weight)
+#   G5 → boosting (busca de learning_rate, max_iter, etc.)
+models:
+
+  baseline:
+    # Não depende de tuning — é a referência mínima.
+    strategy: prior
+
+  logistic:
+    # Valores iniciais razoáveis. Gate G4 decide se ficam.
+    C: null                   # TBD: busca em [1e-3, 1e-2, 1e-1, 1, 10]
+    penalty: l2
+    solver: lbfgs
+    max_iter: 1000
+    class_weight: balanced
+
+  boosting:
+    # Valores iniciais razoáveis. Gate G5 decide se ficam.
+    learning_rate: null       # TBD: busca em [0.01, 0.03, 0.05, 0.1]
+    max_iter: null            # TBD: busca em [300, 500, 1000]
+    max_depth: null           # TBD: [None, 4, 6, 8]
+    max_leaf_nodes: 31
+    min_samples_leaf: 20
+    l2_regularization: 0.0
+    early_stopping: true
+    validation_fraction: 0.1
+    n_iter_no_change: 20
+    class_weight: balanced
+
+# -----------------------------------------------------------------------------
+# Calibração
+# -----------------------------------------------------------------------------
+# Gate G6 decide o método e onde calibrar (validação vs pedaço do treino).
+calibracao:
+  ativa: true
+  metodo: null                # TBD: "isotonic" | "sigmoid"
+  fonte: null                 # TBD: "validacao" | "treino_tail"
+  frac_treino_tail: 0.10      # usado se `fonte == "treino_tail"`
+  cv: prefit
+
+# -----------------------------------------------------------------------------
+# Limiar de decisão
+# -----------------------------------------------------------------------------
+# Gate G7 decide o limiar operacional (trade-off recall × precision).
+limiar:
+  default: 0.50               # usado enquanto o gate não fecha
+  otimo: null                 # TBD: preenchido pelo gate G7
+  metrica: f1                 # "f1" | "recall" | "precision" | "accuracy"
+  min_precision: null         # TBD: se contexto clínico exigir, ex.: 0.5
+
+# -----------------------------------------------------------------------------
+# Métricas e avaliação
+# -----------------------------------------------------------------------------
+avaliacao:
+  metricas_principais:
+    - auc
+    - ap
+    - brier
+    - f1
+    - precision
+    - recall
+    - accuracy
+
+  bootstrap:
+    n_boot: 200
+    alpha: 0.05
+    seed: 42
+
+  calibracao:
+    n_bins: 10
+    reportar:
+      - ece
+      - mce
+      - brier_decomposicao
+
+  grupos:
+    # Colunas para `metricas_por_grupo` na análise de erros (C6)
+    - sg_uf
+    - cs_sexo
+    - faixa_etaria
+
+  min_n_grupo: 100            # grupos menores são ignorados
+
+# -----------------------------------------------------------------------------
+# Registro de execução
+# -----------------------------------------------------------------------------
+registro:
+  output_dir: outputs/runs
+  salvar_metadata: true
+  salvar_summary: true
+
+# =============================================================================
+# GATES
+# =============================================================================
+# Cada gate marca uma decisão que precisa ser tomada ANTES de rodar a próxima
+# etapa. O campo `status` evolui de "pendente" para "aprovado".
+# Enquanto houver gate pendente, notebooks C3+ recusam rodar.
+# =============================================================================
+gates:
+
+  G1_definicao_alvo_features:
+    descricao: >
+      Definir alvo binário definitivo (quais valores de `evolucao`
+      contam como positivo) e a lista final de features.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G2_janela_temporal:
+    descricao: >
+      Definir janelas de treino / validação / holdout. Pode ser por fração
+      (modo atual) ou por datas explícitas.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G3_baseline:
+    descricao: >
+      Rodar `DummyClassifier` e registrar AUC/accuracy de referência.
+      Nenhum modelo precisa superar — serve para calibrar expectativas.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G4_logistica:
+    descricao: >
+      Buscar C e class_weight da regressão logística na validação.
+      Preencher `models.logistic.C`.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G5_boosting:
+    descricao: >
+      Buscar learning_rate / max_iter / max_depth na validação.
+      Preencher os campos `null` em `models.boosting`.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G6_calibracao:
+    descricao: >
+      Escolher método de calibração (isotonic vs sigmoid) e fonte
+      (validação vs treino_tail). Medir ECE antes/depois.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G7_limiar:
+    descricao: >
+      Escolher limiar operacional. Se contexto clínico exigir precisão
+      mínima, preencher `min_precision`.
+    status: pendente
+    aprovado_por: null
+    data: null
+
+  G8_holdout:
+    descricao: >
+      Liberar holdout UMA única vez. Rodar após G7.
+      Registrar métricas finais em `outputs/runs/<RUN_ID>/metadata.json`.
+    status: pendente
+    aprovado_por: null
+    data: null
