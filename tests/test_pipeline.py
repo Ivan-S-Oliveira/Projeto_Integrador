@@ -19,30 +19,85 @@ pytestmark = pytest.mark.slow
 # coletar_amostra — download do Parquet
 # ---------------------------------------------------------------------------
 
-def test_coletar_amostra_retorna_dataframe(parquet_disponivel):
-    """Se já há Parquet em data/raw, deve reutilizar; caso contrário, tenta baixar."""
+# ---------------------------------------------------------------------------
+# Leitura do Parquet local
+# ---------------------------------------------------------------------------
+
+def test_read_srag_retorna_dataframe(
+    parquet_disponivel,
+):
+    """
+    Valida o caminho oficial de leitura local do projeto.
+    """
     if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível e download não testado em CI.")
+        pytest.skip(
+            "Parquet nao disponivel."
+        )
 
-    from src.data.extracao import coletar_amostra
+    from src.utils.storage import read_srag
 
-    df = coletar_amostra()
-    assert isinstance(df, pd.DataFrame)
-    assert len(df) > 0
-    assert df.shape[1] > 0
+    df = read_srag(
+        columns=[
+            "sg_uf",
+            "dt_notific",
+        ]
+    )
+
+    assert isinstance(
+        df,
+        pd.DataFrame,
+    )
+
+    assert not df.empty
+
+    assert {
+        "sg_uf",
+        "dt_notific",
+    }.issubset(
+        set(df.columns)
+    )
 
 
-def test_coletar_amostra_reaproveita_arquivo(parquet_disponivel):
-    """Chamar duas vezes não deve re-baixar."""
+def test_get_parquet_reaproveita_arquivo(
+    parquet_disponivel,
+):
+    """
+    get_parquet com force igual a False deve reutilizar
+    o arquivo existente.
+    """
     if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+        pytest.skip(
+            "Parquet nao disponivel."
+        )
 
-    from src.data.extracao import coletar_amostra
+    from src.utils.storage import get_parquet
 
-    df1 = coletar_amostra()
-    df2 = coletar_amostra()
-    assert len(df1) == len(df2)
-    assert list(df1.columns) == list(df2.columns)
+    caminho_1 = Path(
+        get_parquet(force=False)
+    )
+
+    estado_1 = caminho_1.stat()
+
+    caminho_2 = Path(
+        get_parquet(force=False)
+    )
+
+    estado_2 = caminho_2.stat()
+
+    assert (
+        caminho_1.resolve()
+        == caminho_2.resolve()
+    )
+
+    assert (
+        estado_1.st_mtime_ns
+        == estado_2.st_mtime_ns
+    )
+
+    assert (
+        estado_1.st_size
+        == estado_2.st_size
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -88,8 +143,14 @@ def test_csv_to_parquet_erro_quando_csv_inexistente(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_raw_dir_foi_criado():
+    env.garantir_diretorios()
+
     assert env.RAW.exists()
+    assert env.RAW.is_dir()
 
 
 def test_processed_dir_foi_criado():
+    env.garantir_diretorios()
+
     assert env.PROCESSED.exists()
+    assert env.PROCESSED.is_dir()
