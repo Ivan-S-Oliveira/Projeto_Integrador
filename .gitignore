@@ -35,7 +35,7 @@ data/treino/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/treino/.gitkeep
-
+*.parquet
 
 # =========================================================
 # Modelos treinados
@@ -58,10 +58,11 @@ models/*.pth
 *.log
 *.tmp
 
-reports/figuras/*
+reports/figures/*
 reports/resultados/*
 
-!reports/figuras/.gitkeep
+
+!reports/figures/.gitkeep
 !reports/resultados/.gitkeep
 
 
@@ -89,8 +90,21 @@ Thumbs.db
 .vscode/
 .idea/
 
-# =========================================================
-# Recomendações
-# =========================================================
+# Configurações específicas de cada computador
+configs/paths.local.json
 
-.venv/
+# Artefatos gerados pelas execuções
+outputs/*
+!outputs/.gitkeep
+!outputs/runs/
+!outputs/tables/
+!outputs/predictions/
+outputs/runs/*
+outputs/tables/*
+outputs/predictions/*
+!outputs/runs/.gitkeep
+!outputs/tables/.gitkeep
+!outputs/predictions/.gitkeep
+
+# Inventarios locais usados para auditoria e documentacao
+/docs/ai_context/
