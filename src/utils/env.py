@@ -32,17 +32,39 @@ TREINO    = DATA / "treino"
 FIGURES   = ROOT / "reports" / "figures"
 
 
+# ---------------------------------------------------------------------------
+# Diretórios — garantia de existência
+# ---------------------------------------------------------------------------
 def garantir_diretorios() -> None:
-    """Cria os diretórios padrão do projeto, se ainda não existirem."""
-    for p in (RAW, PROCESSED, TREINO, FIGURES):
+    """
+    Cria todos os diretórios padrão do projeto, se ainda não existirem.
+
+    Importa de `config.py` (fonte única da verdade) para evitar
+    duplicação de caminhos. Import local para evitar ciclo.
+    """
+    from src.utils import config as C
+
+    for p in (
+        C.DATA_DIR,
+        C.RAW_DIR,
+        C.PROCESSED_DIR,
+        C.ANALYTICAL_DIR,
+        C.TREINO_DIR,
+        C.CONFIGS_DIR,
+        C.MODELS_DIR,
+        C.OUTPUTS_DIR,
+        C.RUNS_DIR,
+        C.LOGS_DIR,
+        C.REPORTS_DIR,
+        C.FIGURES_DIR,
+        C.TABLES_DIR,
+        C.PREDICTIONS_DIR,
+    ):
         p.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
 # Carregamento do .env (opcional)
-# ---------------------------------------------------------------------------
-# python-dotenv é opcional: se não estiver instalado, seguimos apenas com
-# variáveis de ambiente já definidas no sistema.
 # ---------------------------------------------------------------------------
 def carregar_dotenv(caminho: Path | None = None) -> bool:
     """
@@ -71,8 +93,6 @@ def carregar_dotenv(caminho: Path | None = None) -> bool:
 def detectar_ambiente() -> str:
     """
     Retorna 'ci' se estiver em pipeline, senão 'local'.
-
-    Não é mais usado para escolher fonte de segredos — apenas para logs.
     """
     if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
         return "ci"
@@ -101,11 +121,6 @@ def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
     obrigatorio : bool
         Se True (padrão) e a variável não existir, levanta RuntimeError
         com mensagem explicativa. Se False, retorna None.
-
-    Uso
-    ---
-    >>> token = get_secret("GITHUB_TOKEN", obrigatorio=False)
-    >>> if token: ...
     """
     valor = os.getenv(nome)
 

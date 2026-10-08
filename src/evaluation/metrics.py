@@ -186,3 +186,27 @@ def ic_bootstrap(
     inf = float(np.quantile(valores, alpha / 2))
     sup = float(np.quantile(valores, 1 - alpha / 2))
     return est, inf, sup
+
+def evaluate_classifier(
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+    y_proba: ArrayLike,
+) -> dict[str, float]:
+    """
+    Wrapper de conveniência que aceita y_pred já calculado.
+    Complementa `metricas_completas` (que deriva y_pred do limiar).
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_proba)
+    yp = _to_int_labels(y_pred)
+
+    return {
+        "auc":       auc(y, p),
+        "ap":        average_precision(y, p),
+        "brier":     brier(y, p),
+        "f1":        f1(y, yp),
+        "precision": precision(y, yp),
+        "recall":    recall(y, yp),
+        "accuracy":  accuracy(y, yp),
+        "n":         float(len(y)),
+    }

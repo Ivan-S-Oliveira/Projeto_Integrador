@@ -223,3 +223,60 @@ class TemporalSplit:
             f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  "
             f"({'liberado' if self._holdout_liberado else 'bloqueado'})"
         )
+
+# ---------------------------------------------------------------------------
+# Compatibilidade com o C2 (nome histórico)
+# ---------------------------------------------------------------------------
+
+def temporal_split(
+    df: pd.DataFrame,
+    *,
+    date_column: str | None = None,
+    coluna_tempo: str | None = None,
+    fracao: dict | None = None,
+    frac_treino: float | None = None,
+    frac_validacao: float | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Compat: aceita tanto `date_column` (nome usado no C2) quanto
+    `coluna_tempo` (nome usado no resto do projeto).
+
+    Se `fracao` for passado ({'treino': .., 'validacao': ..}), sobrescreve
+    `frac_treino` / `frac_validacao`. Se nenhum for passado, lê do
+    `supervised.yaml`.
+
+    Retorna (treino, validacao, holdout).
+    """
+    from src.utils import config as C
+
+    col = coluna_tempo or date_column or C.cfg("coluna_tempo") or "dt_notific"
+
+    # --- resolve frações ---
+    if fracao is None:
+        fracao = C.cfg("temporal", "fracao") or {"treino": 0.70, "validacao": 0.15}
+
+    if not isinstance(fracao, dict) or "treino" not in fracao or "validacao" not in fracao:
+        raise ValueError(
+            "Frações inválidas: esperado dict com chaves 'treino' e 'validacao', "
+            f"recebido {fracao!r}."
+        )
+
+    ft = float(frac_treino) if frac_treino is not None else float(fracao["treino"])
+    fv = float(frac_validacao) if frac_validacao is not None else float(fracao["validacao"])
+
+    if not (0 < ft < 1):
+        raise ValueError(f"frac_treino deve estar em (0, 1); recebido {ft!r}.")
+    if not (0 < fv < 1):
+        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {fv!r}.")
+    if ft + fv >= 1:
+        raise ValueError(
+            "frac_treino + frac_validacao deve ser < 1 "
+            "(o restante vira holdout)."
+        )
+
+    return split_temporal_3way(
+        df,
+        coluna_tempo=col,
+        frac_treino=ft,
+        frac_validacao=fv,
+    )

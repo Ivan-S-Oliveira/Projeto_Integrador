@@ -212,3 +212,51 @@ def top_erros(
         )
 
     return sel.head(n).reset_index(drop=True)
+
+# ---------------------------------------------------------------------------
+# Verificação de leakage
+# ---------------------------------------------------------------------------
+
+class LeakageError(RuntimeError):
+    """Levantado quando uma coluna proibida aparece em X."""
+
+
+def check_leakage(
+    X: pd.DataFrame,
+    *,
+    forbidden_columns: list[str] | None = None,
+    target_column: str | None = None,
+) -> None:
+    """
+    Garante que X não contém colunas que vazam o alvo.
+
+    - `forbidden_columns`: se None, lê `features.proibidas` do supervised.yaml.
+    - `target_column`: se None, lê `target.coluna`.
+    - Levanta LeakageError listando as colunas problemáticas.
+
+    Se `forbidden_columns` for passado como lista vazia, a checagem de
+    proibidas é ignorada (só o target é verificado) — evita surpresa.
+    """
+    from src.utils import config as C
+
+    if forbidden_columns is None:
+        forbidden_columns = list(C.cfg("features", "proibidas") or [])
+    if target_column is None:
+        target_column = C.cfg("target", "coluna")
+
+    proibidas = set(forbidden_columns)
+    if target_column:
+        proibidas.add(target_column)
+
+    encontradas = sorted(set(X.columns) & proibidas)
+    if encontradas:
+        raise LeakageError(
+            f"Leakage detectado: colunas proibidas em X → {encontradas}.\n"
+            f"Revise `features.proibidas` em supervised.yaml "
+            f"ou remova essas colunas antes de prosseguir."
+        )
+
+    print(
+        f"[check_leakage] OK — {X.shape[1]} colunas, "
+        f"nenhuma proibida presente."
+    )

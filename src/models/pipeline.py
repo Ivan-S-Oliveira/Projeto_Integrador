@@ -163,25 +163,24 @@ def split_temporal(
     frac_treino: float = 0.8,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Split temporal **sem embaralhar** (treino = mais antigo, teste = recente).
+    DEPRECATED. Use `src.evaluation.temporal.split_temporal_3way`
+    (ou `TemporalSplit`) — que respeita as frações do `supervised.yaml`.
 
-    Garante `max(treino[coluna_tempo]) <= min(teste[coluna_tempo])` **desde que
-    não haja timestamps duplicados exatamente na fronteira** (nesse caso, uma
-    ou outra linha pode empatar).
+    Mantida apenas para compatibilidade retroativa. Retorna (treino, teste)
+    juntando validação + holdout no segundo bloco.
     """
-    if not 0.0 < frac_treino < 1.0:
-        raise ValueError("frac_treino deve estar em (0, 1).")
-
-    if coluna_tempo not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
-
-    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
-    n = len(ordenado)
-    corte = int(n * frac_treino)
-
-    treino = ordenado.iloc[:corte].reset_index(drop=True)
-    teste = ordenado.iloc[corte:].reset_index(drop=True)
-    return treino, teste
+    import warnings
+    warnings.warn(
+        "src.models.pipeline.split_temporal está deprecated. "
+        "Use src.evaluation.temporal.split_temporal_3way.",
+        DeprecationWarning, stacklevel=2,
+    )
+    from src.evaluation.temporal import split_temporal_3way
+    tr, va, ho = split_temporal_3way(
+        df, coluna_tempo=coluna_tempo,
+        frac_treino=frac_treino, frac_validacao=(1 - frac_treino) / 2,
+    )
+    return tr, pd.concat([va, ho], ignore_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -206,3 +205,57 @@ def separar_xy(
 def random_state() -> int:
     """Seed canônica do projeto (vem de `config.SEED`)."""
     return int(C.SEED)
+
+# ---------------------------------------------------------------------------
+# Pipeline completo (pré-processamento + classificador opcional)
+# ---------------------------------------------------------------------------
+
+def build_pipeline(
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
+    *,
+    classifier: object | None = None,
+    features: Iterable[str] | None = None,
+) -> Pipeline:
+    """
+    Constrói o Pipeline sklearn.
+
+    - Se `classifier` for None, devolve só o pré-processamento (útil no C2,
+      que só inspeciona o pipeline).
+    - Se `classifier` for passado (C3+), anexa como etapa final.
+    - `features`: se None, usa FEATURES do módulo. Se X for passado e
+      `features` for None, faz interseção com as colunas de X (evita
+      KeyError por colunas ausentes).
+
+    As listas numéricas/categóricas vêm do supervised.yaml quando
+    disponível; caso contrário, dos defaults do módulo.
+    """
+    # Tenta ler do YAML (fonte única); cai nos defaults se indisponível.
+    try:
+        from src.utils import config as C
+        num = list(C.cfg("features", "numericas") or FEATURES_NUMERICAS)
+        cat = list(C.cfg("features", "categoricas") or FEATURES_CATEGORICAS)
+        final = C.cfg("features", "final")
+        if final:
+            fs = set(final)
+            num = [c for c in num if c in fs]
+            cat = [c for c in cat if c in fs]
+    except Exception:
+        num, cat = FEATURES_NUMERICAS, FEATURES_CATEGORICAS
+
+    if features is not None:
+        fs = set(features)
+        num = [c for c in num if c in fs]
+        cat = [c for c in cat if c in fs]
+
+    if X is not None:
+        num = [c for c in num if c in X.columns]
+        cat = [c for c in cat if c in X.columns]
+
+    pre = build_preprocessor(numericas=num, categoricas=cat)
+
+    etapas: list[tuple[str, object]] = [("pre", pre)]
+    if classifier is not None:
+        etapas.append(("clf", classifier))
+
+    return Pipeline(etapas)

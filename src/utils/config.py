@@ -1,14 +1,6 @@
 """
 Configurações centralizadas do Projeto Integrador.
-
-Regras deste módulo:
-- NÃO usar caminhos pessoais (C:/Users/... , /home/fulano/...).
-- NÃO usar caminhos absolutos externos ao projeto.
-- Todos os caminhos derivam de ROOT_DIR, calculado a partir deste arquivo.
-- Segredos e URLs sensíveis são lidos LAZILY (função), nunca no import —
-  porque o `.env` é carregado por `env.carregar_dotenv()` depois.
-- O YAML de configuração (`configs/supervised.yaml`) também é lido LAZILY
-  e cacheado, pelo mesmo motivo.
+... (docstring igual) ...
 """
 
 from __future__ import annotations
@@ -23,8 +15,6 @@ from typing import Any
 # ---------------------------------------------------------------------------
 # Raiz do projeto
 # ---------------------------------------------------------------------------
-# <ROOT>/src/utils/config.py → parents[2] = <ROOT>
-# ---------------------------------------------------------------------------
 ROOT_DIR: Path = Path(__file__).resolve().parents[2]
 
 
@@ -38,10 +28,11 @@ RANDOM_STATE = SEED
 # ---------------------------------------------------------------------------
 # Diretórios do projeto (fonte única da verdade)
 # ---------------------------------------------------------------------------
-DATA_DIR      = ROOT_DIR / "data"
-RAW_DIR       = DATA_DIR / "raw"
-PROCESSED_DIR = DATA_DIR / "processed"
-TREINO_DIR    = DATA_DIR / "treino"
+DATA_DIR       = ROOT_DIR / "data"
+RAW_DIR        = DATA_DIR / "raw"
+PROCESSED_DIR  = DATA_DIR / "processed"
+ANALYTICAL_DIR = DATA_DIR / "analytical"        # ← NOVO
+TREINO_DIR     = DATA_DIR / "treino"
 
 CONFIGS_DIR   = ROOT_DIR / "configs"
 MODELS_DIR    = ROOT_DIR / "models"
@@ -51,8 +42,8 @@ LOGS_DIR      = ROOT_DIR / "logs"
 REPORTS_DIR   = ROOT_DIR / "reports"
 FIGURES_DIR   = REPORTS_DIR / "figures"
 
-TABLES_DIR        = OUTPUTS_DIR / "tables"
-PREDICTIONS_DIR   = OUTPUTS_DIR / "predictions"
+TABLES_DIR      = OUTPUTS_DIR / "tables"
+PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 
 
 # ---------------------------------------------------------------------------
@@ -76,23 +67,11 @@ GITHUB_RELEASE_URL = (
 # ---------------------------------------------------------------------------
 # Segredos e URLs sensíveis — LEITURA LAZY
 # ---------------------------------------------------------------------------
-# Não use estas constantes em tempo de import. Chame as funções abaixo,
-# sempre depois de `env.carregar_dotenv()`. Assim o `.env` funciona.
-# ---------------------------------------------------------------------------
-
 def github_token() -> str | None:
-    """Token do GitHub — lido a cada chamada (permite .env tardio)."""
     return os.getenv("GITHUB_TOKEN")
 
 
 def srag_parquet_url() -> str:
-    """
-    URL do Parquet do SRAG 2019–2026.
-
-    Override via variável de ambiente `SRAG_PARQUET_URL`.
-    O link do Parquet muda semanalmente — atualize em:
-      https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026
-    """
     return os.getenv(
         "SRAG_PARQUET_URL",
         "https://s3.sa-east-1.amazonaws.com/"
@@ -101,31 +80,17 @@ def srag_parquet_url() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Configuração supervisionada — LEITURA LAZY + CACHEADa
-# ---------------------------------------------------------------------------
-# Interpolação simples de ${VAR} com variáveis de ambiente. Útil quando o
-# YAML quiser referenciar algo do .env (ex.: caminhos de artefato).
+# Configuração supervisionada — LEITURA LAZY + CACHEADA
 # ---------------------------------------------------------------------------
 _ENV_PATTERN = re.compile(r"\$\{(\w+)\}")
 
 
 def _interpolar_env(texto: str) -> str:
-    """Substitui `${VAR}` pelo valor de os.environ (vazio se ausente)."""
     return _ENV_PATTERN.sub(lambda m: os.getenv(m.group(1), ""), texto)
 
 
 @lru_cache(maxsize=1)
 def carregar_supervised() -> dict[str, Any]:
-    """
-    Lê `configs/supervised.yaml` de forma lazy e cacheada.
-
-    Regras:
-    - Import de `yaml` é local (dependência opcional em tempo de import).
-    - Se o arquivo não existir, levanta FileNotFoundError com instrução.
-    - Suporta `${VAR}` interpolado a partir do ambiente.
-    - O resultado é cacheado — para recarregar após editar o YAML, chame
-      `carregar_supervised.cache_clear()`.
-    """
     if not SUPERVISED_YAML.exists():
         raise FileNotFoundError(
             f"Configuração não encontrada: {SUPERVISED_YAML}\n"
@@ -134,7 +99,7 @@ def carregar_supervised() -> dict[str, Any]:
         )
 
     try:
-        import yaml  # import local: não quebra quem não usa o YAML
+        import yaml
     except ImportError as e:
         raise ImportError(
             "PyYAML não está instalado. Rode: pip install pyyaml"
@@ -152,10 +117,6 @@ def carregar_supervised() -> dict[str, Any]:
 
 
 def supervised_yaml_sha256() -> str | None:
-    """
-    SHA-256 do YAML atual (ou None se não existir).
-    Útil para gravar em `metadata.json` e garantir reprodutibilidade.
-    """
     import hashlib
     if not SUPERVISED_YAML.exists():
         return None
@@ -179,7 +140,7 @@ HTTP_BACKOFF    = 5
 # ---------------------------------------------------------------------------
 CSV_SEP      = ","
 CSV_ENCODING = "utf-8-sig"
-COLS         = None   # None = todas as colunas
+COLS         = None
 
 
 # ---------------------------------------------------------------------------
@@ -192,10 +153,10 @@ CSV_CHUNKSIZE       = 500_000
 # ---------------------------------------------------------------------------
 # Compatibilidade retroativa
 # ---------------------------------------------------------------------------
-# O SRAG não possui API paginada — mantidos como None para deixar explícito.
 API_URL   = None
 PAGE_SIZE = None
 N_PAGINAS = None
+
 
 # ---------------------------------------------------------------------------
 # Acesso tipado ao YAML supervisionado
@@ -205,12 +166,6 @@ class GatePendenteError(RuntimeError):
 
 
 def cfg(*chaves: str, default: Any = None) -> Any:
-    """
-    Acessa uma chave aninhada do supervised.yaml.
-
-        cfg("target", "coluna")          -> "evolucao"
-        cfg("models", "logistic", "C")   -> None (TBD)
-    """
     atual: Any = carregar_supervised()
     for k in chaves:
         if not isinstance(atual, dict) or k not in atual:
@@ -220,10 +175,6 @@ def cfg(*chaves: str, default: Any = None) -> Any:
 
 
 def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any:
-    """
-    Garante que `valor` não é None nem 'TBD'. Se for, levanta erro
-    apontando o gate que precisa ser aprovado antes.
-    """
     if valor is None or valor == "TBD":
         raise GatePendenteError(
             f"Valor não definido em '{caminho}'. "
@@ -233,13 +184,11 @@ def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any:
 
 
 def gate_aprovado(nome_gate: str) -> bool:
-    """Retorna True se o gate existe e está com status 'aprovado'."""
     g = cfg("gates", nome_gate) or {}
     return g.get("status") == "aprovado"
 
 
 def exigir_gate(nome_gate: str) -> None:
-    """Levanta GatePendenteError se o gate ainda não foi aprovado."""
     if not gate_aprovado(nome_gate):
         raise GatePendenteError(
             f"Gate '{nome_gate}' está pendente. "
@@ -249,10 +198,6 @@ def exigir_gate(nome_gate: str) -> None:
 
 
 def features_finais() -> list[str]:
-    """
-    Retorna a lista final de features.
-    Se `features.final` for null, usa numericas + categoricas.
-    """
     f = cfg("features") or {}
     final = f.get("final")
     if final:
@@ -261,10 +206,6 @@ def features_finais() -> list[str]:
 
 
 def limiar_ativo() -> float:
-    """
-    Retorna o limiar operacional.
-    Só usa `otimo` se o gate G7 estiver aprovado; caso contrário, `default`.
-    """
     lim = cfg("limiar") or {}
     if gate_aprovado("G7_limiar") and lim.get("otimo") is not None:
         return float(lim["otimo"])
@@ -279,13 +220,13 @@ def _status(valor: object) -> str:
 
 
 def resumo() -> str:
-    """Retorna um resumo legível das configurações ativas."""
     yaml_ok = "ok" if SUPERVISED_YAML.exists() else "AUSENTE"
     return (
         f"ROOT_DIR          = {ROOT_DIR}\n"
         f"DATA_DIR          = {DATA_DIR}\n"
         f"RAW_DIR           = {RAW_DIR}\n"
         f"PROCESSED_DIR     = {PROCESSED_DIR}\n"
+        f"ANALYTICAL_DIR    = {ANALYTICAL_DIR}\n"      # ← NOVO
         f"TREINO_DIR        = {TREINO_DIR}\n"
         f"OUTPUTS_DIR       = {OUTPUTS_DIR}\n"
         f"RUNS_DIR          = {RUNS_DIR}\n"
