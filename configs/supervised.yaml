@@ -43,7 +43,11 @@ coluna_tempo: dt_notific
 # Estrutura definida agora; lista final consolidada após o gate G1.
 features:
   numericas:
-    - nu_idade_n
+    - idade_anos
+    - intervalo_sint_interna_dias
+    - flag_intervalo_invalido
+    - sin_semana
+    - cos_semana
 
   categoricas:
     - sg_uf
@@ -56,6 +60,7 @@ features:
     # internado e utilizouvni removidos: conferir se existem na admissão.
     # Se confirmados como disponíveis na admissão, reintroduzir com nomes reais.
     - vacina_cov
+    - faixa_etaria        # derivada de idade_anos
 
   # Lista final só é fechada depois do gate G1 (definição do alvo e features).
   # Enquanto `null`, o loader usa `numericas + categoricas`.
@@ -74,6 +79,52 @@ features:
     - criterio_confirmacao
     - sorologia
     - pcr
+
+  # ---------------------------------------------------------------------------
+  # Engenharia de atributos (src/features/engineering.py)
+  # ---------------------------------------------------------------------------
+  # Parâmetros e inventário das colunas derivadas. Todas as funções são
+  # puras; `montar_features(df)` aplica todas e devolve uma cópia de `df`.
+  #
+  # ATENÇÃO: `dt_interna` (internação) precisa ser reconhecida pelo gate
+  # G1 como disponível no momento da admissão. Enquanto G1 estiver
+  # pendente, `intervalo_sint_interna_dias` e `flag_intervalo_invalido`
+  # são candidatos, não decisão congelada.
+  engenharia:
+    # Limite superior (dias) para o intervalo sintomas→internação.
+    # Acima disso, o intervalo vira NaN e a flag sobe para 1.
+    intervalo_max_dias: 60
+
+    # Faixas etárias interpretadas como intervalo semiaberto [min, max).
+    # `max: null` significa "sem limite superior".
+    faixas_etarias:
+      - {nome: "<1",    min: 0,  max: 1}
+      - {nome: "1-4",   min: 1,  max: 5}
+      - {nome: "5-11",  min: 5,  max: 12}
+      - {nome: "12-17", min: 12, max: 18}
+      - {nome: "18-39", min: 18, max: 40}
+      - {nome: "40-59", min: 40, max: 60}
+      - {nome: "60-79", min: 60, max: 80}
+      - {nome: "80+",   min: 80, max: null}
+
+    # Colunas produzidas por montar_features() — NÃO existem no Parquet
+    # bruto; por isso ficam separadas em `derivadas`.
+    derivadas:
+      - idade_anos
+      - intervalo_sint_interna_dias
+      - flag_intervalo_invalido
+      - sin_semana
+      - cos_semana
+      - faixa_etaria
+
+    # Colunas de entrada exigidas pela derivação (precisam estar no
+    # Parquet). `coluna_tempo` (dt_notific) também é usada por
+    # `sazonalidade`, mas vem do bloco `coluna_tempo`.
+    entradas:
+      - nu_idade_n
+      - tp_idade
+      - dt_sin_pri
+      - dt_interna
 
 # -----------------------------------------------------------------------------
 # Split temporal
@@ -146,8 +197,7 @@ avaliacao:
   grupos:
     - sg_uf
     - cs_sexo
-    # faixa_etaria removida: não existe em features. Criar em features ou
-    # manter fora dos grupos.
+    - faixa_etaria
   min_n_grupo: 100
 
 # =============================================================================

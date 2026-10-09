@@ -192,9 +192,11 @@ def test_get_secret_opcional_retorna_none(monkeypatch):
 @pytest.mark.slow
 def test_features_finais_existem_no_schema(parquet_disponivel):
     """
-    Todas as features declaradas no YAML precisam existir no Parquet.
-    Se este teste falhar, o desalinhamento é entre `features` do
-    `supervised.yaml` e o dataset analítico — não um bug de pipeline.
+    Verifica se as colunas que devem existir no Parquet estão lá.
+
+    Features derivadas (produzidas por `montar_features`) não existem no
+    Parquet bruto — são excluídas da checagem. As colunas de entrada
+    exigidas pela derivação são verificadas explicitamente.
     """
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
@@ -205,8 +207,12 @@ def test_features_finais_existem_no_schema(parquet_disponivel):
     schema = pq.read_schema(parquet_disponivel)
     colunas = set(schema.names)
 
-    faltando = set(pipeline.FEATURES) - colunas
+    derivadas = set(C.cfg("features", "engenharia", "derivadas") or [])
+    base = set(pipeline.FEATURES) - derivadas
+
+    entradas = set(C.cfg("features", "engenharia", "entradas") or [])
+
+    faltando = (base | entradas) - colunas
     assert not faltando, (
-        f"Features declaradas no supervised.yaml não existem no Parquet: "
-        f"{sorted(faltando)}"
+        f"Colunas exigidas não existem no Parquet: {sorted(faltando)}"
     )
