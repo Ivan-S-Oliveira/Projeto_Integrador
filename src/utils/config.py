@@ -65,7 +65,7 @@ SUPERVISED_YAML = CONFIGS_DIR / "supervised.yaml"
 # Dataset processado (versão distribuída via GitHub Release)
 # ---------------------------------------------------------------------------
 GITHUB_REPO  = "Ivan-S-Oliveira/Projeto_Integrador"
-DATA_VERSION = "dados-v1"
+DATA_VERSION = "dados-v2"
 PARQUET_NAME = "srag.parquet"
 
 GITHUB_RELEASE_URL = (
