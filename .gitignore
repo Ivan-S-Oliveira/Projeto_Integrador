@@ -30,10 +30,12 @@ __pycache__/
 
 data/raw/*
 data/processed/*
+data/analytical/*
 data/treino/*
 
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/analytical/.gitkeep
 !data/treino/.gitkeep
 *.parquet
 

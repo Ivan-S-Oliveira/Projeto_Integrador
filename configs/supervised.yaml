@@ -200,6 +200,29 @@ avaliacao:
     - faixa_etaria
   min_n_grupo: 100
 
+# -----------------------------------------------------------------------------
+# Clustering (apresentação na admissão, sem alvo)
+# -----------------------------------------------------------------------------
+# Variáveis consideradas disponíveis no momento da admissão. Usadas
+# exclusivamente pelo dataset de clustering (EDA não supervisionada).
+#
+# ATENÇÃO: NÃO inclua aqui nada de `features.proibidas` nem colunas
+# posteriores à admissão. O `check_leakage` roda sobre este dataset e
+# falha se encontrar qualquer item da lista de proibidas.
+#
+# Lista provisória — sujeita a revisão do gate G1.
+clustering:
+  features:
+    - idade_anos
+    - sg_uf
+    - cs_sexo
+    - cs_gestant
+    - febre
+    - tosse
+    - dispneia
+    - saturacao
+    - vacina_cov
+
 # =============================================================================
 # GATES
 # =============================================================================
