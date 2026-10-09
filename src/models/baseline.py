@@ -8,18 +8,14 @@ qualquer modelo com desempenho acima disso está efetivamente aprendendo.
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
-from sklearn.metrics import brier_score_loss, roc_auc_score
-
-from src.evaluation.metrics import metricas_completas, average_precision
 
 from typing import Literal
 
 from sklearn.dummy import DummyClassifier
 from sklearn.pipeline import Pipeline
 
-from src.models.calibration import metricas_completas
+from src.evaluation.metrics import metricas_completas
 from src.models.pipeline import build_preprocessor, random_state
 
 # Estratégias aceitas pelo DummyClassifier do scikit-learn.
@@ -60,6 +56,7 @@ def build_baseline_pipeline(
         )),
     ])
 
+
 def evaluate_baseline(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -85,7 +82,6 @@ def evaluate_baseline(
     pipe.fit(X_train, y_train)
 
     y_prob = pipe.predict_proba(X_eval)[:, 1]
-    y_pred = pipe.predict(X_eval)
 
     return {
         "strategy": strategy,

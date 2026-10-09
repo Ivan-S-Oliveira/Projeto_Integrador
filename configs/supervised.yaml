@@ -12,7 +12,6 @@
 # =============================================================================
 
 version: 1
-run_name_prefix: "supervisionado"
 
 # -----------------------------------------------------------------------------
 # Reprodutibilidade
@@ -28,9 +27,10 @@ target:
   # Valor(es) de `evolucao` que contam como positivo (óbito SRAG).
   # 1 = cura | 2 = óbito SRAG | 3 = óbito outras causas | 9 = ignorado
   positivos: [2.0]
+  negativos: [1.0]
 
-  # Se True, descarta linhas com `evolucao == 9` (ignorado).
-  descartar_ignorado: true
+  # Descarta 3, 9 e nulos — ficam fora do alvo binário.
+  descartar_outros: true
 
 # -----------------------------------------------------------------------------
 # Coluna temporal (usada no split)
@@ -48,13 +48,13 @@ features:
   categoricas:
     - sg_uf
     - cs_sexo
-    - tp_gestante
+    - cs_gestant          # antes: tp_gestante (schema real provável)
     - febre
     - tosse
     - dispneia
     - saturacao
-    - internado
-    - utilizouvni
+    # internado e utilizouvni removidos: conferir se existem na admissão.
+    # Se confirmados como disponíveis na admissão, reintroduzir com nomes reais.
     - vacina_cov
 
   # Lista final só é fechada depois do gate G1 (definição do alvo e features).
@@ -66,8 +66,10 @@ features:
   proibidas:
     - evolucao
     - evolucao_covid19
-    - dt_evolucao
-    - dt_encerramento
+    - dt_evoluca          # antes: dt_evolucao
+    - dt_encerra          # antes: dt_encerramento
+    - dt_digita
+    # Conferir nomes reais no schema antes de fechar:
     - classificacao_final
     - criterio_confirmacao
     - sorologia
@@ -76,29 +78,12 @@ features:
 # -----------------------------------------------------------------------------
 # Split temporal
 # -----------------------------------------------------------------------------
-# As datas (`start` / `end`) são preenchidas APÓS o gate G2 (análise descritiva
-# do período coberto pelo dataset). Enquanto nulas, o split é feito por fração.
+# Split por fração. Chaves de modo/datas/exigir_conclusao_selecao removidas.
 temporal:
-  modo: fracao        # "fracao" | "datas"
   fracao:
     treino:    0.70
     validacao: 0.15
-    # holdout é o restante: 1 - 0.70 - 0.15 = 0.15
-
-  # Só usadas se `modo == "datas"`. Deixadas nulas de propósito.
-  datas:
-    treino:
-      start: null
-      end:   null
-    validacao:
-      start: null
-      end:   null
-    holdout:
-      start: null
-      end:   null
-
-  # Trava de segurança: o holdout só é liberado após `concluir_selecao()`.
-  exigir_conclusao_selecao: true
+    holdout:   0.15
 
 # -----------------------------------------------------------------------------
 # Modelos
@@ -124,14 +109,12 @@ models:
   boosting:
     # Valores iniciais razoáveis. Gate G5 decide se ficam.
     learning_rate: null       # TBD: busca em [0.01, 0.03, 0.05, 0.1]
-    max_iter: null            # TBD: busca em [300, 500, 1000]
+    max_iter: null            # TBD: busca em [300, 500, 1000] na validação temporal
     max_depth: null           # TBD: [None, 4, 6, 8]
     max_leaf_nodes: 31
     min_samples_leaf: 20
     l2_regularization: 0.0
-    early_stopping: true
-    validation_fraction: 0.1
-    n_iter_no_change: 20
+    early_stopping: false
     class_weight: balanced
 
 # -----------------------------------------------------------------------------
@@ -143,7 +126,6 @@ calibracao:
   metodo: null                # TBD: "isotonic" | "sigmoid"
   fonte: null                 # TBD: "validacao" | "treino_tail"
   frac_treino_tail: 0.10      # usado se `fonte == "treino_tail"`
-  cv: prefit
 
 # -----------------------------------------------------------------------------
 # Limiar de decisão
@@ -158,43 +140,15 @@ limiar:
 # -----------------------------------------------------------------------------
 # Métricas e avaliação
 # -----------------------------------------------------------------------------
+# Bloco enxuto: apenas grupos e min_n_grupo.
+# `min_n_grupo` deve ser lido pelas funções de métricas por grupo.
 avaliacao:
-  metricas_principais:
-    - auc
-    - ap
-    - brier
-    - f1
-    - precision
-    - recall
-    - accuracy
-
-  bootstrap:
-    n_boot: 200
-    alpha: 0.05
-    seed: 42
-
-  calibracao:
-    n_bins: 10
-    reportar:
-      - ece
-      - mce
-      - brier_decomposicao
-
   grupos:
-    # Colunas para `metricas_por_grupo` na análise de erros (C6)
     - sg_uf
     - cs_sexo
-    - faixa_etaria
-
-  min_n_grupo: 100            # grupos menores são ignorados
-
-# -----------------------------------------------------------------------------
-# Registro de execução
-# -----------------------------------------------------------------------------
-registro:
-  output_dir: outputs/runs
-  salvar_metadata: true
-  salvar_summary: true
+    # faixa_etaria removida: não existe em features. Criar em features ou
+    # manter fora dos grupos.
+  min_n_grupo: 100
 
 # =============================================================================
 # GATES

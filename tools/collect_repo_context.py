@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 """Gera um pacote seguro de contexto técnico do repositório para pessoas e IAs.
 
-As pastas data/, models/, outputs/ e logs/ são excluídas
-somente quando estão na raiz. Módulos como src/data e
-src/models permanecem incluídos no inventário.
+As pastas data/, models/, outputs/ e logs/ são excluídas somente quando
+estão na raiz. Módulos como src/data e src/models permanecem incluídos
+no inventário.
+
+Caminhos do usuário (ex.: local do interpretador Python) são omitidos ou
+substituídos por placeholders na saída — o inventário registra o
+ambiente, não a máquina específica.
 
 Uso, na raiz do Git:
     python tools/collect_repo_context.py
@@ -15,15 +19,14 @@ Saídas:
     docs/ai_context/pip_freeze.txt
     docs/ai_context/git_tracked_files.txt
 
-O script não lê valores de .env, não inclui o conteúdo de dados/artefatos, e exclui
-.venv, .git, caches, outputs e arquivos grandes.
+O script não lê valores de .env, não inclui o conteúdo de dados/artefatos,
+e exclui .venv, .git, caches, outputs e arquivos grandes.
 """
 from __future__ import annotations
 
 import ast
 import hashlib
 import json
-import os
 import platform
 import re
 import subprocess
@@ -34,7 +37,6 @@ from typing import Any
 
 ROOT = Path.cwd().resolve()
 OUT = ROOT / "docs" / "ai_context"
-OUT.mkdir(parents=True, exist_ok=True)
 
 EXCLUDED_DIR_NAMES_ANYWHERE = {
     ".git",
@@ -66,13 +68,66 @@ MAX_TEXT_BYTES = 1_000_000
 SECRET_NAME = re.compile(r"(token|secret|password|passwd|api[_-]?key|credential)", re.I)
 
 
-def run(cmd: list[str]) -> dict[str, Any]:
+# ---------------------------------------------------------------------------
+# Helpers de execução e sanitização
+# ---------------------------------------------------------------------------
+
+def run(
+    cmd: list[str],
+    *,
+    record_as: list[str] | None = None,
+) -> dict[str, Any]:
+    """
+    Executa um comando e devolve stdout/stderr capturados.
+
+    `record_as` permite gravar um comando "público" diferente do executado
+    — útil para registrar `["python", "--version"]` quando a linha real
+    contém o caminho absoluto do interpretador. Quando omitido, o próprio
+    `cmd` é registrado, com `sys.executable` já substituído por `"python"`.
+    """
+    if record_as is not None:
+        public = record_as
+    else:
+        public = ["python" if part == sys.executable else part for part in cmd]
+
     try:
-        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, errors="replace")
-        return {"command": cmd, "returncode": p.returncode,
-                "stdout": p.stdout.strip(), "stderr": p.stderr.strip()}
+        p = subprocess.run(
+            cmd, cwd=ROOT, capture_output=True, text=True, errors="replace"
+        )
+        return {
+            "command": public,
+            "returncode": p.returncode,
+            "stdout": p.stdout.strip(),
+            "stderr": p.stderr.strip(),
+        }
     except Exception as exc:
-        return {"command": cmd, "returncode": None, "stdout": "", "stderr": repr(exc)}
+        return {
+            "command": public,
+            "returncode": None,
+            "stdout": "",
+            "stderr": repr(exc),
+        }
+
+
+def redact_user_paths(text: str) -> str:
+    """
+    Substitui o diretório home do usuário por `<HOME>` em textos.
+
+    Cobre as variantes: caminho literal (POSIX), com barras normais e com
+    backslashes escapados (como aparecem em JSON no Windows). Aplicado
+    sobre saídas externas (pip inspect/freeze) antes de gravar.
+    """
+    home = str(Path.home())
+    if not home:
+        return text
+    variantes = {
+        home,
+        home.replace("\\", "/"),
+        home.replace("\\", "\\\\"),
+    }
+    for v in sorted(variantes, key=len, reverse=True):
+        text = text.replace(v, "<HOME>")
+    return text
 
 
 def sha256(path: Path) -> str:
@@ -89,8 +144,8 @@ def rel(path: Path) -> str:
 
 def excluded(path: Path) -> bool:
     """
-    Exclui caches em qualquer nível, mas exclui data, models,
-    outputs e logs somente quando forem pastas da raiz.
+    Exclui caches em qualquer nível, mas exclui data, models, outputs e
+    logs somente quando forem pastas da raiz.
 
     Assim:
         data/processed/...       → excluído
@@ -104,10 +159,7 @@ def excluded(path: Path) -> bool:
     if not parts:
         return False
 
-    if any(
-        part in EXCLUDED_DIR_NAMES_ANYWHERE
-        for part in parts
-    ):
+    if any(part in EXCLUDED_DIR_NAMES_ANYWHERE for part in parts):
         return True
 
     if parts[0] in EXCLUDED_ROOT_DIRS:
@@ -188,23 +240,40 @@ def analyze_python(path: Path) -> dict[str, Any]:
         elif isinstance(node, ast.ImportFrom):
             imports.append(("." * node.level) + (node.module or ""))
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            functions.append({"name": node.name, "signature": signature(node),
-                              "line": node.lineno, "docstring": docstring(node)})
+            functions.append({
+                "name": node.name,
+                "signature": signature(node),
+                "line": node.lineno,
+                "docstring": docstring(node),
+            })
         elif isinstance(node, ast.ClassDef):
             methods = []
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    methods.append({"name": item.name, "signature": signature(item),
-                                    "line": item.lineno, "docstring": docstring(item)})
-            classes.append({"name": node.name, "line": node.lineno,
-                            "docstring": docstring(node), "methods": methods})
+                    methods.append({
+                        "name": item.name,
+                        "signature": signature(item),
+                        "line": item.lineno,
+                        "docstring": docstring(item),
+                    })
+            classes.append({
+                "name": node.name,
+                "line": node.lineno,
+                "docstring": docstring(node),
+                "methods": methods,
+            })
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
             for target in targets:
                 if isinstance(target, ast.Name) and target.id.isupper():
                     constants.append(target.id)
-    return {"module_docstring": docstring(tree), "imports": sorted(set(imports)),
-            "functions": functions, "classes": classes, "constants": constants}
+    return {
+        "module_docstring": docstring(tree),
+        "imports": sorted(set(imports)),
+        "functions": functions,
+        "classes": classes,
+        "constants": constants,
+    }
 
 
 def analyze_notebook(path: Path) -> dict[str, Any]:
@@ -226,7 +295,9 @@ def analyze_notebook(path: Path) -> dict[str, Any]:
             "cell_count": len(cells),
             "code_cells": sum(c.get("cell_type") == "code" for c in cells),
             "markdown_cells": sum(c.get("cell_type") == "markdown" for c in cells),
-            "execution_counts": [c.get("execution_count") for c in cells if c.get("cell_type") == "code"],
+            "execution_counts": [
+                c.get("execution_count") for c in cells if c.get("cell_type") == "code"
+            ],
         }
     except Exception as exc:
         return {"parse_error": repr(exc)}
@@ -257,102 +328,132 @@ def redact_config_preview(path: Path, text: str) -> str:
     return "\n".join(lines)
 
 
-files = []
-python_analysis = {}
-notebooks = {}
-env_vars = set()
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
 
-for path in tracked_files():
-    if not path.exists() or excluded(path):
-        continue
-    record = {
-        "path": rel(path), "suffix": path.suffix.lower(),
-        "size_bytes": path.stat().st_size, "sha256": sha256(path),
+def main() -> int:
+    OUT.mkdir(parents=True, exist_ok=True)
+
+    files: list[dict[str, Any]] = []
+    python_analysis: dict[str, dict[str, Any]] = {}
+    notebooks: dict[str, dict[str, Any]] = {}
+    env_vars: set[str] = set()
+
+    for path in tracked_files():
+        if not path.exists() or excluded(path):
+            continue
+        record = {
+            "path": rel(path),
+            "suffix": path.suffix.lower(),
+            "size_bytes": path.stat().st_size,
+            "sha256": sha256(path),
+        }
+        text = safe_text(path)
+        if text is not None:
+            record["line_count"] = len(text.splitlines())
+            env_vars.update(env_names_from_text(text))
+            if path.suffix.lower() in {".yaml", ".yml", ".toml", ".ini", ".cfg"}:
+                record["preview_redacted"] = redact_config_preview(path, text)
+        files.append(record)
+        if path.suffix.lower() == ".py":
+            python_analysis[rel(path)] = analyze_python(path)
+        elif path.suffix.lower() == ".ipynb":
+            notebooks[rel(path)] = analyze_notebook(path)
+
+    commands = {
+        "git_status":     run(["git", "status", "--short", "--branch"]),
+        "git_remote":     run(["git", "remote", "-v"]),
+        "git_branches":   run(["git", "branch", "--all", "--verbose", "--no-abbrev"]),
+        "git_log":        run([
+            "git", "log", "--date=iso-strict",
+            "--pretty=format:%H%x09%ad%x09%an%x09%s", "-n", "100",
+        ]),
+        "git_tags":       run(["git", "tag", "--list", "--sort=-creatordate"]),
+        "git_submodules": run(["git", "submodule", "status"]),
+        "python_version": run([sys.executable, "--version"]),
+        "pip_check":      run([sys.executable, "-m", "pip", "check"]),
     }
-    text = safe_text(path)
-    if text is not None:
-        record["line_count"] = len(text.splitlines())
-        env_vars.update(env_names_from_text(text))
-        if path.suffix.lower() in {".yaml", ".yml", ".toml", ".ini", ".cfg"}:
-            record["preview_redacted"] = redact_config_preview(path, text)
-    files.append(record)
-    if path.suffix.lower() == ".py":
-        python_analysis[rel(path)] = analyze_python(path)
-    elif path.suffix.lower() == ".ipynb":
-        notebooks[rel(path)] = analyze_notebook(path)
 
-commands = {
-    "git_status": run(["git", "status", "--short", "--branch"]),
-    "git_remote": run(["git", "remote", "-v"]),
-    "git_branches": run(["git", "branch", "--all", "--verbose", "--no-abbrev"]),
-    "git_log": run(["git", "log", "--date=iso-strict", "--pretty=format:%H%x09%ad%x09%an%x09%s", "-n", "100"]),
-    "git_tags": run(["git", "tag", "--list", "--sort=-creatordate"]),
-    "git_submodules": run(["git", "submodule", "status"]),
-    "python_version": run([sys.executable, "--version"]),
-    "pip_check": run([sys.executable, "-m", "pip", "check"]),
-}
+    pip_inspect = run([sys.executable, "-m", "pip", "inspect", "--local"])
+    if pip_inspect["returncode"] == 0:
+        (OUT / "pip_inspect.json").write_text(
+            redact_user_paths(pip_inspect["stdout"]) + "\n",
+            encoding="utf-8",
+        )
+    pip_freeze = run([sys.executable, "-m", "pip", "freeze"])
+    (OUT / "pip_freeze.txt").write_text(
+        redact_user_paths(pip_freeze["stdout"]) + "\n",
+        encoding="utf-8",
+    )
+    (OUT / "git_tracked_files.txt").write_text(
+        "\n".join(sorted(f["path"] for f in files)) + "\n",
+        encoding="utf-8",
+    )
 
-pip_inspect = run([sys.executable, "-m", "pip", "inspect", "--local"])
-if pip_inspect["returncode"] == 0:
-    (OUT / "pip_inspect.json").write_text(pip_inspect["stdout"] + "\n", encoding="utf-8")
-pip_freeze = run([sys.executable, "-m", "pip", "freeze"])
-(OUT / "pip_freeze.txt").write_text(pip_freeze["stdout"] + "\n", encoding="utf-8")
-(OUT / "git_tracked_files.txt").write_text("\n".join(sorted(f["path"] for f in files)) + "\n", encoding="utf-8")
+    inventory = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "root_name": ROOT.name,
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "file_count": len(files),
+        "files": sorted(files, key=lambda x: x["path"]),
+        "python_analysis": python_analysis,
+        "notebooks": notebooks,
+        "environment_variable_names_only": sorted(env_vars),
+        "commands": commands,
+        "notes": [
+            "Valores de variáveis de ambiente não são coletados.",
+            "Caminhos do usuário (ex.: local do interpretador) são "
+            "substituídos por placeholders.",
+            "data/, outputs/, models/, logs/, .git/ e .venv/ são excluídos.",
+            "Conteúdo integral dos arquivos não é copiado; são coletados "
+            "estrutura, hashes e símbolos.",
+        ],
+    }
+    (OUT / "repo_inventory.json").write_text(
+        json.dumps(inventory, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
-inventory = {
-    "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-    "root_name": ROOT.name,
-    "python_executable": sys.executable,
-    "python_version": sys.version,
-    "platform": platform.platform(),
-    "file_count": len(files),
-    "files": sorted(files, key=lambda x: x["path"]),
-    "python_analysis": python_analysis,
-    "notebooks": notebooks,
-    "environment_variable_names_only": sorted(env_vars),
-    "commands": commands,
-    "notes": [
-        "Valores de variáveis de ambiente não são coletados.",
-        "data/, outputs/, models/, logs/, .git/ e .venv/ são excluídos.",
-        "Conteúdo integral dos arquivos não é copiado; são coletados estrutura, hashes e símbolos.",
-    ],
-}
-(OUT / "repo_inventory.json").write_text(json.dumps(inventory, ensure_ascii=False, indent=2), encoding="utf-8")
+    md: list[str] = []
+    md.append("# Inventário técnico do repositório\n")
+    md.append(f"Gerado em: `{inventory['generated_at_utc']}`  ")
+    md.append(f"Python: `{sys.version.split()[0]}`  ")
+    md.append(f"Arquivos rastreados analisados: **{len(files)}**\n")
+    md.append("## Estado do Git\n```text\n" + commands["git_status"]["stdout"] + "\n```\n")
+    md.append("## Variáveis de ambiente referenciadas\n")
+    md.extend(f"- `{name}`" for name in sorted(env_vars))
+    md.append("\n## Arquivos Python e símbolos\n")
+    for path, info in sorted(python_analysis.items()):
+        md.append(f"### `{path}`")
+        if info.get("parse_error"):
+            md.append(f"- Erro de parse: `{info['parse_error']}`")
+            continue
+        if info.get("module_docstring"):
+            md.append(f"- Módulo: {info['module_docstring'].splitlines()[0]}")
+        for item in info.get("functions", []):
+            md.append(f"- Função L{item['line']}: `{item['signature']}`")
+        for cls in info.get("classes", []):
+            md.append(f"- Classe L{cls['line']}: `{cls['name']}`")
+            for method in cls["methods"]:
+                md.append(f"  - Método L{method['line']}: `{method['signature']}`")
+    md.append("\n## Notebooks\n")
+    for path, info in sorted(notebooks.items()):
+        md.append(f"- `{path}`: {info}")
+    md.append("\n## Validação do ambiente\n")
+    md.append(f"- `pip check` return code: `{commands['pip_check']['returncode']}`")
+    if commands["pip_check"]["stdout"]:
+        md.append("```text\n" + commands["pip_check"]["stdout"] + "\n```")
+    if commands["pip_check"]["stderr"]:
+        md.append("```text\n" + commands["pip_check"]["stderr"] + "\n```")
+    (OUT / "repo_inventory.md").write_text("\n".join(md) + "\n", encoding="utf-8")
 
-md = []
-md.append("# Inventário técnico do repositório\n")
-md.append(f"Gerado em: `{inventory['generated_at_utc']}`  ")
-md.append(f"Python: `{sys.version.split()[0]}`  ")
-md.append(f"Executável: `{sys.executable}`  ")
-md.append(f"Arquivos rastreados analisados: **{len(files)}**\n")
-md.append("## Estado do Git\n```text\n" + commands["git_status"]["stdout"] + "\n```\n")
-md.append("## Variáveis de ambiente referenciadas\n")
-md.extend(f"- `{name}`" for name in sorted(env_vars))
-md.append("\n## Arquivos Python e símbolos\n")
-for path, info in sorted(python_analysis.items()):
-    md.append(f"### `{path}`")
-    if info.get("parse_error"):
-        md.append(f"- Erro de parse: `{info['parse_error']}`")
-        continue
-    if info.get("module_docstring"):
-        md.append(f"- Módulo: {info['module_docstring'].splitlines()[0]}")
-    for item in info.get("functions", []):
-        md.append(f"- Função L{item['line']}: `{item['signature']}`")
-    for cls in info.get("classes", []):
-        md.append(f"- Classe L{cls['line']}: `{cls['name']}`")
-        for method in cls["methods"]:
-            md.append(f"  - Método L{method['line']}: `{method['signature']}`")
-md.append("\n## Notebooks\n")
-for path, info in sorted(notebooks.items()):
-    md.append(f"- `{path}`: {info}")
-md.append("\n## Validação do ambiente\n")
-md.append(f"- `pip check` return code: `{commands['pip_check']['returncode']}`")
-if commands["pip_check"]["stdout"]:
-    md.append("```text\n" + commands["pip_check"]["stdout"] + "\n```")
-if commands["pip_check"]["stderr"]:
-    md.append("```text\n" + commands["pip_check"]["stderr"] + "\n```")
-(OUT / "repo_inventory.md").write_text("\n".join(md) + "\n", encoding="utf-8")
+    print(f"Inventário criado em: {OUT.relative_to(ROOT)}")
+    for p in sorted(OUT.iterdir()):
+        print(" -", p.relative_to(ROOT))
+    return 0
 
-print(f"Inventário criado em: {OUT}")
-for p in sorted(OUT.iterdir()):
-    print(" -", p.relative_to(ROOT))
+
+if __name__ == "__main__":
+    raise SystemExit(main())

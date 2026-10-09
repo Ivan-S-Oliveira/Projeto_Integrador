@@ -5,6 +5,7 @@ Fundação dos modelos supervisionados.
 
 from __future__ import annotations
 
+import logging
 from typing import Iterable
 
 import pandas as pd
@@ -15,38 +16,35 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.utils import config as C
 
-# ---------------------------------------------------------------------------
-# Fonte única da verdade
-# ---------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
 
-FEATURES_NUMERICAS: list[str] = [
-    "nu_idade_n",
-]
+# ---------------------------------------------------------------------------
+# Fonte única da verdade — tudo vem de `configs/supervised.yaml`
+# ---------------------------------------------------------------------------
+# Sem defaults próprios neste módulo: se a config falhar, o import falha.
 
-FEATURES_CATEGORICAS: list[str] = [
-    "sg_uf",
-    "cs_sexo",
-    "tp_gestante",
-    "febre",
-    "tosse",
-    "dispneia",
-    "saturacao",
-    "internado",
-    "utilizouvni",
-    "vacina_cov",
-]
+ALVO: str = C.cfg("target", "coluna")
+COLUNA_TEMPO: str = C.cfg("coluna_tempo")
+
+FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
+FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
+
+# Se `features.final` estiver preenchido no YAML, restringe as listas a ele.
+_final = C.cfg("features", "final")
+if _final:
+    _fs = set(_final)
+    FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
+    FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
 
 FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
 
-COLUNA_TEMPO: str = "dt_notific"
-ALVO: str = "evolucao"
 
-# Valores de `evolucao` que contam como "óbito" no alvo binário.
-#   1.0 = Cura | 2.0 = Óbito por SRAG | 3.0 = Óbito por outras causas | 9 = Ignorado
-ALVO_POSITIVO: list[float] = [2.0]
+def _alvo_cfg_positivos() -> list[float]:
+    return [float(v) for v in (C.cfg("target", "positivos") or [])]
 
-# Códigos de `evolucao` que jamais viram rótulo (nem 0 nem 1).
-ALVO_IGNORADO: set[float] = {9.0}
+
+def _alvo_cfg_negativos() -> list[float]:
+    return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
 
 # ---------------------------------------------------------------------------
@@ -86,55 +84,58 @@ def build_preprocessor(
 
 def criar_alvo_binario(
     df: pd.DataFrame,
-    alvo: str = ALVO,
-    positivos: Iterable[float] = ALVO_POSITIVO,
-    ignorados: Iterable[float] = ALVO_IGNORADO,
-    *,
-    descartar_nao_rotulados: bool = True,
+    alvo: str | None = None,
+    positivos: Iterable[float] | None = None,
+    negativos: Iterable[float] | None = None,
 ) -> pd.Series:
     """
     Converte `evolucao` em alvo binário (float64, com NaN onde indefinido).
 
-        1 = óbito SRAG   (valores em `positivos`)
-        0 = cura         (valor 1.0)
-        NaN = qualquer outro valor (3.0, 9.0, ...) → será descartado em
-              `filtrar_rotulos_validos` se `descartar_nao_rotulados=True`.
+        1 = óbito SRAG   (valores em `positivos`, default do YAML)
+        0 = cura         (valores em `negativos`, default do YAML)
+        NaN = qualquer outro valor (3.0, 9.0, nulos) → descartado adiante
+              por `filtrar_rotulos_validos`.
+
+    Por padrão, lê `target.coluna`, `target.positivos` e `target.negativos`
+    do `supervised.yaml`. Argumentos explícitos sobrepõem a config.
 
     Parâmetros
     ----------
-    positivos : iterable de float
-        Códigos de `evolucao` que contam como positivo (default {2.0}).
-    ignorados : iterable de float
-        Códigos que sabemos serem "ignorado" (default {9.0}). Servem apenas
-        para documentação/estatística; o comportamento é o mesmo dos demais
-        não-rotulados.
-    descartar_nao_rotulados : bool
-        Se False, mantém os NaN (o chamador decide o que fazer). Se True,
-        eles permanecem como NaN e serão removidos adiante.
+    alvo : str | None
+        Coluna de `df` usada como rótulo. Se None, usa `ALVO` (config).
+    positivos : iterable de float | None
+        Códigos que contam como positivo. Se None, lê do YAML.
+    negativos : iterable de float | None
+        Códigos que contam como negativo. Se None, lê do YAML.
 
     Retorna
     -------
     pd.Series dtype float64 (usa NaN para indefinidos).
     """
-    positivos_set = {float(v) for v in positivos}
-    ignorados_set = {float(v) for v in ignorados}
+    alvo = alvo if alvo is not None else ALVO
 
-    if positivos_set & {1.0}:
-        raise ValueError("`positivos` não pode conter 1.0 (reservado para 'cura').")
+    positivos_set = {
+        float(v) for v in (positivos if positivos is not None else _alvo_cfg_positivos())
+    }
+    negativos_set = {
+        float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
+    }
+
+    if positivos_set & negativos_set:
+        raise ValueError(
+            "`positivos` e `negativos` não podem se sobrepor: "
+            f"{sorted(positivos_set & negativos_set)}"
+        )
+    if not positivos_set:
+        raise ValueError("`target.positivos` está vazio na config.")
+    if not negativos_set:
+        raise ValueError("`target.negativos` está vazio na config.")
 
     valores = df[alvo].astype("float64")
 
     y = pd.Series(float("nan"), index=df.index, dtype="float64")
-    y[valores == 1.0] = 0
+    y[valores.isin(negativos_set)] = 0
     y[valores.isin(positivos_set)] = 1
-
-    # 3.0, 9.0, NaN, ... continuam NaN por construção — nada a fazer aqui.
-    # `ignorados_set` é mantido só para eventuais relatórios/asserts.
-    _ = ignorados_set  # noqa: F841 (documenta a intenção)
-
-    if not descartar_nao_rotulados:
-        # Mantém o NaN explícito — útil se o chamador quiser inspecionar.
-        pass
 
     return y
 
@@ -151,36 +152,6 @@ def filtrar_rotulos_validos(
     X_ok = X.loc[mascara].reset_index(drop=True)
     y_ok = y.loc[mascara].astype("int8").reset_index(drop=True)
     return X_ok, y_ok
-
-
-# ---------------------------------------------------------------------------
-# Split temporal
-# ---------------------------------------------------------------------------
-
-def split_temporal(
-    df: pd.DataFrame,
-    coluna_tempo: str = COLUNA_TEMPO,
-    frac_treino: float = 0.8,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    DEPRECATED. Use `src.evaluation.temporal.split_temporal_3way`
-    (ou `TemporalSplit`) — que respeita as frações do `supervised.yaml`.
-
-    Mantida apenas para compatibilidade retroativa. Retorna (treino, teste)
-    juntando validação + holdout no segundo bloco.
-    """
-    import warnings
-    warnings.warn(
-        "src.models.pipeline.split_temporal está deprecated. "
-        "Use src.evaluation.temporal.split_temporal_3way.",
-        DeprecationWarning, stacklevel=2,
-    )
-    from src.evaluation.temporal import split_temporal_3way
-    tr, va, ho = split_temporal_3way(
-        df, coluna_tempo=coluna_tempo,
-        frac_treino=frac_treino, frac_validacao=(1 - frac_treino) / 2,
-    )
-    return tr, pd.concat([va, ho], ignore_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +177,7 @@ def random_state() -> int:
     """Seed canônica do projeto (vem de `config.SEED`)."""
     return int(C.SEED)
 
+
 # ---------------------------------------------------------------------------
 # Pipeline completo (pré-processamento + classificador opcional)
 # ---------------------------------------------------------------------------
@@ -216,6 +188,7 @@ def build_pipeline(
     *,
     classifier: object | None = None,
     features: Iterable[str] | None = None,
+    strict: bool = True,
 ) -> Pipeline:
     """
     Constrói o Pipeline sklearn.
@@ -223,25 +196,16 @@ def build_pipeline(
     - Se `classifier` for None, devolve só o pré-processamento (útil no C2,
       que só inspeciona o pipeline).
     - Se `classifier` for passado (C3+), anexa como etapa final.
-    - `features`: se None, usa FEATURES do módulo. Se X for passado e
-      `features` for None, faz interseção com as colunas de X (evita
-      KeyError por colunas ausentes).
+    - `features`: se None, usa `FEATURES` do módulo (que vem do YAML).
+    - `strict`: se True (default), levanta `KeyError` quando alguma feature
+      configurada estiver ausente em `X`. Se False, emite warning e segue
+      apenas com as features presentes.
 
-    As listas numéricas/categóricas vêm do supervised.yaml quando
-    disponível; caso contrário, dos defaults do módulo.
+    As listas numéricas/categóricas vêm do `supervised.yaml`; se `X` for
+    passado, é feita uma verificação de presença das colunas.
     """
-    # Tenta ler do YAML (fonte única); cai nos defaults se indisponível.
-    try:
-        from src.utils import config as C
-        num = list(C.cfg("features", "numericas") or FEATURES_NUMERICAS)
-        cat = list(C.cfg("features", "categoricas") or FEATURES_CATEGORICAS)
-        final = C.cfg("features", "final")
-        if final:
-            fs = set(final)
-            num = [c for c in num if c in fs]
-            cat = [c for c in cat if c in fs]
-    except Exception:
-        num, cat = FEATURES_NUMERICAS, FEATURES_CATEGORICAS
+    num = list(FEATURES_NUMERICAS)
+    cat = list(FEATURES_CATEGORICAS)
 
     if features is not None:
         fs = set(features)
@@ -249,8 +213,18 @@ def build_pipeline(
         cat = [c for c in cat if c in fs]
 
     if X is not None:
-        num = [c for c in num if c in X.columns]
-        cat = [c for c in cat if c in X.columns]
+        ausentes = sorted((set(num) | set(cat)) - set(X.columns))
+        if ausentes:
+            msg = (
+                f"Features configuradas ausentes em X: {ausentes}. "
+                "Verifique `features` no supervised.yaml ou o DataFrame "
+                "de entrada."
+            )
+            if strict:
+                raise KeyError(msg)
+            logger.warning(msg)
+            num = [c for c in num if c in X.columns]
+            cat = [c for c in cat if c in X.columns]
 
     pre = build_preprocessor(numericas=num, categoricas=cat)
 

@@ -1,6 +1,21 @@
 """
-Calibração de probabilidades e escolha de limiar.
-...
+Calibração de probabilidades e escolha de limiar de decisão.
+
+Este módulo concentra as operações que vivem na fronteira entre modelo e
+decisão operacional:
+
+- `calibrar`: envolve um `Pipeline` **já ajustado** em
+  `CalibratedClassifierCV` (via `FrozenEstimator`), ajustando o calibrador
+  em uma base separada (`X_cal`, `y_cal`) — nunca no mesmo conjunto usado
+  para treinar o modelo base.
+
+- `escolher_limiar`: varre uma grade de limiares, reporta a tabela completa
+  de métricas (f1, precision, recall, accuracy) e devolve o limiar ótimo
+  segundo a métrica escolhida, opcionalmente sujeito a uma precisão mínima.
+
+Funções de diagnóstico e agregação de métricas vivem em `src.evaluation`
+(fonte única). `curva_confiabilidade` e `metricas_completas` são
+reexportadas aqui apenas por compatibilidade — não há implementação local.
 """
 
 from __future__ import annotations
@@ -19,6 +34,19 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# Reexportados de `src.evaluation` — não reimplementar aqui.
+from src.evaluation.calibration import curva_confiabilidade
+from src.evaluation.metrics import metricas_completas
+
+__all__ = [
+    "Metrica",
+    "calibrar",
+    "escolher_limiar",
+    # reexports
+    "curva_confiabilidade",
+    "metricas_completas",
+]
+
 
 # Conjunto fechado de métricas suportadas em `escolher_limiar`.
 Metrica = Literal["f1", "precision", "recall", "accuracy"]
@@ -34,86 +62,45 @@ def calibrar(
     y_cal: pd.Series,
     *,
     method: str = "isotonic",
-    cv: int | str | None = None,
 ):
     """
-    Envolve um `Pipeline` JÁ AJUSTADO em `CalibratedClassifierCV`.
+    Envolve um `Pipeline` **já ajustado** em `CalibratedClassifierCV`.
 
-    Compatível com scikit-learn < 1.6 (usa `cv="prefit"`) e >= 1.6
-    (usa `FrozenEstimator`).
+    O pipeline base é congelado com `FrozenEstimator`, de modo que o
+    calibrador aprende apenas o mapeamento probabilidade → probabilidade
+    calibrada, sem re-treinar o estimador subjacente. Use uma base de
+    calibração (`X_cal`, `y_cal`) distinta da base de treino do pipeline.
+
+    Parâmetros
+    ----------
+    pipeline :
+        Estimador já ajustado (p.ex. `Pipeline` de pré-processamento +
+        classificador). Não é re-treinado.
+    X_cal, y_cal :
+        Base de calibração. Não deve ser o mesmo conjunto usado no fit do
+        `pipeline`, sob pena de o calibrador herdar o overfit do modelo.
+    method : {"isotonic", "sigmoid"}
+        Método de calibração. `"isotonic"` é não-paramétrico e requer mais
+        dados; `"sigmoid"` (Platt) é paramétrico e mais estável em amostras
+        pequenas.
+
+    Retorno
+    -------
+    `CalibratedClassifierCV` já ajustado, pronto para `predict_proba`.
+
+    Requer scikit-learn >= 1.6 (`sklearn.frozen.FrozenEstimator`).
     """
     if method not in ("isotonic", "sigmoid"):
         raise ValueError(f"method inválido: {method!r}")
 
-    if cv is None or cv == "prefit":
-        try:
-            # scikit-learn >= 1.6
-            from sklearn.frozen import FrozenEstimator  # type: ignore
+    from sklearn.frozen import FrozenEstimator  # sklearn >= 1.6
 
-            modelo = CalibratedClassifierCV(
-                estimator=FrozenEstimator(pipeline),
-                method=method,
-            )
-        except ImportError:
-            # scikit-learn < 1.6
-            modelo = CalibratedClassifierCV(
-                estimator=pipeline,
-                method=method,
-                cv="prefit",
-            )
-    else:
-        modelo = CalibratedClassifierCV(
-            estimator=pipeline,
-            method=method,
-            cv=cv,
-        )
-
+    modelo = CalibratedClassifierCV(
+        estimator=FrozenEstimator(pipeline),
+        method=method,
+    )
     modelo.fit(X_cal, y_cal)
     return modelo
-
-
-# ---------------------------------------------------------------------------
-# Curva de confiabilidade
-# ---------------------------------------------------------------------------
-
-def curva_confiabilidade(
-    y_true: pd.Series | np.ndarray,
-    y_prob: pd.Series | np.ndarray,
-    n_bins: int = 10,
-) -> pd.DataFrame:
-    """
-    Dados para o reliability diagram.
-
-    Bins meio-abertos à esquerda: `[0, 1/n], [1/n, 2/n), ..., [(n-1)/n, 1]`.
-    """
-    y_true = np.asarray(y_true).ravel()
-    y_prob = np.asarray(y_prob).ravel()
-
-    if not np.all((y_prob >= 0) & (y_prob <= 1)):
-        raise ValueError("y_prob deve estar em [0, 1].")
-
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    # right=False → bins são [bins[i], bins[i+1]) — último recebe o 1.0 via clip.
-    idx = np.clip(np.digitize(y_prob, bins[1:-1], right=False), 0, n_bins - 1)
-
-    linhas = []
-    for b in range(n_bins):
-        mascara = idx == b
-        n = int(mascara.sum())
-        if n == 0:
-            linhas.append({
-                "bin_centro":    (bins[b] + bins[b + 1]) / 2,
-                "freq_positiva": np.nan,
-                "n":             0,
-            })
-        else:
-            linhas.append({
-                "bin_centro":    float(y_prob[mascara].mean()),
-                "freq_positiva": float(y_true[mascara].mean()),
-                "n":             n,
-            })
-
-    return pd.DataFrame(linhas)
 
 
 # ---------------------------------------------------------------------------
@@ -138,6 +125,32 @@ def escolher_limiar(
     n_limiares: int = 101,
     min_precision: float | None = None,
 ) -> dict[str, Any]:
+    """
+    Varre uma grade de limiares e devolve o ótimo segundo `metrica`.
+
+    Parâmetros
+    ----------
+    y_true, y_prob :
+        Rótulos verdadeiros (0/1) e probabilidades preditas em [0, 1].
+    metrica : {"f1", "precision", "recall", "accuracy"}
+        Métrica maximizada na escolha do limiar.
+    n_limiares : int
+        Número de limiares avaliados, linearmente espaçados em (0.01, 0.99).
+    min_precision : float | None
+        Se informado, restringe os candidatos a limiares cuja precision
+        seja ≥ `min_precision` antes de maximizar `metrica`. Se nenhum
+        candidato satisfizer, levanta `ValueError`.
+
+    Retorno
+    -------
+    dict com:
+        - `limiar`  : float — limiar ótimo.
+        - `valor`   : float — valor da métrica escolhida no ótimo.
+        - `metrica` : str   — métrica usada.
+        - `auc`     : float — ROC-AUC no conjunto avaliado.
+        - `brier`   : float — Brier score no conjunto avaliado.
+        - `tabela`  : `pd.DataFrame` — grade completa com todas as métricas.
+    """
     if metrica not in _METRICAS:
         raise ValueError(f"metrica inválida: {metrica!r}. Use {list(_METRICAS)}.")
 
@@ -182,29 +195,4 @@ def escolher_limiar(
         "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
         "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
         "tabela":  tabela,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Conveniência
-# ---------------------------------------------------------------------------
-
-def metricas_completas(
-    y_true: pd.Series | np.ndarray,
-    y_prob: pd.Series | np.ndarray,
-    limiar: float = 0.5,
-) -> dict[str, float]:
-    y_true_arr = np.asarray(y_true).ravel().astype(int)
-    y_prob_arr = np.asarray(y_prob).ravel()
-    pred = (y_prob_arr >= limiar).astype(int)
-
-    return {
-        "auc":       float(roc_auc_score(y_true_arr, y_prob_arr)),
-        "brier":     float(brier_score_loss(y_true_arr, y_prob_arr)),
-        "f1":        float(f1_score(y_true_arr, pred, zero_division=0)),
-        "precision": float(precision_score(y_true_arr, pred, zero_division=0)),
-        "recall":    float(recall_score(y_true_arr, pred, zero_division=0)),
-        "accuracy":  float(accuracy_score(y_true_arr, pred)),
-        "limiar":    float(limiar),
-        "n":         int(len(y_true_arr)),
     }

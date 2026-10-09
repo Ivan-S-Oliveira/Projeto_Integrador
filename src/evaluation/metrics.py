@@ -25,6 +25,20 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+__all__ = [
+    "ArrayLike",
+    "auc",
+    "average_precision",
+    "brier",
+    "f1",
+    "precision",
+    "recall",
+    "accuracy",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "ic_bootstrap",
+]
+
 
 # ---------------------------------------------------------------------------
 # Tipos auxiliares
@@ -107,14 +121,6 @@ def metricas_completas(
 # Varredura de limiar
 # ---------------------------------------------------------------------------
 
-_METRICAS: dict[str, Callable[[np.ndarray, np.ndarray], float]] = {
-    "f1":        lambda y, p: float(f1_score(y, p, zero_division=0)),
-    "precision": lambda y, p: float(precision_score(y, p, zero_division=0)),
-    "recall":    lambda y, p: float(recall_score(y, p, zero_division=0)),
-    "accuracy":  lambda y, p: float(accuracy_score(y, p)),
-}
-
-
 def metricas_por_limiar(
     y_true: ArrayLike,
     y_prob: ArrayLike,
@@ -124,6 +130,9 @@ def metricas_por_limiar(
     Tabela com métricas para cada limiar em [0.01, 0.99].
 
     Colunas: limiar, f1, precision, recall, accuracy.
+
+    Usa as métricas deste próprio módulo (`f1`, `precision`, `recall`,
+    `accuracy`) — não há tabela paralela de lambdas.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
@@ -133,10 +142,10 @@ def metricas_por_limiar(
         y_pred = (p >= float(th)).astype(int)
         linhas.append({
             "limiar":    float(th),
-            "f1":        _METRICAS["f1"](y, y_pred),
-            "precision": _METRICAS["precision"](y, y_pred),
-            "recall":    _METRICAS["recall"](y, y_pred),
-            "accuracy":  _METRICAS["accuracy"](y, y_pred),
+            "f1":        f1(y, y_pred),
+            "precision": precision(y, y_pred),
+            "recall":    recall(y, y_pred),
+            "accuracy":  accuracy(y, y_pred),
         })
 
     return pd.DataFrame(linhas)
@@ -186,27 +195,3 @@ def ic_bootstrap(
     inf = float(np.quantile(valores, alpha / 2))
     sup = float(np.quantile(valores, 1 - alpha / 2))
     return est, inf, sup
-
-def evaluate_classifier(
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-    y_proba: ArrayLike,
-) -> dict[str, float]:
-    """
-    Wrapper de conveniência que aceita y_pred já calculado.
-    Complementa `metricas_completas` (que deriva y_pred do limiar).
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_proba)
-    yp = _to_int_labels(y_pred)
-
-    return {
-        "auc":       auc(y, p),
-        "ap":        average_precision(y, p),
-        "brier":     brier(y, p),
-        "f1":        f1(y, yp),
-        "precision": precision(y, yp),
-        "recall":    recall(y, yp),
-        "accuracy":  accuracy(y, yp),
-        "n":         float(len(y)),
-    }

@@ -10,26 +10,30 @@ Regras:
 - Não há dependência de Colab, Kaggle ou qualquer ambiente específico.
 - Em CI/CD ou produção, defina as variáveis diretamente no ambiente;
   o .env é opcional e serve apenas para desenvolvimento local.
+
+Nota
+----
+Os caminhos de diretório (`ROOT`, `DATA`, `RAW`, `PROCESSED`, `TREINO`,
+`FIGURES`) são **aliases** de `src.utils.config` — não são redefinidos
+aqui. `config.py` continua sendo a fonte única da verdade.
 """
 
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
+from src.utils import config as C
 
 # ---------------------------------------------------------------------------
-# Raiz do projeto: <ROOT>/src/utils/env.py → parents[2] = <ROOT>
+# Aliases de conveniência — apontam para `config.py`, sem duplicar caminhos
 # ---------------------------------------------------------------------------
-ROOT: Path = Path(__file__).resolve().parents[2]
-
-# Diretórios padrão do projeto
-DATA      = ROOT / "data"
-RAW       = DATA / "raw"
-PROCESSED = DATA / "processed"
-TREINO    = DATA / "treino"
-FIGURES   = ROOT / "reports" / "figures"
+ROOT      = C.ROOT_DIR
+DATA      = C.DATA_DIR
+RAW       = C.RAW_DIR
+PROCESSED = C.PROCESSED_DIR
+TREINO    = C.TREINO_DIR
+FIGURES   = C.FIGURES_DIR
 
 
 # ---------------------------------------------------------------------------
@@ -39,11 +43,9 @@ def garantir_diretorios() -> None:
     """
     Cria todos os diretórios padrão do projeto, se ainda não existirem.
 
-    Importa de `config.py` (fonte única da verdade) para evitar
-    duplicação de caminhos. Import local para evitar ciclo.
+    Percorre as constantes de `config.py` (fonte única da verdade) — nenhum
+    caminho é redefinido aqui.
     """
-    from src.utils import config as C
-
     for p in (
         C.DATA_DIR,
         C.RAW_DIR,

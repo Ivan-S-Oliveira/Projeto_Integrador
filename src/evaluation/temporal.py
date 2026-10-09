@@ -18,6 +18,7 @@ de "espionar" o holdout durante a fase de modelagem.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 import pandas as pd
 
@@ -31,6 +32,8 @@ def split_temporal_3way(
     coluna_tempo: str,
     frac_treino: float = 0.7,
     frac_validacao: float = 0.15,
+    *,
+    on_nat: Literal["raise", "drop"] = "raise",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Split temporal em treino / validação / holdout, **sem embaralhar**.
@@ -43,6 +46,10 @@ def split_temporal_3way(
         Coluna usada para ordenar (ex.: "dt_notific").
     frac_treino, frac_validacao : float
         Frações do total. `frac_holdout = 1 - frac_treino - frac_validacao`.
+    on_nat : {"raise", "drop"}
+        Como tratar `NaT`/nulos em `coluna_tempo`:
+          - "raise" (default): levanta `ValueError` — falha explícita.
+          - "drop": remove as linhas com data inválida antes de ordenar.
 
     Retorno
     -------
@@ -65,6 +72,29 @@ def split_temporal_3way(
             "frac_treino + frac_validacao deve ser < 1 "
             "(o restante vira holdout)."
         )
+
+    # --- NaT: sem data não há ordenação temporal possível ---
+    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
+        raise TypeError(
+            f"Coluna temporal {coluna_tempo!r} não é datetime "
+            f"(dtype atual: {df[coluna_tempo].dtype}). "
+            "Converta com pd.to_datetime antes do split."
+        )
+
+    nat_mask = df[coluna_tempo].isna()
+    n_nat = int(nat_mask.sum())
+    if n_nat:
+        if on_nat == "raise":
+            raise ValueError(
+                f"{n_nat} linha(s) com data inválida (NaT) em "
+                f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
+            )
+        elif on_nat == "drop":
+            df = df.loc[~nat_mask].reset_index(drop=True)
+        else:
+            raise ValueError(
+                f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
+            )
 
     ordenado = (
         df.sort_values(coluna_tempo, kind="mergesort")
@@ -103,7 +133,7 @@ class TemporalSplit:
         modelo = ...
         modelo.fit(tr[FEATURES], y_tr)
 
-        # Ao terminar a seleção:
+        # Ao terminar a seleção (exige gate G7_limiar aprovado):
         split.concluir_selecao()
 
         # Fase 2 — avaliação final, UMA única vez
@@ -120,6 +150,7 @@ class TemporalSplit:
     coluna_tempo: str
     frac_treino: float = 0.7
     frac_validacao: float = 0.15
+    on_nat: Literal["raise", "drop"] = "raise"
 
     _treino: pd.DataFrame = field(init=False, repr=False)
     _validacao: pd.DataFrame = field(init=False, repr=False)
@@ -132,6 +163,7 @@ class TemporalSplit:
             coluna_tempo=self.coluna_tempo,
             frac_treino=self.frac_treino,
             frac_validacao=self.frac_validacao,
+            on_nat=self.on_nat,
         )
         self._treino = tr
         self._validacao = va
@@ -166,9 +198,26 @@ class TemporalSplit:
         """
         Marca a fase de seleção como encerrada e libera o holdout.
 
+        Só é permitido quando o gate `G7_limiar` estiver com
+        `status: aprovado` em `configs/supervised.yaml`. Caso contrário,
+        levanta `RuntimeError`.
+
         Deve ser chamada **uma única vez**, depois que o modelo final foi
         escolhido, o limiar foi definido e a calibração foi ajustada.
         """
+        from src.utils import config as C
+
+        gate = C.cfg("gates", "G7_limiar") or {}
+        status = (gate or {}).get("status")
+        if status != "aprovado":
+            raise RuntimeError(
+                "Holdout bloqueado: gate `G7_limiar` ainda não aprovado "
+                f"(status atual: {status!r}).\n"
+                "Feche o gate G7 (limiar operacional) em "
+                "`configs/supervised.yaml` antes de chamar "
+                "`concluir_selecao()`."
+            )
+
         self._holdout_liberado = True
 
     @property
@@ -223,60 +272,3 @@ class TemporalSplit:
             f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  "
             f"({'liberado' if self._holdout_liberado else 'bloqueado'})"
         )
-
-# ---------------------------------------------------------------------------
-# Compatibilidade com o C2 (nome histórico)
-# ---------------------------------------------------------------------------
-
-def temporal_split(
-    df: pd.DataFrame,
-    *,
-    date_column: str | None = None,
-    coluna_tempo: str | None = None,
-    fracao: dict | None = None,
-    frac_treino: float | None = None,
-    frac_validacao: float | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Compat: aceita tanto `date_column` (nome usado no C2) quanto
-    `coluna_tempo` (nome usado no resto do projeto).
-
-    Se `fracao` for passado ({'treino': .., 'validacao': ..}), sobrescreve
-    `frac_treino` / `frac_validacao`. Se nenhum for passado, lê do
-    `supervised.yaml`.
-
-    Retorna (treino, validacao, holdout).
-    """
-    from src.utils import config as C
-
-    col = coluna_tempo or date_column or C.cfg("coluna_tempo") or "dt_notific"
-
-    # --- resolve frações ---
-    if fracao is None:
-        fracao = C.cfg("temporal", "fracao") or {"treino": 0.70, "validacao": 0.15}
-
-    if not isinstance(fracao, dict) or "treino" not in fracao or "validacao" not in fracao:
-        raise ValueError(
-            "Frações inválidas: esperado dict com chaves 'treino' e 'validacao', "
-            f"recebido {fracao!r}."
-        )
-
-    ft = float(frac_treino) if frac_treino is not None else float(fracao["treino"])
-    fv = float(frac_validacao) if frac_validacao is not None else float(fracao["validacao"])
-
-    if not (0 < ft < 1):
-        raise ValueError(f"frac_treino deve estar em (0, 1); recebido {ft!r}.")
-    if not (0 < fv < 1):
-        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {fv!r}.")
-    if ft + fv >= 1:
-        raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 "
-            "(o restante vira holdout)."
-        )
-
-    return split_temporal_3way(
-        df,
-        coluna_tempo=col,
-        frac_treino=ft,
-        frac_validacao=fv,
-    )

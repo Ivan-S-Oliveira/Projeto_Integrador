@@ -1,136 +1,133 @@
-from pathlib import Path
+"""
+Coleta do Parquet bruto de SRAG — fonte upstream (OpenDataSUS).
+
+Diferente de `src.utils.storage`, que serve o Parquet **processado** a
+partir de GitHub Release, este módulo baixa o arquivo **bruto** direto
+do repositório do Ministério da Saúde e o coloca em `data/raw/`,
+preservando o nome original (ex.: `INFLUD24-16-12-2024.parquet`).
+
+O trabalho pesado de rede (retry, verificação de magic bytes, sidecar
+`.sha256`) fica em `src.utils.storage.download_file` — fonte única para
+download HTTP de Parquet no projeto.
+
+Também expõe `csv_to_parquet`, para converter CSVs grandes em Parquet
+em chunks (útil quando a fonte upstream publica CSV).
+"""
+
+from __future__ import annotations
+
 import time
+from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import requests
 
 from src.utils import config as C
+from src.utils.storage import PARQUET_MAGIC, download_file, sha256_path
 
 
-# ---------------------------------------------------------------------------
-# URL do arquivo Parquet do SRAG 2019–2026 (banco vivo)
-# ---------------------------------------------------------------------------
-# O link exato muda periodicamente (novas atualizações semanais).
-# Consulte a página do conjunto de dados para obter a URL atualizada:
-#   https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026
-#
-# Padrão observado:
-#   https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2023/INFLUD23-16-10-2023.parquet
-# ---------------------------------------------------------------------------
-SRAG_PARQUET_URL = getattr(
-    C,
-    "SRAG_PARQUET_URL",
-    "https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/2023/INFLUD23-16-10-2023.parquet"
-)
-
-HTTP_TIMEOUT = getattr(C, "HTTP_TIMEOUT", 180)
-HTTP_TENTATIVAS = getattr(C, "HTTP_TENTATIVAS", 3)
-
-
-def baixar_arquivo(
-    url: str,
-    destino: str | Path,
-    timeout: int = HTTP_TIMEOUT,
-    tentativas: int = HTTP_TENTATIVAS,
+def baixar_srag_bruto(
+    url: str | None = None,
+    *,
+    force: bool = False,
 ) -> Path:
-    destino = Path(destino)
-    destino.parent.mkdir(parents=True, exist_ok=True)
+    """
+    Baixa o Parquet bruto de SRAG para `data/raw/` e devolve o caminho.
 
-    ultimo_erro: Exception | None = None
+    Diferente de `src.utils.storage.get_parquet`, que serve o Parquet
+    processado/versionado via GitHub Release, este download preserva o
+    arquivo original do OpenDataSUS em `data/raw/<nome-original>`.
 
-    for tentativa in range(1, tentativas + 1):
-        try:
-            print(f"[baixar_arquivo] tentativa {tentativa}/{tentativas} → {url}")
+    Parâmetros
+    ----------
+    url : str | None
+        URL do Parquet. Se None, usa `C.srag_parquet_url()` — default do
+        OpenDataSUS, sobrescrevível pela variável de ambiente
+        `SRAG_PARQUET_URL`.
+    force : bool
+        Se True, rebaixa mesmo que o arquivo exista localmente e
+        descarta o sidecar `.sha256` antigo.
 
-            with requests.get(url, stream=True, timeout=timeout) as r:
-                r.raise_for_status()
+    Retorno
+    -------
+    Path
+        Caminho do arquivo bruto baixado.
 
-                total = int(r.headers.get("content-length", 0))
-                baixado = 0
-                inicio = time.time()
+    Efeitos colaterais
+    ------------------
+    - Arquivo gravado em `data/raw/<nome-do-arquivo>`.
+    - Sidecar `<arquivo>.sha256` com o hash do conteúdo.
+    - SHA-256 e tamanho impressos no stdout.
+    """
+    url = url or C.srag_parquet_url()
+    nome = url.split("/")[-1]
 
-                with open(destino, "wb") as f:
-                    for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1 MB
-                        if chunk:
-                            f.write(chunk)
-                            baixado += len(chunk)
+    C.RAW_DIR.mkdir(parents=True, exist_ok=True)
+    destino = C.RAW_DIR / nome
 
-                            if total > 0:
-                                percentual = baixado / total * 100
-                                tempo = time.time() - inicio
-                                print(
-                                    f"\r{percentual:5.1f}% | "
-                                    f"{baixado / 1024**2:,.1f} MB | "
-                                    f"{tempo:.0f}s",
-                                    end="",
-                                    flush=True,
-                                )
+    if destino.exists() and not force:
+        digest_antigo = None
+        sidecar = sha256_path(destino)
+        if sidecar.exists():
+            digest_antigo = sidecar.read_text(encoding="utf-8").split()[0]
+        print(
+            f"[baixar_srag_bruto] reutilizando {destino}"
+            + (f"  sha256={digest_antigo}" if digest_antigo else "")
+        )
+        return destino
 
-            print()  # nova linha após a barra de progresso
-            return destino
+    if force and destino.exists():
+        destino.unlink()
+        sha256_path(destino).unlink(missing_ok=True)
 
-        except requests.RequestException as e:
-            ultimo_erro = e
-            print(f"[baixar_arquivo] tentativa {tentativa}/{tentativas} falhou: {e}")
-            time.sleep(2 * tentativa)
-
-    raise RuntimeError(
-        f"Falha ao baixar {url} após {tentativas} tentativas"
-    ) from ultimo_erro
-
-
-def coletar_amostra(
-    n_paginas: int | None = None,   # mantido por compatibilidade, não é mais usado
-    url: str = SRAG_PARQUET_URL,
-    page_size: int | None = None,   # mantido por compatibilidade, não é mais usado
-) -> pd.DataFrame:
     inicio = time.time()
-
-    # ------------------------------------------------------------------
-    # 1) Define diretório de destino
-    # ------------------------------------------------------------------
-    raw_dir = (
-        Path.cwd().parent / "data" / "raw"
-        if Path.cwd().name == "notebooks"
-        else Path.cwd() / "data" / "raw"
+    digest = download_file(
+        url,
+        destino,
+        expected_magic=PARQUET_MAGIC,
     )
-    raw_dir.mkdir(parents=True, exist_ok=True)
+    duracao = time.time() - inicio
 
-    nome_arquivo = url.split("/")[-1]  # ex: INFLUD23-16-10-2023.parquet
-    destino = raw_dir / nome_arquivo
-
-    # ------------------------------------------------------------------
-    # 2) Baixa o arquivo (se ainda não existir)
-    # ------------------------------------------------------------------
-    if destino.exists():
-        print(f"[coletar_amostra] arquivo já existe em {destino}, reutilizando.")
-    else:
-        baixar_arquivo(url, destino)
-
-    # ------------------------------------------------------------------
-    # 3) Lê o Parquet e retorna DataFrame
-    # ------------------------------------------------------------------
-    print(f"[coletar_amostra] lendo {destino} …")
-    df = pd.read_parquet(destino)
-
-    tempo = time.time() - inicio
     print(
-        f"[coletar_amostra] {len(df):,} linhas em {tempo:.1f}s "
-        f"({df.shape[1]} colunas)"
+        f"[baixar_srag_bruto] {destino.name} "
+        f"({destino.stat().st_size / 1e6:.1f} MB) em {duracao:.0f}s"
     )
-    return df
+    print(f"[baixar_srag_bruto] SHA-256: {digest}")
+    return destino
 
 
-# ---------------------------------------------------------------------------
-# csv_to_parquet permanece inalterado (útil para outros fluxos)
-# ---------------------------------------------------------------------------
 def csv_to_parquet(
     csv_path: str | Path,
     out_path: str | Path,
     chunksize: int = 500_000,
 ) -> Path:
+    """
+    Converte um CSV grande em Parquet em chunks, com compressão zstd.
+
+    Lê o CSV em pedaços de `chunksize` linhas, converte cada chunk para
+    string e escreve incrementalmente com `pyarrow.parquet.ParquetWriter`
+    — o arquivo inteiro nunca é carregado de uma vez.
+
+    Parâmetros
+    ----------
+    csv_path : str | Path
+        CSV de origem. Precisa existir.
+    out_path : str | Path
+        Parquet de destino. O diretório pai é criado se necessário.
+    chunksize : int
+        Linhas por chunk.
+
+    Retorno
+    -------
+    Path
+        Caminho do Parquet gerado.
+
+    Levanta
+    ------
+    FileNotFoundError
+        Se `csv_path` não existir.
+    """
     csv_path = Path(csv_path)
     out_path = Path(out_path)
 
@@ -140,8 +137,7 @@ def csv_to_parquet(
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     size = csv_path.stat().st_size
-
-    writer = None
+    writer: pq.ParquetWriter | None = None
     total = 0
     inicio = time.time()
 
@@ -164,7 +160,7 @@ def csv_to_parquet(
                     writer = pq.ParquetWriter(
                         out_path,
                         tabela.schema,
-                        compression="zstd",
+                        compression=C.PARQUET_COMPRESSION,
                     )
 
                 writer.write_table(tabela)

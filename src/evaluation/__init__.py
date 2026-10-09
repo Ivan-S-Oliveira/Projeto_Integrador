@@ -5,6 +5,7 @@ from src.evaluation.temporal import (
     split_temporal_3way,
 )
 from src.evaluation.metrics import (
+    average_precision,
     auc,
     brier,
     f1,
@@ -21,6 +22,10 @@ from src.evaluation.calibration import (
     mce,
     brier_decomposicao,
 )
+from src.evaluation.leakage import (
+    LeakageError,
+    check_leakage,
+)
 from src.evaluation.errors import (
     matriz_confusao,
     extrair_falsos_positivos,
@@ -30,10 +35,16 @@ from src.evaluation.errors import (
 )
 
 __all__ = [
+    # temporal
     "TemporalSplit", "split_temporal_3way",
-    "auc", "brier", "f1", "precision", "recall", "accuracy",
+    # métricas
+    "average_precision", "auc", "brier", "f1", "precision", "recall", "accuracy",
     "metricas_completas", "metricas_por_limiar", "ic_bootstrap",
+    # calibração
     "curva_confiabilidade", "ece", "mce", "brier_decomposicao",
+    # leakage
+    "LeakageError", "check_leakage",
+    # análise de erros
     "matriz_confusao", "extrair_falsos_positivos", "extrair_falsos_negativos",
     "metricas_por_grupo", "top_erros",
 ]

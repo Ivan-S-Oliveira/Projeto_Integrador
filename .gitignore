@@ -37,6 +37,7 @@ data/treino/*
 !data/treino/.gitkeep
 *.parquet
 
+
 # =========================================================
 # Modelos treinados
 # =========================================================
@@ -60,7 +61,6 @@ models/*.pth
 
 reports/figures/*
 reports/resultados/*
-
 
 !reports/figures/.gitkeep
 !reports/resultados/.gitkeep
@@ -93,7 +93,11 @@ Thumbs.db
 # Configurações específicas de cada computador
 configs/paths.local.json
 
+
+# =========================================================
 # Artefatos gerados pelas execuções
+# =========================================================
+
 outputs/*
 !outputs/.gitkeep
 !outputs/runs/
@@ -106,5 +110,12 @@ outputs/predictions/*
 !outputs/tables/.gitkeep
 !outputs/predictions/.gitkeep
 
-# Inventarios locais usados para auditoria e documentacao
+
+# =========================================================
+# Inventários locais de auditoria e contexto (gerados por
+# `tools/collect_repo_context.py` e
+# `tools/update_project_reference.py`)
+# =========================================================
+
 /docs/ai_context/
+/docs/PROJECT_COMPLETE_REFERENCE.md

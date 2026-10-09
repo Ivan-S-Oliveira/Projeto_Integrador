@@ -8,6 +8,10 @@ Ferramentas
 - `extrair_falsos_negativos`  → subconjunto do df com FN
 - `metricas_por_grupo`        → métricas por categoria de uma coluna
 - `top_erros`                 → os N piores erros por confiança
+
+A checagem de leakage vive em `src.evaluation.leakage` — importe de lá:
+
+    from src.evaluation.leakage import LeakageError, check_leakage
 """
 
 from __future__ import annotations
@@ -25,6 +29,16 @@ from src.evaluation.metrics import (
     precision,
     recall,
 )
+
+__all__ = [
+    "ArrayLike",
+    "CriterioTop",
+    "matriz_confusao",
+    "extrair_falsos_positivos",
+    "extrair_falsos_negativos",
+    "metricas_por_grupo",
+    "top_erros",
+]
 
 ArrayLike = Union[np.ndarray, pd.Series, list]
 
@@ -109,7 +123,7 @@ def metricas_por_grupo(
 
     Ignora grupos com menos de `min_n` amostras (evita métricas instáveis).
 
-    Colunas: grupo, n, positivos, auc, f1, precision, recall.
+    Colunas: grupo, n, taxa_positivos, auc, f1, precision, recall.
     """
     if coluna_grupo not in df.columns:
         raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
@@ -144,13 +158,13 @@ def metricas_por_grupo(
             auc_g = auc(y_g, p_g)
 
         linhas.append({
-            "grupo":     str(g),
-            "n":         float(n),
-            "positivos": float(y_g.mean()),
-            "auc":       auc_g,
-            "f1":        f1(y_g, y_pred),
-            "precision": precision(y_g, y_pred),
-            "recall":    recall(y_g, y_pred),
+            "grupo":          str(g),
+            "n":              float(n),
+            "taxa_positivos": float(y_g.mean()),
+            "auc":            auc_g,
+            "f1":             f1(y_g, y_pred),
+            "precision":      precision(y_g, y_pred),
+            "recall":         recall(y_g, y_pred),
         })
 
     return pd.DataFrame(linhas).sort_values("n", ascending=False).reset_index(drop=True)
@@ -212,51 +226,3 @@ def top_erros(
         )
 
     return sel.head(n).reset_index(drop=True)
-
-# ---------------------------------------------------------------------------
-# Verificação de leakage
-# ---------------------------------------------------------------------------
-
-class LeakageError(RuntimeError):
-    """Levantado quando uma coluna proibida aparece em X."""
-
-
-def check_leakage(
-    X: pd.DataFrame,
-    *,
-    forbidden_columns: list[str] | None = None,
-    target_column: str | None = None,
-) -> None:
-    """
-    Garante que X não contém colunas que vazam o alvo.
-
-    - `forbidden_columns`: se None, lê `features.proibidas` do supervised.yaml.
-    - `target_column`: se None, lê `target.coluna`.
-    - Levanta LeakageError listando as colunas problemáticas.
-
-    Se `forbidden_columns` for passado como lista vazia, a checagem de
-    proibidas é ignorada (só o target é verificado) — evita surpresa.
-    """
-    from src.utils import config as C
-
-    if forbidden_columns is None:
-        forbidden_columns = list(C.cfg("features", "proibidas") or [])
-    if target_column is None:
-        target_column = C.cfg("target", "coluna")
-
-    proibidas = set(forbidden_columns)
-    if target_column:
-        proibidas.add(target_column)
-
-    encontradas = sorted(set(X.columns) & proibidas)
-    if encontradas:
-        raise LeakageError(
-            f"Leakage detectado: colunas proibidas em X → {encontradas}.\n"
-            f"Revise `features.proibidas` em supervised.yaml "
-            f"ou remova essas colunas antes de prosseguir."
-        )
-
-    print(
-        f"[check_leakage] OK — {X.shape[1]} colunas, "
-        f"nenhuma proibida presente."
-    )

@@ -14,10 +14,20 @@ from pathlib import Path
 
 OUTPUT = Path("docs/PROJECT_COMPLETE_REFERENCE.md")
 MAX_BYTES = 4_000_000
-EXCLUDED_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".ipynb_checkpoints", "data", "outputs", "models", "logs", "node_modules"}
+
+# Diretórios ignorados em QUALQUER nível da árvore (não fazem parte do produto).
+EXCLUDED_DIRS_ANYWHERE = {
+    ".git", ".venv", "venv", "__pycache__",
+    ".pytest_cache", ".ipynb_checkpoints", "node_modules",
+}
+
+# Diretórios ignorados APENAS na raiz (conteúdo local, gerado ou sensível).
+EXCLUDED_DIRS_AT_ROOT = {"data", "outputs", "models", "logs"}
+
 EXCLUDED_FILES = {".env", "paths.local.json", "pip_inspect-venv.json", OUTPUT.name}
+
 TEXT_SUFFIXES = {".py", ".pyi", ".md", ".rst", ".txt", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".json", ".json5", ".sql", ".ps1", ".sh", ".bat", ".gitignore", ".gitattributes"}
-SPECIAL_NAMES = {"README", "README.md", "LICENSE", "Makefile", "Dockerfile", "requirements.txt", "pyproject.toml", "pytest.ini"}
+SPECIAL_NAMES = {"README", "README.md", "LICENSE", "Makefile", "Dockerfile", "requirements.txt", "pyproject.toml", "pytest.ini", ".env.example"}
 LANG = {".py":"python", ".pyi":"python", ".md":"markdown", ".rst":"rst", ".yaml":"yaml", ".yml":"yaml", ".toml":"toml", ".json":"json", ".json5":"json5", ".ini":"ini", ".cfg":"ini", ".sql":"sql", ".ps1":"powershell", ".sh":"bash", ".bat":"bat"}
 ENV_RE = re.compile(r"(?:os\.getenv|os\.environ\.get|get_env|get_secret)\(\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]")
 SECRET_RE = re.compile(r"(?im)^(\s*[A-Za-z_][A-Za-z0-9_.-]*?(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[A-Za-z0-9_.-]*\s*[:=]\s*)([^\n#]+)")
@@ -32,15 +42,21 @@ CONTEXT = '''# Project Complete Reference
 
 This is an academic retrospective machine-learning project using SRAG/SIVEP-Gripe data. The operational objective is to estimate risk of death from SRAG using only information plausibly available by hospital admission. The unit of analysis is an eligible notification used as a proxy for a hospital episode, not automatically a unique person.
 
-The repository already contains reusable foundations for configuration, environment handling, Parquet access, basic preprocessing, target construction, preprocessing pipelines, baseline, logistic regression, gradient boosting, probability calibration, threshold selection, classification metrics, calibration diagnostics, error analysis, temporal validation, protected holdout access, experiment registration and automated tests.
+This section states **intent and rules**, not a verified inventory of what is implemented. The authoritative views of the current codebase are:
+
+- **Section 9 — Python API catalog**: public functions and classes actually present in tracked Python modules (generated statically via AST; project code is not imported or executed).
+- **Section 11 — Complete tracked source**: literal contents of every included file, including notebooks without outputs.
+- **`configs/supervised.yaml`**: approved or pending decisions and gates.
+
+If a capability is mentioned in this section (or in any older plan) but does not appear in section 9 or section 11, treat it as **planned**, not implemented. Absence from the catalog is meaningful evidence, not an omission of the generator.
 
 ## 2. Non-negotiable methodological rules
 
 - Academic retrospective analysis, not a clinically validated decision tool.
 - Do not make causal claims from predictive associations.
 - Prediction time is hospital admission. Later information cannot be a feature.
-- Current target contract: `evolucao == 2.0` is positive; `evolucao == 1.0` is negative; other values stay outside the primary binary target unless formally changed.
-- Never use the final holdout to choose model, hyperparameters, calibration or threshold.
+- Current target contract in `configs/supervised.yaml`: `evolucao == 2.0` is positive; `evolucao == 1.0` is negative; other values stay outside the primary binary target unless the config is formally changed and a gate is approved.
+- Never use the final holdout to choose model, hyperparameters, calibration or threshold. Access is mediated by `TemporalSplit` and gated by `gates.G7_limiar`.
 - Preserve temporal ordering. Do not silently replace temporal validation with random splitting.
 - Data, trained models, outputs, local paths, `.env` and secrets do not belong in Git.
 - Changes to cohort, target, features, split, seed, calibration, threshold or gates must update configuration, tests and documentation together.
@@ -90,7 +106,21 @@ def tracked(root: Path) -> list[Path]:
     return sorted((Path(x) for x in git(root, "ls-files").splitlines() if x.strip()), key=lambda p: p.as_posix().lower())
 
 def include(path: Path) -> bool:
-    return not any(part in EXCLUDED_DIRS for part in path.parts) and path.name not in EXCLUDED_FILES and not path.name.startswith(".env") and (path.suffix.lower() in TEXT_SUFFIXES or path.suffix.lower() == ".ipynb" or path.name in SPECIAL_NAMES)
+    parts = path.parts
+    # Diretórios ignorados em qualquer nível.
+    if any(part in EXCLUDED_DIRS_ANYWHERE for part in parts):
+        return False
+    # Diretórios locais ignorados apenas quando estão na raiz do repositório.
+    if parts and parts[0] in EXCLUDED_DIRS_AT_ROOT:
+        return False
+    # Arquivos explicitamente excluídos.
+    if path.name in EXCLUDED_FILES:
+        return False
+    # `.env` e variantes (.env.local, .env.production, ...) são sensíveis,
+    # mas `.env.example` é seguro e deve ser versionado e incluído.
+    if path.name.startswith(".env") and path.name != ".env.example":
+        return False
+    return path.suffix.lower() in TEXT_SUFFIXES or path.suffix.lower() == ".ipynb" or path.name in SPECIAL_NAMES
 
 def redact(text: str) -> tuple[str, list[str]]:
     warnings = []
@@ -176,35 +206,3 @@ def main() -> int:
 
 ```text
 {status}
-```
-
-## 7. Included file list
-
-''' + "\n".join(f"- `{p.as_posix()}`" for p in paths) + f'''
-
-## 8. Environment variables referenced
-
-{env}
-
-Only names are documented. Secret values must never appear here.
-
-## 9. Python API catalog
-
-Generated statically with Python AST. Project modules are not imported or executed. Missing docstrings are marked explicitly.
-
-''' + "\n".join(api) + f'''
-
-## 10. Skipped files
-
-{skipped_text}
-
-## 11. Complete tracked source by file
-
-Each section preserves the original file boundary. Notebook outputs are omitted.
-
-''' + "\n".join(sources)
-    atomic_write(output, document)
-    print(f"Updated: {output}"); print(f"Included: {len(paths) - len(skipped)}"); print(f"Skipped: {len(skipped)}")
-    return 0
-
-if __name__ == "__main__": raise SystemExit(main())
