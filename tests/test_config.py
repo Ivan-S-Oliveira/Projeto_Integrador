@@ -136,11 +136,62 @@ def test_repo_e_data_version_definidos():
     assert C.PARQUET_NAME.endswith(".parquet")
 
 
-def test_srag_parquet_url_nao_vazia():
-    url = C.srag_parquet_url()
-    assert isinstance(url, str)
-    assert url.strip()
-    assert url.startswith(("http://", "https://"))
+def test_srag_parquet_url_padrao(monkeypatch):
+    monkeypatch.delenv(
+        "SRAG_PARQUET_URL",
+        raising=False,
+    )
+
+    url_esperada = (
+        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
+        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
+    )
+
+    url_observada = C.srag_parquet_url()
+
+    assert isinstance(
+        url_observada,
+        str,
+    )
+
+    assert url_observada == url_esperada
+
+
+def test_srag_parquet_url_permite_sobrescrita(
+    monkeypatch,
+):
+    url_customizada = (
+        "https://example.org/dados/srag_teste.parquet"
+    )
+
+    monkeypatch.setenv(
+        "SRAG_PARQUET_URL",
+        url_customizada,
+    )
+
+    assert (
+        C.srag_parquet_url()
+        == url_customizada
+    )
+
+
+def test_srag_parquet_url_vazia_volta_ao_padrao(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "SRAG_PARQUET_URL",
+        "   ",
+    )
+
+    url_esperada = (
+        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
+        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
+    )
+
+    assert (
+        C.srag_parquet_url()
+        == url_esperada
+    )
 
 
 def test_parametros_http_razoaveis():

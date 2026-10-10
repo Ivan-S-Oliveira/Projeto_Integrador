@@ -1,0 +1,52 @@
+manifest_version: "1.0"
+
+dataset:
+  id: "srag-dados-v2"
+  versao: "dados-v2"
+  arquivo: "srag.parquet"
+  formato: "parquet"
+  caminho_relativo: "data/processed/dados-v2/srag.parquet"
+
+integridade:
+  sha256: "96ED6B9D5CEEBAAEA00659F77511112174B04BB980CB243B560C00DD2A8F316C
+  tamanho_bytes: 303573013
+  quantidade_linhas: 4666910
+  quantidade_colunas: 198
+
+cobertura_temporal:
+  periodo_nominal_fontes: "2019-2026"
+  periodo_observado_dt_notific:
+    inicio: "2018-12-30"
+    fim: "2026-09-28"
+  observacao:
+    - "Foram observados três registros com dt_notific em 2018."
+    - "A elegibilidade temporal da coorte será definida por dt_interna, não por dt_notific."
+    - "O recorte analítico principal considera internações entre 2019 e 2026."
+    - "O ano de 2026 está incompleto na versão atual dos dados e deverá ser identificado como tal nas análises temporais."
+    - "Os anos associados à pandemia serão mantidos inicialmente; qualquer exclusão posterior será tratada como análise de sensibilidade."
+
+geracao:
+  data_geracao: "2026-10-09"
+  motivo_nova_versao: >
+    Correção da geração de dt_notific. Na versão dados-v1,
+    a coluna não preservava as datas individuais de notificação
+    e apresentava valores concentrados em âncoras anuais do
+    calendário epidemiológico. A versão dados-v2 preserva os
+    valores individuais provenientes das fontes oficiais.
+
+fontes:
+  - nome: "Dados Abertos do SUS - SRAG 2019 a 2026"
+    url: "https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026"
+
+uso_no_projeto:
+  interface_leitura: "src.utils.storage.read_srag"
+  versao_configurada: "dados-v2"
+  observacao: >
+    Os notebooks devem acessar o dataset pela interface de storage
+    do repositório, evitando caminhos locais absolutos.
+
+validacao:
+  schema_verificado: true
+  dimensoes_verificadas: true
+  notebook_validacao: "01_eda_primeira_passagem.ipynb"
+  hash_confirmado_manualmente: true

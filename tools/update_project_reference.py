@@ -90,8 +90,10 @@ If a capability is mentioned in this section (or in any older plan) but does not
 - Do not make causal claims from predictive associations.
 - Prediction time is hospital admission. Later information cannot be a feature.
 - Current target contract in `configs/supervised.yaml`: `evolucao == 2.0` is positive; `evolucao == 1.0` is negative; other values stay outside the primary binary target unless the config is formally changed and a gate is approved.
-- Never use the final holdout to choose model, hyperparameters, calibration or threshold. Access is mediated by `TemporalSplit` and gated by `gates.G7_limiar`.
-- Preserve temporal ordering. Do not silently replace temporal validation with random splitting.
+- Never use the final test partition to choose model, hyperparameters, calibration or threshold.
+- The primary partition contract must follow `configs/supervised.yaml`.
+- The current intended workflow is a fixed 70/15/15 train, validation and test split, stratified by target and hospitalization year, while keeping repeated `nu_notific` values in the same partition.
+- Temporal evaluation may be performed as an additional robustness analysis, but it does not replace the primary partition unless the configuration is formally changed.
 - Data, trained models, outputs, local paths, `.env` and secrets do not belong in Git.
 - Changes to cohort, target, features, split, seed, calibration, threshold or gates must update configuration, tests and documentation together.
 
@@ -102,7 +104,7 @@ If a capability is mentioned in this section (or in any older plan) but does not
 3. Notebooks orchestrate, explain and visualize. Reusable logic belongs in `src/`.
 4. Experimental decisions belong in `configs/`.
 5. Use `src/utils/storage.py` for the official Parquet contract.
-6. Use `src/evaluation/temporal.py::TemporalSplit` for the final three-way workflow.
+6. Use the partition strategy defined in `configs/supervised.yaml`; do not hard-code a competing split strategy in notebooks.
 7. Reuse metrics and error analysis from `src/evaluation/`.
 8. Use `src/utils/reproducibility.py::Run` instead of creating another logger.
 9. A new public function requires an uncovered gap, typing, docstring and tests.
@@ -152,10 +154,57 @@ def root_dir() -> Path:
     return Path(p.stdout.strip()).resolve()
 
 
-def tracked(root: Path) -> list[Path]:
-    return sorted(
-        (Path(x) for x in git(root, "ls-files").splitlines() if x.strip()),
-        key=lambda p: p.as_posix().lower(),
+def tracked(
+    root: Path,
+) -> tuple[list[Path], list[Path]]:
+    """
+    Retorna os arquivos rastreados que ainda existem na pasta local
+    e, separadamente, os arquivos rastreados ausentes.
+
+    Arquivos excluídos localmente continuam visíveis no git status,
+    mas não são enviados para leitura com Path.read_bytes().
+    """
+
+    caminhos_rastreados = [
+        Path(linha)
+        for linha in git(
+            root,
+            "ls-files",
+        ).splitlines()
+        if linha.strip()
+    ]
+
+    caminhos_existentes = sorted(
+        [
+            caminho
+            for caminho in caminhos_rastreados
+            if (
+                root
+                / caminho
+            ).is_file()
+        ],
+        key=lambda caminho: (
+            caminho.as_posix().lower()
+        ),
+    )
+
+    caminhos_ausentes = sorted(
+        [
+            caminho
+            for caminho in caminhos_rastreados
+            if not (
+                root
+                / caminho
+            ).exists()
+        ],
+        key=lambda caminho: (
+            caminho.as_posix().lower()
+        ),
+    )
+
+    return (
+        caminhos_existentes,
+        caminhos_ausentes,
     )
 
 
@@ -287,17 +336,48 @@ def atomic_write(path: Path, text: str) -> None:
 
 def main() -> int:
     root = root_dir()
-    output = root / OUTPUT
-    paths = [p for p in tracked(root) if include(p)]
 
-    branch = git(root, "branch", "--show-current").strip() or "detached"
+    output = (
+        root
+        / OUTPUT
+    )
+
+    (
+        caminhos_rastreados_existentes,
+        caminhos_rastreados_ausentes,
+    ) = tracked(
+        root
+    )
+
+    paths = [
+        caminho
+        for caminho in caminhos_rastreados_existentes
+        if include(
+            caminho
+        )
+    ]
+
+    branch = (
+        git(
+            root,
+            "branch",
+            "--show-current",
+        ).strip()
+        or "detached"
+    )
     commit = git(root, "rev-parse", "HEAD").strip()
     status = git(root, "status", "--short").rstrip() or "clean working tree"
 
     api: list[str] = []
     sources: list[str] = []
     variables: dict[str, set[str]] = {}
-    skipped: list[str] = []
+    skipped: list[str] = [
+    (
+        f"{caminho.as_posix()} "
+        "(tracked but missing from local working tree)"
+    )
+    for caminho in caminhos_rastreados_ausentes
+    ]
 
     for rel in paths:
         data = (root / rel).read_bytes()

@@ -60,7 +60,13 @@ def baixar_srag_bruto(
     - Sidecar `<arquivo>.sha256` com o hash do conteúdo.
     - SHA-256 e tamanho impressos no stdout.
     """
-    url = url or C.srag_parquet_url()
+    if url is None:
+        raise ValueError(
+            "Informe explicitamente a URL do arquivo bruto "
+            "do OpenDataSUS ao chamar baixar_srag_bruto(). "
+            "Para obter o Parquet processado oficial do projeto, "
+            "utilize src.utils.storage.get_parquet()."
+    )
     nome = url.split("/")[-1]
 
     C.RAW_DIR.mkdir(parents=True, exist_ok=True)

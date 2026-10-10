@@ -87,6 +87,7 @@ GITHUB_RELEASE_URL = (
 # ---------------------------------------------------------------------------
 # Segredos e URLs sensíveis — LEITURA LAZY
 # ---------------------------------------------------------------------------
+
 def github_token() -> str | None:
     """Token do GitHub (opcional) para releases/downloads autenticados."""
     return os.getenv("GITHUB_TOKEN")
@@ -94,18 +95,37 @@ def github_token() -> str | None:
 
 def srag_parquet_url() -> str:
     """
-    URL do Parquet de SRAG usado como fonte bruta.
+    Retorna a URL do Parquet oficial processado do projeto.
 
-    O default aponta para o arquivo mais recente publicado no OpenDataSUS
-    (``INFLUD24``). Como esse arquivo é atualizado periodicamente pelo
-    Ministério da Saúde, o valor pode ser sobrescrito pela variável de
-    ambiente ``SRAG_PARQUET_URL``.
+    Por padrão, a URL é construída a partir da release configurada no
+    GitHub, utilizando:
+
+    - GITHUB_REPO;
+    - DATA_VERSION;
+    - PARQUET_NAME.
+
+    A URL pode ser sobrescrita pela variável de ambiente
+    SRAG_PARQUET_URL quando for necessário utilizar outra origem
+    explicitamente configurada.
+
+    A função é mantida para preservar compatibilidade com chamadas
+    existentes no projeto.
     """
-    return os.getenv(
-        "SRAG_PARQUET_URL",
-        "https://s3.sa-east-1.amazonaws.com/"
-        "ckan.saude.gov.br/SRAG/2024/INFLUD24-16-12-2024.parquet",
+
+    url_padrao = (
+        f"https://github.com/{GITHUB_REPO}/releases/download/"
+        f"{DATA_VERSION}/{PARQUET_NAME}"
     )
+
+    url_configurada = os.getenv(
+        "SRAG_PARQUET_URL",
+        url_padrao,
+    ).strip()
+
+    if not url_configurada:
+        return url_padrao
+
+    return url_configurada
 
 
 # ---------------------------------------------------------------------------
