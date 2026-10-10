@@ -110,7 +110,7 @@ def _abrir_stream(
     raise last_exc
 
 
-def _download(
+def download_file(
     url: str,
     dest: Path,
     *,
@@ -294,7 +294,7 @@ def get_parquet(
     )
 
     try:
-        digest = _download(
+        digest = download_file(
             public_url,
             path,
             expected_magic=PARQUET_MAGIC,
@@ -311,7 +311,7 @@ def get_parquet(
             "Authorization": f"Bearer {token}",
             "Accept": "application/octet-stream",
         }
-        digest = _download(
+        digest = download_file(
             _private_asset_url(token),
             path,
             headers=h,

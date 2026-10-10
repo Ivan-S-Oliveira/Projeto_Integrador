@@ -34,7 +34,7 @@ from typing import Any
 
 import pandas as pd
 
-from src.evaluation.leakage import check_leakage
+from src.evaluation.leakage import LeakageError, check_leakage
 from src.features.engineering import montar_features
 from src.utils import config as C
 from src.utils.reproducibility import Run
@@ -283,6 +283,18 @@ def gerar_datasets(
     from src.models.pipeline import FEATURES
 
     clustering_features = _clustering_features()
+
+    # ------------------------------------------------------------------
+    # Vazamento: `clustering.features` não pode tocar em proibidas
+    # ------------------------------------------------------------------
+    proibidas = set(C.cfg("features", "proibidas") or [])
+    vazamento = proibidas.intersection(clustering_features)
+    if vazamento:
+        raise LeakageError(
+            "`clustering.features` contém colunas proibidas: "
+            f"{sorted(vazamento)}. Essas colunas vazam o alvo — remova-as "
+            "de `clustering.features` no configs/supervised.yaml."
+        )
 
     # ------------------------------------------------------------------
     # Derivação

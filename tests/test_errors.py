@@ -83,12 +83,12 @@ def test_metricas_por_grupo_coluna_renomeada():
 
 def test_metricas_por_grupo_ignora_abaixo_de_min_n():
     df = pd.DataFrame({"grupo": ["A"] * 5 + ["B"] * 300})
-    y = pd.Series([0, 1] * 150 + [0, 1] * 3 + [0, 0])
-    p = pd.Series([0.1, 0.9] * 152 + [0.5])
+    y = pd.Series([0, 1] * 152 + [0])            # 305
+    p = pd.Series([0.1, 0.9] * 152 + [0.5])      # 305
 
     r = metricas_por_grupo(df, y, p, "grupo", min_n=30)
-    assert "A" not in set(r["grupo"])
-    assert "B" in set(r["grupo"])
+    assert set(r["grupo"]) == {"B"}
+    assert r.loc[r["grupo"] == "B", "n"].iloc[0] == 300
 
 
 def test_metricas_por_grupo_coluna_ausente():

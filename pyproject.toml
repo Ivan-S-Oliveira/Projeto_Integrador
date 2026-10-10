@@ -1,14 +1,14 @@
-[project]
 name = "projeto-integrador"
 version = "0.0.1"
 description = "Análise retrospectiva de risco de óbito por SRAG (SIVEP-Gripe)."
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-testpaths  = ["tests"]
+minversion   = "7.0"
+testpaths    = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-ra -q"
+pythonpath   = ["."]                     # ← adicione esta linha
+addopts      = "-ra -q"
 markers = [
     "slow: testes que fazem I/O pesado (Parquet, downloads)",
     "net:  testes que exigem acesso à internet",

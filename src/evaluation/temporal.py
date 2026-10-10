@@ -73,7 +73,13 @@ def split_temporal_3way(
             "(o restante vira holdout)."
         )
 
-    # --- NaT: sem data não há ordenação temporal possível ---
+    # --- Validação do argumento (antes de olhar os dados) ---
+    if on_nat not in ("raise", "drop"):
+        raise ValueError(
+            f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
+        )
+
+    # --- Tipo da coluna temporal ---
     if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
         raise TypeError(
             f"Coluna temporal {coluna_tempo!r} não é datetime "
@@ -81,6 +87,7 @@ def split_temporal_3way(
             "Converta com pd.to_datetime antes do split."
         )
 
+    # --- NaT: sem data não há ordenação temporal possível ---
     nat_mask = df[coluna_tempo].isna()
     n_nat = int(nat_mask.sum())
     if n_nat:
@@ -89,12 +96,8 @@ def split_temporal_3way(
                 f"{n_nat} linha(s) com data inválida (NaT) em "
                 f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
             )
-        elif on_nat == "drop":
-            df = df.loc[~nat_mask].reset_index(drop=True)
-        else:
-            raise ValueError(
-                f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
-            )
+        # on_nat == "drop" já validado acima
+        df = df.loc[~nat_mask].reset_index(drop=True)
 
     ordenado = (
         df.sort_values(coluna_tempo, kind="mergesort")
