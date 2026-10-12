@@ -401,7 +401,6 @@ artefatos_coorte:
   waterfall: coorte_waterfall.csv
   variaveis: variaveis_finais.csv
   manifesto: manifesto_coorte.json
-
 # -----------------------------------------------------------------------------
 # Gates
 # -----------------------------------------------------------------------------
@@ -421,28 +420,20 @@ gates:
     aprovado_por: time_do_projeto
     data: "2026-10-11"
 
-G4_baseline:
-  descricao: >
-    Rodar DummyClassifier e registrar as metricas de referencia.
-  status: aprovado
-  aprovado_por: time_do_projeto
-  data: "2026-10-11"
-
-G5_pilotos:
-  descricao: >
-    Rodar regressao logistica, arvore, random forest e boosting sem
-    consultar o teste.
-  status: aprovado
-  aprovado_por: time_do_projeto
-  data: "2026-10-11"
+  G4_baseline:
+    descricao: >
+      Rodar DummyClassifier e registrar as metricas de referencia.
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: "2026-10-11"
 
   G5_pilotos:
     descricao: >
       Rodar regressao logistica, arvore, random forest e boosting sem
       consultar o teste.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: "2026-10-11"
 
   G6_finalistas_tuning:
     descricao: >
