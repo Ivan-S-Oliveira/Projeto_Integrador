@@ -1,17 +1,24 @@
 # =============================================================================
-# Configuração do pipeline supervisionado — Projeto Integrador
+# Configuracao do pipeline supervisionado - Projeto Integrador SRAG
+# Atualizacao compativel com a estrutura atual do supervised.yaml
 # =============================================================================
 #
-# Este arquivo é a fonte única de verdade para C2–C6.
-# Nenhum notebook deve hard-coded hiperparâmetro, fração de split ou limiar.
+# Decisoes alinhadas:
+# - periodo analitico: 2019 a 2026, inclusive;
+# - 2026 identificado como periodo parcial;
+# - split principal aleatorio 70% / 15% / 15%;
+# - estratificacao por alvo + ano de internacao;
+# - seed 42;
+# - teste aberto uma unica vez apos congelar modelo, calibracao e limiar;
+# - nenhuma informacao posterior a admissao entra em X;
+# - vazio, ignorado e nao aplicavel nao viram automaticamente "nao";
+# - clusters nao entram como features nem como alvo.
 #
-# REGRA:
-#   Valores marcados com `null` ou `"TBD"` só podem ser preenchidos
-#   DEPOIS que o gate correspondente for aprovado.
-#   Enquanto estiverem nulos, o loader levanta erro explícito ao tentar usá-los.
+# A lista features.final permanece null ate a chegada e validacao da
+# coorte definitiva. Os nomes devem ser conferidos contra o schema final.
 # =============================================================================
 
-version: 1
+version: 2
 
 # -----------------------------------------------------------------------------
 # Reprodutibilidade
@@ -23,103 +30,153 @@ seed: 42
 # -----------------------------------------------------------------------------
 target:
   coluna: evolucao
-
-  # Valor(es) de `evolucao` que contam como positivo (óbito SRAG).
-  # 1 = cura | 2 = óbito SRAG | 3 = óbito outras causas | 9 = ignorado
-  positivos: [2.0]
-  negativos: [1.0]
-
-  # Descarta 3, 9 e nulos — ficam fora do alvo binário.
+  coluna_modelagem: alvo_obito_srag
+  positivos:
+    - 2.0
+  negativos:
+    - 1.0
   descartar_outros: true
+  sensibilidade_qualquer_obito:
+    ativa: true
+    positivos:
+      - 2.0
+      - 3.0
+    negativos:
+      - 1.0
 
 # -----------------------------------------------------------------------------
-# Coluna temporal (usada no split)
+# Periodo e ancora temporal
 # -----------------------------------------------------------------------------
-coluna_tempo: dt_notific
+coluna_tempo: dt_interna
+
+periodo:
+  ano_inicial: 2019
+  ano_final: 2026
+  coluna_ano: ano_internacao
+  incluir_limites: true
+  anos_parciais:
+    - 2026
 
 # -----------------------------------------------------------------------------
 # Features
 # -----------------------------------------------------------------------------
-# Estrutura definida agora; lista final consolidada após o gate G1.
 features:
+  # Base numerica do nucleo.
   numericas:
     - idade_anos
-    - intervalo_sint_interna_dias
-    - flag_intervalo_invalido
-    - sin_semana
-    - cos_semana
+    - dias_sintomas_ate_internacao
 
+  # Categoricas e binarias do nucleo principal.
   categoricas:
-    - sg_uf
-    - cs_sexo
-    - cs_gestant          # antes: tp_gestante (schema real provável)
+    - sexo_categoria
+    - cs_gestant
+    - cs_raca
+    - cs_zona
+    - ave_suino
     - febre
     - tosse
+    - garganta
     - dispneia
-    - saturacao
-    # internado e utilizouvni removidos: conferir se existem na admissão.
-    # Se confirmados como disponíveis na admissão, reintroduzir com nomes reais.
-    - vacina_cov
-    - faixa_etaria        # derivada de idade_anos
+    - diarreia
+    - vomito
+    - dor_abd
+    - fadiga
+    - perd_olft
+    - perd_pala
+    - outro_sin
+    - puerpera
+    - cardiopati
+    - hematologi
+    - sind_down
+    - hepatica
+    - asma
+    - diabetes
+    - neurologic
+    - pneumopati
+    - imunodepre
+    - renal
+    - obesidade
+    - out_morbi
 
-  # Lista final só é fechada depois do gate G1 (definição do alvo e features).
-  # Enquanto `null`, o loader usa `numericas + categoricas`.
+  # Nao congelar antes da coorte definitiva.
   final: null
 
-  # Colunas que NUNCA podem entrar em X (vazamento de alvo).
-  # Servem de invariante para o `test_leakage.py`.
+  # Contexto avaliado somente como ganho incremental.
+  contexto_incremental:
+    - cs_escol_n
+    - sg_uf
+    - vacina
+    - vacina_cov
+
+  # Sensibilidades, fora do nucleo principal.
+  sensibilidade_gravidade_admissao:
+    - saturacao
+    - desc_resp
+
+  sensibilidade_indicadores_ausencia:
+    ativa: true
+    incluir_no_pipeline_principal: false
+    prefixo_esperado: missingindicator_
+
+  sensibilidade_contadores_clinicos:
+    ativa: false
+    motivo: >
+      Os contadores agregados podem duplicar o peso das variaveis
+      individuais das quais foram derivados.
+    colunas:
+      - n_sintomas_confirmados
+      - n_sintomas_avaliados
+      - n_comorbidades_confirmadas
+      - n_comorbidades_avaliadas
+
+  # Colunas que nunca podem entrar em X.
   proibidas:
     - evolucao
+    - alvo_obito_srag
+    - evolucao_normalizada
     - evolucao_covid19
-    - dt_evoluca          # antes: dt_evolucao
-    - dt_encerra          # antes: dt_encerramento
+    - dt_evoluca
+    - dt_encerra
     - dt_digita
-    # Conferir nomes reais no schema antes de fechar:
+    - uti
+    - dt_entuti
+    - dt_saiduti
+    - suport_ven
+    - utilizouvni
+    - antiviral
+    - tp_antivir
+    - out_antiv
+    - dt_antivir
+    - trat_cov
+    - tipo_trat
+    - dt_trt_cov
+    - out_trat
     - classificacao_final
     - criterio_confirmacao
     - sorologia
     - pcr
+    - cluster
+    - cluster_rotulo
 
-  # ---------------------------------------------------------------------------
-  # Engenharia de atributos (src/features/engineering.py)
-  # ---------------------------------------------------------------------------
-  # Parâmetros e inventário das colunas derivadas. Todas as funções são
-  # puras; `montar_features(df)` aplica todas e devolve uma cópia de `df`.
-  #
-  # ATENÇÃO: `dt_interna` (internação) precisa ser reconhecida pelo gate
-  # G1 como disponível no momento da admissão. Enquanto G1 estiver
-  # pendente, `intervalo_sint_interna_dias` e `flag_intervalo_invalido`
-  # são candidatos, não decisão congelada.
+  # Engenharia de atributos.
   engenharia:
-    # Limite superior (dias) para o intervalo sintomas→internação.
-    # Acima disso, o intervalo vira NaN e a flag sobe para 1.
     intervalo_max_dias: 60
-
-    # Faixas etárias interpretadas como intervalo semiaberto [min, max).
-    # `max: null` significa "sem limite superior".
     faixas_etarias:
-      - {nome: "<1",    min: 0,  max: 1}
-      - {nome: "1-4",   min: 1,  max: 5}
-      - {nome: "5-11",  min: 5,  max: 12}
+      - {nome: "<1", min: 0, max: 1}
+      - {nome: "1-4", min: 1, max: 5}
+      - {nome: "5-11", min: 5, max: 12}
       - {nome: "12-17", min: 12, max: 18}
       - {nome: "18-39", min: 18, max: 40}
       - {nome: "40-59", min: 40, max: 60}
       - {nome: "60-79", min: 60, max: 80}
-      - {nome: "80+",   min: 80, max: null}
-
-    # Colunas produzidas por montar_features() — NÃO existem no Parquet
-    # bruto; por isso ficam separadas em `derivadas`.
+      - {nome: "80+", min: 80, max: null}
     derivadas:
       - idade_anos
-      - intervalo_sint_interna_dias
+      - dias_sintomas_ate_internacao
       - flag_intervalo_invalido
-      - sin_semana
-      - cos_semana
       - faixa_etaria
-
-    # Colunas de entrada exigidas pela derivação (precisam estar no
-    # Parquet). `coluna_tempo` (dt_notific) também é usada por
-    # `sazonalidade`, mas vem do bloco `coluna_tempo`.
+      - ano_internacao
+      - mes_internacao
     entradas:
       - nu_idade_n
       - tp_idade
@@ -127,41 +184,108 @@ features:
       - dt_interna
 
 # -----------------------------------------------------------------------------
-# Split temporal
+# Split principal
 # -----------------------------------------------------------------------------
-# Split por fração. Chaves de modo/datas/exigir_conclusao_selecao removidas.
+# Mantem temporal.fracao por compatibilidade com consumidores atuais.
 temporal:
+  modo: aleatorio_estratificado
+  coluna_estratificacao_temporal: ano_internacao
+  coluna_estratificacao_alvo: alvo_obito_srag
+  seed: 42
+  gravar_particao_na_coorte: true
+  coluna_particao: particao
+  permitir_novo_sorteio: false
+  teste_aberto_uma_unica_vez: true
   fracao:
-    treino:    0.70
+    treino: 0.70
     validacao: 0.15
-    holdout:   0.15
+    holdout: 0.15
+
+# -----------------------------------------------------------------------------
+# Tratamento de ausencia
+# -----------------------------------------------------------------------------
+missingness:
+  vazio_nao_e_nao: true
+  ignorado_nao_e_nao: true
+  nao_aplicavel_nao_e_nao: true
+  ajustar_imputacao_apenas_no_treino: true
+  numericas:
+    imputacao: mediana
+  categoricas:
+    imputacao: categoria_explicita
+    valor_ausente: AUSENTE
+  indicadores_ausencia:
+    pipeline_principal: false
+    sensibilidade: true
 
 # -----------------------------------------------------------------------------
 # Modelos
 # -----------------------------------------------------------------------------
-# Valores marcados como null serão definidos nos gates:
-#   G3 → baseline (referência fixa, valores já definidos abaixo)
-#   G4 → regressão logística (busca de C e class_weight)
-#   G5 → boosting (busca de learning_rate, max_iter, etc.)
 models:
-
   baseline:
-    # Não depende de tuning — é a referência mínima.
     strategy: prior
 
   logistic:
-    # Valores iniciais razoáveis. Gate G4 decide se ficam.
-    C: null                   # TBD: busca em [1e-3, 1e-2, 1e-1, 1, 10]
+    C: null
+    busca_C:
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1.0
+      - 10.0
     penalty: l2
     solver: lbfgs
     max_iter: 1000
     class_weight: balanced
 
+  decision_tree:
+    ativa: true
+    max_depth:
+      - 3
+      - 5
+      - 8
+      - null
+    min_samples_leaf:
+      - 20
+      - 50
+      - 100
+    class_weight: balanced
+
+  random_forest:
+    ativa: true
+    n_estimators: 300
+    max_depth:
+      - 6
+      - 10
+      - null
+    min_samples_leaf:
+      - 10
+      - 20
+      - 50
+    max_features:
+      - sqrt
+      - log2
+    class_weight: balanced
+    n_jobs: -1
+
+  # Preserva a chave "boosting" esperada pelo YAML atual.
   boosting:
-    # Valores iniciais razoáveis. Gate G5 decide se ficam.
-    learning_rate: null       # TBD: busca em [0.01, 0.03, 0.05, 0.1]
-    max_iter: null            # TBD: busca em [300, 500, 1000] na validação temporal
-    max_depth: null           # TBD: [None, 4, 6, 8]
+    learning_rate: null
+    busca_learning_rate:
+      - 0.03
+      - 0.05
+      - 0.10
+    max_iter: null
+    busca_max_iter:
+      - 300
+      - 500
+      - 1000
+    max_depth: null
+    busca_max_depth:
+      - null
+      - 4
+      - 6
+      - 8
     max_leaf_nodes: 31
     min_samples_leaf: 20
     l2_regularization: 0.0
@@ -169,129 +293,180 @@ models:
     class_weight: balanced
 
 # -----------------------------------------------------------------------------
-# Calibração
+# Tuning
 # -----------------------------------------------------------------------------
-# Gate G6 decide o método e onde calibrar (validação vs pedaço do treino).
+tuning:
+  metrica_principal: pr_auc
+  concentrar_nos_dois_melhores: true
+  usar_apenas_treino_validacao: true
+  teste_proibido_durante_tuning: true
+  max_configuracoes_por_modelo: 30
+
+# -----------------------------------------------------------------------------
+# Calibracao
+# -----------------------------------------------------------------------------
 calibracao:
   ativa: true
-  metodo: null                # TBD: "isotonic" | "sigmoid"
-  fonte: null                 # TBD: "validacao" | "treino_tail"
-  frac_treino_tail: 0.10      # usado se `fonte == "treino_tail"`
+  metodo: null
+  metodos_candidatos:
+    - sigmoid
+    - isotonic
+  fonte: validacao
+  frac_treino_tail: 0.10
+  comparar_brier_antes_depois: true
 
 # -----------------------------------------------------------------------------
-# Limiar de decisão
+# Limiar de decisao
 # -----------------------------------------------------------------------------
-# Gate G7 decide o limiar operacional (trade-off recall × precision).
 limiar:
-  default: 0.50               # usado enquanto o gate não fecha
-  otimo: null                 # TBD: preenchido pelo gate G7
-  metrica: f1                 # "f1" | "recall" | "precision" | "accuracy"
-  min_precision: null         # TBD: se contexto clínico exigir, ex.: 0.5
+  default: 0.50
+  otimo: null
+  metrica: null
+  metricas_candidatas:
+    - f1
+    - recall
+    - precision
+  min_precision: null
+  selecionar_somente_na_validacao: true
 
 # -----------------------------------------------------------------------------
-# Métricas e avaliação
+# Metricas e avaliacao
 # -----------------------------------------------------------------------------
-# Bloco enxuto: apenas grupos e min_n_grupo.
-# `min_n_grupo` deve ser lido pelas funções de métricas por grupo.
 avaliacao:
+  metrica_principal: pr_auc
+  metricas:
+    - pr_auc
+    - roc_auc
+    - brier_score
+    - log_loss
+    - recall
+    - precision
+    - f1
+    - especificidade
+    - sensibilidade
+    - matriz_confusao
   grupos:
     - sg_uf
-    - cs_sexo
+    - sexo_categoria
     - faixa_etaria
+    - ano_internacao
   min_n_grupo: 100
+  desempenho_por_ano: true
+  calibracao_por_ano: true
+  bootstrap:
+    ativo: true
+    repeticoes: 1000
+    nivel: 0.95
+    seed: 42
+  analise_erros:
+    ativa: true
+    priorizar_falsos_negativos: true
 
 # -----------------------------------------------------------------------------
-# Clustering (apresentação na admissão, sem alvo)
+# Sensibilidades supervisionadas
 # -----------------------------------------------------------------------------
-# Variáveis consideradas disponíveis no momento da admissão. Usadas
-# exclusivamente pelo dataset de clustering (EDA não supervisionada).
-#
-# ATENÇÃO: NÃO inclua aqui nada de `features.proibidas` nem colunas
-# posteriores à admissão. O `check_leakage` roda sobre este dataset e
-# falha se encontrar qualquer item da lista de proibidas.
-#
-# Lista provisória — sujeita a revisão do gate G1.
+sensibilidades:
+  temporal:
+    ativa: true
+  com_sem_indicadores_ausencia:
+    ativa: true
+  sem_saturacao_desc_resp:
+    ativa: true
+  contexto_incremental:
+    ativa: true
+  alvo_qualquer_obito:
+    ativa: true
+
+# -----------------------------------------------------------------------------
+# Clustering concluido como exploratorio
+# -----------------------------------------------------------------------------
 clustering:
-  features:
-    - idade_anos
-    - sg_uf
-    - cs_sexo
-    - cs_gestant
-    - febre
-    - tosse
-    - dispneia
-    - saturacao
-    - vacina_cov
+  status: encerrado_exploratorio
+  matriz_documentada: nucleo
+  quantidade_clusters_documentada: 2
+  aplicar_na_coorte_completa: false
+  usar_como_feature_supervisionada: false
+  usar_como_alvo: false
+  usar_como_fenotipo_clinico_definitivo: false
+  comparacoes_minimas_executadas:
+    - kmeans
+    - hca_ward
+    - dbscan
 
-# =============================================================================
-# GATES
-# =============================================================================
-# Cada gate marca uma decisão que precisa ser tomada ANTES de rodar a próxima
-# etapa. O campo `status` evolui de "pendente" para "aprovado".
-# Enquanto houver gate pendente, notebooks C3+ recusam rodar.
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Artefatos esperados da coorte final
+# -----------------------------------------------------------------------------
+artefatos_coorte:
+  parquet: coorte_final.parquet
+  waterfall: coorte_waterfall.csv
+  variaveis: variaveis_finais.csv
+  manifesto: manifesto_coorte.json
+
+# -----------------------------------------------------------------------------
+# Gates
+# -----------------------------------------------------------------------------
 gates:
-
   G1_definicao_alvo_features:
     descricao: >
-      Definir alvo binário definitivo (quais valores de `evolucao`
-      contam como positivo) e a lista final de features.
+      Confirmar schema da coorte definitiva, alvo e lista final de features.
     status: pendente
     aprovado_por: null
     data: null
 
   G2_janela_temporal:
     descricao: >
-      Definir janelas de treino / validação / holdout. Pode ser por fração
-      (modo atual) ou por datas explícitas.
+      Periodo 2019-2026 e split aleatorio estratificado 70/15/15 por
+      alvo e ano de internacao, seed 42.
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: "2026-10-11"
+
+  G3_validacao_coorte:
+    descricao: >
+      Validar waterfall, schema, particoes, identificadores e vazamento.
     status: pendente
     aprovado_por: null
     data: null
 
-  G3_baseline:
+  G4_baseline:
     descricao: >
-      Rodar `DummyClassifier` e registrar AUC/accuracy de referência.
-      Nenhum modelo precisa superar — serve para calibrar expectativas.
+      Rodar DummyClassifier e registrar as metricas de referencia.
     status: pendente
     aprovado_por: null
     data: null
 
-  G4_logistica:
+  G5_pilotos:
     descricao: >
-      Buscar C e class_weight da regressão logística na validação.
-      Preencher `models.logistic.C`.
+      Rodar regressao logistica, arvore, random forest e boosting sem
+      consultar o teste.
     status: pendente
     aprovado_por: null
     data: null
 
-  G5_boosting:
+  G6_finalistas_tuning:
     descricao: >
-      Buscar learning_rate / max_iter / max_depth na validação.
-      Preencher os campos `null` em `models.boosting`.
+      Selecionar no maximo dois finalistas e executar tuning limitado.
     status: pendente
     aprovado_por: null
     data: null
 
-  G6_calibracao:
+  G7_calibracao:
     descricao: >
-      Escolher método de calibração (isotonic vs sigmoid) e fonte
-      (validação vs treino_tail). Medir ECE antes/depois.
+      Escolher o metodo de calibracao usando apenas treino e validacao.
     status: pendente
     aprovado_por: null
     data: null
 
-  G7_limiar:
+  G8_limiar:
     descricao: >
-      Escolher limiar operacional. Se contexto clínico exigir precisão
-      mínima, preencher `min_precision`.
+      Escolher o limiar operacional usando apenas a validacao.
     status: pendente
     aprovado_por: null
     data: null
 
-  G8_holdout:
+  G9_holdout:
     descricao: >
-      Liberar holdout UMA única vez. Rodar após G7.
-      Registrar métricas finais em `outputs/runs/<RUN_ID>/metadata.json`.
+      Liberar o teste uma unica vez apos congelar modelo, calibracao e limiar.
     status: pendente
     aprovado_por: null
     data: null
