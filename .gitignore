@@ -37,6 +37,7 @@ data/treino/*
 !data/processed/.gitkeep
 !data/analytical/.gitkeep
 !data/treino/.gitkeep
+
 *.parquet
 
 
@@ -55,7 +56,7 @@ models/*.pth
 
 
 # =========================================================
-# Resultados
+# Resultados e relatórios gerados
 # =========================================================
 
 *.log
@@ -101,23 +102,66 @@ configs/paths.local.json
 # =========================================================
 
 outputs/*
+
 !outputs/.gitkeep
 !outputs/runs/
 !outputs/tables/
 !outputs/predictions/
+
 outputs/runs/*
 outputs/tables/*
 outputs/predictions/*
+
 !outputs/runs/.gitkeep
 !outputs/tables/.gitkeep
 !outputs/predictions/.gitkeep
 
 
 # =========================================================
-# Inventários locais de auditoria e contexto (gerados por
-# `tools/collect_repo_context.py` e
-# `tools/update_project_reference.py`)
+# Retratos locais do repositório
+#
+# Arquivos de inventário, auditoria, contexto e referência
+# gerados automaticamente por tools/repo_snapshot.py.
+#
+# O script gerador pode ser versionado.
+# Os retratos produzidos permanecem apenas no ambiente local.
 # =========================================================
 
-/docs/ai_context/
 /docs/PROJECT_COMPLETE_REFERENCE.md
+/docs/PROJECT_COMPLETE_REFERENCE.json
+
+/docs/ai_context/
+/docs/repo_context/
+/docs/repo_snapshot/
+/docs/context_snapshot/
+/docs/.context/
+/docs/.snapshot/
+
+
+# =========================================================
+# Arquivos alternativos de contexto e inventário
+# =========================================================
+
+/docs/*_AI_CONTEXT.md
+/docs/*_AI_CONTEXT.json
+/docs/*_REPO_CONTEXT.md
+/docs/*_REPO_CONTEXT.json
+/docs/*_REPOSITORY_SNAPSHOT.md
+/docs/*_REPOSITORY_SNAPSHOT.json
+/docs/*_COMPLETE_REFERENCE.md
+/docs/*_COMPLETE_REFERENCE.json
+
+
+# =========================================================
+# Artefatos locais eventualmente gerados fora de docs
+# =========================================================
+
+/ai_context/
+/repo_context/
+/repo_snapshot/
+/context_snapshot/
+
+/PROJECT_COMPLETE_REFERENCE.md
+/PROJECT_COMPLETE_REFERENCE.json
+/REPOSITORY_SNAPSHOT.md
+/REPOSITORY_SNAPSHOT.json

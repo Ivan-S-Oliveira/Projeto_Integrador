@@ -421,19 +421,20 @@ gates:
     aprovado_por: time_do_projeto
     data: "2026-10-11"
 
-  G3_validacao_coorte:
-    descricao: >
-      Validar waterfall, schema, particoes, identificadores e vazamento.
-    status: pendente
-    aprovado_por: null
-    data: null
+G4_baseline:
+  descricao: >
+    Rodar DummyClassifier e registrar as metricas de referencia.
+  status: aprovado
+  aprovado_por: time_do_projeto
+  data: "2026-10-11"
 
-  G4_baseline:
-    descricao: >
-      Rodar DummyClassifier e registrar as metricas de referencia.
-    status: pendente
-    aprovado_por: null
-    data: null
+G5_pilotos:
+  descricao: >
+    Rodar regressao logistica, arvore, random forest e boosting sem
+    consultar o teste.
+  status: aprovado
+  aprovado_por: time_do_projeto
+  data: "2026-10-11"
 
   G5_pilotos:
     descricao: >
@@ -470,3 +471,18 @@ gates:
     status: pendente
     aprovado_por: null
     data: null
+
+selecao_modelos:
+  status: shortlist_provisoria
+  origem: pilotos
+  teste_consultado: false
+  finalistas:
+    - hist_gradient_boosting
+    - logistic
+  familias_encerradas:
+    - decision_tree
+    - random_forest
+  criterio_principal: pr_auc
+  observacoes:
+    - probabilidades brutas ainda nao calibradas
+    - decisao sujeita a repeticao na coorte definitiva

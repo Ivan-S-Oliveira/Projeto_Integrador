@@ -1,56 +1,114 @@
 #!/usr/bin/env python3
-r"""One-command project reference generator.
+r"""Generate an AI-oriented, static snapshot of a Python/ML Git repository.
 
-Run from repository root:
+Run from the repository root:
+
     .\.venv\Scripts\python.exe tools\update_project_reference.py
 
 Creates:
+
     docs/PROJECT_COMPLETE_REFERENCE.md
+    docs/PROJECT_COMPLETE_REFERENCE.json
+
+Design goals
+------------
+1. Show what exists now, not only what older plans describe.
+2. Help a person or an AI reuse existing modules before adding new code.
+3. Keep configuration, source, tests, notebooks and consumers connected.
+4. Surface inconsistencies without importing or executing project code.
+5. Include useful summaries of large notebooks instead of silently omitting them.
+6. Include relevant untracked files in a clearly labelled working-tree section.
+7. Never copy notebook outputs, data files, model files, secrets or local paths.
+
+The analysis is static. It uses Git, pathlib, json and Python AST. PyYAML is
+used when available; if it is unavailable, YAML is still included as source but
+semantic YAML checks are skipped and reported transparently.
 """
+
 from __future__ import annotations
 
+import argparse
 import ast
 import hashlib
 import json
+import os
 import re
 import subprocess
+import sys
 import tempfile
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Iterable, Iterator
 
-OUTPUT = Path("docs/PROJECT_COMPLETE_REFERENCE.md")
-MAX_BYTES = 4_000_000
+try:
+    import yaml  # type: ignore
+except Exception:  # pragma: no cover
+    yaml = None
 
-# Excluded at any depth (caches, environments, VCS).
+
+OUTPUT_MD = Path("docs/PROJECT_COMPLETE_REFERENCE.md")
+OUTPUT_JSON = Path("docs/PROJECT_COMPLETE_REFERENCE.json")
+DEFAULT_MAX_INLINE_BYTES = 4_000_000
+MAX_DOCSTRING_CHARS = 4_000
+MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 160
+
 EXCLUDED_DIRS_ANYWHERE = {
-    ".git", ".venv", "venv", "__pycache__",
-    ".pytest_cache", ".ipynb_checkpoints", "node_modules",
+    ".git",
+    ".venv",
+    "venv",
+    "env",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+    ".ipynb_checkpoints",
+    "node_modules",
 }
-
-# Excluded only when they are top-level folders, so that
-# src/data and src/models stay included.
-EXCLUDED_DIRS_AT_ROOT = {"data", "outputs", "models", "logs"}
-
+EXCLUDED_DIRS_AT_ROOT = {
+    "data",
+    "outputs",
+    "models",
+    "logs",
+    "artifacts",
+    "mlruns",
+}
 EXCLUDED_FILES = {
-    ".env", "paths.local.json", "pip_inspect-venv.json", OUTPUT.name,
+    ".env",
+    "paths.local.json",
+    "pip_inspect-venv.json",
+    OUTPUT_MD.name,
+    OUTPUT_JSON.name,
 }
-
 TEXT_SUFFIXES = {
-    ".py", ".pyi", ".md", ".rst", ".txt", ".yaml", ".yml", ".toml", ".ini",
-    ".cfg", ".json", ".json5", ".sql", ".ps1", ".sh", ".bat",
+    ".py", ".pyi", ".md", ".rst", ".txt", ".yaml", ".yml", ".toml",
+    ".ini", ".cfg", ".json", ".json5", ".sql", ".ps1", ".sh", ".bat",
+    ".csv", ".tsv",
 }
-# Path(".gitignore").suffix is "", so dotfiles must be matched by name.
 SPECIAL_NAMES = {
     "README", "README.md", "LICENSE", "Makefile", "Dockerfile",
-    "requirements.txt", "pyproject.toml", "pytest.ini",
-    ".env.example", ".gitignore", ".gitattributes",
+    "requirements.txt", "pyproject.toml", "pytest.ini", ".env.example",
+    ".gitignore", ".gitattributes", "CONTRIBUTING.md",
 }
 LANG = {
     ".py": "python", ".pyi": "python", ".md": "markdown", ".rst": "rst",
     ".yaml": "yaml", ".yml": "yaml", ".toml": "toml", ".json": "json",
     ".json5": "json5", ".ini": "ini", ".cfg": "ini", ".sql": "sql",
-    ".ps1": "powershell", ".sh": "bash", ".bat": "bat",
+    ".ps1": "powershell", ".sh": "bash", ".bat": "bat", ".csv": "csv",
+    ".tsv": "tsv",
 }
+LIKELY_BINARY_SUFFIXES = {
+    ".parquet", ".feather", ".arrow", ".pkl", ".pickle", ".joblib",
+    ".onnx", ".pt", ".pth", ".h5", ".hdf5", ".npy", ".npz", ".pdf",
+    ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".png", ".jpg",
+    ".jpeg", ".gif", ".webp", ".zip", ".7z", ".gz", ".tar",
+}
+IMPORTANT_UNTRACKED_PREFIXES = (
+    "src/", "tests/", "configs/", "docs/", "notebooks/", "tools/", "scripts/",
+)
 
 ENV_RE = re.compile(
     r"(?:os\.getenv|os\.environ\.get|get_env|get_secret)"
@@ -65,150 +123,260 @@ PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN [^-]+ PRIVATE KEY-----.*?-----END [^-]+ PRIVATE KEY-----",
     re.DOTALL,
 )
+URL_CREDENTIAL_RE = re.compile(r"(?i)(https?://[^\s/:]+:)([^@\s]+)(@)")
+WINDOWS_ABS_RE = re.compile(r"(?i)\b[A-Z]:\\(?:[^\n\r\t\"']+)")
+HOME_PATH_RE = re.compile(r"(?<![A-Za-z0-9_])/(?:home|Users)/[^\s\"']+")
 BACKTICK_RUN_RE = re.compile(r"`+")
+HEADING_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
+FILE_LITERAL_RE = re.compile(
+    r"['\"]([^'\"]+\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md))['\"]",
+    re.IGNORECASE,
+)
 
-CONTEXT = '''# Project Complete Reference
 
-> **Generated file. Do not edit manually.**  
-> Update with `tools/update_project_reference.py`.
+CONTEXT = """# Project Complete Reference
 
-## 1. Project context
+> **Generated file. Do not edit manually.**
+> Generated by `tools/update_project_reference.py`.
+> Treat this document as a static snapshot, not as executable proof.
 
-This is an academic retrospective machine-learning project using SRAG/SIVEP-Gripe data. The operational objective is to estimate risk of death from SRAG using only information plausibly available by hospital admission. The unit of analysis is an eligible notification used as a proxy for a hospital episode, not automatically a unique person.
+## 1. Purpose
 
-This section states **intent and rules**, not a verified inventory of what is implemented. The authoritative views of the current codebase are:
+This reference is designed for a person or an AI continuing the SRAG project
+without prior conversation context. It connects current Git state, configuration,
+Python APIs, imports, consumers, tests, notebooks, decisions and static contract
+checks. Its main goal is to encourage reuse and coherent extension instead of
+creating disconnected helper functions and competing pipelines.
 
-- **Section 9 — Python API catalog**: public functions and classes actually present in tracked Python modules (generated statically via AST; project code is not imported or executed).
-- **Section 11 — Complete tracked source**: literal contents of every included file, including notebooks without outputs.
-- **`configs/supervised.yaml`**: approved or pending decisions and gates.
+## 2. Methodological guardrails
 
-If a capability is mentioned in this section (or in any older plan) but does not appear in section 9 or section 11, treat it as **planned**, not implemented. Absence from the catalog is meaningful evidence, not an omission of the generator.
-
-## 2. Non-negotiable methodological rules
-
-- Academic retrospective analysis, not a clinically validated decision tool.
+- Academic retrospective prediction project, not a clinically validated tool.
+- Prediction time is hospital admission; later information cannot be a feature.
 - Do not make causal claims from predictive associations.
-- Prediction time is hospital admission. Later information cannot be a feature.
-- Current target contract in `configs/supervised.yaml`: `evolucao == 2.0` is positive; `evolucao == 1.0` is negative; other values stay outside the primary binary target unless the config is formally changed and a gate is approved.
-- Never use the final test partition to choose model, hyperparameters, calibration or threshold.
-- The primary partition contract must follow `configs/supervised.yaml`.
-- The current intended workflow is a fixed 70/15/15 train, validation and test split, stratified by target and hospitalization year, while keeping repeated `nu_notific` values in the same partition.
-- Temporal evaluation may be performed as an additional robustness analysis, but it does not replace the primary partition unless the configuration is formally changed.
-- Data, trained models, outputs, local paths, `.env` and secrets do not belong in Git.
-- Changes to cohort, target, features, split, seed, calibration, threshold or gates must update configuration, tests and documentation together.
+- Never use the final test partition for model, hyperparameter, calibration or
+  threshold selection.
+- The active partition, target, feature, seed, calibration, threshold and gate
+  contracts come from `configs/supervised.yaml` and executable tests.
+- Temporal analyses may be robustness analyses and must not silently replace the
+  configured primary partition.
+- Original data, Parquets, trained models, outputs, secrets and local paths do not
+  belong in Git or in this reference.
 
-## 3. Ways of working
+## 3. Required workflow for any AI
 
-1. Read this document before proposing code.
-2. Search the API catalog and complete source sections before creating a function.
-3. Notebooks orchestrate, explain and visualize. Reusable logic belongs in `src/`.
-4. Experimental decisions belong in `configs/`.
-5. Use `src/utils/storage.py` for the official Parquet contract.
-6. Use the partition strategy defined in `configs/supervised.yaml`; do not hard-code a competing split strategy in notebooks.
-7. Reuse metrics and error analysis from `src/evaluation/`.
-8. Use `src/utils/reproducibility.py::Run` instead of creating another logger.
-9. A new public function requires an uncovered gap, typing, docstring and tests.
-10. Review `git diff` and run relevant tests before integration.
+1. Read the Executive continuation map and Attention report.
+2. Search the symbol index before proposing a new function or class.
+3. Open the implementation, its tests and its known consumers.
+4. Reuse or extend the canonical module when the responsibility already exists.
+5. Keep reusable logic in `src/`; notebooks should orchestrate, explain and plot.
+6. Keep decisions and parameters in `configs/`; keep artifacts in `outputs/` or
+   `reports/` according to project conventions.
+7. Treat untracked code as working-tree evidence, not as committed architecture.
+8. A new public function needs a documented gap, canonical module, typing,
+   docstring, tests and updated documentation.
+9. If configuration, code, tests and older plans disagree, report the conflict.
+   Do not choose silently.
+10. After relevant changes, run tests, review the diff and regenerate this file.
 
-## 4. Source precedence
+## 4. Evidence precedence
 
-1. Executable code and tests describe actual behavior.
-2. `configs/supervised.yaml` describes approved or pending decisions and gates.
-3. This generated reference combines the current codebase.
-4. Older plans describe intent, not necessarily implementation.
+1. Current executable code and current tests.
+2. Active configuration and explicit decision records.
+3. Current notebooks as orchestration evidence.
+4. Generated snapshot sections in this document.
+5. Older plans and roadmaps as historical intent only.
 
-## 5. Status labels
+## 5. Status vocabulary
 
-- **Implemented:** executable code exists.
-- **Configured:** a value or rule exists in configuration.
-- **Planned:** described but not confirmed in executable code.
-- **Placeholder:** intentionally empty file reserved for later work.
-- **Attention:** overlap, pending decision or technical risk.
-'''
+- **Implemented:** executable code exists in the current snapshot.
+- **Configured:** an active value, rule or gate exists in configuration.
+- **Tested:** at least one static test reference was found for the symbol/module.
+- **Consumed:** at least one static import or call reference was found.
+- **Working tree:** relevant but not tracked in the current commit.
+- **Planned:** described in text but not confirmed in executable code.
+- **Attention:** mismatch, duplication risk, stale reference or unresolved contract.
+"""
 
 
-def git(root: Path, *args: str) -> str:
-    p = subprocess.run(
-        ["git", *args],
-        cwd=root,
+@dataclass
+class GitEntry:
+    path: str
+    tracked: bool
+    status: str = ""
+    exists: bool = True
+
+
+@dataclass
+class Symbol:
+    module: str
+    path: str
+    qualname: str
+    name: str
+    kind: str
+    signature: str
+    lineno: int
+    end_lineno: int | None
+    docstring: str
+    decorators: list[str] = field(default_factory=list)
+    calls: list[str] = field(default_factory=list)
+    imports: list[str] = field(default_factory=list)
+    env_vars: list[str] = field(default_factory=list)
+    file_literals: list[str] = field(default_factory=list)
+    is_private: bool = False
+
+
+@dataclass
+class PythonFileAnalysis:
+    path: str
+    module: str
+    docstring: str
+    parse_error: str | None
+    imports: list[str]
+    internal_imports: list[str]
+    external_imports: list[str]
+    calls: list[str]
+    symbols: list[Symbol]
+    constants: dict[str, str]
+    env_vars: list[str]
+    file_literals: list[str]
+
+
+@dataclass
+class NotebookAnalysis:
+    path: str
+    cells: int
+    code_cells: int
+    markdown_cells: int
+    kernel: dict[str, Any]
+    headings: list[str]
+    imports: list[str]
+    internal_imports: list[str]
+    functions: list[Symbol]
+    classes: list[Symbol]
+    assignments: list[str]
+    file_literals: list[str]
+    env_vars: list[str]
+    parse_errors: list[str]
+    code_lines: int
+    outputs_omitted: bool = True
+
+
+@dataclass
+class Attention:
+    severity: str
+    category: str
+    message: str
+    evidence: list[str] = field(default_factory=list)
+    recommendation: str = ""
+
+
+def run_command(
+    args: list[str],
+    *,
+    cwd: Path,
+    check: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        args,
+        cwd=cwd,
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
     )
-    if p.returncode:
-        raise RuntimeError(p.stderr.strip() or "Git command failed")
-    return p.stdout
+    if check and result.returncode:
+        raise RuntimeError(
+            result.stderr.strip()
+            or result.stdout.strip()
+            or f"Command failed: {' '.join(args)}"
+        )
+    return result
+
+
+def git(root: Path, *args: str, check: bool = True) -> str:
+    return run_command(["git", *args], cwd=root, check=check).stdout
 
 
 def root_dir() -> Path:
-    p = subprocess.run(
+    result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
     )
-    if p.returncode:
+    if result.returncode:
         raise RuntimeError("Run inside the Git repository.")
-    return Path(p.stdout.strip()).resolve()
+    return Path(result.stdout.strip()).resolve()
 
 
-def tracked(
-    root: Path,
-) -> tuple[list[Path], list[Path]]:
-    """
-    Retorna os arquivos rastreados que ainda existem na pasta local
-    e, separadamente, os arquivos rastreados ausentes.
+def normalize_path(path: Path) -> str:
+    return path.as_posix()
 
-    Arquivos excluídos localmente continuam visíveis no git status,
-    mas não são enviados para leitura com Path.read_bytes().
-    """
 
-    caminhos_rastreados = [
-        Path(linha)
-        for linha in git(
+def module_name(path: Path) -> str:
+    without_suffix = path.with_suffix("")
+    parts = list(without_suffix.parts)
+    if parts and parts[-1] == "__init__":
+        parts = parts[:-1]
+    return ".".join(parts)
+
+
+def parse_porcelain_status(root: Path) -> dict[str, str]:
+    raw = git(root, "status", "--porcelain=v1", "-z")
+    items = raw.split("\0")
+    status: dict[str, str] = {}
+    i = 0
+    while i < len(items):
+        item = items[i]
+        if not item:
+            i += 1
+            continue
+        code = item[:2]
+        path_text = item[3:]
+        if code[0] in {"R", "C"} and i + 1 < len(items):
+            new_path = items[i + 1]
+            status[new_path] = code
+            i += 2
+        else:
+            status[path_text] = code
+            i += 1
+    return status
+
+
+def collect_git_entries(root: Path) -> list[GitEntry]:
+    status_map = parse_porcelain_status(root)
+    tracked_paths = {
+        line.strip()
+        for line in git(root, "ls-files").splitlines()
+        if line.strip()
+    }
+    untracked_paths = {
+        line.strip()
+        for line in git(
             root,
             "ls-files",
+            "--others",
+            "--exclude-standard",
         ).splitlines()
-        if linha.strip()
-    ]
-
-    caminhos_existentes = sorted(
-        [
-            caminho
-            for caminho in caminhos_rastreados
-            if (
-                root
-                / caminho
-            ).is_file()
-        ],
-        key=lambda caminho: (
-            caminho.as_posix().lower()
-        ),
-    )
-
-    caminhos_ausentes = sorted(
-        [
-            caminho
-            for caminho in caminhos_rastreados
-            if not (
-                root
-                / caminho
-            ).exists()
-        ],
-        key=lambda caminho: (
-            caminho.as_posix().lower()
-        ),
-    )
-
-    return (
-        caminhos_existentes,
-        caminhos_ausentes,
-    )
+        if line.strip()
+    }
+    entries: list[GitEntry] = []
+    for value in sorted(tracked_paths | untracked_paths, key=str.lower):
+        rel = Path(value)
+        exists = (root / rel).is_file()
+        entries.append(
+            GitEntry(
+                path=rel.as_posix(),
+                tracked=value in tracked_paths,
+                status=status_map.get(value, ""),
+                exists=exists,
+            )
+        )
+    return entries
 
 
-def include(path: Path) -> bool:
+def include_path(path: Path, *, tracked: bool) -> bool:
     parts = path.parts
     if any(part in EXCLUDED_DIRS_ANYWHERE for part in parts):
         return False
@@ -218,11 +386,17 @@ def include(path: Path) -> bool:
         return False
     if path.name.startswith(".env") and path.name != ".env.example":
         return False
+    if not tracked and not path.as_posix().startswith(IMPORTANT_UNTRACKED_PREFIXES):
+        return False
     return (
         path.suffix.lower() in TEXT_SUFFIXES
         or path.suffix.lower() == ".ipynb"
         or path.name in SPECIAL_NAMES
     )
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def redact(text: str) -> tuple[str, list[str]]:
@@ -233,94 +407,957 @@ def redact(text: str) -> tuple[str, list[str]]:
     if SECRET_RE.search(text):
         text = SECRET_RE.sub(r"\1[REDACTED]", text)
         warnings.append("possible secret assignment redacted")
+    if URL_CREDENTIAL_RE.search(text):
+        text = URL_CREDENTIAL_RE.sub(r"\1[REDACTED]\3", text)
+        warnings.append("credentials in URL redacted")
     return text, warnings
 
 
 def fence_for(text: str) -> str:
-    """Return a backtick fence longer than any backtick run inside `text`.
-
-    Prevents embedded fences (README, markdown cells) from closing the block.
-    """
-    longest = max((len(m.group(0)) for m in BACKTICK_RUN_RE.finditer(text)), default=0)
+    longest = max(
+        (len(match.group(0)) for match in BACKTICK_RUN_RE.finditer(text)),
+        default=0,
+    )
     return "`" * max(3, longest + 1)
 
 
-def code_block(text: str, lexer: str) -> str:
+def code_block(text: str, lexer: str = "text") -> str:
     fence = fence_for(text)
     return f"{fence}{lexer}\n{text}\n{fence}"
 
 
-def function_signature(node: ast.AST) -> str:
-    if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        return ""
+def safe_unparse(node: ast.AST | None, default: str = "") -> str:
+    if node is None:
+        return default
+    try:
+        return ast.unparse(node)
+    except Exception:
+        return default or "..."
+
+
+def literal_preview(node: ast.AST, max_chars: int = 300) -> str:
+    try:
+        value = ast.literal_eval(node)
+        text = repr(value)
+    except Exception:
+        text = safe_unparse(node, "<dynamic>")
+    return text if len(text) <= max_chars else text[: max_chars - 3] + "..."
+
+
+def function_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
-    try:
-        args = ast.unparse(node.args)
-    except Exception:
-        args = "..."
-    try:
-        returns = " -> " + ast.unparse(node.returns) if node.returns else ""
-    except Exception:
-        returns = ""
+    args = safe_unparse(node.args, "...")
+    returns = f" -> {safe_unparse(node.returns)}" if node.returns else ""
     return f"{prefix} {node.name}({args}){returns}"
 
 
-def api_section(path: Path, text: str) -> tuple[str, list[str]]:
+def dotted_name(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        parent = dotted_name(node.value)
+        return f"{parent}.{node.attr}" if parent else node.attr
+    if isinstance(node, ast.Call):
+        return dotted_name(node.func)
+    return None
+
+
+def imported_names(tree: ast.AST) -> list[str]:
+    imports: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.add(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            prefix = "." * node.level + (node.module or "")
+            for alias in node.names:
+                imports.add(f"{prefix}.{alias.name}".strip("."))
+    return sorted(imports)
+
+
+def call_names(tree: ast.AST) -> list[str]:
+    values = {
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        for name in [dotted_name(node.func)]
+        if name
+    }
+    return sorted(values)
+
+
+def assigned_constant_names(tree: ast.Module) -> dict[str, str]:
+    constants: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            if isinstance(target, ast.Name) and target.id.isupper():
+                constants[target.id] = literal_preview(node.value)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id.isupper() and node.value:
+                constants[node.target.id] = literal_preview(node.value)
+    return constants
+
+
+def env_names(text: str) -> list[str]:
+    return sorted(set(ENV_RE.findall(text)))
+
+
+def file_literals(text: str) -> list[str]:
+    return sorted(set(match.group(1) for match in FILE_LITERAL_RE.finditer(text)))
+
+
+def extract_symbol(
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+    *,
+    path: Path,
+    module: str,
+    parent: str = "",
+    file_imports: list[str],
+    text: str,
+) -> Symbol:
+    qualname = f"{parent}.{node.name}" if parent else node.name
+    if isinstance(node, ast.ClassDef):
+        signature = f"class {node.name}"
+        kind = "class"
+    else:
+        signature = function_signature(node)
+        kind = "function" if not parent else "method"
+    doc = (ast.get_docstring(node) or "").strip()
+    if len(doc) > MAX_DOCSTRING_CHARS:
+        doc = doc[: MAX_DOCSTRING_CHARS - 3] + "..."
+    segment = ast.get_source_segment(text, node) or ""
+    return Symbol(
+        module=module,
+        path=path.as_posix(),
+        qualname=qualname,
+        name=node.name,
+        kind=kind,
+        signature=signature,
+        lineno=node.lineno,
+        end_lineno=getattr(node, "end_lineno", None),
+        docstring=doc,
+        decorators=[safe_unparse(d) for d in node.decorator_list],
+        calls=call_names(node),
+        imports=file_imports,
+        env_vars=env_names(segment),
+        file_literals=file_literals(segment),
+        is_private=node.name.startswith("_"),
+    )
+
+
+def analyze_python(path: Path, text: str, internal_roots: set[str]) -> PythonFileAnalysis:
+    module = module_name(path)
     try:
-        tree = ast.parse(text)
+        tree = ast.parse(text, filename=path.as_posix())
     except SyntaxError as exc:
-        return f"### `{path.as_posix()}`\n\n- Parse error: `{exc}`\n", []
+        return PythonFileAnalysis(
+            path=path.as_posix(),
+            module=module,
+            docstring="",
+            parse_error=str(exc),
+            imports=[],
+            internal_imports=[],
+            external_imports=[],
+            calls=[],
+            symbols=[],
+            constants={},
+            env_vars=env_names(text),
+            file_literals=file_literals(text),
+        )
+    imports = imported_names(tree)
+    internal = sorted(
+        value
+        for value in imports
+        if value.split(".")[0] in internal_roots
+    )
+    external = sorted(set(imports) - set(internal))
+    symbols: list[Symbol] = []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            top = extract_symbol(
+                node,
+                path=path,
+                module=module,
+                file_imports=imports,
+                text=text,
+            )
+            symbols.append(top)
+            if isinstance(node, ast.ClassDef):
+                for child in node.body:
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        symbols.append(
+                            extract_symbol(
+                                child,
+                                path=path,
+                                module=module,
+                                parent=node.name,
+                                file_imports=imports,
+                                text=text,
+                            )
+                        )
+    return PythonFileAnalysis(
+        path=path.as_posix(),
+        module=module,
+        docstring=(ast.get_docstring(tree) or "").strip(),
+        parse_error=None,
+        imports=imports,
+        internal_imports=internal,
+        external_imports=external,
+        calls=call_names(tree),
+        symbols=symbols,
+        constants=assigned_constant_names(tree),
+        env_vars=env_names(text),
+        file_literals=file_literals(text),
+    )
 
-    out = [f"### `{path.as_posix()}`", ""]
-    module_doc = ast.get_docstring(tree)
-    if module_doc:
-        out += [module_doc.strip(), ""]
 
-    found = False
+def notebook_code_analysis(
+    path: Path,
+    source: str,
+    cell_number: int,
+    internal_roots: set[str],
+) -> tuple[list[str], list[str], list[Symbol], list[Symbol], list[str], list[str], list[str]]:
+    label = Path(f"{path.as_posix()}#cell-{cell_number}.py")
+    try:
+        tree = ast.parse(source, filename=label.as_posix())
+    except SyntaxError as exc:
+        return [], [], [], [], [], [], [f"Cell {cell_number}: {exc}"]
+    imports = imported_names(tree)
+    internal = sorted(
+        value for value in imports if value.split(".")[0] in internal_roots
+    )
+    functions: list[Symbol] = []
+    classes: list[Symbol] = []
+    assignments: list[str] = []
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            found = True
-            out += [
-                f"#### `{function_signature(node)}`",
-                f"- Source line: `{node.lineno}`",
-                ast.get_docstring(node) or "- **Missing docstring**",
-                "",
-            ]
+            functions.append(
+                extract_symbol(
+                    node,
+                    path=label,
+                    module=f"notebook:{path.as_posix()}",
+                    file_imports=imports,
+                    text=source,
+                )
+            )
         elif isinstance(node, ast.ClassDef):
-            found = True
-            out += [
-                f"#### `class {node.name}`",
-                f"- Source line: `{node.lineno}`",
-                ast.get_docstring(node) or "- **Missing class docstring**",
-                "",
-            ]
-            for method in node.body:
-                if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    out += [
-                        f"##### `{function_signature(method)}`",
-                        ast.get_docstring(method) or "- **Missing method docstring**",
-                        "",
-                    ]
-    if not found:
-        out += ["- No top-level functions or classes detected.", ""]
-    return "\n".join(out), sorted(set(ENV_RE.findall(text)))
+            classes.append(
+                extract_symbol(
+                    node,
+                    path=label,
+                    module=f"notebook:{path.as_posix()}",
+                    file_imports=imports,
+                    text=source,
+                )
+            )
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets: list[ast.AST] = (
+                node.targets if isinstance(node, ast.Assign) else [node.target]
+            )
+            for target in targets:
+                if isinstance(target, ast.Name) and (
+                    target.id.isupper()
+                    or target.id.lower().endswith(("_dir", "_path", "_file"))
+                ):
+                    assignments.append(target.id)
+    return (
+        imports,
+        internal,
+        functions,
+        classes,
+        assignments,
+        file_literals(source),
+        [],
+    )
 
 
-def notebook(data: bytes) -> tuple[str, dict]:
-    if not data:
-        return "_Empty placeholder._\n", {"cells": 0, "placeholder": True}
+def analyze_notebook(
+    path: Path,
+    data: bytes,
+    internal_roots: set[str],
+) -> tuple[NotebookAnalysis, dict[str, Any]]:
     nb = json.loads(data.decode("utf-8-sig"))
+    headings: list[str] = []
+    imports: set[str] = set()
+    internal_imports: set[str] = set()
+    functions: list[Symbol] = []
+    classes: list[Symbol] = []
+    assignments: set[str] = set()
+    literals: set[str] = set()
+    envs: set[str] = set()
+    parse_errors: list[str] = []
+    code_lines = 0
+    code_cells = 0
+    markdown_cells = 0
+    cell_summaries: list[dict[str, Any]] = []
+    for number, cell in enumerate(nb.get("cells", []), 1):
+        kind = cell.get("cell_type", "unknown")
+        source = "".join(cell.get("source", []))
+        if kind == "markdown":
+            markdown_cells += 1
+            for _, title in HEADING_RE.findall(source):
+                headings.append(title.strip())
+        elif kind == "code":
+            code_cells += 1
+            code_lines += len(source.splitlines())
+            (
+                cell_imports,
+                cell_internal,
+                cell_functions,
+                cell_classes,
+                cell_assignments,
+                cell_literals,
+                cell_errors,
+            ) = notebook_code_analysis(path, source, number, internal_roots)
+            imports.update(cell_imports)
+            internal_imports.update(cell_internal)
+            functions.extend(cell_functions)
+            classes.extend(cell_classes)
+            assignments.update(cell_assignments)
+            literals.update(cell_literals)
+            envs.update(env_names(source))
+            parse_errors.extend(cell_errors)
+        cell_summaries.append(
+            {
+                "number": number,
+                "type": kind,
+                "lines": len(source.splitlines()),
+                "heading": next(
+                    (title.strip() for _, title in HEADING_RE.findall(source)),
+                    "",
+                ),
+            }
+        )
+    analysis = NotebookAnalysis(
+        path=path.as_posix(),
+        cells=len(nb.get("cells", [])),
+        code_cells=code_cells,
+        markdown_cells=markdown_cells,
+        kernel=nb.get("metadata", {}).get("kernelspec", {}),
+        headings=headings,
+        imports=sorted(imports),
+        internal_imports=sorted(internal_imports),
+        functions=functions,
+        classes=classes,
+        assignments=sorted(assignments),
+        file_literals=sorted(literals),
+        env_vars=sorted(envs),
+        parse_errors=parse_errors,
+        code_lines=code_lines,
+    )
+    return analysis, {"notebook": nb, "cells": cell_summaries}
+
+
+def notebook_full_source(nb: dict[str, Any]) -> str:
     blocks: list[str] = []
-    for i, cell in enumerate(nb.get("cells", []), 1):
+    for number, cell in enumerate(nb.get("cells", []), 1):
         kind = cell.get("cell_type", "unknown")
         source = "".join(cell.get("source", [])).rstrip()
         lexer = "python" if kind == "code" else "markdown"
-        blocks.append(f"### Cell {i} [{kind}]\n\n{code_block(source, lexer)}")
-    return "\n\n".join(blocks) + "\n", {
-        "cells": len(nb.get("cells", [])),
-        "kernel": nb.get("metadata", {}).get("kernelspec", {}),
-        "outputs_omitted": True,
+        blocks.append(
+            f"### Cell {number} [{kind}]\n\n{code_block(source, lexer)}"
+        )
+    return "\n\n".join(blocks)
+
+
+def notebook_reduced_source(
+    nb: dict[str, Any],
+    analysis: NotebookAnalysis,
+) -> str:
+    parts = [
+        "Large notebook reduced view. Outputs are omitted.",
+        "",
+        f"- Cells: `{analysis.cells}`",
+        f"- Code cells: `{analysis.code_cells}`",
+        f"- Markdown cells: `{analysis.markdown_cells}`",
+        f"- Code lines: `{analysis.code_lines}`",
+        "",
+        "### Headings",
+        "",
+    ]
+    parts.extend(f"- {heading}" for heading in analysis.headings)
+    parts += ["", "### Functions/classes defined in notebook", ""]
+    symbols = analysis.functions + analysis.classes
+    if symbols:
+        parts.extend(
+            f"- `{symbol.signature}` at `{symbol.path}:{symbol.lineno}`"
+            for symbol in symbols
+        )
+    else:
+        parts.append("- None detected.")
+    parts += ["", "### Selected cell source", ""]
+    for number, cell in enumerate(nb.get("cells", []), 1):
+        kind = cell.get("cell_type", "unknown")
+        source = "".join(cell.get("source", [])).rstrip()
+        if kind == "markdown":
+            if HEADING_RE.search(source):
+                parts.append(
+                    f"#### Cell {number} [markdown]\n\n{code_block(source, 'markdown')}"
+                )
+        elif kind == "code":
+            lines = source.splitlines()
+            selected = (
+                any(
+                    token in source
+                    for token in (
+                        "def ", "class ", "from src", "import src",
+                        "Pipeline(", "ColumnTransformer(", "to_csv(",
+                        "to_parquet(", "Run(", "read_parquet(",
+                    )
+                )
+                or number <= 3
+            )
+            if selected:
+                clipped = lines[:MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL]
+                if len(lines) > len(clipped):
+                    clipped.append(
+                        f"# ... {len(lines) - len(clipped)} lines omitted from this cell ..."
+                    )
+                parts.append(
+                    f"#### Cell {number} [code]\n\n"
+                    f"{code_block(chr(10).join(clipped), 'python')}"
+                )
+    return "\n\n".join(parts)
+
+
+def flatten_mapping(value: Any, prefix: str = "") -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    if isinstance(value, dict):
+        for key, child in value.items():
+            new_prefix = f"{prefix}.{key}" if prefix else str(key)
+            result.update(flatten_mapping(child, new_prefix))
+    elif isinstance(value, list):
+        result[prefix] = value
+    else:
+        result[prefix] = value
+    return result
+
+
+def load_yaml_safely(path: Path) -> tuple[Any | None, str | None]:
+    if yaml is None:
+        return None, "PyYAML not available"
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8-sig")), None
+    except Exception as exc:
+        return None, repr(exc)
+
+
+def nested_get(mapping: Any, *keys: str, default: Any = None) -> Any:
+    current = mapping
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return default
+        current = current[key]
+    return current
+
+
+def all_python_names(analyses: list[PythonFileAnalysis]) -> set[str]:
+    values: set[str] = set()
+    for analysis in analyses:
+        values.update(symbol.name for symbol in analysis.symbols)
+    return values
+
+
+def index_consumers(
+    symbols: list[Symbol],
+    python_files: list[PythonFileAnalysis],
+    notebooks: list[NotebookAnalysis],
+) -> dict[str, list[str]]:
+    consumers: dict[str, set[str]] = defaultdict(set)
+    by_name: defaultdict[str, list[Symbol]] = defaultdict(list)
+    for symbol in symbols:
+        by_name[symbol.name].append(symbol)
+    for analysis in python_files:
+        haystack = set(analysis.calls) | set(analysis.imports)
+        for name, matches in by_name.items():
+            if any(
+                item == name
+                or item.endswith(f".{name}")
+                for item in haystack
+            ):
+                for match in matches:
+                    if analysis.path != match.path:
+                        consumers[f"{match.module}.{match.qualname}"].add(analysis.path)
+    for notebook in notebooks:
+        haystack = set(notebook.imports)
+        for name, matches in by_name.items():
+            if any(item == name or item.endswith(f".{name}") for item in haystack):
+                for match in matches:
+                    consumers[f"{match.module}.{match.qualname}"].add(notebook.path)
+    return {
+        key: sorted(values)
+        for key, values in sorted(consumers.items())
     }
+
+
+def index_tests(
+    symbols: list[Symbol],
+    python_files: list[PythonFileAnalysis],
+) -> dict[str, list[str]]:
+    test_files = [
+        item for item in python_files
+        if item.path.startswith("tests/") or Path(item.path).name.startswith("test_")
+    ]
+    tests: dict[str, set[str]] = defaultdict(set)
+    for symbol in symbols:
+        key = f"{symbol.module}.{symbol.qualname}"
+        for test in test_files:
+            if (
+                symbol.name in test.calls
+                or any(value.endswith(f".{symbol.name}") for value in test.calls)
+                or any(value.endswith(f".{symbol.name}") for value in test.imports)
+            ):
+                tests[key].add(test.path)
+    return {key: sorted(values) for key, values in sorted(tests.items())}
+
+
+def notebook_duplicate_symbols(
+    notebooks: list[NotebookAnalysis],
+    python_files: list[PythonFileAnalysis],
+) -> list[Attention]:
+    canonical_names: defaultdict[str, list[str]] = defaultdict(list)
+    for analysis in python_files:
+        if analysis.path.startswith("src/"):
+            for symbol in analysis.symbols:
+                if symbol.kind in {"function", "class"}:
+                    canonical_names[symbol.name].append(symbol.path)
+    attention: list[Attention] = []
+    for notebook in notebooks:
+        for symbol in notebook.functions + notebook.classes:
+            if symbol.name in canonical_names:
+                attention.append(
+                    Attention(
+                        severity="medium",
+                        category="notebook-duplication-risk",
+                        message=(
+                            f"Notebook defines `{symbol.name}`, a name already present in src."
+                        ),
+                        evidence=[symbol.path, *sorted(set(canonical_names[symbol.name]))],
+                        recommendation=(
+                            "Open both implementations before editing. Reuse or extend the src "
+                            "contract when responsibilities overlap."
+                        ),
+                    )
+                )
+            else:
+                attention.append(
+                    Attention(
+                        severity="low",
+                        category="notebook-reusable-logic",
+                        message=f"Notebook-local reusable candidate: `{symbol.name}`.",
+                        evidence=[symbol.path],
+                        recommendation=(
+                            "Keep it in the notebook if it is single-use orchestration; move it "
+                            "to src with tests if another notebook needs it."
+                        ),
+                    )
+                )
+    return attention
+
+
+def duplicate_symbol_attention(symbols: list[Symbol]) -> list[Attention]:
+    grouped: defaultdict[str, list[Symbol]] = defaultdict(list)
+    for symbol in symbols:
+        if symbol.kind in {"function", "class"}:
+            grouped[symbol.name].append(symbol)
+    attention: list[Attention] = []
+    for name, matches in grouped.items():
+        unique_paths = sorted({item.path for item in matches})
+        if len(unique_paths) > 1:
+            attention.append(
+                Attention(
+                    severity="medium",
+                    category="duplicate-symbol-name",
+                    message=f"Symbol name `{name}` exists in multiple files.",
+                    evidence=unique_paths,
+                    recommendation=(
+                        "Confirm whether these are distinct responsibilities or competing "
+                        "implementations before creating another symbol with the same role."
+                    ),
+                )
+            )
+    return attention
+
+
+def config_contract_attention(
+    config: Any,
+    python_files: list[PythonFileAnalysis],
+    notebooks: list[NotebookAnalysis],
+) -> list[Attention]:
+    if not isinstance(config, dict):
+        return []
+    attention: list[Attention] = []
+    feature_lists: dict[str, list[str]] = {}
+    for key in ("numericas", "categoricas", "final", "proibidas"):
+        value = nested_get(config, "features", key, default=[])
+        if isinstance(value, list):
+            feature_lists[key] = [str(item) for item in value]
+    derived = nested_get(config, "features", "engenharia", "derivadas", default=[])
+    inputs = nested_get(config, "features", "engenharia", "entradas", default=[])
+    if isinstance(derived, list):
+        feature_lists["derivadas"] = [str(item) for item in derived]
+    if isinstance(inputs, list):
+        feature_lists["entradas"] = [str(item) for item in inputs]
+    active_features = set(feature_lists.get("final") or [])
+    if not active_features:
+        active_features = set(feature_lists.get("numericas", [])) | set(
+            feature_lists.get("categoricas", [])
+        )
+    prohibited = set(feature_lists.get("proibidas", []))
+    overlap = sorted(active_features & prohibited)
+    if overlap:
+        attention.append(
+            Attention(
+                severity="high",
+                category="feature-leakage-contract",
+                message="Configured model features overlap `features.proibidas`.",
+                evidence=overlap,
+                recommendation="Remove the overlap or formally revise the configuration and tests.",
+            )
+        )
+    declared_derived = set(feature_lists.get("derivadas", []))
+    source_text = "\n".join(
+        " ".join(item.calls + list(item.constants) + item.file_literals)
+        for item in python_files
+        if item.path.startswith("src/features/") or item.path.startswith("src/data/")
+    )
+    missing_evidence = sorted(
+        value for value in declared_derived if value not in source_text
+    )
+    if missing_evidence:
+        attention.append(
+            Attention(
+                severity="medium",
+                category="derived-feature-contract",
+                message=(
+                    "Configured derived features were not found as static names in "
+                    "src/features or src/data."
+                ),
+                evidence=missing_evidence,
+                recommendation=(
+                    "Confirm whether the names are generated dynamically, stale, or missing "
+                    "from the canonical engineering implementation."
+                ),
+            )
+        )
+    gate_mapping = nested_get(config, "gates", default={})
+    gate_names = set(gate_mapping) if isinstance(gate_mapping, dict) else set()
+    code_gate_literals: set[str] = set()
+    gate_re = re.compile(r"\bG\d+_[A-Za-z0-9_]+\b")
+    for item in python_files:
+        path = Path(item.path)
+        if path.suffix == ".py":
+            code_gate_literals.update(
+                gate_re.findall(" ".join(item.calls + item.file_literals + list(item.constants.values())))
+            )
+    for notebook in notebooks:
+        code_gate_literals.update(gate_re.findall(" ".join(notebook.file_literals)))
+    stale_gates = sorted(code_gate_literals - gate_names)
+    if stale_gates:
+        attention.append(
+            Attention(
+                severity="high",
+                category="gate-contract",
+                message="Code/notebooks reference gate names absent from active YAML.",
+                evidence=stale_gates,
+                recommendation="Align code, tests and YAML gate names in one change.",
+            )
+        )
+    fractions = nested_get(config, "temporal", "fracao", default={})
+    if isinstance(fractions, dict):
+        numeric = [value for value in fractions.values() if isinstance(value, (int, float))]
+        if numeric and abs(sum(numeric) - 1.0) > 1e-9:
+            attention.append(
+                Attention(
+                    severity="high",
+                    category="split-contract",
+                    message="Configured split fractions do not sum to 1.",
+                    evidence=[repr(fractions)],
+                    recommendation="Correct the active split contract before model development.",
+                )
+            )
+    return attention
+
+
+def import_integrity_attention(
+    python_files: list[PythonFileAnalysis],
+    available_modules: set[str],
+) -> list[Attention]:
+    missing: defaultdict[str, set[str]] = defaultdict(set)
+    roots = {module.split(".")[0] for module in available_modules}
+    for analysis in python_files:
+        for value in analysis.internal_imports:
+            candidate = value
+            if candidate in available_modules:
+                continue
+            if any(module.startswith(candidate + ".") for module in available_modules):
+                continue
+            if candidate.split(".")[0] in roots:
+                missing[candidate].add(analysis.path)
+    return [
+        Attention(
+            severity="high",
+            category="internal-import-integrity",
+            message=f"Internal import `{name}` has no matching tracked/working-tree module.",
+            evidence=sorted(paths),
+            recommendation="Check branch completeness, rename history or stale imports before recreating the module.",
+        )
+        for name, paths in sorted(missing.items())
+    ]
+
+
+def stale_document_attention(
+    files_text: dict[str, str],
+    existing_paths: set[str],
+) -> list[Attention]:
+    attention: list[Attention] = []
+    path_re = re.compile(
+        r"(?<![A-Za-z0-9_.-])((?:src|tests|notebooks|configs|tools|docs)/"
+        r"[A-Za-z0-9_./ -]+\.(?:py|ipynb|yaml|yml|md|csv))"
+    )
+    for path, text in files_text.items():
+        if not (
+            path.lower().endswith((".md", ".rst", ".txt"))
+            or Path(path).name.upper().startswith("README")
+        ):
+            continue
+        references = sorted(set(match.group(1).strip() for match in path_re.finditer(text)))
+        missing = [value for value in references if value not in existing_paths]
+        if missing:
+            attention.append(
+                Attention(
+                    severity="medium",
+                    category="stale-document-path",
+                    message=f"Documentation `{path}` references paths absent from the snapshot.",
+                    evidence=missing[:30],
+                    recommendation="Confirm whether the documentation is historical or needs updating.",
+                )
+            )
+    return attention
+
+
+def working_tree_attention(entries: list[GitEntry]) -> list[Attention]:
+    relevant = [entry.path for entry in entries if not entry.tracked and entry.exists]
+    if not relevant:
+        return []
+    return [
+        Attention(
+            severity="high",
+            category="untracked-relevant-files",
+            message="Relevant working-tree files are not part of the current commit.",
+            evidence=relevant,
+            recommendation=(
+                "Review and add intentional source/config/test/notebook files before treating "
+                "the snapshot as a committed project state."
+            ),
+        )
+    ]
+
+
+def test_inventory(python_files: list[PythonFileAnalysis]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for analysis in python_files:
+        if not (
+            analysis.path.startswith("tests/")
+            or Path(analysis.path).name.startswith("test_")
+        ):
+            continue
+        tests = [
+            symbol
+            for symbol in analysis.symbols
+            if symbol.kind == "function" and symbol.name.startswith("test_")
+        ]
+        rows.append(
+            {
+                "path": analysis.path,
+                "tests": [symbol.name for symbol in tests],
+                "count": len(tests),
+                "imports": analysis.internal_imports,
+            }
+        )
+    return rows
+
+
+def render_attention(attention: list[Attention]) -> str:
+    if not attention:
+        return "- No static inconsistencies detected by this generator."
+    order = {"high": 0, "medium": 1, "low": 2}
+    blocks: list[str] = []
+    for index, item in enumerate(
+        sorted(attention, key=lambda value: (order.get(value.severity, 9), value.category, value.message)),
+        1,
+    ):
+        blocks += [
+            f"### A{index}. {item.severity.upper()} — {item.category}",
+            "",
+            item.message,
+            "",
+            "**Evidence**",
+            "",
+            *(f"- `{value}`" for value in item.evidence),
+            "",
+            f"**Recommended action:** {item.recommendation}",
+            "",
+        ]
+    return "\n".join(blocks).rstrip()
+
+
+def symbol_markdown(
+    symbol: Symbol,
+    consumers: dict[str, list[str]],
+    tests: dict[str, list[str]],
+) -> str:
+    key = f"{symbol.module}.{symbol.qualname}"
+    lines = [
+        f"#### `{symbol.signature}`",
+        "",
+        f"- Location: `{symbol.path}:{symbol.lineno}`",
+        f"- Qualified name: `{key}`",
+        f"- Visibility: `{'private' if symbol.is_private else 'public'}`",
+        f"- Tested by: {', '.join(f'`{p}`' for p in tests.get(key, [])) or 'not found statically'}",
+        f"- Consumed by: {', '.join(f'`{p}`' for p in consumers.get(key, [])) or 'not found statically'}",
+    ]
+    if symbol.decorators:
+        lines.append("- Decorators: " + ", ".join(f"`{value}`" for value in symbol.decorators))
+    if symbol.calls:
+        lines.append("- Calls: " + ", ".join(f"`{value}`" for value in symbol.calls[:30]))
+    lines += ["", symbol.docstring or "**Missing docstring.**", ""]
+    return "\n".join(lines)
+
+
+def render_python_api(
+    python_files: list[PythonFileAnalysis],
+    consumers: dict[str, list[str]],
+    tests: dict[str, list[str]],
+) -> str:
+    parts: list[str] = []
+    for analysis in sorted(python_files, key=lambda item: item.path.lower()):
+        parts += [f"### `{analysis.path}`", ""]
+        if analysis.parse_error:
+            parts += [f"- Parse error: `{analysis.parse_error}`", ""]
+            continue
+        if analysis.docstring:
+            parts += [analysis.docstring, ""]
+        parts += [
+            f"- Module: `{analysis.module}`",
+            "- Internal imports: "
+            + (", ".join(f"`{value}`" for value in analysis.internal_imports) or "none"),
+            "- External imports: "
+            + (", ".join(f"`{value}`" for value in analysis.external_imports) or "none"),
+            "",
+        ]
+        top_symbols = [
+            value for value in analysis.symbols
+            if value.kind in {"function", "class"}
+        ]
+        if not top_symbols:
+            parts += ["- No top-level functions or classes detected.", ""]
+        else:
+            for symbol in top_symbols:
+                parts.append(symbol_markdown(symbol, consumers, tests))
+                methods = [
+                    value for value in analysis.symbols
+                    if value.kind == "method" and value.qualname.startswith(symbol.name + ".")
+                ]
+                for method in methods:
+                    parts.append(symbol_markdown(method, consumers, tests))
+    return "\n".join(parts).rstrip()
+
+
+def render_notebook_inventory(notebooks: list[NotebookAnalysis]) -> str:
+    parts: list[str] = []
+    for item in sorted(notebooks, key=lambda value: value.path.lower()):
+        parts += [
+            f"### `{item.path}`",
+            "",
+            f"- Cells: `{item.cells}` (`{item.code_cells}` code, `{item.markdown_cells}` markdown)",
+            f"- Code lines: `{item.code_lines}`",
+            "- Internal imports: "
+            + (", ".join(f"`{value}`" for value in item.internal_imports) or "none"),
+            "- Notebook-defined functions/classes: "
+            + (
+                ", ".join(f"`{value.name}`" for value in item.functions + item.classes)
+                or "none"
+            ),
+            "- Referenced artifacts: "
+            + (", ".join(f"`{value}`" for value in item.file_literals) or "none"),
+            "",
+            "**Headings**",
+            "",
+            *(f"- {heading}" for heading in item.headings),
+            "",
+        ]
+        if item.parse_errors:
+            parts += ["**Code-cell parse notes**", ""]
+            parts.extend(f"- `{value}`" for value in item.parse_errors)
+            parts.append("")
+    return "\n".join(parts).rstrip()
+
+
+def render_dependency_map(python_files: list[PythonFileAnalysis]) -> str:
+    lines = ["| Module | Internal dependencies |", "|---|---|"]
+    for item in sorted(python_files, key=lambda value: value.module.lower()):
+        if item.path.startswith("src/"):
+            deps = ", ".join(f"`{value}`" for value in item.internal_imports) or "none"
+            lines.append(f"| `{item.module}` | {deps} |")
+    return "\n".join(lines)
+
+
+def render_test_inventory(rows: list[dict[str, Any]]) -> str:
+    if not rows:
+        return "- No test files detected."
+    lines = ["| Test file | Tests | Internal imports |", "|---|---:|---|"]
+    for row in rows:
+        imports = ", ".join(f"`{value}`" for value in row["imports"]) or "none"
+        lines.append(f"| `{row['path']}` | {row['count']} | {imports} |")
+    return "\n".join(lines)
+
+
+def source_section(
+    *,
+    rel: Path,
+    data: bytes,
+    text: str | None,
+    digest: str,
+    tracked: bool,
+    status: str,
+    max_inline_bytes: int,
+    notebook_payload: dict[str, Any] | None,
+    notebook_analysis: NotebookAnalysis | None,
+    warnings: list[str],
+) -> str:
+    header = [
+        f"## `{rel.as_posix()}`",
+        "",
+        f"- Git: `{'tracked' if tracked else 'working tree / untracked'}`",
+        f"- Status: `{status or 'clean'}`",
+        f"- SHA-256: `{digest}`",
+        f"- Bytes: `{len(data)}`",
+    ]
+    if warnings:
+        header.append("- Security: " + "; ".join(warnings))
+    header.append("")
+    if rel.suffix.lower() == ".ipynb":
+        assert notebook_payload is not None and notebook_analysis is not None
+        nb = notebook_payload["notebook"]
+        if len(data) <= max_inline_bytes:
+            body = notebook_full_source(nb)
+        else:
+            body = notebook_reduced_source(nb, notebook_analysis)
+        return "\n".join(header) + body + "\n"
+    if text is None:
+        return "\n".join(header) + "_No textual source included._\n"
+    if len(data) > max_inline_bytes:
+        preview_lines = text.splitlines()[:400]
+        body = code_block(
+            "\n".join(preview_lines)
+            + f"\n# ... file truncated; {max(0, len(text.splitlines()) - 400)} lines omitted ...",
+            LANG.get(rel.suffix.lower(), "text"),
+        )
+    else:
+        body = code_block(text.rstrip(), LANG.get(rel.suffix.lower(), "text"))
+    return "\n".join(header) + body + "\n"
 
 
 def atomic_write(path: Path, text: str) -> None:
@@ -328,162 +1365,387 @@ def atomic_write(path: Path, text: str) -> None:
     data = text.encode("utf-8")
     if path.exists() and path.read_bytes() == data:
         return
-    with tempfile.NamedTemporaryFile("wb", delete=False, dir=path.parent) as f:
-        f.write(data)
-        temp = f.name
-    Path(temp).replace(path)
+    with tempfile.NamedTemporaryFile("wb", delete=False, dir=path.parent) as handle:
+        handle.write(data)
+        temporary = Path(handle.name)
+    temporary.replace(path)
+
+
+def build_reference(root: Path, *, max_inline_bytes: int) -> tuple[str, dict[str, Any]]:
+    entries = collect_git_entries(root)
+    selected_entries = [
+        entry
+        for entry in entries
+        if entry.exists and include_path(Path(entry.path), tracked=entry.tracked)
+    ]
+    existing_paths = {entry.path for entry in entries if entry.exists}
+    internal_roots = {
+        Path(entry.path).parts[0]
+        for entry in entries
+        if entry.exists and Path(entry.path).suffix.lower() in {".py", ".pyi"}
+    }
+    internal_roots.update({"src", "tests", "tools"})
+
+    python_files: list[PythonFileAnalysis] = []
+    notebooks: list[NotebookAnalysis] = []
+    notebook_payloads: dict[str, dict[str, Any]] = {}
+    files_text: dict[str, str] = {}
+    file_records: list[dict[str, Any]] = []
+    source_sections: list[str] = []
+    skipped: list[str] = []
+    config: Any = None
+    config_error: str | None = None
+
+    for entry in selected_entries:
+        rel = Path(entry.path)
+        absolute = root / rel
+        data = absolute.read_bytes()
+        digest = sha256_bytes(data)
+        suffix = rel.suffix.lower()
+        warnings: list[str] = []
+        text: str | None = None
+        nb_analysis: NotebookAnalysis | None = None
+        nb_payload: dict[str, Any] | None = None
+
+        if suffix in LIKELY_BINARY_SUFFIXES:
+            skipped.append(f"{rel.as_posix()} (binary asset)")
+            continue
+
+        if suffix == ".ipynb":
+            try:
+                nb_analysis, nb_payload = analyze_notebook(rel, data, internal_roots)
+                notebooks.append(nb_analysis)
+                notebook_payloads[rel.as_posix()] = nb_payload
+            except Exception as exc:
+                skipped.append(f"{rel.as_posix()} (notebook parse error: {exc!r})")
+                continue
+        else:
+            if b"\x00" in data[:8192]:
+                skipped.append(f"{rel.as_posix()} (binary content)")
+                continue
+            decoded = data.decode("utf-8-sig", errors="replace")
+            text, warnings = redact(decoded)
+            files_text[rel.as_posix()] = text
+            if suffix in {".py", ".pyi"}:
+                python_files.append(analyze_python(rel, text, internal_roots))
+            if rel.as_posix() == "configs/supervised.yaml":
+                config, config_error = load_yaml_safely(absolute)
+
+        file_records.append(
+            {
+                "path": rel.as_posix(),
+                "tracked": entry.tracked,
+                "status": entry.status,
+                "sha256": digest,
+                "bytes": len(data),
+                "type": "notebook" if suffix == ".ipynb" else suffix.lstrip(".") or "text",
+            }
+        )
+        source_sections.append(
+            source_section(
+                rel=rel,
+                data=data,
+                text=text,
+                digest=digest,
+                tracked=entry.tracked,
+                status=entry.status,
+                max_inline_bytes=max_inline_bytes,
+                notebook_payload=nb_payload,
+                notebook_analysis=nb_analysis,
+                warnings=warnings,
+            )
+        )
+
+    symbols = [symbol for item in python_files for symbol in item.symbols]
+    available_modules = {item.module for item in python_files}
+    consumers = index_consumers(symbols, python_files, notebooks)
+    tests = index_tests(symbols, python_files)
+    tests_summary = test_inventory(python_files)
+
+    attention: list[Attention] = []
+    attention.extend(working_tree_attention(entries))
+    attention.extend(import_integrity_attention(python_files, available_modules))
+    attention.extend(duplicate_symbol_attention(symbols))
+    attention.extend(notebook_duplicate_symbols(notebooks, python_files))
+    attention.extend(config_contract_attention(config, python_files, notebooks))
+    attention.extend(stale_document_attention(files_text, existing_paths))
+    for item in python_files:
+        if item.parse_error:
+            attention.append(
+                Attention(
+                    severity="high",
+                    category="python-parse-error",
+                    message=f"Python source could not be parsed: `{item.path}`.",
+                    evidence=[item.parse_error],
+                    recommendation="Fix syntax or confirm interpreter compatibility.",
+                )
+            )
+    if config_error:
+        attention.append(
+            Attention(
+                severity="high",
+                category="yaml-analysis-unavailable",
+                message="Semantic analysis of `configs/supervised.yaml` was not completed.",
+                evidence=[config_error],
+                recommendation="Install PyYAML or fix the YAML and regenerate the reference.",
+            )
+        )
+
+    branch = git(root, "branch", "--show-current").strip() or "detached"
+    commit = git(root, "rev-parse", "HEAD").strip()
+    status_text = git(root, "status", "--short").rstrip() or "clean working tree"
+    remote = git(root, "remote", "get-url", "origin", check=False).strip()
+    generated = datetime.now(timezone.utc).isoformat()
+
+    tracked_selected = [record for record in file_records if record["tracked"]]
+    untracked_selected = [record for record in file_records if not record["tracked"]]
+    env_index: defaultdict[str, set[str]] = defaultdict(set)
+    for item in python_files:
+        for name in item.env_vars:
+            env_index[name].add(item.path)
+    for item in notebooks:
+        for name in item.env_vars:
+            env_index[name].add(item.path)
+
+    public_symbols = [
+        symbol for symbol in symbols
+        if not symbol.is_private and symbol.kind in {"function", "class"}
+    ]
+    tested_count = sum(
+        bool(tests.get(f"{symbol.module}.{symbol.qualname}"))
+        for symbol in public_symbols
+    )
+    consumed_count = sum(
+        bool(consumers.get(f"{symbol.module}.{symbol.qualname}"))
+        for symbol in public_symbols
+    )
+
+    continuation_lines = [
+        "## 6. Executive continuation map",
+        "",
+        f"- Branch: `{branch}`",
+        f"- Commit: `{commit}`",
+        f"- Git status: `{'clean' if status_text == 'clean working tree' else 'has changes'}`",
+        f"- Tracked relevant files included: `{len(tracked_selected)}`",
+        f"- Relevant untracked files included: `{len(untracked_selected)}`",
+        f"- Python modules analyzed: `{len(python_files)}`",
+        f"- Notebooks analyzed: `{len(notebooks)}`",
+        f"- Public top-level functions/classes: `{len(public_symbols)}`",
+        f"- Public symbols with detected tests: `{tested_count}`",
+        f"- Public symbols with detected consumers: `{consumed_count}`",
+        f"- Static attention items: `{len(attention)}`",
+        "",
+        "### Canonical responsibility map",
+        "",
+        "| Responsibility | Inspect first |",
+        "|---|---|",
+        "| Data access and Parquet contract | `src/utils/storage.py`, `src/utils/config.py` |",
+        "| Cohort and analytical datasets | `src/data/`, active notebooks, cohort tests |",
+        "| Feature engineering | `src/features/`, feature tests, `configs/supervised.yaml` |",
+        "| Split and leakage prevention | active split module, `src/evaluation/leakage.py`, split tests |",
+        "| Models and pipelines | `src/models/`, pipeline tests, active pilot notebook |",
+        "| Metrics and calibration | `src/evaluation/`, model calibration module, tests |",
+        "| Experiment logging | `src/utils/reproducibility.py` and `Run` consumers |",
+        "| Methodological decisions | `configs/supervised.yaml`, `docs/decisoes.md` |",
+        "| Current orchestration | notebooks, but migrate repeated logic to `src/` |",
+        "",
+        "### Immediate continuation protocol",
+        "",
+        "1. Resolve HIGH attention items before introducing a competing implementation.",
+        "2. Search Section 10 by symbol name and responsibility.",
+        "3. Review Section 11 for imports and likely blast radius.",
+        "4. Review Section 12 for tests covering the affected contract.",
+        "5. Review Section 13 for notebook-local functions that may need extraction.",
+        "6. Use Section 15 source boundaries to inspect exact implementations.",
+    ]
+
+    config_section = ["## 8. Active configuration summary", ""]
+    if isinstance(config, dict):
+        flattened = flatten_mapping(config)
+        important_prefixes = (
+            "seed", "target", "coluna_tempo", "periodo", "features.numericas",
+            "features.categoricas", "features.final", "features.proibidas",
+            "features.engenharia", "temporal", "models", "tuning", "calibracao",
+            "limiar", "avaliacao", "gates", "selecao_modelos",
+        )
+        for key, value in flattened.items():
+            if any(key == prefix or key.startswith(prefix + ".") for prefix in important_prefixes):
+                preview = repr(value)
+                if len(preview) > 500:
+                    preview = preview[:497] + "..."
+                config_section.append(f"- `{key}`: `{preview}`")
+    else:
+        config_section.append(f"- Semantic YAML summary unavailable: `{config_error}`")
+
+    file_list_lines = [
+        "## 9. Repository inventory",
+        "",
+        "### Tracked relevant files",
+        "",
+        *(f"- `{record['path']}`" for record in tracked_selected),
+        "",
+        "### Relevant working-tree files not in the commit",
+        "",
+        *(
+            [f"- `{record['path']}` ({record['status'] or 'untracked'})" for record in untracked_selected]
+            or ["- None."]
+        ),
+        "",
+        "### Skipped or reduced assets",
+        "",
+        *(
+            [f"- `{value}`" for value in skipped]
+            if skipped
+            else ["- None."]
+        ),
+    ]
+
+    env_lines = ["## 14. Environment variables referenced", ""]
+    if env_index:
+        for name, paths in sorted(env_index.items()):
+            env_lines.append(
+                f"- `{name}`: " + ", ".join(f"`{path}`" for path in sorted(paths))
+            )
+    else:
+        env_lines.append("- None detected.")
+    env_lines += ["", "Only variable names are documented; values are never collected."]
+
+    document_parts = [
+        CONTEXT.rstrip(),
+        "",
+        *continuation_lines,
+        "",
+        "## 7. Static attention report",
+        "",
+        render_attention(attention),
+        "",
+        *config_section,
+        "",
+        *file_list_lines,
+        "",
+        "## 10. Python API and reuse catalog",
+        "",
+        "Generated with Python AST. Project modules are not imported or executed.",
+        "",
+        render_python_api(python_files, consumers, tests),
+        "",
+        "## 11. Internal dependency map",
+        "",
+        render_dependency_map(python_files),
+        "",
+        "## 12. Test inventory and static coverage links",
+        "",
+        render_test_inventory(tests_summary),
+        "",
+        "## 13. Notebook orchestration inventory",
+        "",
+        render_notebook_inventory(notebooks),
+        "",
+        *env_lines,
+        "",
+        "## 15. Complete or reduced source by file",
+        "",
+        "Tracked and relevant working-tree files are separated in metadata. Notebook outputs are omitted. Large notebooks use a reduced static view rather than disappearing from the snapshot.",
+        "",
+        "\n".join(source_sections).rstrip(),
+        "",
+        "## 16. Snapshot provenance",
+        "",
+        f"- Generated UTC: `{generated}`",
+        f"- Branch: `{branch}`",
+        f"- Commit: `{commit}`",
+        f"- Origin: `{remote or 'not configured'}`",
+        f"- Python used by generator: `{sys.version.split()[0]}`",
+        f"- PyYAML available: `{yaml is not None}`",
+        "",
+        "### Git status at generation",
+        "",
+        code_block(status_text, "text"),
+    ]
+    document = "\n".join(document_parts).rstrip() + "\n"
+
+    machine = {
+        "schema_version": 2,
+        "generated_utc": generated,
+        "repository": {
+            "branch": branch,
+            "commit": commit,
+            "origin": remote or None,
+            "status": status_text,
+        },
+        "files": file_records,
+        "python_files": [asdict(item) for item in python_files],
+        "notebooks": [asdict(item) for item in notebooks],
+        "consumers": consumers,
+        "tests_by_symbol": tests,
+        "test_inventory": tests_summary,
+        "attention": [asdict(item) for item in attention],
+        "environment_variables": {
+            name: sorted(paths) for name, paths in sorted(env_index.items())
+        },
+        "config_summary": flatten_mapping(config) if isinstance(config, dict) else None,
+        "config_error": config_error,
+        "skipped": skipped,
+    }
+    return document, machine
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate an AI-oriented static reference of the current Git repository."
+    )
+    parser.add_argument(
+        "--output-md",
+        type=Path,
+        default=OUTPUT_MD,
+        help=f"Markdown destination (default: {OUTPUT_MD.as_posix()})",
+    )
+    parser.add_argument(
+        "--output-json",
+        type=Path,
+        default=OUTPUT_JSON,
+        help=f"JSON destination (default: {OUTPUT_JSON.as_posix()})",
+    )
+    parser.add_argument(
+        "--max-inline-bytes",
+        type=int,
+        default=DEFAULT_MAX_INLINE_BYTES,
+        help="Maximum bytes before text or notebook source uses a reduced view.",
+    )
+    parser.add_argument(
+        "--fail-on-high",
+        action="store_true",
+        help="Return exit code 2 when HIGH attention items are detected.",
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
+    args = parse_args()
     root = root_dir()
-
-    output = (
-        root
-        / OUTPUT
+    document, machine = build_reference(
+        root,
+        max_inline_bytes=args.max_inline_bytes,
     )
-
-    (
-        caminhos_rastreados_existentes,
-        caminhos_rastreados_ausentes,
-    ) = tracked(
-        root
+    output_md = root / args.output_md
+    output_json = root / args.output_json
+    atomic_write(output_md, document)
+    atomic_write(
+        output_json,
+        json.dumps(machine, ensure_ascii=False, indent=2, default=str) + "\n",
     )
-
-    paths = [
-        caminho
-        for caminho in caminhos_rastreados_existentes
-        if include(
-            caminho
-        )
-    ]
-
-    branch = (
-        git(
-            root,
-            "branch",
-            "--show-current",
-        ).strip()
-        or "detached"
+    high_count = sum(
+        item.get("severity") == "high"
+        for item in machine.get("attention", [])
     )
-    commit = git(root, "rev-parse", "HEAD").strip()
-    status = git(root, "status", "--short").rstrip() or "clean working tree"
-
-    api: list[str] = []
-    sources: list[str] = []
-    variables: dict[str, set[str]] = {}
-    skipped: list[str] = [
-    (
-        f"{caminho.as_posix()} "
-        "(tracked but missing from local working tree)"
-    )
-    for caminho in caminhos_rastreados_ausentes
-    ]
-
-    for rel in paths:
-        data = (root / rel).read_bytes()
-        if len(data) > MAX_BYTES:
-            skipped.append(f"{rel.as_posix()} ({len(data)} bytes)")
-            continue
-        digest = hashlib.sha256(data).hexdigest()
-
-        if rel.suffix.lower() == ".ipynb":
-            try:
-                text, meta = notebook(data)
-            except Exception as exc:
-                text, meta = (
-                    f"_Notebook parse error: {exc!r}_\n",
-                    {"parse_error": repr(exc)},
-                )
-            sources.append(
-                f"## `{rel.as_posix()}`\n\n"
-                f"- SHA-256: `{digest}`\n"
-                f"- Bytes: `{len(data)}`\n"
-                f"- Notebook: `{json.dumps(meta, ensure_ascii=False)}`\n\n"
-                f"{text}"
-            )
-            continue
-
-        if b"\x00" in data[:8192]:
-            skipped.append(f"{rel.as_posix()} (binary)")
-            continue
-
-        text, warnings = redact(data.decode("utf-8-sig", errors="replace"))
-
-        if rel.suffix.lower() == ".py":
-            section, names = api_section(rel, text)
-            api.append(section)
-            for name in names:
-                variables.setdefault(name, set()).add(rel.as_posix())
-
-        security = (
-            "\n> Security: " + "; ".join(warnings) + "\n" if warnings else ""
-        )
-        lexer = LANG.get(rel.suffix.lower(), "text")
-        sources.append(
-            f"## `{rel.as_posix()}`\n\n"
-            f"- SHA-256: `{digest}`\n"
-            f"- Bytes: `{len(data)}`\n"
-            f"{security}\n"
-            f"{code_block(text.rstrip(), lexer)}\n"
-        )
-
-    env = "\n".join(
-        f"- `{name}`: " + ", ".join(f"`{p}`" for p in sorted(files))
-        for name, files in sorted(variables.items())
-    ) or "- None detected."
-    skipped_text = "\n".join(f"- `{x}`" for x in skipped) or "- None."
-    file_list = "\n".join(f"- `{p.as_posix()}`" for p in paths)
-    api_text = "\n".join(api)
-    sources_text = "\n".join(sources)
-
-    parts = [
-        CONTEXT.rstrip(),
-        "",
-        "## 6. Current snapshot",
-        "",
-        f"- Generated UTC: `{datetime.now(timezone.utc).isoformat()}`",
-        f"- Branch: `{branch}`",
-        f"- Commit: `{commit}`",
-        f"- Included tracked files: `{len(paths) - len(skipped)}`",
-        "",
-        "### Git status",
-        "",
-        code_block(status, "text"),
-        "",
-        "## 7. Included file list",
-        "",
-        file_list,
-        "",
-        "## 8. Environment variables referenced",
-        "",
-        env,
-        "",
-        "Only names are documented. Secret values must never appear here.",
-        "",
-        "## 9. Python API catalog",
-        "",
-        "Generated statically with Python AST. Project modules are not imported "
-        "or executed. Missing docstrings are marked explicitly.",
-        "",
-        api_text,
-        "",
-        "## 10. Skipped files",
-        "",
-        skipped_text,
-        "",
-        "## 11. Complete tracked source by file",
-        "",
-        "Each section preserves the original file boundary. "
-        "Notebook outputs are omitted.",
-        "",
-        sources_text,
-    ]
-    document = "\n".join(parts).rstrip() + "\n"
-
-    atomic_write(output, document)
-    print(f"Updated: {output}")
-    print(f"Included: {len(paths) - len(skipped)}")
-    print(f"Skipped: {len(skipped)}")
+    print(f"Updated: {output_md}")
+    print(f"Updated: {output_json}")
+    print(f"Files documented: {len(machine['files'])}")
+    print(f"Python modules analyzed: {len(machine['python_files'])}")
+    print(f"Notebooks analyzed: {len(machine['notebooks'])}")
+    print(f"Attention items: {len(machine['attention'])} ({high_count} high)")
+    if args.fail_on_high and high_count:
+        return 2
     return 0
 
 
