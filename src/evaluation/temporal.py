@@ -23,9 +23,9 @@ Regra de ouro (quando usado como análise de sensibilidade):
     - `treino` + `validação` → escolha de modelo, hiperparâmetros, limiar
     - `holdout`               → UMA ÚNICA vez, no fim, após `concluir_selecao()`
 
-A classe `TemporalSplit` bloqueia o acesso ao holdout enquanto a seleção
-não for explicitamente marcada como concluída — útil tanto no fluxo
-oficial quanto no de sensibilidade.
+A classe `TemporalSplit` bloqueia o acesso ao holdout enquanto o gate
+`G9_holdout` não estiver aprovado — útil tanto no fluxo oficial quanto no
+de sensibilidade.
 """
 
 from __future__ import annotations
@@ -158,7 +158,7 @@ class TemporalSplit:
         modelo = ...
         modelo.fit(tr[FEATURES], y_tr)
 
-        # Ao terminar a seleção (exige gate G8_limiar aprovado):
+        # Ao terminar a seleção (exige gate G9_holdout aprovado):
         split.concluir_selecao()
 
         # Fase 2 — avaliação final, UMA única vez
@@ -223,24 +223,29 @@ class TemporalSplit:
         """
         Marca a fase de seleção como encerrada e libera o holdout.
 
-        Só é permitido quando o gate `G8_limiar` estiver com
+        Só é permitido quando o gate `G9_holdout` estiver com
         `status: aprovado` em `configs/supervised.yaml`. Caso contrário,
         levanta `RuntimeError`.
 
+        O gate `G9_holdout` é a autorização explícita para a avaliação
+        final — independente de `G7_calibracao` e `G8_limiar`, que tratam
+        de decisões da fase de seleção. Ambos precisam ter sido aprovados
+        *antes* de se pedir `G9_holdout`; a verificação deles é feita no
+        fluxo de modelagem, não aqui. Esta função apenas certifica que a
+        transição para a fase de avaliação foi autorizada.
+
         Deve ser chamada **uma única vez**, depois que o modelo final foi
-        escolhido, o limiar foi definido e a calibração foi ajustada
-        (gate `G7_calibracao` também precisa estar aprovado — a checagem
-        dele é feita no fluxo de modelagem, não aqui).
+        escolhido, o limiar foi definido e a calibração foi ajustada.
         """
         from src.utils import config as C
 
-        gate = C.cfg("gates", "G8_limiar") or {}
+        gate = C.cfg("gates", "G9_holdout") or {}
         status = (gate or {}).get("status")
         if status != "aprovado":
             raise RuntimeError(
-                "Holdout bloqueado: gate `G8_limiar` ainda não aprovado "
+                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
                 f"(status atual: {status!r}).\n"
-                "Feche o gate G8 (limiar operacional) em "
+                "Feche o gate G9 (liberação do holdout) em "
                 "`configs/supervised.yaml` antes de chamar "
                 "`concluir_selecao()`."
             )

@@ -1,11 +1,30 @@
-"""Engenharia de atributos do pipeline supervisionado.
+"""
+Engenharia de atributos do pipeline supervisionado.
 
 Funções puras que derivam colunas a partir do DataFrame analítico.
 Nenhuma função muta a entrada — todas devolvem cópia ou Series novas.
 
 Decisões configuráveis (limite de intervalo, faixas etárias, inventário
-das colunas derivadas) vêm de `configs/supervised.yaml`, bloco
-`features.engenharia`.
+das colunas derivadas, política de intervalo) vêm de
+`configs/supervised.yaml`, bloco `features.engenharia`.
+
+Política de intervalos inválidos
+--------------------------------
+`decisoes.md` pede **sinalizar, não corrigir em silêncio**. Por isso o
+default desta camada é:
+
+- `dias_sintomas_ate_internacao` mantém o valor **bruto** calculado a
+  partir das datas (só vira `NaN` quando alguma data é `NaT`);
+- a invalidade (negativo, `> intervalo_max_dias`, ou data ausente) é
+  comunicada por flags explícitas:
+    * `flag_intervalo_invalido` — umbrella (qualquer motivo);
+    * `flag_internacao_antes_sintomas` — negativo (internação antes do
+      início dos sintomas).
+
+A chave `features.engenharia.intervalo_politica` aceita `"sinalizar"`
+(default) ou `"descartar"`. No modo `"descartar"`, valores inválidos
+viram `NaN` na coluna de dias, mantendo as flags — útil se o grupo
+decidir que a feature não deve entrar no modelo com valores extremos.
 
 Uso típico:
     from src.features import montar_features
@@ -26,6 +45,8 @@ __all__ = [
     "intervalo_sintomas_internacao",
     "sazonalidade",
     "faixa_etaria",
+    "sexo_categoria",
+    "ano_mes_internacao",
     "montar_features",
 ]
 
@@ -53,6 +74,25 @@ def _intervalo_max_dias() -> float:
     """Limite (dias) para o intervalo sintomas→internação."""
     valor = C.cfg("features", "engenharia", "intervalo_max_dias")
     return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
+
+
+def _intervalo_politica() -> str:
+    """
+    Política para valores fora de `[0, intervalo_max_dias]`.
+
+    `"sinalizar"` (default): mantém o valor bruto, apenas marca nas flags.
+    `"descartar"`: substitui o valor por `NaN` quando inválido.
+    """
+    valor = C.cfg("features", "engenharia", "intervalo_politica")
+    if valor is None:
+        return "sinalizar"
+    politica = str(valor).strip().lower()
+    if politica not in ("sinalizar", "descartar"):
+        raise ValueError(
+            f"features.engenharia.intervalo_politica inválida: {valor!r}. "
+            "Use 'sinalizar' ou 'descartar'."
+        )
+    return politica
 
 
 def _faixas_etarias() -> list[tuple[str, float, float | None]]:
@@ -132,18 +172,22 @@ def idade_em_anos(df: pd.DataFrame) -> pd.Series:
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
     """
     Intervalo em dias entre início dos sintomas (`dt_sin_pri`) e
-    internação (`dt_interna`), mais uma flag de invalidade.
+    internação (`dt_interna`), com flags de invalidade.
 
-    Regras
-    ------
-    - `intervalo_sint_interna_dias` = `(dt_interna - dt_sin_pri).days`.
-    - `flag_intervalo_invalido` (int8) = 1 quando:
-        * qualquer das datas é nula/não parseável, ou
-        * o intervalo é negativo, ou
-        * o intervalo ultrapassa
-          `features.engenharia.intervalo_max_dias`.
-      Caso contrário, 0.
-    - Quando inválido, o intervalo vira `NaN`.
+    Colunas geradas
+    ---------------
+    - `dias_sintomas_ate_internacao` (float64)
+        `(dt_interna - dt_sin_pri).days`. `NaN` apenas quando alguma das
+        datas é nula/não parseável. Negativos e valores acima do limite
+        permanecem visíveis — a invalidade é comunicada pelas flags (ver
+        `decisoes.md`). O comportamento é controlado por
+        `features.engenharia.intervalo_politica`:
+          * `"sinalizar"` (default) → valor bruto mantido.
+          * `"descartar"`           → valor bruto substituído por `NaN`.
+    - `flag_intervalo_invalido` (int8)
+        1 quando data ausente, `dias < 0`, ou `dias > intervalo_max_dias`.
+    - `flag_internacao_antes_sintomas` (int8)
+        1 quando `dias < 0` (internação antes do início dos sintomas).
 
     ATENÇÃO metodológica
     --------------------
@@ -161,11 +205,10 @@ def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
 
     Retorno
     -------
-    pd.DataFrame com colunas:
-        - `intervalo_sint_interna_dias` (float64)
-        - `flag_intervalo_invalido` (int8)
+    pd.DataFrame com as três colunas acima.
     """
     max_dias = _intervalo_max_dias()
+    politica = _intervalo_politica()
 
     dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
     dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
@@ -173,18 +216,22 @@ def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
     delta = pd.to_numeric((dt_int - dt_sin).dt.days, errors="coerce").astype("float64")
     delta_arr = delta.to_numpy(dtype="float64", na_value=np.nan)
 
-    invalido = (
-        pd.isna(delta_arr)
-        | (delta_arr < 0)
-        | (delta_arr > float(max_dias))
-    )
-    invalido = pd.Series(invalido, index=df.index, dtype="bool")
-    delta_limpo = delta.where(~invalido, np.nan).astype("float64")
+    data_ausente = pd.isna(delta_arr)
+    negativo = (~data_ausente) & (delta_arr < 0)
+    acima_limite = (~data_ausente) & (delta_arr > float(max_dias))
+
+    invalido = data_ausente | negativo | acima_limite
+
+    if politica == "descartar":
+        delta_final = delta.where(~invalido, np.nan).astype("float64")
+    else:  # "sinalizar"
+        delta_final = delta
 
     return pd.DataFrame(
         {
-            "intervalo_sint_interna_dias": delta_limpo,
-            "flag_intervalo_invalido": invalido.astype("int8"),
+            "dias_sintomas_ate_internacao":   delta_final,
+            "flag_intervalo_invalido":        invalido.astype("int8"),
+            "flag_internacao_antes_sintomas": negativo.astype("int8"),
         }
     )
 
@@ -203,12 +250,17 @@ def sazonalidade(
     A codificação é `2π × (semana − 1) / 52,18`, o que mantém a
     continuidade entre as semanas 52/53 e a semana 1 do ano seguinte.
 
+    A coluna usada por default é `dt_sin_pri` (início dos sintomas) —
+    reflete melhor a sazonalidade da circulação viral do que a data de
+    notificação/internação, que depende de fatores administrativos.
+
     Parâmetros
     ----------
     df : pd.DataFrame
     coluna_data : str | None
-        Coluna de data a usar. Se None, usa `coluna_tempo` do
-        `supervised.yaml`.
+        Coluna de data a usar. Se None, usa `dt_sin_pri`. Pode ser
+        sobrescrita por `features.engenharia.coluna_sazonalidade` no
+        YAML.
 
     Retorno
     -------
@@ -218,12 +270,9 @@ def sazonalidade(
     Não muta o DataFrame de entrada.
     """
     if coluna_data is None:
-        coluna_data = C.cfg("coluna_tempo")
-    if not coluna_data:
-        raise ValueError(
-            "`coluna_data` não informado e `coluna_tempo` ausente no "
-            "supervised.yaml."
-        )
+        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade")
+    if coluna_data is None:
+        coluna_data = "dt_sin_pri"
     if coluna_data not in df.columns:
         raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
 
@@ -285,7 +334,76 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
 
 
 # ---------------------------------------------------------------------------
-# 5) montar_features
+# 5) sexo_categoria
+# ---------------------------------------------------------------------------
+
+def sexo_categoria(df: pd.DataFrame) -> pd.Series:
+    """
+    Normaliza `cs_sexo` (SIVEP) em uma categórica explícita.
+
+    Mapeamento
+    ----------
+    - `"M"` / `"m"` → `"masculino"`
+    - `"F"` / `"f"` → `"feminino"`
+    - `"I"` / `"i"` → `"ignorado"`  (preserva o código SIVEP)
+    - nulo, vazio, ou qualquer outro valor → `"ausente"`
+
+    Nunca levanta erro por código desconhecido: cai em `"ausente"`.
+
+    Parâmetros
+    ----------
+    df : pd.DataFrame
+        Precisa conter `cs_sexo`.
+
+    Retorno
+    -------
+    pd.Series dtype `category` com os quatro níveis.
+    """
+    raw = df["cs_sexo"]
+    sexo = raw.astype("string").str.strip().str.upper()
+
+    out = pd.Series("ausente", index=df.index, dtype="object")
+    out[sexo == "M"] = "masculino"
+    out[sexo == "F"] = "feminino"
+    out[sexo == "I"] = "ignorado"
+
+    return out.astype("category")
+
+
+# ---------------------------------------------------------------------------
+# 6) ano_mes_internacao
+# ---------------------------------------------------------------------------
+
+def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extrai `ano_internacao` e `mes_internacao` de `dt_interna`.
+
+    Datas nulas resultam em `NaN` (float64), permitindo que o
+    pré-processador trate a ausência via imputer mediano. Usar `float64`
+    em vez de `Int64` mantém compatibilidade com `SimpleImputer` e
+    `StandardScaler` sem conversões extras.
+
+    Parâmetros
+    ----------
+    df : pd.DataFrame
+        Precisa conter `dt_interna`.
+
+    Retorno
+    -------
+    pd.DataFrame com `ano_internacao` e `mes_internacao` (float64).
+    """
+    dt = pd.to_datetime(df["dt_interna"], errors="coerce")
+
+    return pd.DataFrame(
+        {
+            "ano_internacao": dt.dt.year.astype("float64"),
+            "mes_internacao": dt.dt.month.astype("float64"),
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# 7) montar_features
 # ---------------------------------------------------------------------------
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -295,11 +413,15 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
 
     Colunas adicionadas:
         - idade_anos
-        - intervalo_sint_interna_dias
+        - dias_sintomas_ate_internacao
         - flag_intervalo_invalido
+        - flag_internacao_antes_sintomas
         - sin_semana
         - cos_semana
         - faixa_etaria
+        - sexo_categoria
+        - ano_internacao
+        - mes_internacao
 
     O DataFrame de entrada NÃO é modificado.
 
@@ -307,7 +429,8 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     ----------
     df : pd.DataFrame
         Precisa conter `nu_idade_n`, `tp_idade`, `dt_sin_pri`,
-        `dt_interna` e a coluna de tempo configurada (`coluna_tempo`).
+        `dt_interna`, `cs_sexo` e (se configurado) a coluna de
+        sazonalidade.
 
     Retorno
     -------
@@ -319,13 +442,19 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     out["idade_anos"] = idade_em_anos(df)
 
     intervalo = intervalo_sintomas_internacao(df)
-    out["intervalo_sint_interna_dias"] = intervalo["intervalo_sint_interna_dias"]
-    out["flag_intervalo_invalido"] = intervalo["flag_intervalo_invalido"]
+    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
+    out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
+    out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
 
     saz = sazonalidade(df)
     out["sin_semana"] = saz["sin_semana"]
     out["cos_semana"] = saz["cos_semana"]
 
-    out["faixa_etaria"] = faixa_etaria(out["idade_anos"])
+    out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
+    out["sexo_categoria"] = sexo_categoria(df)
+
+    ano_mes = ano_mes_internacao(df)
+    out["ano_internacao"] = ano_mes["ano_internacao"]
+    out["mes_internacao"] = ano_mes["mes_internacao"]
 
     return out

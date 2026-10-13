@@ -7,6 +7,13 @@ o que faz o Pylance reclamar. Aqui a gente encapsula e garante `float`.
 Também oferece:
     - `metricas_por_limiar` → tabela varrendo limiares
     - `ic_bootstrap`        → intervalo de confiança por bootstrap
+
+Convenção de nomes de chaves em `metricas_completas`
+----------------------------------------------------
+`ap` (average precision) e `pr_auc` (área sob a curva precision-recall)
+são a **mesma métrica** — a chave `pr_auc` é um alias mantido para
+compatibilidade com consumidores que usam essa nomenclatura (ex.: C4).
+Ambas apontam para o mesmo valor; não divergem.
 """
 
 from __future__ import annotations
@@ -139,18 +146,27 @@ def metricas_completas(
     limiar: float = 0.5,
 ) -> dict[str, float]:
     """
-    Retorna um dict com AUC, AP, Brier, log_loss, F1, precision, recall,
-    sensibilidade, especificidade e accuracy.
+    Retorna um dict com AUC, AP, pr_auc, Brier, log_loss, F1, precision,
+    recall, sensibilidade, especificidade e accuracy.
 
     Pronto para `Run.metrica(**d)`.
+
+    Notas
+    -----
+    - `pr_auc` é **alias** de `ap` (ambos = `average_precision_score`),
+      mantido para compatibilidade com consumidores que usam esse nome
+      (ex.: C4). Os dois valores são idênticos.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
     y_pred = (p >= limiar).astype(int)
 
+    ap = average_precision(y, p)
+
     return {
         "auc":            auc(y, p),
-        "ap":             average_precision(y, p),
+        "ap":             ap,
+        "pr_auc":         ap,
         "brier":          brier(y, p),
         "log_loss":       log_loss(y, p),
         "f1":             f1(y, y_pred),
