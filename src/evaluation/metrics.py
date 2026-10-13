@@ -20,6 +20,7 @@ from sklearn.metrics import (
     average_precision_score,
     brier_score_loss,
     f1_score,
+    log_loss as sk_log_loss,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -30,10 +31,13 @@ __all__ = [
     "auc",
     "average_precision",
     "brier",
+    "log_loss",
     "f1",
     "precision",
     "recall",
     "accuracy",
+    "especificidade",
+    "sensibilidade",
     "metricas_completas",
     "metricas_por_limiar",
     "ic_bootstrap",
@@ -71,6 +75,18 @@ def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
     return float(brier_score_loss(_to_int_labels(y_true), _to_np(y_prob)))
 
 
+def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    """
+    Log loss (entropia cruzada binária).
+
+    Recebe probabilidades (não rótulos duros) e devolve `float`.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    # sklearn exige labels={0,1} explícito quando y pode ser todo 0 ou todo 1
+    return float(sk_log_loss(y, p, labels=[0, 1]))
+
+
 def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     return float(f1_score(_to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0))
 
@@ -87,6 +103,32 @@ def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     return float(accuracy_score(_to_int_labels(y_true), _to_int_labels(y_pred)))
 
 
+def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """
+    Especificidade = TN / (TN + FP).
+
+    Ou seja, `recall` da classe negativa. Retorna 0.0 quando não há
+    nenhum negativo real (evita divisão por zero).
+    """
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+
+    tn = int(((y == 0) & (p == 0)).sum())
+    fp = int(((y == 0) & (p == 1)).sum())
+    denom = tn + fp
+    return float(tn / denom) if denom > 0 else 0.0
+
+
+def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """
+    Sensibilidade = recall da classe positiva.
+
+    Alias semântico de `recall` — mantido para alinhar com o YAML,
+    que pede explicitamente "sensibilidade".
+    """
+    return recall(y_true, y_pred)
+
+
 # ---------------------------------------------------------------------------
 # Resumo completo
 # ---------------------------------------------------------------------------
@@ -97,7 +139,9 @@ def metricas_completas(
     limiar: float = 0.5,
 ) -> dict[str, float]:
     """
-    Retorna um dict com AUC, AP, Brier, F1, precision, recall e accuracy.
+    Retorna um dict com AUC, AP, Brier, log_loss, F1, precision, recall,
+    sensibilidade, especificidade e accuracy.
+
     Pronto para `Run.metrica(**d)`.
     """
     y = _to_int_labels(y_true)
@@ -105,15 +149,18 @@ def metricas_completas(
     y_pred = (p >= limiar).astype(int)
 
     return {
-        "auc":       auc(y, p),
-        "ap":        average_precision(y, p),
-        "brier":     brier(y, p),
-        "f1":        f1(y, y_pred),
-        "precision": precision(y, y_pred),
-        "recall":    recall(y, y_pred),
-        "accuracy":  accuracy(y, y_pred),
-        "limiar":    float(limiar),
-        "n":         float(len(y)),
+        "auc":            auc(y, p),
+        "ap":             average_precision(y, p),
+        "brier":          brier(y, p),
+        "log_loss":       log_loss(y, p),
+        "f1":             f1(y, y_pred),
+        "precision":      precision(y, y_pred),
+        "recall":         recall(y, y_pred),
+        "sensibilidade":  sensibilidade(y, y_pred),
+        "especificidade": especificidade(y, y_pred),
+        "accuracy":       accuracy(y, y_pred),
+        "limiar":         float(limiar),
+        "n":              float(len(y)),
     }
 
 
@@ -129,10 +176,10 @@ def metricas_por_limiar(
     """
     Tabela com métricas para cada limiar em [0.01, 0.99].
 
-    Colunas: limiar, f1, precision, recall, accuracy.
+    Colunas: limiar, f1, precision, recall, sensibilidade, especificidade,
+    accuracy.
 
-    Usa as métricas deste próprio módulo (`f1`, `precision`, `recall`,
-    `accuracy`) — não há tabela paralela de lambdas.
+    Usa as métricas deste próprio módulo — não há tabela paralela de lambdas.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
@@ -141,11 +188,13 @@ def metricas_por_limiar(
     for th in np.linspace(0.01, 0.99, n_limiares):
         y_pred = (p >= float(th)).astype(int)
         linhas.append({
-            "limiar":    float(th),
-            "f1":        f1(y, y_pred),
-            "precision": precision(y, y_pred),
-            "recall":    recall(y, y_pred),
-            "accuracy":  accuracy(y, y_pred),
+            "limiar":         float(th),
+            "f1":             f1(y, y_pred),
+            "precision":      precision(y, y_pred),
+            "recall":         recall(y, y_pred),
+            "sensibilidade":  sensibilidade(y, y_pred),
+            "especificidade": especificidade(y, y_pred),
+            "accuracy":       accuracy(y, y_pred),
         })
 
     return pd.DataFrame(linhas)
@@ -189,9 +238,18 @@ def ic_bootstrap(
 
     for i in range(n_boot):
         idx = rng.integers(0, n, size=n)
+        # Alguns boots podem ter apenas uma classe — protege AUC e AP.
+        if len(np.unique(y[idx])) < 2:
+            valores[i] = np.nan
+            continue
         valores[i] = metrica(y[idx], p[idx])
 
+    validos = valores[~np.isnan(valores)]
+    if validos.size == 0:
+        est = float(metrica(y, p))
+        return est, float("nan"), float("nan")
+
     est = float(metrica(y, p))
-    inf = float(np.quantile(valores, alpha / 2))
-    sup = float(np.quantile(valores, 1 - alpha / 2))
+    inf = float(np.quantile(validos, alpha / 2))
+    sup = float(np.quantile(validos, 1 - alpha / 2))
     return est, inf, sup

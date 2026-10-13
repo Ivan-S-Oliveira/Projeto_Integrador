@@ -1,7 +1,20 @@
 """
 Split temporal em três blocos + trava do holdout.
 
-Regra de ouro:
+⚠️  PAPEL ATUAL DESTE MÓDULO
+----------------------------
+O split **oficial** do projeto é o **aleatório estratificado**, gerado no
+Notebook 03 e persistido na coluna de partição do artefato supervisionado
+(`dataset_supervisionado.parquet`). Esse é o caminho usado por C2, C3, C5,
+C6 e G8.
+
+Este módulo (`TemporalSplit` / `split_temporal_3way`) é mantido como
+**ferramenta de sensibilidade temporal** — serve para responder perguntas
+do tipo "o desempenho se mantém se eu treinar no passado e testar no
+futuro?". Ele **não** é o caminho principal e **não** deve ser usado para
+gerar a partição consumida pelo pipeline supervisionado.
+
+Regra de ouro (quando usado como análise de sensibilidade):
     ┌──────────────┬──────────────┬──────────────────┐
     │   treino     │  validação   │     holdout      │
     └──────────────┴──────────────┴──────────────────┘
@@ -11,8 +24,8 @@ Regra de ouro:
     - `holdout`               → UMA ÚNICA vez, no fim, após `concluir_selecao()`
 
 A classe `TemporalSplit` bloqueia o acesso ao holdout enquanto a seleção
-não for explicitamente marcada como concluída. Isso impede o erro clássico
-de "espionar" o holdout durante a fase de modelagem.
+não for explicitamente marcada como concluída — útil tanto no fluxo
+oficial quanto no de sensibilidade.
 """
 
 from __future__ import annotations
@@ -37,6 +50,10 @@ def split_temporal_3way(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Split temporal em treino / validação / holdout, **sem embaralhar**.
+
+    Ferramenta de **sensibilidade temporal** — não é o split oficial do
+    projeto. Para o pipeline supervisionado, use a coluna de partição
+    persistida no artefato (ver `src.data.supervised_artifact`).
 
     Parâmetros
     ----------
@@ -127,6 +144,11 @@ class TemporalSplit:
     """
     Guarda os três blocos e controla o acesso ao holdout.
 
+    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
+    O split oficial do projeto é o **aleatório estratificado** persistido
+    no artefato supervisionado. Use esta classe apenas para análises do
+    tipo "treinar no passado, testar no futuro".
+
     Uso típico
     ----------
         split = TemporalSplit(df, coluna_tempo="dt_notific")
@@ -136,7 +158,7 @@ class TemporalSplit:
         modelo = ...
         modelo.fit(tr[FEATURES], y_tr)
 
-        # Ao terminar a seleção (exige gate G7_limiar aprovado):
+        # Ao terminar a seleção (exige gate G8_limiar aprovado):
         split.concluir_selecao()
 
         # Fase 2 — avaliação final, UMA única vez
@@ -201,22 +223,24 @@ class TemporalSplit:
         """
         Marca a fase de seleção como encerrada e libera o holdout.
 
-        Só é permitido quando o gate `G7_limiar` estiver com
+        Só é permitido quando o gate `G8_limiar` estiver com
         `status: aprovado` em `configs/supervised.yaml`. Caso contrário,
         levanta `RuntimeError`.
 
         Deve ser chamada **uma única vez**, depois que o modelo final foi
-        escolhido, o limiar foi definido e a calibração foi ajustada.
+        escolhido, o limiar foi definido e a calibração foi ajustada
+        (gate `G7_calibracao` também precisa estar aprovado — a checagem
+        dele é feita no fluxo de modelagem, não aqui).
         """
         from src.utils import config as C
 
-        gate = C.cfg("gates", "G7_limiar") or {}
+        gate = C.cfg("gates", "G8_limiar") or {}
         status = (gate or {}).get("status")
         if status != "aprovado":
             raise RuntimeError(
-                "Holdout bloqueado: gate `G7_limiar` ainda não aprovado "
+                "Holdout bloqueado: gate `G8_limiar` ainda não aprovado "
                 f"(status atual: {status!r}).\n"
-                "Feche o gate G7 (limiar operacional) em "
+                "Feche o gate G8 (limiar operacional) em "
                 "`configs/supervised.yaml` antes de chamar "
                 "`concluir_selecao()`."
             )
@@ -269,7 +293,8 @@ class TemporalSplit:
             return f"{ini} .. {fim}"
 
         return (
-            f"TemporalSplit(coluna={self.coluna_tempo!r})\n"
+            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
+            f"papel='sensibilidade_temporal')\n"
             f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
             f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
             f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  "
