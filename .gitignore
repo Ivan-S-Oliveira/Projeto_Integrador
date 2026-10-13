@@ -121,7 +121,7 @@ outputs/predictions/*
 # Retratos locais do repositório
 #
 # Arquivos de inventário, auditoria, contexto e referência
-# gerados automaticamente por tools/repo_snapshot.py.
+# gerados automaticamente por tools/update_project_reference.py.
 #
 # O script gerador pode ser versionado.
 # Os retratos produzidos permanecem apenas no ambiente local.
