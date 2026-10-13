@@ -652,7 +652,7 @@ def notebook_code_analysis(
                 )
             )
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-            targets: list[ast.AST] = (
+            targets: list[ast.expr] = (
                 node.targets if isinstance(node, ast.Assign) else [node.target]
             )
             for target in targets:
@@ -1093,6 +1093,21 @@ def import_integrity_attention(
                 continue
             if any(module.startswith(candidate + ".") for module in available_modules):
                 continue
+
+            # `from pkg.module import symbol` is recorded as
+            # `pkg.module.symbol`. If `symbol` is not a submodule, the
+            # real target module is the parent path. Test it (and its
+            # descendants) before declaring the import broken.
+            parent = candidate.rsplit(".", 1)[0]
+            if parent and parent != candidate:
+                if parent in available_modules:
+                    continue
+                if any(
+                    module.startswith(parent + ".")
+                    for module in available_modules
+                ):
+                    continue
+
             if candidate.split(".")[0] in roots:
                 missing[candidate].add(analysis.path)
     return [

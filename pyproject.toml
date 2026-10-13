@@ -1,13 +1,70 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "projeto-integrador"
 version = "0.0.1"
 description = "Análise retrospectiva de risco de óbito por SRAG (SIVEP-Gripe)."
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Time do Projeto Integrador SRAG" },
+]
+keywords = ["srag", "sivep-gripe", "supervisionado", "saude-publica"]
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
 
+# Dependências de runtime — inferidas dos imports observados nos
+# módulos do projeto (pandas, numpy, pyarrow, scikit-learn, pyyaml,
+# requests). Ajuste as faixas conforme o ambiente real.
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=15.0",
+    "scikit-learn>=1.4",
+    "PyYAML>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
+
+[project.urls]
+Repository = "https://github.com/SEU_USUARIO/SEU_REPO"
+
+# ---------------------------------------------------------------------------
+# Empacotamento — layout src/
+# ---------------------------------------------------------------------------
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion   = "7.0"
 testpaths    = ["tests"]
 python_files = ["test_*.py"]
-pythonpath   = ["."]                     # ← adicione esta linha
+pythonpath   = ["."]
 addopts      = "-ra -q"
 markers = [
     "slow: testes que fazem I/O pesado (Parquet, downloads)",
