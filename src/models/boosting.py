@@ -8,7 +8,7 @@ Requisitos de versão do scikit-learn:
 Nota: o default de `early_stopping` neste módulo é `False` (e não o
 default `'auto'` do sklearn) para alinhar com a decisão metodológica do
 projeto: sem early stopping interno, o número de iterações é escolhido na
-validação temporal (gate G5).
+validação (gate G6).
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def build_boosting_pipeline(
     early_stopping : bool
         Se True, usa early stopping interno com `validation_fraction` do
         treino. Default `False` neste projeto: a escolha de `max_iter` é
-        feita na validação temporal (gate G5), não internamente.
+        feita na validação (gate G6), não internamente.
     validation_fraction : float
         Fração do treino reservada para early stopping (ignorada se
         `early_stopping=False`).

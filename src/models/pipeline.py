@@ -1,6 +1,17 @@
 """
 Fundação dos modelos supervisionados.
-...
+
+Concentra tudo que é comum aos modelos supervisionados do projeto:
+
+- leitura da configuração canônica (`configs/supervised.yaml`) para alvo,
+  features e valor sentinela de ausência categórica;
+- construção do pré-processador (`ColumnTransformer` com pipelines
+  numérico e categórico) reutilizado por todos os modelos;
+- derivação do alvo binário a partir da coluna `evolucao`;
+- conveniência para montar o `Pipeline` completo (pré + classificador).
+
+Este módulo é a fonte única de verdade do pré-processamento — notebooks
+e demais modelos devem importá-lo em vez de reimplementar.
 """
 
 from __future__ import annotations
@@ -29,6 +40,9 @@ COLUNA_TEMPO: str = C.cfg("coluna_tempo")
 FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
 FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
 
+# Sentinela de ausência para categóricas (mesmo valor usado no Notebook 03).
+AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
+
 # Se `features.final` estiver preenchido no YAML, restringe as listas a ele.
 _final = C.cfg("features", "final")
 if _final:
@@ -55,6 +69,27 @@ def build_preprocessor(
     numericas: Iterable[str] | None = None,
     categoricas: Iterable[str] | None = None,
 ) -> ColumnTransformer:
+    """
+    Constrói o `ColumnTransformer` de pré-processamento.
+
+    - Numéricas: `SimpleImputer(strategy="median")` + `StandardScaler`.
+    - Categóricas: `SimpleImputer(strategy="constant",
+      fill_value=AUSENTE)` + `OneHotEncoder(handle_unknown="ignore")`.
+      O sentinela `AUSENTE` vem de
+      `missingness.categoricas.valor_ausente` no `supervised.yaml`,
+      mantendo o mesmo comportamento do Notebook 03.
+
+    Parâmetros
+    ----------
+    numericas : iterable de str | None
+        Colunas numéricas. Se None, usa `FEATURES_NUMERICAS` (config).
+    categoricas : iterable de str | None
+        Colunas categóricas. Se None, usa `FEATURES_CATEGORICAS` (config).
+
+    Retorna
+    -------
+    ColumnTransformer pronto para ser encadeado em um `Pipeline`.
+    """
     num = list(numericas) if numericas is not None else FEATURES_NUMERICAS
     cat = list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
 
@@ -64,7 +99,7 @@ def build_preprocessor(
     ])
 
     pipe_cat = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("imputer", SimpleImputer(strategy="constant", fill_value=AUSENTE)),
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ])
 
@@ -157,21 +192,6 @@ def filtrar_rotulos_validos(
 # ---------------------------------------------------------------------------
 # Conveniência
 # ---------------------------------------------------------------------------
-
-def separar_xy(
-    df: pd.DataFrame,
-    features: Iterable[str] | None = None,
-) -> tuple[pd.DataFrame, pd.Series]:
-    feats = list(features) if features is not None else FEATURES
-
-    faltando = [c for c in feats if c not in df.columns]
-    if faltando:
-        raise KeyError(f"Features ausentes no DataFrame: {faltando}")
-
-    X = df[feats].copy()
-    y = criar_alvo_binario(df)
-    return filtrar_rotulos_validos(X, y)
-
 
 def random_state() -> int:
     """Seed canônica do projeto (vem de `config.SEED`)."""

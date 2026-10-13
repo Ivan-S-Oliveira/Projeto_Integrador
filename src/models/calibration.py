@@ -9,47 +9,43 @@ decisão operacional:
   em uma base separada (`X_cal`, `y_cal`) — nunca no mesmo conjunto usado
   para treinar o modelo base.
 
-- `escolher_limiar`: varre uma grade de limiares, reporta a tabela completa
-  de métricas (f1, precision, recall, accuracy) e devolve o limiar ótimo
-  segundo a métrica escolhida, opcionalmente sujeito a uma precisão mínima.
+- `escolher_limiar`: delega a varredura da grade a
+  `src.evaluation.metrics.metricas_por_limiar` (fonte única da tabela de
+  métricas por limiar) e devolve o limiar ótimo segundo a métrica
+  escolhida, opcionalmente sujeito a precisão e/ou recall mínimos.
 
-Funções de diagnóstico e agregação de métricas vivem em `src.evaluation`
-(fonte única). `curva_confiabilidade` e `metricas_completas` são
-reexportadas aqui apenas por compatibilidade — não há implementação local.
+Toda a agregação de métricas vive em `src.evaluation` — não reimplementar
+aqui.
 """
 
 from __future__ import annotations
 
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import (
-    accuracy_score,
-    brier_score_loss,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
+from sklearn.metrics import brier_score_loss, roc_auc_score
 
-# Reexportados de `src.evaluation` — não reimplementar aqui.
-from src.evaluation.calibration import curva_confiabilidade
-from src.evaluation.metrics import metricas_completas
+from src.evaluation.metrics import metricas_por_limiar
 
 __all__ = [
     "Metrica",
     "calibrar",
     "escolher_limiar",
-    # reexports
-    "curva_confiabilidade",
-    "metricas_completas",
 ]
 
 
 # Conjunto fechado de métricas suportadas em `escolher_limiar`.
-Metrica = Literal["f1", "precision", "recall", "accuracy"]
+# `youden_j = sensibilidade + especificidade − 1 = recall + especificidade − 1`.
+Metrica = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
+_METRICAS_VALIDAS: tuple[str, ...] = (
+    "f1",
+    "precision",
+    "recall",
+    "accuracy",
+    "youden_j",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -107,16 +103,6 @@ def calibrar(
 # Escolha de limiar
 # ---------------------------------------------------------------------------
 
-# `float(...)` explícito dentro das lambdas resolve o typing do sklearn:
-# os stubs declaram retorno como `Float | ndarray`, não `float`.
-_METRICAS: dict[Metrica, Callable[[np.ndarray, np.ndarray], float]] = {
-    "f1":        lambda y, p: float(f1_score(y, p, zero_division=0)),
-    "precision": lambda y, p: float(precision_score(y, p, zero_division=0)),
-    "recall":    lambda y, p: float(recall_score(y, p, zero_division=0)),
-    "accuracy":  lambda y, p: float(accuracy_score(y, p)),
-}
-
-
 def escolher_limiar(
     y_true: pd.Series | np.ndarray,
     y_prob: pd.Series | np.ndarray,
@@ -124,22 +110,32 @@ def escolher_limiar(
     metrica: Metrica = "f1",
     n_limiares: int = 101,
     min_precision: float | None = None,
+    min_recall: float | None = None,
 ) -> dict[str, Any]:
     """
     Varre uma grade de limiares e devolve o ótimo segundo `metrica`.
+
+    A tabela completa de métricas por limiar vem de
+    `src.evaluation.metrics.metricas_por_limiar` — este módulo apenas
+    filtra, ranqueia e devolve o resumo.
 
     Parâmetros
     ----------
     y_true, y_prob :
         Rótulos verdadeiros (0/1) e probabilidades preditas em [0, 1].
-    metrica : {"f1", "precision", "recall", "accuracy"}
-        Métrica maximizada na escolha do limiar.
+    metrica : {"f1", "precision", "recall", "accuracy", "youden_j"}
+        Métrica maximizada na escolha do limiar. `"youden_j"` corresponde a
+        `recall + especificidade − 1`, critério citado em `decisoes.md`.
     n_limiares : int
         Número de limiares avaliados, linearmente espaçados em (0.01, 0.99).
     min_precision : float | None
         Se informado, restringe os candidatos a limiares cuja precision
-        seja ≥ `min_precision` antes de maximizar `metrica`. Se nenhum
-        candidato satisfizer, levanta `ValueError`.
+        seja ≥ `min_precision` antes de maximizar `metrica`.
+    min_recall : float | None
+        Se informado, restringe os candidatos a limiares cujo recall seja
+        ≥ `min_recall` antes de maximizar `metrica`. Pode ser combinado com
+        `min_precision`; se nenhum candidato satisfizer o conjunto de
+        restrições, levanta `ValueError`.
 
     Retorno
     -------
@@ -151,46 +147,43 @@ def escolher_limiar(
         - `brier`   : float — Brier score no conjunto avaliado.
         - `tabela`  : `pd.DataFrame` — grade completa com todas as métricas.
     """
-    if metrica not in _METRICAS:
-        raise ValueError(f"metrica inválida: {metrica!r}. Use {list(_METRICAS)}.")
+    if metrica not in _METRICAS_VALIDAS:
+        raise ValueError(
+            f"metrica inválida: {metrica!r}. Use {list(_METRICAS_VALIDAS)}."
+        )
 
     y_true_arr = np.asarray(y_true).ravel().astype(int)
     y_prob_arr = np.asarray(y_prob).ravel()
 
-    linhas = []
-    for th in np.linspace(0.01, 0.99, n_limiares):
-        pred = (y_prob_arr >= th).astype(int)
-        linhas.append({
-            "limiar":    float(th),
-            "f1":        _METRICAS["f1"](y_true_arr, pred),
-            "precision": _METRICAS["precision"](y_true_arr, pred),
-            "recall":    _METRICAS["recall"](y_true_arr, pred),
-            "accuracy":  _METRICAS["accuracy"](y_true_arr, pred),
-        })
+    tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
 
-    tabela = pd.DataFrame(linhas)
-
+    filtros: list[str] = []
     candidatos = tabela
     if min_precision is not None:
+        filtros.append(f"precision ≥ {min_precision}")
         candidatos = candidatos[candidatos["precision"] >= min_precision]
-        if candidatos.empty:
-            raise ValueError(f"Nenhum limiar atinge precision ≥ {min_precision}.")
+    if min_recall is not None:
+        filtros.append(f"recall ≥ {min_recall}")
+        candidatos = candidatos[candidatos["recall"] >= min_recall]
+    if candidatos.empty:
+        restricao = " e ".join(filtros) if filtros else "sem restrição"
+        raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
 
-    # pandas-stubs ainda não resolvem `df[str]` como coluna única de forma
-    # limpa. Montamos explicitamente o mapping de séries — cada chave é
-    # vista pelo type checker e o `Literal` de `metrica` fecha o cerco.
+    # Montamos o mapping explicitamente — mantém o typing do `Literal`
+    # e deixa claro quais colunas são exigidas de `metricas_por_limiar`.
     series: dict[Metrica, pd.Series] = {
         "f1":        candidatos["f1"],
         "precision": candidatos["precision"],
         "recall":    candidatos["recall"],
         "accuracy":  candidatos["accuracy"],
+        "youden_j":  candidatos["youden_j"],
     }
     serie_metrica = series[metrica]
-    melhor_idx = serie_metrica.idxmax()
+    melhor_pos = int(np.asarray(serie_metrica).argmax())
 
     return {
-        "limiar":  float(tabela.loc[melhor_idx, "limiar"]),
-        "valor":   float(serie_metrica.loc[melhor_idx]),
+        "limiar":  float(tabela.iloc[melhor_pos]["limiar"]),
+        "valor":   float(serie_metrica.iloc[melhor_pos]),
         "metrica": metrica,
         "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
         "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
