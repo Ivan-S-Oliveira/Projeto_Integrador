@@ -102,6 +102,13 @@ features:
   final: null
 
   # Contexto avaliado somente como ganho incremental.
+  #
+  # `vacina` e `vacina_cov` sao historico de vacinacao (conhecido na
+  # admissao), mas sao contexto de saude publica, nao estado clinico
+  # individual. Mantidos fora do nucleo principal para que o modelo
+  # nao seja dominado por "vacinado vs nao" e preserve
+  # interpretabilidade clinica. Avaliados apenas como ganho
+  # incremental em sensibilidade. Decisao revisavel em G1.
   contexto_incremental:
     - cs_escol_n
     - sg_uf
@@ -109,6 +116,13 @@ features:
     - vacina_cov
 
   # Sensibilidades, fora do nucleo principal.
+  #
+  # `saturacao` e `desc_resp` sao proxies de gravidade no momento da
+  # admissao — informativos, mas fortemente correlacionados com o
+  # desfecho. Mantidos fora do nucleo para evitar que o modelo aprenda
+  # apenas "muito doente -> obito" e perca utilidade operacional.
+  # Avaliados como ganho incremental em sensibilidade. Decisao
+  # revisavel em G1.
   sensibilidade_gravidade_admissao:
     - saturacao
     - desc_resp
@@ -160,7 +174,19 @@ features:
 
   # Engenharia de atributos.
   engenharia:
+    # Limite (dias) para `dias_sintomas_ate_internacao`.
     intervalo_max_dias: 60
+
+    # Como tratar valores fora de [0, intervalo_max_dias]:
+    #   "sinalizar" (default) — mantem o valor bruto, marca nas flags.
+    #   "descartar"           — substitui o valor por NaN, mantendo flags.
+    # Alinhado com decisoes.md: sinalizar, nao corrigir em silencio.
+    intervalo_politica: sinalizar
+
+    # Coluna usada para o par sin_semana / cos_semana.
+    # Reflete a sazonalidade viral melhor que a data de notificacao.
+    coluna_sazonalidade: dt_sin_pri
+
     faixas_etarias:
       - {nome: "<1", min: 0, max: 1}
       - {nome: "1-4", min: 1, max: 5}
@@ -170,16 +196,30 @@ features:
       - {nome: "40-59", min: 40, max: 60}
       - {nome: "60-79", min: 60, max: 80}
       - {nome: "80+", min: 80, max: null}
+
+    # Inventario exato das colunas produzidas por
+    # `src.features.engineering.montar_features`. Manter em sincronia
+    # com aquela funcao.
     derivadas:
+      # Numericas continuas
       - idade_anos
       - dias_sintomas_ate_internacao
-      - flag_intervalo_invalido
-      - faixa_etaria
+      - sin_semana
+      - cos_semana
       - ano_internacao
       - mes_internacao
+      # Flags binarias
+      - flag_intervalo_invalido
+      - flag_internacao_antes_sintomas
+      # Categoricas
+      - faixa_etaria
+      - sexo_categoria
+
+    # Colunas consumidas por `montar_features`.
     entradas:
       - nu_idade_n
       - tp_idade
+      - cs_sexo
       - dt_sin_pri
       - dt_interna
 
@@ -233,6 +273,11 @@ models:
       - 0.1
       - 1.0
       - 10.0
+    # Consumido por `src/models/logistic.py::_penalty_do_yaml`.
+    # Traduzido para `l1_ratio` (API nova do sklearn):
+    #   l2 -> l1_ratio=0.0 ; l1 -> l1_ratio=1.0 ;
+    #   elasticnet -> exige 0 < l1_ratio < 1 (o valor de `l1_ratio`
+    #   do YAML permanece).
     penalty: l2
     solver: lbfgs
     max_iter: 1000
@@ -312,7 +357,6 @@ calibracao:
     - sigmoid
     - isotonic
   fonte: validacao
-  frac_treino_tail: 0.10
   comparar_brier_antes_depois: true
 
 # -----------------------------------------------------------------------------
@@ -401,13 +445,24 @@ artefatos_coorte:
   waterfall: coorte_waterfall.csv
   variaveis: variaveis_finais.csv
   manifesto: manifesto_coorte.json
+
 # -----------------------------------------------------------------------------
 # Gates
+# -----------------------------------------------------------------------------
+#
+# Fluxo de estados:
+#   pendente  -> aprovado  -> (apenas G9_holdout) executado
+#
+# `aprovado` libera a etapa correspondente.
+# `executado` (terminal, irreversivel) registra que o holdout foi
+# efetivamente consultado. So existe para G9_holdout.
 # -----------------------------------------------------------------------------
 gates:
   G1_definicao_alvo_features:
     descricao: >
-      Confirmar schema da coorte definitiva, alvo e lista final de features.
+      Confirmar schema da coorte definitiva, alvo e lista final de
+      features. Inclui a decisao sobre onde ficam saturacao,
+      desc_resp, vacina e vacina_cov.
     status: pendente
     aprovado_por: null
     data: null
@@ -438,6 +493,7 @@ gates:
   G6_finalistas_tuning:
     descricao: >
       Selecionar no maximo dois finalistas e executar tuning limitado.
+      Ao final, preencher `selecao_modelos.finalista_escolhido`.
     status: pendente
     aprovado_por: null
     data: null
@@ -458,10 +514,15 @@ gates:
 
   G9_holdout:
     descricao: >
-      Liberar o teste uma unica vez apos congelar modelo, calibracao e limiar.
+      Liberar o teste uma unica vez apos congelar modelo, calibracao
+      e limiar. Estados: pendente -> aprovado -> executado.
+      "aprovado" libera o acesso; "executado" registra que o teste ja
+      foi consultado (estado terminal, irreversivel).
     status: pendente
     aprovado_por: null
     data: null
+    executado_em: null
+    n_acessos: 0
 
 selecao_modelos:
   status: shortlist_provisoria
@@ -470,6 +531,9 @@ selecao_modelos:
   finalistas:
     - hist_gradient_boosting
     - logistic
+  # Preenchido ao final do C6 (gate G6). Valor deve constar em
+  # `finalistas`. `null` enquanto a escolha nao foi feita.
+  finalista_escolhido: null
   familias_encerradas:
     - decision_tree
     - random_forest
