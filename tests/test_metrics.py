@@ -133,4 +133,4 @@ def test_ic_bootstrap_metrica_customizada(y_true, y_prob):
     est, inf, sup = ic_bootstrap(
         y_true, y_prob, metrica=average_precision, n_boot=30, seed=1,
     )
-    assert inf <= est <= sup or inf <= sup  # IC contém ou, ao menos, é coerente
+    assert inf <= est <= sup  # IC contém ou, ao menos, é coerente

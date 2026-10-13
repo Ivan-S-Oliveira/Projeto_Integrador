@@ -81,7 +81,7 @@ def test_intervalo_normal():
         "dt_interna": ["2024-01-06", "2024-02-11"],
     })
     r = intervalo_sintomas_internacao(df)
-    assert r["intervalo_sint_interna_dias"].tolist() == [5.0, 10.0]
+    assert r["dias_sintomas_ate_internacao"].tolist() == [5.0, 10.0]
     assert (r["flag_intervalo_invalido"] == 0).all()
 
 
@@ -91,7 +91,7 @@ def test_intervalo_negativo():
         "dt_interna": ["2024-01-01"],
     })
     r = intervalo_sintomas_internacao(df)
-    assert pd.isna(r["intervalo_sint_interna_dias"].iloc[0])
+    assert pd.isna(r["dias_sintomas_ate_internacao"].iloc[0])
     assert r["flag_intervalo_invalido"].iloc[0] == 1
 
 
@@ -101,7 +101,7 @@ def test_intervalo_nulo():
         "dt_interna": ["2024-01-01"],
     })
     r = intervalo_sintomas_internacao(df)
-    assert pd.isna(r["intervalo_sint_interna_dias"].iloc[0])
+    assert pd.isna(r["dias_sintomas_ate_internacao"].iloc[0])
     assert r["flag_intervalo_invalido"].iloc[0] == 1
 
 
@@ -113,7 +113,7 @@ def test_intervalo_acima_do_limite():
         "dt_interna": [dt_int],
     })
     r = intervalo_sintomas_internacao(df)
-    assert pd.isna(r["intervalo_sint_interna_dias"].iloc[0])
+    assert pd.isna(r["dias_sintomas_ate_internacao"].iloc[0])
     assert r["flag_intervalo_invalido"].iloc[0] == 1
 
 
@@ -125,7 +125,7 @@ def test_intervalo_limite_exato_valido():
         "dt_interna": [dt_int],
     })
     r = intervalo_sintomas_internacao(df)
-    assert r["intervalo_sint_interna_dias"].iloc[0] == float(max_dias)
+    assert r["dias_sintomas_ate_internacao"].iloc[0] == float(max_dias)
     assert r["flag_intervalo_invalido"].iloc[0] == 0
 
 
@@ -216,13 +216,17 @@ def test_montar_features_colunas():
     out = montar_features(df)
     for c in (
         "idade_anos",
-        "intervalo_sint_interna_dias",
-        "flag_intervalo_invalido",
+        "dias_sintomas_ate_internacao",
         "sin_semana",
         "cos_semana",
+        "ano_internacao",
+        "mes_internacao",
+        "flag_intervalo_invalido",
+        "flag_internacao_antes_sintomas",
         "faixa_etaria",
+        "sexo_categoria",
     ):
-        assert c in out.columns
+        assert c in out.columns, f"derivada ausente: {c}"
 
 
 def test_montar_features_nao_altera_original():
@@ -249,10 +253,14 @@ def test_derivadas_sem_colisao_com_proibidas():
     proibidas = set(C.cfg("features", "proibidas") or [])
     derivadas = {
         "idade_anos",
-        "intervalo_sint_interna_dias",
-        "flag_intervalo_invalido",
+        "dias_sintomas_ate_internacao",
         "sin_semana",
         "cos_semana",
+        "ano_internacao",
+        "mes_internacao",
+        "flag_intervalo_invalido",
+        "flag_internacao_antes_sintomas",
         "faixa_etaria",
+        "sexo_categoria",
     }
     assert not (derivadas & proibidas)

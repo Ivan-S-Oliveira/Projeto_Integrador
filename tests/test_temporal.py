@@ -1,4 +1,4 @@
-"""Testes do split temporal e da trava do holdout (gate G7)."""
+"""Testes do split temporal e da trava do holdout (gate G9_holdout)."""
 
 from __future__ import annotations
 
@@ -88,34 +88,34 @@ def test_holdout_bloqueado_inicialmente():
 
 
 # ---------------------------------------------------------------------------
-# Gate G7
+# Gate G9_holdout
 # ---------------------------------------------------------------------------
 
-def test_concluir_selecao_exige_gate_g7(monkeypatch):
-    """Com `G7_limiar` pendente, `concluir_selecao()` levanta RuntimeError."""
+def test_concluir_selecao_exige_gate_g9_holdout(monkeypatch):
+    """Com `G9_holdout` pendente, `concluir_selecao()` levanta RuntimeError."""
     from src.utils import config as C
 
     monkeypatch.setattr(
         C, "cfg",
         lambda *k, default=None: (
-            {"status": "pendente"} if k == ("gates", "G7_limiar") else default
+            {"status": "pendente"} if k == ("gates", "G9_holdout") else default
         ),
     )
 
     split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    with pytest.raises(RuntimeError, match="G7_limiar"):
+    with pytest.raises(RuntimeError, match="G9_holdout"):
         split.concluir_selecao()
     assert not split.holdout_liberado
 
 
 def test_concluir_selecao_libera_quando_gate_aprovado(monkeypatch):
-    """Com `G7_limiar` aprovado, `concluir_selecao()` libera o holdout."""
+    """Com `G9_holdout` aprovado, `concluir_selecao()` libera o holdout."""
     from src.utils import config as C
 
     monkeypatch.setattr(
         C, "cfg",
         lambda *k, default=None: (
-            {"status": "aprovado"} if k == ("gates", "G7_limiar") else default
+            {"status": "aprovado"} if k == ("gates", "G9_holdout") else default
         ),
     )
 

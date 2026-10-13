@@ -1,10 +1,13 @@
 """
 Testes para `src.data.split.criar_particoes_agrupadas`.
 
-Cobrem:
+Invariantes centrais:
+    1. nenhum grupo aparece em mais de uma partição (group integrity);
+    2. proporções de linhas próximas de 70/15/15 (com tolerância);
+    3. mesma seed → mesma partição (reprodutibilidade).
+
+Cobrem ainda:
     - partição completa e bem-distribuída;
-    - integridade dos grupos (não cruzam partições);
-    - reprodutibilidade por seed;
     - as quatro políticas de estratos pequenos;
     - grupo com alvo heterogêneo (raise e warn);
     - validações de parâmetros e colunas.
@@ -57,27 +60,19 @@ def _df_estratificado(
     return pd.DataFrame(linhas)
 
 
-# ---------------------------------------------------------------------------
-# Caso feliz
-# ---------------------------------------------------------------------------
-
-def test_split_basico_todas_particoes_populadas():
-    df = _df_estratificado()
-    out = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
-        seed=42,
+def _df_grande(n_grupos_classe0: int = 700, n_grupos_classe1: int = 300) -> pd.DataFrame:
+    """Base grande o bastante para checar proporções com folga."""
+    return _df_estratificado(
+        n_grupos_classe0=n_grupos_classe0,
+        n_grupos_classe1=n_grupos_classe1,
+        linhas_por_grupo=2,
+        seed=1,
     )
 
-    assert "particao" in out.columns
-    presentes = set(out["particao"].unique())
-    assert presentes == set(PARTICOES_CANONICAS)
 
-    # Nenhuma linha perdida
-    assert len(out) == len(df)
-
+# ---------------------------------------------------------------------------
+# Invariante 1 — nenhum grupo em duas partições
+# ---------------------------------------------------------------------------
 
 def test_grupos_nao_cruzam_particoes():
     df = _df_estratificado()
@@ -89,12 +84,89 @@ def test_grupos_nao_cruzam_particoes():
         seed=42,
     )
 
-    grupos_por_particao = out.groupby("nu_notific", observed=True)["particao"].nunique()
+    grupos_por_particao = (
+        out.groupby("nu_notific", observed=True)["particao"].nunique()
+    )
     assert (grupos_por_particao == 1).all(), (
         "Algum grupo aparece em mais de uma partição:\n"
         f"{grupos_por_particao[grupos_por_particao > 1]}"
     )
 
+
+def test_nenhuma_linha_perdida():
+    df = _df_estratificado()
+    out = criar_particoes_agrupadas(
+        df,
+        target_column="alvo",
+        group_column="nu_notific",
+        partition_column="particao",
+        seed=42,
+    )
+    assert len(out) == len(df)
+    assert set(out["particao"].unique()) == set(PARTICOES_CANONICAS)
+
+
+# ---------------------------------------------------------------------------
+# Invariante 2 — proporções 70/15/15
+# ---------------------------------------------------------------------------
+
+def test_proporcoes_linhas_proximas_de_70_15_15():
+    df = _df_grande()
+    out = criar_particoes_agrupadas(
+        df,
+        target_column="alvo",
+        group_column="nu_notific",
+        partition_column="particao",
+        seed=42,
+    )
+
+    contagem = out["particao"].value_counts(normalize=True)
+    # Tolerância generosa: grupos são atômicos, então a proporção real
+    # de linhas oscila em torno do alvo.
+    tol = 0.05
+
+    assert abs(contagem["treino"] - 0.70) < tol, contagem
+    assert abs(contagem["validacao"] - 0.15) < tol, contagem
+    assert abs(contagem["teste"] - 0.15) < tol, contagem
+
+
+def test_proporcoes_grupos_proximas_de_70_15_15():
+    df = _df_grande()
+    out = criar_particoes_agrupadas(
+        df,
+        target_column="alvo",
+        group_column="nu_notific",
+        partition_column="particao",
+        seed=42,
+    )
+
+    por_grupo = (
+        out.groupby("nu_notific", observed=True)["particao"].first()
+    )
+    contagem = por_grupo.value_counts(normalize=True)
+    tol = 0.05
+
+    assert abs(contagem["treino"] - 0.70) < tol, contagem
+    assert abs(contagem["validacao"] - 0.15) < tol, contagem
+    assert abs(contagem["teste"] - 0.15) < tol, contagem
+
+
+def test_estratificacao_preserva_proporcao_aproximada():
+    df = _df_estratificado(n_grupos_classe0=70, n_grupos_classe1=30)
+    out = criar_particoes_agrupadas(
+        df, target_column="alvo", group_column="nu_notific",
+        partition_column="particao", seed=42,
+    )
+    prevalencia_global = df["alvo"].mean()
+    for particao in PARTICOES_CANONICAS:
+        sub = out[out["particao"] == particao]
+        # tolerância generosa: 10 pontos percentuais
+        assert abs(sub["alvo"].mean() - prevalencia_global) < 0.10
+
+
+# ---------------------------------------------------------------------------
+# Invariante 3 — reprodutibilidade por seed
+# ---------------------------------------------------------------------------
 
 def test_reprodutibilidade_mesma_seed():
     df = _df_estratificado()
@@ -122,27 +194,12 @@ def test_seeds_diferentes_produzem_splits_diferentes():
     assert not a["particao"].equals(b["particao"])
 
 
-def test_estratificacao_preserva_proporcao_aproximada():
-    df = _df_estratificado(n_grupos_classe0=70, n_grupos_classe1=30)
-    out = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=42,
-    )
-    prevalencia_global = df["alvo"].mean()
-    for particao in PARTICOES_CANONICAS:
-        sub = out[out["particao"] == particao]
-        # tolerância generosa: 10 pontos percentuais
-        assert abs(sub["alvo"].mean() - prevalencia_global) < 0.10
-
-
 # ---------------------------------------------------------------------------
 # Estratos pequenos
 # ---------------------------------------------------------------------------
 
 def _df_com_estrato_pequeno() -> pd.DataFrame:
-    """
-    1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0.
-    """
+    """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
     return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
 
 
@@ -163,10 +220,8 @@ def test_estrato_pequeno_warn_teste_manda_para_teste():
             partition_column="particao",
             politica_estratos_pequenos="warn_teste",
         )
-    # O grupo pequeno foi para o teste
     linhas_classe1 = out[out["alvo"] == 1]
     assert (linhas_classe1["particao"] == "teste").all()
-    # Nenhuma linha perdida
     assert len(out) == len(df)
 
 
@@ -192,7 +247,6 @@ def test_estrato_pequeno_drop_remove_linhas():
         )
     assert (out["alvo"] == 1).sum() == 0
     assert len(out) < len(df)
-    # Só sobraram as partições canônicas
     assert set(out["particao"].unique()).issubset(set(PARTICOES_CANONICAS))
 
 
@@ -202,7 +256,6 @@ def test_estrato_pequeno_drop_remove_linhas():
 
 def _df_com_grupo_heterogeneo() -> pd.DataFrame:
     df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
-    # força o primeiro grupo da classe 0 a ter também um alvo=1
     idx = df.index[df["nu_notific"] == "g0000"][0]
     df.loc[idx, "alvo"] = 1
     return df

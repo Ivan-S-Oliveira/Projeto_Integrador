@@ -200,9 +200,9 @@ def test_temporal_split_bloqueia_holdout_antes_de_concluir():
         split.holdout()
 
 
-def test_concluir_selecao_exige_gate_g7(monkeypatch):
+def test_concluir_selecao_exige_gate_g9_holdout(monkeypatch):
     """
-    `concluir_selecao` só libera o holdout quando `gates.G7_limiar`
+    `concluir_selecao` só libera o holdout quando `gates.G9_holdout`
     estiver `aprovado`. Com o gate pendente, precisa levantar
     `RuntimeError`.
     """
@@ -215,7 +215,7 @@ def test_concluir_selecao_exige_gate_g7(monkeypatch):
         "cfg",
         lambda *chaves, default=None: (
             {"status": "pendente"}
-            if chaves == ("gates", "G7_limiar")
+            if chaves == ("gates", "G9_holdout")
             else default
         ),
     )
@@ -226,7 +226,7 @@ def test_concluir_selecao_exige_gate_g7(monkeypatch):
     })
     split = TemporalSplit(df=df, coluna_tempo="dt_notific")
 
-    with pytest.raises(RuntimeError, match="G7_limiar"):
+    with pytest.raises(RuntimeError, match="G9_holdout"):
         split.concluir_selecao()
 
     assert not split.holdout_liberado
@@ -234,7 +234,7 @@ def test_concluir_selecao_exige_gate_g7(monkeypatch):
 
 def test_concluir_selecao_libera_holdout_quando_gate_aprovado(monkeypatch):
     """
-    Com o gate `G7_limiar` aprovado (simulado), `concluir_selecao`
+    Com o gate `G9_holdout` aprovado (simulado), `concluir_selecao`
     libera o holdout normalmente.
     """
     from src.evaluation.temporal import TemporalSplit

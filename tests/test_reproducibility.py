@@ -61,7 +61,7 @@ def test_metadata_grava_gates(tmp_path):
     pasta = R.registrar_execucao(modelo="gates", output_dir=tmp_path)
     meta = json.loads((pasta / "metadata.json").read_text(encoding="utf-8"))
     assert isinstance(meta["gates"], dict)
-    assert "G7_limiar" in meta["gates"]
+    assert "G9_holdout" in meta["gates"]
 
 
 # ---------------------------------------------------------------------------
