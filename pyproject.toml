@@ -21,9 +21,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
 
-# Dependências de runtime — inferidas dos imports observados nos
-# módulos do projeto (pandas, numpy, pyarrow, scikit-learn, pyyaml,
-# requests). Ajuste as faixas conforme o ambiente real.
 dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
@@ -49,13 +46,12 @@ docs = [
 Repository = "https://github.com/SEU_USUARIO/SEU_REPO"
 
 # ---------------------------------------------------------------------------
-# Empacotamento — layout src/
+# Empacotamento — src/ é o pacote de topo, para que `import src.*` funcione
 # ---------------------------------------------------------------------------
-[tool.setuptools]
-package-dir = { "" = "src" }
-
 [tool.setuptools.packages.find]
-where = ["src"]
+where      = ["."]
+include    = ["src*"]
+namespaces = false
 
 # ---------------------------------------------------------------------------
 # Pytest

@@ -192,25 +192,50 @@ def metricas_por_limiar(
     """
     Tabela com métricas para cada limiar em [0.01, 0.99].
 
-    Colunas: limiar, f1, precision, recall, sensibilidade, especificidade,
-    accuracy.
+    Colunas: limiar, tp, fp, tn, fn, f1, precision, recall,
+    sensibilidade, especificidade, accuracy, youden_j.
 
     Usa as métricas deste próprio módulo — não há tabela paralela de lambdas.
+
+    Notas
+    -----
+    - `youden_j` = sensibilidade + especificidade − 1 = recall +
+      especificidade − 1. Índice de Youden, útil para escolher o limiar
+      que maximiza a separação entre as classes.
+    - `tp`, `fp`, `tn`, `fn` vêm da matriz de confusão no limiar corrente
+      e permitem derivar qualquer outra métrica a posteriori.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
 
     linhas: list[dict[str, float]] = []
     for th in np.linspace(0.01, 0.99, n_limiares):
-        y_pred = (p >= float(th)).astype(int)
+        lim = float(th)
+        y_pred = (p >= lim).astype(int)
+
+        # Matriz de confusão explícita — base para todas as métricas.
+        tp = int(((y == 1) & (y_pred == 1)).sum())
+        fp = int(((y == 0) & (y_pred == 1)).sum())
+        tn = int(((y == 0) & (y_pred == 0)).sum())
+        fn = int(((y == 1) & (y_pred == 0)).sum())
+
+        rec = recall(y, y_pred)
+        esp = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+        youden_j = rec + esp - 1.0
+
         linhas.append({
-            "limiar":         float(th),
+            "limiar":         lim,
+            "tp":             tp,
+            "fp":             fp,
+            "tn":             tn,
+            "fn":             fn,
             "f1":             f1(y, y_pred),
             "precision":      precision(y, y_pred),
-            "recall":         recall(y, y_pred),
-            "sensibilidade":  sensibilidade(y, y_pred),
-            "especificidade": especificidade(y, y_pred),
+            "recall":         rec,
+            "sensibilidade":  rec,
+            "especificidade": esp,
             "accuracy":       accuracy(y, y_pred),
+            "youden_j":       youden_j,
         })
 
     return pd.DataFrame(linhas)

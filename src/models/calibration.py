@@ -169,21 +169,23 @@ def escolher_limiar(
         restricao = " e ".join(filtros) if filtros else "sem restrição"
         raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
 
-    # Montamos o mapping explicitamente — mantém o typing do `Literal`
-    # e deixa claro quais colunas são exigidas de `metricas_por_limiar`.
-    series: dict[Metrica, pd.Series] = {
-        "f1":        candidatos["f1"],
-        "precision": candidatos["precision"],
-        "recall":    candidatos["recall"],
-        "accuracy":  candidatos["accuracy"],
-        "youden_j":  candidatos["youden_j"],
-    }
-    serie_metrica = series[metrica]
-    melhor_pos = int(np.asarray(serie_metrica).argmax())
+    # Acesso lazy: só a métrica pedida é exigida de `metricas_por_limiar`.
+    # Se um dia `Metrica` ganhar um novo valor, o único ponto de manutenção
+    # é o `Literal` + `metricas_por_limiar` — não aqui.
+    if metrica not in candidatos.columns:
+        raise ValueError(
+            f"A métrica {metrica!r} não foi produzida por "
+            f"metricas_por_limiar. Colunas disponíveis: "
+            f"{sorted(candidatos.columns)}"
+        )
+
+    serie_metrica = candidatos[metrica]
+    idx_melhor = serie_metrica.idxmax()  # rótulo do índice, não posição
+    linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
 
     return {
-        "limiar":  float(tabela.iloc[melhor_pos]["limiar"]),
-        "valor":   float(serie_metrica.iloc[melhor_pos]),
+        "limiar":  float(linha_melhor["limiar"]),
+        "valor":   float(linha_melhor[metrica]),
         "metrica": metrica,
         "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
         "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),

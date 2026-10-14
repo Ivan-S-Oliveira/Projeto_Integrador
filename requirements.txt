@@ -2,6 +2,7 @@ python-dotenv
 PyYAML
 pandas
 requests
+ipykernel
 numpy
 matplotlib
 seaborn
@@ -9,3 +10,4 @@ scikit-learn
 pyarrow
 jupyterlab
 pytest
+joblib

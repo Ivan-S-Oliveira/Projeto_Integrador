@@ -521,6 +521,8 @@ gates:
     status: pendente
     aprovado_por: null
     data: null
+    # Preenchidos automaticamente pelo C6 (célula de marcação de G9).
+    # NÃO remover: _marcar_g9_executado exige as duas chaves.
     executado_em: null
     n_acessos: 0
 
