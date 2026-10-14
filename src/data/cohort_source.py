@@ -17,6 +17,18 @@ import pandas as pd
 
 CohortKind = Literal["provisional", "final", "auto"]
 
+_ENV_VAR = "SRAG_COHORT_KIND"
+_DEFAULT_KIND: CohortKind = "provisional"
+_VALID_KINDS: frozenset[str] = frozenset({"provisional", "final", "auto"})
+_ANALYTICAL_DIR = Path("data") / "analytical"
+
+_FINAL_FILENAMES = ("coorte_final.parquet",)
+_PROVISIONAL_FILENAMES = (
+    "coorte_provisoria.parquet",
+    "coorte_provisoria_b.parquet",
+    "coorte.parquet",
+)
+
 
 @dataclass(frozen=True)
 class CohortSource:
@@ -30,7 +42,6 @@ class CohortSource:
     columns: int
 
     def to_dict(self) -> dict[str, object]:
-        """Retorna representacao serializavel da fonte."""
         return asdict(self)
 
 
@@ -45,17 +56,24 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
 
 def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
     """Retorna candidatos ordenados por tipo de coorte."""
-    analytical = root / "data" / "analytical"
+    analytical = root / _ANALYTICAL_DIR
     return {
-        "final": (
-            analytical / "coorte_final.parquet",
-        ),
-        "provisional": (
-            analytical / "coorte_provisoria.parquet",
-            analytical / "coorte_provisoria_b.parquet",
-            analytical / "coorte.parquet",
-        ),
+        "final": tuple(analytical / name for name in _FINAL_FILENAMES),
+        "provisional": tuple(analytical / name for name in _PROVISIONAL_FILENAMES),
     }
+
+
+def _resolve_kind(kind: CohortKind | None) -> str:
+    selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
+    if selected not in _VALID_KINDS:
+        raise ValueError(
+            f"{_ENV_VAR} deve ser provisional, final ou auto. Recebido: {selected!r}."
+        )
+    return selected
+
+
+def _kind_from_path(path: Path) -> str:
+    return "final" if "final" in path.name.lower() else "provisional"
 
 
 def resolve_cohort_path(
@@ -67,26 +85,19 @@ def resolve_cohort_path(
     """Resolve a coorte sem alternar silenciosamente de provisoria para final.
 
     ``kind=None`` consulta ``SRAG_COHORT_KIND`` e usa ``provisional`` como padrao.
-    ``auto`` prefere a definitiva quando ela existir, mas imprime esse fato no
-    notebook consumidor. Para reproducibilidade, execucoes oficiais devem usar
-    ``provisional`` ou ``final`` explicitamente.
+    ``auto`` prefere a definitiva quando ela existir. Para reproducibilidade,
+    execucoes oficiais devem usar ``provisional`` ou ``final`` explicitamente.
     """
-    selected_kind = (kind or os.getenv("SRAG_COHORT_KIND", "provisional")).lower()
-    if selected_kind not in {"provisional", "final", "auto"}:
-        raise ValueError(
-            "SRAG_COHORT_KIND deve ser provisional, final ou auto. "
-            f"Recebido: {selected_kind!r}."
-        )
-
     if explicit_path is not None:
         path = Path(explicit_path).expanduser().resolve()
         if not path.is_file():
             raise FileNotFoundError(f"Coorte explicita nao encontrada: {path}")
-        effective_kind = "final" if "final" in path.name.lower() else "provisional"
-        return effective_kind, path
+        return _kind_from_path(path), path
 
+    selected_kind = _resolve_kind(kind)
     candidates = cohort_candidates(root)
     order = ("final", "provisional") if selected_kind == "auto" else (selected_kind,)
+
     checked: list[Path] = []
     for effective_kind in order:
         for path in candidates[effective_kind]:
@@ -96,7 +107,8 @@ def resolve_cohort_path(
 
     formatted = "\n".join(f"- {path}" for path in checked)
     raise FileNotFoundError(
-        f"Nenhuma coorte do tipo {selected_kind!r} foi encontrada. Candidatos:\n{formatted}"
+        f"Nenhuma coorte do tipo {selected_kind!r} foi encontrada. "
+        f"Candidatos:\n{formatted}"
     )
 
 

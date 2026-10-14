@@ -50,11 +50,6 @@ __all__ = [
     "ic_bootstrap",
 ]
 
-
-# ---------------------------------------------------------------------------
-# Tipos auxiliares
-# ---------------------------------------------------------------------------
-
 ArrayLike = Union[np.ndarray, pd.Series, list]
 
 
@@ -66,9 +61,16 @@ def _to_int_labels(y: ArrayLike) -> np.ndarray:
     return np.asarray(y).ravel().astype(int)
 
 
-# ---------------------------------------------------------------------------
-# Métricas individuais (retornam float)
-# ---------------------------------------------------------------------------
+def _contagens_confusao(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+) -> tuple[int, int, int, int]:
+    tp = int(((y_true == 1) & (y_pred == 1)).sum())
+    fp = int(((y_true == 0) & (y_pred == 1)).sum())
+    tn = int(((y_true == 0) & (y_pred == 0)).sum())
+    fn = int(((y_true == 1) & (y_pred == 0)).sum())
+    return tp, fp, tn, fn
+
 
 def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
     return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
@@ -90,24 +92,43 @@ def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
-    # sklearn exige labels={0,1} explícito quando y pode ser todo 0 ou todo 1
     return float(sk_log_loss(y, p, labels=[0, 1]))
 
 
 def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(f1_score(_to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0))
+    return float(
+        f1_score(
+            _to_int_labels(y_true),
+            _to_int_labels(y_pred),
+            zero_division=0,
+        )
+    )
 
 
 def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(precision_score(_to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0))
+    return float(
+        precision_score(
+            _to_int_labels(y_true),
+            _to_int_labels(y_pred),
+            zero_division=0,
+        )
+    )
 
 
 def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(recall_score(_to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0))
+    return float(
+        recall_score(
+            _to_int_labels(y_true),
+            _to_int_labels(y_pred),
+            zero_division=0,
+        )
+    )
 
 
 def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(accuracy_score(_to_int_labels(y_true), _to_int_labels(y_pred)))
+    return float(
+        accuracy_score(_to_int_labels(y_true), _to_int_labels(y_pred))
+    )
 
 
 def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
@@ -120,8 +141,7 @@ def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     y = _to_int_labels(y_true)
     p = _to_int_labels(y_pred)
 
-    tn = int(((y == 0) & (p == 0)).sum())
-    fp = int(((y == 0) & (p == 1)).sum())
+    _, fp, tn, _ = _contagens_confusao(y, p)
     denom = tn + fp
     return float(tn / denom) if denom > 0 else 0.0
 
@@ -135,10 +155,6 @@ def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """
     return recall(y_true, y_pred)
 
-
-# ---------------------------------------------------------------------------
-# Resumo completo
-# ---------------------------------------------------------------------------
 
 def metricas_completas(
     y_true: ArrayLike,
@@ -180,10 +196,6 @@ def metricas_completas(
     }
 
 
-# ---------------------------------------------------------------------------
-# Varredura de limiar
-# ---------------------------------------------------------------------------
-
 def metricas_por_limiar(
     y_true: ArrayLike,
     y_prob: ArrayLike,
@@ -209,15 +221,12 @@ def metricas_por_limiar(
     p = _to_np(y_prob)
 
     linhas: list[dict[str, float]] = []
+
     for th in np.linspace(0.01, 0.99, n_limiares):
         lim = float(th)
         y_pred = (p >= lim).astype(int)
 
-        # Matriz de confusão explícita — base para todas as métricas.
-        tp = int(((y == 1) & (y_pred == 1)).sum())
-        fp = int(((y == 0) & (y_pred == 1)).sum())
-        tn = int(((y == 0) & (y_pred == 0)).sum())
-        fn = int(((y == 1) & (y_pred == 0)).sum())
+        tp, fp, tn, fn = _contagens_confusao(y, y_pred)
 
         rec = recall(y, y_pred)
         esp = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
@@ -240,10 +249,6 @@ def metricas_por_limiar(
 
     return pd.DataFrame(linhas)
 
-
-# ---------------------------------------------------------------------------
-# Bootstrap
-# ---------------------------------------------------------------------------
 
 def ic_bootstrap(
     y_true: ArrayLike,
@@ -279,18 +284,19 @@ def ic_bootstrap(
 
     for i in range(n_boot):
         idx = rng.integers(0, n, size=n)
-        # Alguns boots podem ter apenas uma classe — protege AUC e AP.
+
         if len(np.unique(y[idx])) < 2:
             valores[i] = np.nan
             continue
+
         valores[i] = metrica(y[idx], p[idx])
 
+    est = float(metrica(y, p))
     validos = valores[~np.isnan(valores)]
+
     if validos.size == 0:
-        est = float(metrica(y, p))
         return est, float("nan"), float("nan")
 
-    est = float(metrica(y, p))
     inf = float(np.quantile(validos, alpha / 2))
     sup = float(np.quantile(validos, 1 - alpha / 2))
     return est, inf, sup

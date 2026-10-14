@@ -1,17 +1,12 @@
 """
 Fundação dos modelos supervisionados.
 
-Concentra tudo que é comum aos modelos supervisionados do projeto:
+Fonte única de verdade para o pré-processamento e para a derivação do
+alvo binário a partir da coluna `evolucao`, além de leitura da config
+canônica (`configs/supervised.yaml`) e da conveniência `build_pipeline`.
 
-- leitura da configuração canônica (`configs/supervised.yaml`) para alvo,
-  features e valor sentinela de ausência categórica;
-- construção do pré-processador (`ColumnTransformer` com pipelines
-  numérico e categórico) reutilizado por todos os modelos;
-- derivação do alvo binário a partir da coluna `evolucao`;
-- conveniência para montar o `Pipeline` completo (pré + classificador).
-
-Este módulo é a fonte única de verdade do pré-processamento — notebooks
-e demais modelos devem importá-lo em vez de reimplementar.
+Notebooks e demais modelos devem importar este módulo em vez de
+reimplementar o pré-processamento.
 """
 
 from __future__ import annotations
@@ -29,23 +24,16 @@ from src.utils import config as C
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Fonte única da verdade — tudo vem de `configs/supervised.yaml`
-# ---------------------------------------------------------------------------
-# Sem defaults próprios neste módulo: se a config falhar, o import falha.
-
+# Sem defaults próprios: se a config falhar, o import falha.
 ALVO: str = C.cfg("target", "coluna")
 COLUNA_TEMPO: str = C.cfg("coluna_tempo")
 
 FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
 FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
 
-# Sentinela de ausência para categóricas (mesmo valor usado no Notebook 03).
 AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
 
-# Se `features.final` estiver preenchido no YAML, restringe as listas a ele.
-_final = C.cfg("features", "final")
-if _final:
+if _final := C.cfg("features", "final"):
     _fs = set(_final)
     FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
     FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
@@ -60,10 +48,6 @@ def _alvo_cfg_positivos() -> list[float]:
 def _alvo_cfg_negativos() -> list[float]:
     return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
-
-# ---------------------------------------------------------------------------
-# Pré-processador
-# ---------------------------------------------------------------------------
 
 def build_preprocessor(
     numericas: Iterable[str] | None = None,
@@ -112,10 +96,6 @@ def build_preprocessor(
         verbose_feature_names_out=False,
     )
 
-
-# ---------------------------------------------------------------------------
-# Alvo binário
-# ---------------------------------------------------------------------------
 
 def criar_alvo_binario(
     df: pd.DataFrame,
@@ -189,18 +169,10 @@ def filtrar_rotulos_validos(
     return X_ok, y_ok
 
 
-# ---------------------------------------------------------------------------
-# Conveniência
-# ---------------------------------------------------------------------------
-
 def random_state() -> int:
     """Seed canônica do projeto (vem de `config.SEED`)."""
     return int(C.SEED)
 
-
-# ---------------------------------------------------------------------------
-# Pipeline completo (pré-processamento + classificador opcional)
-# ---------------------------------------------------------------------------
 
 def build_pipeline(
     X: pd.DataFrame | None = None,

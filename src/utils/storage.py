@@ -4,17 +4,13 @@ Contrato oficial de acesso ao Parquet de SRAG.
 Fluxo:
     GitHub Release → data/processed/<DATA_VERSION>/srag.parquet
 
-- Tenta primeiro o download **público** via URL de release.
-- Se falhar (4xx/5xx ou asset inválido) e houver `GITHUB_TOKEN`, cai no
-  asset **privado** via API do GitHub.
-- Grava um sidecar `<arquivo>.sha256` com o hash do Parquet baixado —
-  reprodutibilidade e registro no `Run`.
-- `force=True` rebaixa e descarta o sidecar antigo.
+Tenta primeiro o download público via URL de release. Se falhar e houver
+`GITHUB_TOKEN`, cai no asset privado via API do GitHub. Grava um sidecar
+`<arquivo>.sha256` com o hash do Parquet baixado — reprodutibilidade e
+registro no `Run`. `force=True` rebaixa e descarta o sidecar antigo.
 
-Requisitos:
-    - `requests` e `pandas` no ambiente.
-    - Constantes `C.HTTP_TIMEOUT`, `C.HTTP_TENTATIVAS` e `C.HTTP_BACKOFF`
-      em `src.utils.config` controlam o comportamento de rede.
+Requer `requests` e `pandas`. Constantes `C.HTTP_TIMEOUT`,
+`C.HTTP_TENTATIVAS` e `C.HTTP_BACKOFF` controlam o comportamento de rede.
 """
 
 from __future__ import annotations
@@ -32,12 +28,8 @@ from src.utils.env import PROCESSED, get_secret
 
 
 PARQUET_MAGIC: bytes = b"PAR1"
-_CHUNK: int = 8 * 1024 * 1024  # 8 MiB
+_CHUNK: int = 8 * 1024 * 1024
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _token() -> str | None:
     """Devolve `GITHUB_TOKEN` se definido; caso contrário, `None`."""
@@ -69,9 +61,9 @@ def _abrir_stream(
     """
     Abre um stream HTTP com retry linear.
 
-    - 4xx permanente (exceto 429) falha sem retentar — erro do cliente.
-    - 5xx, 429 e erros de conexão são retentados até `tentativas` vezes,
-      esperando `backoff * tentativa` segundos entre as tentativas.
+    4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
+    conexão são retentados até `tentativas` vezes, com espera
+    `backoff * tentativa` entre elas.
     """
     last_exc: Exception | None = None
 
@@ -90,16 +82,13 @@ def _abrir_stream(
                 time.sleep(backoff * tentativa)
             continue
 
-        # 2xx → entrega.
         if r.ok:
             return r
 
-        # 4xx permanente (exceto 429) → não retenta.
         if 400 <= r.status_code < 500 and r.status_code != 429:
             r.close()
             r.raise_for_status()
 
-        # 5xx ou 429 → fecha, retenta.
         status = r.status_code
         r.close()
         last_exc = requests.HTTPError(f"HTTP {status} em {url}")
@@ -121,28 +110,12 @@ def download_file(
     """
     Baixa `url` para `dest` com verificação de magic bytes e SHA-256.
 
-    Retorna o SHA-256 hex do conteúdo baixado e grava um sidecar
-    `<dest>.sha256` no formato `sha256sum`.
+    Retorna o SHA-256 hex do conteúdo e grava um sidecar `<dest>.sha256`
+    no formato `sha256sum`. O download passa por `<dest>.part`.
 
-    Parâmetros
-    ----------
-    url : str
-        Origem do arquivo.
-    dest : Path
-        Destino final (o download passa por `<dest>.part`).
-    headers : dict | None
-        Cabeçalhos HTTP adicionais (ex.: `Authorization`).
-    expected_magic : bytes | None
-        Se informado, valida que os primeiros bytes do arquivo começam
-        com esse valor (ex.: `b"PAR1"` para Parquet).
-    expected_sha256 : str | None
-        Se informado, valida o hash após o download.
-
-    Levanta
-    ------
-    RuntimeError
-        Se o content-type indicar HTML/JSON, se o magic não bater, ou
-        se o SHA-256 divergir. O `.part` é removido em qualquer falha.
+    Levanta `RuntimeError` se o content-type indicar HTML/JSON, se o
+    magic não bater ou se o SHA-256 divergir; o `.part` é removido em
+    qualquer falha.
     """
     tmp = dest.with_suffix(dest.suffix + ".part")
     tmp.unlink(missing_ok=True)
@@ -240,10 +213,6 @@ def _private_asset_url(token: str) -> str:
     return asset["url"]
 
 
-# ---------------------------------------------------------------------------
-# API pública
-# ---------------------------------------------------------------------------
-
 def get_parquet(
     force: bool = False,
     *,
@@ -252,30 +221,16 @@ def get_parquet(
     """
     Devolve o caminho local do Parquet de SRAG, baixando se necessário.
 
-    Ordem de tentativas:
-        1. Release pública do GitHub.
-        2. Se (1) falhar e `GITHUB_TOKEN` estiver definido, asset privado
-           via API do GitHub.
+    Ordem de tentativas: release pública do GitHub; se falhar e
+    `GITHUB_TOKEN` estiver definido, asset privado via API do GitHub.
 
-    Parâmetros
-    ----------
-    force : bool
-        Se True, rebaixa mesmo que o arquivo já exista localmente e
-        descarta o sidecar `.sha256` antigo.
-    expected_sha256 : str | None
-        Se informado, valida o hash do arquivo baixado — divergência
-        interrompe o pipeline com `RuntimeError`.
+    Com `force=True`, rebaixa mesmo que o arquivo já exista e descarta o
+    sidecar `.sha256` antigo. Se `expected_sha256` for informado, valida
+    o hash do arquivo baixado.
 
-    Retorno
-    -------
-    Path
-        Caminho absoluto do Parquet baixado.
-
-    Efeitos colaterais
-    ------------------
-    - Parquet gravado em `data/processed/<DATA_VERSION>/<PARQUET_NAME>`.
-    - Sidecar `<arquivo>.sha256` com o hash do conteúdo.
-    - SHA-256 impresso no stdout para uso em logs/manifests.
+    Efeitos colaterais: Parquet gravado em
+    `data/processed/<DATA_VERSION>/<PARQUET_NAME>`, sidecar `.sha256`
+    ao lado, e SHA-256 impresso no stdout para uso em logs/manifests.
     """
     folder = PROCESSED / C.DATA_VERSION
     folder.mkdir(parents=True, exist_ok=True)
@@ -330,14 +285,8 @@ def read_srag(
     """
     Lê o Parquet de SRAG como DataFrame.
 
-    Parâmetros
-    ----------
-    columns : iterable de str | None
-        Subconjunto de colunas a carregar (pushdown do Parquet). Se None,
-        carrega todas.
-    filters : list | None
-        Filtros no formato aceito por `pd.read_parquet(filters=...)`.
-        Deixe None para carregar o arquivo inteiro.
+    `columns` restringe o subconjunto carregado (pushdown do Parquet);
+    `filters` segue o formato de `pd.read_parquet(filters=...)`.
     """
     return pd.read_parquet(
         get_parquet(),

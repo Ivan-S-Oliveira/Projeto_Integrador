@@ -2,26 +2,19 @@
 Fábrica de modelos finalistas.
 
 Ponto único de construção dos pipelines finalistas usados em C5 e C6.
-Antes desta fábrica, cada notebook duplicava a leitura de hiperparâmetros
-do `supervised.yaml` e o `if/elif` de despacho por nome de modelo.
 
 Convenções
 ----------
-- Os hiperparâmetros de cada finalista vivem em uma seção própria do
-  `supervised.yaml`, com o mesmo nome do modelo (ex.: `boosting:`,
-  `logistic:`). Chaves ausentes caem nos defaults do construtor
-  correspondente.
-- Overrides explícitos passados em `**overrides` têm precedência sobre o
-  YAML — útil em testes e em varreduras pontuais.
-- O `preprocessor` é opcional. Quando None, cada construtor monta o seu
-  via `build_preprocessor()`.
-
-Finalistas suportados: `"boosting"` e `"logistic"`.
+- Hiperparâmetros de cada finalista vivem em `models.<nome>` no
+  `supervised.yaml`. Chaves ausentes caem nos defaults do construtor.
+- Overrides em `**overrides` têm precedência sobre o YAML.
+- `preprocessor` é opcional; quando None, cada construtor usa
+  `build_preprocessor()`.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from sklearn.pipeline import Pipeline
 
@@ -33,8 +26,7 @@ __all__ = ["Finalista", "build_finalista", "finalistas_disponiveis"]
 
 
 Finalista = Literal["boosting", "logistic"]
-
-_FINALISTAS_VALIDOS: tuple[str, ...] = ("boosting", "logistic")
+_FINALISTAS_VALIDOS: tuple[str, ...] = get_args(Finalista)
 
 
 def finalistas_disponiveis() -> tuple[str, ...]:
@@ -47,13 +39,8 @@ def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
     Lê a seção `models.<nome>` do `supervised.yaml` e devolve o dict de
     kwargs aceitos pelo construtor do modelo.
 
-    A seção fica aninhada em `models:` — ex.: `models.boosting` e
-    `models.logistic`. Retorna `{}` quando a seção não existir ou não for
-    um mapping, caso em que os defaults do construtor são usados.
-
-    Chaves de controle da varredura (`busca_*`) são descartadas: elas
-    configuram C5/C6 e não são parâmetros válidos dos construtores.
-    Valores `None` também são descartados para não sobrepor defaults.
+    Retorna `{}` quando a seção não existir ou não for um mapping.
+    Chaves `busca_*` e valores `None` são descartados.
     """
     try:
         secao = C.cfg("models", nome)
@@ -91,7 +78,7 @@ def build_finalista(
 
     Retorno
     -------
-    `Pipeline` (pré-processamento + classificador) ainda **não ajustado**.
+    `Pipeline` (pré-processamento + classificador) ainda não ajustado.
 
     Levanta
     ------
@@ -111,5 +98,4 @@ def build_finalista(
 
     if nome == "boosting":
         return build_boosting_pipeline(**params)
-    # `nome` é validado acima; este ramo cobre "logistic".
     return build_logistic_pipeline(**params)

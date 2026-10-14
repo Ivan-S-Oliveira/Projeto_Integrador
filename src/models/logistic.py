@@ -1,21 +1,16 @@
 """
 Regressão logística — modelo linear interpretável.
 
-A partir do scikit-learn 1.8, o parâmetro `penalty` foi depreciado e será
-removido na versão 1.10. O controle de regularização passou a ser feito via
-`l1_ratio`:
+A partir do scikit-learn 1.8, `penalty` foi depreciado (remoção prevista
+para 1.10) em favor de `l1_ratio`:
 
-    - `l1_ratio=0.0` → penalidade L2 (default histórico)
-    - `l1_ratio=1.0` → penalidade L1
+    - `l1_ratio=0.0`     → L2 (default histórico)
+    - `l1_ratio=1.0`     → L1
     - `0 < l1_ratio < 1` → elastic-net (requer solver `saga`)
 
-Este módulo usa `l1_ratio` diretamente e valida a compatibilidade com o
-`solver` escolhido.
-
-A chave `logistic.penalty` do `supervised.yaml` (`"l1"`, `"l2"` ou
-`"elasticnet"`) é traduzida para o `l1_ratio` equivalente, de modo que a
-config continue sendo a fonte única da verdade sem depender da API
-depreciada.
+A chave `models.logistic.penalty` do `supervised.yaml` (`"l1"`, `"l2"` ou
+`"elasticnet"`) é traduzida para o `l1_ratio` equivalente, mantendo a
+config como fonte única da verdade sem depender da API depreciada.
 """
 
 from __future__ import annotations
@@ -33,14 +28,10 @@ Solver = Literal[
 ]
 Penalty = Literal["l1", "l2", "elasticnet"]
 
-# Solvers compatíveis com cada faixa de l1_ratio.
-#   l1_ratio == 0.0  → L2 puro (todos os solvers)
-#   l1_ratio == 1.0  → L1 puro (liblinear, saga)
-#   0 < l1_ratio < 1 → elastic-net (saga apenas)
 _L1_RATIO_SOLVERS: dict[str, set[str]] = {
-    "l2":          {"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"},
-    "l1":          {"liblinear", "saga"},
-    "elasticnet":  {"saga"},
+    "l2":         {"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"},
+    "l1":         {"liblinear", "saga"},
+    "elasticnet": {"saga"},
 }
 
 
@@ -118,28 +109,20 @@ def build_logistic_pipeline(
     if penalty is None:
         penalty = _penalty_do_yaml()
 
-    # Traduz `penalty` (config) → `l1_ratio` (API nova do sklearn).
     if penalty == "l2":
         l1_ratio = 0.0
     elif penalty == "l1":
         l1_ratio = 1.0
-    elif penalty == "elasticnet":
-        if l1_ratio <= 0.0 or l1_ratio >= 1.0:
-            raise ValueError(
-                f"penalty='elasticnet' requer 0 < l1_ratio < 1; "
-                f"recebido l1_ratio={l1_ratio!r}."
-            )
+    elif penalty == "elasticnet" and not (0.0 < l1_ratio < 1.0):
+        raise ValueError(
+            f"penalty='elasticnet' requer 0 < l1_ratio < 1; "
+            f"recebido l1_ratio={l1_ratio!r}."
+        )
 
     if not (0.0 <= l1_ratio <= 1.0):
         raise ValueError(f"l1_ratio deve estar em [0, 1]; recebido {l1_ratio!r}.")
 
-    # Classifica o tipo de penalidade para validar solver.
-    if l1_ratio == 0.0:
-        tipo = "l2"
-    elif l1_ratio == 1.0:
-        tipo = "l1"
-    else:
-        tipo = "elasticnet"
+    tipo = "l2" if l1_ratio == 0.0 else "l1" if l1_ratio == 1.0 else "elasticnet"
 
     solvers_validos = _L1_RATIO_SOLVERS[tipo]
     if solver not in solvers_validos:

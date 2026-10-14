@@ -5,13 +5,10 @@ Cada execução gera `outputs/runs/<RUN_ID>/` com:
     metadata.json   ← tudo estruturado
     summary.txt     ← versão legível
 
-O registro captura:
-    - identificação (run_id, modelo, seed, timestamps);
-    - status da execução (`success` | `error`);
-    - erro estruturado (tipo, mensagem, traceback) quando houver exceção;
-    - versão dos dados (`DATA_VERSION`), SHA-256 do Parquet (se disponível);
-    - estado de todos os gates no momento da execução;
-    - versões de bibliotecas, commit/branch e ambiente.
+O metadata captura identificação (run_id, modelo, seed, timestamps),
+status (`success` | `error`), erro estruturado quando houver exceção,
+versão e SHA-256 do Parquet, estado dos gates, versões de bibliotecas,
+commit/branch e ambiente.
 
 Uso:
     from src.utils.reproducibility import Run
@@ -47,20 +44,16 @@ from src.utils import config as C
 RUNS_DIR: Path = C.RUNS_DIR
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def gerar_run_id(
     modelo: str | None = None,
     base_dir: Path | None = None,
 ) -> str:
     """
-    Gera um identificador único para uma execução.
+    Gera um identificador único no formato
+    `YYYY-MM-DD_HHMMSS_micros[_modelo]`.
 
-    Formato: `YYYY-MM-DD_HHMMSS_micros[_modelo]`. Se `base_dir` for
-    informado, garante unicidade contra o sistema de arquivos adicionando
-    sufixo `_NN` em caso de colisão.
+    Se `base_dir` for informado, garante unicidade contra o sistema de
+    arquivos adicionando sufixo `_NN` em caso de colisão.
     """
     agora = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
     candidato = f"{agora}_{modelo}" if modelo else agora
@@ -87,12 +80,7 @@ def _agora() -> dict[str, str]:
 
 
 def _coletar_gates() -> dict[str, str]:
-    """
-    Estado atual de cada gate definido em `supervised.yaml`.
-
-    Devolve `{nome_gate: status}` — compacto o suficiente para o
-    metadata. Detalhes (aprovado_por, data) ficam no próprio YAML.
-    """
+    """Estado atual de cada gate em `supervised.yaml` como `{nome: status}`."""
     gates = C.cfg("gates") or {}
     return {
         nome: (info or {}).get("status", "desconhecido")
@@ -105,12 +93,8 @@ def _resolver_dataset_sha256(
     dataset_path: Path | None,
 ) -> str | None:
     """
-    Resolve o SHA-256 do dataset.
-
-    Prioridade:
-        1. `dataset_sha256` explícito.
-        2. Sidecar `<dataset_path>.sha256` (gravado por `storage`).
-        3. `None`.
+    Resolve o SHA-256 do dataset por prioridade: valor explícito, sidecar
+    `<dataset_path>.sha256`, ou `None`.
     """
     if dataset_sha256:
         return dataset_sha256
@@ -145,7 +129,6 @@ def _resumo(meta: dict[str, Any]) -> str:
     if meta.get("duracao_s") is not None:
         linhas.append(f"DURACAO:  {meta['duracao_s']:.1f}s")
 
-    # Erro (só tipo + mensagem aqui; traceback fica no metadata.json).
     if meta.get("erro"):
         err = meta["erro"]
         linhas.append("")
@@ -242,10 +225,6 @@ def _env_info() -> dict[str, str | bool]:
     }
 
 
-# ---------------------------------------------------------------------------
-# Núcleo
-# ---------------------------------------------------------------------------
-
 def registrar_execucao(
     modelo: str,
     *,
@@ -265,17 +244,9 @@ def registrar_execucao(
     """
     Grava `metadata.json` + `summary.txt` em `outputs/runs/<RUN_ID>/`.
 
-    Parâmetros
-    ----------
-    status : {"success", "error"}
-        Resultado da execução. `"error"` deve vir acompanhado de `erro`.
-    erro : dict | None
-        Estrutura com `tipo`, `mensagem` e (opcionalmente) `traceback`.
-        Gravado no metadata quando `status == "error"`.
-    dataset_sha256 : str | None
-        Hash SHA-256 do Parquet usado. Se None, fica ausente do metadata.
-
-    Outros parâmetros seguem o contrato histórico deste módulo.
+    `status` deve ser `"success"` ou `"error"`; este último deve vir
+    acompanhado de `erro` (dict com `tipo`, `mensagem` e opcionalmente
+    `traceback`). Se `dataset_sha256` for None, fica ausente do metadata.
     """
     base = Path(output_dir) if output_dir is not None else RUNS_DIR
 
@@ -286,24 +257,24 @@ def registrar_execucao(
     pasta.mkdir(parents=True, exist_ok=False)
 
     meta: dict[str, Any] = {
-        "run_id":       pasta.name,
-        "timestamp":    _agora(),
-        "modelo":       modelo,
-        "seed":         seed if seed is not None else C.SEED,
-        "status":       status,
-        "erro":         erro,
-        "duracao_s":    duracao_s,
-        "parametros":   parametros or {},
-        "dataset":      dataset or {},
+        "run_id":         pasta.name,
+        "timestamp":      _agora(),
+        "modelo":         modelo,
+        "seed":           seed if seed is not None else C.SEED,
+        "status":         status,
+        "erro":           erro,
+        "duracao_s":      duracao_s,
+        "parametros":     parametros or {},
+        "dataset":        dataset or {},
         "dataset_sha256": dataset_sha256,
-        "data_version": C.DATA_VERSION,
-        "features":     features or {},
-        "metricas":     metricas or {},
-        "gates":        _coletar_gates(),
-        "notas":        notas,
-        "versoes":      _versoes(),
-        "git":          _git_info(),
-        "env":          _env_info(),
+        "data_version":   C.DATA_VERSION,
+        "features":       features or {},
+        "metricas":       metricas or {},
+        "gates":          _coletar_gates(),
+        "notas":          notas,
+        "versoes":        _versoes(),
+        "git":            _git_info(),
+        "env":            _env_info(),
         "supervised_yaml_sha256": C.supervised_yaml_sha256(),
     }
 
@@ -321,11 +292,8 @@ def listar_runs(
     output_dir: Path | None = None,
 ) -> list[dict[str, Any]]:
     """
-    Lista os metadados das execuções registradas.
-
-    Cada item corresponde ao conteúdo de um `metadata.json` e inclui
-    também o caminho da pasta em `"pasta"`. Ordenado por `run_id`
-    decrescente (mais recentes primeiro).
+    Lista os metadados das execuções registradas, ordenados por `run_id`
+    decrescente. Cada item inclui o caminho da pasta em `"pasta"`.
     """
     raiz = Path(output_dir) if output_dir is not None else RUNS_DIR
     if not raiz.exists():
@@ -368,10 +336,6 @@ def carregar_run(
     return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
-# ---------------------------------------------------------------------------
-# Context manager
-# ---------------------------------------------------------------------------
-
 class Run:
     """
     Context manager de registro de execução.
@@ -382,9 +346,9 @@ class Run:
             ...
             r.metrica(auc=0.82)
 
-    O metadata é gravado **sempre** ao sair do bloco, inclusive em caso
-    de exceção — com `status="error"` e `erro` estruturado. A exceção
-    **não** é suprimida (retorno `False` de `__exit__`).
+    O metadata é gravado sempre ao sair do bloco, inclusive em caso de
+    exceção — com `status="error"` e `erro` estruturado. A exceção não
+    é suprimida.
     """
 
     def __init__(
@@ -413,8 +377,6 @@ class Run:
         self._inicio: float | None = None
         self.pasta: Path | None = None
 
-    # -- API fluente ----------------------------------------------------
-
     def metrica(self, **kwargs: Any) -> "Run":
         self._metricas.update(kwargs)
         return self
@@ -426,8 +388,6 @@ class Run:
     def add_dataset(self, **kwargs: Any) -> "Run":
         self.dataset.update(kwargs)
         return self
-
-    # -- Ciclo de vida --------------------------------------------------
 
     def __enter__(self) -> "Run":
         self._inicio = time.perf_counter()
@@ -469,4 +429,4 @@ class Run:
             erro=erro,
             dataset_sha256=sha,
         )
-        return False  # não suprime a exceção
+        return False

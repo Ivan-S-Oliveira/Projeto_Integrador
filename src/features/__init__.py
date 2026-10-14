@@ -9,9 +9,9 @@ from src.features.engineering import (
 )
 
 __all__ = [
+    "faixa_etaria",
     "idade_em_anos",
     "intervalo_sintomas_internacao",
-    "sazonalidade",
-    "faixa_etaria",
     "montar_features",
+    "sazonalidade",
 ]

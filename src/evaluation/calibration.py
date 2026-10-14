@@ -27,10 +27,6 @@ from src.evaluation.metrics import _to_int_labels, _to_np
 ArrayLike = Union[np.ndarray, pd.Series, list]
 
 
-# ---------------------------------------------------------------------------
-# Reliability diagram
-# ---------------------------------------------------------------------------
-
 def curva_confiabilidade(
     y_true: ArrayLike,
     y_prob: ArrayLike,
@@ -55,6 +51,7 @@ def curva_confiabilidade(
     for b in range(n_bins):
         m = idx == b
         n = int(m.sum())
+
         if n == 0:
             linhas.append({
                 "bin_centro":    float((bins[b] + bins[b + 1]) / 2),
@@ -62,22 +59,19 @@ def curva_confiabilidade(
                 "n":             0.0,
                 "gap":           float("nan"),
             })
-        else:
-            centro = float(p[m].mean())
-            freq = float(y[m].mean())
-            linhas.append({
-                "bin_centro":    centro,
-                "freq_positiva": freq,
-                "n":             float(n),
-                "gap":           float(abs(freq - centro)),
-            })
+            continue
+
+        centro = float(p[m].mean())
+        freq = float(y[m].mean())
+        linhas.append({
+            "bin_centro":    centro,
+            "freq_positiva": freq,
+            "n":             float(n),
+            "gap":           float(abs(freq - centro)),
+        })
 
     return pd.DataFrame(linhas)
 
-
-# ---------------------------------------------------------------------------
-# ECE / MCE
-# ---------------------------------------------------------------------------
 
 def ece(
     y_true: ArrayLike,
@@ -87,8 +81,10 @@ def ece(
     """Expected Calibration Error — média ponderada dos gaps por bin."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
     total = float(tabela["n"].sum())
+
     if total == 0:
         return float("nan")
+
     pesos = tabela["n"] / total
     gaps = tabela["gap"].fillna(0.0)
     return float((pesos * gaps).sum())
@@ -102,14 +98,12 @@ def mce(
     """Maximum Calibration Error — o pior gap entre os bins."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
     gaps = tabela["gap"].dropna()
+
     if gaps.empty:
         return float("nan")
+
     return float(gaps.max())
 
-
-# ---------------------------------------------------------------------------
-# Decomposição de Brier (Murphy)
-# ---------------------------------------------------------------------------
 
 def brier_decomposicao(
     y_true: ArrayLike,
@@ -146,14 +140,18 @@ def brier_decomposicao(
 
     reliability = 0.0
     resolution = 0.0
+
     for b in range(n_bins):
         m = idx == b
         n_b = int(m.sum())
+
         if n_b == 0:
             continue
+
         freq_obs = float(y[m].mean())
         freq_pred = float(p[m].mean())
         peso = n_b / n
+
         reliability += peso * (freq_obs - freq_pred) ** 2
         resolution += peso * (freq_obs - base_rate) ** 2
 

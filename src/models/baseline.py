@@ -1,24 +1,22 @@
 """
 Baseline: `DummyClassifier` — referência mínima.
 
-Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
+Responde à pergunta: "o modelo aprendeu algo além da classe majoritária?"
 
 Se o AUC do baseline ≈ 0.5 e a acurácia ≈ frequência da classe majoritária,
 qualquer modelo com desempenho acima disso está efetivamente aprendendo.
 """
 from __future__ import annotations
 
-import pandas as pd
-
 from typing import Literal
 
+import pandas as pd
 from sklearn.dummy import DummyClassifier
 from sklearn.pipeline import Pipeline
 
 from src.evaluation.metrics import metricas_completas
 from src.models.pipeline import build_preprocessor, random_state
 
-# Estratégias aceitas pelo DummyClassifier do scikit-learn.
 DummyStrategy = Literal[
     "most_frequent",
     "prior",
@@ -73,10 +71,10 @@ def evaluate_baseline(
 
     Nota
     ----
-    - strategy="prior"        → probabilidade constante = prevalência do treino
-                                (AUC ≈ 0.5 por construção, mas Brier informativo)
-    - strategy="most_frequent"→ prevê sempre a classe majoritária
-                                (F1/recall = 0 se a positiva for minoria)
+    - strategy="prior"         → probabilidade constante = prevalência do treino
+                                 (AUC ≈ 0.5 por construção, mas Brier informativo)
+    - strategy="most_frequent" → prevê sempre a classe majoritária
+                                 (F1/recall = 0 se a positiva for minoria)
     """
     pipe = build_baseline_pipeline(strategy=strategy)
     pipe.fit(X_train, y_train)
