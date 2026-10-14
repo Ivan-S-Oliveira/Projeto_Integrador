@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -9,48 +12,58 @@ from src.data.supervised_artifact import (
 )
 
 
-def _frame():
+def _frame() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "idade_anos": [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
             "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
-            "particao": ["treino", "treino", "validacao", "validacao", "teste", "teste"],
+            "particao": [
+                "treino",
+                "treino",
+                "validacao",
+                "validacao",
+                "teste",
+                "teste",
+            ],
         }
     )
 
 
-def test_roundtrip_preserva_particao(tmp_path):
-    persist_supervised_artifact(
-        _frame(),
-        root=tmp_path,
-        source={"kind": "provisional", "sha256": "abc"},
-        feature_columns=["idade_anos"],
-        target_column="alvo_obito_srag",
-        partition_column="particao",
-        cohort_kind="provisional",
-        seed=42,
+def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
+    params: dict[str, Any] = {
+        "source": {},
+        "feature_columns": ["idade_anos"],
+        "target_column": "alvo_obito_srag",
+        "partition_column": "particao",
+        "cohort_kind": "provisional",
+        "seed": 42,
+    }
+    params.update(kwargs)
+    persist_supervised_artifact(frame, root=tmp_path, **params)
+
+
+def test_roundtrip_preserva_particao(tmp_path: Path) -> None:
+    frame = _frame()
+    _persistir(tmp_path, frame, source={"kind": "provisional", "sha256": "abc"})
+
+    loaded, manifest = load_supervised_artifact(
+        tmp_path, expected_kind="provisional"
     )
-    loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
-    assert loaded["particao"].tolist() == _frame()["particao"].tolist()
+
+    assert loaded["particao"].tolist() == frame["particao"].tolist()
     assert manifest["test_opened"] is False
     assert manifest["seed"] == 42
 
 
-def test_tipo_de_coorte_incorreto_falha(tmp_path):
-    persist_supervised_artifact(
-        _frame(), root=tmp_path, source={}, feature_columns=["idade_anos"],
-        target_column="alvo_obito_srag", partition_column="particao",
-        cohort_kind="provisional", seed=42,
-    )
+def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
+    _persistir(tmp_path, _frame())
+
     with pytest.raises(RuntimeError, match="SRAG_COHORT_KIND"):
         load_supervised_artifact(tmp_path, expected_kind="final")
 
 
-def test_particoes_incompletas_falham(tmp_path):
+def test_particoes_incompletas_falham(tmp_path: Path) -> None:
     frame = _frame().query("particao != 'teste'")
+
     with pytest.raises(ValueError, match="Particoes esperadas"):
-        persist_supervised_artifact(
-            frame, root=tmp_path, source={}, feature_columns=["idade_anos"],
-            target_column="alvo_obito_srag", partition_column="particao",
-            cohort_kind="provisional", seed=42,
-        )
+        _persistir(tmp_path, frame)

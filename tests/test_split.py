@@ -1,19 +1,18 @@
 """
 Testes para `src.data.split.criar_particoes_agrupadas`.
 
-Invariantes centrais:
-    1. nenhum grupo aparece em mais de uma partição (group integrity);
+Invariantes:
+    1. nenhum grupo em mais de uma partição;
     2. proporções de linhas próximas de 70/15/15 (com tolerância);
-    3. mesma seed → mesma partição (reprodutibilidade).
+    3. mesma seed → mesma partição.
 
-Cobrem ainda:
-    - partição completa e bem-distribuída;
-    - as quatro políticas de estratos pequenos;
-    - grupo com alvo heterogêneo (raise e warn);
-    - validações de parâmetros e colunas.
+Cobrem ainda: políticas de estratos pequenos, grupos com alvo
+heterogêneo (raise/warn) e validações de parâmetros/colunas.
 """
 
 from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -26,10 +25,6 @@ from src.data.split import (
 )
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
 def _df_estratificado(
     n_grupos_classe0: int = 30,
     n_grupos_classe1: int = 20,
@@ -37,7 +32,7 @@ def _df_estratificado(
     seed: int = 0,
 ) -> pd.DataFrame:
     """
-    Cria um DataFrame com grupos homogêneos (alvo constante por grupo)
+    DataFrame com grupos homogêneos (alvo constante por grupo)
     e duas classes bem representadas.
     """
     rng = np.random.default_rng(seed)
@@ -60,7 +55,10 @@ def _df_estratificado(
     return pd.DataFrame(linhas)
 
 
-def _df_grande(n_grupos_classe0: int = 700, n_grupos_classe1: int = 300) -> pd.DataFrame:
+def _df_grande(
+    n_grupos_classe0: int = 700,
+    n_grupos_classe1: int = 300,
+) -> pd.DataFrame:
     """Base grande o bastante para checar proporções com folga."""
     return _df_estratificado(
         n_grupos_classe0=n_grupos_classe0,
@@ -70,19 +68,19 @@ def _df_grande(n_grupos_classe0: int = 700, n_grupos_classe1: int = 300) -> pd.D
     )
 
 
-# ---------------------------------------------------------------------------
-# Invariante 1 — nenhum grupo em duas partições
-# ---------------------------------------------------------------------------
+def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
+    """Chama `criar_particoes_agrupadas` com os defaults dos testes."""
+    params: dict[str, Any] = {
+        "target_column": "alvo",
+        "group_column": "nu_notific",
+        "partition_column": "particao",
+    }
+    params.update(kwargs)
+    return criar_particoes_agrupadas(df, **params)
 
-def test_grupos_nao_cruzam_particoes():
-    df = _df_estratificado()
-    out = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
-        seed=42,
-    )
+
+def test_grupos_nao_cruzam_particoes() -> None:
+    out = _split(_df_estratificado(), seed=42)
 
     grupos_por_particao = (
         out.groupby("nu_notific", observed=True)["particao"].nunique()
@@ -93,36 +91,19 @@ def test_grupos_nao_cruzam_particoes():
     )
 
 
-def test_nenhuma_linha_perdida():
+def test_nenhuma_linha_perdida() -> None:
     df = _df_estratificado()
-    out = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
-        seed=42,
-    )
+    out = _split(df, seed=42)
+
     assert len(out) == len(df)
     assert set(out["particao"].unique()) == set(PARTICOES_CANONICAS)
 
 
-# ---------------------------------------------------------------------------
-# Invariante 2 — proporções 70/15/15
-# ---------------------------------------------------------------------------
-
-def test_proporcoes_linhas_proximas_de_70_15_15():
-    df = _df_grande()
-    out = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
-        seed=42,
-    )
+def test_proporcoes_linhas_proximas_de_70_15_15() -> None:
+    out = _split(_df_grande(), seed=42)
 
     contagem = out["particao"].value_counts(normalize=True)
-    # Tolerância generosa: grupos são atômicos, então a proporção real
-    # de linhas oscila em torno do alvo.
+    # Grupos são atômicos; a proporção real de linhas oscila em torno do alvo.
     tol = 0.05
 
     assert abs(contagem["treino"] - 0.70) < tol, contagem
@@ -130,19 +111,10 @@ def test_proporcoes_linhas_proximas_de_70_15_15():
     assert abs(contagem["teste"] - 0.15) < tol, contagem
 
 
-def test_proporcoes_grupos_proximas_de_70_15_15():
-    df = _df_grande()
-    out = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
-        seed=42,
-    )
+def test_proporcoes_grupos_proximas_de_70_15_15() -> None:
+    out = _split(_df_grande(), seed=42)
 
-    por_grupo = (
-        out.groupby("nu_notific", observed=True)["particao"].first()
-    )
+    por_grupo = out.groupby("nu_notific", observed=True)["particao"].first()
     contagem = por_grupo.value_counts(normalize=True)
     tol = 0.05
 
@@ -151,108 +123,70 @@ def test_proporcoes_grupos_proximas_de_70_15_15():
     assert abs(contagem["teste"] - 0.15) < tol, contagem
 
 
-def test_estratificacao_preserva_proporcao_aproximada():
+def test_estratificacao_preserva_proporcao_aproximada() -> None:
     df = _df_estratificado(n_grupos_classe0=70, n_grupos_classe1=30)
-    out = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=42,
-    )
+    out = _split(df, seed=42)
+
     prevalencia_global = df["alvo"].mean()
     for particao in PARTICOES_CANONICAS:
         sub = out[out["particao"] == particao]
-        # tolerância generosa: 10 pontos percentuais
         assert abs(sub["alvo"].mean() - prevalencia_global) < 0.10
 
 
-# ---------------------------------------------------------------------------
-# Invariante 3 — reprodutibilidade por seed
-# ---------------------------------------------------------------------------
-
-def test_reprodutibilidade_mesma_seed():
+def test_reprodutibilidade_mesma_seed() -> None:
     df = _df_estratificado()
-    a = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=7,
-    )
-    b = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=7,
-    )
+    a = _split(df, seed=7)
+    b = _split(df, seed=7)
     pd.testing.assert_series_equal(a["particao"], b["particao"])
 
 
-def test_seeds_diferentes_produzem_splits_diferentes():
+def test_seeds_diferentes_produzem_splits_diferentes() -> None:
     df = _df_estratificado()
-    a = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=1,
-    )
-    b = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-        partition_column="particao", seed=2,
-    )
+    a = _split(df, seed=1)
+    b = _split(df, seed=2)
     assert not a["particao"].equals(b["particao"])
 
-
-# ---------------------------------------------------------------------------
-# Estratos pequenos
-# ---------------------------------------------------------------------------
 
 def _df_com_estrato_pequeno() -> pd.DataFrame:
     """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
     return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
 
 
-def test_estrato_pequeno_raise_e_default():
-    df = _df_com_estrato_pequeno()
+def test_estrato_pequeno_raise_e_default() -> None:
     with pytest.raises(ValueError, match="Estrato"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
-        )
+        _split(_df_com_estrato_pequeno())
 
 
-def test_estrato_pequeno_warn_teste_manda_para_teste():
+def test_estrato_pequeno_warn_teste_manda_para_teste() -> None:
     df = _df_com_estrato_pequeno()
     with pytest.warns(SplitWarning, match="Destinando ao teste"):
-        out = criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
-            politica_estratos_pequenos="warn_teste",
-        )
+        out = _split(df, politica_estratos_pequenos="warn_teste")
+
     linhas_classe1 = out[out["alvo"] == 1]
     assert (linhas_classe1["particao"] == "teste").all()
     assert len(out) == len(df)
 
 
-def test_estrato_pequeno_warn_treino_manda_para_treino():
-    df = _df_com_estrato_pequeno()
+def test_estrato_pequeno_warn_treino_manda_para_treino() -> None:
     with pytest.warns(SplitWarning, match="Destinando ao treino"):
-        out = criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
+        out = _split(
+            _df_com_estrato_pequeno(),
             politica_estratos_pequenos="warn_treino",
         )
+
     linhas_classe1 = out[out["alvo"] == 1]
     assert (linhas_classe1["particao"] == "treino").all()
 
 
-def test_estrato_pequeno_drop_remove_linhas():
+def test_estrato_pequeno_drop_remove_linhas() -> None:
     df = _df_com_estrato_pequeno()
     with pytest.warns(SplitWarning, match="Descartando"):
-        out = criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
-            politica_estratos_pequenos="drop",
-        )
+        out = _split(df, politica_estratos_pequenos="drop")
+
     assert (out["alvo"] == 1).sum() == 0
     assert len(out) < len(df)
     assert set(out["particao"].unique()).issubset(set(PARTICOES_CANONICAS))
 
-
-# ---------------------------------------------------------------------------
-# Grupo com alvo heterogêneo
-# ---------------------------------------------------------------------------
 
 def _df_com_grupo_heterogeneo() -> pd.DataFrame:
     df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
@@ -261,95 +195,71 @@ def _df_com_grupo_heterogeneo() -> pd.DataFrame:
     return df
 
 
-def test_grupo_heterogeneo_raise():
-    df = _df_com_grupo_heterogeneo()
+def test_grupo_heterogeneo_raise() -> None:
     with pytest.raises(ValueError, match="mais de um valor distinto"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
-        )
+        _split(_df_com_grupo_heterogeneo())
 
 
-def test_grupo_heterogeneo_warn():
-    df = _df_com_grupo_heterogeneo()
+def test_grupo_heterogeneo_warn() -> None:
     with pytest.warns(SplitWarning, match="mais de um valor distinto"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
+        _split(
+            _df_com_grupo_heterogeneo(),
             on_grupo_alvo_heterogeneo="warn",
         )
 
 
-# ---------------------------------------------------------------------------
-# Validações de parâmetros
-# ---------------------------------------------------------------------------
-
-def test_coluna_alvo_ausente():
-    df = _df_estratificado()
+def test_coluna_alvo_ausente() -> None:
     with pytest.raises(KeyError, match="alvo"):
         criar_particoes_agrupadas(
-            df, target_column="nao_existe", group_column="nu_notific",
+            _df_estratificado(),
+            target_column="nao_existe",
+            group_column="nu_notific",
         )
 
 
-def test_coluna_grupo_ausente():
-    df = _df_estratificado()
+def test_coluna_grupo_ausente() -> None:
     with pytest.raises(KeyError, match="grupo"):
         criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nao_existe",
+            _df_estratificado(),
+            target_column="alvo",
+            group_column="nao_existe",
         )
 
 
-def test_partition_column_ja_existente():
+def test_partition_column_ja_existente() -> None:
     df = _df_estratificado()
     df["particao"] = "treino"
     with pytest.raises(ValueError, match="já contém"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            partition_column="particao",
-        )
+        _split(df)
 
 
-def test_frac_invalida():
+def test_frac_invalida() -> None:
     df = _df_estratificado()
+
     with pytest.raises(ValueError, match="frac_treino"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            frac_treino=0.0,
-        )
+        _split(df, frac_treino=0.0)
+
     with pytest.raises(ValueError, match="frac_validacao"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            frac_validacao=1.5,
-        )
+        _split(df, frac_validacao=1.5)
+
     with pytest.raises(ValueError, match="< 1"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            frac_treino=0.7, frac_validacao=0.4,
-        )
+        _split(df, frac_treino=0.7, frac_validacao=0.4)
 
 
-def test_min_grupos_abaixo_de_3():
-    df = _df_estratificado()
+def test_min_grupos_abaixo_de_3() -> None:
     with pytest.raises(ValueError, match="min_grupos_por_estrato"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-            min_grupos_por_estrato=2,
-        )
+        _split(_df_estratificado(), min_grupos_por_estrato=2)
 
 
-def test_politica_invalida():
-    df = _df_estratificado()
+def test_politica_invalida() -> None:
     with pytest.raises(ValueError, match="politica_estratos_pequenos"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
+        _split(
+            _df_estratificado(),
             politica_estratos_pequenos="qualquer_coisa",  # type: ignore[arg-type]
         )
 
 
-def test_df_vazio():
+def test_df_vazio() -> None:
     df = pd.DataFrame({"alvo": [], "nu_notific": []})
     with pytest.raises(ValueError, match="vazio"):
-        criar_particoes_agrupadas(
-            df, target_column="alvo", group_column="nu_notific",
-        )
+        _split(df)

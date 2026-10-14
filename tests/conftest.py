@@ -1,11 +1,4 @@
-"""
-Fixtures e configuração de testes.
-
-- `parquet_disponivel`: caminho do Parquet **oficial** (processado/versionado
-  em `data/processed/<DATA_VERSION>/srag.parquet`), ou `None` se ainda não
-  foi gerado. Não há fallback para arquivos brutos nem para amostras locais —
-  quem depende dele deve tratar o `None` com `pytest.skip`.
-"""
+"""Fixtures e configuração de testes."""
 
 from __future__ import annotations
 
@@ -17,7 +10,6 @@ from src.utils import config as C
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Registra os marcadores customizados do projeto (uma única vez)."""
     config.addinivalue_line(
         "markers",
         "slow: testes que tocam arquivos grandes (Parquet de SRAG).",
@@ -26,11 +18,6 @@ def pytest_configure(config: pytest.Config) -> None:
 
 @pytest.fixture(scope="session")
 def parquet_disponivel() -> Path | None:
-    """
-    Parquet processado/versionado, se existir.
-
-    Retorna `None` quando o arquivo ainda não foi gerado — os testes que
-    dependem dele devem chamar `pytest.skip`.
-    """
+    """Retorna o Parquet processado, ou None se ainda não foi gerado."""
     caminho = C.PROCESSED_DIR / C.DATA_VERSION / C.PARQUET_NAME
-    return caminho if caminho.exists() else None
+    return caminho if caminho.is_file() else None

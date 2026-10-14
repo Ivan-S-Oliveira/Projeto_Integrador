@@ -1,9 +1,13 @@
 """
 Smoke tests: o dataset existe, abre, tem colunas e registros?
 
-Todos os testes de I/O estão marcados como `slow`.
-Rode com:  pytest -m slow
+Todos os testes são marcados como `slow` via `pytestmark`.
+Rode com: pytest -m slow
 """
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -14,94 +18,66 @@ from src.utils import config as C
 pytestmark = pytest.mark.slow
 
 
-# ---------------------------------------------------------------------------
-# Existência e integridade do arquivo
-# ---------------------------------------------------------------------------
-
-def test_parquet_existe(parquet_disponivel):
+@pytest.fixture
+def parquet(parquet_disponivel: Path | None) -> Path:
+    """Versão obrigatória de `parquet_disponivel`, com skip se ausente."""
     if parquet_disponivel is None:
         pytest.skip(
             "Nenhum Parquet encontrado. Rode 00_acesso_dados_parquet.ipynb "
             "ou 01_extracao.ipynb primeiro."
         )
-    assert parquet_disponivel.exists()
-    assert parquet_disponivel.stat().st_size > 0
+    return parquet_disponivel
 
 
-def test_parquet_tem_magic_bytes(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
-    with open(parquet_disponivel, "rb") as f:
+def test_parquet_existe(parquet: Path) -> None:
+    assert parquet.exists()
+    assert parquet.stat().st_size > 0
+
+
+def test_parquet_tem_magic_bytes(parquet: Path) -> None:
+    with open(parquet, "rb") as f:
         magic = f.read(4)
     assert magic == b"PAR1", f"Arquivo não é Parquet válido (magic={magic!r})"
 
 
-# ---------------------------------------------------------------------------
-# Abertura e esquema
-# ---------------------------------------------------------------------------
-
-def test_parquet_abre(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+def test_parquet_abre(parquet: Path) -> None:
     import pyarrow.parquet as pq
 
-    schema = pq.read_schema(parquet_disponivel)
+    schema = pq.read_schema(parquet)
     assert len(schema.names) > 0
 
 
-def test_parquet_tem_colunas_esperadas(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+def test_parquet_tem_colunas_esperadas(parquet: Path) -> None:
     import pyarrow.parquet as pq
 
-    schema = pq.read_schema(parquet_disponivel)
-    colunas = set(schema.names)
+    colunas = set(pq.read_schema(parquet).names)
 
-    # Colunas mínimas que o projeto espera encontrar no SRAG.
-    # Ajuste aqui conforme o dicionário de dados for consolidado.
+    # Colunas mínimas esperadas no SRAG; ajustar conforme o dicionário de dados.
     esperadas = {"sg_uf", "dt_notific"}
     faltando = esperadas - colunas
 
     assert not faltando, f"Colunas ausentes: {faltando}"
 
 
-# ---------------------------------------------------------------------------
-# Leitura e registros
-# ---------------------------------------------------------------------------
-
-def test_parquet_tem_registros(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
-    df = pd.read_parquet(parquet_disponivel, columns=["sg_uf"])
+def test_parquet_tem_registros(parquet: Path) -> None:
+    df = pd.read_parquet(parquet, columns=["sg_uf"])
     assert len(df) > 0
 
 
-def test_leitura_de_uma_coluna(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
-    df = pd.read_parquet(parquet_disponivel, columns=["sg_uf"])
+def test_leitura_de_uma_coluna(parquet: Path) -> None:
+    df = pd.read_parquet(parquet, columns=["sg_uf"])
     assert df.shape[1] == 1
     assert "sg_uf" in df.columns
 
 
-def test_produz_saida_pequena(parquet_disponivel):
-    """Confirma que conseguimos produzir uma saída minúscula — o 'smoke' final."""
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
-    df = pd.read_parquet(parquet_disponivel, columns=["sg_uf"]).head(10)
+def test_produz_saida_pequena(parquet: Path) -> None:
+    """Confirma que conseguimos produzir uma saída minúscula — o smoke final."""
+    df = pd.read_parquet(parquet, columns=["sg_uf"]).head(10)
     assert len(df) == 10
-    # Uma contagem simples, só pra exercitar o DataFrame
-    contagem = df["sg_uf"].value_counts()
-    assert contagem.sum() == 10
+    assert df["sg_uf"].value_counts().sum() == 10
 
 
-# ---------------------------------------------------------------------------
-# storage.py
-# ---------------------------------------------------------------------------
-
-def test_storage_read_srag(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+def test_storage_read_srag(parquet: Path) -> None:
     from src.utils import storage
 
     df = storage.read_srag(columns=["sg_uf"])
@@ -110,9 +86,7 @@ def test_storage_read_srag(parquet_disponivel):
     assert "sg_uf" in df.columns
 
 
-def test_storage_read_srag_com_filtro(parquet_disponivel):
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+def test_storage_read_srag_com_filtro(parquet: Path) -> None:
     from src.utils import storage
 
     df = storage.read_srag(

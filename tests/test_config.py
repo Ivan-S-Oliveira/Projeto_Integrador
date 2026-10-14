@@ -1,27 +1,22 @@
-"""
-Verifica que o ambiente e a configuração estão íntegros.
-
-Estes testes são rápidos e não fazem I/O pesado.
-Devem rodar em toda validação local e em CI.
-"""
+"""Valida a integridade do ambiente e da configuração do projeto."""
 
 from __future__ import annotations
 
 import ast
-
 from pathlib import Path
+
 import pytest
 
 from src.utils import config as C
 from src.utils import env
 
 
-def test_root_dir_existe():
+def test_root_dir_existe() -> None:
     assert C.ROOT_DIR.exists()
     assert C.ROOT_DIR.is_dir()
 
 
-def test_root_dir_calculado_a_partir_do_arquivo():
+def test_root_dir_calculado_a_partir_do_arquivo() -> None:
     esperado = Path(C.__file__).resolve().parents[2]
     assert C.ROOT_DIR == esperado
 
@@ -36,13 +31,13 @@ def test_root_dir_calculado_a_partir_do_arquivo():
         "MODELS_DIR",
     ],
 )
-def test_diretorios_derivam_da_raiz(chave):
+def test_diretorios_derivam_da_raiz(chave: str) -> None:
     """
-    Os diretórios do projeto devem derivar de ROOT_DIR.
+    Diretórios do projeto devem derivar de ROOT_DIR.
 
-    O caminho absoluto pode conter C:/Users ou OneDrive porque esse pode
-    ser o local real do clone. O que não pode existir é um caminho
-    pessoal gravado diretamente em config.py.
+    Caminhos absolutos podem conter C:/Users ou OneDrive porque esse pode
+    ser o local real do clone; o que não pode existir é um caminho pessoal
+    gravado diretamente em config.py.
     """
     valor = getattr(C, chave)
     assert isinstance(valor, Path)
@@ -52,12 +47,12 @@ def test_diretorios_derivam_da_raiz(chave):
     )
 
 
-def test_config_nao_contem_caminho_pessoal_hardcoded():
+def test_config_nao_contem_caminho_pessoal_hardcoded() -> None:
     """
-    Examina somente atribuições de constantes relacionadas a caminhos.
+    Examina apenas atribuições de constantes relacionadas a caminhos.
 
-    Comentários, docstrings e mensagens explicativas podem mencionar
-    exemplos como C:/Users ou /home sem representar configuração real.
+    Comentários, docstrings e mensagens podem mencionar exemplos como
+    C:/Users ou /home sem representar configuração real.
     """
     caminho_config = Path(C.__file__)
     fonte = caminho_config.read_text(encoding="utf-8")
@@ -69,12 +64,7 @@ def test_config_nao_contem_caminho_pessoal_hardcoded():
         "RUNS_DIR", "LOGS_DIR", "REPORTS_DIR", "FIGURES_DIR",
         "TABLES_DIR", "PREDICTIONS_DIR", "SUPERVISED_YAML",
     }
-
-    proibidos = [
-        "c:/users/",
-        "/home/",
-        "/users/",
-    ]
+    proibidos = ["c:/users/", "/home/", "/users/"]
 
     problemas = []
 
@@ -116,99 +106,66 @@ def test_config_nao_contem_caminho_pessoal_hardcoded():
     )
 
 
-# ---------------------------------------------------------------------------
-# Constantes
-# ---------------------------------------------------------------------------
-
-def test_seed_definido():
+def test_seed_definido() -> None:
     assert isinstance(C.SEED, int)
     assert C.SEED == 42
 
 
-def test_random_state_igual_ao_seed():
+def test_random_state_igual_ao_seed() -> None:
     assert C.RANDOM_STATE == C.SEED
 
 
-def test_repo_e_data_version_definidos():
+def test_repo_e_data_version_definidos() -> None:
     assert C.GITHUB_REPO
     assert "/" in C.GITHUB_REPO
     assert C.DATA_VERSION
     assert C.PARQUET_NAME.endswith(".parquet")
 
 
-def test_srag_parquet_url_padrao(monkeypatch):
-    monkeypatch.delenv(
-        "SRAG_PARQUET_URL",
-        raising=False,
-    )
+def test_srag_parquet_url_padrao(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SRAG_PARQUET_URL", raising=False)
 
     url_esperada = (
         f"https://github.com/{C.GITHUB_REPO}/releases/download/"
         f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
     )
 
-    url_observada = C.srag_parquet_url()
-
-    assert isinstance(
-        url_observada,
-        str,
-    )
-
-    assert url_observada == url_esperada
+    assert C.srag_parquet_url() == url_esperada
 
 
 def test_srag_parquet_url_permite_sobrescrita(
-    monkeypatch,
-):
-    url_customizada = (
-        "https://example.org/dados/srag_teste.parquet"
-    )
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    url_customizada = "https://example.org/dados/srag_teste.parquet"
+    monkeypatch.setenv("SRAG_PARQUET_URL", url_customizada)
 
-    monkeypatch.setenv(
-        "SRAG_PARQUET_URL",
-        url_customizada,
-    )
-
-    assert (
-        C.srag_parquet_url()
-        == url_customizada
-    )
+    assert C.srag_parquet_url() == url_customizada
 
 
 def test_srag_parquet_url_vazia_volta_ao_padrao(
-    monkeypatch,
-):
-    monkeypatch.setenv(
-        "SRAG_PARQUET_URL",
-        "   ",
-    )
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SRAG_PARQUET_URL", "   ")
 
     url_esperada = (
         f"https://github.com/{C.GITHUB_REPO}/releases/download/"
         f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
     )
 
-    assert (
-        C.srag_parquet_url()
-        == url_esperada
-    )
+    assert C.srag_parquet_url() == url_esperada
 
 
-def test_parametros_http_razoaveis():
+def test_parametros_http_razoaveis() -> None:
     assert C.HTTP_TIMEOUT > 0
     assert C.HTTP_TENTATIVAS >= 1
     assert C.HTTP_BACKOFF >= 0
 
 
-# ---------------------------------------------------------------------------
-# Ambiente
-# ---------------------------------------------------------------------------
-
-def test_env_aponta_para_mesma_raiz():
+def test_env_aponta_para_mesma_raiz() -> None:
     assert env.ROOT == C.ROOT_DIR
 
 
-def test_env_diretorios_padrao_existem():
+def test_env_diretorios_padrao_existem() -> None:
     env.garantir_diretorios()
     for caminho in (env.RAW, env.PROCESSED, env.TREINO, env.FIGURES):
         assert caminho.exists(), (
@@ -217,33 +174,33 @@ def test_env_diretorios_padrao_existem():
         assert caminho.is_dir(), f"{caminho} existe, mas não é um diretório."
 
 
-def test_env_resumo_nao_quebra():
+def test_env_resumo_nao_quebra() -> None:
     texto = env.resumo()
     assert "ROOT_DIR" in texto
     assert "ENV" in texto
 
 
-def test_get_secret_obrigatorio_levanta_erro(monkeypatch):
+def test_get_secret_obrigatorio_levanta_erro(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     nome = "VAR_QUE_NAO_EXISTE_XYZ"
     monkeypatch.delenv(nome, raising=False)
     with pytest.raises(RuntimeError, match=nome):
         env.get_secret(nome)
 
 
-def test_get_secret_opcional_retorna_none(monkeypatch):
+def test_get_secret_opcional_retorna_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     nome = "VAR_OPCIONAL_XYZ"
     monkeypatch.delenv(nome, raising=False)
     assert env.get_secret(nome, obrigatorio=False) is None
 
 
-# ---------------------------------------------------------------------------
-# Schema do Parquet (slow)
-# ---------------------------------------------------------------------------
-
 @pytest.mark.slow
-def test_features_finais_existem_no_schema(parquet_disponivel):
+def test_features_finais_existem_no_schema(parquet_disponivel) -> None:
     """
-    Verifica se as colunas que devem existir no Parquet estão lá.
+    Verifica se as colunas esperadas existem no Parquet.
 
     Features derivadas (produzidas por `montar_features`) não existem no
     Parquet bruto — são excluídas da checagem. As colunas de entrada
@@ -255,12 +212,10 @@ def test_features_finais_existem_no_schema(parquet_disponivel):
     import pyarrow.parquet as pq
     from src.models import pipeline
 
-    schema = pq.read_schema(parquet_disponivel)
-    colunas = set(schema.names)
+    colunas = set(pq.read_schema(parquet_disponivel).names)
 
     derivadas = set(C.cfg("features", "engenharia", "derivadas") or [])
     base = set(pipeline.FEATURES) - derivadas
-
     entradas = set(C.cfg("features", "engenharia", "entradas") or [])
 
     faltando = (base | entradas) - colunas
