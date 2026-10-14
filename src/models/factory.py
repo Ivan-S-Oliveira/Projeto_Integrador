@@ -44,19 +44,28 @@ def finalistas_disponiveis() -> tuple[str, ...]:
 
 def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
     """
-    Lê a seção `nome` do `supervised.yaml` e devolve o dict de kwargs.
+    Lê a seção `models.<nome>` do `supervised.yaml` e devolve o dict de
+    kwargs aceitos pelo construtor do modelo.
 
-    Retorna `{}` quando a seção não existir ou não for um mapping — nesse
-    caso os defaults do construtor do modelo são usados. Chaves cujo valor
-    seja `None` são descartadas para não sobrepor defaults com `None`.
+    A seção fica aninhada em `models:` — ex.: `models.boosting` e
+    `models.logistic`. Retorna `{}` quando a seção não existir ou não for
+    um mapping, caso em que os defaults do construtor são usados.
+
+    Chaves de controle da varredura (`busca_*`) são descartadas: elas
+    configuram C5/C6 e não são parâmetros válidos dos construtores.
+    Valores `None` também são descartados para não sobrepor defaults.
     """
     try:
-        secao = C.cfg(nome)
+        secao = C.cfg("models", nome)
     except (KeyError, TypeError):
         return {}
     if not isinstance(secao, dict):
         return {}
-    return {k: v for k, v in secao.items() if v is not None}
+    return {
+        k: v
+        for k, v in secao.items()
+        if v is not None and not k.startswith("busca_")
+    }
 
 
 def build_finalista(

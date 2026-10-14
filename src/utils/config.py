@@ -290,11 +290,11 @@ def limiar_ativo() -> float:
     """
     Limiar de decisão vigente.
 
-    Usa `limiar.otimo` se o gate `G7_limiar` estiver aprovado e o valor
+    Usa `limiar.otimo` se o gate `G8_limiar` estiver aprovado e o valor
     estiver preenchido; caso contrário, cai em `limiar.default` (0.5).
     """
     lim = cfg("limiar") or {}
-    if gate_aprovado("G7_limiar") and lim.get("otimo") is not None:
+    if gate_aprovado("G8_limiar") and lim.get("otimo") is not None:
         return float(lim["otimo"])
     return float(lim.get("default", 0.5))
 

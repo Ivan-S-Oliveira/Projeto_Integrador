@@ -46,20 +46,20 @@ _L1_RATIO_SOLVERS: dict[str, set[str]] = {
 
 def _penalty_do_yaml() -> Penalty | None:
     """
-    Lê `logistic.penalty` do `supervised.yaml`.
+    Lê `models.logistic.penalty` do `supervised.yaml`.
 
     Retorna None quando a chave estiver ausente, vazia ou nula — nesse
     caso o `l1_ratio` passado explicitamente é usado sem alteração.
     """
     try:
-        valor = C.cfg("logistic", "penalty")
+        valor = C.cfg("models", "logistic", "penalty")
     except (KeyError, TypeError):
         return None
     if not valor:
         return None
     if valor not in ("l1", "l2", "elasticnet"):
         raise ValueError(
-            f"logistic.penalty inválido: {valor!r}. "
+            f"models.logistic.penalty inválido: {valor!r}. "
             "Use 'l1', 'l2' ou 'elasticnet'."
         )
     return valor  # type: ignore[return-value]
