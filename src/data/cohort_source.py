@@ -7,13 +7,14 @@ cria particoes e nao altera o alvo.
 
 from __future__ import annotations
 
-import hashlib
 import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
 
 import pandas as pd
+
+from src.utils.hashing import sha256_file
 
 CohortKind = Literal["provisional", "final", "auto"]
 
@@ -43,15 +44,6 @@ class CohortSource:
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
-
-
-def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
-    """Calcula SHA-256 de um arquivo sem carrega-lo integralmente em memoria."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:

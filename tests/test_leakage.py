@@ -38,6 +38,30 @@ def features_finais() -> set[str]:
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _forcar_status_gate(monkeypatch, nome_gate: str, status: str) -> None:
+    """
+    Faz `C.cfg("gates", nome_gate)` devolver `{"status": status}`
+    independentemente do YAML. Qualquer outra chave devolve `default`
+    (ou seja, o YAML real continua sendo consultado para o resto).
+
+    Usado pelos testes que precisam simular um gate aprovado/pendente
+    sem editar `configs/supervised.yaml`.
+    """
+    monkeypatch.setattr(
+        C,
+        "cfg",
+        lambda *chaves, default=None: (
+            {"status": status}
+            if chaves == ("gates", nome_gate)
+            else default
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Configuração mínima de features.proibidas
 # ---------------------------------------------------------------------------
 
@@ -204,21 +228,11 @@ def test_concluir_selecao_exige_gate_g9_holdout(monkeypatch):
     """
     `concluir_selecao` só libera o holdout quando `gates.G9_holdout`
     estiver `aprovado`. Com o gate pendente, precisa levantar
-    `RuntimeError`.
+    `RuntimeError` citando o gate.
     """
     from src.evaluation.temporal import TemporalSplit
-    from src.utils import config as C
 
-    # Força o gate como pendente, independentemente do YAML.
-    monkeypatch.setattr(
-        C,
-        "cfg",
-        lambda *chaves, default=None: (
-            {"status": "pendente"}
-            if chaves == ("gates", "G9_holdout")
-            else default
-        ),
-    )
+    _forcar_status_gate(monkeypatch, "G9_holdout", "pendente")
 
     df = pd.DataFrame({
         "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
@@ -238,17 +252,8 @@ def test_concluir_selecao_libera_holdout_quando_gate_aprovado(monkeypatch):
     libera o holdout normalmente.
     """
     from src.evaluation.temporal import TemporalSplit
-    from src.utils import config as C
 
-    monkeypatch.setattr(
-        C,
-        "cfg",
-        lambda *chaves, default=None: (
-            {"status": "aprovado"}
-            if chaves == ("gates", "G7_limiar")
-            else default
-        ),
-    )
+    _forcar_status_gate(monkeypatch, "G9_holdout", "aprovado")
 
     df = pd.DataFrame({
         "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
