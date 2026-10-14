@@ -9,7 +9,6 @@ from src.models.pipeline import (
     build_preprocessor,
     criar_alvo_binario,
     filtrar_rotulos_validos,
-    separar_xy,
     random_state,
 )
 from src.models.baseline import build_baseline_pipeline, evaluate_baseline
@@ -25,7 +24,7 @@ __all__ = [
     "FEATURES", "FEATURES_CATEGORICAS", "FEATURES_NUMERICAS",
     "ALVO", "COLUNA_TEMPO",
     "build_preprocessor", "criar_alvo_binario", "filtrar_rotulos_validos",
-    "separar_xy", "random_state",
+    "random_state",
     # modelos
     "build_baseline_pipeline", "evaluate_baseline",
     "build_logistic_pipeline", "build_boosting_pipeline",
