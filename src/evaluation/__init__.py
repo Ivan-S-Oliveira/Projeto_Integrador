@@ -1,50 +1,61 @@
 """Avaliação: splits temporais, métricas, calibração e análise de erros."""
 
-from src.evaluation.temporal import (
-    TemporalSplit,
-    split_temporal_3way,
-)
-from src.evaluation.metrics import (
-    average_precision,
-    auc,
-    brier,
-    f1,
-    precision,
-    recall,
-    accuracy,
-    metricas_completas,
-    metricas_por_limiar,
-    ic_bootstrap,
-)
 from src.evaluation.calibration import (
+    brier_decomposicao,
     curva_confiabilidade,
     ece,
     mce,
-    brier_decomposicao,
+)
+from src.evaluation.errors import (
+    extrair_falsos_negativos,
+    extrair_falsos_positivos,
+    matriz_confusao,
+    metricas_por_grupo,
+    top_erros,
 )
 from src.evaluation.leakage import (
     LeakageError,
     check_leakage,
 )
-from src.evaluation.errors import (
-    matriz_confusao,
-    extrair_falsos_positivos,
-    extrair_falsos_negativos,
-    metricas_por_grupo,
-    top_erros,
+from src.evaluation.metrics import (
+    accuracy,
+    auc,
+    average_precision,
+    brier,
+    f1,
+    ic_bootstrap,
+    metricas_completas,
+    metricas_por_limiar,
+    precision,
+    recall,
+)
+from src.evaluation.temporal import (
+    TemporalSplit,
+    split_temporal_3way,
 )
 
 __all__ = [
-    # temporal
-    "TemporalSplit", "split_temporal_3way",
-    # métricas
-    "average_precision", "auc", "brier", "f1", "precision", "recall", "accuracy",
-    "metricas_completas", "metricas_por_limiar", "ic_bootstrap",
-    # calibração
-    "curva_confiabilidade", "ece", "mce", "brier_decomposicao",
-    # leakage
-    "LeakageError", "check_leakage",
-    # análise de erros
-    "matriz_confusao", "extrair_falsos_positivos", "extrair_falsos_negativos",
-    "metricas_por_grupo", "top_erros",
+    "TemporalSplit",
+    "split_temporal_3way",
+    "average_precision",
+    "auc",
+    "brier",
+    "f1",
+    "precision",
+    "recall",
+    "accuracy",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "ic_bootstrap",
+    "curva_confiabilidade",
+    "ece",
+    "mce",
+    "brier_decomposicao",
+    "LeakageError",
+    "check_leakage",
+    "matriz_confusao",
+    "extrair_falsos_positivos",
+    "extrair_falsos_negativos",
+    "metricas_por_grupo",
+    "top_erros",
 ]

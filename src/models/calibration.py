@@ -1,26 +1,17 @@
 """
 Calibração de probabilidades e escolha de limiar de decisão.
 
-Este módulo concentra as operações que vivem na fronteira entre modelo e
-decisão operacional:
+Concentra as operações na fronteira entre modelo e decisão operacional:
+envolver um `Pipeline` já ajustado em `CalibratedClassifierCV` com uma base
+de calibração dedicada, e escolher o limiar de decisão ótimo segundo uma
+métrica (opcionalmente sujeito a precisão/recall mínimos).
 
-- `calibrar`: envolve um `Pipeline` **já ajustado** em
-  `CalibratedClassifierCV` (via `FrozenEstimator`), ajustando o calibrador
-  em uma base separada (`X_cal`, `y_cal`) — nunca no mesmo conjunto usado
-  para treinar o modelo base.
-
-- `escolher_limiar`: delega a varredura da grade a
-  `src.evaluation.metrics.metricas_por_limiar` (fonte única da tabela de
-  métricas por limiar) e devolve o limiar ótimo segundo a métrica
-  escolhida, opcionalmente sujeito a precisão e/ou recall mínimos.
-
-Toda a agregação de métricas vive em `src.evaluation` — não reimplementar
-aqui.
+Toda a agregação de métricas vive em `src.evaluation`.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -35,22 +26,9 @@ __all__ = [
     "escolher_limiar",
 ]
 
-
-# Conjunto fechado de métricas suportadas em `escolher_limiar`.
-# `youden_j = sensibilidade + especificidade − 1 = recall + especificidade − 1`.
 Metrica = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
-_METRICAS_VALIDAS: tuple[str, ...] = (
-    "f1",
-    "precision",
-    "recall",
-    "accuracy",
-    "youden_j",
-)
+_METRICAS_VALIDAS: tuple[str, ...] = get_args(Metrica)
 
-
-# ---------------------------------------------------------------------------
-# Calibração
-# ---------------------------------------------------------------------------
 
 def calibrar(
     pipeline,
@@ -60,7 +38,7 @@ def calibrar(
     method: str = "isotonic",
 ):
     """
-    Envolve um `Pipeline` **já ajustado** em `CalibratedClassifierCV`.
+    Envolve um `Pipeline` já ajustado em `CalibratedClassifierCV`.
 
     O pipeline base é congelado com `FrozenEstimator`, de modo que o
     calibrador aprende apenas o mapeamento probabilidade → probabilidade
@@ -99,10 +77,6 @@ def calibrar(
     return modelo
 
 
-# ---------------------------------------------------------------------------
-# Escolha de limiar
-# ---------------------------------------------------------------------------
-
 def escolher_limiar(
     y_true: pd.Series | np.ndarray,
     y_prob: pd.Series | np.ndarray,
@@ -116,7 +90,7 @@ def escolher_limiar(
     Varre uma grade de limiares e devolve o ótimo segundo `metrica`.
 
     A tabela completa de métricas por limiar vem de
-    `src.evaluation.metrics.metricas_por_limiar` — este módulo apenas
+    `src.evaluation.metrics.metricas_por_limiar`; este módulo apenas
     filtra, ranqueia e devolve o resumo.
 
     Parâmetros
@@ -169,9 +143,6 @@ def escolher_limiar(
         restricao = " e ".join(filtros) if filtros else "sem restrição"
         raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
 
-    # Acesso lazy: só a métrica pedida é exigida de `metricas_por_limiar`.
-    # Se um dia `Metrica` ganhar um novo valor, o único ponto de manutenção
-    # é o `Literal` + `metricas_por_limiar` — não aqui.
     if metrica not in candidatos.columns:
         raise ValueError(
             f"A métrica {metrica!r} não foi produzida por "
@@ -179,8 +150,7 @@ def escolher_limiar(
             f"{sorted(candidatos.columns)}"
         )
 
-    serie_metrica = candidatos[metrica]
-    idx_melhor = serie_metrica.idxmax()  # rótulo do índice, não posição
+    idx_melhor = candidatos[metrica].idxmax()
     linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
 
     return {

@@ -4,18 +4,10 @@ Carregamento de variáveis de ambiente e segredos do projeto.
 Fluxo:
     .env  →  os.environ  →  config.py  →  restante do projeto
 
-Regras:
-- O arquivo .env NUNCA vai para o Git (ver .gitignore).
-- Use .env.example como template versionado.
-- Não há dependência de Colab, Kaggle ou qualquer ambiente específico.
-- Em CI/CD ou produção, defina as variáveis diretamente no ambiente;
-  o .env é opcional e serve apenas para desenvolvimento local.
-
-Nota
-----
-Os caminhos de diretório (`ROOT`, `DATA`, `RAW`, `PROCESSED`, `TREINO`,
-`FIGURES`) são **aliases** de `src.utils.config` — não são redefinidos
-aqui. `config.py` continua sendo a fonte única da verdade.
+O arquivo .env nunca é versionado (ver .gitignore); use .env.example como
+template. Em CI/CD ou produção, defina as variáveis diretamente no ambiente.
+Caminhos de diretório são aliases de `src.utils.config`, que permanece a
+fonte única da verdade.
 """
 
 from __future__ import annotations
@@ -25,9 +17,7 @@ from pathlib import Path
 
 from src.utils import config as C
 
-# ---------------------------------------------------------------------------
-# Aliases de conveniência — apontam para `config.py`, sem duplicar caminhos
-# ---------------------------------------------------------------------------
+
 ROOT      = C.ROOT_DIR
 DATA      = C.DATA_DIR
 RAW       = C.RAW_DIR
@@ -36,15 +26,11 @@ TREINO    = C.TREINO_DIR
 FIGURES   = C.FIGURES_DIR
 
 
-# ---------------------------------------------------------------------------
-# Diretórios — garantia de existência
-# ---------------------------------------------------------------------------
 def garantir_diretorios() -> None:
     """
     Cria todos os diretórios padrão do projeto, se ainda não existirem.
 
-    Percorre as constantes de `config.py` (fonte única da verdade) — nenhum
-    caminho é redefinido aqui.
+    Percorre as constantes de `config.py` — nenhum caminho é redefinido aqui.
     """
     for p in (
         C.DATA_DIR,
@@ -65,15 +51,12 @@ def garantir_diretorios() -> None:
         p.mkdir(parents=True, exist_ok=True)
 
 
-# ---------------------------------------------------------------------------
-# Carregamento do .env (opcional)
-# ---------------------------------------------------------------------------
 def carregar_dotenv(caminho: Path | None = None) -> bool:
     """
     Carrega o arquivo .env da raiz do projeto (ou o caminho informado).
 
     Retorna True se o arquivo foi encontrado e carregado, False caso contrário.
-    Não sobrescreve variáveis já definidas no ambiente (override=False).
+    Não sobrescreve variáveis já definidas no ambiente.
     """
     try:
         from dotenv import load_dotenv
@@ -89,13 +72,8 @@ def carregar_dotenv(caminho: Path | None = None) -> bool:
     return True
 
 
-# ---------------------------------------------------------------------------
-# Detecção do ambiente (apenas informativa)
-# ---------------------------------------------------------------------------
 def detectar_ambiente() -> str:
-    """
-    Retorna 'ci' se estiver em pipeline, senão 'local'.
-    """
+    """Retorna 'ci' se estiver em pipeline, senão 'local'."""
     if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
         return "ci"
     return "local"
@@ -104,9 +82,6 @@ def detectar_ambiente() -> str:
 ENV = detectar_ambiente()
 
 
-# ---------------------------------------------------------------------------
-# Acesso a variáveis e segredos
-# ---------------------------------------------------------------------------
 def get_env(nome: str, default: str | None = None) -> str | None:
     """Lê uma variável de ambiente, com default opcional."""
     return os.getenv(nome, default)
@@ -116,13 +91,8 @@ def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
     """
     Lê um segredo/variável sensível do ambiente.
 
-    Parâmetros
-    ----------
-    nome : str
-        Nome da variável (ex.: 'GITHUB_TOKEN').
-    obrigatorio : bool
-        Se True (padrão) e a variável não existir, levanta RuntimeError
-        com mensagem explicativa. Se False, retorna None.
+    Se `obrigatorio` for True (padrão) e a variável não existir, levanta
+    RuntimeError com instruções de configuração. Se False, retorna None.
     """
     valor = os.getenv(nome)
 
@@ -143,9 +113,6 @@ def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Diagnóstico
-# ---------------------------------------------------------------------------
 def resumo() -> str:
     """Resumo legível do estado do ambiente."""
     tem_env_file = (ROOT / ".env").exists()
@@ -157,9 +124,6 @@ def resumo() -> str:
     )
 
 
-# ---------------------------------------------------------------------------
-# Execução direta: prepara diretórios e mostra o resumo
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     carregar_dotenv()
     garantir_diretorios()

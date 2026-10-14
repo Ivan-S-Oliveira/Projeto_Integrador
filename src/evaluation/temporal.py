@@ -35,10 +35,45 @@ from typing import Literal
 
 import pandas as pd
 
+OnNat = Literal["raise", "drop"]
 
-# ---------------------------------------------------------------------------
-# Split em 3 blocos (função pura, sem trava)
-# ---------------------------------------------------------------------------
+
+def _validar_fracao(nome: str, valor: float) -> None:
+    if not (0 < valor < 1):
+        raise ValueError(f"{nome} deve estar em (0, 1).")
+
+
+def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
+    if coluna_tempo not in df.columns:
+        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
+
+    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
+        raise TypeError(
+            f"Coluna temporal {coluna_tempo!r} não é datetime "
+            f"(dtype atual: {df[coluna_tempo].dtype}). "
+            "Converta com pd.to_datetime antes do split."
+        )
+
+
+def _tratar_nat(
+    df: pd.DataFrame,
+    coluna_tempo: str,
+    on_nat: OnNat,
+) -> pd.DataFrame:
+    nat_mask = df[coluna_tempo].isna()
+    n_nat = int(nat_mask.sum())
+
+    if not n_nat:
+        return df
+
+    if on_nat == "raise":
+        raise ValueError(
+            f"{n_nat} linha(s) com data inválida (NaT) em "
+            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
+        )
+
+    return df.loc[~nat_mask].reset_index(drop=True)
+
 
 def split_temporal_3way(
     df: pd.DataFrame,
@@ -46,7 +81,7 @@ def split_temporal_3way(
     frac_treino: float = 0.7,
     frac_validacao: float = 0.15,
     *,
-    on_nat: Literal["raise", "drop"] = "raise",
+    on_nat: OnNat = "raise",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Split temporal em treino / validação / holdout, **sem embaralhar**.
@@ -77,44 +112,22 @@ def split_temporal_3way(
         max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
         max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
     """
-    if coluna_tempo not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
+    if on_nat not in ("raise", "drop"):
+        raise ValueError(
+            f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
+        )
 
-    if not (0 < frac_treino < 1):
-        raise ValueError("frac_treino deve estar em (0, 1).")
-    if not (0 < frac_validacao < 1):
-        raise ValueError("frac_validacao deve estar em (0, 1).")
+    _validar_fracao("frac_treino", frac_treino)
+    _validar_fracao("frac_validacao", frac_validacao)
+
     if frac_treino + frac_validacao >= 1:
         raise ValueError(
             "frac_treino + frac_validacao deve ser < 1 "
             "(o restante vira holdout)."
         )
 
-    # --- Validação do argumento (antes de olhar os dados) ---
-    if on_nat not in ("raise", "drop"):
-        raise ValueError(
-            f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
-        )
-
-    # --- Tipo da coluna temporal ---
-    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
-        raise TypeError(
-            f"Coluna temporal {coluna_tempo!r} não é datetime "
-            f"(dtype atual: {df[coluna_tempo].dtype}). "
-            "Converta com pd.to_datetime antes do split."
-        )
-
-    # --- NaT: sem data não há ordenação temporal possível ---
-    nat_mask = df[coluna_tempo].isna()
-    n_nat = int(nat_mask.sum())
-    if n_nat:
-        if on_nat == "raise":
-            raise ValueError(
-                f"{n_nat} linha(s) com data inválida (NaT) em "
-                f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
-            )
-        # on_nat == "drop" já validado acima
-        df = df.loc[~nat_mask].reset_index(drop=True)
+    _validar_coluna_tempo(df, coluna_tempo)
+    df = _tratar_nat(df, coluna_tempo, on_nat)
 
     ordenado = (
         df.sort_values(coluna_tempo, kind="mergesort")
@@ -134,10 +147,6 @@ def split_temporal_3way(
 
     return treino, validacao, holdout
 
-
-# ---------------------------------------------------------------------------
-# Split com trava do holdout
-# ---------------------------------------------------------------------------
 
 @dataclass
 class TemporalSplit:
@@ -175,7 +184,7 @@ class TemporalSplit:
     coluna_tempo: str
     frac_treino: float = 0.7
     frac_validacao: float = 0.15
-    on_nat: Literal["raise", "drop"] = "raise"
+    on_nat: OnNat = "raise"
 
     _treino: pd.DataFrame = field(init=False, repr=False)
     _validacao: pd.DataFrame = field(init=False, repr=False)
@@ -194,10 +203,6 @@ class TemporalSplit:
         self._validacao = va
         self._holdout = ho
 
-    # ------------------------------------------------------------------
-    # Acesso aos blocos de modelagem
-    # ------------------------------------------------------------------
-
     def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Retorna (treino, validação).
@@ -214,10 +219,6 @@ class TemporalSplit:
     @property
     def validacao(self) -> pd.DataFrame:
         return self._validacao
-
-    # ------------------------------------------------------------------
-    # Ciclo de vida do holdout
-    # ------------------------------------------------------------------
 
     def concluir_selecao(self) -> None:
         """
@@ -241,6 +242,7 @@ class TemporalSplit:
 
         gate = C.cfg("gates", "G9_holdout") or {}
         status = (gate or {}).get("status")
+
         if status != "aprovado":
             raise RuntimeError(
                 "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
@@ -267,14 +269,10 @@ class TemporalSplit:
         if not self._holdout_liberado:
             raise RuntimeError(
                 "Holdout bloqueado.\n"
-                "Finalize a seleção de modelo e chame `split.concluir_selecao()` "
-                "antes de acessar o holdout."
+                "Finalize a seleção de modelo e chame "
+                "`split.concluir_selecao()` antes de acessar o holdout."
             )
         return self._holdout
-
-    # ------------------------------------------------------------------
-    # Diagnóstico
-    # ------------------------------------------------------------------
 
     @property
     def n_treino(self) -> int:

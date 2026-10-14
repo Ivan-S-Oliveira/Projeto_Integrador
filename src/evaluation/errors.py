@@ -45,10 +45,6 @@ ArrayLike = Union[np.ndarray, pd.Series, list]
 CriterioTop = Literal["fp", "fn", "erro_absoluto"]
 
 
-# ---------------------------------------------------------------------------
-# Matriz de confusão
-# ---------------------------------------------------------------------------
-
 def matriz_confusao(
     y_true: ArrayLike,
     y_pred: ArrayLike,
@@ -77,10 +73,6 @@ def matriz_confusao(
     return df
 
 
-# ---------------------------------------------------------------------------
-# Falsos positivos / negativos
-# ---------------------------------------------------------------------------
-
 def extrair_falsos_positivos(
     df: pd.DataFrame,
     y_true: ArrayLike,
@@ -104,10 +96,6 @@ def extrair_falsos_negativos(
     mascara = (y == 1) & (p == 0)
     return df.loc[mascara].reset_index(drop=True)
 
-
-# ---------------------------------------------------------------------------
-# Métricas por grupo
-# ---------------------------------------------------------------------------
 
 def metricas_por_grupo(
     df: pd.DataFrame,
@@ -136,14 +124,15 @@ def metricas_por_grupo(
             f"df tem {len(df)} linhas e y_true tem {len(y)}."
         )
 
-    # zera o índice para casar com arrays
     base = df.reset_index(drop=True)
     grupos = base[coluna_grupo].astype("string")
 
     linhas: list[dict[str, float | str]] = []
+
     for g in grupos.dropna().unique():
         m = (grupos == g).to_numpy()
         n = int(m.sum())
+
         if n < min_n:
             continue
 
@@ -151,11 +140,11 @@ def metricas_por_grupo(
         p_g = p[m]
         y_pred = (p_g >= limiar).astype(int)
 
-        # AUC só faz sentido se houver as duas classes
-        if len(np.unique(y_g)) < 2:
-            auc_g = float("nan")
-        else:
-            auc_g = auc(y_g, p_g)
+        auc_g = (
+            auc(y_g, p_g)
+            if len(np.unique(y_g)) >= 2
+            else float("nan")
+        )
 
         linhas.append({
             "grupo":          str(g),
@@ -167,12 +156,12 @@ def metricas_por_grupo(
             "recall":         recall(y_g, y_pred),
         })
 
-    return pd.DataFrame(linhas).sort_values("n", ascending=False).reset_index(drop=True)
+    return (
+        pd.DataFrame(linhas)
+        .sort_values("n", ascending=False)
+        .reset_index(drop=True)
+    )
 
-
-# ---------------------------------------------------------------------------
-# Top-N piores erros
-# ---------------------------------------------------------------------------
 
 def top_erros(
     df: pd.DataFrame,

@@ -1,14 +1,7 @@
 """
 Gradient boosting — `HistGradientBoostingClassifier` (nativo do sklearn).
 
-Requisitos de versão do scikit-learn:
-    - `class_weight` (incluindo "balanced") foi adicionado na versão 1.2.
-    - `class_weight` como dict também foi adicionado na versão 1.2.
-
-Nota: o default de `early_stopping` neste módulo é `False` (e não o
-default `'auto'` do sklearn) para alinhar com a decisão metodológica do
-projeto: sem early stopping interno, o número de iterações é escolhido na
-validação (gate G6).
+Requer scikit-learn >= 1.2 (suporte a `class_weight` como str ou dict).
 """
 from __future__ import annotations
 
@@ -51,9 +44,9 @@ def build_boosting_pipeline(
     l2_regularization : float
         Força da regularização L2.
     early_stopping : bool
-        Se True, usa early stopping interno com `validation_fraction` do
-        treino. Default `False` neste projeto: a escolha de `max_iter` é
-        feita na validação (gate G6), não internamente.
+        Default `False` (em vez do `'auto'` do sklearn) por decisão
+        metodológica do projeto: sem early stopping interno, `max_iter`
+        é escolhido na validação (gate G6).
     validation_fraction : float
         Fração do treino reservada para early stopping (ignorada se
         `early_stopping=False`).

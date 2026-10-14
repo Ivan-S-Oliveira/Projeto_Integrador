@@ -1,18 +1,12 @@
 """
 Configurações centralizadas do Projeto Integrador.
 
-Fonte única da verdade para:
-
-    - diretórios do projeto (data, outputs, logs, configs);
-    - identificação da versão dos dados distribuídos (GITHUB_REPO, DATA_VERSION);
-    - seed de reprodutibilidade;
-    - leitura lazy e cacheada de `configs/supervised.yaml`;
-    - acesso tipado a valores do YAML (`cfg`) com trava de gates
-      (`gate_aprovado`, `exigir_gate`, `exigir_valor`).
+Fonte única da verdade para diretórios, identificação da versão dos dados,
+seed de reprodutibilidade e acesso tipado ao `configs/supervised.yaml`.
 
 Segredos e URLs sensíveis (`GITHUB_TOKEN`, `SRAG_PARQUET_URL`) são lidos em
-tempo de execução via `os.getenv`, nunca no import. O YAML aceita
-interpolação `${VAR}` — resolvida no momento da leitura.
+tempo de execução via `os.getenv`, nunca no import. O YAML aceita interpolação
+`${VAR}`, resolvida no momento da leitura.
 
 Uso típico:
     from src.utils import config as C
@@ -32,49 +26,30 @@ from pathlib import Path
 from typing import Any
 
 
-# ---------------------------------------------------------------------------
-# Raiz do projeto
-# ---------------------------------------------------------------------------
 ROOT_DIR: Path = Path(__file__).resolve().parents[2]
 
-
-# ---------------------------------------------------------------------------
-# Reprodutibilidade
-# ---------------------------------------------------------------------------
 SEED = 42
 RANDOM_STATE = SEED
 
-
-# ---------------------------------------------------------------------------
-# Diretórios do projeto (fonte única da verdade)
-# ---------------------------------------------------------------------------
 DATA_DIR       = ROOT_DIR / "data"
 RAW_DIR        = DATA_DIR / "raw"
 PROCESSED_DIR  = DATA_DIR / "processed"
 ANALYTICAL_DIR = DATA_DIR / "analytical"
 TREINO_DIR     = DATA_DIR / "treino"
 
-CONFIGS_DIR   = ROOT_DIR / "configs"
-MODELS_DIR    = ROOT_DIR / "models"
-OUTPUTS_DIR   = ROOT_DIR / "outputs"
-RUNS_DIR      = OUTPUTS_DIR / "runs"
-LOGS_DIR      = ROOT_DIR / "logs"
-REPORTS_DIR   = ROOT_DIR / "reports"
-FIGURES_DIR   = REPORTS_DIR / "figures"
+CONFIGS_DIR  = ROOT_DIR / "configs"
+MODELS_DIR   = ROOT_DIR / "models"
+OUTPUTS_DIR  = ROOT_DIR / "outputs"
+RUNS_DIR     = OUTPUTS_DIR / "runs"
+LOGS_DIR     = ROOT_DIR / "logs"
+REPORTS_DIR  = ROOT_DIR / "reports"
+FIGURES_DIR  = REPORTS_DIR / "figures"
 
 TABLES_DIR      = OUTPUTS_DIR / "tables"
 PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 
-
-# ---------------------------------------------------------------------------
-# Arquivos de configuração do projeto
-# ---------------------------------------------------------------------------
 SUPERVISED_YAML = CONFIGS_DIR / "supervised.yaml"
 
-
-# ---------------------------------------------------------------------------
-# Dataset processado (versão distribuída via GitHub Release)
-# ---------------------------------------------------------------------------
 GITHUB_REPO  = "Ivan-S-Oliveira/Projeto_Integrador"
 DATA_VERSION = "dados-v2"
 PARQUET_NAME = "srag.parquet"
@@ -83,10 +58,17 @@ GITHUB_RELEASE_URL = (
     f"https://github.com/{GITHUB_REPO}/releases/download/{DATA_VERSION}/"
 )
 
+HTTP_TIMEOUT    = 180
+HTTP_TENTATIVAS = 3
+HTTP_BACKOFF    = 5
 
-# ---------------------------------------------------------------------------
-# Segredos e URLs sensíveis — LEITURA LAZY
-# ---------------------------------------------------------------------------
+CSV_SEP      = ","
+CSV_ENCODING = "utf-8-sig"
+COLS         = None
+
+PARQUET_COMPRESSION = "zstd"
+CSV_CHUNKSIZE       = 500_000
+
 
 def github_token() -> str | None:
     """Token do GitHub (opcional) para releases/downloads autenticados."""
@@ -95,42 +77,20 @@ def github_token() -> str | None:
 
 def srag_parquet_url() -> str:
     """
-    Retorna a URL do Parquet oficial processado do projeto.
+    URL do Parquet oficial processado do projeto.
 
-    Por padrão, a URL é construída a partir da release configurada no
-    GitHub, utilizando:
-
-    - GITHUB_REPO;
-    - DATA_VERSION;
-    - PARQUET_NAME.
-
-    A URL pode ser sobrescrita pela variável de ambiente
-    SRAG_PARQUET_URL quando for necessário utilizar outra origem
-    explicitamente configurada.
-
-    A função é mantida para preservar compatibilidade com chamadas
-    existentes no projeto.
+    Por padrão, construída a partir de `GITHUB_REPO`, `DATA_VERSION` e
+    `PARQUET_NAME`. Pode ser sobrescrita via variável de ambiente
+    `SRAG_PARQUET_URL`.
     """
-
     url_padrao = (
         f"https://github.com/{GITHUB_REPO}/releases/download/"
         f"{DATA_VERSION}/{PARQUET_NAME}"
     )
-
-    url_configurada = os.getenv(
-        "SRAG_PARQUET_URL",
-        url_padrao,
-    ).strip()
-
-    if not url_configurada:
-        return url_padrao
-
-    return url_configurada
+    url_configurada = os.getenv("SRAG_PARQUET_URL", url_padrao).strip()
+    return url_configurada or url_padrao
 
 
-# ---------------------------------------------------------------------------
-# Configuração supervisionada — LEITURA LAZY + CACHEADA
-# ---------------------------------------------------------------------------
 _ENV_PATTERN = re.compile(r"\$\{(\w+)\}")
 
 
@@ -143,11 +103,9 @@ def carregar_supervised() -> dict[str, Any]:
     """
     Lê `configs/supervised.yaml` e devolve o dict parseado.
 
-    - Resolve `${VAR}` a partir do ambiente antes de fazer o parse.
-    - Resultado é cacheado (`lru_cache(maxsize=1)`) — o arquivo é lido
-      uma única vez por processo.
-    - Levanta `FileNotFoundError` se o YAML não existir e
-      `ImportError` se `PyYAML` não estiver instalado.
+    Resolve `${VAR}` antes do parse e cacheia o resultado. Levanta
+    `FileNotFoundError` se o YAML não existir e `ImportError` se PyYAML
+    não estiver instalado.
     """
     if not SUPERVISED_YAML.exists():
         raise FileNotFoundError(
@@ -177,6 +135,7 @@ def carregar_supervised() -> dict[str, Any]:
 def supervised_yaml_sha256() -> str | None:
     """SHA-256 do `supervised.yaml`, ou `None` se o arquivo não existir."""
     import hashlib
+
     if not SUPERVISED_YAML.exists():
         return None
     h = hashlib.sha256()
@@ -186,32 +145,6 @@ def supervised_yaml_sha256() -> str | None:
     return h.hexdigest()
 
 
-# ---------------------------------------------------------------------------
-# HTTP
-# ---------------------------------------------------------------------------
-HTTP_TIMEOUT    = 180
-HTTP_TENTATIVAS = 3
-HTTP_BACKOFF    = 5
-
-
-# ---------------------------------------------------------------------------
-# Leitura de CSV
-# ---------------------------------------------------------------------------
-CSV_SEP      = ","
-CSV_ENCODING = "utf-8-sig"
-COLS         = None
-
-
-# ---------------------------------------------------------------------------
-# Conversão CSV → Parquet
-# ---------------------------------------------------------------------------
-PARQUET_COMPRESSION = "zstd"
-CSV_CHUNKSIZE       = 500_000
-
-
-# ---------------------------------------------------------------------------
-# Acesso tipado ao YAML supervisionado
-# ---------------------------------------------------------------------------
 class GatePendenteError(RuntimeError):
     """Levantado quando se tenta usar um valor que depende de gate não aprovado."""
 
@@ -220,8 +153,7 @@ def cfg(*chaves: str, default: Any = None) -> Any:
     """
     Acessa `configs/supervised.yaml` por caminho de chaves.
 
-    Exemplo
-    -------
+    Exemplo:
         cfg("target", "coluna")        # → "evolucao"
         cfg("temporal", "fracao")      # → {"treino": 0.7, "validacao": 0.15}
 
@@ -237,11 +169,9 @@ def cfg(*chaves: str, default: Any = None) -> Any:
 
 def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any:
     """
-    Devolve `valor` se preenchido; levanta `GatePendenteError` caso
-    contrário (`None` ou `"TBD"`).
-
-    Usado para valores do YAML que só podem ser preenchidos após um gate
-    ser aprovado (p.ex. `models.logistic.C`).
+    Devolve `valor` se preenchido; levanta `GatePendenteError` caso contrário
+    (`None` ou `"TBD"`). Usado para valores do YAML que só podem ser
+    preenchidos após um gate ser aprovado.
     """
     if valor is None or valor == "TBD":
         raise GatePendenteError(
@@ -261,8 +191,8 @@ def exigir_gate(nome_gate: str) -> None:
     """
     Levanta `GatePendenteError` se o gate ainda não estiver aprovado.
 
-    Use no início de qualquer etapa que dependa de decisão metodológica
-    congelada (p.ex. split temporal antes de G2, holdout antes de G7).
+    Use no início de etapas que dependam de decisão metodológica congelada
+    (p.ex. split temporal antes de G2, holdout antes de G7).
     """
     if not gate_aprovado(nome_gate):
         raise GatePendenteError(
@@ -276,8 +206,8 @@ def features_finais() -> list[str]:
     """
     Lista final de features.
 
-    Se `features.final` estiver preenchida no YAML, usa-a. Caso contrário,
-    concatena `features.numericas` + `features.categoricas`.
+    Usa `features.final` se preenchida; caso contrário, concatena
+    `features.numericas` + `features.categoricas`.
     """
     f = cfg("features") or {}
     final = f.get("final")
@@ -299,9 +229,6 @@ def limiar_ativo() -> float:
     return float(lim.get("default", 0.5))
 
 
-# ---------------------------------------------------------------------------
-# Utilitário de diagnóstico
-# ---------------------------------------------------------------------------
 def resumo() -> str:
     """Resumo legível das configurações ativas — usado em bootstrap de notebooks."""
     yaml_ok = "ok" if SUPERVISED_YAML.exists() else "AUSENTE"

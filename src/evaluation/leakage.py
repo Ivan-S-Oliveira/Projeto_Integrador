@@ -9,7 +9,7 @@ Uso típico
 ----------
     from src.evaluation.leakage import check_leakage
 
-    check_leakage(X_train)   # lê `features.proibidas` do supervised.yaml
+    check_leakage(X_train)
     check_leakage(X_val)
 
 Para inspeção manual (sem config), passe a lista explicitamente:
@@ -24,6 +24,26 @@ import pandas as pd
 
 class LeakageError(RuntimeError):
     """Levantado quando uma coluna proibida aparece em X."""
+
+
+def _resolver_colunas_proibidas(
+    forbidden_columns: list[str] | None,
+    target_column: str | None,
+) -> set[str]:
+    from src.utils import config as C
+
+    if forbidden_columns is None:
+        forbidden_columns = list(C.cfg("features", "proibidas") or [])
+
+    if target_column is None:
+        target_column = C.cfg("target", "coluna")
+
+    proibidas = set(forbidden_columns)
+
+    if target_column:
+        proibidas.add(target_column)
+
+    return proibidas
 
 
 def check_leakage(
@@ -52,18 +72,10 @@ def check_leakage(
     LeakageError
         Se qualquer coluna proibida estiver presente em `X`.
     """
-    from src.utils import config as C
-
-    if forbidden_columns is None:
-        forbidden_columns = list(C.cfg("features", "proibidas") or [])
-    if target_column is None:
-        target_column = C.cfg("target", "coluna")
-
-    proibidas = set(forbidden_columns)
-    if target_column:
-        proibidas.add(target_column)
+    proibidas = _resolver_colunas_proibidas(forbidden_columns, target_column)
 
     encontradas = sorted(set(X.columns) & proibidas)
+
     if encontradas:
         raise LeakageError(
             f"Leakage detectado: colunas proibidas em X → {encontradas}.\n"
