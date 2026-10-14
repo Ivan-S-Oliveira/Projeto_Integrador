@@ -531,6 +531,9 @@ selecao_modelos:
   finalistas:
     - hist_gradient_boosting
     - logistic
+  nomes_execucao:
+    hist_gradient_boosting: hist_gradient_boosting_v2
+    logistic: logistica_C1_v2
   # Preenchido ao final do C6 (gate G6). Valor deve constar em
   # `finalistas`. `null` enquanto a escolha nao foi feita.
   finalista_escolhido: null
