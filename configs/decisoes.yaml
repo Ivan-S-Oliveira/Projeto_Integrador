@@ -1,5 +1,5 @@
 # =============================================================================
-# Config de decisões da Pessoa A — v0.1 (fonte de verdade para A1–A4)
+# Config de decisões da Pessoa — v0.1 (fonte de verdade para A1–A4)
 # =============================================================================
 # Cada valor abaixo é uma DECISÃO. Enquanto `status_decisoes` estiver como
 # "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
@@ -15,51 +15,51 @@ versao: '0.4'
 status_decisoes:
   ponto_de_previsao:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   coorte_estrita:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa 
     data: null
   alvo:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   evolucao_desconhecida:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   periodos:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   acoes_inconsistencias_datas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa  
     data: null
   variaveis_proibidas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   variaveis_condicionais:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   maturidade_evolucao:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   features_derivadas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   split_aleatorio_70_15_15:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   cenario_sem_2020_2021:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
 cols:
   hospital: HOSPITAL
@@ -74,6 +74,9 @@ cols:
   dt_encerra: DT_ENCERRA
   nu_notific: NU_NOTIFIC
 dev_years:
+- 2019
+- 2020
+- 2021
 - 2022
 - 2023
 - 2024
@@ -299,10 +302,9 @@ experimentos_split:
       - 2024
       - 2025
       descricao: Base completa 2019-2025
-    sem_2020_2021:
+    sem_2020_2021_2022:
       anos:
       - 2019
-      - 2022
       - 2023
       - 2024
       - 2025
