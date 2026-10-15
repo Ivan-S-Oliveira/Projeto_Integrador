@@ -1,30 +1,3 @@
-"""
-Engenharia de atributos do pipeline supervisionado.
-
-Funções puras que derivam colunas a partir do DataFrame analítico.
-Nenhuma função muta a entrada — todas devolvem cópia ou Series novas.
-
-Decisões configuráveis vêm de `configs/supervised.yaml`, bloco
-`features.engenharia`.
-
-Política de intervalos inválidos
---------------------------------
-`decisoes.md` pede sinalizar, não corrigir em silêncio. O default é
-manter `dias_sintomas_ate_internacao` bruto (NaN apenas quando alguma
-data é `NaT`) e comunicar invalidade via flags explícitas:
-`flag_intervalo_invalido` (umbrella) e `flag_internacao_antes_sintomas`.
-
-`features.engenharia.intervalo_politica` aceita `"sinalizar"` (default)
-ou `"descartar"` — este último substitui valores inválidos por `NaN`
-mantendo as flags.
-
-Uso típico:
-    from src.features import montar_features
-
-    df_feat = montar_features(df)
-    X = df_feat[FEATURES]
-"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -33,6 +6,7 @@ import pandas as pd
 from src.utils import config as C
 
 __all__ = [
+    "COLUNAS_DERIVADAS",
     "idade_em_anos",
     "intervalo_sintomas_internacao",
     "sazonalidade",
@@ -56,20 +30,26 @@ _FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
     ("80+",   80.0, None),
 )
 
+COLUNAS_DERIVADAS: tuple[str, ...] = (
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sin_semana",
+    "cos_semana",
+    "ano_internacao",
+    "mes_internacao",
+    "flag_intervalo_invalido",
+    "flag_internacao_antes_sintomas",
+    "faixa_etaria",
+    "sexo_categoria",
+)
+
 
 def _intervalo_max_dias() -> float:
-    """Limite (dias) para o intervalo sintomas→internação."""
     valor = C.cfg("features", "engenharia", "intervalo_max_dias")
     return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
 
 
 def _intervalo_politica() -> str:
-    """
-    Política para valores fora de `[0, intervalo_max_dias]`.
-
-    `"sinalizar"` (default): mantém o valor bruto, apenas marca nas flags.
-    `"descartar"`: substitui o valor por `NaN` quando inválido.
-    """
     valor = C.cfg("features", "engenharia", "intervalo_politica")
     if valor is None:
         return "sinalizar"
@@ -84,7 +64,6 @@ def _intervalo_politica() -> str:
 
 
 def _faixas_etarias() -> list[tuple[str, float, float | None]]:
-    """Faixas etárias configuradas em `features.engenharia.faixas_etarias`."""
     bruto = C.cfg("features", "engenharia", "faixas_etarias")
     if not bruto:
         return list(_FAIXAS_PADRAO)
@@ -101,13 +80,10 @@ def _faixas_etarias() -> list[tuple[str, float, float | None]]:
 
 def idade_em_anos(df: pd.DataFrame) -> pd.Series:
     """
-    Converte `nu_idade_n` + `tp_idade` (codificação SIVEP) em idade em anos.
+    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
 
-    Codificação SIVEP: 1 → dias (÷ 365,25); 2 → meses (÷ 12); 3 → anos.
-
-    Retorna `pd.Series` float64. Vira `NaN` quando `tp_idade` está fora
-    de {1, 2, 3}, `nu_idade_n` é nulo/negativo, ou a idade ultrapassa
-    120 anos. Não imputa e não muta a entrada.
+    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
+    a codificação é desconhecida, a idade é negativa ou excede 120.
     """
     idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
     tipo = pd.to_numeric(df["tp_idade"], errors="coerce")
@@ -131,25 +107,11 @@ def idade_em_anos(df: pd.DataFrame) -> pd.Series:
 
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Intervalo em dias entre `dt_sin_pri` e `dt_interna`, com flags.
+    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
 
-    Colunas geradas
-    ---------------
-    - `dias_sintomas_ate_internacao` (float64): `(dt_interna - dt_sin_pri).days`.
-      `NaN` apenas quando alguma data é nula/não parseável. Negativos e
-      valores acima do limite ficam visíveis; a invalidade é comunicada
-      pelas flags. Comportamento controlado por
-      `features.engenharia.intervalo_politica`: `"sinalizar"` (default)
-      mantém o valor bruto; `"descartar"` substitui por `NaN`.
-    - `flag_intervalo_invalido` (int8): 1 para data ausente, dias < 0,
-      ou dias > `intervalo_max_dias`.
-    - `flag_internacao_antes_sintomas` (int8): 1 quando dias < 0.
-
-    `dt_interna` precisa ser reconhecida pelo gate G1 como disponível
-    no momento da admissão; a decisão de incluir as colunas em
-    `features.numericas` depende desse gate, não desta função.
-
-    Não muta o DataFrame de entrada.
+    Colunas: dias_sintomas_ate_internacao (float64), flag_intervalo_invalido
+    (int8), flag_internacao_antes_sintomas (int8). A política de valores
+    fora de [0, intervalo_max_dias] vem de features.engenharia.intervalo_politica.
     """
     max_dias = _intervalo_max_dias()
     politica = _intervalo_politica()
@@ -187,20 +149,10 @@ def sazonalidade(
     coluna_data: str | None = None,
 ) -> pd.DataFrame:
     """
-    Codifica a semana ISO do ano como par (seno, cosseno).
+    Codifica a semana ISO como par (seno, cosseno) em 2π × (semana − 1)/52,18.
 
-    A codificação é `2π × (semana − 1) / 52,18`, mantendo continuidade
-    entre as semanas 52/53 e a semana 1 do ano seguinte.
-
-    A coluna default é `dt_sin_pri` — reflete melhor a sazonalidade da
-    circulação viral do que a data de notificação/internação, que
-    depende de fatores administrativos. Pode ser sobrescrita por
-    `features.engenharia.coluna_sazonalidade`.
-
-    Retorna `pd.DataFrame` com `sin_semana` e `cos_semana` (float64).
-    Datas nulas ou não parseáveis resultam em `NaN`.
-
-    Não muta o DataFrame de entrada.
+    Coluna default: dt_sin_pri (ou features.engenharia.coluna_sazonalidade).
+    Datas nulas resultam em NaN.
     """
     if coluna_data is None:
         coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade")
@@ -229,13 +181,9 @@ def sazonalidade(
 
 def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
     """
-    Categoriza idade em anos em faixas configuradas no YAML.
+    Categoriza idade em faixas semiabertas [min, max) do YAML.
 
-    As faixas vêm de `features.engenharia.faixas_etarias`, cada uma no
-    formato `{nome, min, max}`, interpretado como intervalo semiaberto
-    `[min, max)`. `max: null` significa "sem limite superior".
-
-    Idade nula vira a categoria explícita `"desconhecida"`.
+    Idade nula vira a categoria explícita "desconhecida".
     """
     faixas = _faixas_etarias()
     idade = pd.to_numeric(idade_anos, errors="coerce")
@@ -254,11 +202,9 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
 
 def sexo_categoria(df: pd.DataFrame) -> pd.Series:
     """
-    Normaliza `cs_sexo` (SIVEP) em uma categórica explícita.
+    Normaliza cs_sexo em categórica explícita.
 
-    Mapeamento: `"M"` → `"masculino"`; `"F"` → `"feminino"`;
-    `"I"` → `"ignorado"`; qualquer outro valor (ou nulo) → `"ausente"`.
-    Nunca levanta erro por código desconhecido.
+    M → masculino; F → feminino; I → ignorado; demais/nulo → ausente.
     """
     sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
 
@@ -272,10 +218,10 @@ def sexo_categoria(df: pd.DataFrame) -> pd.Series:
 
 def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Extrai `ano_internacao` e `mes_internacao` de `dt_interna`.
+    Extrai ano_internacao e mes_internacao de dt_interna como float64.
 
-    Datas nulas resultam em `NaN` (float64), mantendo compatibilidade
-    com `SimpleImputer` e `StandardScaler` sem conversões extras.
+    Datas nulas resultam em NaN, mantendo compatibilidade com
+    SimpleImputer e StandardScaler.
     """
     dt = pd.to_datetime(df["dt_interna"], errors="coerce")
 
@@ -289,14 +235,8 @@ def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Aplica todas as funções acima e devolve cópia de `df` com as
-    colunas derivadas adicionadas. O DataFrame de entrada NÃO é
-    modificado.
-
-    Colunas adicionadas: `idade_anos`, `dias_sintomas_ate_internacao`,
-    `flag_intervalo_invalido`, `flag_internacao_antes_sintomas`,
-    `sin_semana`, `cos_semana`, `faixa_etaria`, `sexo_categoria`,
-    `ano_internacao`, `mes_internacao`.
+    Aplica todas as derivações e devolve cópia de df com as colunas de
+    COLUNAS_DERIVADAS adicionadas. Não muta a entrada.
     """
     out = df.copy()
 
