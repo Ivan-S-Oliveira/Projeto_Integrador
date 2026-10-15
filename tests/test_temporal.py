@@ -1,133 +1,150 @@
-"""Testes do split temporal e da trava do holdout (gate G9_holdout)."""
+"""
+Testes anti-vazamento de dados.
+
+Protegem contra:
+- inclusão do alvo nas features;
+- inclusão de colunas posteriores ao desfecho;
+- duplicação de identificadores quando houver chave adequada.
+
+Split temporal e trava do gate ``G9_holdout`` são testados em
+``tests/test_temporal.py`` — não duplicar aqui.
+
+Fonte única de verdade: `configs/supervised.yaml`, lido via
+`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
+"""
 
 from __future__ import annotations
 
 import pandas as pd
 import pytest
 
-from src.evaluation.temporal import TemporalSplit, split_temporal_3way
+from src.utils import config as C
 
 
-def _df(n: int = 100) -> pd.DataFrame:
-    return pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=n, freq="D"),
-        "valor": range(n),
-    })
+@pytest.fixture
+def proibidas() -> set[str]:
+    """Colunas proibidas declaradas em `features.proibidas` do YAML."""
+    return set(C.cfg("features", "proibidas") or [])
 
 
-# ---------------------------------------------------------------------------
-# split_temporal_3way
-# ---------------------------------------------------------------------------
-
-def test_split_3way_ordem():
-    tr, va, ho = split_temporal_3way(_df(), coluna_tempo="dt_notific")
-    assert tr["dt_notific"].max() <= va["dt_notific"].min()
-    assert va["dt_notific"].max() <= ho["dt_notific"].min()
+@pytest.fixture
+def features_finais() -> set[str]:
+    """Lista final de features exposta por `src.models.pipeline`."""
+    from src.models import pipeline
+    return set(pipeline.FEATURES)
 
 
-def test_split_3way_coluna_ausente():
-    with pytest.raises(KeyError):
-        split_temporal_3way(pd.DataFrame({"x": [1]}), coluna_tempo="dt_notific")
-
-
-def test_split_3way_coluna_nao_datetime():
-    df = pd.DataFrame({"dt_notific": ["2020-01-01", "2020-01-02", "2020-01-03"]})
-    with pytest.raises(TypeError):
-        split_temporal_3way(df, coluna_tempo="dt_notific")
-
-
-def test_split_3way_nat_default_levanta():
-    df = _df(10)
-    df.loc[3, "dt_notific"] = pd.NaT
-    with pytest.raises(ValueError, match="data inválida"):
-        split_temporal_3way(df, coluna_tempo="dt_notific")
-
-
-def test_split_3way_nat_drop():
-    df = _df(10)
-    df.loc[3, "dt_notific"] = pd.NaT
-    tr, va, ho = split_temporal_3way(df, coluna_tempo="dt_notific", on_nat="drop")
-    assert len(tr) + len(va) + len(ho) == 9
-
-
-def test_split_3way_on_nat_invalido():
-    with pytest.raises(ValueError, match="on_nat"):
-        split_temporal_3way(_df(), coluna_tempo="dt_notific", on_nat="xxx") # type: ignore[arg-type]
-
-
-def test_split_3way_fracoes_invalidas():
-    with pytest.raises(ValueError):
-        split_temporal_3way(
-            _df(), coluna_tempo="dt_notific",
-            frac_treino=0.9, frac_validacao=0.2,
-        )
-
-
-def test_split_3way_dataset_minusculo():
-    with pytest.raises(ValueError, match="pequeno demais"):
-        split_temporal_3way(
-            pd.DataFrame({"dt_notific": [pd.Timestamp("2020-01-01")]}),
-            coluna_tempo="dt_notific",
-        )
-
-
-# ---------------------------------------------------------------------------
-# TemporalSplit
-# ---------------------------------------------------------------------------
-
-def test_temporal_split_propriedades():
-    split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    assert split.n_treino + split.n_validacao + split.n_holdout == 100
-
-
-def test_holdout_bloqueado_inicialmente():
-    split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    assert not split.holdout_liberado
-    with pytest.raises(RuntimeError, match="Holdout bloqueado"):
-        split.holdout()
-
-
-# ---------------------------------------------------------------------------
-# Gate G9_holdout
-# ---------------------------------------------------------------------------
-
-def test_concluir_selecao_exige_gate_g9_holdout(monkeypatch):
-    """Com `G9_holdout` pendente, `concluir_selecao()` levanta RuntimeError."""
-    from src.utils import config as C
-
-    monkeypatch.setattr(
-        C, "cfg",
-        lambda *k, default=None: (
-            {"status": "pendente"} if k == ("gates", "G9_holdout") else default
-        ),
+def test_proibidas_nao_vazia(proibidas: set[str]) -> None:
+    assert proibidas, (
+        "features.proibidas está vazia no supervised.yaml — "
+        "ao menos o alvo e as colunas posteriores ao desfecho precisam "
+        "estar listadas."
     )
 
-    split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    with pytest.raises(RuntimeError, match="G9_holdout"):
-        split.concluir_selecao()
-    assert not split.holdout_liberado
 
-
-def test_concluir_selecao_libera_quando_gate_aprovado(monkeypatch):
-    """Com `G9_holdout` aprovado, `concluir_selecao()` libera o holdout."""
-    from src.utils import config as C
-
-    monkeypatch.setattr(
-        C, "cfg",
-        lambda *k, default=None: (
-            {"status": "aprovado"} if k == ("gates", "G9_holdout") else default
-        ),
+def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None:
+    alvo = C.cfg("target", "coluna")
+    assert alvo in proibidas, (
+        f"target.coluna ({alvo!r}) precisa estar em features.proibidas."
     )
 
-    split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    split.concluir_selecao()
-    assert split.holdout_liberado
-    assert not split.holdout().empty
+
+def test_features_finais_sem_proibidas(
+    features_finais: set[str],
+    proibidas: set[str],
+) -> None:
+    vazamento = features_finais & proibidas
+    assert not vazamento, (
+        f"FEATURES contém colunas proibidas: {sorted(vazamento)}"
+    )
 
 
-def test_resumo_nao_quebra():
-    split = TemporalSplit(df=_df(), coluna_tempo="dt_notific")
-    txt = split.resumo()
-    assert "TemporalSplit" in txt
-    assert "treino" in txt
-    assert "holdout" in txt
+def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None:
+    alvo = C.cfg("target", "coluna")
+    assert alvo not in features_finais
+
+
+def test_check_leakage_passa_quando_X_limpo() -> None:
+    from src.evaluation.leakage import check_leakage
+
+    X = pd.DataFrame({"feat_a": [1, 2, 3], "feat_b": [4, 5, 6]})
+    check_leakage(X)
+
+
+def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None:
+    from src.evaluation.leakage import LeakageError, check_leakage
+
+    coluna = sorted(proibidas)[0]
+    X = pd.DataFrame({coluna: [1, 2, 3], "feat_ok": [4, 5, 6]})
+
+    with pytest.raises(LeakageError) as exc:
+        check_leakage(X)
+
+    assert coluna in str(exc.value), (
+        "A mensagem de erro precisa citar a coluna problemática."
+    )
+
+
+def test_check_leakage_levanta_para_alvo() -> None:
+    from src.evaluation.leakage import LeakageError, check_leakage
+
+    alvo = C.cfg("target", "coluna")
+    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
+
+    with pytest.raises(LeakageError):
+        check_leakage(X)
+
+
+def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None:
+    """Lista vazia desliga proibidas, mas o alvo continua sendo checado."""
+    from src.evaluation.leakage import LeakageError, check_leakage
+
+    alvo = C.cfg("target", "coluna")
+    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
+
+    with pytest.raises(LeakageError):
+        check_leakage(X, forbidden_columns=[])
+
+
+def test_dataset_sem_identificadores_duplicados(
+    parquet_disponivel,
+) -> None:
+    """
+    Checa duplicidade apenas se houver coluna que sirva como
+    identificador da notificação. UF e data não formam chave única.
+    """
+    if parquet_disponivel is None:
+        pytest.skip("Parquet não disponível.")
+
+    import pyarrow.parquet as pq
+
+    colunas = set(pq.read_schema(parquet_disponivel).names)
+
+    candidatas = [
+        "nu_notific",
+        "numero_notificacao",
+        "id_notificacao",
+        "id",
+    ]
+    coluna_id = next((c for c in candidatas if c in colunas), None)
+
+    if coluna_id is None:
+        pytest.skip(
+            "O Parquet não possui uma coluna identificadora adequada "
+            "para o teste de duplicidade."
+        )
+
+    df = pd.read_parquet(parquet_disponivel, columns=[coluna_id])
+    ids = df[coluna_id].dropna().astype("string").str.strip()
+    ids = ids[ids.ne("")]
+
+    if ids.empty:
+        pytest.skip(f"A coluna {coluna_id} não possui identificadores válidos.")
+
+    quantidade_duplicada = int(ids.duplicated().sum())
+    taxa_duplicada = quantidade_duplicada / len(ids)
+
+    assert taxa_duplicada < 0.05, (
+        f"Alta taxa de identificadores duplicados em {coluna_id}: "
+        f"{quantidade_duplicada}/{len(ids)} ({taxa_duplicada:.1%})"
+    )

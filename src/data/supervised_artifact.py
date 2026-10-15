@@ -22,13 +22,14 @@ Convencoes:
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import pandas as pd
+
+from src.utils.hashing import sha256_file
 
 DATASET_NAME = "dataset_supervisionado.parquet"
 MANIFEST_NAME = "manifesto_supervisionado.json"
@@ -38,14 +39,6 @@ SCHEMA_VERSION = 2
 _PARTITION_TREINO = "treino"
 _PARTITION_VALIDACAO = "validacao"
 _PARTITION_TESTE = "teste"
-
-
-def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _analytical_dir(root: Path) -> Path:

@@ -9,12 +9,8 @@ import pytest
 from src.models.calibration import calibrar, escolher_limiar
 
 
-# ---------------------------------------------------------------------------
-# escolher_limiar
-# ---------------------------------------------------------------------------
-
 @pytest.fixture
-def dados():
+def dados() -> tuple[np.ndarray, np.ndarray]:
     y = np.array([0, 0, 1, 1, 1, 0, 1, 0, 1, 1])
     p = np.array([0.1, 0.2, 0.8, 0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.75])
     return y, p
@@ -43,16 +39,11 @@ def test_escolher_limiar_min_precision_respeitado():
 
 
 def test_escolher_limiar_min_precision_impossivel():
-    # Em nenhum limiar a precisão passa de 0.25.
     y = np.array([1, 0, 0, 0])
     p = np.array([0.1, 0.9, 0.8, 0.85])
     with pytest.raises(ValueError, match="precision"):
         escolher_limiar(y, p, min_precision=0.5)
 
-
-# ---------------------------------------------------------------------------
-# calibrar
-# ---------------------------------------------------------------------------
 
 def test_calibrar_requer_sklearn_16():
     pytest.importorskip("sklearn.frozen")
@@ -84,7 +75,7 @@ def test_calibrar_sigmoid_preserva_shape():
     proba = cal.predict_proba(X)
     assert proba.shape == (len(X), 2)
     assert np.allclose(proba.sum(axis=1), 1.0)
-    assert ((proba >= 0) & (proba <= 1)).all()
+    assert np.all((proba >= 0) & (proba <= 1))
 
 
 def test_calibrar_isotonic_preserva_shape():

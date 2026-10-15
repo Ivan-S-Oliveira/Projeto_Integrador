@@ -16,28 +16,22 @@ from src.evaluation.errors import (
 
 
 @pytest.fixture
-def dados():
-    #         idx: 0  1  2  3  4  5  6  7
+def dados() -> tuple[np.ndarray, np.ndarray]:
     y_true = np.array([0, 0, 1, 1, 0, 1, 0, 1])
     y_pred = np.array([0, 1, 1, 0, 0, 1, 1, 1])
-    # fp: 1, 6  |  fn: 3
     return y_true, y_pred
 
 
-# ---------------------------------------------------------------------------
-# Matriz de confusão
-# ---------------------------------------------------------------------------
-
-def test_matriz_confusao_shape_e_valores(dados):
+def test_matriz_confusao_shape_e_valores(dados) -> None:
     y_true, y_pred = dados
     m = matriz_confusao(y_true, y_pred)
     assert {"pred_0", "pred_1"}.issubset(m.columns)
     assert {"real_0", "real_1"}.issubset(m.index)
-    assert m.loc["real_0", "pred_1"] == 2  # FP
-    assert m.loc["real_1", "pred_0"] == 1  # FN
+    assert m.loc["real_0", "pred_1"] == 2
+    assert m.loc["real_1", "pred_0"] == 1
 
 
-def test_matriz_confusao_tem_totais(dados):
+def test_matriz_confusao_tem_totais(dados) -> None:
     y_true, y_pred = dados
     m = matriz_confusao(y_true, y_pred)
     assert "total" in m.columns
@@ -45,11 +39,7 @@ def test_matriz_confusao_tem_totais(dados):
     assert m.loc["total", "total"] == len(y_true)
 
 
-# ---------------------------------------------------------------------------
-# Extração de FP/FN
-# ---------------------------------------------------------------------------
-
-def test_extrair_fp(dados):
+def test_extrair_fp(dados) -> None:
     y_true, y_pred = dados
     df = pd.DataFrame({"x": range(len(y_true))})
     fp = extrair_falsos_positivos(df, y_true, y_pred)
@@ -57,7 +47,7 @@ def test_extrair_fp(dados):
     assert set(fp["x"]) == {1, 6}
 
 
-def test_extrair_fn(dados):
+def test_extrair_fn(dados) -> None:
     y_true, y_pred = dados
     df = pd.DataFrame({"x": range(len(y_true))})
     fn = extrair_falsos_negativos(df, y_true, y_pred)
@@ -65,12 +55,8 @@ def test_extrair_fn(dados):
     assert fn["x"].iloc[0] == 3
 
 
-# ---------------------------------------------------------------------------
-# Métricas por grupo
-# ---------------------------------------------------------------------------
-
-def test_metricas_por_grupo_coluna_renomeada():
-    """A coluna de prevalência chama-se `taxa_positivos` (não `positivos`)."""
+def test_metricas_por_grupo_coluna_renomeada() -> None:
+    """A coluna de prevalência chama-se `taxa_positivos`, não `positivos`."""
     n = 300
     df = pd.DataFrame({"grupo": ["A"] * n + ["B"] * n})
     y = pd.Series(np.tile([0, 1], n))
@@ -81,17 +67,17 @@ def test_metricas_por_grupo_coluna_renomeada():
     assert "positivos" not in r.columns
 
 
-def test_metricas_por_grupo_ignora_abaixo_de_min_n():
+def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
     df = pd.DataFrame({"grupo": ["A"] * 5 + ["B"] * 300})
-    y = pd.Series([0, 1] * 152 + [0])            # 305
-    p = pd.Series([0.1, 0.9] * 152 + [0.5])      # 305
+    y = pd.Series([0, 1] * 152 + [0])
+    p = pd.Series([0.1, 0.9] * 152 + [0.5])
 
     r = metricas_por_grupo(df, y, p, "grupo", min_n=30)
     assert set(r["grupo"]) == {"B"}
     assert r.loc[r["grupo"] == "B", "n"].iloc[0] == 300
 
 
-def test_metricas_por_grupo_coluna_ausente():
+def test_metricas_por_grupo_coluna_ausente() -> None:
     df = pd.DataFrame({"outra": [1, 2]})
     y = np.array([0, 1])
     p = np.array([0.1, 0.9])
@@ -99,19 +85,15 @@ def test_metricas_por_grupo_coluna_ausente():
         metricas_por_grupo(df, y, p, "grupo")
 
 
-def test_metricas_por_grupo_tamanho_incompativel():
+def test_metricas_por_grupo_tamanho_incompativel() -> None:
     df = pd.DataFrame({"grupo": ["A"] * 5})
-    y = np.array([0, 1, 0, 1, 0, 1])  # 6 ≠ 5
+    y = np.array([0, 1, 0, 1, 0, 1])
     p = np.array([0.1, 0.9, 0.2, 0.8, 0.3, 0.7])
     with pytest.raises(ValueError):
         metricas_por_grupo(df, y, p, "grupo")
 
 
-# ---------------------------------------------------------------------------
-# Top erros
-# ---------------------------------------------------------------------------
-
-def test_top_erros_erro_absoluto():
+def test_top_erros_erro_absoluto() -> None:
     df = pd.DataFrame({"x": range(6)})
     y_true = np.array([0, 0, 1, 1, 0, 1])
     y_prob = np.array([0.1, 0.9, 0.1, 0.9, 0.5, 0.5])
@@ -122,7 +104,7 @@ def test_top_erros_erro_absoluto():
         assert c in t.columns
 
 
-def test_top_erros_fp_ordena_por_prob_decrescente():
+def test_top_erros_fp_ordena_por_prob_decrescente() -> None:
     df = pd.DataFrame({"x": range(5)})
     y_true = np.array([0, 0, 1, 1, 0])
     y_prob = np.array([0.1, 0.9, 0.1, 0.9, 0.6])
@@ -133,7 +115,7 @@ def test_top_erros_fp_ordena_por_prob_decrescente():
     assert t["y_prob"].is_monotonic_decreasing
 
 
-def test_top_erros_fn_ordena_por_prob_crescente():
+def test_top_erros_fn_ordena_por_prob_crescente() -> None:
     df = pd.DataFrame({"x": range(5)})
     y_true = np.array([0, 0, 1, 1, 1])
     y_prob = np.array([0.1, 0.9, 0.1, 0.4, 0.9])
@@ -144,7 +126,7 @@ def test_top_erros_fn_ordena_por_prob_crescente():
     assert t["y_prob"].is_monotonic_increasing
 
 
-def test_top_erros_criterio_invalido():
+def test_top_erros_criterio_invalido() -> None:
     df = pd.DataFrame({"x": [1, 2]})
     y_true = np.array([0, 1])
     y_prob = np.array([0.1, 0.9])

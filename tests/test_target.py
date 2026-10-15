@@ -13,44 +13,36 @@ def _df(valores: list) -> pd.DataFrame:
     return pd.DataFrame({"evolucao": valores, "feat": range(len(valores))})
 
 
-# ---------------------------------------------------------------------------
-# Mapeamento de códigos
-# ---------------------------------------------------------------------------
-
-def test_positivo_e_um():
+def test_positivo_e_um() -> None:
     y = criar_alvo_binario(_df([2.0, 2.0]))
     assert y.tolist() == [1.0, 1.0]
 
 
-def test_negativo_e_zero():
+def test_negativo_e_zero() -> None:
     y = criar_alvo_binario(_df([1.0, 1.0]))
     assert y.tolist() == [0.0, 0.0]
 
 
-def test_codigos_3_e_9_viram_nan():
+def test_codigos_3_e_9_viram_nan() -> None:
     y = criar_alvo_binario(_df([3.0, 9.0]))
     assert y.isna().all()
 
 
-def test_nan_de_entrada_permanece_nan():
+def test_nan_de_entrada_permanece_nan() -> None:
     y = criar_alvo_binario(_df([np.nan, 1.0, 2.0]))
     assert pd.isna(y.iloc[0])
     assert y.iloc[1] == 0.0
     assert y.iloc[2] == 1.0
 
 
-def test_mistura_completa():
+def test_mistura_completa() -> None:
     y = criar_alvo_binario(_df([1.0, 2.0, 3.0, 9.0, np.nan]))
     assert y.iloc[0] == 0.0
     assert y.iloc[1] == 1.0
     assert y.iloc[2:].isna().all()
 
 
-# ---------------------------------------------------------------------------
-# filtrar_rotulos_validos
-# ---------------------------------------------------------------------------
-
-def test_filtrar_remove_nan():
+def test_filtrar_remove_nan() -> None:
     df = _df([1.0, 2.0, 3.0, 9.0, np.nan])
     X = df[["feat"]]
     y = criar_alvo_binario(df)
@@ -62,33 +54,29 @@ def test_filtrar_remove_nan():
     assert list(X_ok["feat"]) == [0, 1]
 
 
-def test_filtrar_exige_indice_alinhado():
+def test_filtrar_exige_indice_alinhado() -> None:
     X = pd.DataFrame({"feat": [1, 2]}, index=[0, 1])
-    y = pd.Series([0, 1], index=[1, 2])  # índices diferentes
+    y = pd.Series([0, 1], index=[1, 2])
     with pytest.raises(ValueError, match="mesmo índice"):
         filtrar_rotulos_validos(X, y)
 
 
-# ---------------------------------------------------------------------------
-# Validação de config
-# ---------------------------------------------------------------------------
-
-def test_positivos_e_negativos_nao_se_sobrepoem():
+def test_positivos_e_negativos_nao_se_sobrepoem() -> None:
     with pytest.raises(ValueError, match="sobrepor"):
         criar_alvo_binario(_df([1.0, 2.0]), positivos=[1.0, 2.0], negativos=[1.0])
 
 
-def test_positivos_vazio_levanta():
+def test_positivos_vazio_levanta() -> None:
     with pytest.raises(ValueError, match="positivos"):
         criar_alvo_binario(_df([1.0, 2.0]), positivos=[], negativos=[1.0])
 
 
-def test_negativos_vazio_levanta():
+def test_negativos_vazio_levanta() -> None:
     with pytest.raises(ValueError, match="negativos"):
         criar_alvo_binario(_df([1.0, 2.0]), positivos=[2.0], negativos=[])
 
 
-def test_default_vem_do_yaml():
+def test_default_vem_do_yaml() -> None:
     """Sem argumentos, usa `target.positivos` e `target.negativos` do YAML."""
     from src.utils import config as C
 

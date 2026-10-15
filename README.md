@@ -1,112 +1,72 @@
-# Projeto Integrador — SRAG Machine Learning
+# Projeto Integrador --- SRAG e Machine Learning
 
-Projeto desenvolvido como parte do **Projeto Integrador I** da Pós-Graduação em Inteligência Artificial.
+Projeto acadêmico desenvolvido no âmbito do **Projeto Integrador I da
+Pós-Graduação em Inteligência Artificial**. Investiga o uso de técnicas
+de aprendizado de máquina sobre dados públicos de Síndrome Respiratória
+Aguda Grave (SRAG), com foco em preparação de dados, avaliação de
+modelos e reprodutibilidade.
 
-O projeto investiga a aplicação de técnicas de **Machine Learning** sobre dados públicos de **Síndrome Respiratória Aguda Grave (SRAG)** disponibilizados pelo Ministério da Saúde.
+> **Status:** em desenvolvimento. A seleção final do modelo, a
+> calibração, a definição do limiar e a avaliação final ainda dependem
+> da conclusão dos gates metodológicos configurados no projeto.
 
-> 🚧 **Status:** Projeto em desenvolvimento.
+## Objetivo
 
-## 🎯 Objetivo
+Construir um fluxo reproduzível para estudar a previsão retrospectiva de
+óbito por SRAG a partir de informações disponíveis **no momento da
+internação hospitalar**. O trabalho envolve:
 
-Desenvolver um fluxo de Machine Learning **reprodutível e temporalmente consistente** aplicado aos dados de SRAG, abrangendo:
+-   acesso, organização e preparação dos dados;
+-   definição e rastreabilidade da coorte analítica;
+-   análise exploratória e experimentos não supervisionados;
+-   engenharia e validação de atributos;
+-   comparação de modelos supervisionados;
+-   calibração das probabilidades e escolha de limiar;
+-   avaliação de erros e análise de desempenho por grupos;
+-   documentação dos experimentos e das limitações.
 
-1. Extração e armazenamento dos dados;
-2. Preparação e construção da população analítica;
-3. Análise exploratória e aprendizado não supervisionado;
-4. Engenharia de atributos e preparação para modelagem;
-5. Modelagem supervisionada;
-6. Validação temporal;
-7. Calibração de probabilidades e definição de limiar;
-8. Análise de erros;
-9. Validação final em holdout temporal.
+O projeto tem finalidade **acadêmica e exploratória**. Não é um sistema
+clinicamente validado, não deve ser usado para diagnóstico ou decisão
+clínica e não permite inferir causalidade a partir de associações
+preditivas.
 
-A estrutura do projeto busca manter código, configurações, dados, modelos e resultados organizados para facilitar a reprodução dos experimentos em diferentes ambientes.
+## Fonte dos dados
 
----
+Os dados são provenientes da base pública **SRAG 2019--2026**,
+disponibilizada pelo Ministério da Saúde por meio da API de Dados
+Abertos.
 
-## 📊 Dados
+-   **Fonte:** Ministério da Saúde --- Dados Abertos
+-   **Endpoint:**
+    <https://apidadosabertos.saude.gov.br/vigilancia-e-meio-ambiente/srag-2019-2026>
 
-Os dados utilizados são provenientes da base pública **SRAG 2019–2026**, disponibilizada pelo Ministério da Saúde por meio da API de Dados Abertos.
+O projeto utiliza arquivos Parquet e rotinas de acesso/armazenamento. Os
+dados originais, arquivos Parquet, modelos treinados e resultados
+volumosos não devem ser versionados diretamente no Git.
 
-**Fonte:** Ministério da Saúde — Dados Abertos
+## Arquitetura e organização
 
-Endpoint utilizado:
+A lógica reutilizável deve ficar em `src/`; notebooks devem orquestrar
+experimentos, explicar decisões e apresentar tabelas e gráficos.
+Parâmetros e decisões metodológicas devem permanecer centralizados em
+`configs/` e `docs/`.
 
-```text
-https://apidadosabertos.saude.gov.br/vigilancia-e-meio-ambiente/srag-2019-2026
-```
-
-A extração é realizada em Python e os dados são organizados em camadas para separar a fonte original, os dados processados e a população utilizada na modelagem.
-
-### Camadas dos dados
-
-| Camada | Finalidade |
-|---|---|
-| `data/raw/` | Dados obtidos diretamente das fontes, sem as transformações analíticas finais. |
-| `data/processed/` | Dados processados e armazenados para reutilização. |
-| `data/analytical/` | População analítica utilizada nas análises e na modelagem supervisionada. |
-
-A população analítica deve ser definida antes da modelagem final, documentando período, inclusões, exclusões, tratamento de ausentes, variável-alvo e variáveis permitidas.
-
----
-
-## 🔄 Fluxo do projeto
-
-```text
-API de Dados Abertos
-        ↓
-Extração
-        ↓
-data/raw/
-        ↓
-Processamento / Limpeza
-        ↓
-data/processed/
-        ↓
-População Analítica
-        ↓
-Análise exploratória e não supervisionada
-        ↓
-Pipeline supervisionado
-        ↓
-Validação temporal
-        ↓
-Calibração e definição do threshold
-        ↓
-Validação final
-        ↓
-Resultados
-```
-
-A modelagem supervisionada utiliza o mesmo pipeline de transformação durante treinamento e inferência, evitando duplicação de lógica entre notebooks e código de produção experimental.
-
----
-
-## 🧱 Estrutura do projeto
-
-```text
+``` text
 Projeto_Integrador/
-│
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── analytical/
-│
 ├── configs/
-│   ├── base.yaml
+│   ├── dicionario_variaveis_v1.csv
 │   └── supervised.yaml
-│
-├── logs/
-├── models/
-│
-├── outputs/
-│   ├── tables/
-│   ├── figures/
-│   └── predictions/
-│
+├── docs/
+│   └── decisoes.md
 ├── notebooks/
 │   ├── 00_acesso_dados_parquet.ipynb
 │   ├── 01_extracao.ipynb
+│   ├── 02_eda/
+│   │   ├── 01_eda_primeira_passagem.ipynb
+│   │   ├── 02_eda_temporal_clustering.ipynb
+│   │   ├── 03_supervisionado_pilotos.ipynb
+│   │   ├── 04_consolidacao_shortlist_transicao_coorte.ipynb
+│   │   └── _provisorio_construcao_coorte_b.ipynb
 │   └── C/
 │       ├── C1_smoke_test.ipynb
 │       ├── C2_pipeline_supervisionado.ipynb
@@ -114,524 +74,389 @@ Projeto_Integrador/
 │       ├── C4_boosting.ipynb
 │       ├── C5_calibracao_limiar.ipynb
 │       └── C6_validacao_final.ipynb
-│
 ├── src/
 │   ├── data/
-│   │   ├── extracao.py
-│   │   └── ...
-│   ├── models/
-│   │   ├── pipeline.py
-│   │   ├── baseline.py
-│   │   ├── logistic.py
-│   │   ├── boosting.py
-│   │   └── calibration.py
+│   │   ├── cohort_source.py
+│   │   ├── split.py
+│   │   └── supervised_artifact.py
 │   ├── evaluation/
-│   │   ├── temporal.py
-│   │   ├── metrics.py
 │   │   ├── calibration.py
-│   │   └── errors.py
+│   │   ├── errors.py
+│   │   ├── leakage.py
+│   │   ├── metrics.py
+│   │   └── temporal.py
+│   ├── features/
+│   │   ├── engineering.py
+│   │   └── normalization.py
+│   ├── models/
+│   │   ├── baseline.py
+│   │   ├── boosting.py
+│   │   ├── calibration.py
+│   │   ├── factory.py
+│   │   ├── logistic.py
+│   │   └── pipeline.py
 │   └── utils/
 │       ├── config.py
 │       ├── env.py
-│       ├── storage.py
-│       ├── logging.py
-│       └── reproducibility.py
-│
+│       ├── reproducibility.py
+│       └── storage.py
 ├── tests/
-│   ├── test_smoke.py
-│   ├── test_pipeline.py
-│   ├── test_leakage.py
-│   └── test_config.py
-│
+├── tools/
+│   └── update_project_reference.py
+├── .env.example
+├── .gitignore
+├── pyproject.toml
 ├── requirements.txt
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
-### Principais diretórios
+A árvore acima destaca os principais componentes identificados na
+referência do projeto; `tests/` contém testes automatizados para
+configuração, coorte, atributos, partições, pipeline, métricas,
+calibração, leakage e reprodutibilidade. Consulte os arquivos do
+repositório para a lista completa.
 
-| Diretório | Finalidade |
-|---|---|
-| `data/` | Organização das diferentes camadas dos dados. |
-| `configs/` | Configurações e parâmetros do projeto. |
-| `logs/` | Registros das execuções. |
-| `models/` | Modelos e artefatos treinados. |
-| `outputs/tables/` | Métricas, comparações e tabelas dos experimentos. |
-| `outputs/figures/` | Gráficos e visualizações. |
-| `outputs/predictions/` | Predições produzidas pelos modelos. |
-| `notebooks/` | Execução, exploração e documentação dos experimentos. |
-| `src/` | Código reutilizável e definitivo do projeto. |
-| `tests/` | Testes de funcionamento, configuração e prevenção de problemas. |
+### Responsabilidades principais
 
----
+  ---------------------------------------------------------------------------
+  Componente                              Responsabilidade
+  --------------------------------------- -----------------------------------
+  `configs/supervised.yaml`               Configura alvo, período, atributos,
+                                          partições, modelos, métricas e
+                                          gates metodológicos.
 
-## 🧩 Organização do código
+  `configs/dicionario_variaveis_v1.csv`   Dicionário de variáveis.
 
-A lógica reutilizável deve permanecer em `src/`, enquanto os notebooks são utilizados para execução, experimentação, apresentação de resultados e documentação.
+  `docs/decisoes.md`                      Registro das decisões
+                                          metodológicas.
 
-Exemplo:
+  `src/data/`                             Resolução/carregamento da coorte,
+                                          partições e artefatos
+                                          supervisionados.
 
-```text
-src/models/logistic.py
-        ↓
-Implementação da regressão logística
-        ↓
-notebooks/C/C3_baseline_logistica.ipynb
-        ↓
-Execução + resultados + documentação
-```
+  `src/features/`                         Engenharia e normalização de
+                                          atributos.
 
-Essa separação reduz a duplicação de código e facilita a reprodução dos experimentos.
+  `src/models/`                           Construção de pipelines, modelos e
+                                          calibração.
 
----
+  `src/evaluation/`                       Métricas, avaliação temporal,
+                                          calibração, erros e verificações de
+                                          leakage.
 
-## 🔬 Metodologia
+  `src/utils/`                            Configuração, ambiente,
+                                          armazenamento e reprodutibilidade.
 
-### 1. Acesso e extração dos dados
+  `tests/`                                Verificações automatizadas dos
+                                          contratos do projeto.
 
-O notebook `notebooks/00_acesso_dados_parquet.ipynb` valida o acesso à base Parquet, incluindo existência do arquivo, schema, colunas, quantidade de registros e funcionamento do armazenamento.
+  `notebooks/`                            Exploração, experimentos,
+                                          orquestração e comunicação dos
+                                          resultados.
+  ---------------------------------------------------------------------------
 
-A extração pela API é implementada em `src/data/extracao.py` e documentada em `notebooks/01_extracao.ipynb`.
+## Notebooks
 
-A rotina utiliza requisições paginadas e contempla:
+  -----------------------------------------------------------------------------------------------
+  Notebook                                                    Finalidade
+  ----------------------------------------------------------- -----------------------------------
+  `00_acesso_dados_parquet.ipynb`                             Verificar o acesso aos dados
+                                                              Parquet.
 
-- controle de paginação;
-- tratamento de erros;
-- novas tentativas de requisição;
-- controle de tempo entre requisições;
-- conversão dos resultados para `DataFrame`;
-- armazenamento em CSV/Parquet.
+  `01_extracao.ipynb`                                         Documentar a etapa de extração.
 
-### 2. Preparação e população analítica
+  `02_eda/01_eda_primeira_passagem.ipynb`                     Primeira exploração e diagnóstico
+                                                              dos dados.
 
-A população analítica é construída a partir dos dados processados e envolve decisões sobre:
+  `02_eda/02_eda_temporal_clustering.ipynb`                   Análises temporais e experimentos
+                                                              de agrupamento.
 
-- período analisado;
-- população incluída;
-- exclusões;
-- tratamento de dados ausentes;
-- definição da variável-alvo (`target`);
-- seleção das variáveis utilizadas na modelagem;
-- prevenção de variáveis que possam causar vazamento de informação.
+  `02_eda/03_supervisionado_pilotos.ipynb`                    Experimentos supervisionados
+                                                              preliminares.
 
-Após definida, a população analítica deve permanecer congelada para a etapa de modelagem supervisionada.
+  `02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`   Consolidar a shortlist e a
+                                                              transição da coorte.
 
-### 3. Análise exploratória
+  `02_eda/_provisorio_construcao_coorte_b.ipynb`              Notebook provisório de construção
+                                                              de coorte; confirmar sua
+                                                              necessidade antes de tratá-lo como
+                                                              fluxo oficial.
 
-A análise exploratória busca compreender:
+  `C/C1_smoke_test.ipynb`                                     Verificar componentes essenciais do
+                                                              ambiente e do projeto.
 
-- estrutura e tipos das variáveis;
-- valores ausentes e duplicidades;
-- distribuições;
-- relações entre atributos;
-- comportamento temporal;
-- inconsistências;
-- padrões e anomalias.
+  `C/C2_pipeline_supervisionado.ipynb`                        Orquestrar e validar o pipeline
+                                                              supervisionado.
 
-### 4. Aprendizado não supervisionado
+  `C/C3_baseline_logistica.ipynb`                             Executar referências e experimentos
+                                                              com regressão logística.
 
-São avaliadas técnicas exploratórias de agrupamento, incluindo:
+  `C/C4_boosting.ipynb`                                       Executar a busca limitada e avaliar
+                                                              boosting.
 
-- DBSCAN;
-- Hierarchical Clustering / HCA;
-- análise de agrupamentos;
-- avaliação de estabilidade;
-- análise de ruído;
-- comparação de métricas;
-- análise de dendrogramas.
+  `C/C5_calibracao_limiar.ipynb`                              Escolher calibração e limiar usando
+                                                              dados permitidos.
 
-Essas análises têm caráter exploratório e não substituem a avaliação supervisionada.
+  `C/C6_validacao_final.ipynb`                                Executar o protocolo de validação
+                                                              final, condicionado à liberação do
+                                                              gate correspondente.
+  -----------------------------------------------------------------------------------------------
 
-### 5. Pipeline supervisionado
+Os notebooks devem evitar implementações duplicadas de funções
+reutilizáveis. Uma função deve migrar para `src/` quando representar uma
+responsabilidade compartilhada ou uma regra que precise de testes;
+código exclusivo de apresentação e orquestração pode permanecer no
+notebook.
 
-A modelagem supervisionada é construída em um pipeline reproduzível, concentrando as transformações necessárias para que o mesmo processamento seja aplicado durante treinamento e inferência.
+## Metodologia supervisionada
 
-Implementação principal:
+### Alvo e momento da previsão
+
+A configuração ativa define:
+
+-   coluna de origem do alvo: `evolucao`;
+-   coluna de modelagem: `alvo_obito_srag`;
+-   classe positiva: valor `2.0`;
+-   classe negativa: valor `1.0`;
+-   descarte de outros valores para o alvo principal: habilitado;
+-   análise de sensibilidade para qualquer óbito: configurada
+    separadamente.
+
+O momento de previsão definido metodologicamente é a **internação
+hospitalar**. Informações registradas depois desse momento não devem ser
+usadas como atributos de entrada.
+
+### Período e partições
+
+A configuração abrange 2019--2026, incluindo 2026 como ano parcial. A
+partição primária atualmente configurada é **aleatória estratificada por
+alvo e ano de internação**, com seed `42` e proporções:
+
+-   treino: 70%;
+-   validação: 15%;
+-   teste/holdout: 15%.
+
+**Importante:** apesar do interesse em comportamento temporal, essa
+configuração não corresponde a uma separação estritamente cronológica
+entre passado e futuro. Análises temporais adicionais podem ser usadas
+como análises de robustez, mas não devem substituir silenciosamente a
+partição primária definida na configuração. A documentação e os
+resultados devem explicitar essa escolha.
 
-```text
-src/models/pipeline.py
-```
+### Atributos e prevenção de leakage
 
-O pipeline contempla preparação e transformação das variáveis, separação temporal, prevenção de leakage, treinamento e avaliação.
+A configuração inclui atributos numéricos e categóricos, além de regras
+para engenharia de atributos. A lista final de atributos ainda depende
+da confirmação do gate `G1_definicao_alvo_features`.
 
-### 6. Validação temporal
+Variáveis relacionadas ao desfecho ou a informações posteriores à
+internação estão listadas entre as proibidas em
+`configs/supervised.yaml`. Antes de treinar, verificar:
 
-A avaliação respeita a ordem temporal dos registros em vez de depender exclusivamente de uma divisão aleatória.
+1.  se cada atributo estava disponível no momento da internação;
+2.  se o alvo não aparece entre as entradas;
+3.  se transformações e imputações são ajustadas somente nos dados de
+    treino;
+4.  se treino, validação e teste respeitam os contratos de partição;
+5.  se a coorte e a lista de atributos estão documentadas e versionadas
+    por metadados.
 
-```text
-PASSADO
-   ↓
-Treinamento
-   ↓
-Desenvolvimento
-   ↓
-Holdout temporal
-   ↓
-Futuro / período não utilizado
-```
+Não use o holdout final para escolher modelo, hiperparâmetros,
+calibração ou limiar.
 
-Essa estratégia busca representar um cenário no qual dados históricos são utilizados para realizar previsões sobre períodos posteriores.
+### Modelos e seleção
 
-A implementação encontra-se em `src/evaluation/temporal.py`.
+A configuração prevê baseline, regressão logística, árvore de decisão,
+random forest e boosting. A shortlist provisória registrada aponta
+`hist_gradient_boosting` e `logistic` como finalistas candidatos; isso
+não equivale a uma escolha final de modelo. A métrica principal
+configurada para comparação é `PR-AUC`.
 
-### 7. Baseline e regressão logística
+### Calibração, limiar e avaliação
 
-São estabelecidos modelos de referência para comparação com modelos mais complexos:
+A configuração prevê comparar métodos de calibração (`sigmoid` e
+`isotonic`) e avaliar o Brier Score antes e depois da calibração. O
+limiar deve ser escolhido apenas com dados de validação, de acordo com
+os critérios registrados na configuração.
 
-1. baseline;
-2. regressão logística.
+As métricas configuradas incluem:
 
-Notebook: `notebooks/C/C3_baseline_logistica.ipynb`
+-   PR-AUC e ROC-AUC;
+-   Brier Score e log loss;
+-   precisão, recall/sensibilidade, F1 e especificidade;
+-   matriz de confusão;
+-   avaliação por grupos e por ano;
+-   análise de erros, com prioridade para falsos negativos;
+-   bootstrap para estimativa de incerteza, conforme os parâmetros
+    ativos.
 
-### 8. Boosting
+As métricas finais devem ser publicadas somente após a execução válida
+do protocolo de avaliação e acompanhadas do contexto, tamanho da amostra
+e limitações.
 
-Após os modelos de referência, é avaliado um modelo baseado em boosting.
+## Gates metodológicos e status
 
-Notebook: `notebooks/C/C4_boosting.ipynb`
+Os gates em `configs/supervised.yaml` registram decisões que precisam
+ser concluídas antes de avançar. No snapshot documentado:
 
-A busca de hiperparâmetros deve ser limitada aos dados de desenvolvimento, sem utilização do holdout final para seleção do modelo.
+  -----------------------------------------------------------------------
+  Gate                    Situação registrada     Significado
+  ----------------------- ----------------------- -----------------------
+  G1 --- alvo e atributos Pendente                Confirmar coorte
+                                                  definitiva, alvo e
+                                                  lista final de
+                                                  atributos.
 
-### 9. Calibração e definição do limiar
+  G2 --- janela e         Aprovado                Período e estratégia de
+  partições                                       partição registrados.
 
-Além da capacidade discriminativa, o projeto avalia a qualidade das probabilidades produzidas pelo modelo.
+  G4 --- baseline         Aprovado                Execução do modelo de
+                                                  referência registrada.
 
-São consideradas:
+  G5 --- pilotos          Aprovado                Pilotos supervisionados
+                                                  registrados.
 
-- curva de calibração;
-- Brier Score;
-- comparação entre probabilidades previstas e observadas;
-- avaliação de diferentes limiares de classificação.
+  G6 --- finalistas e     Pendente                Selecionar finalista e
+  tuning                                          concluir busca
+                                                  limitada.
 
-Notebook: `notebooks/C/C5_calibracao_limiar.ipynb`
+  G7 --- calibração       Pendente                Escolher método com
+                                                  dados permitidos.
 
-O threshold é definido com dados de desenvolvimento e deve ser congelado antes da utilização do holdout final.
+  G8 --- limiar           Pendente                Definir limiar usando
+                                                  validação.
 
-### 10. Validação final
+  G9 --- holdout final    Pendente                Liberar e executar o
+                                                  teste final uma única
+                                                  vez, após congelar as
+                                                  decisões.
+  -----------------------------------------------------------------------
 
-A validação final utiliza um holdout temporal que não participa das decisões de modelagem.
+Esses estados são os registrados no snapshot de referência e podem
+mudar. Consulte sempre `configs/supervised.yaml` e os testes antes de
+executar ou descrever uma etapa como concluída.
 
-Antes da abertura do holdout devem estar definidos:
+## Configuração do ambiente
 
-- modelo;
-- hiperparâmetros;
-- pipeline;
-- transformações;
-- calibração;
-- threshold;
-- métricas;
-- critérios de avaliação.
+Recomenda-se executar o projeto em ambiente virtual, na raiz do
+repositório.
 
-Notebook: `notebooks/C/C6_validacao_final.ipynb`
+### Windows PowerShell
 
-```text
-Dados de desenvolvimento
-        ↓
-Treinamento / seleção / calibração / threshold
-        ↓
-CONFIGURAÇÃO CONGELADA
-        ↓
-HOLDOUT FINAL
-        ↓
-MÉTRICAS FINAIS
-```
-
-O holdout não deve ser utilizado para ajustar novamente o modelo.
-
----
-
-## 📏 Métricas
-
-A escolha definitiva das métricas depende da variável-alvo e das características da tarefa supervisionada.
-
-Entre as métricas consideradas estão:
-
-- ROC-AUC;
-- PR-AUC;
-- Brier Score;
-- Precision;
-- Recall / Sensibilidade;
-- Specificity / Especificidade;
-- F1-Score;
-- matriz de confusão;
-- curvas de calibração.
-
-O conjunto de métricas permite avaliar discriminação, qualidade das probabilidades e diferentes tipos de erro.
-
----
-
-## ⚠️ Prevenção de Data Leakage
-
-Informações que não estariam disponíveis no momento da previsão não devem ser utilizadas como variáveis de entrada.
-
-Também devem ser evitadas situações em que informações futuras sejam utilizadas durante o treinamento ou a seleção do modelo.
-
-Os testes relacionados a leakage estão em:
-
-```text
-tests/test_leakage.py
-```
-
-O holdout final permanece separado durante todas as etapas de desenvolvimento.
-
----
-
-## 🧪 Testes
-
-Os testes buscam detectar problemas antes dos experimentos principais:
-
-```text
-tests/
-├── test_smoke.py
-├── test_pipeline.py
-├── test_leakage.py
-└── test_config.py
-```
-
-São verificados aspectos como funcionamento básico, carregamento de módulos, configuração, construção do pipeline e prevenção de leakage.
-
----
-
-## 📝 Notebooks da modelagem supervisionada
-
-| Notebook | Finalidade |
-|---|---|
-| `C1_smoke_test.ipynb` | Verifica o ambiente e os principais componentes do projeto. |
-| `C2_pipeline_supervisionado.ipynb` | Constrói e valida o pipeline supervisionado. |
-| `C3_baseline_logistica.ipynb` | Estabelece modelos de referência e avalia a regressão logística. |
-| `C4_boosting.ipynb` | Avalia boosting e realiza busca limitada de hiperparâmetros. |
-| `C5_calibracao_limiar.ipynb` | Avalia a calibração e define o threshold com dados de desenvolvimento. |
-| `C6_validacao_final.ipynb` | Realiza a avaliação final no holdout temporal. |
-
----
-
-## 🔁 Reprodutibilidade
-
-O projeto utiliza mecanismos para facilitar a reprodução dos experimentos:
-
-- ambiente virtual Python;
-- `requirements.txt`;
-- configurações centralizadas;
-- caminhos relativos;
-- controle de seeds;
-- registro de parâmetros e versões;
-- logs de execução;
-- organização padronizada dos dados;
-- testes automatizados.
-
-Os utilitários relacionados estão em `src/utils/`, especialmente:
-
-```text
-config.py
-
-env.py
-
-storage.py
-
-logging.py
-
-reproducibility.py
-```
-
----
-
-## ⚙️ Configuração do ambiente
-
-Recomenda-se utilizar um ambiente virtual.
-
-### Windows
-
-Criar o ambiente:
-
-```powershell
+``` powershell
 python -m venv .venv
-```
-
-Ativar:
-
-```powershell
-.venv\Scripts\activate
-```
-
-Atualizar o pip:
-
-```powershell
+.\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Instalar as dependências:
+Se a política do PowerShell impedir a ativação, use o terminal Command
+Prompt:
 
-```powershell
-pip install -r requirements.txt
+``` bat
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
----
+Configure o interpretador do ambiente `.venv` no VS Code. Não é
+necessário remover a instalação global do Python para usar esse
+ambiente.
 
-## ▶️ Execução
+### Segredos e dados privados
 
-A execução deve seguir a ordem lógica do projeto:
+O projeto inclui `.env.example` como referência de configuração. Nunca
+comite tokens, arquivos `.env` com valores reais, senhas ou credenciais.
+Se o acesso aos dados exigir `GITHUB_TOKEN`, configure-o como variável
+de ambiente ou pelo mecanismo de segredos suportado pelo ambiente de
+execução.
 
-```text
-00_acesso_dados_parquet.ipynb
-        ↓
-01_extracao.ipynb
-        ↓
-Preparação / população analítica
-        ↓
-Análise exploratória e não supervisionada
-        ↓
-C1_smoke_test.ipynb
-        ↓
-C2_pipeline_supervisionado.ipynb
-        ↓
-C3_baseline_logistica.ipynb
-        ↓
-C4_boosting.ipynb
-        ↓
-C5_calibracao_limiar.ipynb
-        ↓
-C6_validacao_final.ipynb
+## Testes
+
+Execute os testes a partir da raiz do repositório, com o ambiente
+virtual ativado:
+
+``` powershell
+python -m pytest
 ```
 
-As etapas de preparação, exploração e análise não supervisionada são definidas pelos notebooks correspondentes às atividades anteriores do projeto.
+Se o comando não estiver disponível, confira se as dependências de
+desenvolvimento estão instaladas no ambiente selecionado. Após mudanças,
+execute os testes pertinentes, revise o diff e verifique se a
+documentação continua coerente com código e configuração.
 
----
+## Reprodutibilidade e artefatos
 
-## 📦 Dependências
+Para permitir a rastreabilidade dos experimentos:
 
-Principais tecnologias utilizadas:
+-   mantenha parâmetros e decisões em `configs/` e `docs/`;
+-   registre seeds, versões, origem e identificação da coorte;
+-   mantenha transformações reutilizáveis em `src/`;
+-   registre resultados e metadados sem expor dados sensíveis;
+-   preserve a separação entre desenvolvimento e holdout;
+-   use `.gitignore` para impedir o versionamento de dados grandes,
+    modelos, saídas geradas, segredos e caminhos locais.
 
-- Python;
-- Jupyter / Jupyter Notebook;
-- Pandas;
-- NumPy;
-- PyArrow;
-- Requests;
-- Scikit-learn;
-- Matplotlib;
-- Seaborn;
-- python-dotenv;
-- PyYAML.
+Os artefatos e resultados devem seguir as convenções já utilizadas no
+projeto. Não crie diretórios alternativos para a mesma finalidade sem
+antes verificar a organização existente.
 
-As versões efetivamente utilizadas devem ser registradas em `requirements.txt`.
+## Pontos de atenção conhecidos
 
----
+A referência estática do repositório identificou itens que precisam ser
+conferidos; eles não significam automaticamente que toda a
+funcionalidade esteja quebrada:
 
-## 📈 Resultados
+1.  **Importação de `csv_to_parquet`:** `tests/test_pipeline.py`
+    referencia `src.data.extracao.csv_to_parquet`, mas o módulo
+    correspondente não aparece entre os arquivos rastreados no snapshot.
+    Verifique histórico de renomeação e atualize o teste ou a
+    implementação canônica, sem recriar o módulo às cegas.
+2.  **Engenharia de atributos:** nomes derivados configurados --- como
+    `sin_semana`, `cos_semana`, `ano_internacao` e
+    `dias_sintomas_ate_internacao` --- não foram todos encontrados como
+    nomes estáticos nos módulos de `src/data/` e `src/features/`.
+    Confirme sua geração real e cubra o contrato com testes.
+3.  **Documentação de decisões:** `docs/decisoes.md` cita
+    `configs/dicionario_variaveis_v1_revisao.csv`, que não aparece na
+    lista de arquivos rastreados do snapshot. Atualize a referência ou
+    restaure o arquivo se ele for realmente necessário.
+4.  **Lógica nos notebooks:** há funções auxiliares locais nos notebooks
+    de EDA e modelagem. Avalie caso a caso se são exclusivas de um
+    experimento ou se devem ser promovidas a módulos testados em `src/`.
+5.  **Caminhos e estrutura:** mantenha este README sincronizado com os
+    arquivos reais; a referência do projeto é um snapshot estático, não
+    uma verificação de execução ponta a ponta.
 
-Os resultados dos experimentos são organizados em:
+## Limitações
 
-```text
-outputs/
-├── tables/
-├── figures/
-└── predictions/
-```
+Os dados públicos podem conter ausências, inconsistências, duplicidades,
+diferenças de preenchimento e mudanças ao longo do tempo. A definição da
+coorte, do alvo e das variáveis disponíveis influencia os resultados. O
+ano de 2026 está configurado como parcial e exige interpretação
+cuidadosa.
 
-- `tables/`: métricas, comparações entre modelos e resultados de validação;
-- `figures/`: gráficos, curvas de calibração, matrizes de confusão e demais visualizações;
-- `predictions/`: previsões produzidas pelos modelos.
+Os resultados descrevem desempenho preditivo na população e nas
+condições avaliadas. Não demonstram causalidade, não garantem
+generalização para outros períodos ou populações e não constituem
+validação clínica.
 
-Os resultados finais serão documentados após a conclusão da modelagem e da validação.
+## Autores
 
----
+-   **Ivan Schincariol Oliveira** ---
+    [LinkedIn](https://www.linkedin.com/in/ivan-s-oliveira-3608a92aa/)
+-   **Eduardo Hudson de Almeida Leite** ---
+    [LinkedIn](https://www.linkedin.com/in/eduardo-hudson-de-almeida-leite-71ab5a7b/)
+-   **Pedro Henrique Silva dos Santos** ---
+    [LinkedIn](https://www.linkedin.com/in/pedro-h-s-santos/)
+-   **Mateus da Silva Oliveira** ---
+    [LinkedIn](https://www.linkedin.com/in/mateusso)
 
-## 🧠 Organização metodológica
+## Contexto acadêmico
 
-O projeto é dividido em responsabilidades relacionadas à preparação dos dados, análise exploratória e não supervisionada, e modelagem supervisionada.
+**Projeto Integrador I --- Pós-Graduação em Inteligência Artificial.**
 
-A etapa de modelagem supervisionada contempla:
-
-- reprodutibilidade;
-- pipeline supervisionado;
-- baseline;
-- regressão logística;
-- boosting;
-- calibração;
-- definição de threshold;
-- validação temporal;
-- análise de erros;
-- validação final;
-- integração dos resultados.
-
----
-
-## ⚠️ Considerações e limitações
-
-Os dados provenientes de uma fonte pública podem apresentar:
-
-- valores ausentes;
-- inconsistências;
-- alterações na estrutura;
-- registros duplicados;
-- diferenças de preenchimento;
-- mudanças ao longo do período;
-- limitações de representatividade.
-
-Os modelos possuem **finalidade acadêmica e educacional**. Os resultados não devem ser interpretados como ferramenta de diagnóstico médico, decisão clínica ou substituição de avaliação profissional.
-
-As conclusões devem considerar as limitações dos dados, das variáveis disponíveis, da população analítica e da metodologia utilizada.
-
----
-
-## 🔒 Dados e arquivos grandes
-
-Devido ao tamanho da base SRAG, arquivos de dados e artefatos grandes não necessariamente devem ser versionados diretamente no Git.
-
-Quando aplicável, devem ser utilizados mecanismos de armazenamento externo ou arquivos disponibilizados separadamente.
-
-O Git deve manter principalmente:
-
-- código;
-- notebooks;
-- configurações;
-- testes;
-- documentação;
-- arquivos de dependências.
-
----
-
-## 🚧 Status do projeto
-
-### Etapas estruturadas
-
-- [x] Estrutura inicial do projeto
-- [x] Acesso aos dados Parquet
-- [x] Validação da leitura da base SRAG
-- [x] Rotina de armazenamento dos dados
-- [x] Estrutura de extração
-- [x] Organização da arquitetura `src/`
-- [x] Estrutura de configurações
-- [x] Planejamento da reprodutibilidade
-- [x] Estrutura da modelagem supervisionada
-- [x] Definição dos notebooks da modelagem supervisionada
-
-### Em desenvolvimento
-
-- [ ] Consolidação da população analítica
-- [ ] Finalização do pipeline supervisionado
-- [ ] Baseline
-- [ ] Regressão logística
-- [ ] Boosting
-- [ ] Calibração
-- [ ] Definição do threshold
-- [ ] Validação temporal final
-- [ ] Análise de erros
-- [ ] Resultados finais
-- [ ] Documentação final
-
----
-
-## 👥 Autores
-
-- **Ivan Schincariol Oliveira** — [LinkedIn](https://www.linkedin.com/in/ivan-s-oliveira-3608a92aa/)
-- **Eduardo Hudson de Almeida Leite** — [LinkedIn](https://www.linkedin.com/in/eduardo-hudson-de-almeida-leite-71ab5a7b/)
-- **Pedro Henrique Silva dos Santos** — [LinkedIn](https://www.linkedin.com/in/pedro-h-s-santos/)
-- **Mateus da Silva Oliveira** — [LinkedIn](https://www.linkedin.com/in/mateusso)
-
----
-
-## 🎓 Contexto acadêmico
-
-**Projeto Integrador I — Pós-Graduação em Inteligência Artificial.**
-
-O projeto aplica, de forma prática, conceitos de Engenharia de Dados, Machine Learning, aprendizado supervisionado e não supervisionado, engenharia de atributos, validação e avaliação de modelos, reprodutibilidade e análise de dados.
+O projeto reúne práticas de engenharia de dados, análise exploratória,
+aprendizado supervisionado e não supervisionado, engenharia de
+atributos, avaliação de modelos, prevenção de vazamento de informação e
+reprodutibilidade.
