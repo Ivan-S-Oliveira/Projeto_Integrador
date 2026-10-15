@@ -1,0 +1,338 @@
+# =============================================================================
+# Config de decisões da Pessoa A — v0.1 (fonte de verdade para A1–A4)
+# =============================================================================
+# Cada valor abaixo é uma DECISÃO. Enquanto `status_decisoes` estiver como
+# "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
+# Ao confirmar: atualizar o valor, mudar o status para "aprovada" e registrar
+# em outputs/tables/pessoa_a/tabela_decisoes.csv (v.log_decision).
+#
+# `cols`: nomes canônicos SIVEP. Nomes alternativos da base (ex.: internado ->
+# HOSPITAL) são tratados em ALIASES no módulo src/protocolo/verificacoes.py.
+# Os Gates G1 (alvo/features) e G2 (janela temporal) do supervised.yaml são
+# aprovados por A com base nestas decisões.
+# =============================================================================
+versao: '0.4'
+status_decisoes:
+  ponto_de_previsao:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  coorte_estrita:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  alvo:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  evolucao_desconhecida:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  periodos:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  acoes_inconsistencias_datas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  variaveis_proibidas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  variaveis_condicionais:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  maturidade_evolucao:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  features_derivadas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  split_aleatorio_70_15_15:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  cenario_sem_2020_2021:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+cols:
+  hospital: HOSPITAL
+  dt_interna: DT_INTERNA
+  evolucao: EVOLUCAO
+  tp_idade: TP_IDADE
+  nu_idade: NU_IDADE_N
+  dt_nasc: DT_NASC
+  dt_sin_pri: DT_SIN_PRI
+  dt_notific: DT_NOTIFIC
+  dt_evoluca: DT_EVOLUCA
+  dt_encerra: DT_ENCERRA
+  nu_notific: NU_NOTIFIC
+dev_years:
+- 2022
+- 2023
+- 2024
+holdout_years:
+- 2025
+min_date: '2009-01-01'
+expected_codes:
+  HOSPITAL:
+  - '1'
+  - '2'
+  - '9'
+  EVOLUCAO:
+  - '1'
+  - '2'
+  - '3'
+  - '9'
+  TP_IDADE:
+  - '1'
+  - '2'
+  - '3'
+  UTI:
+  - '1'
+  - '2'
+  - '9'
+  FEBRE:
+  - '1'
+  - '2'
+  - '9'
+  TOSSE:
+  - '1'
+  - '2'
+  - '9'
+  DISPNEIA:
+  - '1'
+  - '2'
+  - '9'
+  SATURACAO:
+  - '1'
+  - '2'
+  - '9'
+target_positive: '2'
+target_negative: '1'
+target_separate:
+- '3'
+closed_codes:
+- '1'
+- '2'
+- '3'
+drop_date_inconsistencies: false
+maturity_min_closed_pct: 90.0
+date_rules:
+- - dt_nasc
+  - dt_sin_pri
+  - Nascimento posterior ao início dos sintomas
+  - excluir
+- - dt_sin_pri
+  - dt_notific
+  - Início dos sintomas posterior à notificação
+  - manter com flag
+- - dt_sin_pri
+  - dt_interna
+  - Início dos sintomas posterior à internação
+  - manter com flag
+- - dt_interna
+  - dt_evoluca
+  - Evolução anterior à internação
+  - excluir
+- - dt_evoluca
+  - dt_encerra
+  - Encerramento anterior à evolução
+  - manter com flag
+max_symptom_to_admission_days: 30
+max_age_years: 120
+forbidden_vars:
+- EVOLUCAO
+- DT_EVOLUCA
+- DT_ENCERRA
+- CLASSI_FIN
+- CLASSI_OUT
+- CRITERIO
+- UTI
+- DT_ENTUTI
+- DT_SAIDUTI
+- SUPORT_VEN
+- ANTIVIRAL
+- DT_ANTIVIR
+- DT_COLETA
+- TP_AMOSTRA
+- PCR_RESUL
+- DT_PCR
+- RES_AN
+- DT_RES_AN
+- RES_IGG
+- RES_IGM
+- RES_IGA
+- DT_RES
+- POS_PCRFLU
+- POS_PCROUT
+- HOSPITAL
+- EVOLUCAO_COVID19
+- SOROLOGIA
+- PCR
+- UTILIZOUVNI
+- TP_ANTIVIR
+- TRAT_COV
+- TIPO_TRAT
+- DT_TRT_COV
+- OUT_ANTIV
+- OUT_TRAT
+- DT_DIGITA
+conditional_vars:
+- SATURACAO
+- VACINA
+- VACINA_COV
+- DOSE_1_COV
+- DOSE_2_COV
+- DOSE_REF
+- SG_UF
+- SG_UF_NOT
+- CO_MUN_RES
+- ID_MN_RESI
+- CS_ZONA
+- SURTO_SG
+- CO_REGIONA
+- CO_MUN_NOT
+- CO_PAIS
+- CO_RG_RESI
+- SG_UF_INTE
+- CO_RG_INTE
+- CO_MU_INTE
+- DT_UT_DOSE
+- MAE_VAC
+- DT_VAC_MAE
+- M_AMAMENTA
+- DT_DOSEUNI
+- DT_1_DOSE
+- DT_2_DOSE
+- DOSE_2REF
+- DOSE_ADIC
+- DOS_RE_BI
+- PAC_COCBO
+- PAC_DSCBO
+- POV_CT
+- TP_POV_CT
+- ESTRANG
+- OUTRO_SIN
+- OUTRO_DES
+- OBES_IMC
+- OUT_MORBI
+- MORB_DESC
+allowed_vars:
+- CS_SEXO
+- NU_IDADE_N
+- TP_IDADE
+- CS_RACA
+- CS_GESTANT
+- FEBRE
+- TOSSE
+- GARGANTA
+- DISPNEIA
+- DESC_RESP
+- DIARREIA
+- VOMITO
+- DOR_ABD
+- FADIGA
+- PERD_OLFT
+- PERD_PALA
+- CARDIOPATI
+- HEMATOLOGI
+- SIND_DOWN
+- HEPATICA
+- ASMA
+- DIABETES
+- NEUROLOGIC
+- PNEUMOPATI
+- IMUNODEPRE
+- RENAL
+- OBESIDADE
+- DT_SIN_PRI
+- DT_INTERNA
+- DT_NOTIFIC
+- SEM_PRI
+- CS_ETINIA
+- CS_ESCOL_N
+- AVE_SUINO
+- OUT_ANIM
+- PUERPERA
+- TABAG
+leak_auc_threshold: 0.9
+leak_max_categories: 50
+leak_sample: 200000
+suspicious_metric_threshold: 0.95
+log_required_keys:
+  timestamp: timestamp|data_hora|datetime
+  versão: vers[aã]o|version
+  seed: seed|semente
+  config: config
+  variáveis: features|vari[aá]veis|columns
+  folds: fold
+  parâmetros: params|par[aâ]metros|hiperpar
+  artefatos: artefato|artifact|output
+decision_min_pr_auc_gain: 0.01
+decision_max_cv_ratio: 0.1
+exclusion_sample_rows: 50
+dataset_analitico:
+  path: data/analytical/dataset_supervisionado.parquet
+experimentos_split:
+  seed: 42
+  fracoes:
+    treino: 0.7
+    validacao: 0.15
+    holdout: 0.15
+  estratificar_por_alvo: true
+  bench_max_linhas: 200000
+  cenarios:
+    todos_2019_2025:
+      anos:
+      - 2019
+      - 2020
+      - 2021
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      descricao: Base completa 2019-2025
+    sem_2020_2021:
+      anos:
+      - 2019
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      descricao: Remove 2020 e 2021 (anos de pandemia)
+derivadas:
+  intervalo_max_dias: 30
+  periodo_semanas: 52.1775
+  faixas_etarias:
+    bins:
+    - 0
+    - 1
+    - 5
+    - 12
+    - 18
+    - 30
+    - 40
+    - 50
+    - 60
+    - 70
+    - 80
+    - 200
+    labels:
+    - <1
+    - 1-4
+    - 5-11
+    - 12-17
+    - 18-29
+    - 30-39
+    - 40-49
+    - 50-59
+    - 60-69
+    - 70-79
+    - 80+
