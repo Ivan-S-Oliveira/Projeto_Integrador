@@ -57,13 +57,13 @@ parsed configuration and static consistency checks.
 
 ## 6. Executive continuation map
 
-- Generated (UTC): `2026-10-15T12:52:01+00:00` · branch `main` · commit `77e533263f91`
-- Git status: `has changes`; upstream ahead/behind: `0	0`
-- Files in working folder (inventory): `335` (tracked `72`, untracked `0`, ignored/local `263`)
-- Source files with full content: `66`; artifacts included: `147`
-- Python modules: `44` · notebooks: `13` · public src symbols: `86`
-- Public src symbols with tests: `54` · with consumers: `69`
-- Attention items: **2 high**, 13 medium, 29 low
+- Generated (UTC): `2026-10-16T22:09:12+00:00` · branch `main` · commit `b1bad9876868`
+- Git status: `clean`; upstream ahead/behind: `0	0`
+- Files in working folder (inventory): `390` (tracked `83`, untracked `0`, ignored/local `307`)
+- Source files with full content: `76`; artifacts included: `185`
+- Python modules: `48` · notebooks: `18` · public src symbols: `137`
+- Public src symbols with tests: `82` · with consumers: `118`
+- Attention items: **5 high**, 12 medium, 34 low
 - Tests executed: `no (use --run-tests)`
 
 ### Canonical responsibility map
@@ -81,54 +81,61 @@ parsed configuration and static consistency checks.
 
 ## 7. Static attention report
 
-Totals: **2 high**, 13 medium, 29 low.
+Totals: **5 high**, 12 medium, 34 low.
 
 | # | Severity | Category | Message |
 |---|---|---|---|
 | A1 | HIGH | call-signature-mismatch | Call to `src.models.pipeline.criar_alvo_binario` does not match its signature: unknown keyword(s) ['ignorados', 'descartar_nao_rotulados']. |
-| A2 | HIGH | source-ignored-by-git | Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub. |
-| A3 | MEDIUM | config-consistency | Finalist `hist_gradient_boosting` has no section in `models` (factory names must match). |
-| A4 | MEDIUM | dependency-not-declared | Third-party imports not declared in `pyproject.toml`. |
-| A5 | MEDIUM | dependency-not-declared | Third-party imports not declared in `requirements.txt`. |
-| A6 | MEDIUM | derived-feature-contract | Configured derived features not found as static names in src/features or src/data. |
-| A7 | MEDIUM | duplicate-symbol-name | `resumo` is defined in multiple files. |
-| A8 | MEDIUM | gate-name-not-in-yaml | `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML. |
-| A9 | MEDIUM | gate-name-not-in-yaml | `G6_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A10 | MEDIUM | gate-name-not-in-yaml | `G7_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A11 | MEDIUM | gate-name-not-in-yaml | `G7_limiar` is referenced but does not exist in `gates` of the active YAML. |
-| A12 | MEDIUM | gate-name-not-in-yaml | `G8_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A13 | MEDIUM | reference-to-missing-path | `README.md` references paths absent from the working folder. |
-| A14 | MEDIUM | reference-to-missing-path | `docs/decisoes.md` references paths absent from the working folder. |
-| A15 | MEDIUM | uncommitted-changes | Tracked files with uncommitted changes. |
-| A16 | LOW | config-consistency | `models.decision_tree.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
-| A17 | LOW | config-consistency | `models.random_forest.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
-| A18 | LOW | config-key-not-referenced | 37 YAML keys whose name never appears as a string literal in code or notebooks (possible dead configuration, or keys read dynamically). |
-| A19 | LOW | dependency-unpinned | Dependencies without version constraint in `requirements.txt`. |
-| A20 | LOW | derived-not-used-as-feature | Derived columns produced by feature engineering but absent from the model feature lists. |
-| A21 | LOW | encoding-mojibake | Text with likely encoding corruption (file saved with the wrong encoding). |
-| A22 | LOW | gate-numbering | Gate numbering has gaps. |
-| A23 | LOW | missing-docstring | Public src symbols without docstring. |
-| A24 | LOW | notebook-local-functions | `notebooks/02_eda/01_eda_primeira_passagem.ipynb` defines 10 local functions/classes. |
-| A25 | LOW | notebook-local-functions | `notebooks/02_eda/02_eda_temporal_clustering.ipynb` defines 30 local functions/classes. |
-| A26 | LOW | notebook-local-functions | `notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 6 local functions/classes. |
-| A27 | LOW | notebook-local-functions | `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes. |
-| A28 | LOW | notebook-local-functions | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes. |
-| A29 | LOW | notebook-local-functions | `notebooks/C/C2_pipeline_supervisionado.ipynb` defines 2 local functions/classes. |
-| A30 | LOW | notebook-local-functions | `notebooks/C/C3_baseline_logistica.ipynb` defines 1 local functions/classes. |
-| A31 | LOW | notebook-local-functions | `notebooks/C/C4_boosting.ipynb` defines 8 local functions/classes. |
-| A32 | LOW | notebook-local-functions | `notebooks/C/C5_calibracao_limiar.ipynb` defines 2 local functions/classes. |
-| A33 | LOW | notebook-local-functions | `notebooks/C/C6_validacao_final.ipynb` defines 7 local functions/classes. |
-| A34 | LOW | notebook-not-fully-executed | `notebooks/00_acesso_dados_parquet.ipynb`: 6 of 6 code cells have no saved execution. |
-| A35 | LOW | notebook-not-fully-executed | `notebooks/01_extracao.ipynb`: 5 of 5 code cells have no saved execution. |
-| A36 | LOW | notebook-not-fully-executed | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution. |
-| A37 | LOW | notebook-not-fully-executed | `notebooks/C/C1_smoke_test.ipynb`: 6 of 6 code cells have no saved execution. |
-| A38 | LOW | notebook-not-fully-executed | `notebooks/C/C2_pipeline_supervisionado.ipynb`: 13 of 13 code cells have no saved execution. |
-| A39 | LOW | notebook-not-fully-executed | `notebooks/C/C3_baseline_logistica.ipynb`: 12 of 12 code cells have no saved execution. |
-| A40 | LOW | notebook-not-fully-executed | `notebooks/C/C4_boosting.ipynb`: 15 of 15 code cells have no saved execution. |
-| A41 | LOW | notebook-not-fully-executed | `notebooks/C/C5_calibracao_limiar.ipynb`: 16 of 16 code cells have no saved execution. |
-| A42 | LOW | notebook-not-fully-executed | `notebooks/C/C6_validacao_final.ipynb`: 22 of 22 code cells have no saved execution. |
-| A43 | LOW | public-symbol-untested | 32 public src symbols without a detected test. |
-| A44 | LOW | public-symbol-unused | Public src symbols with no detected consumer and no test (possibly dead code). |
+| A2 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['capture_output', 'text', 'encoding', 'errors']. |
+| A3 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'check']. |
+| A4 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'timeout']. |
+| A5 | HIGH | source-ignored-by-git | Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub. |
+| A6 | MEDIUM | config-consistency | Finalist `hist_gradient_boosting` has no section in `models` (factory names must match). |
+| A7 | MEDIUM | dependency-not-declared | Third-party imports not declared in `pyproject.toml`. |
+| A8 | MEDIUM | dependency-not-declared | Third-party imports not declared in `requirements.txt`. |
+| A9 | MEDIUM | duplicate-symbol-name | `resumo` is defined in multiple files. |
+| A10 | MEDIUM | gate-name-not-in-yaml | `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML. |
+| A11 | MEDIUM | gate-name-not-in-yaml | `G6_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A12 | MEDIUM | gate-name-not-in-yaml | `G7_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A13 | MEDIUM | gate-name-not-in-yaml | `G8_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A14 | MEDIUM | notebook-parse-error | `notebooks/02_eda/03_supervisionado_pilotos.ipynb` has code cells that could not be parsed. |
+| A15 | MEDIUM | reference-to-missing-path | `README.md` references paths absent from the working folder. |
+| A16 | MEDIUM | reference-to-missing-path | `configs/decisoes.yaml` references paths absent from the working folder. |
+| A17 | MEDIUM | reference-to-missing-path | `docs/decisoes.md` references paths absent from the working folder. |
+| A18 | LOW | config-consistency | `models.decision_tree.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
+| A19 | LOW | config-consistency | `models.random_forest.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
+| A20 | LOW | config-key-not-referenced | 30 YAML keys whose name never appears as a string literal in code or notebooks (possible dead configuration, or keys read dynamically). |
+| A21 | LOW | dependency-unpinned | Dependencies without version constraint in `requirements.txt`. |
+| A22 | LOW | derived-not-used-as-feature | Derived columns produced by feature engineering but absent from the model feature lists. |
+| A23 | LOW | encoding-mojibake | Text with likely encoding corruption (file saved with the wrong encoding). |
+| A24 | LOW | gate-numbering | Gate numbering has gaps. |
+| A25 | LOW | missing-docstring | Public src symbols without docstring. |
+| A26 | LOW | notebook-local-functions | `notebooks/02_eda/01_eda_primeira_passagem.ipynb` defines 10 local functions/classes. |
+| A27 | LOW | notebook-local-functions | `notebooks/02_eda/02_eda_temporal_clustering.ipynb` defines 30 local functions/classes. |
+| A28 | LOW | notebook-local-functions | `notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 7 local functions/classes. |
+| A29 | LOW | notebook-local-functions | `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes. |
+| A30 | LOW | notebook-local-functions | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes. |
+| A31 | LOW | notebook-local-functions | `notebooks/C/C2_pipeline_supervisionado.ipynb` defines 2 local functions/classes. |
+| A32 | LOW | notebook-local-functions | `notebooks/C/C3_baseline_logistica.ipynb` defines 1 local functions/classes. |
+| A33 | LOW | notebook-local-functions | `notebooks/C/C4_boosting.ipynb` defines 7 local functions/classes. |
+| A34 | LOW | notebook-local-functions | `notebooks/C/C5_calibracao_limiar.ipynb` defines 1 local functions/classes. |
+| A35 | LOW | notebook-local-functions | `notebooks/C/C6_validacao_final.ipynb` defines 4 local functions/classes. |
+| A36 | LOW | notebook-not-fully-executed | `notebooks/02_eda/01_eda_primeira_passagem.ipynb`: 42 of 42 code cells have no saved execution. |
+| A37 | LOW | notebook-not-fully-executed | `notebooks/02_eda/02_eda_temporal_clustering.ipynb`: 119 of 119 code cells have no saved execution. |
+| A38 | LOW | notebook-not-fully-executed | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution. |
+| A39 | LOW | notebook-not-fully-executed | `notebooks/A/A1_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution. |
+| A40 | LOW | notebook-not-fully-executed | `notebooks/A/A2_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution. |
+| A41 | LOW | notebook-not-fully-executed | `notebooks/A/A3_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution. |
+| A42 | LOW | notebook-not-fully-executed | `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution. |
+| A43 | LOW | notebook-not-fully-executed | `notebooks/A/A4_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution. |
+| A44 | LOW | notebook-not-fully-executed | `notebooks/C/C1_smoke_test.ipynb`: 3 of 3 code cells have no saved execution. |
+| A45 | LOW | notebook-not-fully-executed | `notebooks/C/C2_pipeline_supervisionado.ipynb`: 7 of 7 code cells have no saved execution. |
+| A46 | LOW | notebook-not-fully-executed | `notebooks/C/C3_baseline_logistica.ipynb`: 6 of 6 code cells have no saved execution. |
+| A47 | LOW | notebook-not-fully-executed | `notebooks/C/C4_boosting.ipynb`: 9 of 9 code cells have no saved execution. |
+| A48 | LOW | notebook-not-fully-executed | `notebooks/C/C5_calibracao_limiar.ipynb`: 6 of 6 code cells have no saved execution. |
+| A49 | LOW | notebook-not-fully-executed | `notebooks/C/C6_validacao_final.ipynb`: 9 of 9 code cells have no saved execution. |
+| A50 | LOW | public-symbol-untested | 55 public src symbols without a detected test. |
+| A51 | LOW | public-symbol-unused | Public src symbols with no detected consumer and no test (possibly dead code). |
 
 ### A1. HIGH — call-signature-mismatch
 
@@ -137,11 +144,44 @@ Call to `src.models.pipeline.criar_alvo_binario` does not match its signature: u
 **Evidence**
 
 - `notebooks/02_eda/03_supervisionado_pilotos.ipynb#cell-9:77`
-- `definition: src/models/pipeline.py:100 `def criar_alvo_binario(df: pd.DataFrame, alvo: str | None=None, positivos: Iterable[float] | None=None, negativos: Iterable[float] | None=None) -> pd.Series``
+- `definition: src/models/pipeline.py:105 `def criar_alvo_binario(df: pd.DataFrame, alvo: str | None=None, positivos: Iterable[float] | None=None, negativos: Iterable[float] | None=None) -> pd.Series``
 
 **Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
 
-### A2. HIGH — source-ignored-by-git
+### A2. HIGH — call-signature-mismatch
+
+Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['capture_output', 'text', 'encoding', 'errors'].
+
+**Evidence**
+
+- `tools/update_project_reference.py:392`
+- `definition: src/protocolo/verificacoes.py:1640 `def run(df: pd.DataFrame, args, cfg: dict) -> Report``
+
+**Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
+
+### A3. HIGH — call-signature-mismatch
+
+Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'check'].
+
+**Evidence**
+
+- `src/utils/reproducibility.py:75`
+- `definition: src/protocolo/verificacoes.py:1640 `def run(df: pd.DataFrame, args, cfg: dict) -> Report``
+
+**Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
+
+### A4. HIGH — call-signature-mismatch
+
+Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'timeout'].
+
+**Evidence**
+
+- `tools/update_project_reference.py:370`
+- `definition: src/protocolo/verificacoes.py:1640 `def run(df: pd.DataFrame, args, cfg: dict) -> Report``
+
+**Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
+
+### A5. HIGH — source-ignored-by-git
 
 Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub.
 
@@ -151,7 +191,7 @@ Source/config/test/notebook files are ignored by .gitignore and therefore missin
 
 **Recommended action:** Fix .gitignore (anchor root folders, e.g. `/data/` instead of `data/`) and commit the files.
 
-### A3. MEDIUM — config-consistency
+### A6. MEDIUM — config-consistency
 
 Finalist `hist_gradient_boosting` has no section in `models` (factory names must match).
 
@@ -162,7 +202,7 @@ Finalist `hist_gradient_boosting` has no section in `models` (factory names must
 
 **Recommended action:** Use the same names or declare an explicit alias in code.
 
-### A4. MEDIUM — dependency-not-declared
+### A7. MEDIUM — dependency-not-declared
 
 Third-party imports not declared in `pyproject.toml`.
 
@@ -177,7 +217,7 @@ Third-party imports not declared in `pyproject.toml`.
 
 **Recommended action:** Declare them (with a minimum version) in a single source of dependencies.
 
-### A5. MEDIUM — dependency-not-declared
+### A8. MEDIUM — dependency-not-declared
 
 Third-party imports not declared in `requirements.txt`.
 
@@ -188,23 +228,7 @@ Third-party imports not declared in `requirements.txt`.
 
 **Recommended action:** Declare them (with a minimum version) in a single source of dependencies.
 
-### A6. MEDIUM — derived-feature-contract
-
-Configured derived features not found as static names in src/features or src/data.
-
-**Evidence**
-
-- `ano_internacao`
-- `cos_semana`
-- `dias_sintomas_ate_internacao`
-- `flag_internacao_antes_sintomas`
-- `flag_intervalo_invalido`
-- `idade_anos`
-- `sin_semana`
-
-**Recommended action:** Confirm whether names are dynamic, stale or missing from the implementation.
-
-### A7. MEDIUM — duplicate-symbol-name
+### A9. MEDIUM — duplicate-symbol-name
 
 `resumo` is defined in multiple files.
 
@@ -215,7 +239,7 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Confirm distinct responsibilities or consolidate competing implementations.
 
-### A8. MEDIUM — gate-name-not-in-yaml
+### A10. MEDIUM — gate-name-not-in-yaml
 
 `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML.
 
@@ -225,7 +249,7 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
-### A9. MEDIUM — gate-name-not-in-yaml
+### A11. MEDIUM — gate-name-not-in-yaml
 
 `G6_STATUS` is referenced but does not exist in `gates` of the active YAML.
 
@@ -235,7 +259,7 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
-### A10. MEDIUM — gate-name-not-in-yaml
+### A12. MEDIUM — gate-name-not-in-yaml
 
 `G7_STATUS` is referenced but does not exist in `gates` of the active YAML.
 
@@ -245,17 +269,7 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
-### A11. MEDIUM — gate-name-not-in-yaml
-
-`G7_limiar` is referenced but does not exist in `gates` of the active YAML.
-
-**Evidence**
-
-- `src/utils/config.py`
-
-**Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
-
-### A12. MEDIUM — gate-name-not-in-yaml
+### A13. MEDIUM — gate-name-not-in-yaml
 
 `G8_STATUS` is referenced but does not exist in `gates` of the active YAML.
 
@@ -265,7 +279,17 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
-### A13. MEDIUM — reference-to-missing-path
+### A14. MEDIUM — notebook-parse-error
+
+`notebooks/02_eda/03_supervisionado_pilotos.ipynb` has code cells that could not be parsed.
+
+**Evidence**
+
+- `Cell 19: '(' was never closed (notebooks/02_eda/03_supervisionado_pilotos.ipynb#cell-19, line 133)`
+
+**Recommended action:** Check syntax (magics are already tolerated).
+
+### A15. MEDIUM — reference-to-missing-path
 
 `README.md` references paths absent from the working folder.
 
@@ -275,7 +299,17 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Confirm whether the reference is historical, generated at runtime, or stale.
 
-### A14. MEDIUM — reference-to-missing-path
+### A16. MEDIUM — reference-to-missing-path
+
+`configs/decisoes.yaml` references paths absent from the working folder.
+
+**Evidence**
+
+- `outputs/tables/pessoa_a/tabela_decisoes.csv`
+
+**Recommended action:** Confirm whether the reference is historical, generated at runtime, or stale.
+
+### A17. MEDIUM — reference-to-missing-path
 
 `docs/decisoes.md` references paths absent from the working folder.
 
@@ -285,17 +319,7 @@ Configured derived features not found as static names in src/features or src/dat
 
 **Recommended action:** Confirm whether the reference is historical, generated at runtime, or stale.
 
-### A15. MEDIUM — uncommitted-changes
-
-Tracked files with uncommitted changes.
-
-**Evidence**
-
-- `tools/update_project_reference.py (M)`
-
-**Recommended action:** Review Section 16 (diff) and commit or discard.
-
-### A16. LOW — config-consistency
+### A18. LOW — config-consistency
 
 `models.decision_tree.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`.
 
@@ -305,7 +329,7 @@ Tracked files with uncommitted changes.
 
 **Recommended action:** Set `ativa: false` or remove the family from the closed list.
 
-### A17. LOW — config-consistency
+### A19. LOW — config-consistency
 
 `models.random_forest.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`.
 
@@ -315,9 +339,9 @@ Tracked files with uncommitted changes.
 
 **Recommended action:** Set `ativa: false` or remove the family from the closed list.
 
-### A18. LOW — config-key-not-referenced
+### A20. LOW — config-key-not-referenced
 
-37 YAML keys whose name never appears as a string literal in code or notebooks (possible dead configuration, or keys read dynamically).
+30 YAML keys whose name never appears as a string literal in code or notebooks (possible dead configuration, or keys read dynamically).
 
 **Evidence**
 
@@ -326,16 +350,14 @@ Tracked files with uncommitted changes.
 - `periodo.ano_final`
 - `periodo.incluir_limites`
 - `periodo.anos_parciais`
-- `features.contexto_incremental`
-- `features.sensibilidade_gravidade_admissao`
 - `features.sensibilidade_indicadores_ausencia.incluir_no_pipeline_principal`
 - `features.sensibilidade_indicadores_ausencia.prefixo_esperado`
 - `temporal.coluna_estratificacao_temporal`
 - `temporal.coluna_estratificacao_alvo`
 - `temporal.gravar_particao_na_coorte`
 - `temporal.permitir_novo_sorteio`
+- `temporal.metodo_particao`
 - `temporal.teste_aberto_uma_unica_vez`
-- `temporal.fracao.holdout`
 - `missingness.vazio_nao_e_nao`
 - `missingness.ignorado_nao_e_nao`
 - `missingness.nao_aplicavel_nao_e_nao`
@@ -347,21 +369,16 @@ Tracked files with uncommitted changes.
 - `tuning.concentrar_nos_dois_melhores`
 - `tuning.usar_apenas_treino_validacao`
 - `tuning.teste_proibido_durante_tuning`
+- `calibracao.comparar_brier_antes_depois`
 - `limiar.metricas_candidatas`
 - `limiar.selecionar_somente_na_validacao`
 - `avaliacao.desempenho_por_ano`
-- `clustering.matriz_documentada`
-- `clustering.aplicar_na_coorte_completa`
-- `clustering.usar_como_feature_supervisionada`
-- `clustering.usar_como_alvo`
-- `clustering.usar_como_fenotipo_clinico_definitivo`
-- `clustering.comparacoes_minimas_executadas`
+- `avaliacao.analise_erros.priorizar_falsos_negativos`
 - `artefatos_coorte.parquet`
-- `artefatos_coorte.variaveis`
 
 **Recommended action:** Remove dead keys or make the code read them; keep documentation keys commented.
 
-### A19. LOW — dependency-unpinned
+### A21. LOW — dependency-unpinned
 
 Dependencies without version constraint in `requirements.txt`.
 
@@ -383,7 +400,7 @@ Dependencies without version constraint in `requirements.txt`.
 
 **Recommended action:** Add minimum versions for reproducibility (at least scikit-learn, pandas, numpy).
 
-### A20. LOW — derived-not-used-as-feature
+### A22. LOW — derived-not-used-as-feature
 
 Derived columns produced by feature engineering but absent from the model feature lists.
 
@@ -399,7 +416,7 @@ Derived columns produced by feature engineering but absent from the model featur
 
 **Recommended action:** Confirm whether they are intentionally descriptive-only or missing from the model.
 
-### A21. LOW — encoding-mojibake
+### A23. LOW — encoding-mojibake
 
 Text with likely encoding corruption (file saved with the wrong encoding).
 
@@ -448,7 +465,7 @@ Text with likely encoding corruption (file saved with the wrong encoding).
 
 **Recommended action:** Fix the characters and save the file as UTF-8.
 
-### A22. LOW — gate-numbering
+### A24. LOW — gate-numbering
 
 Gate numbering has gaps.
 
@@ -458,7 +475,7 @@ Gate numbering has gaps.
 
 **Recommended action:** Document why the gate does not exist or renumber.
 
-### A23. LOW — missing-docstring
+### A25. LOW — missing-docstring
 
 Public src symbols without docstring.
 
@@ -471,10 +488,30 @@ Public src symbols without docstring.
 - `src.evaluation.metrics.precision`
 - `src.evaluation.metrics.recall`
 - `src.evaluation.metrics.accuracy`
+- `src.protocolo.verificacoes.canon`
+- `src.protocolo.verificacoes.age_years`
+- `src.protocolo.verificacoes.year_labels`
+- `src.protocolo.verificacoes.has_cols`
+- `src.protocolo.verificacoes.a1_columns`
+- `src.protocolo.verificacoes.a1_code_tables`
+- `src.protocolo.verificacoes.a1_target`
+- `src.protocolo.verificacoes.a2_missing`
+- `src.protocolo.verificacoes.a2_dates`
+- `src.protocolo.verificacoes.a2_duplicates`
+- `src.protocolo.verificacoes.a2_maturity`
+- `src.protocolo.verificacoes.classify_variable`
+- `src.protocolo.verificacoes.a2_eligibility`
+- `src.protocolo.verificacoes.load_supervised_yaml`
+- `src.protocolo.verificacoes.a3_forbidden`
+- `src.protocolo.verificacoes.a3_temporal_split`
+- `src.protocolo.verificacoes.a3_suspicious_metrics`
+- `src.protocolo.verificacoes.a3_audit_logs`
+- `src.protocolo.verificacoes.uso_memoria_gb`
+- `src.protocolo.verificacoes.run`
 
 **Recommended action:** Add a short docstring with purpose, parameters and returned value.
 
-### A24. LOW — notebook-local-functions
+### A26. LOW — notebook-local-functions
 
 `notebooks/02_eda/01_eda_primeira_passagem.ipynb` defines 10 local functions/classes.
 
@@ -493,7 +530,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A25. LOW — notebook-local-functions
+### A27. LOW — notebook-local-functions
 
 `notebooks/02_eda/02_eda_temporal_clustering.ipynb` defines 30 local functions/classes.
 
@@ -532,13 +569,14 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A26. LOW — notebook-local-functions
+### A28. LOW — notebook-local-functions
 
-`notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 6 local functions/classes.
+`notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 7 local functions/classes.
 
 **Evidence**
 
 - `encontrar_raiz_projeto`
+- `amostrar_treino_estratificado`
 - `calcular_metricas_piloto`
 - `executar_piloto`
 - `selecionar_amostra_estratificada`
@@ -547,7 +585,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A27. LOW — notebook-local-functions
+### A29. LOW — notebook-local-functions
 
 `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes.
 
@@ -560,7 +598,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A28. LOW — notebook-local-functions
+### A30. LOW — notebook-local-functions
 
 `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes.
 
@@ -573,7 +611,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A29. LOW — notebook-local-functions
+### A31. LOW — notebook-local-functions
 
 `notebooks/C/C2_pipeline_supervisionado.ipynb` defines 2 local functions/classes.
 
@@ -584,7 +622,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A30. LOW — notebook-local-functions
+### A32. LOW — notebook-local-functions
 
 `notebooks/C/C3_baseline_logistica.ipynb` defines 1 local functions/classes.
 
@@ -594,107 +632,132 @@ Public src symbols without docstring.
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A31. LOW — notebook-local-functions
+### A33. LOW — notebook-local-functions
 
-`notebooks/C/C4_boosting.ipynb` defines 8 local functions/classes.
+`notebooks/C/C4_boosting.ipynb` defines 7 local functions/classes.
 
 **Evidence**
 
 - `encontrar_raiz_projeto`
 - `_subamostrar`
-- `_linha_busca`
-- `busca_limitada_boosting`
-- `busca_limitada_logistica`
-- `_linha`
-- `_fmt_scalar`
+- `_busca_limitada`
+- `_candidatos_boosting`
+- `_candidatos_logistica`
+- `_fmt`
 - `_montar_proposta_yaml`
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A32. LOW — notebook-local-functions
+### A34. LOW — notebook-local-functions
 
-`notebooks/C/C5_calibracao_limiar.ipynb` defines 2 local functions/classes.
+`notebooks/C/C5_calibracao_limiar.ipynb` defines 1 local functions/classes.
 
 **Evidence**
 
 - `encontrar_raiz_projeto`
-- `construir_finalista`
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A33. LOW — notebook-local-functions
+### A35. LOW — notebook-local-functions
 
-`notebooks/C/C6_validacao_final.ipynb` defines 7 local functions/classes.
+`notebooks/C/C6_validacao_final.ipynb` defines 4 local functions/classes.
 
 **Evidence**
 
 - `encontrar_raiz_projeto`
-- `_localizar_manifesto_c5`
 - `_reproduzir_split_val_cal`
-- `_hash_indices`
-- `construir_finalista`
-- `_safe_float`
+- `_localizar_manifesto_c5`
 - `_marcar_g9_executado`
 
 **Recommended action:** Keep single-use orchestration in the notebook; move reusable logic to src with tests.
 
-### A34. LOW — notebook-not-fully-executed
-
-`notebooks/00_acesso_dados_parquet.ipynb`: 6 of 6 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A35. LOW — notebook-not-fully-executed
-
-`notebooks/01_extracao.ipynb`: 5 of 5 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
 ### A36. LOW — notebook-not-fully-executed
 
-`notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution.
+`notebooks/02_eda/01_eda_primeira_passagem.ipynb`: 42 of 42 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A37. LOW — notebook-not-fully-executed
 
-`notebooks/C/C1_smoke_test.ipynb`: 6 of 6 code cells have no saved execution.
+`notebooks/02_eda/02_eda_temporal_clustering.ipynb`: 119 of 119 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A38. LOW — notebook-not-fully-executed
 
-`notebooks/C/C2_pipeline_supervisionado.ipynb`: 13 of 13 code cells have no saved execution.
+`notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A39. LOW — notebook-not-fully-executed
 
-`notebooks/C/C3_baseline_logistica.ipynb`: 12 of 12 code cells have no saved execution.
+`notebooks/A/A1_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A40. LOW — notebook-not-fully-executed
 
-`notebooks/C/C4_boosting.ipynb`: 15 of 15 code cells have no saved execution.
+`notebooks/A/A2_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A41. LOW — notebook-not-fully-executed
 
-`notebooks/C/C5_calibracao_limiar.ipynb`: 16 of 16 code cells have no saved execution.
+`notebooks/A/A3_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A42. LOW — notebook-not-fully-executed
 
-`notebooks/C/C6_validacao_final.ipynb`: 22 of 22 code cells have no saved execution.
+`notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
-### A43. LOW — public-symbol-untested
+### A43. LOW — notebook-not-fully-executed
 
-32 public src symbols without a detected test.
+`notebooks/A/A4_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A44. LOW — notebook-not-fully-executed
+
+`notebooks/C/C1_smoke_test.ipynb`: 3 of 3 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A45. LOW — notebook-not-fully-executed
+
+`notebooks/C/C2_pipeline_supervisionado.ipynb`: 7 of 7 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A46. LOW — notebook-not-fully-executed
+
+`notebooks/C/C3_baseline_logistica.ipynb`: 6 of 6 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A47. LOW — notebook-not-fully-executed
+
+`notebooks/C/C4_boosting.ipynb`: 9 of 9 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A48. LOW — notebook-not-fully-executed
+
+`notebooks/C/C5_calibracao_limiar.ipynb`: 6 of 6 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A49. LOW — notebook-not-fully-executed
+
+`notebooks/C/C6_validacao_final.ipynb`: 9 of 9 code cells have no saved execution.
+
+**Recommended action:** Outputs may be partial; re-run before using results.
+
+### A50. LOW — public-symbol-untested
+
+55 public src symbols without a detected test.
 
 **Evidence**
 
@@ -714,10 +777,33 @@ Public src symbols without docstring.
 - `src.models.factory.build_finalista`
 - `src.models.pipeline.build_preprocessor`
 - `src.models.pipeline.random_state`
+- `src.protocolo.verificacoes.canon`
+- `src.protocolo.verificacoes.code_str`
+- `src.protocolo.verificacoes.age_years`
+- `src.protocolo.verificacoes.year_labels`
+- `src.protocolo.verificacoes.has_cols`
+- `src.protocolo.verificacoes.a1_columns`
+- `src.protocolo.verificacoes.a1_code_tables`
+- `src.protocolo.verificacoes.a1_target`
+- `src.protocolo.verificacoes.cfg_para_anos`
+- `src.protocolo.verificacoes.a2_missing`
+- `src.protocolo.verificacoes.a2_duplicates`
+- `src.protocolo.verificacoes.classify_variable`
+- `src.protocolo.verificacoes.a2_eligibility`
+- `src.protocolo.verificacoes.load_feature_list`
+- `src.protocolo.verificacoes.load_supervised_yaml`
+- `src.protocolo.verificacoes.supervised_features`
+- `src.protocolo.verificacoes.a3_temporal_split`
+- `src.protocolo.verificacoes.a3_suspicious_metrics`
+- `src.protocolo.verificacoes.a3_audit_logs`
+- `src.protocolo.verificacoes.carregar_base`
+- `src.protocolo.verificacoes.uso_memoria_gb`
+- `src.protocolo.verificacoes.write_ata`
+- `src.protocolo.verificacoes.run`
+- `src.utils.config.GatePendenteError`
 - `src.utils.config.github_token`
 - `src.utils.config.carregar_supervised`
 - `src.utils.config.supervised_yaml_sha256`
-- `src.utils.config.GatePendenteError`
 - `src.utils.config.exigir_valor`
 - `src.utils.config.gate_aprovado`
 - `src.utils.config.exigir_gate`
@@ -733,7 +819,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Prioritise tests for functions used by notebooks C2–C6.
 
-### A44. LOW — public-symbol-unused
+### A51. LOW — public-symbol-unused
 
 Public src symbols with no detected consumer and no test (possibly dead code).
 
@@ -742,12 +828,14 @@ Public src symbols with no detected consumer and no test (possibly dead code).
 - `src.data.cohort_source.CohortSource`
 - `src.data.supervised_artifact.validate_supervised_frame`
 - `src.data.supervised_artifact.holdout_partition`
-- `src.evaluation.metrics.log_loss`
-- `src.evaluation.metrics.especificidade`
-- `src.evaluation.metrics.sensibilidade`
-- `src.models.factory.finalistas_disponiveis`
-- `src.utils.config.github_token`
+- `src.protocolo.verificacoes.code_str`
+- `src.protocolo.verificacoes.age_years`
+- `src.protocolo.verificacoes.year_labels`
+- `src.protocolo.verificacoes.has_cols`
+- `src.protocolo.verificacoes.cfg_para_anos`
+- `src.protocolo.verificacoes.classify_variable`
 - `src.utils.config.GatePendenteError`
+- `src.utils.config.github_token`
 - `src.utils.config.exigir_valor`
 - `src.utils.config.gate_aprovado`
 - `src.utils.config.exigir_gate`
@@ -769,7 +857,7 @@ Public src symbols with no detected consumer and no test (possibly dead code).
 | `G2_janela_temporal` | aprovado | time_do_projeto | 2026-10-11 | Periodo 2019-2026 e split aleatorio estratificado 70/15/15 por alvo e ano de internacao, seed 42. |
 | `G4_baseline` | aprovado | time_do_projeto | 2026-10-11 | Rodar DummyClassifier e registrar as metricas de referencia. |
 | `G5_pilotos` | aprovado | time_do_projeto | 2026-10-11 | Rodar regressao logistica, arvore, random forest e boosting sem consultar o teste. |
-| `G6_finalistas_tuning` | pendente | None | None | Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher `selecao_modelos.finalista_escolhido`. |
+| `G6_finalistas_tuning` | pendente | None | None | Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher selecao_modelos.finalista_escolhido. |
 | `G7_calibracao` | pendente | None | None | Escolher o metodo de calibracao usando apenas treino e validacao. |
 | `G8_limiar` | pendente | None | None | Escolher o limiar operacional usando apenas a validacao. |
 | `G9_holdout` | pendente | None | None | Liberar o teste uma unica vez apos congelar modelo, calibracao e limiar. Estados: pendente -> aprovado -> executado. "aprovado" libera o acesso; "executado" reg |
@@ -805,7 +893,7 @@ Source: `configs/supervised.yaml`
 - `features.sensibilidade_contadores_clinicos.ativa`: `False`
 - `features.sensibilidade_contadores_clinicos.motivo`: `'Os contadores agregados podem duplicar o peso das variaveis individuais das quais foram derivados.\n'`
 - `features.sensibilidade_contadores_clinicos.colunas`: `['n_sintomas_confirmados', 'n_sintomas_avaliados', 'n_comorbidades_confirmadas', 'n_comorbidades_avaliadas']`
-- `features.proibidas`: `['evolucao', 'alvo_obito_srag', 'evolucao_normalizada', 'evolucao_covid19', 'dt_evoluca', 'dt_encerra', 'dt_digita', 'uti', 'dt_entuti', 'dt_saiduti', 'suport_ven', 'utilizouvni', 'antiviral', 'tp_antivir', 'out_antiv', 'dt_antivir', 'trat_cov', 'tipo_trat', 'dt_trt_cov', 'out_trat', 'classificacao_final', 'criterio_confirmacao', 'sorologia', 'pcr', 'cluster', 'cluster_rotulo']`
+- `features.proibidas`: `['evolucao', 'alvo_obito_srag', 'evolucao_normalizada', 'evolucao_covid19', 'dt_evoluca', 'dt_encerra', 'dt_digita', 'uti', 'dt_entuti', 'dt_saiduti', 'suport_ven', 'utilizouvni', 'antiviral', 'tp_antivir', 'out_antiv', 'dt_antivir', 'trat_cov', 'tipo_trat', 'dt_trt_cov', 'out_trat', 'cluster', 'cluster_rotulo']`
 - `features.engenharia.intervalo_max_dias`: `60`
 - `features.engenharia.intervalo_politica`: `'sinalizar'`
 - `features.engenharia.coluna_sazonalidade`: `'dt_sin_pri'`
@@ -819,6 +907,8 @@ Source: `configs/supervised.yaml`
 - `temporal.gravar_particao_na_coorte`: `True`
 - `temporal.coluna_particao`: `'particao'`
 - `temporal.permitir_novo_sorteio`: `False`
+- `temporal.metodo_particao`: `'hash_grupo_estratificado_v1'`
+- `temporal.min_grupos_por_estrato`: `3`
 - `temporal.teste_aberto_uma_unica_vez`: `True`
 - `temporal.fracao.treino`: `0.7`
 - `temporal.fracao.validacao`: `0.15`
@@ -894,14 +984,6 @@ Source: `configs/supervised.yaml`
 - `sensibilidades.sem_saturacao_desc_resp.ativa`: `True`
 - `sensibilidades.contexto_incremental.ativa`: `True`
 - `sensibilidades.alvo_qualquer_obito.ativa`: `True`
-- `clustering.status`: `'encerrado_exploratorio'`
-- `clustering.matriz_documentada`: `'nucleo'`
-- `clustering.quantidade_clusters_documentada`: `2`
-- `clustering.aplicar_na_coorte_completa`: `False`
-- `clustering.usar_como_feature_supervisionada`: `False`
-- `clustering.usar_como_alvo`: `False`
-- `clustering.usar_como_fenotipo_clinico_definitivo`: `False`
-- `clustering.comparacoes_minimas_executadas`: `['kmeans', 'hca_ward', 'dbscan']`
 - `artefatos_coorte.parquet`: `'coorte_final.parquet'`
 - `artefatos_coorte.waterfall`: `'coorte_waterfall.csv'`
 - `artefatos_coorte.variaveis`: `'variaveis_finais.csv'`
@@ -922,7 +1004,7 @@ Source: `configs/supervised.yaml`
 - `gates.G5_pilotos.status`: `'aprovado'`
 - `gates.G5_pilotos.aprovado_por`: `'time_do_projeto'`
 - `gates.G5_pilotos.data`: `'2026-10-11'`
-- `gates.G6_finalistas_tuning.descricao`: `'Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher `selecao_modelos.finalista_escolhido`.\n'`
+- `gates.G6_finalistas_tuning.descricao`: `'Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher selecao_modelos.finalista_escolhido.\n'`
 - `gates.G6_finalistas_tuning.status`: `'pendente'`
 - `gates.G6_finalistas_tuning.aprovado_por`: `None`
 - `gates.G6_finalistas_tuning.data`: `None`
@@ -955,6 +1037,7 @@ Source: `configs/supervised.yaml`
 
 | File | Parse | Duplicated keys |
 |---|---|---|
+| `configs/decisoes.yaml` | ok | none |
 | `configs/supervised.yaml` | ok | none |
 
 ### pyproject.toml
@@ -1116,38 +1199,44 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 ### Directory tree
 
 ```text
-./  (335 files, 1.1 GB)
-  configs/  (3 files, 61.1 KB)
-  data/  (11 files, 1.0 GB)
-    analytical/  (4 files, 307.4 MB)
-    processed/  (3 files, 525.9 MB)
+./  (390 files, 1.2 GB)
+  configs/  (4 files, 60.1 KB)
+  data/  (10 files, 1.1 GB)
+    analytical/  (4 files, 317.9 MB)
+    processed/  (2 files, 525.9 MB)
       dados-v1/  (1 files, 236.4 MB)
       dados-v2/  (1 files, 289.5 MB)
     raw/  (2 files, 236.4 MB)
-  docs/  (3 files, 5.9 MB)
-  notebooks/  (14 files, 9.3 MB)
-    02_eda/  (5 files, 9.1 MB)
-    C/  (6 files, 183.7 KB)
-  outputs/  (227 files, 82.2 MB)
+  docs/  (6 files, 8.2 MB)
+    project_reference_parts/  (3 files, 2.3 MB)
+  notebooks/  (19 files, 1.8 MB)
+    02_eda/  (5 files, 1.6 MB)
+    A/  (5 files, 54.9 KB)
+    C/  (6 files, 96.8 KB)
+  outputs/  (271 files, 128.2 MB)
     imagens_notebook_02_temp/  (73 files, 10.4 MB)
-    predictions/  (9 files, 71.4 MB)
-    runs/  (8 files, 15.4 KB)
+    predictions/  (15 files, 117.4 MB)
+    runs/  (14 files, 26.9 KB)
       2026-10-11_231339_836520_03_supervisionado_pilotos/  (2 files, 3.9 KB)
       2026-10-12_095946_799810_03_supervisionado_pilotos/  (2 files, 3.8 KB)
       2026-10-14_000946_434671_03_supervisionado_pilotos/  (2 files, 3.8 KB)
       2026-10-14_204618_338775_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-    tables/  (137 files, 405.2 KB)
-  reports/  (28 files, 2.9 MB)
-    figures/  (28 files, 2.9 MB)
-      supervisionado_03/  (2 files, 443.1 KB)
-  src/  (27 files, 133.0 KB)
-    data/  (4 files, 27.6 KB)
-    evaluation/  (6 files, 32.9 KB)
-    features/  (3 files, 11.0 KB)
-    models/  (7 files, 27.3 KB)
-    utils/  (6 files, 34.2 KB)
-  tests/  (16 files, 71.5 KB)
-  tools/  (1 files, 103.7 KB)
+      2026-10-15_235914_672066_03_supervisionado_pilotos/  (2 files, 3.8 KB)
+      2026-10-16_002506_352890_03_supervisionado_pilotos/  (2 files, 3.8 KB)
+      2026-10-16_004101_436301_03_supervisionado_pilotos/  (2 files, 3.8 KB)
+    tables/  (169 files, 451.8 KB)
+  reports/  (27 files, 2.9 MB)
+    figures/  (27 files, 2.9 MB)
+      supervisionado_03/  (2 files, 441.0 KB)
+  src/  (29 files, 210.0 KB)
+    data/  (4 files, 25.1 KB)
+    evaluation/  (6 files, 28.6 KB)
+    features/  (3 files, 8.5 KB)
+    models/  (7 files, 23.5 KB)
+    protocolo/  (2 files, 89.8 KB)
+    utils/  (6 files, 34.5 KB)
+  tests/  (17 files, 101.9 KB)
+  tools/  (2 files, 107.3 KB)
 ```
 
 ### All files
@@ -1159,37 +1248,45 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `README.md` | tracked | 19.9 KB | 2026-10-15 01:27 |
 | `pyproject.toml` | tracked | 1.9 KB | 2026-10-14 22:03 |
 | `requirements.txt` | tracked | 129 B | 2026-10-14 22:03 |
-| `configs/dicionario_variaveis_v1.csv` | tracked | 45.7 KB | 2026-10-15 01:27 |
+| `configs/decisoes.yaml` | tracked | 6.1 KB | 2026-10-16 01:28 |
+| `configs/dicionario_variaveis_v1.csv` | tracked | 45.4 KB | 2026-10-16 01:28 |
 | `configs/paths.local.json` | ignored | 45 B | 2026-10-08 01:30 |
-| `configs/supervised.yaml` | tracked | 15.3 KB | 2026-10-14 22:03 |
+| `configs/supervised.yaml` | tracked | 8.5 KB | 2026-10-16 03:37 |
 | `data/manifest_dados-v2.yaml` | tracked | 1.9 KB | 2026-10-10 16:31 |
 | `data/split.py` | tracked | 6.4 KB | 2026-10-14 02:12 |
 | `data/analytical/.gitkeep` | tracked | 0 B | 2026-10-08 01:16 |
 | `data/analytical/coorte_provisoria_b.parquet` | ignored | 200.0 MB | 2026-10-11 13:17 |
-| `data/analytical/dataset_supervisionado.parquet` | ignored | 107.4 MB | 2026-10-14 23:44 |
-| `data/analytical/manifesto_supervisionado.json` | ignored | 1.6 KB | 2026-10-14 23:44 |
-| `data/processed/.gitkeep` | tracked | 0 B | 2026-10-06 00:55 |
+| `data/analytical/dataset_supervisionado.parquet` | ignored | 118.0 MB | 2026-10-16 03:40 |
+| `data/analytical/manifesto_supervisionado.json` | ignored | 2.3 KB | 2026-10-16 03:40 |
 | `data/processed/dados-v1/srag.parquet` | ignored | 236.4 MB | 2026-10-08 02:35 |
 | `data/processed/dados-v2/srag.parquet` | ignored | 289.5 MB | 2026-10-09 19:44 |
 | `data/raw/.gitkeep` | tracked | 0 B | 2026-10-06 00:55 |
 | `data/raw/srag.parquet` | ignored | 236.4 MB | 2026-10-08 01:22 |
-| `docs/PROJECT_COMPLETE_REFERENCE.json` | ignored | 3.6 MB | 2026-10-15 12:47 |
-| `docs/PROJECT_COMPLETE_REFERENCE.md` | ignored | 2.3 MB | 2026-10-15 12:47 |
+| `docs/PROJECT_COMPLETE_REFERENCE.json` | ignored | 3.6 MB | 2026-10-15 12:52 |
+| `docs/PROJECT_COMPLETE_REFERENCE.md` | ignored | 2.3 MB | 2026-10-15 12:52 |
 | `docs/decisoes.md` | tracked | 27.7 KB | 2026-10-10 17:42 |
+| `docs/project_reference_parts/part_01_of_03.md` | tracked | 826.4 KB | 2026-10-15 12:52 |
+| `docs/project_reference_parts/part_02_of_03.md` | tracked | 1020.5 KB | 2026-10-15 12:52 |
+| `docs/project_reference_parts/part_03_of_03.md` | tracked | 493.7 KB | 2026-10-15 12:52 |
 | `notebooks/.gitkeep` | tracked | 0 B | 2026-10-06 00:50 |
-| `notebooks/00_acesso_dados_parquet.ipynb` | tracked | 3.8 KB | 2026-10-09 22:42 |
-| `notebooks/01_extracao.ipynb` | tracked | 5.9 KB | 2026-10-14 01:55 |
-| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | tracked | 1.8 MB | 2026-10-14 23:22 |
-| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | tracked | 6.7 MB | 2026-10-14 23:30 |
-| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | tracked | 530.2 KB | 2026-10-14 23:50 |
-| `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` | tracked | 63.4 KB | 2026-10-14 23:55 |
+| `notebooks/00_acesso_dados_parquet.ipynb` | tracked | 18.4 KB | 2026-10-16 01:28 |
+| `notebooks/01_extracao.ipynb` | tracked | 14.8 KB | 2026-10-16 01:28 |
+| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | tracked | 206.2 KB | 2026-10-16 01:28 |
+| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | tracked | 739.7 KB | 2026-10-16 01:28 |
+| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | tracked | 553.6 KB | 2026-10-16 03:43 |
+| `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` | tracked | 63.4 KB | 2026-10-16 03:46 |
 | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` | tracked | 50.8 KB | 2026-10-14 22:03 |
-| `notebooks/C/C1_smoke_test.ipynb` | tracked | 3.9 KB | 2026-10-14 22:03 |
-| `notebooks/C/C2_pipeline_supervisionado.ipynb` | tracked | 16.8 KB | 2026-10-14 22:03 |
-| `notebooks/C/C3_baseline_logistica.ipynb` | tracked | 20.3 KB | 2026-10-14 22:03 |
-| `notebooks/C/C4_boosting.ipynb` | tracked | 41.6 KB | 2026-10-14 22:03 |
-| `notebooks/C/C5_calibracao_limiar.ipynb` | tracked | 38.5 KB | 2026-10-14 22:03 |
-| `notebooks/C/C6_validacao_final.ipynb` | tracked | 62.5 KB | 2026-10-14 22:03 |
+| `notebooks/A/A1_coorte_protocolo.ipynb` | tracked | 13.0 KB | 2026-10-16 01:28 |
+| `notebooks/A/A2_qualidade_elegibilidade.ipynb` | tracked | 10.5 KB | 2026-10-16 01:28 |
+| `notebooks/A/A3_desenho_experimental.ipynb` | tracked | 10.4 KB | 2026-10-16 01:28 |
+| `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | tracked | 12.1 KB | 2026-10-16 01:28 |
+| `notebooks/A/A4_decisao_candidatos.ipynb` | tracked | 8.9 KB | 2026-10-16 01:28 |
+| `notebooks/C/C1_smoke_test.ipynb` | tracked | 2.6 KB | 2026-10-16 01:28 |
+| `notebooks/C/C2_pipeline_supervisionado.ipynb` | tracked | 10.2 KB | 2026-10-16 01:28 |
+| `notebooks/C/C3_baseline_logistica.ipynb` | tracked | 10.7 KB | 2026-10-16 01:28 |
+| `notebooks/C/C4_boosting.ipynb` | tracked | 22.4 KB | 2026-10-16 01:28 |
+| `notebooks/C/C5_calibracao_limiar.ipynb` | tracked | 19.3 KB | 2026-10-16 01:28 |
+| `notebooks/C/C6_validacao_final.ipynb` | tracked | 31.5 KB | 2026-10-16 01:28 |
 | `outputs/imagens_notebook_02_temp/eda_02_001_volume_de_registros_por_ano_de_internacao.png` | ignored | 62.0 KB | 2026-10-11 19:56 |
 | `outputs/imagens_notebook_02_temp/eda_02_002_proporcao_observada_de_obito_por_srag_por_ano_de_internacao.png` | ignored | 99.2 KB | 2026-10-11 19:56 |
 | `outputs/imagens_notebook_02_temp/eda_02_003_idade_mediana_e_intervalo_interquartil_por_ano_de_internacao.png` | ignored | 114.3 KB | 2026-10-11 19:56 |
@@ -1267,11 +1364,17 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/predictions/03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-12 13:01 |
 | `outputs/predictions/03_cinco_familias_provisoria_20261014T031127Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-14 03:11 |
 | `outputs/predictions/03_cinco_familias_provisoria_20261014T234809Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-14 23:48 |
+| `outputs/predictions/03_cinco_familias_provisoria_20261016T030120Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:01 |
+| `outputs/predictions/03_cinco_familias_provisoria_20261016T032647Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:26 |
+| `outputs/predictions/03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:42 |
 | `outputs/predictions/03_pilotos_provisional_20261012T124857Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 12:48 |
 | `outputs/predictions/03_pilotos_provisoria_20261012T021331Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 02:13 |
 | `outputs/predictions/03_pilotos_provisoria_20261012T125945Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 12:59 |
 | `outputs/predictions/03_pilotos_provisoria_20261014T030944Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-14 03:09 |
 | `outputs/predictions/03_pilotos_provisoria_20261014T234615Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-14 23:46 |
+| `outputs/predictions/03_pilotos_provisoria_20261016T025913Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-16 02:59 |
+| `outputs/predictions/03_pilotos_provisoria_20261016T032505Z_predicoes_validacao.parquet` | ignored | 10.0 MB | 2026-10-16 03:25 |
+| `outputs/predictions/03_pilotos_provisoria_20261016T034100Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-16 03:41 |
 | `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-12 02:13 |
 | `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-12 02:13 |
 | `outputs/runs/2026-10-12_095946_799810_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-12 12:59 |
@@ -1280,6 +1383,12 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/runs/2026-10-14_000946_434671_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-14 03:09 |
 | `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-14 23:46 |
 | `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-14 23:46 |
+| `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 02:59 |
+| `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 02:59 |
+| `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 03:25 |
+| `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 03:25 |
+| `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 03:41 |
+| `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 03:41 |
 | `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_amostras.csv` | ignored | 211 B | 2026-10-12 02:26 |
 | `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_manifesto.json` | ignored | 2.7 KB | 2026-10-12 02:26 |
 | `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_metricas.csv` | ignored | 1.3 KB | 2026-10-12 02:26 |
@@ -1300,6 +1409,21 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas.csv` | ignored | 1.3 KB | 2026-10-14 23:48 |
 | `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-14 23:48 |
 | `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-14 23:48 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_amostras.csv` | ignored | 212 B | 2026-10-16 03:01 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:01 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:01 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-16 03:01 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-16 03:01 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_amostras.csv` | ignored | 211 B | 2026-10-16 03:26 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:26 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:26 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv` | ignored | 5.1 KB | 2026-10-16 03:26 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv` | ignored | 913 B | 2026-10-16 03:26 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_amostras.csv` | ignored | 212 B | 2026-10-16 03:42 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:42 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:42 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-16 03:42 |
+| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-16 03:42 |
 | `outputs/tables/03_pilotos_provisional_20261012T124857Z_contrato.csv` | ignored | 213 B | 2026-10-12 12:48 |
 | `outputs/tables/03_pilotos_provisional_20261012T124857Z_manifesto.json` | ignored | 1.7 KB | 2026-10-12 12:48 |
 | `outputs/tables/03_pilotos_provisional_20261012T124857Z_metricas_validacao.csv` | ignored | 540 B | 2026-10-12 12:48 |
@@ -1320,6 +1444,18 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/tables/03_pilotos_provisoria_20261014T234615Z_manifesto.json` | ignored | 2.0 KB | 2026-10-14 23:46 |
 | `outputs/tables/03_pilotos_provisoria_20261014T234615Z_metricas_validacao.csv` | ignored | 534 B | 2026-10-14 23:46 |
 | `outputs/tables/03_pilotos_provisoria_20261014T234615Z_particoes.csv` | ignored | 313 B | 2026-10-14 23:46 |
+| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_contrato.csv` | ignored | 213 B | 2026-10-16 02:59 |
+| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 02:59 |
+| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv` | ignored | 574 B | 2026-10-16 02:59 |
+| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_particoes.csv` | ignored | 313 B | 2026-10-16 02:59 |
+| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_contrato.csv` | ignored | 213 B | 2026-10-16 03:25 |
+| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 03:25 |
+| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv` | ignored | 571 B | 2026-10-16 03:25 |
+| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_particoes.csv` | ignored | 312 B | 2026-10-16 03:25 |
+| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_contrato.csv` | ignored | 213 B | 2026-10-16 03:41 |
+| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 03:41 |
+| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv` | ignored | 573 B | 2026-10-16 03:41 |
+| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_particoes.csv` | ignored | 313 B | 2026-10-16 03:41 |
 | `outputs/tables/04_handoff_provisional_20261012T123353Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 12:33 |
 | `outputs/tables/04_handoff_provisional_20261012T123353Z_manifesto.json` | ignored | 2.5 KB | 2026-10-12 12:33 |
 | `outputs/tables/04_handoff_provisional_20261012T123353Z_shortlist.csv` | ignored | 638 B | 2026-10-12 12:33 |
@@ -1353,6 +1489,11 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/tables/04_handoff_provisional_20261014T235131Z_shortlist.csv` | ignored | 640 B | 2026-10-14 23:51 |
 | `outputs/tables/04_handoff_provisional_20261014T235131Z_temporal.csv` | ignored | 2.1 KB | 2026-10-14 23:51 |
 | `outputs/tables/04_handoff_provisional_20261014T235131Z_transicao.csv` | ignored | 742 B | 2026-10-14 23:51 |
+| `outputs/tables/04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv` | ignored | 236 B | 2026-10-16 03:46 |
+| `outputs/tables/04_handoff_provisional_20261016T034632Z_manifesto.json` | ignored | 2.9 KB | 2026-10-16 03:46 |
+| `outputs/tables/04_handoff_provisional_20261016T034632Z_shortlist.csv` | ignored | 650 B | 2026-10-16 03:46 |
+| `outputs/tables/04_handoff_provisional_20261016T034632Z_temporal.csv` | ignored | 2.1 KB | 2026-10-16 03:46 |
+| `outputs/tables/04_handoff_provisional_20261016T034632Z_transicao.csv` | ignored | 742 B | 2026-10-16 03:46 |
 | `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv` | ignored | 772 B | 2026-10-11 13:17 |
 | `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv` | ignored | 448 B | 2026-10-11 13:17 |
 | `outputs/tables/coorte_provisoria_b_resumo.csv` | ignored | 512 B | 2026-10-11 13:17 |
@@ -1414,10 +1555,9 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `outputs/tables/eda_02_variacao_preenchimento.csv` | ignored | 12.6 KB | 2026-10-14 23:23 |
 | `outputs/tables/eda_02_variacao_sintomas.csv` | ignored | 1.9 KB | 2026-10-14 23:26 |
 | `outputs/tables/eda_02_volume_por_ano.csv` | ignored | 368 B | 2026-10-14 23:22 |
-| `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv` | ignored | 376 B | 2026-10-14 23:31 |
-| `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv` | ignored | 154 B | 2026-10-14 23:31 |
-| `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv` | ignored | 181 B | 2026-10-14 23:31 |
-| `reports/figures/.gitkeep` | tracked | 0 B | 2026-10-06 00:50 |
+| `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv` | ignored | 376 B | 2026-10-16 03:39 |
+| `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv` | ignored | 154 B | 2026-10-16 03:39 |
+| `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv` | ignored | 181 B | 2026-10-16 03:39 |
 | `reports/figures/eda_01_volume_por_ano_internacao.png` | ignored | 36.5 KB | 2026-10-14 22:27 |
 | `reports/figures/eda_02_ausencia_por_desfecho.png` | ignored | 99.0 KB | 2026-10-14 23:28 |
 | `reports/figures/eda_02_cobertura_clinica_clusters_sensibilidade.png` | ignored | 158.7 KB | 2026-10-14 23:30 |
@@ -1443,51 +1583,55 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `reports/figures/eda_02_vacinacao_por_ano.png` | ignored | 104.8 KB | 2026-10-14 23:26 |
 | `reports/figures/eda_02_variacao_preenchimento.png` | ignored | 99.2 KB | 2026-10-14 23:22 |
 | `reports/figures/eda_02_volume_por_ano.png` | ignored | 55.1 KB | 2026-10-14 23:22 |
-| `reports/figures/supervisionado_03/03_pilotos_curvas_pr_roc_calibracao.png` | ignored | 224.0 KB | 2026-10-14 23:48 |
-| `reports/figures/supervisionado_03/03_pilotos_metricas_por_ano.png` | ignored | 219.2 KB | 2026-10-14 23:48 |
+| `reports/figures/supervisionado_03/03_pilotos_curvas_pr_roc_calibracao.png` | ignored | 225.3 KB | 2026-10-16 03:42 |
+| `reports/figures/supervisionado_03/03_pilotos_metricas_por_ano.png` | ignored | 215.6 KB | 2026-10-16 03:42 |
 | `src/__init__.py` | tracked | 0 B | 2026-10-14 22:03 |
 | `src/data/__init__.py` | tracked | 0 B | 2026-10-06 02:28 |
-| `src/data/cohort_source.py` | tracked | 4.0 KB | 2026-10-15 01:27 |
-| `src/data/split.py` | tracked | 12.1 KB | 2026-10-14 22:03 |
-| `src/data/supervised_artifact.py` | tracked | 11.5 KB | 2026-10-15 01:27 |
-| `src/evaluation/__init__.py` | tracked | 1.2 KB | 2026-10-14 22:03 |
-| `src/evaluation/calibration.py` | tracked | 4.4 KB | 2026-10-14 22:03 |
-| `src/evaluation/errors.py` | tracked | 5.8 KB | 2026-10-14 22:03 |
-| `src/evaluation/leakage.py` | tracked | 2.5 KB | 2026-10-14 22:03 |
-| `src/evaluation/metrics.py` | tracked | 8.4 KB | 2026-10-14 22:03 |
-| `src/evaluation/temporal.py` | tracked | 10.6 KB | 2026-10-14 22:03 |
-| `src/features/__init__.py` | tracked | 362 B | 2026-10-14 22:03 |
-| `src/features/engineering.py` | tracked | 10.6 KB | 2026-10-14 22:03 |
+| `src/data/cohort_source.py` | tracked | 3.8 KB | 2026-10-16 01:28 |
+| `src/data/split.py` | tracked | 10.0 KB | 2026-10-16 01:28 |
+| `src/data/supervised_artifact.py` | tracked | 11.3 KB | 2026-10-16 01:28 |
+| `src/evaluation/__init__.py` | tracked | 1.5 KB | 2026-10-16 01:28 |
+| `src/evaluation/calibration.py` | tracked | 4.6 KB | 2026-10-16 01:28 |
+| `src/evaluation/errors.py` | tracked | 5.5 KB | 2026-10-16 01:28 |
+| `src/evaluation/leakage.py` | tracked | 2.1 KB | 2026-10-16 01:28 |
+| `src/evaluation/metrics.py` | tracked | 7.5 KB | 2026-10-16 01:28 |
+| `src/evaluation/temporal.py` | tracked | 7.4 KB | 2026-10-16 01:28 |
+| `src/features/__init__.py` | tracked | 508 B | 2026-10-16 01:28 |
+| `src/features/engineering.py` | tracked | 8.0 KB | 2026-10-16 01:28 |
 | `src/features/normalization.py` | tracked | 0 B | 2026-10-14 02:30 |
-| `src/models/__init__.py` | tracked | 935 B | 2026-10-14 22:03 |
-| `src/models/baseline.py` | tracked | 2.6 KB | 2026-10-14 22:03 |
-| `src/models/boosting.py` | tracked | 2.6 KB | 2026-10-14 22:03 |
-| `src/models/calibration.py` | tracked | 5.8 KB | 2026-10-14 22:03 |
-| `src/models/factory.py` | tracked | 2.9 KB | 2026-10-14 22:03 |
-| `src/models/logistic.py` | tracked | 4.8 KB | 2026-10-14 22:03 |
-| `src/models/pipeline.py` | tracked | 7.6 KB | 2026-10-14 22:03 |
+| `src/models/__init__.py` | tracked | 1.5 KB | 2026-10-16 01:28 |
+| `src/models/baseline.py` | tracked | 2.2 KB | 2026-10-16 01:28 |
+| `src/models/boosting.py` | tracked | 2.0 KB | 2026-10-16 01:28 |
+| `src/models/calibration.py` | tracked | 4.3 KB | 2026-10-16 01:28 |
+| `src/models/factory.py` | tracked | 2.2 KB | 2026-10-16 01:28 |
+| `src/models/logistic.py` | tracked | 4.3 KB | 2026-10-16 01:28 |
+| `src/models/pipeline.py` | tracked | 7.0 KB | 2026-10-16 01:28 |
+| `src/protocolo/__init__.py` | tracked | 89 B | 2026-10-16 01:28 |
+| `src/protocolo/verificacoes.py` | tracked | 89.8 KB | 2026-10-16 01:28 |
 | `src/utils/__init__.py` | tracked | 0 B | 2026-10-06 02:28 |
-| `src/utils/config.py` | tracked | 8.0 KB | 2026-10-14 22:03 |
-| `src/utils/env.py` | tracked | 3.5 KB | 2026-10-14 22:03 |
-| `src/utils/hashing.py` | tracked | 874 B | 2026-10-15 01:27 |
-| `src/utils/reproducibility.py` | tracked | 13.1 KB | 2026-10-14 22:03 |
-| `src/utils/storage.py` | tracked | 8.8 KB | 2026-10-14 22:03 |
-| `tests/conftest.py` | tracked | 619 B | 2026-10-15 01:27 |
-| `tests/test_calibration.py` | tracked | 2.8 KB | 2026-10-15 01:27 |
-| `tests/test_cohort_source.py` | tracked | 1.6 KB | 2026-10-15 01:27 |
-| `tests/test_config.py` | tracked | 6.6 KB | 2026-10-15 01:27 |
-| `tests/test_errors.py` | tracked | 4.2 KB | 2026-10-15 01:27 |
-| `tests/test_features.py` | tracked | 11.5 KB | 2026-10-15 01:27 |
-| `tests/test_leakage.py` | tracked | 8.2 KB | 2026-10-15 01:27 |
-| `tests/test_metrics.py` | tracked | 3.8 KB | 2026-10-15 01:27 |
-| `tests/test_model_pipelines.py` | tracked | 5.9 KB | 2026-10-15 01:27 |
-| `tests/test_pipeline.py` | tracked | 2.3 KB | 2026-10-15 01:27 |
-| `tests/test_reproducibility.py` | tracked | 4.0 KB | 2026-10-15 01:27 |
-| `tests/test_smoke.py` | tracked | 2.7 KB | 2026-10-15 01:27 |
-| `tests/test_split.py` | tracked | 8.1 KB | 2026-10-15 01:27 |
-| `tests/test_supervised_artifact.py` | tracked | 1.9 KB | 2026-10-15 01:27 |
-| `tests/test_target.py` | tracked | 2.7 KB | 2026-10-15 01:27 |
-| `tests/test_temporal.py` | tracked | 4.5 KB | 2026-10-15 01:27 |
+| `src/utils/config.py` | tracked | 8.0 KB | 2026-10-16 01:28 |
+| `src/utils/env.py` | tracked | 3.7 KB | 2026-10-16 01:28 |
+| `src/utils/hashing.py` | tracked | 891 B | 2026-10-16 01:28 |
+| `src/utils/reproducibility.py` | tracked | 13.1 KB | 2026-10-16 01:28 |
+| `src/utils/storage.py` | tracked | 8.8 KB | 2026-10-16 01:28 |
+| `tests/conftest.py` | tracked | 639 B | 2026-10-16 01:28 |
+| `tests/test_calibration.py` | tracked | 3.5 KB | 2026-10-16 01:28 |
+| `tests/test_cohort_source.py` | tracked | 2.1 KB | 2026-10-16 01:28 |
+| `tests/test_config.py` | tracked | 7.4 KB | 2026-10-16 01:28 |
+| `tests/test_errors.py` | tracked | 5.5 KB | 2026-10-16 01:28 |
+| `tests/test_features.py` | tracked | 11.3 KB | 2026-10-16 01:28 |
+| `tests/test_leakage.py` | tracked | 3.9 KB | 2026-10-16 01:28 |
+| `tests/test_metrics.py` | tracked | 5.5 KB | 2026-10-16 01:28 |
+| `tests/test_model_pipelines.py` | tracked | 6.2 KB | 2026-10-16 01:28 |
+| `tests/test_pipeline.py` | tracked | 2.7 KB | 2026-10-16 01:28 |
+| `tests/test_regras_pessoa_a.py` | tracked | 22.9 KB | 2026-10-16 01:28 |
+| `tests/test_reproducibility.py` | tracked | 5.1 KB | 2026-10-16 01:28 |
+| `tests/test_smoke.py` | tracked | 3.2 KB | 2026-10-16 01:28 |
+| `tests/test_split.py` | tracked | 9.4 KB | 2026-10-16 01:28 |
+| `tests/test_supervised_artifact.py` | tracked | 3.0 KB | 2026-10-16 01:28 |
+| `tests/test_target.py` | tracked | 3.7 KB | 2026-10-16 01:28 |
+| `tests/test_temporal.py` | tracked | 5.9 KB | 2026-10-16 01:28 |
+| `tools/clean_project.py` | tracked | 3.7 KB | 2026-10-16 01:28 |
 | `tools/update_project_reference.py` | tracked | 103.7 KB | 2026-10-15 12:51 |
 
 ### Skipped files
@@ -1508,21 +1652,22 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | Test file | Tests | Internal imports |
 |---|---|---|
 | `tests/conftest.py` | 0 | `src.utils.config` |
-| `tests/test_calibration.py` | 8 | `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar` |
+| `tests/test_calibration.py` | 7 | `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar` |
 | `tests/test_cohort_source.py` | 4 | `src.data.cohort_source.cohort_candidates`, `src.data.cohort_source.load_cohort`, `src.data.cohort_source.resolve_cohort_path` |
-| `tests/test_config.py` | 17 | `src.models.pipeline`, `src.utils.config`, `src.utils.env` |
+| `tests/test_config.py` | 16 | `src.models.pipeline`, `src.utils.config`, `src.utils.env` |
 | `tests/test_errors.py` | 12 | `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros` |
 | `tests/test_features.py` | 33 | `src.features.engineering.ano_mes_internacao`, `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`, `src.features.engineering.sexo_categoria` |
-| `tests/test_leakage.py` | 15 | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.models.pipeline`, `src.utils.config` |
+| `tests/test_leakage.py` | 9 | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config` |
 | `tests/test_metrics.py` | 14 | `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall` |
-| `tests/test_model_pipelines.py` | 7 | `src.models.baseline.build_baseline_pipeline`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline`, `src.utils.config` |
-| `tests/test_pipeline.py` | 6 | `src.models.pipeline.build_pipeline`, `src.utils.env`, `src.utils.storage.get_parquet`, `src.utils.storage.read_srag` |
+| `tests/test_model_pipelines.py` | 5 | `src.models.baseline.build_baseline_pipeline`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline`, `src.utils.config` |
+| `tests/test_pipeline.py` | 5 | `src.models.pipeline.build_pipeline`, `src.utils.env`, `src.utils.storage.get_parquet`, `src.utils.storage.read_srag` |
+| `tests/test_regras_pessoa_a.py` | 30 | `src.protocolo.verificacoes` |
 | `tests/test_reproducibility.py` | 10 | `src.utils.config`, `src.utils.reproducibility` |
-| `tests/test_smoke.py` | 9 | `src.utils.config`, `src.utils.storage` |
+| `tests/test_smoke.py` | 8 | `src.utils.storage` |
 | `tests/test_split.py` | 20 | `src.data.split.PARTICOES_CANONICAS`, `src.data.split.SplitWarning`, `src.data.split.criar_particoes_agrupadas` |
 | `tests/test_supervised_artifact.py` | 3 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.persist_supervised_artifact` |
-| `tests/test_target.py` | 11 | `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config` |
-| `tests/test_temporal.py` | 9 | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config` |
+| `tests/test_target.py` | 8 | `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config` |
+| `tests/test_temporal.py` | 14 | `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.utils.config` |
 
 pytest was not executed. Use `--run-tests` (optionally `--pytest-args "-m 'not slow'"`).
 
@@ -1544,16 +1689,16 @@ Generated with Python AST; project modules are not imported.
 
 ### `src/data/cohort_source.py`
 
-- Module: `src.data.cohort_source` · 129 lines
+- Module: `src.data.cohort_source` · 126 lines
 - Internal imports: `src.utils.hashing.sha256_file`
-- External imports: `__future__.annotations`, `dataclasses.asdict`, `dataclasses.dataclass`, `os`, `pandas`, `pathlib.Path`, `typing.Literal`
-- Module constants: `_ENV_VAR = 'SRAG_COHORT_KIND'`, `_DEFAULT_KIND = 'provisional'`, `_VALID_KINDS = frozenset({'provisional', 'final', 'auto'})`, `_ANALYTICAL_DIR = Path('data') / 'analytical'`, `_FINAL_FILENAMES = ('coorte_final.parquet',)`, `_PROVISIONAL_FILENAMES = ('coorte_provisoria.parquet', 'coorte_provisoria_b.parquet', 'coorte.parquet')`
+- External imports: `__future__.annotations`, `dataclasses.asdict`, `dataclasses.dataclass`, `os`, `pandas`, `pathlib.Path`, `typing.Literal`, `typing.get_args`
+- Module constants: `_ENV_VAR = 'SRAG_COHORT_KIND'`, `_DEFAULT_KIND = 'provisional'`, `_VALID_KINDS = frozenset(get_args(CohortKind))`, `_ANALYTICAL_DIR = Path('data') / 'analytical'`, `_FINAL_FILENAMES = ('coorte_final.parquet',)`, `_PROVISIONAL_FILENAMES = ('coorte_provisoria.parquet', 'coorte_provisoria_b.parquet', 'coorte.parquet')`
 
-Resolve e descreve a fonte de coorte sem acoplar notebooks ao nome do arquivo.
+Resolve a fonte de coorte sem acoplar notebooks ao nome do arquivo.
 
-A troca entre coorte provisoria e definitiva deve acontecer por parametro ou pela
-variavel de ambiente ``SRAG_COHORT_KIND``. O modulo nao transforma a coorte, nao
-cria particoes e nao altera o alvo.
+A troca entre coorte provisória e definitiva acontece por parâmetro ou
+pela variável de ambiente ``SRAG_COHORT_KIND``. Não transforma a coorte,
+não cria partições e não altera o alvo.
 
 #### `CohortSource`
 
@@ -1568,7 +1713,7 @@ class CohortSource()
 - Decorators: `dataclass(frozen=True)`
 - Calls: `asdict`, `dataclass`
 
-Metadados imutaveis da coorte selecionada.
+Metadados imutáveis da coorte selecionada.
 
 #### `CohortSource.to_dict`
 
@@ -1578,8 +1723,8 @@ def to_dict(self) -> dict[str, object]
 
 - Location: `src/data/cohort_source.py:45-46`
 - Visibility: `public`
-- Tested by: not found statically
-- Consumed by: `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_regras_pessoa_a.py`
 - Calls: `asdict`
 
 _Missing docstring._
@@ -1596,7 +1741,7 @@ def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]
 - Consumed by: `tests/test_cohort_source.py`
 - Calls: `tuple`
 
-Retorna candidatos ordenados por tipo de coorte.
+Candidatos de coorte por tipo, na ordem de preferência.
 
 #### `_resolve_kind`
 
@@ -1608,7 +1753,7 @@ def _resolve_kind(kind: CohortKind | None) -> str
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `ValueError`, `lower`, `os.getenv`
+- Calls: `ValueError`, `lower`, `os.getenv`, `sorted`
 
 _Missing docstring._
 
@@ -1632,18 +1777,18 @@ _Missing docstring._
 def resolve_cohort_path(root: Path, *, kind: CohortKind | None=None, explicit_path: Path | None=None) -> tuple[str, Path]
 ```
 
-- Location: `src/data/cohort_source.py:71-104`
+- Location: `src/data/cohort_source.py:71-103`
 - Visibility: `public`
 - Tested by: `tests/test_cohort_source.py`
 - Consumed by: `tests/test_cohort_source.py`
 - Defaults: `kind=None`, `explicit_path=None`
-- Calls: `FileNotFoundError`, `Path`, `Path.expanduser`, `Path.expanduser.resolve`, `_kind_from_path`, `_resolve_kind`, `checked.append`, `cohort_candidates`, `join`, `path.is_file`, `path.resolve`
+- Calls: `FileNotFoundError`, `Path`, `Path.expanduser`, `Path.expanduser.resolve`, `_kind_from_path`, `_resolve_kind`, `cohort_candidates`, `join`, `path.is_file`, `path.resolve`
 
-Resolve a coorte sem alternar silenciosamente de provisoria para final.
+Resolve a coorte sem alternar silenciosamente de provisória para final.
 
-``kind=None`` consulta ``SRAG_COHORT_KIND`` e usa ``provisional`` como padrao.
-``auto`` prefere a definitiva quando ela existir. Para reproducibilidade,
-execucoes oficiais devem usar ``provisional`` ou ``final`` explicitamente.
+``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``provisional``).
+``auto`` prefere a definitiva quando existir. Execuções oficiais devem
+usar ``provisional`` ou ``final`` explícitos.
 
 #### `load_cohort`
 
@@ -1651,48 +1796,38 @@ execucoes oficiais devem usar ``provisional`` ou ``final`` explicitamente.
 def load_cohort(root: Path, *, kind: CohortKind | None=None, explicit_path: Path | None=None, columns: list[str] | None=None) -> tuple[pd.DataFrame, CohortSource]
 ```
 
-- Location: `src/data/cohort_source.py:107-129`
+- Location: `src/data/cohort_source.py:106-126`
 - Visibility: `public`
 - Tested by: `tests/test_cohort_source.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `tests/test_cohort_source.py`
 - Defaults: `kind=None`, `explicit_path=None`, `columns=None`
 - Calls: `CohortSource`, `int`, `len`, `path.stat`, `pd.read_parquet`, `resolve_cohort_path`, `sha256_file`, `str`
 
-Carrega a coorte selecionada e devolve dados mais metadados da fonte.
+Carrega a coorte selecionada e devolve dados + metadados da fonte.
 
 ### `src/data/split.py`
 
-- Module: `src.data.split` · 362 lines
+- Module: `src.data.split` · 287 lines
 - Internal imports: none
-- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Any`, `typing.Literal`, `warnings`
-- Module constants: `PARTICOES_CANONICAS = ('treino', 'validacao', 'teste')`, `_POLITICAS_ESTRATOS_PEQUENOS = ('raise', 'warn_teste', 'warn_treino', 'drop')`, `_POLITICAS_GRUPO_HETEROGENEO = ('raise', 'warn')`
+- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Any`, `typing.Literal`, `typing.get_args`, `warnings`
+- Module constants: `PARTICOES_CANONICAS = ('treino', 'validacao', 'teste')`, `_POLITICAS_ESTRATOS_PEQUENOS = frozenset(get_args(PoliticaEstratosPequenos))`, `_POLITICAS_GRUPO_HETEROGENEO = frozenset(get_args(PoliticaGrupoHeterogeneo))`
 
-Criação de partições agrupadas e estratificadas (treino / validação / teste).
+Partições agrupadas e estratificadas (treino / validação / teste).
 
 Garante simultaneamente:
 
-- **Estratificação**: cada partição preserva aproximadamente a proporção do
-  alvo (0/1), importante porque a prevalência de óbito é baixa.
-- **Agrupamento**: todas as linhas de um mesmo grupo (p.ex. paciente) caem em
-  uma única partição, evitando vazamento entre treino e avaliação.
+- **Estratificação**: cada partição preserva a proporção do alvo (0/1),
+  importante porque a prevalência de óbito é baixa.
+- **Agrupamento**: todas as linhas de um mesmo grupo caem numa única
+  partição, evitando vazamento entre treino e avaliação.
 
 Estratos pequenos demais para as três partições são tratados por
-`politica_estratos_pequenos`:
+``politica_estratos_pequenos``. Uso::
 
-- ``"raise"``        → levanta `ValueError` (default).
-- ``"warn_teste"``   → warning + estrato inteiro vai para `teste`.
-- ``"warn_treino"``  → warning + estrato inteiro vai para `treino`.
-- ``"drop"``         → warning + linhas do estrato removidas.
-
-Uso típico
-----------
     from src.data.split import criar_particoes_agrupadas
 
     df_part = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
+        df, target_column="alvo", group_column="nu_notific",
     )
 
 #### `SplitWarning`
@@ -1701,17 +1836,15 @@ Uso típico
 class SplitWarning(UserWarning)
 ```
 
-- Location: `src/data/split.py:59-67`
+- Location: `src/data/split.py:43-48`
 - Visibility: `public`
 - Tested by: `tests/test_split.py`
 - Consumed by: `tests/test_split.py`
 
-Emitido quando o split precisa tomar uma decisão não-trivial.
+Decisão não-trivial do split (estrato pequeno, grupo com alvo misto).
 
-Casos que disparam: estratos pequenos demais para as três partições e
-grupos com alvo heterogêneo. Filtre com
-``warnings.filterwarnings("ignore", category=SplitWarning)`` se a decisão
-já foi tomada pelo grupo.
+Filtre com ``warnings.filterwarnings("ignore", category=SplitWarning)``
+se a decisão já foi tomada pelo grupo.
 
 #### `_validar_parametros`
 
@@ -1719,11 +1852,11 @@ já foi tomada pelo grupo.
 def _validar_parametros(df: pd.DataFrame, *, target_column: str, group_column: str, partition_column: str, frac_treino: float, frac_validacao: float, min_grupos_por_estrato: int, politica_estratos_pequenos: str, on_grupo_alvo_heterogeneo: str) -> None
 ```
 
-- Location: `src/data/split.py:70-123`
+- Location: `src/data/split.py:51-96`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `KeyError`, `ValueError`, `len`
+- Calls: `KeyError`, `ValueError`, `len`, `sorted`
 
 _Missing docstring._
 
@@ -1733,18 +1866,18 @@ _Missing docstring._
 def _estrato_por_grupo(df: pd.DataFrame, *, target_column: str, group_column: str, on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo) -> pd.Series
 ```
 
-- Location: `src/data/split.py:126-182`
+- Location: `src/data/split.py:99-147`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `ValueError`, `agg`, `df.groupby`, `estrato.dropna`, `estrato.isna`, `heterogeneos.index.tolist`, `len`, `nunique`, `s.dropna`, `s.dropna.mode`, `s.notna`, `s.notna.any`, `warnings.warn`
+- Calls: `ValueError`, `agrupado.agg`, `agrupado.nunique`, `df.groupby`, `estrato.dropna`, `estrato.isna`, `estrato.isna.any`, `estrato.isna.sum`, `heterogeneos.index.tolist`, `int`, `len`, `s.dropna`, `s.dropna.mode`, `s.notna`, `s.notna.any`, `warnings.warn`
 
-Devolve uma `Series` indexada por grupo com o estrato (valor do alvo).
+Estrato (valor do alvo) por grupo.
 
 Grupos com mais de um valor distinto de alvo são tratados por
-`on_grupo_alvo_heterogeneo`: ``"raise"`` levanta `ValueError`; ``"warn"``
-emite `SplitWarning` e usa a moda por grupo. Grupos com alvo todo nulo são
-descartados com `SplitWarning`.
+``on_grupo_alvo_heterogeneo``: ``"raise"`` levanta ``ValueError``;
+``"warn"`` emite ``SplitWarning`` e usa a moda. Grupos com alvo todo
+nulo são descartados com ``SplitWarning``.
 
 #### `_distribuir_tamanhos`
 
@@ -1752,13 +1885,13 @@ descartados com `SplitWarning`.
 def _distribuir_tamanhos(n: int, frac_treino: float, frac_validacao: float) -> tuple[int, int, int]
 ```
 
-- Location: `src/data/split.py:185-200`
+- Location: `src/data/split.py:150-162`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `ValueError`, `int`, `max`
 
-Distribui `n >= 3` grupos em (treino, validacao, teste) com ≥1 por partição.
+Distribui ``n >= 3`` grupos em (treino, validação, teste), ≥1 por partição.
 
 #### `_aplicar_politica_estrato_pequeno`
 
@@ -1766,11 +1899,11 @@ Distribui `n >= 3` grupos em (treino, validacao, teste) com ≥1 por partição.
 def _aplicar_politica_estrato_pequeno(grupos: list[Any], *, estrato: Any, min_grupos_por_estrato: int, politica: PoliticaEstratosPequenos, atribuicao: dict[Any, str], descartar: set[Any]) -> None
 ```
 
-- Location: `src/data/split.py:203-237`
+- Location: `src/data/split.py:165-194`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `ValueError`, `descartar.update`, `len`, `warnings.warn`
+- Calls: `ValueError`, `atribuicao.update`, `descartar.update`, `len`, `warnings.warn`
 
 _Missing docstring._
 
@@ -1780,94 +1913,75 @@ _Missing docstring._
 def criar_particoes_agrupadas(df: pd.DataFrame, *, target_column: str, group_column: str, partition_column: str='particao', frac_treino: float=0.7, frac_validacao: float=0.15, seed: int=42, min_grupos_por_estrato: int=3, politica_estratos_pequenos: PoliticaEstratosPequenos='raise', on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo='raise') -> pd.DataFrame
 ```
 
-- Location: `src/data/split.py:240-362`
+- Location: `src/data/split.py:197-287`
 - Visibility: `public`
 - Tested by: `tests/test_split.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `tests/test_split.py`
+- Consumed by: `tests/test_split.py`
 - Defaults: `partition_column='particao'`, `frac_treino=0.7`, `frac_validacao=0.15`, `seed=42`, `min_grupos_por_estrato=3`, `politica_estratos_pequenos='raise'`, `on_grupo_alvo_heterogeneo='raise'`
-- Calls: `_aplicar_politica_estrato_pequeno`, `_distribuir_tamanhos`, `_estrato_por_grupo`, `_validar_parametros`, `astype`, `df.copy`, `estrato_por_grupo.groupby`, `invalidos.any`, `isin`, `isna`, `len`, `map`, `np.random.default_rng`, `reset_index`, `rng.shuffle`, `set`, `sorted`, `sub.index.tolist`, `unique`, `warnings.warn`
+- Calls: `_aplicar_politica_estrato_pequeno`, `_distribuir_tamanhos`, `_estrato_por_grupo`, `_validar_parametros`, `astype`, `atribuicao.update`, `df.copy`, `estrato_por_grupo.groupby`, `fatias.items`, `invalidos.any`, `isin`, `isna`, `len`, `map`, `np.random.default_rng`, `reset_index`, `rng.shuffle`, `set`, `sorted`, `sub.index.tolist`, `unique`, `warnings.warn`
 
-Cria partições treino/validação/teste agrupadas por `group_column` e
-estratificadas por `target_column`.
+Partições treino/validação/teste agrupadas e estratificadas.
 
-Não muta `df`: devolve uma cópia com a coluna `partition_column` adicionada.
+Não muta ``df``: devolve cópia com ``partition_column`` adicionada.
+Grupos com alvo nulo e estratos descartados por ``"drop"`` não aparecem.
 
-Parâmetros
-----------
-df : pd.DataFrame
-    Base de entrada. Precisa conter `target_column` e `group_column`.
-target_column : str
-    Coluna binária (0/1) usada como estrato.
-group_column : str
-    Coluna de agrupamento (p.ex. `nu_notific`).
-partition_column : str
-    Nome da coluna de saída. Não pode já existir em `df`.
-frac_treino, frac_validacao : float
-    Frações alvo. `frac_teste = 1 - frac_treino - frac_validacao`.
-seed : int
-    Semente do gerador. Mesmo `seed` + mesmo `df` → mesmo resultado.
-min_grupos_por_estrato : int
-    Mínimo de grupos por estrato para permitir split em três partições.
-    Precisa ser ≥ 3.
-politica_estratos_pequenos : {"raise", "warn_teste", "warn_treino", "drop"}
-    Comportamento para estratos abaixo de `min_grupos_por_estrato`.
-on_grupo_alvo_heterogeneo : {"raise", "warn"}
-    Como tratar grupos com mais de um valor de alvo.
-
-Retorno
--------
-pd.DataFrame
-    Cópia de `df` com a coluna `partition_column` em
-    `{"treino", "validacao", "teste"}`. Grupos com alvo nulo e estratos
-    descartados por `politica_estratos_pequenos="drop"` não aparecem.
-
-Levanta
-------
-KeyError
-    Se `target_column` ou `group_column` não existirem em `df`.
-ValueError
-    Parâmetros inválidos, DataFrame vazio, coluna de partição já presente,
-    ou estrato pequeno com política ``"raise"``.
+Levanta ``KeyError`` se ``target_column`` ou ``group_column`` não
+existirem em ``df``, e ``ValueError`` para parâmetros inválidos,
+DataFrame vazio, coluna de partição já presente, ou estrato pequeno
+com política ``"raise"``.
 
 ### `src/data/supervised_artifact.py`
 
-- Module: `src.data.supervised_artifact` · 338 lines
+- Module: `src.data.supervised_artifact` · 323 lines
 - Internal imports: `src.utils.hashing.sha256_file`
 - External imports: `__future__.annotations`, `datetime.datetime`, `datetime.timezone`, `json`, `pandas`, `pathlib.Path`, `typing.Any`, `typing.Mapping`, `typing.Sequence`
-- Module constants: `DATASET_NAME = 'dataset_supervisionado.parquet'`, `MANIFEST_NAME = 'manifesto_supervisionado.json'`, `ALLOWED_PARTITIONS = {'treino', 'teste', 'validacao'}`, `SCHEMA_VERSION = 2`, `_PARTITION_TREINO = 'treino'`, `_PARTITION_VALIDACAO = 'validacao'`, `_PARTITION_TESTE = 'teste'`
+- Module constants: `DATASET_NAME = 'dataset_supervisionado.parquet'`, `MANIFEST_NAME = 'manifesto_supervisionado.json'`, `SCHEMA_VERSION = 2`, `_PARTITION_TREINO = 'treino'`, `_PARTITION_VALIDACAO = 'validacao'`, `_PARTITION_TESTE = 'teste'`, `ALLOWED_PARTITIONS = {_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE}`
 
 Persistencia e leitura do dataset supervisionado canonico.
 
-O modulo separa notebooks da origem fisica da coorte. O Notebook 03
-materializa uma unica particao e os notebooks seguintes apenas a reutilizam.
+Separa notebooks da origem fisica da coorte: o Notebook 03 materializa uma
+unica particao e os notebooks seguintes apenas a reutilizam.
 
 O manifesto registra, alem do hash e das particoes:
 
-- ``feature_columns`` — colunas efetivamente usadas como features;
-- ``numeric_columns`` / ``categorical_columns`` — divisao das features por
-  tipo, consumida por ``build_preprocessor``;
-- ``audit_columns`` — colunas presentes no parquet que NAO entram em X, mas
-  devem ser preservadas para auditoria (ex.: ``sg_uf``, ``faixa_etaria``).
+- ``feature_columns`` — colunas usadas como features;
+- ``numeric_columns`` / ``categorical_columns`` — divisao por tipo,
+  consumida por ``build_preprocessor``;
+- ``audit_columns`` — colunas no parquet que NAO entram em X, mas devem
+  ser preservadas para auditoria (ex.: ``sg_uf``, ``faixa_etaria``).
 
 Convencoes:
 
 - As particoes canonicas sao ``treino``, ``validacao`` e ``teste``.
-- ``split_partitions`` devolve ``(treino, validacao)`` — o par consumido
-  durante a fase de selecao. O bloco ``teste`` NAO e exposto por essa
-  funcao; use ``holdout_partition`` e respeite a disciplina do gate
-  ``G9_holdout``.
+- ``split_partitions`` devolve ``(treino, validacao)`` — par consumido na
+  fase de selecao. O bloco ``teste`` NAO e exposto; use
+  ``holdout_partition`` respeitando o gate ``G9_holdout``.
 
-#### `_analytical_dir`
+#### `_paths`
 
 ```python
-def _analytical_dir(root: Path) -> Path
+def _paths(root: Path) -> tuple[Path, Path]
 ```
 
-- Location: `src/data/supervised_artifact.py:44-45`
+- Location: `src/data/supervised_artifact.py:44-47`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `Path`, `Path.resolve`
+
+Caminhos canonicos (dataset, manifesto) para uma raiz de projeto.
+
+#### `_validar_grupos`
+
+```python
+def _validar_grupos(num_set: set[str], cat_set: set[str], feats_set: set[str]) -> None
+```
+
+- Location: `src/data/supervised_artifact.py:50-69`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `ValueError`, `sorted`
 
 _Missing docstring._
 
@@ -1877,31 +1991,17 @@ _Missing docstring._
 def _resolver_grupos(feature_columns: Sequence[str], numeric_columns: Sequence[str] | None, categorical_columns: Sequence[str] | None) -> tuple[list[str] | None, list[str] | None]
 ```
 
-- Location: `src/data/supervised_artifact.py:48-74`
+- Location: `src/data/supervised_artifact.py:72-98`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_validar_grupos`, `list`, `set`
 
-Resolve o par ``(numericas, categoricas)`` a partir das entradas.
+Resolve o par ``(numericas, categoricas)``.
 
 - Ambas ``None`` → ``(None, None)`` (compatibilidade com chamadas antigas).
 - Apenas uma passada → o complemento e inferido dentro de ``feature_columns``.
 - Ambas passadas → valida disjuncao e cobertura exata de ``feature_columns``.
-
-#### `_validar_grupos`
-
-```python
-def _validar_grupos(num_set: set[str], cat_set: set[str], feats_set: set[str]) -> None
-```
-
-- Location: `src/data/supervised_artifact.py:77-99`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `ValueError`, `sorted`
-
-_Missing docstring._
 
 #### `validate_supervised_frame`
 
@@ -1909,12 +2009,12 @@ _Missing docstring._
 def validate_supervised_frame(frame: pd.DataFrame, *, feature_columns: Sequence[str], target_column: str, partition_column: str, audit_columns: Sequence[str] | None=None) -> None
 ```
 
-- Location: `src/data/supervised_artifact.py:102-139`
+- Location: `src/data/supervised_artifact.py:101-132`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Defaults: `audit_columns=None`
-- Calls: `KeyError`, `ValueError`, `dropna`, `dropna.astype`, `dropna.astype.unique`, `dropna.astype.unique.tolist`, `pd.to_numeric`, `pd.to_numeric.dropna`, `pd.to_numeric.dropna.astype`, `pd.to_numeric.dropna.astype.unique`, `pd.to_numeric.dropna.astype.unique.tolist`, `set`, `sorted`, `target_values.issubset`
+- Calls: `KeyError`, `ValueError`, `dropna`, `dropna.astype`, `dropna.astype.unique`, `pd.to_numeric`, `pd.to_numeric.dropna`, `pd.to_numeric.dropna.astype`, `pd.to_numeric.dropna.astype.unique`, `set`, `sorted`, `target_values.issubset`
 
 Valida schema minimo, alvo e particoes do artefato supervisionado.
 
@@ -1924,7 +2024,7 @@ Valida schema minimo, alvo e particoes do artefato supervisionado.
 def _build_manifest(*, frame: pd.DataFrame, dataset_path: Path, source: Mapping[str, Any], feature_columns: Sequence[str], numeric_columns: list[str] | None, categorical_columns: list[str] | None, audit_columns: Sequence[str] | None, target_column: str, partition_column: str, cohort_kind: str, seed: int) -> dict[str, Any]
 ```
 
-- Location: `src/data/supervised_artifact.py:142-180`
+- Location: `src/data/supervised_artifact.py:135-171`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -1938,32 +2038,18 @@ _Missing docstring._
 def persist_supervised_artifact(frame: pd.DataFrame, *, root: Path, source: Mapping[str, Any], feature_columns: Sequence[str], target_column: str, partition_column: str, cohort_kind: str, seed: int, numeric_columns: Sequence[str] | None=None, categorical_columns: Sequence[str] | None=None, audit_columns: Sequence[str] | None=None, overwrite: bool=False) -> tuple[Path, Path]
 ```
 
-- Location: `src/data/supervised_artifact.py:183-245`
+- Location: `src/data/supervised_artifact.py:174-233`
 - Visibility: `public`
 - Tested by: `tests/test_supervised_artifact.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `tests/test_supervised_artifact.py`
 - Defaults: `numeric_columns=None`, `categorical_columns=None`, `audit_columns=None`, `overwrite=False`
-- Calls: `FileExistsError`, `_analytical_dir`, `_build_manifest`, `_resolver_grupos`, `dataset_path.exists`, `frame.to_parquet`, `json.dumps`, `manifest_path.exists`, `manifest_path.write_text`, `output_dir.mkdir`, `validate_supervised_frame`
+- Calls: `FileExistsError`, `_build_manifest`, `_paths`, `_resolver_grupos`, `dataset_path.exists`, `dataset_path.parent.mkdir`, `frame.to_parquet`, `json.dumps`, `manifest_path.exists`, `manifest_path.write_text`, `validate_supervised_frame`
 
 Grava dataset e manifesto, preservando a particao criada no Notebook 03.
 
-``numeric_columns``/``categorical_columns`` dividem as ``feature_columns``
+``numeric_columns``/``categorical_columns`` dividem ``feature_columns``
 por tipo (ambas, uma, ou nenhuma — ver ``_resolver_grupos``).
 ``audit_columns`` sao validadas como presentes mas nao entram em X.
-
-#### `_partition_column`
-
-```python
-def _partition_column(frame: pd.DataFrame, manifest: Mapping[str, Any]) -> str
-```
-
-- Location: `src/data/supervised_artifact.py:248-252`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `KeyError`
-
-_Missing docstring._
 
 #### `load_supervised_artifact`
 
@@ -1971,14 +2057,28 @@ _Missing docstring._
 def load_supervised_artifact(root: Path, *, expected_kind: str | None=None, columns: Sequence[str] | None=None) -> tuple[pd.DataFrame, dict[str, Any]]
 ```
 
-- Location: `src/data/supervised_artifact.py:255-295`
+- Location: `src/data/supervised_artifact.py:236-274`
 - Visibility: `public`
 - Tested by: `tests/test_supervised_artifact.py`
 - Consumed by: `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_supervised_artifact.py`
 - Defaults: `expected_kind=None`, `columns=None`
-- Calls: `FileNotFoundError`, `RuntimeError`, `_analytical_dir`, `dataset_path.is_file`, `json.loads`, `list`, `manifest.get`, `manifest_path.is_file`, `manifest_path.read_text`, `pd.read_parquet`, `sha256_file`, `str`, `validate_supervised_frame`
+- Calls: `FileNotFoundError`, `RuntimeError`, `_paths`, `dataset_path.is_file`, `json.loads`, `list`, `manifest.get`, `manifest_path.is_file`, `manifest_path.read_text`, `pd.read_parquet`, `sha256_file`, `str`, `validate_supervised_frame`
 
 Carrega o artefato canonico e valida hash, tipo de coorte e schema.
+
+#### `_select_partition`
+
+```python
+def _select_partition(frame: pd.DataFrame, manifest: Mapping[str, Any], partition: str) -> pd.DataFrame
+```
+
+- Location: `src/data/supervised_artifact.py:277-285`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `KeyError`, `astype`, `reset_index`
+
+_Missing docstring._
 
 #### `split_partitions`
 
@@ -1986,11 +2086,11 @@ Carrega o artefato canonico e valida hash, tipo de coorte e schema.
 def split_partitions(frame: pd.DataFrame, manifest: Mapping[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]
 ```
 
-- Location: `src/data/supervised_artifact.py:298-319`
+- Location: `src/data/supervised_artifact.py:288-306`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`
-- Calls: `ValueError`, `_partition_column`, `astype`, `reset_index`
+- Calls: `ValueError`, `_select_partition`
 
 Devolve ``(treino, validacao)`` a partir da coluna de particao canonica.
 
@@ -2004,11 +2104,11 @@ exige o gate ``G9_holdout`` aprovado e passa por ``holdout_partition``.
 def holdout_partition(frame: pd.DataFrame, manifest: Mapping[str, Any]) -> pd.DataFrame
 ```
 
-- Location: `src/data/supervised_artifact.py:322-338`
+- Location: `src/data/supervised_artifact.py:309-323`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `ValueError`, `_partition_column`, `astype`, `reset_index`
+- Calls: `ValueError`, `_select_partition`
 
 Devolve o bloco ``teste`` (holdout).
 
@@ -2019,21 +2119,21 @@ isola o acesso fisico a particao.
 
 ### `src/evaluation/__init__.py`
 
-- Module: `src.evaluation` · 61 lines
-- Internal imports: `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros`, `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`
+- Module: `src.evaluation` · 76 lines
+- Internal imports: `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.CriterioTop`, `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros`, `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.ArrayLike`, `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.especificidade`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.log_loss`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`, `src.evaluation.metrics.sensibilidade`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`
 - External imports: none
 
 Avaliação: splits temporais, métricas, calibração e análise de erros.
 
 ### `src/evaluation/calibration.py`
 
-- Module: `src.evaluation.calibration` · 164 lines
+- Module: `src.evaluation.calibration` · 169 lines
 - Internal imports: `src.evaluation.metrics._to_int_labels`, `src.evaluation.metrics._to_np`
-- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Union`
+- External imports: `__future__.annotations`, `numpy`, `pandas`
 
 Avaliação de calibração de probabilidades.
 
-Complementa `src/models/calibration.py`:
+Complementa ``src/models/calibration.py``:
 
     src/models/calibration.py      → AJUSTA a calibração
     src/evaluation/calibration.py  → MEDE a qualidade da calibração
@@ -2046,18 +2146,46 @@ Métricas implementadas
 - Decomposição de Brier em Reliability + Resolution − Uncertainty
   (Murphy, 1973)
 
+#### `_bins_digitize`
+
+```python
+def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray
+```
+
+- Location: `src/evaluation/calibration.py:28-31`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `np.clip`, `np.digitize`, `np.linspace`
+
+Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``.
+
+#### `_linha_vazia`
+
+```python
+def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]
+```
+
+- Location: `src/evaluation/calibration.py:34-40`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `float`
+
+_Missing docstring._
+
 #### `curva_confiabilidade`
 
 ```python
 def curva_confiabilidade(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/calibration.py:30-73`
+- Location: `src/evaluation/calibration.py:43-80`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
-- Calls: `_to_int_labels`, `_to_np`, `abs`, `float`, `int`, `linhas.append`, `m.sum`, `mean`, `np.clip`, `np.digitize`, `np.linspace`, `pd.DataFrame`, `range`
+- Calls: `_bins_digitize`, `_linha_vazia`, `_to_int_labels`, `_to_np`, `abs`, `float`, `int`, `linhas.append`, `m.sum`, `mean`, `np.linspace`, `pd.DataFrame`, `range`
 
 Dados para o reliability diagram.
 
@@ -2073,7 +2201,7 @@ Colunas:
 def ece(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> float
 ```
 
-- Location: `src/evaluation/calibration.py:76-90`
+- Location: `src/evaluation/calibration.py:83-97`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
@@ -2088,7 +2216,7 @@ Expected Calibration Error — média ponderada dos gaps por bin.
 def mce(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> float
 ```
 
-- Location: `src/evaluation/calibration.py:93-105`
+- Location: `src/evaluation/calibration.py:100-112`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
@@ -2103,12 +2231,12 @@ Maximum Calibration Error — o pior gap entre os bins.
 def brier_decomposicao(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> dict[str, float]
 ```
 
-- Location: `src/evaluation/calibration.py:108-164`
+- Location: `src/evaluation/calibration.py:115-169`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
-- Calls: `ValueError`, `_to_int_labels`, `_to_np`, `float`, `int`, `len`, `m.sum`, `mean`, `np.clip`, `np.digitize`, `np.linspace`, `np.mean`, `range`, `y.mean`
+- Calls: `ValueError`, `_bins_digitize`, `_to_int_labels`, `_to_np`, `float`, `int`, `len`, `m.sum`, `mean`, `np.mean`, `range`, `y.mean`
 
 Decompõe o Brier score (Murphy, 1973):
 
@@ -2125,23 +2253,29 @@ dict com:
 
 ### `src/evaluation/errors.py`
 
-- Module: `src.evaluation.errors` · 217 lines
+- Module: `src.evaluation.errors` · 201 lines
 - Internal imports: `src.evaluation.metrics._to_int_labels`, `src.evaluation.metrics._to_np`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`
-- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Literal`, `typing.Union`
+- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Literal`
 
 Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
 
-Ferramentas
------------
-- `matriz_confusao`           → TP/FP/FN/TN em DataFrame
-- `extrair_falsos_positivos`  → subconjunto do df com FP
-- `extrair_falsos_negativos`  → subconjunto do df com FN
-- `metricas_por_grupo`        → métricas por categoria de uma coluna
-- `top_erros`                 → os N piores erros por confiança
-
-A checagem de leakage vive em `src.evaluation.leakage` — importe de lá:
+A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
 
     from src.evaluation.leakage import LeakageError, check_leakage
+
+#### `_validar_tamanhos`
+
+```python
+def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None
+```
+
+- Location: `src/evaluation/errors.py:39-42`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `ValueError`, `len`
+
+Garante que ``df`` e os rótulos têm o mesmo número de linhas.
 
 #### `matriz_confusao`
 
@@ -2149,7 +2283,7 @@ A checagem de leakage vive em `src.evaluation.leakage` — importe de lá:
 def matriz_confusao(y_true: ArrayLike, y_pred: ArrayLike) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/errors.py:48-73`
+- Location: `src/evaluation/errors.py:45-72`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
@@ -2157,8 +2291,22 @@ def matriz_confusao(y_true: ArrayLike, y_pred: ArrayLike) -> pd.DataFrame
 
 Matriz de confusão 2×2 como DataFrame.
 
-Colunas: ["pred_0", "pred_1"], índice: ["real_0", "real_1"].
-Adiciona linha/coluna "total" para conveniência.
+Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
+Adiciona linha/coluna ``"total"``.
+
+#### `_extrair_por_mascara`
+
+```python
+def _extrair_por_mascara(df: pd.DataFrame, y_true: ArrayLike, y_pred: ArrayLike, *, yv: int, pv: int) -> pd.DataFrame
+```
+
+- Location: `src/evaluation/errors.py:75-86`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_to_int_labels`, `reset_index`
+
+Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``.
 
 #### `extrair_falsos_positivos`
 
@@ -2166,13 +2314,13 @@ Adiciona linha/coluna "total" para conveniência.
 def extrair_falsos_positivos(df: pd.DataFrame, y_true: ArrayLike, y_pred: ArrayLike) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/errors.py:76-85`
+- Location: `src/evaluation/errors.py:89-95`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
 - Consumed by: `src/evaluation/__init__.py`, `tests/test_errors.py`
-- Calls: `_to_int_labels`, `reset_index`
+- Calls: `_extrair_por_mascara`
 
-Retorna as linhas de `df` onde o modelo previu 1 mas o real é 0.
+Linhas de ``df`` onde o modelo previu 1 mas o real é 0.
 
 #### `extrair_falsos_negativos`
 
@@ -2180,13 +2328,13 @@ Retorna as linhas de `df` onde o modelo previu 1 mas o real é 0.
 def extrair_falsos_negativos(df: pd.DataFrame, y_true: ArrayLike, y_pred: ArrayLike) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/errors.py:88-97`
+- Location: `src/evaluation/errors.py:98-104`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
 - Consumed by: `src/evaluation/__init__.py`, `tests/test_errors.py`
-- Calls: `_to_int_labels`, `reset_index`
+- Calls: `_extrair_por_mascara`
 
-Retorna as linhas de `df` onde o modelo previu 0 mas o real é 1.
+Linhas de ``df`` onde o modelo previu 0 mas o real é 1.
 
 #### `metricas_por_grupo`
 
@@ -2194,18 +2342,17 @@ Retorna as linhas de `df` onde o modelo previu 0 mas o real é 1.
 def metricas_por_grupo(df: pd.DataFrame, y_true: ArrayLike, y_prob: ArrayLike, coluna_grupo: str, *, limiar: float=0.5, min_n: int=30) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/errors.py:100-163`
+- Location: `src/evaluation/errors.py:107-159`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
 - Defaults: `limiar=0.5`, `min_n=30`
-- Calls: `KeyError`, `ValueError`, `_to_int_labels`, `_to_np`, `astype`, `auc`, `df.reset_index`, `f1`, `float`, `grupos.dropna`, `grupos.dropna.unique`, `int`, `len`, `linhas.append`, `m.sum`, `np.unique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.DataFrame.sort_values.reset_index`, `precision`, `recall`, `str`, `to_numpy`, `y_g.mean`
+- Calls: `KeyError`, `_to_int_labels`, `_to_np`, `_validar_tamanhos`, `astype`, `auc`, `df.reset_index`, `f1`, `float`, `grupos.dropna`, `grupos.dropna.unique`, `int`, `len`, `linhas.append`, `m.sum`, `np.unique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.DataFrame.sort_values.reset_index`, `precision`, `recall`, `str`, `to_numpy`, `y_g.mean`
 
-Métricas por categoria de `coluna_grupo` (ex.: "sg_uf", "cs_sexo").
+Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
 
-Ignora grupos com menos de `min_n` amostras (evita métricas instáveis).
-
-Colunas: grupo, n, taxa_positivos, auc, f1, precision, recall.
+Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
+Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
 
 #### `top_erros`
 
@@ -2213,46 +2360,37 @@ Colunas: grupo, n, taxa_positivos, auc, f1, precision, recall.
 def top_erros(df: pd.DataFrame, y_true: ArrayLike, y_prob: ArrayLike, *, n: int=20, criterio: CriterioTop='erro_absoluto', limiar: float=0.5) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/errors.py:166-217`
+- Location: `src/evaluation/errors.py:162-201`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
 - Consumed by: `src/evaluation/__init__.py`, `tests/test_errors.py`
 - Defaults: `n=20`, `criterio='erro_absoluto'`, `limiar=0.5`
-- Calls: `ValueError`, `_to_int_labels`, `_to_np`, `astype`, `df.reset_index`, `df.reset_index.copy`, `len`, `np.abs`, `sel.head`, `sel.head.reset_index`, `sel.sort_values`
+- Calls: `ValueError`, `_to_int_labels`, `_to_np`, `_validar_tamanhos`, `astype`, `df.reset_index`, `df.reset_index.copy`, `np.abs`, `sel.head`, `sel.head.reset_index`, `sort_values`
 
-Retorna as N linhas de `df` com os piores erros.
+Retorna as ``n`` linhas de ``df`` com os piores erros.
 
-Parâmetros
-----------
-criterio : {"fp", "fn", "erro_absoluto"}
-    - "fp"            → ordena por prob decrescente entre FP
-    - "fn"            → ordena por prob crescente entre FN
-    - "erro_absoluto" → ordena por |prob − y| decrescente (todos os erros)
+``criterio``:
+    - ``"fp"``            → prob decrescente entre FP
+    - ``"fn"``            → prob crescente entre FN
+    - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
 
-Adiciona colunas: `y_true`, `y_prob`, `y_pred`, `erro_abs`.
+Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
 
 ### `src/evaluation/leakage.py`
 
-- Module: `src.evaluation.leakage` · 89 lines
+- Module: `src.evaluation.leakage` · 70 lines
 - Internal imports: `src.utils.config`
-- External imports: `__future__.annotations`, `pandas`
+- External imports: `__future__.annotations`, `pandas`, `typing.Iterable`
+- Module constants: `DEFAULT_LEAKAGE_COLUMNS = frozenset({'evolucao', 'dt_evoluca', 'dt_encerra', 'uti', 'utilizouvni', 'suport_ven', 'antiviral', 'antivirais', 'classificacao_final', 'cluster', 'cluster_rotulo'})`
 
-Verificação de vazamento de alvo (leakage).
+Verificação anti-vazamento de dados.
 
-Uma coluna proibida em `X` invalida qualquer avaliação posterior: o
-modelo aprende o alvo por um atalho e as métricas de validação/holdout
-viram ficção. Este módulo concentra a checagem em um único ponto.
+``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
+A lista efetiva é a união de:
 
-Uso típico
-----------
-    from src.evaluation.leakage import check_leakage
-
-    check_leakage(X_train)
-    check_leakage(X_val)
-
-Para inspeção manual (sem config), passe a lista explicitamente:
-
-    check_leakage(X, forbidden_columns=["evolucao", "dt_evoluca"])
+- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
+- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
+- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
 
 #### `LeakageError`
 
@@ -2260,80 +2398,66 @@ Para inspeção manual (sem config), passe a lista explicitamente:
 class LeakageError(RuntimeError)
 ```
 
-- Location: `src/evaluation/leakage.py:25-26`
+- Location: `src/evaluation/leakage.py:22-23`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`, `tests/test_temporal.py`
-- Consumed by: `src/evaluation/__init__.py`, `tests/test_leakage.py`, `tests/test_temporal.py`
+- Tested by: `tests/test_leakage.py`
+- Consumed by: `src/evaluation/__init__.py`, `tests/test_leakage.py`
 
-Levantado quando uma coluna proibida aparece em X.
+Erro lançado quando variáveis com vazamento são encontradas.
 
-#### `_resolver_colunas_proibidas`
+#### `_resolve_forbidden_columns`
 
 ```python
-def _resolver_colunas_proibidas(forbidden_columns: list[str] | None, target_column: str | None) -> set[str]
+def _resolve_forbidden_columns(forbidden_columns: Iterable[str] | None, target_column: str | None) -> set[str]
 ```
 
-- Location: `src/evaluation/leakage.py:29-46`
+- Location: `src/evaluation/leakage.py:35-54`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`, `list`, `proibidas.add`, `set`
+- Calls: `C.cfg`, `base.add`, `set`
 
-_Missing docstring._
+Conjunto efetivo de colunas proibidas.
+
+Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
+do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
 
 #### `check_leakage`
 
 ```python
-def check_leakage(X: pd.DataFrame, *, forbidden_columns: list[str] | None=None, target_column: str | None=None) -> None
+def check_leakage(X: pd.DataFrame, *, forbidden_columns: Iterable[str] | None=None, target_column: str | None=None) -> None
 ```
 
-- Location: `src/evaluation/leakage.py:49-89`
+- Location: `src/evaluation/leakage.py:57-70`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `src/evaluation/__init__.py`, `tests/test_leakage.py`, `tests/test_temporal.py`
+- Tested by: `tests/test_leakage.py`
+- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `src/evaluation/__init__.py`, `tests/test_leakage.py`
 - Defaults: `forbidden_columns=None`, `target_column=None`
-- Calls: `LeakageError`, `_resolver_colunas_proibidas`, `print`, `set`, `sorted`
+- Calls: `LeakageError`, `_resolve_forbidden_columns`, `join`, `set`, `sorted`
 
-Garante que X não contém colunas que vazam o alvo.
+Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
 
-Parâmetros
-----------
-X : pd.DataFrame
-    Matriz de features a ser verificada.
-forbidden_columns : list[str] | None
-    Colunas proibidas. Se None, lê `features.proibidas` do
-    `configs/supervised.yaml`. Lista vazia desliga a checagem de
-    proibidas (apenas o alvo é verificado).
-target_column : str | None
-    Nome da coluna alvo. Se None, lê `target.coluna`. Sempre
-    adicionado ao conjunto de proibidas, se não vazio.
-
-Levanta
-------
-LeakageError
-    Se qualquer coluna proibida estiver presente em `X`.
+``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
+``target_column=None`` usa ``target.coluna`` do YAML.
 
 ### `src/evaluation/metrics.py`
 
-- Module: `src.evaluation.metrics` · 302 lines
+- Module: `src.evaluation.metrics` · 251 lines
 - Internal imports: none
-- External imports: `__future__.annotations`, `numpy`, `pandas`, `sklearn.metrics.accuracy_score`, `sklearn.metrics.average_precision_score`, `sklearn.metrics.brier_score_loss`, `sklearn.metrics.f1_score`, `sklearn.metrics.log_loss`, `sklearn.metrics.precision_score`, `sklearn.metrics.recall_score`, `sklearn.metrics.roc_auc_score`, `typing.Callable`, `typing.Union`
+- External imports: `__future__.annotations`, `numpy`, `pandas`, `sklearn.metrics.accuracy_score`, `sklearn.metrics.average_precision_score`, `sklearn.metrics.brier_score_loss`, `sklearn.metrics.f1_score`, `sklearn.metrics.log_loss`, `sklearn.metrics.precision_score`, `sklearn.metrics.recall_score`, `sklearn.metrics.roc_auc_score`, `typing.Callable`
 
-Métricas de classificação binária — todas retornam `float`.
+Métricas de classificação binária — todas retornam ``float``.
 
-Motivo: o scikit-learn retorna `Float | ndarray` para várias métricas,
-o que faz o Pylance reclamar. Aqui a gente encapsula e garante `float`.
+Encapsula o scikit-learn para garantir ``float``: em várias funções ele
+retorna ``Float | ndarray``, o que polui o type-checker.
 
-Também oferece:
-    - `metricas_por_limiar` → tabela varrendo limiares
-    - `ic_bootstrap`        → intervalo de confiança por bootstrap
+Oferece ainda:
+    - ``metricas_por_limiar`` → tabela varrendo limiares
+    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
 
-Convenção de nomes de chaves em `metricas_completas`
-----------------------------------------------------
-`ap` (average precision) e `pr_auc` (área sob a curva precision-recall)
-são a **mesma métrica** — a chave `pr_auc` é um alias mantido para
-compatibilidade com consumidores que usam essa nomenclatura (ex.: C4).
-Ambas apontam para o mesmo valor; não divergem.
+``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
+chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
+que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
 
 #### `_to_np`
 
@@ -2341,7 +2465,7 @@ Ambas apontam para o mesmo valor; não divergem.
 def _to_np(x: ArrayLike) -> np.ndarray
 ```
 
-- Location: `src/evaluation/metrics.py:56-57`
+- Location: `src/evaluation/metrics.py:53-54`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: `src/evaluation/calibration.py`, `src/evaluation/errors.py`
@@ -2355,7 +2479,7 @@ _Missing docstring._
 def _to_int_labels(y: ArrayLike) -> np.ndarray
 ```
 
-- Location: `src/evaluation/metrics.py:60-61`
+- Location: `src/evaluation/metrics.py:57-58`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: `src/evaluation/calibration.py`, `src/evaluation/errors.py`
@@ -2369,7 +2493,7 @@ _Missing docstring._
 def _contagens_confusao(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[int, int, int, int]
 ```
 
-- Location: `src/evaluation/metrics.py:64-72`
+- Location: `src/evaluation/metrics.py:61-69`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2377,13 +2501,26 @@ def _contagens_confusao(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[int, in
 
 _Missing docstring._
 
+#### `_especificidade_de_contagens`
+
+```python
+def _especificidade_de_contagens(tn: int, fp: int) -> float
+```
+
+- Location: `src/evaluation/metrics.py:72-75`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+``TN / (TN + FP)``; 0.0 quando não há negativo real.
+
 #### `auc`
 
 ```python
 def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:75-76`
+- Location: `src/evaluation/metrics.py:78-79`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
@@ -2397,7 +2534,7 @@ _Missing docstring._
 def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:79-80`
+- Location: `src/evaluation/metrics.py:82-83`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
@@ -2411,7 +2548,7 @@ _Missing docstring._
 def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:83-84`
+- Location: `src/evaluation/metrics.py:86-87`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
@@ -2425,15 +2562,13 @@ _Missing docstring._
 def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:87-95`
+- Location: `src/evaluation/metrics.py:90-92`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
+- Consumed by: `src/evaluation/__init__.py`
 - Calls: `_to_int_labels`, `_to_np`, `float`, `sk_log_loss`
 
-Log loss (entropia cruzada binária).
-
-Recebe probabilidades (não rótulos duros) e devolve `float`.
+Log loss (entropia cruzada binária) sobre probabilidades.
 
 #### `f1`
 
@@ -2441,7 +2576,7 @@ Recebe probabilidades (não rótulos duros) e devolve `float`.
 def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:98-105`
+- Location: `src/evaluation/metrics.py:95-98`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
@@ -2455,7 +2590,7 @@ _Missing docstring._
 def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:108-115`
+- Location: `src/evaluation/metrics.py:101-104`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
@@ -2469,7 +2604,7 @@ _Missing docstring._
 def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:118-125`
+- Location: `src/evaluation/metrics.py:107-110`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
@@ -2483,7 +2618,7 @@ _Missing docstring._
 def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:128-131`
+- Location: `src/evaluation/metrics.py:113-116`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `src/evaluation/__init__.py`, `tests/test_metrics.py`
@@ -2497,16 +2632,13 @@ _Missing docstring._
 def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:134-146`
+- Location: `src/evaluation/metrics.py:119-124`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_contagens_confusao`, `_to_int_labels`, `float`
+- Consumed by: `src/evaluation/__init__.py`
+- Calls: `_contagens_confusao`, `_especificidade_de_contagens`, `_to_int_labels`
 
-Especificidade = TN / (TN + FP).
-
-Ou seja, `recall` da classe negativa. Retorna 0.0 quando não há
-nenhum negativo real (evita divisão por zero).
+Especificidade = ``TN / (TN + FP)`` — recall da classe negativa.
 
 #### `sensibilidade`
 
@@ -2514,16 +2646,13 @@ nenhum negativo real (evita divisão por zero).
 def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float
 ```
 
-- Location: `src/evaluation/metrics.py:149-156`
+- Location: `src/evaluation/metrics.py:127-129`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
+- Consumed by: `src/evaluation/__init__.py`
 - Calls: `recall`
 
-Sensibilidade = recall da classe positiva.
-
-Alias semântico de `recall` — mantido para alinhar com o YAML,
-que pede explicitamente "sensibilidade".
+Alias semântico de ``recall`` — alinha com a chave do YAML.
 
 #### `metricas_completas`
 
@@ -2531,23 +2660,17 @@ que pede explicitamente "sensibilidade".
 def metricas_completas(y_true: ArrayLike, y_prob: ArrayLike, limiar: float=0.5) -> dict[str, float]
 ```
 
-- Location: `src/evaluation/metrics.py:159-196`
+- Location: `src/evaluation/metrics.py:132-162`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/models/baseline.py`, `tests/test_metrics.py`
 - Defaults: `limiar=0.5`
 - Calls: `_to_int_labels`, `_to_np`, `accuracy`, `astype`, `auc`, `average_precision`, `brier`, `especificidade`, `f1`, `float`, `len`, `log_loss`, `precision`, `recall`, `sensibilidade`
 
-Retorna um dict com AUC, AP, pr_auc, Brier, log_loss, F1, precision,
-recall, sensibilidade, especificidade e accuracy.
+Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
 
-Pronto para `Run.metrica(**d)`.
-
-Notas
------
-- `pr_auc` é **alias** de `ap` (ambos = `average_precision_score`),
-  mantido para compatibilidade com consumidores que usam esse nome
-  (ex.: C4). Os dois valores são idênticos.
+``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
+mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
 
 #### `metricas_por_limiar`
 
@@ -2555,27 +2678,22 @@ Notas
 def metricas_por_limiar(y_true: ArrayLike, y_prob: ArrayLike, n_limiares: int=101) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/metrics.py:199-250`
+- Location: `src/evaluation/metrics.py:165-209`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `src/evaluation/__init__.py`, `src/models/calibration.py`, `tests/test_metrics.py`
 - Defaults: `n_limiares=101`
-- Calls: `_contagens_confusao`, `_to_int_labels`, `_to_np`, `accuracy`, `astype`, `f1`, `float`, `linhas.append`, `np.linspace`, `pd.DataFrame`, `precision`, `recall`
+- Calls: `_contagens_confusao`, `_especificidade_de_contagens`, `_to_int_labels`, `_to_np`, `accuracy`, `astype`, `f1`, `float`, `linhas.append`, `np.linspace`, `pd.DataFrame`, `precision`, `recall`
 
-Tabela com métricas para cada limiar em [0.01, 0.99].
+Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
 
-Colunas: limiar, tp, fp, tn, fn, f1, precision, recall,
-sensibilidade, especificidade, accuracy, youden_j.
+Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
+sensibilidade, especificidade, accuracy, youden_j``.
 
-Usa as métricas deste próprio módulo — não há tabela paralela de lambdas.
-
-Notas
------
-- `youden_j` = sensibilidade + especificidade − 1 = recall +
-  especificidade − 1. Índice de Youden, útil para escolher o limiar
-  que maximiza a separação entre as classes.
-- `tp`, `fp`, `tn`, `fn` vêm da matriz de confusão no limiar corrente
-  e permitem derivar qualquer outra métrica a posteriori.
+``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
+o limiar que maximiza a separação entre as classes. As contagens de
+confusão ficam expostas para permitir derivar qualquer outra métrica
+a posteriori — não há tabela paralela de lambdas.
 
 #### `ic_bootstrap`
 
@@ -2583,7 +2701,7 @@ Notas
 def ic_bootstrap(y_true: ArrayLike, y_prob: ArrayLike, *, metrica: Callable[[ArrayLike, ArrayLike], float]=auc, n_boot: int=200, alpha: float=0.05, seed: int=42) -> tuple[float, float, float]
 ```
 
-- Location: `src/evaluation/metrics.py:253-302`
+- Location: `src/evaluation/metrics.py:212-251`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
@@ -2592,52 +2710,31 @@ def ic_bootstrap(y_true: ArrayLike, y_prob: ArrayLike, *, metrica: Callable[[Arr
 
 Intervalo de confiança via bootstrap percentil.
 
-Retorna (estimativa, limite_inferior, limite_superior).
-
-Parâmetros
-----------
-metrica : callable(y_true, y_prob) -> float
-    Função de métrica. Default: `auc`.
-n_boot : int
-    Número de reamostragens.
-alpha : float
-    Nível de significância (0.05 → IC 95%).
-seed : int
-    Semente para reprodutibilidade.
+Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
+degeneradas (uma única classe) são descartadas internamente. Métrica
+default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
 
 ### `src/evaluation/temporal.py`
 
-- Module: `src.evaluation.temporal` · 305 lines
+- Module: `src.evaluation.temporal` · 219 lines
 - Internal imports: `src.utils.config`
-- External imports: `__future__.annotations`, `dataclasses.dataclass`, `dataclasses.field`, `pandas`, `typing.Literal`
+- External imports: `__future__.annotations`, `dataclasses.dataclass`, `dataclasses.field`, `pandas`, `typing.Literal`, `typing.get_args`
+- Module constants: `_ON_NAT_VALORES = frozenset(get_args(OnNat))`
 
 Split temporal em três blocos + trava do holdout.
 
-⚠️  PAPEL ATUAL DESTE MÓDULO
-----------------------------
-O split **oficial** do projeto é o **aleatório estratificado**, gerado no
-Notebook 03 e persistido na coluna de partição do artefato supervisionado
-(`dataset_supervisionado.parquet`). Esse é o caminho usado por C2, C3, C5,
-C6 e G8.
+⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
+O split oficial do projeto é o **aleatório estratificado**, gerado no
+Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
+C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
+se mantém se eu treinar no passado e testar no futuro?".
 
-Este módulo (`TemporalSplit` / `split_temporal_3way`) é mantido como
-**ferramenta de sensibilidade temporal** — serve para responder perguntas
-do tipo "o desempenho se mantém se eu treinar no passado e testar no
-futuro?". Ele **não** é o caminho principal e **não** deve ser usado para
-gerar a partição consumida pelo pipeline supervisionado.
+Regra de ouro (quando usado):
+    treino + validacao → escolha de modelo
+    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
 
-Regra de ouro (quando usado como análise de sensibilidade):
-    ┌──────────────┬──────────────┬──────────────────┐
-    │   treino     │  validação   │     holdout      │
-    └──────────────┴──────────────┴──────────────────┘
-     mais antigo ───────────────────────► mais recente
-
-    - `treino` + `validação` → escolha de modelo, hiperparâmetros, limiar
-    - `holdout`               → UMA ÚNICA vez, no fim, após `concluir_selecao()`
-
-A classe `TemporalSplit` bloqueia o acesso ao holdout enquanto o gate
-`G9_holdout` não estiver aprovado — útil tanto no fluxo oficial quanto no
-de sensibilidade.
+A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
+``G9_holdout`` não estiver aprovado.
 
 #### `_validar_fracao`
 
@@ -2645,7 +2742,7 @@ de sensibilidade.
 def _validar_fracao(nome: str, valor: float) -> None
 ```
 
-- Location: `src/evaluation/temporal.py:41-43`
+- Location: `src/evaluation/temporal.py:31-33`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2659,7 +2756,7 @@ _Missing docstring._
 def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None
 ```
 
-- Location: `src/evaluation/temporal.py:46-55`
+- Location: `src/evaluation/temporal.py:36-44`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2673,13 +2770,13 @@ _Missing docstring._
 def _tratar_nat(df: pd.DataFrame, coluna_tempo: str, on_nat: OnNat) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/temporal.py:58-75`
+- Location: `src/evaluation/temporal.py:47-63`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `ValueError`, `int`, `isna`, `nat_mask.sum`, `reset_index`
 
-_Missing docstring._
+Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``.
 
 #### `split_temporal_3way`
 
@@ -2687,40 +2784,22 @@ _Missing docstring._
 def split_temporal_3way(df: pd.DataFrame, coluna_tempo: str, frac_treino: float=0.7, frac_validacao: float=0.15, *, on_nat: OnNat='raise') -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
 ```
 
-- Location: `src/evaluation/temporal.py:78-148`
+- Location: `src/evaluation/temporal.py:66-112`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`
-- Consumed by: `src/evaluation/__init__.py`, `tests/test_leakage.py`
+- Tested by: `tests/test_temporal.py`
+- Consumed by: `src/evaluation/__init__.py`, `tests/test_temporal.py`
 - Defaults: `frac_treino=0.7`, `frac_validacao=0.15`, `on_nat='raise'`
-- Calls: `ValueError`, `_tratar_nat`, `_validar_coluna_tempo`, `_validar_fracao`, `df.sort_values`, `df.sort_values.reset_index`, `int`, `len`, `reset_index`
+- Calls: `ValueError`, `_tratar_nat`, `_validar_coluna_tempo`, `_validar_fracao`, `df.sort_values`, `df.sort_values.reset_index`, `int`, `len`, `reset_index`, `sorted`
 
-Split temporal em treino / validação / holdout, **sem embaralhar**.
+Divide em treino / validação / holdout, **sem embaralhar**.
 
-Ferramenta de **sensibilidade temporal** — não é o split oficial do
-projeto. Para o pipeline supervisionado, use a coluna de partição
-persistida no artefato (ver `src.data.supervised_artifact`).
+Garante, na ordem temporal::
 
-Parâmetros
-----------
-df : pd.DataFrame
-    Base completa.
-coluna_tempo : str
-    Coluna usada para ordenar (ex.: "dt_notific").
-frac_treino, frac_validacao : float
-    Frações do total. `frac_holdout = 1 - frac_treino - frac_validacao`.
-on_nat : {"raise", "drop"}
-    Como tratar `NaT`/nulos em `coluna_tempo`:
-      - "raise" (default): levanta `ValueError` — falha explícita.
-      - "drop": remove as linhas com data inválida antes de ordenar.
-
-Retorno
--------
-(treino, validacao, holdout) : tuple de DataFrames
-
-Garantias
----------
     max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
     max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
+
+``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
+remove essas linhas antes de ordenar.
 
 #### `TemporalSplit`
 
@@ -2728,40 +2807,22 @@ Garantias
 class TemporalSplit()
 ```
 
-- Location: `src/evaluation/temporal.py:152-305`
+- Location: `src/evaluation/temporal.py:116-219`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`
-- Consumed by: `src/evaluation/__init__.py`, `tests/test_leakage.py`
+- Tested by: `tests/test_temporal.py`
+- Consumed by: `src/evaluation/__init__.py`, `tests/test_temporal.py`
 - Decorators: `dataclass`
-- Calls: `C.cfg`, `RuntimeError`, `_periodo`, `field`, `get`, `len`, `max`, `min`, `split_temporal_3way`
+- Calls: `C.cfg`, `RuntimeError`, `_periodo`, `field`, `gate.get`, `len`, `max`, `min`, `split_temporal_3way`
 
 Guarda os três blocos e controla o acesso ao holdout.
 
 ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
-O split oficial do projeto é o **aleatório estratificado** persistido
-no artefato supervisionado. Use esta classe apenas para análises do
-tipo "treinar no passado, testar no futuro".
+Uso típico::
 
-Uso típico
-----------
     split = TemporalSplit(df, coluna_tempo="dt_notific")
-
-    # Fase 1 — escolha de modelo (SOMENTE treino + validação)
-    tr, va = split.treino_validacao()
-    modelo = ...
-    modelo.fit(tr[FEATURES], y_tr)
-
-    # Ao terminar a seleção (exige gate G9_holdout aprovado):
-    split.concluir_selecao()
-
-    # Fase 2 — avaliação final, UMA única vez
-    ho = split.holdout()
-    y_prob = modelo.predict_proba(ho[FEATURES])[:, 1]
-
-Atributos
----------
-n_treino, n_validacao, n_holdout : int
-    Tamanhos de cada bloco (útil para logging).
+    tr, va = split.treino_validacao()  # seleção
+    split.concluir_selecao()           # exige G9_holdout aprovado
+    ho = split.holdout()               # avaliação, uma vez
 
 #### `TemporalSplit.__post_init__`
 
@@ -2769,7 +2830,7 @@ n_treino, n_validacao, n_holdout : int
 def __post_init__(self) -> None
 ```
 
-- Location: `src/evaluation/temporal.py:194-204`
+- Location: `src/evaluation/temporal.py:139-149`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2783,15 +2844,12 @@ _Missing docstring._
 def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]
 ```
 
-- Location: `src/evaluation/temporal.py:206-213`
+- Location: `src/evaluation/temporal.py:151-153`
 - Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
+- Tested by: `tests/test_temporal.py`
+- Consumed by: `tests/test_temporal.py`
 
-Retorna (treino, validação).
-
-Este é o único caminho para treinar e comparar modelos durante a
-fase de seleção. O holdout NÃO é exposto aqui.
+``(treino, validacao)`` — único par para a fase de seleção.
 
 #### `TemporalSplit.treino`
 
@@ -2799,7 +2857,7 @@ fase de seleção. O holdout NÃO é exposto aqui.
 def treino(self) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/temporal.py:216-217`
+- Location: `src/evaluation/temporal.py:156-157`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2813,7 +2871,7 @@ _Missing docstring._
 def validacao(self) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/temporal.py:220-221`
+- Location: `src/evaluation/temporal.py:160-161`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2827,27 +2885,17 @@ _Missing docstring._
 def concluir_selecao(self) -> None
 ```
 
-- Location: `src/evaluation/temporal.py:223-255`
+- Location: `src/evaluation/temporal.py:163-178`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`
-- Consumed by: `tests/test_leakage.py`
-- Calls: `C.cfg`, `RuntimeError`, `get`
+- Tested by: `tests/test_temporal.py`
+- Consumed by: `tests/test_temporal.py`
+- Calls: `C.cfg`, `RuntimeError`, `gate.get`
 
-Marca a fase de seleção como encerrada e libera o holdout.
+Libera o holdout após o gate ``G9_holdout`` estar aprovado.
 
-Só é permitido quando o gate `G9_holdout` estiver com
-`status: aprovado` em `configs/supervised.yaml`. Caso contrário,
-levanta `RuntimeError`.
-
-O gate `G9_holdout` é a autorização explícita para a avaliação
-final — independente de `G7_calibracao` e `G8_limiar`, que tratam
-de decisões da fase de seleção. Ambos precisam ter sido aprovados
-*antes* de se pedir `G9_holdout`; a verificação deles é feita no
-fluxo de modelagem, não aqui. Esta função apenas certifica que a
-transição para a fase de avaliação foi autorizada.
-
-Deve ser chamada **uma única vez**, depois que o modelo final foi
-escolhido, o limiar foi definido e a calibração foi ajustada.
+O gate é a autorização explícita — G7 e G8 tratam de decisões da
+fase de seleção e devem ter sido fechados *antes* deste ponto.
+Chamar **uma única vez**, após congelar modelo, calibração e limiar.
 
 #### `TemporalSplit.holdout_liberado`
 
@@ -2855,7 +2903,7 @@ escolhido, o limiar foi definido e a calibração foi ajustada.
 def holdout_liberado(self) -> bool
 ```
 
-- Location: `src/evaluation/temporal.py:258-259`
+- Location: `src/evaluation/temporal.py:181-182`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2869,17 +2917,13 @@ _Missing docstring._
 def holdout(self) -> pd.DataFrame
 ```
 
-- Location: `src/evaluation/temporal.py:261-275`
+- Location: `src/evaluation/temporal.py:184-190`
 - Visibility: `public`
-- Tested by: `tests/test_leakage.py`
-- Consumed by: `tests/test_leakage.py`
+- Tested by: `tests/test_temporal.py`
+- Consumed by: `tests/test_temporal.py`
 - Calls: `RuntimeError`
 
-Retorna o bloco de holdout.
-
-Levanta `RuntimeError` se `concluir_selecao()` ainda não foi
-chamada. Isso impede que o holdout seja consultado durante a
-escolha de modelo.
+Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado.
 
 #### `TemporalSplit.n_treino`
 
@@ -2887,7 +2931,7 @@ escolha de modelo.
 def n_treino(self) -> int
 ```
 
-- Location: `src/evaluation/temporal.py:278-279`
+- Location: `src/evaluation/temporal.py:193-194`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2902,7 +2946,7 @@ _Missing docstring._
 def n_validacao(self) -> int
 ```
 
-- Location: `src/evaluation/temporal.py:282-283`
+- Location: `src/evaluation/temporal.py:197-198`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2917,7 +2961,7 @@ _Missing docstring._
 def n_holdout(self) -> int
 ```
 
-- Location: `src/evaluation/temporal.py:286-287`
+- Location: `src/evaluation/temporal.py:201-202`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -2932,53 +2976,38 @@ _Missing docstring._
 def resumo(self) -> str
 ```
 
-- Location: `src/evaluation/temporal.py:289-305`
+- Location: `src/evaluation/temporal.py:204-219`
 - Visibility: `public`
-- Tested by: `tests/test_config.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `src/utils/env.py`, `tests/test_config.py`
+- Tested by: `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
 - Calls: `_periodo`, `max`, `min`
 
-Resumo legível do split — bom para log no `Run`.
+Resumo legível — bom para log no ``Run``.
 
 ### `src/features/__init__.py`
 
-- Module: `src.features` · 17 lines
-- Internal imports: `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`
+- Module: `src.features` · 23 lines
+- Internal imports: `src.features.engineering.COLUNAS_DERIVADAS`, `src.features.engineering.ano_mes_internacao`, `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`, `src.features.engineering.sexo_categoria`
 - External imports: none
 
 Engenharia de atributos do pipeline supervisionado.
 
 ### `src/features/engineering.py`
 
-- Module: `src.features.engineering` · 321 lines
+- Module: `src.features.engineering` · 257 lines
 - Internal imports: `src.utils.config`
-- External imports: `__future__.annotations`, `numpy`, `pandas`
-- Module constants: `_INTERVALO_MAX_DIAS_PADRAO = 60.0`, `_SEMANAS_POR_ANO = 52.18`, `_FAIXAS_PADRAO = (('<1', 0.0, 1.0), ('1-4', 1.0, 5.0), ('5-11', 5.0, 12.0), ('12-17', 12.0, 18.0), ('18-39', 18.0, 40.0), ('40-59', 40.0, 60.0), ('60-79', 60.0, 80.0), ('80+', 80.0, None))`
+- External imports: `__future__.annotations`, `numpy`, `pandas`, `typing.Literal`, `typing.get_args`
+- Module constants: `_INTERVALO_MAX_DIAS_PADRAO = 60.0`, `_SEMANAS_POR_ANO = 52.18`, `_POLITICAS_VALIDAS = frozenset(get_args(PoliticaIntervalo))`, `_FAIXAS_PADRAO = (('<1', 0.0, 1.0), ('1-4', 1.0, 5.0), ('5-11', 5.0, 12.0), ('12-17', 12.0, 18.0), ('18-39', 18.0, 40.0), ('40-59', 40.0, 60.0), ('60-79', 60.0, 80.0), ('80+', 80.0, None))`, `COLUNAS_DERIVADAS = ('idade_anos', 'dias_sintomas_ate_internacao', 'sin_semana', 'cos_semana', 'ano_internacao', 'mes_internacao', 'flag_intervalo_invalido', 'flag_internacao_antes_sintomas', 'faixa_etaria', 'sexo_categoria')`
 
 Engenharia de atributos do pipeline supervisionado.
 
-Funções puras que derivam colunas a partir do DataFrame analítico.
-Nenhuma função muta a entrada — todas devolvem cópia ou Series novas.
+Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
+transforma colunas disponíveis na admissão hospitalar em atributos prontos
+para o modelo — nenhuma usa informação posterior ao desfecho.
 
-Decisões configuráveis vêm de `configs/supervised.yaml`, bloco
-`features.engenharia`.
-
-Política de intervalos inválidos
---------------------------------
-`decisoes.md` pede sinalizar, não corrigir em silêncio. O default é
-manter `dias_sintomas_ate_internacao` bruto (NaN apenas quando alguma
-data é `NaT`) e comunicar invalidade via flags explícitas:
-`flag_intervalo_invalido` (umbrella) e `flag_internacao_antes_sintomas`.
-
-`features.engenharia.intervalo_politica` aceita `"sinalizar"` (default)
-ou `"descartar"` — este último substitui valores inválidos por `NaN`
-mantendo as flags.
-
-Uso típico:
-    from src.features import montar_features
-
-    df_feat = montar_features(df)
-    X = df_feat[FEATURES]
+As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
+``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
+quando o YAML não define nada.
 
 #### `_intervalo_max_dias`
 
@@ -2986,30 +3015,27 @@ Uso típico:
 def _intervalo_max_dias() -> float
 ```
 
-- Location: `src/features/engineering.py:60-63`
+- Location: `src/features/engineering.py:63-65`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `float`
 
-Limite (dias) para o intervalo sintomas→internação.
+_Missing docstring._
 
 #### `_intervalo_politica`
 
 ```python
-def _intervalo_politica() -> str
+def _intervalo_politica() -> PoliticaIntervalo
 ```
 
-- Location: `src/features/engineering.py:66-83`
+- Location: `src/features/engineering.py:68-79`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`, `ValueError`, `str`, `str.strip`, `str.strip.lower`
+- Calls: `C.cfg`, `ValueError`, `sorted`, `str`, `str.strip`, `str.strip.lower`
 
-Política para valores fora de `[0, intervalo_max_dias]`.
-
-`"sinalizar"` (default): mantém o valor bruto, apenas marca nas flags.
-`"descartar"`: substitui o valor por `NaN` quando inválido.
+_Missing docstring._
 
 #### `_faixas_etarias`
 
@@ -3017,13 +3043,13 @@ Política para valores fora de `[0, intervalo_max_dias]`.
 def _faixas_etarias() -> list[tuple[str, float, float | None]]
 ```
 
-- Location: `src/features/engineering.py:86-99`
+- Location: `src/features/engineering.py:82-94`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `float`, `item.get`, `list`, `str`
 
-Faixas etárias configuradas em `features.engenharia.faixas_etarias`.
+_Missing docstring._
 
 #### `idade_em_anos`
 
@@ -3031,19 +3057,16 @@ Faixas etárias configuradas em `features.engenharia.faixas_etarias`.
 def idade_em_anos(df: pd.DataFrame) -> pd.Series
 ```
 
-- Location: `src/features/engineering.py:102-129`
+- Location: `src/features/engineering.py:97-118`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
 - Consumed by: `src/features/__init__.py`, `tests/test_features.py`
-- Calls: `idade.isna`, `pd.Series`, `pd.to_numeric`, `tipo.isin`, `to_numpy`, `valor.where`
+- Calls: `anos.gt`, `anos.where`, `idade.isna`, `idade.lt`, `np.select`, `pd.Series`, `pd.to_numeric`, `tipo.eq`, `tipo.isin`
 
-Converte `nu_idade_n` + `tp_idade` (codificação SIVEP) em idade em anos.
+Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
 
-Codificação SIVEP: 1 → dias (÷ 365,25); 2 → meses (÷ 12); 3 → anos.
-
-Retorna `pd.Series` float64. Vira `NaN` quando `tp_idade` está fora
-de {1, 2, 3}, `nu_idade_n` é nulo/negativo, ou a idade ultrapassa
-120 anos. Não imputa e não muta a entrada.
+tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
+a codificação é desconhecida, a idade é negativa ou excede 120.
 
 #### `intervalo_sintomas_internacao`
 
@@ -3051,31 +3074,18 @@ de {1, 2, 3}, `nu_idade_n` é nulo/negativo, ou a idade ultrapassa
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame
 ```
 
-- Location: `src/features/engineering.py:132-182`
+- Location: `src/features/engineering.py:121-147`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
 - Consumed by: `src/features/__init__.py`, `tests/test_features.py`
-- Calls: `_intervalo_max_dias`, `_intervalo_politica`, `delta.to_numpy`, `delta.where`, `delta.where.astype`, `float`, `invalido.astype`, `negativo.astype`, `pd.DataFrame`, `pd.isna`, `pd.to_datetime`, `pd.to_numeric`, `pd.to_numeric.astype`
+- Calls: `_intervalo_max_dias`, `_intervalo_politica`, `delta.gt`, `delta.isna`, `delta.lt`, `delta.where`, `dt.days.astype`, `invalido.astype`, `negativo.astype`, `pd.DataFrame`, `pd.to_datetime`
 
-Intervalo em dias entre `dt_sin_pri` e `dt_interna`, com flags.
+Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
 
-Colunas geradas
----------------
-- `dias_sintomas_ate_internacao` (float64): `(dt_interna - dt_sin_pri).days`.
-  `NaN` apenas quando alguma data é nula/não parseável. Negativos e
-  valores acima do limite ficam visíveis; a invalidade é comunicada
-  pelas flags. Comportamento controlado por
-  `features.engenharia.intervalo_politica`: `"sinalizar"` (default)
-  mantém o valor bruto; `"descartar"` substitui por `NaN`.
-- `flag_intervalo_invalido` (int8): 1 para data ausente, dias < 0,
-  ou dias > `intervalo_max_dias`.
-- `flag_internacao_antes_sintomas` (int8): 1 quando dias < 0.
-
-`dt_interna` precisa ser reconhecida pelo gate G1 como disponível
-no momento da admissão; a decisão de incluir as colunas em
-`features.numericas` depende desse gate, não desta função.
-
-Não muta o DataFrame de entrada.
+Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
+(int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
+fora de ``[0, intervalo_max_dias]`` vem de
+``features.engenharia.intervalo_politica``.
 
 #### `sazonalidade`
 
@@ -3083,27 +3093,17 @@ Não muta o DataFrame de entrada.
 def sazonalidade(df: pd.DataFrame, coluna_data: str | None=None) -> pd.DataFrame
 ```
 
-- Location: `src/features/engineering.py:185-227`
+- Location: `src/features/engineering.py:150-179`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
 - Consumed by: `src/features/__init__.py`, `tests/test_features.py`
 - Defaults: `coluna_data=None`
 - Calls: `C.cfg`, `KeyError`, `astype`, `astype.to_numpy`, `datas.notna`, `dt.isocalendar`, `mask.any`, `np.cos`, `np.sin`, `pd.DataFrame`, `pd.Series`, `pd.to_datetime`
 
-Codifica a semana ISO do ano como par (seno, cosseno).
+Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
 
-A codificação é `2π × (semana − 1) / 52,18`, mantendo continuidade
-entre as semanas 52/53 e a semana 1 do ano seguinte.
-
-A coluna default é `dt_sin_pri` — reflete melhor a sazonalidade da
-circulação viral do que a data de notificação/internação, que
-depende de fatores administrativos. Pode ser sobrescrita por
-`features.engenharia.coluna_sazonalidade`.
-
-Retorna `pd.DataFrame` com `sin_semana` e `cos_semana` (float64).
-Datas nulas ou não parseáveis resultam em `NaN`.
-
-Não muta o DataFrame de entrada.
+Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
+Datas nulas resultam em NaN.
 
 #### `faixa_etaria`
 
@@ -3111,19 +3111,15 @@ Não muta o DataFrame de entrada.
 def faixa_etaria(idade_anos: pd.Series) -> pd.Series
 ```
 
-- Location: `src/features/engineering.py:230-252`
+- Location: `src/features/engineering.py:182-198`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
 - Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
-- Calls: `_faixas_etarias`, `idade.notna`, `out.astype`, `pd.Series`, `pd.to_numeric`
+- Calls: `_faixas_etarias`, `idade.ge`, `idade.lt`, `out.astype`, `pd.Series`, `pd.to_numeric`
 
-Categoriza idade em anos em faixas configuradas no YAML.
+Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
 
-As faixas vêm de `features.engenharia.faixas_etarias`, cada uma no
-formato `{nome, min, max}`, interpretado como intervalo semiaberto
-`[min, max)`. `max: null` significa "sem limite superior".
-
-Idade nula vira a categoria explícita `"desconhecida"`.
+Idade nula vira a categoria explícita ``"desconhecida"``.
 
 #### `sexo_categoria`
 
@@ -3131,17 +3127,15 @@ Idade nula vira a categoria explícita `"desconhecida"`.
 def sexo_categoria(df: pd.DataFrame) -> pd.Series
 ```
 
-- Location: `src/features/engineering.py:255-270`
+- Location: `src/features/engineering.py:201-214`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
-- Consumed by: `tests/test_features.py`
-- Calls: `astype`, `astype.str.strip`, `astype.str.strip.str.upper`, `out.astype`, `pd.Series`
+- Consumed by: `src/features/__init__.py`, `tests/test_features.py`
+- Calls: `astype`, `astype.str.strip`, `astype.str.strip.str.upper`, `out.astype`, `pd.Series`, `sexo.eq`
 
-Normaliza `cs_sexo` (SIVEP) em uma categórica explícita.
+Normaliza ``cs_sexo`` em categórica explícita.
 
-Mapeamento: `"M"` → `"masculino"`; `"F"` → `"feminino"`;
-`"I"` → `"ignorado"`; qualquer outro valor (ou nulo) → `"ausente"`.
-Nunca levanta erro por código desconhecido.
+``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
 
 #### `ano_mes_internacao`
 
@@ -3149,16 +3143,16 @@ Nunca levanta erro por código desconhecido.
 def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame
 ```
 
-- Location: `src/features/engineering.py:273-287`
+- Location: `src/features/engineering.py:217-229`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
-- Consumed by: `tests/test_features.py`
+- Consumed by: `src/features/__init__.py`, `tests/test_features.py`
 - Calls: `dt.dt.month.astype`, `dt.dt.year.astype`, `pd.DataFrame`, `pd.to_datetime`
 
-Extrai `ano_internacao` e `mes_internacao` de `dt_interna`.
+Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
 
-Datas nulas resultam em `NaN` (float64), mantendo compatibilidade
-com `SimpleImputer` e `StandardScaler` sem conversões extras.
+Datas nulas resultam em NaN, mantendo compatibilidade com
+``SimpleImputer`` e ``StandardScaler``.
 
 #### `montar_features`
 
@@ -3166,20 +3160,14 @@ com `SimpleImputer` e `StandardScaler` sem conversões extras.
 def montar_features(df: pd.DataFrame) -> pd.DataFrame
 ```
 
-- Location: `src/features/engineering.py:290-321`
+- Location: `src/features/engineering.py:232-257`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
 - Calls: `ano_mes_internacao`, `df.copy`, `faixa_etaria`, `idade_em_anos`, `intervalo_sintomas_internacao`, `sazonalidade`, `sexo_categoria`
 
-Aplica todas as funções acima e devolve cópia de `df` com as
-colunas derivadas adicionadas. O DataFrame de entrada NÃO é
-modificado.
-
-Colunas adicionadas: `idade_anos`, `dias_sintomas_ate_internacao`,
-`flag_intervalo_invalido`, `flag_internacao_antes_sintomas`,
-`sin_semana`, `cos_semana`, `faixa_etaria`, `sexo_categoria`,
-`ano_internacao`, `mes_internacao`.
+Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
+``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
 
 ### `src/features/normalization.py`
 
@@ -3189,24 +3177,22 @@ Colunas adicionadas: `idade_anos`, `dias_sintomas_ate_internacao`,
 
 ### `src/models/__init__.py`
 
-- Module: `src.models` · 35 lines
-- Internal imports: `src.models.baseline.build_baseline_pipeline`, `src.models.baseline.evaluate_baseline`, `src.models.boosting.build_boosting_pipeline`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline.ALVO`, `src.models.pipeline.COLUNA_TEMPO`, `src.models.pipeline.FEATURES`, `src.models.pipeline.FEATURES_CATEGORICAS`, `src.models.pipeline.FEATURES_NUMERICAS`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.models.pipeline.random_state`
+- Module: `src.models` · 71 lines
+- Internal imports: `src.models.baseline.DummyStrategy`, `src.models.baseline.build_baseline_pipeline`, `src.models.baseline.evaluate_baseline`, `src.models.boosting.build_boosting_pipeline`, `src.models.calibration.MetodoCalibracao`, `src.models.calibration.Metrica`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.Finalista`, `src.models.factory.build_finalista`, `src.models.factory.finalistas_disponiveis`, `src.models.logistic.Penalty`, `src.models.logistic.Solver`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline.ALVO`, `src.models.pipeline.AUSENTE`, `src.models.pipeline.COLUNA_TEMPO`, `src.models.pipeline.FEATURES`, `src.models.pipeline.FEATURES_CATEGORICAS`, `src.models.pipeline.FEATURES_NUMERICAS`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.models.pipeline.random_state`
 - External imports: none
 
 Modelos supervisionados do Projeto Integrador.
 
 ### `src/models/baseline.py`
 
-- Module: `src.models.baseline` · 87 lines
+- Module: `src.models.baseline` · 75 lines
 - Internal imports: `src.evaluation.metrics.metricas_completas`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state`
 - External imports: `__future__.annotations`, `pandas`, `sklearn.dummy.DummyClassifier`, `sklearn.pipeline.Pipeline`, `typing.Literal`
 
-Baseline: `DummyClassifier` — referência mínima.
+Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
 
-Responde à pergunta: "o modelo aprendeu algo além da classe majoritária?"
-
-Se o AUC do baseline ≈ 0.5 e a acurácia ≈ frequência da classe majoritária,
-qualquer modelo com desempenho acima disso está efetivamente aprendendo.
+Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
+O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
 
 #### `build_baseline_pipeline`
 
@@ -3214,24 +3200,24 @@ qualquer modelo com desempenho acima disso está efetivamente aprendendo.
 def build_baseline_pipeline(*, strategy: DummyStrategy='prior', preprocessor=None) -> Pipeline
 ```
 
-- Location: `src/models/baseline.py:29-55`
+- Location: `src/models/baseline.py:27-52`
 - Visibility: `public`
 - Tested by: `tests/test_model_pipelines.py`
-- Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `src/models/__init__.py`, `tests/test_model_pipelines.py`
+- Consumed by: `src/models/__init__.py`, `tests/test_model_pipelines.py`
 - Defaults: `strategy='prior'`, `preprocessor=None`
 - Calls: `DummyClassifier`, `Pipeline`, `build_preprocessor`, `random_state`
 
-Retorna um `Pipeline` com `DummyClassifier`.
+``Pipeline`` com pré-processamento + ``DummyClassifier``.
 
-Parâmetros
-----------
-strategy : DummyStrategy
-    Estratégia do DummyClassifier. Recomendadas:
-        - "prior"        : prediz a frequência das classes (baseline AUC)
-        - "most_frequent": prediz sempre a classe majoritária (baseline acc)
-        - "stratified"   : prediz aleatoriamente respeitando o prior
-preprocessor : ColumnTransformer | None
-    Se None, usa `build_preprocessor()`.
+Estratégias mais úteis como piso:
+
+- ``"prior"``         → probabilidade constante = prevalência do treino
+  (AUC ≈ 0.5 por construção; Brier ainda informativo);
+- ``"most_frequent"`` → sempre a classe majoritária
+  (F1/recall = 0 se a positiva for minoria);
+- ``"stratified"``    → amostra respeitando o prior.
+
+``preprocessor=None`` usa ``build_preprocessor()``.
 
 #### `evaluate_baseline`
 
@@ -3239,34 +3225,27 @@ preprocessor : ColumnTransformer | None
 def evaluate_baseline(X_train: pd.DataFrame, y_train: pd.Series, X_eval: pd.DataFrame, y_eval: pd.Series, *, strategy: DummyStrategy='prior') -> dict[str, str | float]
 ```
 
-- Location: `src/models/baseline.py:58-87`
+- Location: `src/models/baseline.py:55-75`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `src/models/__init__.py`
 - Defaults: `strategy='prior'`
 - Calls: `build_baseline_pipeline`, `metricas_completas`, `pipe.fit`, `pipe.predict_proba`
 
-Treina um DummyClassifier em (X_train, y_train) e avalia em (X_eval, y_eval).
+Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
 
-Retorna dict com AUC, AP, Brier, F1, precision, recall, accuracy.
-Serve como piso: qualquer modelo real precisa superar isto.
-
-Nota
-----
-- strategy="prior"         → probabilidade constante = prevalência do treino
-                             (AUC ≈ 0.5 por construção, mas Brier informativo)
-- strategy="most_frequent" → prevê sempre a classe majoritária
-                             (F1/recall = 0 se a positiva for minoria)
+O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
+``metricas_completas`` — ver esse módulo para a lista completa.
 
 ### `src/models/boosting.py`
 
-- Module: `src.models.boosting` · 76 lines
+- Module: `src.models.boosting` · 59 lines
 - Internal imports: `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state`
 - External imports: `__future__.annotations`, `sklearn.ensemble.HistGradientBoostingClassifier`, `sklearn.pipeline.Pipeline`
 
-Gradient boosting — `HistGradientBoostingClassifier` (nativo do sklearn).
+Gradient boosting — ``HistGradientBoostingClassifier`` (nativo do sklearn).
 
-Requer scikit-learn >= 1.2 (suporte a `class_weight` como str ou dict).
+Requer scikit-learn >= 1.2 (``class_weight`` como str ou dict).
 
 #### `build_boosting_pipeline`
 
@@ -3274,98 +3253,66 @@ Requer scikit-learn >= 1.2 (suporte a `class_weight` como str ou dict).
 def build_boosting_pipeline(*, learning_rate: float=0.05, max_iter: int=500, max_depth: int | None=None, max_leaf_nodes: int=31, min_samples_leaf: int=20, l2_regularization: float=0.0, early_stopping: bool=False, validation_fraction: float=0.1, n_iter_no_change: int=20, class_weight: str | dict | None='balanced', preprocessor=None) -> Pipeline
 ```
 
-- Location: `src/models/boosting.py:14-76`
+- Location: `src/models/boosting.py:14-59`
 - Visibility: `public`
 - Tested by: `tests/test_model_pipelines.py`
 - Consumed by: `notebooks/C/C4_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
 - Defaults: `learning_rate=0.05`, `max_iter=500`, `max_depth=None`, `max_leaf_nodes=31`, `min_samples_leaf=20`, `l2_regularization=0.0`, `early_stopping=False`, `validation_fraction=0.1`, `n_iter_no_change=20`, `class_weight='balanced'`, `preprocessor=None`
 - Calls: `HistGradientBoostingClassifier`, `Pipeline`, `build_preprocessor`, `random_state`
 
-Constrói um `Pipeline` com pré-processamento +
-`HistGradientBoostingClassifier`.
+``Pipeline`` de pré-processamento + ``HistGradientBoostingClassifier``.
 
-Parâmetros
-----------
-learning_rate : float
-    Fator multiplicativo aplicado às folhas (shrinkage).
-max_iter : int
-    Número máximo de iterações (árvores) do boosting.
-max_depth : int | None
-    Profundidade máxima das árvores. None = sem limite explícito.
-max_leaf_nodes : int
-    Número máximo de folhas por árvore.
-min_samples_leaf : int
-    Mínimo de amostras por folha.
-l2_regularization : float
-    Força da regularização L2.
-early_stopping : bool
-    Default `False` (em vez do `'auto'` do sklearn) por decisão
-    metodológica do projeto: sem early stopping interno, `max_iter`
-    é escolhido na validação (gate G6).
-validation_fraction : float
-    Fração do treino reservada para early stopping (ignorada se
-    `early_stopping=False`).
-n_iter_no_change : int
-    Paciência do early stopping (ignorada se `early_stopping=False`).
-class_weight : str | dict | None
-    Pesos das classes. `"balanced"` ajusta automaticamente.
-preprocessor : ColumnTransformer | None
-    Se None, usa `build_preprocessor()`.
+Parâmetros cujo default difere do sklearn por decisão do projeto:
+
+- ``early_stopping=False`` (em vez de ``'auto'``): sem early stopping
+  interno, ``max_iter`` é escolhido na validação (gate G6);
+- ``class_weight="balanced"``: ajusta pelo inverso da frequência.
+
+Os restantes parâmetros seguem a semântica do sklearn
+(``learning_rate``, ``max_depth``, ``max_leaf_nodes``,
+``min_samples_leaf``, ``l2_regularization``, ``validation_fraction``,
+``n_iter_no_change``).
+
+``preprocessor=None`` usa ``build_preprocessor()``.
 
 ### `src/models/calibration.py`
 
-- Module: `src.models.calibration` · 163 lines
+- Module: `src.models.calibration` · 128 lines
 - Internal imports: `src.evaluation.metrics.metricas_por_limiar`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `sklearn.calibration.CalibratedClassifierCV`, `sklearn.frozen.FrozenEstimator`, `sklearn.metrics.brier_score_loss`, `sklearn.metrics.roc_auc_score`, `typing.Any`, `typing.Literal`, `typing.get_args`
-- Module constants: `_METRICAS_VALIDAS = get_args(Metrica)`
+- Module constants: `_METRICAS_VALIDAS = frozenset(get_args(Metrica))`, `_METODOS_VALIDOS = frozenset(get_args(MetodoCalibracao))`
 
 Calibração de probabilidades e escolha de limiar de decisão.
 
-Concentra as operações na fronteira entre modelo e decisão operacional:
-envolver um `Pipeline` já ajustado em `CalibratedClassifierCV` com uma base
-de calibração dedicada, e escolher o limiar de decisão ótimo segundo uma
-métrica (opcionalmente sujeito a precisão/recall mínimos).
+``calibrar`` envolve um ``Pipeline`` já ajustado em
+``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
+não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
+devolve o ótimo segundo uma métrica, com restrições opcionais de
+precision/recall.
 
-Toda a agregação de métricas vive em `src.evaluation`.
+A agregação de métricas vive em ``src.evaluation.metrics``.
 
 #### `calibrar`
 
 ```python
-def calibrar(pipeline, X_cal: pd.DataFrame, y_cal: pd.Series, *, method: str='isotonic')
+def calibrar(pipeline, X_cal: pd.DataFrame, y_cal: pd.Series, *, method: MetodoCalibracao='isotonic')
 ```
 
-- Location: `src/models/calibration.py:33-77`
+- Location: `src/models/calibration.py:38-68`
 - Visibility: `public`
 - Tested by: `tests/test_calibration.py`
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
 - Defaults: `method='isotonic'`
-- Calls: `CalibratedClassifierCV`, `FrozenEstimator`, `ValueError`, `modelo.fit`
+- Calls: `CalibratedClassifierCV`, `FrozenEstimator`, `ValueError`, `modelo.fit`, `sorted`
 
-Envolve um `Pipeline` já ajustado em `CalibratedClassifierCV`.
+Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
 
-O pipeline base é congelado com `FrozenEstimator`, de modo que o
-calibrador aprende apenas o mapeamento probabilidade → probabilidade
-calibrada, sem re-treinar o estimador subjacente. Use uma base de
-calibração (`X_cal`, `y_cal`) distinta da base de treino do pipeline.
+Use uma base de calibração distinta do treino do ``pipeline``. O
+pipeline não é re-treinado — o calibrador aprende só o mapeamento
+probabilidade → probabilidade.
 
-Parâmetros
-----------
-pipeline :
-    Estimador já ajustado (p.ex. `Pipeline` de pré-processamento +
-    classificador). Não é re-treinado.
-X_cal, y_cal :
-    Base de calibração. Não deve ser o mesmo conjunto usado no fit do
-    `pipeline`, sob pena de o calibrador herdar o overfit do modelo.
-method : {"isotonic", "sigmoid"}
-    Método de calibração. `"isotonic"` é não-paramétrico e requer mais
-    dados; `"sigmoid"` (Platt) é paramétrico e mais estável em amostras
-    pequenas.
-
-Retorno
--------
-`CalibratedClassifierCV` já ajustado, pronto para `predict_proba`.
-
-Requer scikit-learn >= 1.6 (`sklearn.frozen.FrozenEstimator`).
+``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
+(Platt) é paramétrico e mais estável em amostras pequenas.
 
 #### `escolher_limiar`
 
@@ -3373,65 +3320,35 @@ Requer scikit-learn >= 1.6 (`sklearn.frozen.FrozenEstimator`).
 def escolher_limiar(y_true: pd.Series | np.ndarray, y_prob: pd.Series | np.ndarray, *, metrica: Metrica='f1', n_limiares: int=101, min_precision: float | None=None, min_recall: float | None=None) -> dict[str, Any]
 ```
 
-- Location: `src/models/calibration.py:80-163`
+- Location: `src/models/calibration.py:71-128`
 - Visibility: `public`
 - Tested by: `tests/test_calibration.py`
 - Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
 - Defaults: `metrica='f1'`, `n_limiares=101`, `min_precision=None`, `min_recall=None`
-- Calls: `ValueError`, `brier_score_loss`, `filtros.append`, `float`, `idxmax`, `join`, `list`, `metricas_por_limiar`, `np.asarray`, `np.asarray.ravel`, `np.asarray.ravel.astype`, `roc_auc_score`, `sorted`
+- Calls: `ValueError`, `brier_score_loss`, `filtros.append`, `float`, `idxmax`, `join`, `metricas_por_limiar`, `np.asarray`, `np.asarray.ravel`, `np.asarray.ravel.astype`, `roc_auc_score`, `sorted`
 
-Varre uma grade de limiares e devolve o ótimo segundo `metrica`.
+Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
 
-A tabela completa de métricas por limiar vem de
-`src.evaluation.metrics.metricas_por_limiar`; este módulo apenas
-filtra, ranqueia e devolve o resumo.
+Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
+candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
+``ValueError``.
 
-Parâmetros
-----------
-y_true, y_prob :
-    Rótulos verdadeiros (0/1) e probabilidades preditas em [0, 1].
-metrica : {"f1", "precision", "recall", "accuracy", "youden_j"}
-    Métrica maximizada na escolha do limiar. `"youden_j"` corresponde a
-    `recall + especificidade − 1`, critério citado em `decisoes.md`.
-n_limiares : int
-    Número de limiares avaliados, linearmente espaçados em (0.01, 0.99).
-min_precision : float | None
-    Se informado, restringe os candidatos a limiares cuja precision
-    seja ≥ `min_precision` antes de maximizar `metrica`.
-min_recall : float | None
-    Se informado, restringe os candidatos a limiares cujo recall seja
-    ≥ `min_recall` antes de maximizar `metrica`. Pode ser combinado com
-    `min_precision`; se nenhum candidato satisfizer o conjunto de
-    restrições, levanta `ValueError`.
-
-Retorno
--------
-dict com:
-    - `limiar`  : float — limiar ótimo.
-    - `valor`   : float — valor da métrica escolhida no ótimo.
-    - `metrica` : str   — métrica usada.
-    - `auc`     : float — ROC-AUC no conjunto avaliado.
-    - `brier`   : float — Brier score no conjunto avaliado.
-    - `tabela`  : `pd.DataFrame` — grade completa com todas as métricas.
+Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
+``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
+``metricas_por_limiar``).
 
 ### `src/models/factory.py`
 
-- Module: `src.models.factory` · 101 lines
+- Module: `src.models.factory` · 71 lines
 - Internal imports: `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`
 - External imports: `__future__.annotations`, `sklearn.pipeline.Pipeline`, `typing.Any`, `typing.Literal`, `typing.get_args`
-- Module constants: `_FINALISTAS_VALIDOS = get_args(Finalista)`
+- Module constants: `_FINALISTAS_VALIDOS = frozenset(get_args(Finalista))`
 
-Fábrica de modelos finalistas.
+Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
 
-Ponto único de construção dos pipelines finalistas usados em C5 e C6.
-
-Convenções
-----------
-- Hiperparâmetros de cada finalista vivem em `models.<nome>` no
-  `supervised.yaml`. Chaves ausentes caem nos defaults do construtor.
-- Overrides em `**overrides` têm precedência sobre o YAML.
-- `preprocessor` é opcional; quando None, cada construtor usa
-  `build_preprocessor()`.
+Hiperparâmetros vêm de ``models.<nome>`` no ``supervised.yaml``; overrides
+em ``**overrides`` têm precedência. ``preprocessor=None`` faz cada
+construtor usar o default (``build_preprocessor()``).
 
 #### `finalistas_disponiveis`
 
@@ -3439,12 +3356,13 @@ Convenções
 def finalistas_disponiveis() -> tuple[str, ...]
 ```
 
-- Location: `src/models/factory.py:32-34`
+- Location: `src/models/factory.py:25-27`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
+- Consumed by: `src/models/__init__.py`
+- Calls: `sorted`, `tuple`
 
-Nomes canônicos dos finalistas registrados nesta fábrica.
+Nomes canônicos dos finalistas registrados, em ordem estável.
 
 #### `_kwargs_do_yaml`
 
@@ -3452,17 +3370,17 @@ Nomes canônicos dos finalistas registrados nesta fábrica.
 def _kwargs_do_yaml(nome: str) -> dict[str, Any]
 ```
 
-- Location: `src/models/factory.py:37-55`
+- Location: `src/models/factory.py:30-44`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `isinstance`, `k.startswith`, `secao.items`
 
-Lê a seção `models.<nome>` do `supervised.yaml` e devolve o dict de
-kwargs aceitos pelo construtor do modelo.
+Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
 
-Retorna `{}` quando a seção não existir ou não for um mapping.
-Chaves `busca_*` e valores `None` são descartados.
+Descartados: chaves ``busca_*`` (grid de tuning) e valores ``None``
+(deixa o default do construtor agir). Devolve ``{}`` se a secção não
+existir ou não for mapping.
 
 #### `build_finalista`
 
@@ -3470,55 +3388,33 @@ Chaves `busca_*` e valores `None` são descartados.
 def build_finalista(nome: str, *, preprocessor=None, **overrides: Any) -> Pipeline
 ```
 
-- Location: `src/models/factory.py:58-101`
+- Location: `src/models/factory.py:47-71`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
+- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/models/__init__.py`
 - Defaults: `preprocessor=None`
-- Calls: `ValueError`, `_kwargs_do_yaml`, `build_boosting_pipeline`, `build_logistic_pipeline`, `list`, `params.update`
+- Calls: `ValueError`, `_kwargs_do_yaml`, `build_boosting_pipeline`, `build_logistic_pipeline`, `sorted`
 
-Constrói o `Pipeline` de um modelo finalista pelo nome.
+Constrói o ``Pipeline`` de um finalista pelo nome.
 
-Parâmetros
-----------
-nome : {"boosting", "logistic"}
-    Identificador do finalista. Precisa estar em
-    `finalistas_disponiveis()`.
-preprocessor : ColumnTransformer | None
-    Pré-processador a injetar no pipeline. Se None, cada construtor
-    usa o default (`build_preprocessor()`).
-**overrides :
-    Hiperparâmetros que sobrepõem os valores lidos do
-    `supervised.yaml`. Passados direto ao construtor do modelo.
-
-Retorno
--------
-`Pipeline` (pré-processamento + classificador) ainda não ajustado.
-
-Levanta
-------
-ValueError
-    Se `nome` não for um finalista registrado.
+Levanta ``ValueError`` se ``nome`` não estiver em
+``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
+ajustado** — o caller faz ``fit``.
 
 ### `src/models/logistic.py`
 
-- Module: `src.models.logistic` · 146 lines
+- Module: `src.models.logistic` · 126 lines
 - Internal imports: `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state`, `src.utils.config`
-- External imports: `__future__.annotations`, `sklearn.linear_model.LogisticRegression`, `sklearn.pipeline.Pipeline`, `typing.Literal`
-- Module constants: `_L1_RATIO_SOLVERS = {'l2': {'newton-cholesky', 'liblinear', 'newton-cg', 'lbfgs', 'saga', 'sag'}, 'l1': {'saga', 'liblinear'}, 'elasticnet': {'saga'}}`
+- External imports: `__future__.annotations`, `sklearn.linear_model.LogisticRegression`, `sklearn.pipeline.Pipeline`, `typing.Literal`, `typing.cast`
+- Module constants: `_L1_RATIO_SOLVERS = {'l2': frozenset({'lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga'}), 'l1': frozenset({'liblinear', 'saga'}), 'elasticnet': frozenset({'saga'})}`, `_PENALTIES_VALIDAS = ('l1', 'l2', 'elasticnet')`
 
 Regressão logística — modelo linear interpretável.
 
-A partir do scikit-learn 1.8, `penalty` foi depreciado (remoção prevista
-para 1.10) em favor de `l1_ratio`:
-
-    - `l1_ratio=0.0`     → L2 (default histórico)
-    - `l1_ratio=1.0`     → L1
-    - `0 < l1_ratio < 1` → elastic-net (requer solver `saga`)
-
-A chave `models.logistic.penalty` do `supervised.yaml` (`"l1"`, `"l2"` ou
-`"elasticnet"`) é traduzida para o `l1_ratio` equivalente, mantendo a
-config como fonte única da verdade sem depender da API depreciada.
+A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
+para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
+do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
+traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
+única da verdade sem depender da API depreciada.
 
 #### `_penalty_do_yaml`
 
@@ -3526,16 +3422,30 @@ config como fonte única da verdade sem depender da API depreciada.
 def _penalty_do_yaml() -> Penalty | None
 ```
 
-- Location: `src/models/logistic.py:38-56`
+- Location: `src/models/logistic.py:36-51`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`, `ValueError`
+- Calls: `C.cfg`, `ValueError`, `cast`
 
-Lê `models.logistic.penalty` do `supervised.yaml`.
+Lê ``models.logistic.penalty`` do YAML.
 
-Retorna None quando a chave estiver ausente, vazia ou nula — nesse
-caso o `l1_ratio` passado explicitamente é usado sem alteração.
+Devolve ``None`` quando a chave está ausente, vazia ou nula — o
+``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
+``ValueError`` se a chave existir mas tiver valor desconhecido.
+
+#### `_tipo_penalidade`
+
+```python
+def _tipo_penalidade(l1_ratio: float) -> str
+```
+
+- Location: `src/models/logistic.py:54-60`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``.
 
 #### `build_logistic_pipeline`
 
@@ -3543,55 +3453,33 @@ caso o `l1_ratio` passado explicitamente é usado sem alteração.
 def build_logistic_pipeline(*, C: float=1.0, l1_ratio: float=0.0, penalty: Penalty | None=None, solver: Solver='lbfgs', max_iter: int=1000, class_weight: str | dict | None='balanced', preprocessor=None) -> Pipeline
 ```
 
-- Location: `src/models/logistic.py:59-146`
+- Location: `src/models/logistic.py:63-126`
 - Visibility: `public`
 - Tested by: `tests/test_model_pipelines.py`
 - Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
 - Defaults: `C=1.0`, `l1_ratio=0.0`, `penalty=None`, `solver='lbfgs'`, `max_iter=1000`, `class_weight='balanced'`, `preprocessor=None`
-- Calls: `LogisticRegression`, `Pipeline`, `ValueError`, `_penalty_do_yaml`, `build_preprocessor`, `random_state`, `sorted`
+- Calls: `LogisticRegression`, `Pipeline`, `ValueError`, `_penalty_do_yaml`, `_tipo_penalidade`, `build_preprocessor`, `random_state`, `sorted`
 
-Constrói um `Pipeline` com pré-processamento + `LogisticRegression`.
+``Pipeline`` de pré-processamento + ``LogisticRegression``.
 
-Parâmetros
-----------
-C : float
-    Inverso da força de regularização. Valores menores → regularização
-    mais forte.
-l1_ratio : float
-    Controle da mistura L1/L2 (0 ≤ l1_ratio ≤ 1):
-        - 0.0 → L2 puro (default)
-        - 1.0 → L1 puro
-        - 0 < l1_ratio < 1 → elastic-net
-    Só tem efeito quando `penalty` (explícito ou do YAML) é None ou
-    `"elasticnet"`.
-penalty : {"l1", "l2", "elasticnet"} | None
-    Penalidade declarada na config. Quando None, lê
-    `logistic.penalty` do `supervised.yaml`. Se definida, sobrepõe
-    `l1_ratio`:
-        - `"l2"` → força `l1_ratio=0.0`
-        - `"l1"` → força `l1_ratio=1.0`
-        - `"elasticnet"` → exige `0 < l1_ratio < 1` (o valor do YAML
-          permanece)
-solver : Solver
-    Algoritmo de otimização. Precisa ser compatível com `l1_ratio`.
-max_iter : int
-    Número máximo de iterações do solver.
-class_weight : str | dict | None
-    Pesos das classes. `"balanced"` ajusta automaticamente pelo
-    inverso da frequência.
-preprocessor : ColumnTransformer | None
-    Se None, usa `build_preprocessor()`.
+``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
+Quando definido, sobrepõe ``l1_ratio``:
 
-Levanta
-------
-ValueError
-    Se `l1_ratio` estiver fora de [0, 1], se a combinação
-    `l1_ratio` × `solver` for inválida, ou se `penalty="elasticnet"`
-    vier acompanhado de `l1_ratio` nos extremos (0 ou 1).
+- ``"l2"``          → força ``l1_ratio=0.0``;
+- ``"l1"``          → força ``l1_ratio=1.0``;
+- ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
+
+``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
+``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
+resultante (ver ``_L1_RATIO_SOLVERS``).
+
+Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
+combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
+com ``l1_ratio`` nos extremos.
 
 ### `src/models/pipeline.py`
 
-- Module: `src.models.pipeline` · 227 lines
+- Module: `src.models.pipeline` · 209 lines
 - Internal imports: `src.utils.config`
 - External imports: `__future__.annotations`, `logging`, `pandas`, `sklearn.compose.ColumnTransformer`, `sklearn.impute.SimpleImputer`, `sklearn.pipeline.Pipeline`, `sklearn.preprocessing.OneHotEncoder`, `sklearn.preprocessing.StandardScaler`, `typing.Iterable`
 - Module constants: `ALVO = C.cfg('target', 'coluna')`, `COLUNA_TEMPO = C.cfg('coluna_tempo')`, `FEATURES_NUMERICAS = list(C.cfg('features', 'numericas') or [])`, `FEATURES_CATEGORICAS = list(C.cfg('features', 'categoricas') or [])`, `AUSENTE = C.cfg('missingness', 'categoricas', 'valor_ausente')`, `FEATURES = FEATURES_NUMERICAS + FEATURES_CATEGORICAS`
@@ -3599,8 +3487,8 @@ ValueError
 Fundação dos modelos supervisionados.
 
 Fonte única de verdade para o pré-processamento e para a derivação do
-alvo binário a partir da coluna `evolucao`, além de leitura da config
-canônica (`configs/supervised.yaml`) e da conveniência `build_pipeline`.
+alvo binário a partir de ``evolucao``, além da leitura da config canônica
+(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
 
 Notebooks e demais modelos devem importar este módulo em vez de
 reimplementar o pré-processamento.
@@ -3611,13 +3499,13 @@ reimplementar o pré-processamento.
 def _alvo_cfg_positivos() -> list[float]
 ```
 
-- Location: `src/models/pipeline.py:44-45`
+- Location: `src/models/pipeline.py:59-61`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `float`
 
-_Missing docstring._
+Códigos de ``target.positivos`` do YAML, como floats.
 
 #### `_alvo_cfg_negativos`
 
@@ -3625,13 +3513,13 @@ _Missing docstring._
 def _alvo_cfg_negativos() -> list[float]
 ```
 
-- Location: `src/models/pipeline.py:48-49`
+- Location: `src/models/pipeline.py:64-66`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `float`
 
-_Missing docstring._
+Códigos de ``target.negativos`` do YAML, como floats.
 
 #### `build_preprocessor`
 
@@ -3639,32 +3527,22 @@ _Missing docstring._
 def build_preprocessor(numericas: Iterable[str] | None=None, categoricas: Iterable[str] | None=None) -> ColumnTransformer
 ```
 
-- Location: `src/models/pipeline.py:52-97`
+- Location: `src/models/pipeline.py:69-102`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `src/models/__init__.py`, `src/models/baseline.py`, `src/models/boosting.py`, `src/models/logistic.py`
 - Defaults: `numericas=None`, `categoricas=None`
 - Calls: `ColumnTransformer`, `OneHotEncoder`, `Pipeline`, `SimpleImputer`, `StandardScaler`, `list`
 
-Constrói o `ColumnTransformer` de pré-processamento.
+``ColumnTransformer`` de pré-processamento.
 
-- Numéricas: `SimpleImputer(strategy="median")` + `StandardScaler`.
-- Categóricas: `SimpleImputer(strategy="constant",
-  fill_value=AUSENTE)` + `OneHotEncoder(handle_unknown="ignore")`.
-  O sentinela `AUSENTE` vem de
-  `missingness.categoricas.valor_ausente` no `supervised.yaml`,
-  mantendo o mesmo comportamento do Notebook 03.
+- Numéricas: ``SimpleImputer(strategy="median")`` + ``StandardScaler``.
+- Categóricas: ``SimpleImputer(strategy="constant", fill_value=AUSENTE)``
+  + ``OneHotEncoder(handle_unknown="ignore")``.
 
-Parâmetros
-----------
-numericas : iterable de str | None
-    Colunas numéricas. Se None, usa `FEATURES_NUMERICAS` (config).
-categoricas : iterable de str | None
-    Colunas categóricas. Se None, usa `FEATURES_CATEGORICAS` (config).
-
-Retorna
--------
-ColumnTransformer pronto para ser encadeado em um `Pipeline`.
+``AUSENTE`` vem de ``missingness.categoricas.valor_ausente`` no YAML,
+mantendo o mesmo comportamento do Notebook 03. ``None`` em cada
+parâmetro usa a lista correspondente do YAML.
 
 #### `criar_alvo_binario`
 
@@ -3672,35 +3550,21 @@ ColumnTransformer pronto para ser encadeado em um `Pipeline`.
 def criar_alvo_binario(df: pd.DataFrame, alvo: str | None=None, positivos: Iterable[float] | None=None, negativos: Iterable[float] | None=None) -> pd.Series
 ```
 
-- Location: `src/models/pipeline.py:100-155`
+- Location: `src/models/pipeline.py:105-142`
 - Visibility: `public`
 - Tested by: `tests/test_target.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
 - Defaults: `alvo=None`, `positivos=None`, `negativos=None`
 - Calls: `ValueError`, `_alvo_cfg_negativos`, `_alvo_cfg_positivos`, `astype`, `float`, `pd.Series`, `sorted`, `valores.isin`
 
-Converte `evolucao` em alvo binário (float64, com NaN onde indefinido).
+Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
 
-    1 = óbito SRAG   (valores em `positivos`, default do YAML)
-    0 = cura         (valores em `negativos`, default do YAML)
-    NaN = qualquer outro valor (3.0, 9.0, nulos) → descartado adiante
-          por `filtrar_rotulos_validos`.
+``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
+(``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
+vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
 
-Por padrão, lê `target.coluna`, `target.positivos` e `target.negativos`
-do `supervised.yaml`. Argumentos explícitos sobrepõem a config.
-
-Parâmetros
-----------
-alvo : str | None
-    Coluna de `df` usada como rótulo. Se None, usa `ALVO` (config).
-positivos : iterable de float | None
-    Códigos que contam como positivo. Se None, lê do YAML.
-negativos : iterable de float | None
-    Códigos que contam como negativo. Se None, lê do YAML.
-
-Retorna
--------
-pd.Series dtype float64 (usa NaN para indefinidos).
+Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
+conjuntos se sobrepuserem ou se algum estiver vazio.
 
 #### `filtrar_rotulos_validos`
 
@@ -3708,13 +3572,13 @@ pd.Series dtype float64 (usa NaN para indefinidos).
 def filtrar_rotulos_validos(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]
 ```
 
-- Location: `src/models/pipeline.py:158-169`
+- Location: `src/models/pipeline.py:145-157`
 - Visibility: `public`
 - Tested by: `tests/test_target.py`
 - Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
 - Calls: `ValueError`, `astype`, `astype.reset_index`, `reset_index`, `y.index.equals`, `y.notna`
 
-Remove linhas em que y é NaN. Retorna X, y alinhados (int8).
+Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8).
 
 #### `random_state`
 
@@ -3722,13 +3586,13 @@ Remove linhas em que y é NaN. Retorna X, y alinhados (int8).
 def random_state() -> int
 ```
 
-- Location: `src/models/pipeline.py:172-174`
+- Location: `src/models/pipeline.py:160-162`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `src/models/__init__.py`, `src/models/baseline.py`, `src/models/boosting.py`, `src/models/logistic.py`
 - Calls: `int`
 
-Seed canônica do projeto (vem de `config.SEED`).
+Seed canônica do projeto (``config.SEED``).
 
 #### `build_pipeline`
 
@@ -3736,25 +3600,994 @@ Seed canônica do projeto (vem de `config.SEED`).
 def build_pipeline(X: pd.DataFrame | None=None, y: pd.Series | None=None, *, classifier: object | None=None, features: Iterable[str] | None=None, strict: bool=True) -> Pipeline
 ```
 
-- Location: `src/models/pipeline.py:177-227`
+- Location: `src/models/pipeline.py:165-209`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `tests/test_pipeline.py`
+- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_pipeline.py`
 - Defaults: `X=None`, `y=None`, `classifier=None`, `features=None`, `strict=True`
 - Calls: `KeyError`, `Pipeline`, `build_preprocessor`, `etapas.append`, `list`, `logger.warning`, `set`, `sorted`
 
-Constrói o Pipeline sklearn.
+Constrói o ``Pipeline`` sklearn.
 
-- Se `classifier` for None, devolve só o pré-processamento (útil no C2,
-  que só inspeciona o pipeline).
-- Se `classifier` for passado (C3+), anexa como etapa final.
-- `features`: se None, usa `FEATURES` do módulo (que vem do YAML).
-- `strict`: se True (default), levanta `KeyError` quando alguma feature
-  configurada estiver ausente em `X`. Se False, emite warning e segue
-  apenas com as features presentes.
+- ``classifier=None`` → devolve só o pré-processamento (útil no C2).
+- ``classifier`` passado (C3+) → anexa como etapa final.
+- ``features=None`` → usa ``FEATURES`` do módulo.
+- ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
+  estiver ausente em ``X``; ``False`` → emite warning e segue só com
+  as presentes.
 
-As listas numéricas/categóricas vêm do `supervised.yaml`; se `X` for
-passado, é feita uma verificação de presença das colunas.
+### `src/protocolo/__init__.py`
+
+- Module: `src.protocolo` · 1 lines
+- Internal imports: none
+- External imports: none
+
+Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões).
+
+### `src/protocolo/verificacoes.py`
+
+- Module: `src.protocolo.verificacoes` · 1737 lines
+- Internal imports: `src.utils.config`, `src.utils.storage`
+- External imports: `__future__.annotations`, `hashlib`, `json`, `matplotlib.pyplot`, `numpy`, `pandas`, `pathlib.Path`, `pyarrow.parquet`, `re`, `sklearn.compose.ColumnTransformer`, `sklearn.impute.SimpleImputer`, `sklearn.linear_model.LogisticRegression`, `sklearn.metrics.average_precision_score`, `sklearn.metrics.brier_score_loss`, `sklearn.metrics.roc_auc_score`, `sklearn.pipeline.Pipeline`, `sklearn.preprocessing.OneHotEncoder`, `sklearn.preprocessing.StandardScaler`, `yaml`
+- Module constants: `MODULE_VERSION = '0.8'`, `DEFAULT_CONFIG = {'cols': {'hospital': 'HOSPITAL', 'dt_interna': 'DT_INTERNA', 'evolucao': 'EVOLUCAO', 'tp_idade': 'TP_IDADE', 'nu_idade': 'NU_IDADE_N', 'dt_nasc': 'DT_NASC', 'dt_sin_pri': 'DT_SIN_PRI', 'dt_notific': 'DT_NOTIFIC', 'dt_evoluca': 'DT_EVOLUCA', 'dt_encerra': 'DT_ENCERRA', 'nu_notific': 'NU_NOTIFIC'}...`, `_EDA_TRATAMENTO = ['ANTIVIRAL', 'TP_ANTIVIR', 'DT_ANTIVIR', 'TRAT_COV', 'TIPO_TRAT', 'DT_TRT_COV', 'OUT_ANTIV', 'OUT_TRAT']`, `_EDA_DESFECHO = ['EVOLUCAO', 'DT_EVOLUCA', 'DT_ENCERRA', 'DT_DIGITA']`, `_EDA_GEOGRAFIA = ['SG_UF_NOT', 'CO_REGIONA', 'CO_MUN_NOT', 'CO_PAIS', 'SG_UF', 'CO_RG_RESI', 'CO_MUN_RES', 'SG_UF_INTE', 'CO_RG_INTE', 'CO_MU_INTE']`, `_EDA_VACINACAO = ['VACINA', 'DT_UT_DOSE', 'MAE_VAC', 'DT_VAC_MAE', 'M_AMAMENTA', 'DT_DOSEUNI', 'DT_1_DOSE', 'DT_2_DOSE', 'VACINA_COV', 'DOSE_1_COV', 'DOSE_2_COV', 'DOSE_REF', 'DOSE_2REF', 'DOSE_ADIC', 'DOS_RE_BI']`, `_EDA_SOCIAL_TEXTO = ['PAC_COCBO', 'PAC_DSCBO', 'POV_CT', 'TP_POV_CT', 'ESTRANG', 'OUTRO_SIN', 'OUTRO_DES', 'OBES_IMC', 'OUT_MORBI', 'MORB_DESC']`, `_EDA_CANDIDATAS_EXTRA = ['CS_ETINIA', 'CS_ESCOL_N', 'AVE_SUINO', 'OUT_ANIM', 'PUERPERA', 'TABAG']`, `ALIASES = {'HOSPITAL': ['INTERNADO'], 'DT_INTERNA': ['DT_INTERNACAO'], 'DT_EVOLUCA': ['DT_EVOLUCAO'], 'DT_ENCERRA': ['DT_ENCERRAMENTO'], 'CLASSI_FIN': ['CLASSIFICACAO_FINAL'], 'CRITERIO': ['CRITERIO_CONFIRMACAO']}`, `_ALT2CANON = {alt: can for can, alts in ALIASES.items() for alt in alts}`, `PLAUSIBLE_YEARS = (1900, 2100)`, `DERIVADAS = ('idade_anos', 'intervalo_sint_interna_dias', 'flag_intervalo_invalido', 'sin_semana', 'cos_semana', 'faixa_etaria')`, `_DERIVADAS_CANON = {d.upper() for d in DERIVADAS}`, `_COR_SPLIT = {'treino': '#2F6DB5', 'validacao': '#E8912D', 'holdout': '#6BA368'}`, `_ORDEM_SPLIT = ['treino', 'validacao', 'holdout']`, `DECISION_COLS = ['id', 'etapa', 'tema', 'decisao', 'responsavel', 'data', 'status', 'impacto', 'evidencia']`
+
+Verificações da Pessoa A (A1–A4) — Projeto Integrador SRAG
+==========================================================
+
+Lógica reutilizável usada pelos notebooks `notebooks/A/A1..A4`. Os notebooks só
+executam, exibem e documentam; as regras ficam aqui e em `configs/decisoes.yaml`.
+
+  A1  códigos, protocolo e coorte      a1_columns, a1_code_tables, a1_waterfall, a1_target
+  A2  qualidade, datas, elegibilidade  a2_missing, a2_dates, a2_duplicates, a2_maturity, a2_eligibility
+  A3  desenho experimental e pilotos   a3_config_audit, a3_forbidden, a3_temporal_split,
+                                       a3_leak_scan, a3_suspicious_metrics, a3_audit_logs
+  A4  candidatos e decisão             a4_decision_table
+  Registro                             log_decision (tabela de decisões), write_ata (atas de gate)
+
+As listas de variáveis e ações sugeridas são PROPOSTA INICIAL: confirmar no dicionário
+oficial do SIVEP-Gripe e registrar a decisão com `log_decision`.
+
+#### `_merge_lists`
+
+```python
+def _merge_lists() -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:176-181`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+Acrescenta a DEFAULT_CONFIG os grupos da EDA (sem duplicar nem conflitar entre classes).
+
+#### `canon`
+
+```python
+def canon(name) -> str
+```
+
+- Location: `src/protocolo/verificacoes.py:187-189`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Calls: `_ALT2CANON.get`, `str`, `str.strip`, `str.strip.upper`
+
+_Missing docstring._
+
+#### `Report`
+
+```python
+class Report()
+```
+
+- Location: `src/protocolo/verificacoes.py:195-225`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `Path`, `any`, `detail.replace`, `df.to_csv`, `join`, `lines.append`, `path.write_text`, `print`, `self.findings.append`, `self.out.mkdir`, `sum`
+- File literals: `{name}.csv`, `{self.nome}.md`
+
+Acumula achados e grava tabelas/relatório.
+
+#### `Report.__init__`
+
+```python
+def __init__(self, out: str | Path, nome: str='relatorio_pessoa_a')
+```
+
+- Location: `src/protocolo/verificacoes.py:198-202`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `nome='relatorio_pessoa_a'`
+- Calls: `Path`, `self.out.mkdir`
+
+_Missing docstring._
+
+#### `Report.add`
+
+```python
+def add(self, stage: str, check: str, status: str, detail: str) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:204-207`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/evaluation/leakage.py`, `tools/update_project_reference.py`
+- Calls: `print`, `self.findings.append`
+
+_Missing docstring._
+
+#### `Report.save`
+
+```python
+def save(self, name: str, df: pd.DataFrame) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:209-210`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `df.to_csv`
+- File literals: `{name}.csv`
+
+_Missing docstring._
+
+#### `Report.write_md`
+
+```python
+def write_md(self) -> Path
+```
+
+- Location: `src/protocolo/verificacoes.py:212-221`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Calls: `detail.replace`, `join`, `lines.append`, `path.write_text`, `sum`
+- File literals: `{self.nome}.md`
+
+_Missing docstring._
+
+#### `Report.has_failure`
+
+```python
+def has_failure(self) -> bool
+```
+
+- Location: `src/protocolo/verificacoes.py:224-225`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `property`
+- Calls: `any`
+
+_Missing docstring._
+
+#### `parse_date`
+
+```python
+def parse_date(s: pd.Series) -> pd.Series
+```
+
+- Location: `src/protocolo/verificacoes.py:231-265`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `cats.to_numpy`, `getattr`, `isinstance`, `len`, `miss.any`, `np.array`, `np.datetime64`, `np.full`, `ok.any`, `out.astype`, `out.dt.tz_localize`, `out.isna`, `out.mask`, `parse_date`, `pd.Series`, `pd.api.types.is_datetime64_any_dtype`, `pd.to_datetime`, `s.astype`, `s.astype.str.strip`, `s.cat.categories.astype`, `s.cat.codes.to_numpy`, `t.notna`
+
+Converte para datetime64[ns] aceitando ISO (aaaa-mm-dd) e dd/mm/aaaa.
+
+Datas fora de 1900–2100 viram NaT ANTES de qualquer conta (evita OverflowError em
+subtrações/comparações com anos absurdos) e a resolução é padronizada (Parquet pode
+trazer s/ms/us). Quem precisa contar datas inválidas usa `raw.notna() & parsed.isna()`.
+
+#### `code_str`
+
+```python
+def code_str(s: pd.Series) -> pd.Series
+```
+
+- Location: `src/protocolo/verificacoes.py:268-273`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `n.isna`, `n.round`, `n.round.astype`, `n.round.astype.astype`, `pd.to_numeric`, `res.mask`, `s.astype`, `s.astype.str.strip`, `txt.where`
+
+Normaliza códigos (1, 1.0, '1', ' 1 ') para string; vazio -> <NA>.
+
+#### `make_target`
+
+```python
+def make_target(evolucao: pd.Series, cfg: dict=DEFAULT_CONFIG) -> pd.Series
+```
+
+- Location: `src/protocolo/verificacoes.py:276-282`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `cfg=DEFAULT_CONFIG`
+- Calls: `code_str`, `fillna`, `fillna.to_numpy`, `pd.Series`
+
+1 = óbito, 0 = cura; qualquer outro valor (inclusive 9/ausente) -> NA.
+
+#### `age_years`
+
+```python
+def age_years(df: pd.DataFrame, cfg: dict) -> pd.Series
+```
+
+- Location: `src/protocolo/verificacoes.py:285-291`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `code_str`, `fillna`, `fillna.to_numpy`, `is_`, `np.select`, `pd.Series`, `pd.to_numeric`, `pd.to_numeric.to_numpy`
+
+_Missing docstring._
+
+#### `prepare`
+
+```python
+def prepare(df: pd.DataFrame) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:294-310`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `canon`, `join`, `new.append`, `print`, `renamed.append`, `set`, `str`, `str.strip`, `str.strip.upper`, `zip`
+
+Padroniza nomes (maiúsculas + aliases -> nome canônico SIVEP). Renomeia IN-PLACE (sem copiar).
+
+#### `year_labels`
+
+```python
+def year_labels(df: pd.DataFrame, cfg: dict) -> pd.Series
+```
+
+- Location: `src/protocolo/verificacoes.py:313-315`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `dt.dt.year.astype`, `dt.dt.year.astype.astype`, `dt.dt.year.astype.astype.fillna`, `parse_date`
+
+_Missing docstring._
+
+#### `has_cols`
+
+```python
+def has_cols(df: pd.DataFrame, cols: list[str]) -> list[str]
+```
+
+- Location: `src/protocolo/verificacoes.py:318-319`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+_Missing docstring._
+
+#### `a1_columns`
+
+```python
+def a1_columns(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:325-333`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Calls: `has_cols`, `join`, `len`, `list`, `map`, `print`, `rep.add`, `values`
+
+_Missing docstring._
+
+#### `a1_code_tables`
+
+```python
+def a1_code_tables(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:336-355`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Calls: `code_str`, `code_str.fillna`, `items`, `join`, `pd.concat`, `pd.crosstab`, `rep.add`, `rep.save`, `rows.append`, `tab.insert`, `tab.reset_index`, `unexpected.append`, `year_labels`
+
+_Missing docstring._
+
+#### `a1_waterfall`
+
+```python
+def a1_waterfall(df, cfg, rep: Report, sufixo: str='') -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:358-400`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `sufixo=''`
+- Calls: `_date_ok_mask`, `anos.isin`, `anos.isin.to_numpy`, `c.values`, `chr`, `code_str`, `dict`, `dict.fromkeys`, `dt.notna`, `enumerate`, `evo.isin`, `evo.isin.to_numpy`, `excl.any`, `excl.sum`, `fillna`, `fillna.to_numpy`, `head`, `int`, `kept.sum`, `len`, `list`, `max`, `np.ones`, `parse_date`, `pd.DataFrame`, `pd.Timestamp`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `remaining.sum`, `rep.add`, `rep.save`, `round`, `rows.append`, `steps.insert`, `sufixo.strip`, `to_numpy`
+
+Aplica os filtros em sequência, registra N antes/depois e amostras das exclusões.
+
+#### `_date_ok_mask`
+
+```python
+def _date_ok_mask(df, cfg) -> np.ndarray
+```
+
+- Location: `src/protocolo/verificacoes.py:403-410`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `fillna`, `fillna.to_numpy`, `len`, `np.ones`, `parse_date`
+
+_Missing docstring._
+
+#### `a1_cohort`
+
+```python
+def a1_cohort(df, cfg) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:413-428`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `_date_ok_mask`, `code_str`, `copy`, `dt.dt.year.isin`, `dt.dt.year.isin.to_numpy`, `dt.notna`, `dt.year.astype`, `evo.isin`, `evo.isin.to_numpy`, `fillna`, `fillna.to_numpy`, `make_target`, `make_target.astype`, `parse_date`, `pd.Timestamp`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `to_numpy`
+
+Retorna a coorte final (mesmas regras do waterfall) com _ano e _alvo.
+
+#### `a1_target`
+
+```python
+def a1_target(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:431-444`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Calls: `all`, `code_str`, `code_str.fillna`, `fillna`, `fillna.to_numpy`, `list`, `make_target`, `pd.Series`, `pd.crosstab`, `pd.isna`, `rep.add`, `rep.save`, `tab.reset_index`, `tab.sum`, `year_labels`, `zip`
+
+_Missing docstring._
+
+#### `add_derived`
+
+```python
+def add_derived(df: pd.DataFrame, cfg: dict, wanted=None) -> list[str]
+```
+
+- Location: `src/protocolo/verificacoes.py:452-493`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `wanted=None`
+- Calls: `age.where`, `age_years`, `canon`, `criadas.append`, `dt.days.astype`, `fx.astype`, `fx.astype.where`, `fx.notna`, `gap.isna`, `gap.where`, `invalido.astype`, `np.cos`, `np.sin`, `parse_date`, `parse_date.dt.isocalendar`, `parse_date.dt.isocalendar.week.astype`, `pd.cut`
+
+Cria IN-PLACE (nomes canônicos em maiúsculas) as features derivadas pedidas.
+
+Usa só o que existe na admissão (idade, DT_SIN_PRI, DT_INTERNA); nunca desfecho nem datas posteriores.
+- idade_anos: NU_IDADE_N convertida por TP_IDADE (dias/365, meses/12, anos); fora de [0, max_age_years] -> NaN
+- faixa_etaria: faixas de cfg['derivadas']['faixas_etarias'] (texto; NaN se idade inválida)
+- intervalo_sint_interna_dias: DT_INTERNA - DT_SIN_PRI em dias; NaN quando inválido
+- flag_intervalo_invalido: 1 se o intervalo é ausente, negativo ou > intervalo_max_dias; senão 0
+- sin_semana / cos_semana: semana ISO de DT_INTERNA em círculo de periodo_semanas
+
+#### `_analytical_path`
+
+```python
+def _analytical_path(cfg: dict) -> Path
+```
+
+- Location: `src/protocolo/verificacoes.py:496-504`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`
+- Calls: `Path`
+
+Usa C.ANALYTICAL_DIR do projeto (como o C1/C2); senão, o caminho de configs/decisoes.yaml.
+
+#### `a1_export_dataset`
+
+```python
+def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, versao='0.1', excluir_proibidas=False, extra_cols=(), split=None, rotulo='') -> dict
+```
+
+- Location: `src/protocolo/verificacoes.py:507-609`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `supervised_config=None`, `path=None`, `versao='0.1'`, `excluir_proibidas=False`, `extra_cols=()`, `split=None`, `rotulo=''`
+- Calls: `Path`, `Path.exists`, `_analytical_path`, `_sha256`, `a1_cohort`, `add_derived`, `aliases_aplicados.items`, `astype`, `astype.to_numpy`, `c_.lower`, `canon`, `col.lower`, `copy`, `df.attrs.get`, `dict`, `dict.fromkeys`, `f_.get`, `get`, `h.lower`, `int`, `isna`, `isna.sum`, `join`, `json.dumps`, `len`, `list`, `load_supervised_yaml`, `map`, `nome_final`, `nome_final.lower`, `orig.get`, `orig.get.lower`, `out.dropna`, `out.dropna.sort_values`, `out.to_csv`, `out.to_parquet`, `parse_date`, `path.parent.mkdir`, `path.with_suffix`, `path.with_suffix.write_text`
+- File literals: `.meta.json`
+
+Grava a população analítica (coorte + alvo + tempo + features) para o C2.
+
+Colunas: id (NU_NOTIFIC), colunas de tempo (coluna_tempo do supervised.yaml e DT_INTERNA),
+alvo (EVOLUCAO bruta: apenas 1/2 após a coorte), features do supervised.yaml e ANO_INTERNACAO.
+Usa os NOMES ORIGINAIS das colunas da base (os do supervised.yaml), ordenado pelo tempo.
+Nenhuma coluna proibida além das features pedidas é enviada ao C.
+
+#### `validar_contrato_c2`
+
+```python
+def validar_contrato_c2(path, supervised_config, rep: Report) -> bool
+```
+
+- Location: `src/protocolo/verificacoes.py:612-669`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `Path`, `dict.fromkeys`, `dt.isna`, `dt.isna.sum`, `dt.max`, `dt.max.date`, `dt.min`, `dt.min.date`, `f.get`, `float`, `get`, `int`, `join`, `len`, `list`, `load_supervised_yaml`, `map`, `p.exists`, `pd.Series`, `pd.Series.dropna`, `pd.Series.dropna.astype`, `pd.Series.dropna.astype.unique`, `pd.read_csv`, `pd.read_parquet`, `pd.to_datetime`, `pq.ParquetFile`, `rep.add`, `set`, `sorted`, `str`, `str.lower`, `y.get`
+
+Confere o ARQUIVO gravado contra o que o C2 consome (células 6–16 do C2_pipeline_supervisionado).
+
+O C2 faz: read_parquet -> TARGET e DATE_COLUMN presentes -> to_datetime(DATE_COLUMN) e dropna ->
+treino[FEATURES] -> criar_alvo_binario/filtrar_rotulos_validos -> check_leakage(X).
+
+#### `_sha256`
+
+```python
+def _sha256(path) -> str
+```
+
+- Location: `src/protocolo/verificacoes.py:675-682`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `f.read`, `h.hexdigest`, `h.update`, `hashlib.sha256`, `iter`, `open`
+
+_Missing docstring._
+
+#### `verificar_dataset_congelado`
+
+```python
+def verificar_dataset_congelado(path, rep: Report) -> bool
+```
+
+- Location: `src/protocolo/verificacoes.py:685-696`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `Path`, `_sha256`, `json.loads`, `meta.get`, `meta_p.exists`, `meta_p.read_text`, `p.exists`, `p.with_suffix`, `rep.add`
+- File literals: `.meta.json`
+
+Compara o SHA-256 do arquivo com o gravado no .meta.json (população analítica congelada).
+
+#### `cfg_para_anos`
+
+```python
+def cfg_para_anos(cfg: dict, anos) -> dict
+```
+
+- Location: `src/protocolo/verificacoes.py:699-704`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `int`, `json.dumps`, `json.loads`
+
+Cópia de cfg com o período analítico = `anos` (sem holdout temporal): usada nos cenários.
+
+#### `split_aleatorio`
+
+```python
+def split_aleatorio(n: int, estratos=None, seed: int=42, fracoes: dict | None=None) -> np.ndarray
+```
+
+- Location: `src/protocolo/verificacoes.py:707-726`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `estratos=None`, `seed=42`, `fracoes=None`
+- Calls: `ValueError`, `abs`, `fr.values`, `int`, `len`, `np.arange`, `np.asarray`, `np.asarray.astype`, `np.empty`, `np.flatnonzero`, `np.random.default_rng`, `rng.permutation`, `round`, `set`, `sorted`, `sum`
+
+Rótulos 'treino'/'validacao'/'holdout' sorteados (opcionalmente estratificados), reprodutíveis pela seed.
+
+#### `split_por_ordem`
+
+```python
+def split_por_ordem(valores_tempo, fracoes: dict | None=None) -> np.ndarray
+```
+
+- Location: `src/protocolo/verificacoes.py:729-740`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `fracoes=None`
+- Calls: `int`, `len`, `np.argsort`, `np.asarray`, `np.empty`, `round`
+
+Divisão temporal por posição (como o TemporalSplit por fração do C2): passado -> treino, futuro -> holdout.
+
+#### `_ler`
+
+```python
+def _ler(path, cols)
+```
+
+- Location: `src/protocolo/verificacoes.py:743-750`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `Path`, `pd.read_csv`, `pd.read_parquet`, `pq.ParquetFile`
+
+_Missing docstring._
+
+#### `_relatorio_split`
+
+```python
+def _relatorio_split(path, meta: dict, cfg: dict, rep: Report, nome: str) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:753-783`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_ler`, `abs`, `astype`, `d.dropna`, `d.dropna.groupby`, `d.groupby`, `d.groupby.agg`, `float`, `int`, `join`, `max`, `min`, `nunique`, `pd.crosstab`, `pd.crosstab.reindex`, `pd.to_numeric`, `por_ano.reset_index`, `rep.add`, `rep.save`, `round`, `sum`, `t.itertuples`, `t.reindex`, `t.reindex.reset_index`
+
+_Missing docstring._
+
+#### `a3_split_aleatorio_cenario`
+
+```python
+def a3_split_aleatorio_cenario(df, cfg, rep: Report, nome: str, anos, supervised_config=None, versao: str='0.1', excluir_proibidas: bool=False) -> dict
+```
+
+- Location: `src/protocolo/verificacoes.py:786-800`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `supervised_config=None`, `versao='0.1'`, `excluir_proibidas=False`
+- Calls: `_analytical_path`, `_relatorio_split`, `a1_export_dataset`, `a1_waterfall`, `base.with_name`, `cfg_para_anos`, `int`
+
+Coorte do cenário (anos informados) + dataset com coluna `split` aleatória 70/15/15 + relatório.
+
+#### `a3_benchmark_split`
+
+```python
+def a3_benchmark_split(path, supervised_config, cfg: dict, rep: Report, nome: str, max_rows: int=200000, seed: int=42) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:803-873`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `max_rows=200000`, `seed=42`
+- Calls: `ColumnTransformer`, `LogisticRegression`, `OneHotEncoder`, `Pipeline`, `SimpleImputer`, `StandardScaler`, `_ler`, `astype`, `astype.fillna`, `astype.fillna.astype`, `astype.to_numpy`, `average_precision_score`, `brier_score_loss`, `copy`, `d.dropna`, `d.dropna.reset_index`, `d.sample`, `d.sample.reset_index`, `dict`, `f.get`, `float`, `int`, `len`, `linhas.append`, `list`, `load_supervised_yaml`, `mean`, `np.mean`, `np.unique`, `pd.DataFrame`, `pd.to_datetime`, `pd.to_numeric`, `pipe.fit`, `pipe.predict_proba`, `rep.add`, `rep.save`, `roc_auc_score`, `round`, `set`, `set_index`
+
+Regressão logística treino -> VALIDAÇÃO em split aleatório e em split temporal por ordem (o holdout NÃO é aberto).
+
+Mostra o quanto o split aleatório é otimista frente ao temporal (autocorrelação no tempo).
+
+#### `_rotulos_barras`
+
+```python
+def _rotulos_barras(ax, barras, textos, dy=0.0)
+```
+
+- Location: `src/protocolo/verificacoes.py:880-882`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `dy=0.0`
+- Calls: `ax.annotate`, `b.get_height`, `b.get_width`, `b.get_x`, `zip`
+
+_Missing docstring._
+
+#### `grafico_split_cenario`
+
+```python
+def grafico_split_cenario(rep: Report, cfg: dict, nome: str, anos=None, fig_dir='outputs/figures/pessoa_a', mostrar: bool=False)
+```
+
+- Location: `src/protocolo/verificacoes.py:885-948`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `anos=None`, `fig_dir='outputs/figures/pessoa_a'`, `mostrar=False`
+- Calls: `Path`, `_rotulos_barras`, `ax.axhline`, `ax.bar`, `ax.hlines`, `ax.legend`, `ax.set_title`, `ax.set_xticks`, `ax.set_ylabel`, `ax.set_ylim`, `ax.text`, `comp.index.astype`, `destino.mkdir`, `enumerate`, `fig.savefig`, `fig.suptitle`, `fig.tight_layout`, `fr.values`, `int`, `join`, `len`, `map`, `max`, `np.zeros`, `pa.div`, `pa.sum`, `pd.read_csv`, `pd.read_csv.set_index`, `pd.read_csv.set_index.reindex`, `plt.close`, `plt.show`, `plt.subplots`, `prev.max`, `prev.min`, `range`, `sum`, `to_numpy`, `zip`
+- File literals: `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `split_{nome}.png`
+
+3 painéis do split aleatório de um cenário (a partir das tabelas já gravadas em rep.out):
+(a) % de linhas por split x meta 70/15/15; (b) prevalência de óbito por split; (c) composição dos splits dentro de cada ano.
+
+#### `grafico_comparacao_cenarios`
+
+```python
+def grafico_comparacao_cenarios(rep: Report, cfg: dict, nomes, fig_dir='outputs/figures/pessoa_a', mostrar: bool=False)
+```
+
+- Location: `src/protocolo/verificacoes.py:951-1003`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `fig_dir='outputs/figures/pessoa_a'`, `mostrar=False`
+- Calls: `Path`, `_rotulos_barras`, `ax.axvspan`, `ax.bar`, `ax.legend`, `ax.set_title`, `ax.set_xticks`, `ax.set_ylabel`, `ax.set_ylim`, `ax.text`, `base.sum`, `destino.mkdir`, `enumerate`, `fig.savefig`, `fig.suptitle`, `fig.tight_layout`, `int`, `legend`, `len`, `list`, `max`, `np.arange`, `np.zeros`, `p.index.astype`, `p.sum`, `p.sum.max`, `pd.read_csv`, `pd.read_csv.set_index`, `pd.read_csv.set_index.reindex`, `plt.close`, `plt.show`, `plt.subplots`, `por_ano.values`, `range`, `reindex`, `resumo.values`, `set`, `set.union`, `sorted`, `to_numpy`
+- File literals: `a3_split_aleatorio_{n}.csv`, `a3_split_aleatorio_{n}_por_ano.csv`, `split_comparacao_cenarios.png`
+
+Compara os cenários: N por ano empilhado por split (um painel por cenário, mesmo eixo) + prevalência por split.
+
+#### `comparar_cenarios`
+
+```python
+def comparar_cenarios(metas: dict, benchs: dict, rep: Report) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:1006-1023`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `_ler`, `astype`, `benchs.get`, `dict`, `float`, `int`, `join`, `len`, `linhas.append`, `m.get`, `map`, `metas.items`, `pd.DataFrame`, `pd.to_numeric`, `rep.save`, `round`, `y.mean`, `y.sum`
+
+Tabela única: N, prevalência e desempenho (validação) por cenário.
+
+#### `a2_missing`
+
+```python
+def a2_missing(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1029-1054`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Calls: `any`, `code_str`, `dict`, `fillna`, `fillna.groupby`, `fillna.groupby.mean`, `g.iterrows`, `inexistente.reset_index`, `int`, `isna.groupby`, `isna.groupby.agg`, `join`, `len`, `pd.DataFrame`, `pd.api.types.is_string_dtype`, `pivot`, `rep.add`, `rep.save`, `round`, `rows.append`, `s.astype`, `s.astype.str.strip`, `s.isna`, `set`, `year_labels`
+
+_Missing docstring._
+
+#### `a2_dates`
+
+```python
+def a2_dates(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1057-1100`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `age.notna`, `age.notna.sum`, `age_years`, `bad.sum`, `both.sum`, `crit.itertuples`, `d.isna`, `da.notna`, `db.notna`, `dict`, `fillna`, `gap.notna`, `gap.notna.sum`, `int`, `join`, `len`, `max`, `notna`, `parse_date`, `pd.DataFrame`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `raw_filled.sum`, `rep.add`, `rep.save`, `round`, `rows.append`, `set`, `sum`
+
+_Missing docstring._
+
+#### `a2_duplicates`
+
+```python
+def a2_duplicates(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1103-1119`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Calls: `d.sum`, `d2.sum`, `df.duplicated`, `dict`, `drop_duplicates`, `duplicated`, `int`, `len`, `notna`, `nunique`, `pd.DataFrame`, `pd.util.hash_pandas_object`, `pd.util.hash_pandas_object.duplicated`, `pd.util.hash_pandas_object.duplicated.sum`, `rep.add`, `rep.save`, `rows.append`
+- File literals: `{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv`
+
+_Missing docstring._
+
+#### `a2_maturity`
+
+```python
+def a2_maturity(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1122-1144`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `astype`, `code_str`, `code_str.isin`, `dt.notna`, `dt.notna.to_numpy`, `dt.to_period`, `dt.to_period.astype`, `enc.notna`, `fillna`, `fillna.to_numpy`, `head`, `isin`, `join`, `len`, `parse_date`, `pd.DataFrame`, `pd.Series`, `rep.add`, `rep.save`, `res.groupby`, `res.groupby.agg`, `res.groupby.agg.reset_index`, `round`, `x.mean`
+
+_Missing docstring._
+
+#### `classify_variable`
+
+```python
+def classify_variable(col: str, pct_vazio: float, cfg: dict) -> tuple[str, str, str]
+```
+
+- Location: `src/protocolo/verificacoes.py:1147-1156`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+_Missing docstring._
+
+#### `a2_eligibility`
+
+```python
+def a2_eligibility(df, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1159-1181`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Calls: `canon`, `classify_variable`, `cont.get`, `df.attrs.get`, `df.sample`, `dict`, `fillna`, `float`, `int`, `len`, `mean`, `min`, `nunique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.api.types.is_string_dtype`, `rep.add`, `rep.save`, `round`, `rows.append`, `s.astype`, `s.astype.str.strip`, `s.isna`, `s.isna.mean`, `set`, `str`, `str.upper`, `value_counts`, `value_counts.to_dict`
+
+_Missing docstring._
+
+#### `load_feature_list`
+
+```python
+def load_feature_list(path: str | Path) -> list[str]
+```
+
+- Location: `src/protocolo/verificacoes.py:1187-1220`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Calls: `Path`, `ValueError`, `all`, `canon`, `find`, `isinstance`, `json.loads`, `ln.split`, `obj.values`, `p.read_text`, `strip`, `supervised_features`, `txt.splitlines`, `yaml.safe_load`
+
+Lê lista de features de .txt (1 por linha), .json ou .yaml/.yml.
+
+#### `load_supervised_yaml`
+
+```python
+def load_supervised_yaml(path: str | Path) -> dict
+```
+
+- Location: `src/protocolo/verificacoes.py:1223-1226`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Calls: `Path`, `Path.read_text`, `yaml.safe_load`
+
+_Missing docstring._
+
+#### `supervised_features`
+
+```python
+def supervised_features(y: dict) -> list[str]
+```
+
+- Location: `src/protocolo/verificacoes.py:1229-1233`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Calls: `canon`, `f.get`, `y.get`
+
+Features efetivas do configs/supervised.yaml: `final` se preenchida, senão numéricas + categóricas.
+
+#### `a3_config_audit`
+
+```python
+def a3_config_audit(y: dict, cfg: dict, rep: Report, schema_cols=None) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1236-1321`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `schema_cols=None`
+- Calls: `any`, `canon`, `f.get`, `float`, `get`, `h0.date`, `items`, `join`, `len`, `min`, `pd.Timestamp`, `rep.add`, `set`, `sorted`, `str`, `str.lower`, `supervised_features`, `t0.date`, `tg.get`, `tp.get`, `v1.date`, `y.get`
+
+Confere o supervised.yaml contra as decisões do plano (A1–A3).
+
+#### `a3_forbidden`
+
+```python
+def a3_forbidden(features: list[str], label: str, cfg, rep: Report, must_exclude_target=True) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1324-1338`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `must_exclude_target=True`
+- Calls: `join`, `len`, `rep.add`, `set`, `sorted`, `v.upper`
+
+_Missing docstring._
+
+#### `a3_temporal_split`
+
+```python
+def a3_temporal_split(cohort: pd.DataFrame, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1341-1365`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Calls: `abs`, `agg`, `agg.reset_index`, `cohort.assign`, `cohort.assign.groupby`, `isin`, `join`, `max`, `min`, `np.where`, `prev.get`, `problems.append`, `rep.add`, `rep.save`, `round`, `set`, `sorted`, `sum`, `tab.groupby`, `unique`, `x.mean`
+
+_Missing docstring._
+
+#### `a3_leak_scan`
+
+```python
+def a3_leak_scan(cohort: pd.DataFrame, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1368-1402`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `abs`, `cohort.sample`, `data.groupby`, `dict`, `head`, `join`, `len`, `min`, `np.unique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.api.types.is_numeric_dtype`, `rep.add`, `rep.save`, `roc_auc_score`, `round`, `rows.append`, `s.astype`, `s.astype.fillna`, `s.fillna`, `s.fillna.to_numpy`, `s.median`, `s.nunique`, `set`, `to_numpy`, `transform`, `transform.to_numpy`, `values`
+
+AUC univariada contra o alvo: valores ~1 sugerem vazamento (indicativo, não prova).
+
+#### `a3_suspicious_metrics`
+
+```python
+def a3_suspicious_metrics(results: pd.DataFrame, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1405-1417`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Calls: `any`, `c.lower`, `len`, `rep.add`, `results.copy`
+
+_Missing docstring._
+
+#### `a3_audit_logs`
+
+```python
+def a3_audit_logs(logs_dir: str | Path, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1420-1441`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Calls: `Path`, `all`, `bool`, `d.exists`, `d.rglob`, `items`, `join`, `len`, `list`, `p.is_file`, `p.read_text`, `pd.DataFrame`, `re.search`, `rep.add`, `rep.save`, `rows.append`, `sorted`, `str`
+
+_Missing docstring._
+
+#### `a4_decision_table`
+
+```python
+def a4_decision_table(results: pd.DataFrame, cfg, rep: Report) -> None
+```
+
+- Location: `src/protocolo/verificacoes.py:1447-1486`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Calls: `agg`, `agg.iterrows`, `agg.reset_index`, `agg.round`, `c.lower`, `join`, `len`, `lower`, `lower.str.contains`, `n.append`, `notes.append`, `re.search`, `rep.add`, `rep.save`, `res.groupby`, `res.rename`, `results.copy`, `str.lower`, `sum`
+
+Espera colunas: modelo, [fold], roc_auc, pr_auc, brier (nomes case-insensitive).
+
+#### `load_config`
+
+```python
+def load_config(path: str | Path | None='configs/decisoes.yaml') -> dict
+```
+
+- Location: `src/protocolo/verificacoes.py:1492-1500`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `path='configs/decisoes.yaml'`
+- Calls: `Path`, `Path.exists`, `Path.read_text`, `cfg.get`, `isinstance`, `items`, `json.dumps`, `json.loads`, `yaml.safe_load`
+- File literals: `configs/decisoes.yaml`
+
+DEFAULT_CONFIG sobreposto pelo YAML de decisões (se existir).
+
+#### `find_base`
+
+```python
+def find_base(root: str | Path='.') -> Path | None
+```
+
+- Location: `src/protocolo/verificacoes.py:1503-1511`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `root='.'`
+- Calls: `Path`, `r.glob`, `sorted`
+- File literals: `data/**/*.csv`, `data/**/*.parquet`, `data/raw/**/*.csv`, `data/raw/**/*.parquet`
+
+Procura a base ORIGINAL (Parquet/CSV). Ignora data/analytical (saída da Pessoa A) e metadados.
+
+#### `colunas_necessarias`
+
+```python
+def colunas_necessarias(schema_cols, cfg: dict, supervised_config=None, modo: str='classificadas') -> list[str]
+```
+
+- Location: `src/protocolo/verificacoes.py:1514-1531`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `supervised_config=None`, `modo='classificadas'`
+- Calls: `Path`, `Path.exists`, `canon`, `f.get`, `get`, `load_supervised_yaml`, `supervised_features`, `values`, `y.get`
+
+Colunas físicas do Parquet que as verificações realmente usam (a base tem ~194; carregar todas estoura a memória).
+
+modo "minimas": essenciais (coorte/alvo/datas) + códigos esperados + o que o supervised.yaml pede
+(features, alvo, tempo, grupos). modo "classificadas": soma as listas proibidas/condicionais/permitidas (A2).
+
+#### `carregar_base`
+
+```python
+def carregar_base(path=None, demo: bool=False, sample: int=0, colunas='classificadas', cfg: dict | None=None, supervised_config=None, compactar: bool=True) -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:1534-1593`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- Defaults: `path=None`, `demo=False`, `sample=0`, `colunas='classificadas'`, `cfg=None`, `supervised_config=None`, `compactar=True`
+- Calls: `FileNotFoundError`, `Path`, `Path.cwd`, `c.lower`, `colunas_necessarias`, `df.sample`, `find_base`, `isinstance`, `len`, `list`, `load_config`, `make_demo`, `p.exists`, `pd.read_csv`, `pd.read_parquet`, `pq.ParquetFile`, `pq.read_table`, `print`, `storage.get_parquet`, `str`, `str.lower`, `tabela.to_pandas`, `type`
+
+Lê a base. path=None -> usa `src.utils.storage.get_parquet()` do projeto (ou procura em data/).
+
+colunas: "minimas" (só o essencial + o que o supervised.yaml pede; A1/A3/A3b), "classificadas" (soma as listas de
+variáveis; A2), "todas" (pesado) ou lista de nomes. O schema completo fica em df.attrs["schema_cols"].
+compactar=True lê o Parquet via pyarrow com texto em `category` (e libera a tabela Arrow durante a conversão):
+reduz muito o pico de memória (a base tem milhões de linhas).
+
+#### `uso_memoria_gb`
+
+```python
+def uso_memoria_gb(df: pd.DataFrame) -> float
+```
+
+- Location: `src/protocolo/verificacoes.py:1596-1597`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- Calls: `df.memory_usage`, `df.memory_usage.sum`, `float`
+
+_Missing docstring._
+
+#### `log_decision`
+
+```python
+def log_decision(out, id: str, tema: str, decisao: str, etapa: str='', responsavel: str='Pessoa A', status: str='proposta', impacto: str='', evidencia: str='') -> pd.DataFrame
+```
+
+- Location: `src/protocolo/verificacoes.py:1603-1613`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Defaults: `etapa=''`, `responsavel='Pessoa A'`, `status='proposta'`, `impacto=''`, `evidencia=''`
+- Calls: `Path`, `dict`, `path.exists`, `path.parent.mkdir`, `pd.DataFrame`, `pd.Timestamp.today`, `pd.Timestamp.today.date`, `pd.Timestamp.today.date.isoformat`, `pd.concat`, `pd.read_csv`, `pd.read_csv.fillna`, `t.to_csv`
+- File literals: `tabela_decisoes.csv`
+
+Insere/atualiza (por id) uma linha na tabela de decisões. status: proposta | aprovada | revisar.
+
+#### `write_ata`
+
+```python
+def write_ata(out, nome: str, data: str, decisoes=(), pendencias=(), riscos=(), shortlist=(), descartes=(), rep: Report | None=None) -> Path
+```
+
+- Location: `src/protocolo/verificacoes.py:1616-1634`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Defaults: `decisoes=()`, `pendencias=()`, `riscos=()`, `shortlist=()`, `descartes=()`, `rep=None`
+- Calls: `Path`, `join`, `nome.lower`, `path.parent.mkdir`, `path.with_suffix`, `path.write_text`, `re.sub`, `re.sub.strip`, `sec`, `slug.startswith`
+
+Gera a ata (Gates 2/3, 17/10...) em Markdown a partir de listas e dos alertas do relatório.
+
+#### `run`
+
+```python
+def run(df: pd.DataFrame, args, cfg: dict) -> Report
+```
+
+- Location: `src/protocolo/verificacoes.py:1640-1690`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `src/utils/reproducibility.py`, `tools/update_project_reference.py`
+- Calls: `Report`, `a1_code_tables`, `a1_cohort`, `a1_columns`, `a1_target`, `a1_waterfall`, `a2_dates`, `a2_duplicates`, `a2_eligibility`, `a2_maturity`, `a2_missing`, `a3_audit_logs`, `a3_config_audit`, `a3_forbidden`, `a3_leak_scan`, `a3_suspicious_metrics`, `a3_temporal_split`, `a4_decision_table`, `df.attrs.get`, `df.sample`, `do`, `len`, `load_feature_list`, `load_supervised_yaml`, `pd.read_csv`, `prepare`, `print`, `rep.add`, `rep.write_md`, `supervised_features`
+
+_Missing docstring._
+
+#### `make_demo`
+
+```python
+def make_demo(n: int=30000, seed: int=0, inicio: str='2022-01-01', anos: int=4) -> tuple[pd.DataFrame, pd.DataFrame]
+```
+
+- Location: `src/protocolo/verificacoes.py:1693-1737`
+- Visibility: `public`
+- Tested by: `tests/test_regras_pessoa_a.py`
+- Consumed by: `tests/test_regras_pessoa_a.py`
+- Defaults: `n=30000`, `seed=0`, `inicio='2022-01-01'`, `anos=4`
+- Calls: `len`, `np.random.default_rng`, `np.where`, `obito.astype`, `pd.DataFrame`, `pd.Timedelta`, `pd.Timestamp`, `pd.concat`, `pd.to_timedelta`, `rng.choice`, `rng.integers`, `rng.integers.astype`, `rng.normal`, `rng.random`
+
+Dados sintéticos com defeitos plantados, para testar o script.
 
 ### `src/utils/__init__.py`
 
@@ -3764,7 +4597,7 @@ passado, é feita uma verificação de presença das colunas.
 
 ### `src/utils/config.py`
 
-- Module: `src.utils.config` · 260 lines
+- Module: `src.utils.config` · 251 lines
 - Internal imports: none
 - External imports: `__future__.annotations`, `functools.lru_cache`, `hashlib`, `os`, `pathlib.Path`, `re`, `typing.Any`, `yaml`
 - Module constants: `ROOT_DIR = Path(__file__).resolve().parents[2]`, `SEED = 42`, `RANDOM_STATE = SEED`, `DATA_DIR = ROOT_DIR / 'data'`, `RAW_DIR = DATA_DIR / 'raw'`, `PROCESSED_DIR = DATA_DIR / 'processed'`, `ANALYTICAL_DIR = DATA_DIR / 'analytical'`, `TREINO_DIR = DATA_DIR / 'treino'`, `CONFIGS_DIR = ROOT_DIR / 'configs'`, `MODELS_DIR = ROOT_DIR / 'models'`, `OUTPUTS_DIR = ROOT_DIR / 'outputs'`, `RUNS_DIR = OUTPUTS_DIR / 'runs'`, `LOGS_DIR = ROOT_DIR / 'logs'`, `REPORTS_DIR = ROOT_DIR / 'reports'`, `FIGURES_DIR = REPORTS_DIR / 'figures'`, `TABLES_DIR = OUTPUTS_DIR / 'tables'`, `PREDICTIONS_DIR = OUTPUTS_DIR / 'predictions'`, `SUPERVISED_YAML = CONFIGS_DIR / 'supervised.yaml'`, `GITHUB_REPO = 'Ivan-S-Oliveira/Projeto_Integrador'`, `DATA_VERSION = 'dados-v2'`, `PARQUET_NAME = 'srag.parquet'`, `GITHUB_RELEASE_URL = f'https://github.com/{GITHUB_REPO}/releases/download/{DATA_VERSION}/'`, `HTTP_TIMEOUT = 180`, `HTTP_TENTATIVAS = 3`, `HTTP_BACKOFF = 5`, `CSV_SEP = ','`, `CSV_ENCODING = 'utf-8-sig'`, `COLS = None`, `PARQUET_COMPRESSION = 'zstd'`, `CSV_CHUNKSIZE = 500000`, `_ENV_PATTERN = re.compile('\\$\\{(\\w+)\\}')`
@@ -3773,19 +4606,33 @@ passado, é feita uma verificação de presença das colunas.
 Configurações centralizadas do Projeto Integrador.
 
 Fonte única da verdade para diretórios, identificação da versão dos dados,
-seed de reprodutibilidade e acesso tipado ao `configs/supervised.yaml`.
+seed de reprodutibilidade e acesso tipado ao ``configs/supervised.yaml``.
 
-Segredos e URLs sensíveis (`GITHUB_TOKEN`, `SRAG_PARQUET_URL`) são lidos em
-tempo de execução via `os.getenv`, nunca no import. O YAML aceita interpolação
-`${VAR}`, resolvida no momento da leitura.
+Segredos e URLs sensíveis (``GITHUB_TOKEN``, ``SRAG_PARQUET_URL``) são lidos
+em tempo de execução via ``os.getenv``, nunca no import. O YAML aceita
+interpolação ``${VAR}``, resolvida no momento da leitura.
 
-Uso típico:
+Uso típico::
+
     from src.utils import config as C
 
     C.SEED
     C.OUTPUTS_DIR
     C.cfg("target", "coluna")
-    C.exigir_gate("G7_limiar")
+    C.exigir_gate("G7_calibracao")
+
+#### `GatePendenteError`
+
+```python
+class GatePendenteError(RuntimeError)
+```
+
+- Location: `src/utils/config.py:77-78`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+Levantado quando se tenta usar um valor que depende de gate não aprovado.
 
 #### `github_token`
 
@@ -3793,7 +4640,7 @@ Uso típico:
 def github_token() -> str | None
 ```
 
-- Location: `src/utils/config.py:73-75`
+- Location: `src/utils/config.py:81-83`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -3808,18 +4655,17 @@ Token do GitHub (opcional) para releases/downloads autenticados.
 def srag_parquet_url() -> str
 ```
 
-- Location: `src/utils/config.py:78-91`
+- Location: `src/utils/config.py:86-96`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`
 - Consumed by: `notebooks/01_extracao.ipynb`, `tests/test_config.py`
 - Calls: `os.getenv`, `os.getenv.strip`
 - Environment variables: `SRAG_PARQUET_URL`
 
-URL do Parquet oficial processado do projeto.
+URL do Parquet oficial processado.
 
-Por padrão, construída a partir de `GITHUB_REPO`, `DATA_VERSION` e
-`PARQUET_NAME`. Pode ser sobrescrita via variável de ambiente
-`SRAG_PARQUET_URL`.
+Construída a partir de ``GITHUB_REPO`` / ``DATA_VERSION`` /
+``PARQUET_NAME``. Pode ser sobrescrita via ``SRAG_PARQUET_URL``.
 
 #### `_interpolar_env`
 
@@ -3827,13 +4673,28 @@ Por padrão, construída a partir de `GITHUB_REPO`, `DATA_VERSION` e
 def _interpolar_env(texto: str) -> str
 ```
 
-- Location: `src/utils/config.py:97-98`
+- Location: `src/utils/config.py:102-104`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_ENV_PATTERN.sub`, `m.group`, `os.getenv`
 
-_Missing docstring._
+Substitui ``${VAR}`` pelo valor de ``os.getenv``; ausente vira ``""``.
+
+#### `_get_nested`
+
+```python
+def _get_nested(mapping: Any, *chaves: str, default: Any=None) -> Any
+```
+
+- Location: `src/utils/config.py:107-114`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `default=None`
+- Calls: `isinstance`
+
+Acesso a caminho de chaves num dict; devolve ``default`` se faltar.
 
 #### `carregar_supervised`
 
@@ -3841,18 +4702,17 @@ _Missing docstring._
 def carregar_supervised() -> dict[str, Any]
 ```
 
-- Location: `src/utils/config.py:102-132`
+- Location: `src/utils/config.py:118-139`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
 - Decorators: `lru_cache(maxsize=1)`
-- Calls: `FileNotFoundError`, `ImportError`, `SUPERVISED_YAML.exists`, `SUPERVISED_YAML.read_text`, `ValueError`, `_interpolar_env`, `isinstance`, `lru_cache`, `type`, `yaml.safe_load`
+- Calls: `FileNotFoundError`, `SUPERVISED_YAML.exists`, `SUPERVISED_YAML.read_text`, `ValueError`, `_interpolar_env`, `isinstance`, `lru_cache`, `type`, `yaml.safe_load`
 
-Lê `configs/supervised.yaml` e devolve o dict parseado.
+Lê ``configs/supervised.yaml`` e devolve o dict parseado (cacheado).
 
-Resolve `${VAR}` antes do parse e cacheia o resultado. Levanta
-`FileNotFoundError` se o YAML não existir e `ImportError` se PyYAML
-não estiver instalado.
+Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError`` se o
+YAML não existir e ``ValueError`` se a raiz não for mapping.
 
 #### `supervised_yaml_sha256`
 
@@ -3860,26 +4720,13 @@ não estiver instalado.
 def supervised_yaml_sha256() -> str | None
 ```
 
-- Location: `src/utils/config.py:135-145`
+- Location: `src/utils/config.py:142-150`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `src/utils/reproducibility.py`
 - Calls: `SUPERVISED_YAML.exists`, `f.read`, `h.hexdigest`, `h.update`, `hashlib.sha256`, `open`
 
-SHA-256 do `supervised.yaml`, ou `None` se o arquivo não existir.
-
-#### `GatePendenteError`
-
-```python
-class GatePendenteError(RuntimeError)
-```
-
-- Location: `src/utils/config.py:148-149`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-
-Levantado quando se tenta usar um valor que depende de gate não aprovado.
+SHA-256 do ``supervised.yaml``, ou ``None`` se o arquivo não existir.
 
 #### `cfg`
 
@@ -3887,20 +4734,21 @@ Levantado quando se tenta usar um valor que depende de gate não aprovado.
 def cfg(*chaves: str, default: Any=None) -> Any
 ```
 
-- Location: `src/utils/config.py:152-167`
+- Location: `src/utils/config.py:153-163`
 - Visibility: `public`
-- Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`, `tests/test_temporal.py`
+- Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
+- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
 - Defaults: `default=None`
-- Calls: `carregar_supervised`, `isinstance`
+- Calls: `_get_nested`, `carregar_supervised`
 
-Acessa `configs/supervised.yaml` por caminho de chaves.
+Acessa ``configs/supervised.yaml`` por caminho de chaves.
 
-Exemplo:
-    cfg("target", "coluna")        # → "evolucao"
-    cfg("temporal", "fracao")      # → {"treino": 0.7, "validacao": 0.15}
+Exemplo::
 
-Retorna `default` se qualquer chave do caminho não existir.
+    cfg("target", "coluna")       # → "evolucao"
+    cfg("temporal", "fracao")     # → {"treino": 0.7, "validacao": 0.15}
+
+Devolve ``default`` se qualquer chave do caminho não existir.
 
 #### `exigir_valor`
 
@@ -3908,15 +4756,15 @@ Retorna `default` se qualquer chave do caminho não existir.
 def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any
 ```
 
-- Location: `src/utils/config.py:170-181`
+- Location: `src/utils/config.py:166-176`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `GatePendenteError`
 
-Devolve `valor` se preenchido; levanta `GatePendenteError` caso contrário
-(`None` ou `"TBD"`). Usado para valores do YAML que só podem ser
-preenchidos após um gate ser aprovado.
+Devolve ``valor`` se preenchido; levanta ``GatePendenteError`` se ``None`` ou ``"TBD"``.
+
+Usado para valores do YAML que só podem ser preenchidos após gate aprovado.
 
 #### `gate_aprovado`
 
@@ -3924,13 +4772,13 @@ preenchidos após um gate ser aprovado.
 def gate_aprovado(nome_gate: str) -> bool
 ```
 
-- Location: `src/utils/config.py:184-187`
+- Location: `src/utils/config.py:179-181`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `cfg`, `g.get`
+- Calls: `_get_nested`, `_get_nested.get`, `carregar_supervised`
 
-True se `gates.<nome_gate>.status == 'aprovado'`.
+True se ``gates.<nome_gate>.status == 'aprovado'``.
 
 #### `exigir_gate`
 
@@ -3938,16 +4786,16 @@ True se `gates.<nome_gate>.status == 'aprovado'`.
 def exigir_gate(nome_gate: str) -> None
 ```
 
-- Location: `src/utils/config.py:190-202`
+- Location: `src/utils/config.py:184-195`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `GatePendenteError`, `gate_aprovado`
 
-Levanta `GatePendenteError` se o gate ainda não estiver aprovado.
+Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado.
 
-Use no início de etapas que dependam de decisão metodológica congelada
-(p.ex. split temporal antes de G2, holdout antes de G7).
+Use no início de etapas que dependem de decisão metodológica congelada
+(ex.: holdout antes de G9).
 
 #### `features_finais`
 
@@ -3955,7 +4803,7 @@ Use no início de etapas que dependam de decisão metodológica congelada
 def features_finais() -> list[str]
 ```
 
-- Location: `src/utils/config.py:205-216`
+- Location: `src/utils/config.py:198-207`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
@@ -3963,8 +4811,8 @@ def features_finais() -> list[str]
 
 Lista final de features.
 
-Usa `features.final` se preenchida; caso contrário, concatena
-`features.numericas` + `features.categoricas`.
+Usa ``features.final`` se preenchida; caso contrário, concatena
+``features.numericas`` + ``features.categoricas``.
 
 #### `limiar_ativo`
 
@@ -3972,7 +4820,7 @@ Usa `features.final` se preenchida; caso contrário, concatena
 def limiar_ativo() -> float
 ```
 
-- Location: `src/utils/config.py:219-229`
+- Location: `src/utils/config.py:210-219`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -3980,8 +4828,8 @@ def limiar_ativo() -> float
 
 Limiar de decisão vigente.
 
-Usa `limiar.otimo` se o gate `G8_limiar` estiver aprovado e o valor
-estiver preenchido; caso contrário, cai em `limiar.default` (0.5).
+Usa ``limiar.otimo`` se o gate ``G8_limiar`` estiver aprovado e o valor
+preenchido; caso contrário, cai em ``limiar.default`` (0.5).
 
 #### `resumo`
 
@@ -3989,31 +4837,29 @@ estiver preenchido; caso contrário, cai em `limiar.default` (0.5).
 def resumo() -> str
 ```
 
-- Location: `src/utils/config.py:232-256`
+- Location: `src/utils/config.py:222-247`
 - Visibility: `public`
-- Tested by: `tests/test_config.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/env.py`, `tests/test_config.py`
-- Calls: `SUPERVISED_YAML.exists`, `bool`, `github_token`, `srag_parquet_url`, `supervised_yaml_sha256`
+- Tested by: `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
+- Calls: `SUPERVISED_YAML.exists`, `bool`, `github_token`, `join`, `srag_parquet_url`, `supervised_yaml_sha256`
 
 Resumo legível das configurações ativas — usado em bootstrap de notebooks.
 
 ### `src/utils/env.py`
 
-- Module: `src.utils.env` · 130 lines
+- Module: `src.utils.env` · 119 lines
 - Internal imports: `src.utils.config`
 - External imports: `__future__.annotations`, `dotenv.load_dotenv`, `os`, `pathlib.Path`
-- Module constants: `ROOT = C.ROOT_DIR`, `DATA = C.DATA_DIR`, `RAW = C.RAW_DIR`, `PROCESSED = C.PROCESSED_DIR`, `TREINO = C.TREINO_DIR`, `FIGURES = C.FIGURES_DIR`, `ENV = detectar_ambiente()`
+- Module constants: `ROOT = C.ROOT_DIR`, `DATA = C.DATA_DIR`, `RAW = C.RAW_DIR`, `PROCESSED = C.PROCESSED_DIR`, `TREINO = C.TREINO_DIR`, `FIGURES = C.FIGURES_DIR`, `_DIRS_PADRAO = (C.DATA_DIR, C.RAW_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR, C.TREINO_DIR, C.CONFIGS_DIR, C.MODELS_DIR, C.OUTPUTS_DIR, C.RUNS_DIR, C.LOGS_DIR, C.REPORTS_DIR, C.FIGURES_DIR, C.TABLES_DIR, C.PREDICTIONS_DIR)`, `ENV = detectar_ambiente()`
 - Environment variables: `CI`, `GITHUB_ACTIONS`, `GITHUB_TOKEN`
 
-Carregamento de variáveis de ambiente e segredos do projeto.
+Variáveis de ambiente e segredos do projeto.
 
-Fluxo:
-    .env  →  os.environ  →  config.py  →  restante do projeto
+Fluxo: ``.env`` → ``os.environ`` → ``config.py`` → restante do projeto.
 
-O arquivo .env nunca é versionado (ver .gitignore); use .env.example como
-template. Em CI/CD ou produção, defina as variáveis diretamente no ambiente.
-Caminhos de diretório são aliases de `src.utils.config`, que permanece a
-fonte única da verdade.
+O arquivo ``.env`` nunca é versionado (ver ``.gitignore``); use
+``.env.example`` como template. Diretórios são aliases de
+``src.utils.config``, fonte única da verdade.
 
 #### `garantir_diretorios`
 
@@ -4021,7 +4867,7 @@ fonte única da verdade.
 def garantir_diretorios() -> None
 ```
 
-- Location: `src/utils/env.py:29-51`
+- Location: `src/utils/env.py:37-43`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_pipeline.py`
 - Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_config.py`, `tests/test_pipeline.py`
@@ -4029,7 +4875,7 @@ def garantir_diretorios() -> None
 
 Cria todos os diretórios padrão do projeto, se ainda não existirem.
 
-Percorre as constantes de `config.py` — nenhum caminho é redefinido aqui.
+Percorre as constantes de ``config.py`` — nenhum caminho é redefinido aqui.
 
 #### `carregar_dotenv`
 
@@ -4037,17 +4883,18 @@ Percorre as constantes de `config.py` — nenhum caminho é redefinido aqui.
 def carregar_dotenv(caminho: Path | None=None) -> bool
 ```
 
-- Location: `src/utils/env.py:54-72`
+- Location: `src/utils/env.py:46-65`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
 - Defaults: `caminho=None`
 - Calls: `Path`, `caminho.exists`, `load_dotenv`
 
-Carrega o arquivo .env da raiz do projeto (ou o caminho informado).
+Carrega ``.env`` da raiz do projeto (ou de ``caminho``).
 
-Retorna True se o arquivo foi encontrado e carregado, False caso contrário.
-Não sobrescreve variáveis já definidas no ambiente.
+Retorna ``True`` se o arquivo foi encontrado e carregado, ``False`` caso
+contrário (arquivo ausente ou ``python-dotenv`` indisponível). Não
+sobrescreve variáveis já definidas no ambiente.
 
 #### `detectar_ambiente`
 
@@ -4055,14 +4902,14 @@ Não sobrescreve variáveis já definidas no ambiente.
 def detectar_ambiente() -> str
 ```
 
-- Location: `src/utils/env.py:75-79`
+- Location: `src/utils/env.py:68-70`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `os.getenv`
 - Environment variables: `CI`, `GITHUB_ACTIONS`
 
-Retorna 'ci' se estiver em pipeline, senão 'local'.
+``"ci"`` se estiver em pipeline, senão ``"local"``.
 
 #### `get_env`
 
@@ -4070,7 +4917,7 @@ Retorna 'ci' se estiver em pipeline, senão 'local'.
 def get_env(nome: str, default: str | None=None) -> str | None
 ```
 
-- Location: `src/utils/env.py:85-87`
+- Location: `src/utils/env.py:76-78`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4085,7 +4932,7 @@ Lê uma variável de ambiente, com default opcional.
 def get_secret(nome: str, obrigatorio: bool=True) -> str | None
 ```
 
-- Location: `src/utils/env.py:90-113`
+- Location: `src/utils/env.py:81-102`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`
 - Consumed by: `src/utils/storage.py`, `tests/test_config.py`
@@ -4094,8 +4941,9 @@ def get_secret(nome: str, obrigatorio: bool=True) -> str | None
 
 Lê um segredo/variável sensível do ambiente.
 
-Se `obrigatorio` for True (padrão) e a variável não existir, levanta
-RuntimeError com instruções de configuração. Se False, retorna None.
+Se ``obrigatorio=True`` (default) e a variável não existir, levanta
+``RuntimeError`` com instruções de configuração. Se ``False``, devolve
+``None``.
 
 #### `resumo`
 
@@ -4103,11 +4951,11 @@ RuntimeError com instruções de configuração. Se False, retorna None.
 def resumo() -> str
 ```
 
-- Location: `src/utils/env.py:116-124`
+- Location: `src/utils/env.py:105-113`
 - Visibility: `public`
-- Tested by: `tests/test_config.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_config.py`
-- Calls: `bool`, `exists`, `os.getenv`
+- Tested by: `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_config.py`, `tests/test_temporal.py`
+- Calls: `bool`, `exists`, `join`, `os.getenv`
 - Environment variables: `GITHUB_TOKEN`
 
 Resumo legível do estado do ambiente.
@@ -4119,11 +4967,11 @@ Resumo legível do estado do ambiente.
 - External imports: `__future__.annotations`, `hashlib`, `pathlib.Path`
 - Module constants: `_DEFAULT_CHUNK_SIZE = 1024 * 1024`
 
-Hashing de arquivos para verificacao de integridade.
+Hashing de arquivos para verificação de integridade.
 
-Centraliza `sha256_file`, usado tanto pela resolucao de coorte
-(`src/data/cohort_source.py`) quanto pela persistencia do artefato
-supervisionado (`src/data/supervised_artifact.py`).
+Centraliza ``sha256_file``, usado tanto pela resolução de coorte
+(``src/data/cohort_source.py``) quanto pela persistência do artefato
+supervisionado (``src/data/supervised_artifact.py``).
 
 #### `sha256_file`
 
@@ -4138,60 +4986,34 @@ def sha256_file(path: Path, chunk_size: int=_DEFAULT_CHUNK_SIZE) -> str
 - Defaults: `chunk_size=_DEFAULT_CHUNK_SIZE`
 - Calls: `Path`, `Path.open`, `digest.hexdigest`, `digest.update`, `handle.read`, `hashlib.sha256`
 
-Calcula SHA-256 de um arquivo sem carrega-lo integralmente em memoria.
+Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória.
 
-Le em blocos de `chunk_size` bytes (default 1 MiB), permitindo hashear
-arquivos grandes com memoria constante.
+Lê em blocos de ``chunk_size`` bytes (default 1 MiB), permitindo
+hashear arquivos grandes com memória constante.
 
 ### `src/utils/reproducibility.py`
 
-- Module: `src.utils.reproducibility` · 432 lines
+- Module: `src.utils.reproducibility` · 402 lines
 - Internal imports: `src.utils.config`, `src.utils.storage.read_sha256`
-- External imports: `__future__.annotations`, `datetime.datetime`, `datetime.timezone`, `importlib.metadata`, `json`, `os`, `pathlib.Path`, `platform`, `subprocess`, `sys`, `time`, `traceback`, `typing.Any`
-- Module constants: `RUNS_DIR = C.RUNS_DIR`
+- External imports: `__future__.annotations`, `datetime.datetime`, `datetime.timezone`, `importlib.metadata`, `json`, `os`, `pathlib.Path`, `platform`, `subprocess`, `sys`, `time`, `traceback`, `typing.Any`, `typing.Literal`
+- Module constants: `RUNS_DIR = C.RUNS_DIR`, `_VERSOES_PACOTES = ('numpy', 'pandas', 'pyarrow', 'scikit-learn', 'scipy', 'matplotlib', 'seaborn')`, `_DATASET_TAMANHOS = ('n_rows', 'train_rows', 'valid_rows', 'test_rows')`
 - Environment variables: `CI`, `GITHUB_ACTIONS`
 
 Registro de execuções para reprodutibilidade (critério C1).
 
-Cada execução gera `outputs/runs/<RUN_ID>/` com:
-    metadata.json   ← tudo estruturado
-    summary.txt     ← versão legível
+Cada execução grava em ``outputs/runs/<RUN_ID>/``:
 
-O metadata captura identificação (run_id, modelo, seed, timestamps),
-status (`success` | `error`), erro estruturado quando houver exceção,
-versão e SHA-256 do Parquet, estado dos gates, versões de bibliotecas,
-commit/branch e ambiente.
+- ``metadata.json`` — tudo estruturado
+- ``summary.txt``   — versão legível
 
-Uso:
+Uso::
+
     from src.utils.reproducibility import Run
 
-    with Run(
-        modelo="logistic",
-        parametros={"C": 1.0},
-        dataset_path=C.ANALYTICAL_DIR / "dataset_supervisionado.parquet",
-    ) as r:
+    with Run(modelo="logistic", parametros={"C": 1.0}) as r:
         ... treino ...
         r.metrica(auc=0.82, accuracy=0.78)
-        r.anotar("split temporal por dt_notific")
-
-#### `gerar_run_id`
-
-```python
-def gerar_run_id(modelo: str | None=None, base_dir: Path | None=None) -> str
-```
-
-- Location: `src/utils/reproducibility.py:47-71`
-- Visibility: `public`
-- Tested by: `tests/test_reproducibility.py`
-- Consumed by: `tests/test_reproducibility.py`
-- Defaults: `modelo=None`, `base_dir=None`
-- Calls: `Path`, `datetime.now`, `datetime.now.strftime`, `exists`
-
-Gera um identificador único no formato
-`YYYY-MM-DD_HHMMSS_micros[_modelo]`.
-
-Se `base_dir` for informado, garante unicidade contra o sistema de
-arquivos adicionando sufixo `_NN` em caso de colisão.
+        r.anotar("split aleatorio estratificado")
 
 #### `_agora`
 
@@ -4199,7 +5021,7 @@ arquivos adicionando sufixo `_NN` em caso de colisão.
 def _agora() -> dict[str, str]
 ```
 
-- Location: `src/utils/reproducibility.py:74-79`
+- Location: `src/utils/reproducibility.py:47-52`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4213,42 +5035,13 @@ _Missing docstring._
 def _coletar_gates() -> dict[str, str]
 ```
 
-- Location: `src/utils/reproducibility.py:82-88`
+- Location: `src/utils/reproducibility.py:55-58`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `gates.items`, `get`
 
-Estado atual de cada gate em `supervised.yaml` como `{nome: status}`.
-
-#### `_resolver_dataset_sha256`
-
-```python
-def _resolver_dataset_sha256(dataset_sha256: str | None, dataset_path: Path | None) -> str | None
-```
-
-- Location: `src/utils/reproducibility.py:91-107`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `Path`, `read_sha256`
-
-Resolve o SHA-256 do dataset por prioridade: valor explícito, sidecar
-`<dataset_path>.sha256`, ou `None`.
-
-#### `_resumo`
-
-```python
-def _resumo(meta: dict[str, Any]) -> str
-```
-
-- Location: `src/utils/reproducibility.py:110-166`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `err.get`, `isinstance`, `items`, `join`, `k.upper`, `linhas.append`, `meta.get`
-
-`summary.txt` curto e legível a partir do metadata.
+Estado atual de cada gate em ``supervised.yaml`` como ``{nome: status}``.
 
 #### `_versoes`
 
@@ -4256,13 +5049,27 @@ def _resumo(meta: dict[str, Any]) -> str
 def _versoes() -> dict[str, str | None]
 ```
 
-- Location: `src/utils/reproducibility.py:169-188`
+- Location: `src/utils/reproducibility.py:61-69`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `metadata.version`, `platform.python_version`
 
-Versões das bibliotecas fundamentais da execução.
+Versões das bibliotecas fundamentais e do Python.
+
+#### `_run_git`
+
+```python
+def _run_git(args: list[str]) -> str | None
+```
+
+- Location: `src/utils/reproducibility.py:72-86`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `proc.stdout.strip`, `subprocess.run`
+
+Corre ``git args`` em ``C.ROOT_DIR``; devolve stdout ou ``None``.
 
 #### `_git_info`
 
@@ -4270,11 +5077,11 @@ Versões das bibliotecas fundamentais da execução.
 def _git_info() -> dict[str, str | bool | None]
 ```
 
-- Location: `src/utils/reproducibility.py:191-214`
+- Location: `src/utils/reproducibility.py:89-96`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `bool`, `executar_git`, `proc.stdout.strip`, `subprocess.run`
+- Calls: `_run_git`, `bool`
 
 Commit, branch e estado da árvore de trabalho.
 
@@ -4284,7 +5091,7 @@ Commit, branch e estado da árvore de trabalho.
 def _env_info() -> dict[str, str | bool]
 ```
 
-- Location: `src/utils/reproducibility.py:217-225`
+- Location: `src/utils/reproducibility.py:99-107`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4293,13 +5100,76 @@ def _env_info() -> dict[str, str | bool]
 
 Informações não sensíveis do ambiente.
 
+#### `_resolver_dataset_sha256`
+
+```python
+def _resolver_dataset_sha256(dataset_sha256: str | None, dataset_path: Path | None) -> str | None
+```
+
+- Location: `src/utils/reproducibility.py:110-125`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `Path`, `read_sha256`
+
+SHA-256 do dataset por prioridade: explícito > sidecar > ``None``.
+
+O sidecar é ``<dataset_path>.sha256`` (ver ``src.utils.storage``).
+
+#### `_bloco`
+
+```python
+def _bloco(titulo: str, itens: dict[str, Any], largura: int=20) -> list[str]
+```
+
+- Location: `src/utils/reproducibility.py:132-140`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `largura=20`
+- Calls: `isinstance`, `itens.items`, `linhas.append`
+
+``titulo`` seguido de ``k: v`` alinhados — devolve linhas já vazias acima.
+
+#### `_resumo`
+
+```python
+def _resumo(meta: dict[str, Any]) -> str
+```
+
+- Location: `src/utils/reproducibility.py:143-184`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_bloco`, `err.get`, `join`, `k.upper`, `linhas.append`, `meta.get`
+
+``summary.txt`` curto e legível a partir do metadata.
+
+#### `gerar_run_id`
+
+```python
+def gerar_run_id(modelo: str | None=None, base_dir: Path | None=None) -> str
+```
+
+- Location: `src/utils/reproducibility.py:191-211`
+- Visibility: `public`
+- Tested by: `tests/test_reproducibility.py`
+- Consumed by: `tests/test_reproducibility.py`
+- Defaults: `modelo=None`, `base_dir=None`
+- Calls: `Path`, `datetime.now`, `datetime.now.strftime`, `exists`
+
+Identificador único ``YYYY-MM-DD_HHMMSS_micros[_modelo]``.
+
+Com ``base_dir``, acrescenta sufixo ``_NN`` em caso de colisão no
+sistema de arquivos.
+
 #### `registrar_execucao`
 
 ```python
-def registrar_execucao(modelo: str, *, seed: int | None=None, parametros: dict[str, Any] | None=None, dataset: dict[str, Any] | None=None, features: dict[str, Any] | None=None, metricas: dict[str, Any] | None=None, duracao_s: float | None=None, notas: str | None=None, run_id: str | None=None, output_dir: Path | None=None, status: str='success', erro: dict[str, Any] | None=None, dataset_sha256: str | None=None) -> Path
+def registrar_execucao(modelo: str, *, seed: int | None=None, parametros: dict[str, Any] | None=None, dataset: dict[str, Any] | None=None, features: dict[str, Any] | None=None, metricas: dict[str, Any] | None=None, duracao_s: float | None=None, notas: str | None=None, run_id: str | None=None, output_dir: Path | None=None, status: Status='success', erro: dict[str, Any] | None=None, dataset_sha256: str | None=None) -> Path
 ```
 
-- Location: `src/utils/reproducibility.py:228-288`
+- Location: `src/utils/reproducibility.py:214-272`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `tests/test_reproducibility.py`
@@ -4307,11 +5177,11 @@ def registrar_execucao(modelo: str, *, seed: int | None=None, parametros: dict[s
 - Calls: `C.supervised_yaml_sha256`, `Path`, `_agora`, `_coletar_gates`, `_env_info`, `_git_info`, `_resumo`, `_versoes`, `gerar_run_id`, `json.dumps`, `pasta.mkdir`, `print`, `write_text`
 - File literals: `metadata.json`, `summary.txt`
 
-Grava `metadata.json` + `summary.txt` em `outputs/runs/<RUN_ID>/`.
+Grava ``metadata.json`` + ``summary.txt`` em ``outputs/runs/<RUN_ID>/``.
 
-`status` deve ser `"success"` ou `"error"`; este último deve vir
-acompanhado de `erro` (dict com `tipo`, `mensagem` e opcionalmente
-`traceback`). Se `dataset_sha256` for None, fica ausente do metadata.
+``status='error'`` deve vir acompanhado de ``erro`` (dict com ``tipo``,
+``mensagem`` e opcionalmente ``traceback``). ``dataset_sha256=None``
+deixa a chave ausente do metadata.
 
 #### `listar_runs`
 
@@ -4319,16 +5189,17 @@ acompanhado de `erro` (dict com `tipo`, `mensagem` e opcionalmente
 def listar_runs(output_dir: Path | None=None) -> list[dict[str, Any]]
 ```
 
-- Location: `src/utils/reproducibility.py:291-320`
+- Location: `src/utils/reproducibility.py:275-298`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `tests/test_reproducibility.py`
 - Defaults: `output_dir=None`
-- Calls: `Path`, `item.get`, `json.loads`, `metadata_path.exists`, `metadata_path.read_text`, `pasta.is_dir`, `raiz.exists`, `raiz.iterdir`, `runs.append`, `sorted`, `str`
+- Calls: `Path`, `json.loads`, `m.get`, `meta_path.exists`, `meta_path.read_text`, `pasta.is_dir`, `raiz.exists`, `raiz.iterdir`, `runs.append`, `sorted`, `str`
 - File literals: `metadata.json`
 
-Lista os metadados das execuções registradas, ordenados por `run_id`
-decrescente. Cada item inclui o caminho da pasta em `"pasta"`.
+Metadados das execuções registadas, ordenados por ``run_id`` decrescente.
+
+Cada item inclui ``"pasta"`` com o caminho absoluto.
 
 #### `carregar_run`
 
@@ -4336,15 +5207,15 @@ decrescente. Cada item inclui o caminho da pasta em `"pasta"`.
 def carregar_run(run: str | Path, output_dir: Path | None=None) -> dict[str, Any]
 ```
 
-- Location: `src/utils/reproducibility.py:323-336`
+- Location: `src/utils/reproducibility.py:301-313`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `tests/test_reproducibility.py`
 - Defaults: `output_dir=None`
-- Calls: `FileNotFoundError`, `Path`, `caminho.is_absolute`, `json.loads`, `metadata_path.exists`, `metadata_path.read_text`
+- Calls: `FileNotFoundError`, `Path`, `caminho.is_absolute`, `json.loads`, `meta_path.exists`, `meta_path.read_text`
 - File literals: `metadata.json`
 
-Carrega o `metadata.json` de uma execução.
+Carrega o ``metadata.json`` de uma execução.
 
 #### `Run`
 
@@ -4352,23 +5223,17 @@ Carrega o `metadata.json` de uma execução.
 class Run()
 ```
 
-- Location: `src/utils/reproducibility.py:339-432`
+- Location: `src/utils/reproducibility.py:320-402`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_reproducibility.py`
 - Calls: `_resolver_dataset_sha256`, `dict`, `getattr`, `join`, `registrar_execucao`, `self._metricas.update`, `self.dataset.update`, `str`, `time.perf_counter`, `traceback.format_exception`
 
-Context manager de registro de execução.
-
-Uso::
-
-    with Run(modelo="logistic", parametros={"C": 1.0}) as r:
-        ...
-        r.metrica(auc=0.82)
+Context manager de registo de execução.
 
 O metadata é gravado sempre ao sair do bloco, inclusive em caso de
-exceção — com `status="error"` e `erro` estruturado. A exceção não
-é suprimida.
+excepção (com ``status="error"`` e ``erro`` estruturado). A excepção
+não é suprimida — ``__exit__`` devolve ``False``.
 
 #### `Run.__init__`
 
@@ -4376,7 +5241,7 @@ exceção — com `status="error"` e `erro` estruturado. A exceção não
 def __init__(self, modelo: str, *, seed: int | None=None, parametros: dict[str, Any] | None=None, dataset: dict[str, Any] | None=None, features: dict[str, Any] | None=None, notas: str | None=None, output_dir: Path | None=None, dataset_path: Path | None=None, dataset_sha256: str | None=None) -> None
 ```
 
-- Location: `src/utils/reproducibility.py:354-378`
+- Location: `src/utils/reproducibility.py:328-352`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4391,7 +5256,7 @@ _Missing docstring._
 def metrica(self, **kwargs: Any) -> 'Run'
 ```
 
-- Location: `src/utils/reproducibility.py:380-382`
+- Location: `src/utils/reproducibility.py:354-356`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/metrics.py`, `tests/test_reproducibility.py`
@@ -4405,7 +5270,7 @@ _Missing docstring._
 def anotar(self, texto: str) -> 'Run'
 ```
 
-- Location: `src/utils/reproducibility.py:384-386`
+- Location: `src/utils/reproducibility.py:358-360`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
 - Consumed by: `tests/test_reproducibility.py`
@@ -4418,7 +5283,7 @@ _Missing docstring._
 def add_dataset(self, **kwargs: Any) -> 'Run'
 ```
 
-- Location: `src/utils/reproducibility.py:388-390`
+- Location: `src/utils/reproducibility.py:362-364`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
@@ -4432,7 +5297,7 @@ _Missing docstring._
 def __enter__(self) -> 'Run'
 ```
 
-- Location: `src/utils/reproducibility.py:392-394`
+- Location: `src/utils/reproducibility.py:366-368`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4446,7 +5311,7 @@ _Missing docstring._
 def __exit__(self, exc_type, exc, tb) -> bool
 ```
 
-- Location: `src/utils/reproducibility.py:396-432`
+- Location: `src/utils/reproducibility.py:370-402`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4456,7 +5321,7 @@ _Missing docstring._
 
 ### `src/utils/storage.py`
 
-- Module: `src.utils.storage` · 295 lines
+- Module: `src.utils.storage` · 290 lines
 - Internal imports: `src.utils.config`, `src.utils.env.PROCESSED`, `src.utils.env.get_secret`
 - External imports: `__future__.annotations`, `hashlib`, `pandas`, `pathlib.Path`, `requests`, `time`, `typing.Iterable`
 - Module constants: `PARQUET_MAGIC = b'PAR1'`, `_CHUNK = 8 * 1024 * 1024`
@@ -4464,16 +5329,11 @@ _Missing docstring._
 
 Contrato oficial de acesso ao Parquet de SRAG.
 
-Fluxo:
-    GitHub Release → data/processed/<DATA_VERSION>/srag.parquet
+Fluxo: ``GitHub Release → data/processed/<DATA_VERSION>/srag.parquet``.
 
-Tenta primeiro o download público via URL de release. Se falhar e houver
-`GITHUB_TOKEN`, cai no asset privado via API do GitHub. Grava um sidecar
-`<arquivo>.sha256` com o hash do Parquet baixado — reprodutibilidade e
-registro no `Run`. `force=True` rebaixa e descarta o sidecar antigo.
-
-Requer `requests` e `pandas`. Constantes `C.HTTP_TIMEOUT`,
-`C.HTTP_TENTATIVAS` e `C.HTTP_BACKOFF` controlam o comportamento de rede.
+Tenta o download público via release; se falhar e houver ``GITHUB_TOKEN``,
+usa o asset privado via API do GitHub. Grava um sidecar ``<arquivo>.sha256``
+para reprodutibilidade. ``force=True`` rebaixa e descarta o sidecar antigo.
 
 #### `_token`
 
@@ -4481,14 +5341,14 @@ Requer `requests` e `pandas`. Constantes `C.HTTP_TIMEOUT`,
 def _token() -> str | None
 ```
 
-- Location: `src/utils/storage.py:34-36`
+- Location: `src/utils/storage.py:29-31`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `get_secret`
 - Environment variables: `GITHUB_TOKEN`
 
-Devolve `GITHUB_TOKEN` se definido; caso contrário, `None`.
+``GITHUB_TOKEN`` se definido; caso contrário, ``None``.
 
 #### `sha256_path`
 
@@ -4496,13 +5356,13 @@ Devolve `GITHUB_TOKEN` se definido; caso contrário, `None`.
 def sha256_path(parquet_path: Path) -> Path
 ```
 
-- Location: `src/utils/storage.py:39-41`
+- Location: `src/utils/storage.py:34-36`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `parquet_path.with_suffix`
 
-Caminho do sidecar `.sha256` associado a um Parquet.
+Caminho do sidecar ``.sha256`` associado a um Parquet.
 
 #### `read_sha256`
 
@@ -4510,13 +5370,13 @@ Caminho do sidecar `.sha256` associado a um Parquet.
 def read_sha256(parquet_path: Path) -> str | None
 ```
 
-- Location: `src/utils/storage.py:44-50`
+- Location: `src/utils/storage.py:39-45`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `src/utils/reproducibility.py`
 - Calls: `linha.split`, `sha256_path`, `sidecar.exists`, `sidecar.read_text`, `sidecar.read_text.strip`
 
-Lê o SHA-256 do sidecar, ou `None` se ele não existir.
+Lê o SHA-256 do sidecar, ou ``None`` se ele não existir.
 
 #### `_abrir_stream`
 
@@ -4524,17 +5384,33 @@ Lê o SHA-256 do sidecar, ou `None` se ele não existir.
 def _abrir_stream(url: str, *, headers: dict[str, str] | None, tentativas: int, backoff: float, timeout: float) -> requests.Response
 ```
 
-- Location: `src/utils/storage.py:53-99`
+- Location: `src/utils/storage.py:48-95`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `r.close`, `r.raise_for_status`, `range`, `requests.HTTPError`, `requests.get`, `time.sleep`
+- Calls: `RuntimeError`, `r.close`, `r.raise_for_status`, `range`, `requests.HTTPError`, `requests.get`, `time.sleep`
 
 Abre um stream HTTP com retry linear.
 
 4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
-conexão são retentados até `tentativas` vezes, com espera
-`backoff * tentativa` entre elas.
+conexão são retentados até ``tentativas`` vezes, com espera
+``backoff * tentativa`` entre elas.
+
+#### `_baixar_para_part`
+
+```python
+def _baixar_para_part(r: requests.Response, tmp: Path) -> tuple[str, bytes]
+```
+
+- Location: `src/utils/storage.py:98-129`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `f.write`, `h.hexdigest`, `h.update`, `hashlib.sha256`, `int`, `len`, `open`, `print`, `r.headers.get`, `r.iter_content`
+
+Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``.
+
+Imprime progresso quando o servidor declara ``content-length``.
 
 #### `download_file`
 
@@ -4542,21 +5418,19 @@ conexão são retentados até `tentativas` vezes, com espera
 def download_file(url: str, dest: Path, *, headers: dict[str, str] | None=None, expected_magic: bytes | None=None, expected_sha256: str | None=None) -> str
 ```
 
-- Location: `src/utils/storage.py:102-189`
+- Location: `src/utils/storage.py:132-189`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Defaults: `headers=None`, `expected_magic=None`, `expected_sha256=None`
-- Calls: `RuntimeError`, `_abrir_stream`, `dest.with_suffix`, `digest.lower`, `expected_sha256.lower`, `f.write`, `first_bytes.startswith`, `h.hexdigest`, `h.update`, `hashlib.sha256`, `int`, `len`, `next`, `open`, `print`, `r.close`, `r.headers.get`, `r.headers.get.lower`, `r.iter_content`, `sha256_path`, `sha256_path.write_text`, `tmp.replace`, `tmp.unlink`
+- Calls: `RuntimeError`, `_abrir_stream`, `_baixar_para_part`, `dest.with_suffix`, `digest.lower`, `expected_sha256.lower`, `first_bytes.startswith`, `next`, `r.close`, `r.headers.get`, `r.headers.get.lower`, `r.iter_content`, `sha256_path`, `sha256_path.write_text`, `tmp.replace`, `tmp.unlink`
 
-Baixa `url` para `dest` com verificação de magic bytes e SHA-256.
+Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256.
 
-Retorna o SHA-256 hex do conteúdo e grava um sidecar `<dest>.sha256`
-no formato `sha256sum`. O download passa por `<dest>.part`.
-
-Levanta `RuntimeError` se o content-type indicar HTML/JSON, se o
-magic não bater ou se o SHA-256 divergir; o `.part` é removido em
-qualquer falha.
+Retorna o SHA-256 hex e grava o sidecar ``<dest>.sha256``. O download
+passa por ``<dest>.part``, removido em qualquer falha. Levanta
+``RuntimeError`` se o content-type indicar HTML/JSON, se o magic não
+bater ou se o SHA-256 divergir.
 
 #### `_private_asset_url`
 
@@ -4578,25 +5452,23 @@ URL do asset Parquet via API do GitHub (repositório privado).
 def get_parquet(force: bool=False, *, expected_sha256: str | None=None) -> Path
 ```
 
-- Location: `src/utils/storage.py:216-278`
+- Location: `src/utils/storage.py:216-274`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`
-- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `tests/test_pipeline.py`
+- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_pipeline.py`
 - Defaults: `force=False`, `expected_sha256=None`
 - Calls: `RuntimeError`, `_private_asset_url`, `_token`, `download_file`, `folder.mkdir`, `path.exists`, `path.unlink`, `print`, `sha256_path`, `sha256_path.unlink`
 
 Devolve o caminho local do Parquet de SRAG, baixando se necessário.
 
-Ordem de tentativas: release pública do GitHub; se falhar e
-`GITHUB_TOKEN` estiver definido, asset privado via API do GitHub.
+Ordem: release pública; se falhar e ``GITHUB_TOKEN`` estiver definido,
+asset privado via API. ``force=True`` rebaixa mesmo que o arquivo
+exista e descarta o sidecar antigo. ``expected_sha256`` valida o hash
+do arquivo baixado.
 
-Com `force=True`, rebaixa mesmo que o arquivo já exista e descarta o
-sidecar `.sha256` antigo. Se `expected_sha256` for informado, valida
-o hash do arquivo baixado.
-
-Efeitos colaterais: Parquet gravado em
-`data/processed/<DATA_VERSION>/<PARQUET_NAME>`, sidecar `.sha256`
-ao lado, e SHA-256 impresso no stdout para uso em logs/manifests.
+Efeito colateral: Parquet gravado em
+``data/processed/<DATA_VERSION>/<PARQUET_NAME>``, sidecar ``.sha256``
+ao lado, e SHA-256 impresso no stdout.
 
 #### `read_srag`
 
@@ -4604,7 +5476,7 @@ ao lado, e SHA-256 impresso no stdout para uso em logs/manifests.
 def read_srag(columns: Iterable[str] | None=None, filters: list[tuple] | None=None) -> pd.DataFrame
 ```
 
-- Location: `src/utils/storage.py:281-295`
+- Location: `src/utils/storage.py:277-290`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`, `tests/test_smoke.py`
 - Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `tests/test_pipeline.py`, `tests/test_smoke.py`
@@ -4613,30 +5485,16 @@ def read_srag(columns: Iterable[str] | None=None, filters: list[tuple] | None=No
 
 Lê o Parquet de SRAG como DataFrame.
 
-`columns` restringe o subconjunto carregado (pushdown do Parquet);
-`filters` segue o formato de `pd.read_parquet(filters=...)`.
+``columns`` restringe o subconjunto carregado (pushdown do Parquet);
+``filters`` segue o formato de ``pd.read_parquet(filters=...)``.
 
 ### `tests/conftest.py`
 
-- Module: `tests.conftest` · 23 lines
+- Module: `tests.conftest` · 21 lines
 - Internal imports: `src.utils.config`
 - External imports: `__future__.annotations`, `pathlib.Path`, `pytest`
 
-Fixtures e configuração de testes.
-
-#### `pytest_configure`
-
-```python
-def pytest_configure(config: pytest.Config) -> None
-```
-
-- Location: `tests/conftest.py:12-16`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `config.addinivalue_line`
-
-_Missing docstring._
+Fixtures partilhadas entre testes.
 
 #### `parquet_disponivel`
 
@@ -4644,45 +5502,67 @@ _Missing docstring._
 def parquet_disponivel() -> Path | None
 ```
 
-- Location: `tests/conftest.py:20-23`
+- Location: `tests/conftest.py:13-21`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture(scope='session')`
 - Calls: `caminho.is_file`, `pytest.fixture`
 
-Retorna o Parquet processado, ou None se ainda não foi gerado.
+Parquet processado, ou ``None`` se ainda não foi gerado.
+
+Fixture de sessão — o path é calculado uma vez por execução. Testes
+que dependem dela devem fazer ``pytest.skip()`` quando o retorno é
+``None`` (o Parquet não vem versionado no Git).
 
 ### `tests/test_calibration.py`
 
-- Module: `tests.test_calibration` · 91 lines
+- Module: `tests.test_calibration` · 96 lines
 - Internal imports: `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`, `sklearn.linear_model.LogisticRegression`
 
 Testes de calibração e escolha de limiar.
 
-#### `dados`
+#### `dados_limiar`
 
 ```python
-def dados() -> tuple[np.ndarray, np.ndarray]
+def dados_limiar() -> tuple[np.ndarray, np.ndarray]
 ```
 
-- Location: `tests/test_calibration.py:13-16`
+- Location: `tests/test_calibration.py:14-18`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `np.array`
 
-_Missing docstring._
+10 amostras balanceadas — y_true binário, y_prob em [0, 1].
+
+#### `modelo_ajustado`
+
+```python
+def modelo_ajustado() -> tuple[LogisticRegression, pd.DataFrame, pd.Series]
+```
+
+- Location: `tests/test_calibration.py:22-32`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `pytest.fixture`
+- Calls: `LogisticRegression`, `LogisticRegression.fit`, `astype`, `np.random.RandomState`, `pd.DataFrame`, `pd.Series`, `pytest.importorskip`, `rng.randn`
+
+``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal.
+
+Fixture separada (não por teste) para que múltiplos testes de calibração
+reutilizem o mesmo modelo — o objecto é imutável após ``fit``.
 
 #### `test_escolher_limiar_retorna_dict`
 
 ```python
-def test_escolher_limiar_retorna_dict(dados)
+def test_escolher_limiar_retorna_dict(dados_limiar)
 ```
 
-- Location: `tests/test_calibration.py:19-24`
+- Location: `tests/test_calibration.py:39-44`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4693,10 +5573,10 @@ _Missing docstring._
 #### `test_escolher_limiar_metrica_invalida`
 
 ```python
-def test_escolher_limiar_metrica_invalida(dados)
+def test_escolher_limiar_metrica_invalida(dados_limiar)
 ```
 
-- Location: `tests/test_calibration.py:27-30`
+- Location: `tests/test_calibration.py:47-51`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4710,7 +5590,7 @@ _Missing docstring._
 def test_escolher_limiar_min_precision_respeitado()
 ```
 
-- Location: `tests/test_calibration.py:33-38`
+- Location: `tests/test_calibration.py:54-59`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4724,7 +5604,7 @@ _Missing docstring._
 def test_escolher_limiar_min_precision_impossivel()
 ```
 
-- Location: `tests/test_calibration.py:41-45`
+- Location: `tests/test_calibration.py:62-66`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4732,45 +5612,31 @@ def test_escolher_limiar_min_precision_impossivel()
 
 _Missing docstring._
 
-#### `test_calibrar_requer_sklearn_16`
-
-```python
-def test_calibrar_requer_sklearn_16()
-```
-
-- Location: `tests/test_calibration.py:48-49`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `pytest.importorskip`
-
-_Missing docstring._
-
 #### `test_calibrar_metodo_invalido`
 
 ```python
-def test_calibrar_metodo_invalido()
+def test_calibrar_metodo_invalido(modelo_ajustado)
 ```
 
-- Location: `tests/test_calibration.py:52-61`
+- Location: `tests/test_calibration.py:73-76`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `LogisticRegression`, `LogisticRegression.fit`, `calibrar`, `pd.DataFrame`, `pd.Series`, `pytest.importorskip`, `pytest.raises`
+- Calls: `calibrar`, `pytest.raises`
 
 _Missing docstring._
 
 #### `test_calibrar_sigmoid_preserva_shape`
 
 ```python
-def test_calibrar_sigmoid_preserva_shape()
+def test_calibrar_sigmoid_preserva_shape(modelo_ajustado)
 ```
 
-- Location: `tests/test_calibration.py:64-78`
+- Location: `tests/test_calibration.py:79-85`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `LogisticRegression`, `LogisticRegression.fit`, `astype`, `cal.predict_proba`, `calibrar`, `len`, `np.all`, `np.allclose`, `np.random.RandomState`, `pd.DataFrame`, `pd.Series`, `proba.sum`, `pytest.importorskip`, `rng.randn`
+- Calls: `cal.predict_proba`, `calibrar`, `len`, `np.all`, `np.allclose`, `proba.sum`
 
 _Missing docstring._
 
@@ -4780,7 +5646,7 @@ _Missing docstring._
 def test_calibrar_isotonic_preserva_shape()
 ```
 
-- Location: `tests/test_calibration.py:81-91`
+- Location: `tests/test_calibration.py:88-96`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4790,9 +5656,29 @@ _Missing docstring._
 
 ### `tests/test_cohort_source.py`
 
-- Module: `tests.test_cohort_source` · 54 lines
+- Module: `tests.test_cohort_source` · 64 lines
 - Internal imports: `src.data.cohort_source.cohort_candidates`, `src.data.cohort_source.load_cohort`, `src.data.cohort_source.resolve_cohort_path`
 - External imports: `pandas`, `pathlib.Path`, `pytest`
+
+Testes do resolvedor de coorte (provisória, final, auto).
+
+#### `_sem_env_var`
+
+```python
+def _sem_env_var(monkeypatch: pytest.MonkeyPatch) -> None
+```
+
+- Location: `tests/test_cohort_source.py:12-18`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `pytest.fixture(autouse=True)`
+- Calls: `monkeypatch.delenv`, `pytest.fixture`
+
+Limpa ``SRAG_COHORT_KIND`` do ambiente antes de cada teste.
+
+Sem isto, um ``SRAG_COHORT_KIND`` definido no shell do runner
+tornaria os testes dependentes do estado local.
 
 #### `_write`
 
@@ -4800,25 +5686,25 @@ _Missing docstring._
 def _write(path: Path, value: int) -> None
 ```
 
-- Location: `tests/test_cohort_source.py:9-11`
+- Location: `tests/test_cohort_source.py:21-24`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `path.parent.mkdir`, `pd.DataFrame`, `pd.DataFrame.to_parquet`
 
-_Missing docstring._
+Grava um Parquet 1×1 com uma única coluna ``value``.
 
 #### `test_padrao_permanece_provisorio`
 
 ```python
-def test_padrao_permanece_provisorio(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
+def test_padrao_permanece_provisorio(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_cohort_source.py:14-26`
+- Location: `tests/test_cohort_source.py:27-35`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `_write`, `cohort_candidates`, `monkeypatch.delenv`, `resolve_cohort_path`
+- Calls: `_write`, `cohort_candidates`, `resolve_cohort_path`
 - File literals: `coorte_provisoria_b.parquet`
 
 _Missing docstring._
@@ -4829,7 +5715,7 @@ _Missing docstring._
 def test_final_exige_escolha_explicita(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_cohort_source.py:29-38`
+- Location: `tests/test_cohort_source.py:38-47`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4843,7 +5729,7 @@ _Missing docstring._
 def test_auto_prefere_final(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_cohort_source.py:41-49`
+- Location: `tests/test_cohort_source.py:50-58`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4858,7 +5744,7 @@ _Missing docstring._
 def test_tipo_invalido_falha(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_cohort_source.py:52-54`
+- Location: `tests/test_cohort_source.py:61-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4868,11 +5754,24 @@ _Missing docstring._
 
 ### `tests/test_config.py`
 
-- Module: `tests.test_config` · 224 lines
+- Module: `tests.test_config` · 213 lines
 - Internal imports: `src.models.pipeline`, `src.utils.config`, `src.utils.env`
 - External imports: `__future__.annotations`, `ast`, `pathlib.Path`, `pyarrow.parquet`, `pytest`
 
-Valida a integridade do ambiente e da configuração do projeto.
+Integridade do ambiente e da configuração do projeto.
+
+#### `_url_parquet_esperada`
+
+```python
+def _url_parquet_esperada() -> str
+```
+
+- Location: `tests/test_config.py:14-19`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+URL canônica do Parquet na release pública.
 
 #### `test_root_dir_existe`
 
@@ -4880,7 +5779,7 @@ Valida a integridade do ambiente e da configuração do projeto.
 def test_root_dir_existe() -> None
 ```
 
-- Location: `tests/test_config.py:14-16`
+- Location: `tests/test_config.py:26-28`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4894,13 +5793,13 @@ _Missing docstring._
 def test_root_dir_calculado_a_partir_do_arquivo() -> None
 ```
 
-- Location: `tests/test_config.py:19-21`
+- Location: `tests/test_config.py:31-33`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `Path`, `Path.resolve`
 
-_Missing docstring._
+``ROOT_DIR`` deriva de ``config.py`` (dois níveis acima: ``src/utils/``).
 
 #### `test_diretorios_derivam_da_raiz`
 
@@ -4908,18 +5807,34 @@ _Missing docstring._
 def test_diretorios_derivam_da_raiz(chave: str) -> None
 ```
 
-- Location: `tests/test_config.py:34-47`
+- Location: `tests/test_config.py:40-49`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.mark.parametrize('chave', ['DATA_DIR', 'RAW_DIR', 'PROCESSED_DIR', 'REPORTS_DIR', 'MODELS_DIR'])`
 - Calls: `getattr`, `isinstance`, `pytest.mark.parametrize`, `valor.is_absolute`
 
-Diretórios do projeto devem derivar de ROOT_DIR.
+Diretórios públicos derivam de ``ROOT_DIR``.
 
-Caminhos absolutos podem conter C:/Users ou OneDrive porque esse pode
-ser o local real do clone; o que não pode existir é um caminho pessoal
-gravado diretamente em config.py.
+O clone pode estar em ``C:/Users`` ou ``OneDrive`` — o que não pode
+é o caminho estar literalmente gravado em ``config.py``.
+
+#### `_encontrar_caminhos_hardcoded`
+
+```python
+def _encontrar_caminhos_hardcoded(fonte: str, nomes_de_caminho: set[str]) -> list[dict]
+```
+
+- Location: `tests/test_config.py:56-83`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `ast.parse`, `ast.walk`, `isinstance`, `item.value.replace`, `item.value.replace.lower`, `len`, `problemas.append`
+
+Inspeciona atribuições de ``nomes_de_caminho`` à procura de caminhos pessoais.
+
+Só atribuições são olhadas — comentários, docstrings e mensagens podem
+mencionar ``C:/Users`` ou ``/home`` sem serem configuração real.
 
 #### `test_config_nao_contem_caminho_pessoal_hardcoded`
 
@@ -4927,16 +5842,13 @@ gravado diretamente em config.py.
 def test_config_nao_contem_caminho_pessoal_hardcoded() -> None
 ```
 
-- Location: `tests/test_config.py:50-106`
+- Location: `tests/test_config.py:86-97`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `Path`, `ast.parse`, `ast.walk`, `caminho_config.read_text`, `isinstance`, `item.value.replace`, `item.value.replace.lower`, `len`, `problemas.append`, `str`
+- Calls: `Path`, `Path.read_text`, `_encontrar_caminhos_hardcoded`
 
-Examina apenas atribuições de constantes relacionadas a caminhos.
-
-Comentários, docstrings e mensagens podem mencionar exemplos como
-C:/Users ou /home sem representar configuração real.
+Nenhuma constante de caminho em ``config.py`` tem caminho pessoal literal.
 
 #### `test_seed_definido`
 
@@ -4944,7 +5856,7 @@ C:/Users ou /home sem representar configuração real.
 def test_seed_definido() -> None
 ```
 
-- Location: `tests/test_config.py:109-111`
+- Location: `tests/test_config.py:104-106`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -4958,67 +5870,37 @@ _Missing docstring._
 def test_random_state_igual_ao_seed() -> None
 ```
 
-- Location: `tests/test_config.py:114-115`
+- Location: `tests/test_config.py:109-110`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 
 _Missing docstring._
 
-#### `test_repo_e_data_version_definidos`
+#### `test_repo_definido`
 
 ```python
-def test_repo_e_data_version_definidos() -> None
+def test_repo_definido() -> None
 ```
 
-- Location: `tests/test_config.py:118-122`
+- Location: `tests/test_config.py:113-114`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+
+_Missing docstring._
+
+#### `test_data_version_e_parquet_definidos`
+
+```python
+def test_data_version_e_parquet_definidos() -> None
+```
+
+- Location: `tests/test_config.py:117-119`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.PARQUET_NAME.endswith`
-
-_Missing docstring._
-
-#### `test_srag_parquet_url_padrao`
-
-```python
-def test_srag_parquet_url_padrao(monkeypatch: pytest.MonkeyPatch) -> None
-```
-
-- Location: `tests/test_config.py:125-133`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `C.srag_parquet_url`, `monkeypatch.delenv`
-
-_Missing docstring._
-
-#### `test_srag_parquet_url_permite_sobrescrita`
-
-```python
-def test_srag_parquet_url_permite_sobrescrita(monkeypatch: pytest.MonkeyPatch) -> None
-```
-
-- Location: `tests/test_config.py:136-142`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `C.srag_parquet_url`, `monkeypatch.setenv`
-- File literals: `https://example.org/dados/srag_teste.parquet`
-
-_Missing docstring._
-
-#### `test_srag_parquet_url_vazia_volta_ao_padrao`
-
-```python
-def test_srag_parquet_url_vazia_volta_ao_padrao(monkeypatch: pytest.MonkeyPatch) -> None
-```
-
-- Location: `tests/test_config.py:145-155`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `C.srag_parquet_url`, `monkeypatch.setenv`
 
 _Missing docstring._
 
@@ -5028,12 +5910,27 @@ _Missing docstring._
 def test_parametros_http_razoaveis() -> None
 ```
 
-- Location: `tests/test_config.py:158-161`
+- Location: `tests/test_config.py:122-125`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 
 _Missing docstring._
+
+#### `test_srag_parquet_url`
+
+```python
+def test_srag_parquet_url(valor_env, esperado_override, monkeypatch: pytest.MonkeyPatch) -> None
+```
+
+- Location: `tests/test_config.py:141-153`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `pytest.mark.parametrize('valor_env, esperado_override', [(None, False), ('https://example.org/dados/srag_teste.parquet', True), ('   ', False)], ids=['sem_env', 'env_customizada', 'env_vazia'])`
+- Calls: `C.srag_parquet_url`, `_url_parquet_esperada`, `monkeypatch.delenv`, `monkeypatch.setenv`, `pytest.mark.parametrize`, `valor_env.strip`
+
+``SRAG_PARQUET_URL`` sobrepõe a URL padrão; vazia cai no padrão.
 
 #### `test_env_aponta_para_mesma_raiz`
 
@@ -5041,7 +5938,7 @@ _Missing docstring._
 def test_env_aponta_para_mesma_raiz() -> None
 ```
 
-- Location: `tests/test_config.py:164-165`
+- Location: `tests/test_config.py:160-161`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5054,11 +5951,11 @@ _Missing docstring._
 def test_env_diretorios_padrao_existem() -> None
 ```
 
-- Location: `tests/test_config.py:168-174`
+- Location: `tests/test_config.py:164-167`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `caminho.exists`, `caminho.is_dir`, `env.garantir_diretorios`
+- Calls: `caminho.is_dir`, `env.garantir_diretorios`
 
 _Missing docstring._
 
@@ -5068,7 +5965,7 @@ _Missing docstring._
 def test_env_resumo_nao_quebra() -> None
 ```
 
-- Location: `tests/test_config.py:177-180`
+- Location: `tests/test_config.py:170-173`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5082,7 +5979,7 @@ _Missing docstring._
 def test_get_secret_obrigatorio_levanta_erro(monkeypatch: pytest.MonkeyPatch) -> None
 ```
 
-- Location: `tests/test_config.py:183-189`
+- Location: `tests/test_config.py:176-180`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5096,7 +5993,7 @@ _Missing docstring._
 def test_get_secret_opcional_retorna_none(monkeypatch: pytest.MonkeyPatch) -> None
 ```
 
-- Location: `tests/test_config.py:192-197`
+- Location: `tests/test_config.py:183-186`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5110,49 +6007,66 @@ _Missing docstring._
 def test_features_finais_existem_no_schema(parquet_disponivel) -> None
 ```
 
-- Location: `tests/test_config.py:201-224`
+- Location: `tests/test_config.py:194-213`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.mark.slow`
 - Calls: `C.cfg`, `pq.read_schema`, `pytest.skip`, `set`, `sorted`
 
-Verifica se as colunas esperadas existem no Parquet.
+Colunas do ``supervised.yaml`` existem no Parquet (ou são derivadas).
 
-Features derivadas (produzidas por `montar_features`) não existem no
-Parquet bruto — são excluídas da checagem. As colunas de entrada
-exigidas pela derivação são verificadas explicitamente.
+Features derivadas (produzidas por ``montar_features``) não existem no
+Parquet bruto — excluídas da checagem. As colunas de entrada exigidas
+pela derivação são verificadas explicitamente.
 
 ### `tests/test_errors.py`
 
-- Module: `tests.test_errors` · 134 lines
+- Module: `tests.test_errors` · 158 lines
 - Internal imports: `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`
 
-Testes de análise de erros em `src.evaluation.errors`.
+Testes de análise de erros em ``src.evaluation.errors``.
 
-#### `dados`
+#### `y_true_y_pred`
 
 ```python
-def dados() -> tuple[np.ndarray, np.ndarray]
+def y_true_y_pred() -> tuple[np.ndarray, np.ndarray]
 ```
 
-- Location: `tests/test_errors.py:19-22`
+- Location: `tests/test_errors.py:19-27`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `np.array`
 
-_Missing docstring._
+8 amostras com falsos positivos e negativos plantados.
+
+Labels (não probabilidades) — para ``top_erros``, cada teste constrói
+os seus próprios dados.
+
+#### `_df_com_indice`
+
+```python
+def _df_com_indice(n: int) -> pd.DataFrame
+```
+
+- Location: `tests/test_errors.py:30-32`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `pd.DataFrame`, `range`
+
+DataFrame ``{"x": range(n)}`` — índice rastreável nos testes de extração.
 
 #### `test_matriz_confusao_shape_e_valores`
 
 ```python
-def test_matriz_confusao_shape_e_valores(dados) -> None
+def test_matriz_confusao_shape_e_valores(y_true_y_pred) -> None
 ```
 
-- Location: `tests/test_errors.py:25-31`
+- Location: `tests/test_errors.py:39-45`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5163,10 +6077,10 @@ _Missing docstring._
 #### `test_matriz_confusao_tem_totais`
 
 ```python
-def test_matriz_confusao_tem_totais(dados) -> None
+def test_matriz_confusao_tem_totais(y_true_y_pred) -> None
 ```
 
-- Location: `tests/test_errors.py:34-39`
+- Location: `tests/test_errors.py:48-53`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5177,28 +6091,28 @@ _Missing docstring._
 #### `test_extrair_fp`
 
 ```python
-def test_extrair_fp(dados) -> None
+def test_extrair_fp(y_true_y_pred) -> None
 ```
 
-- Location: `tests/test_errors.py:42-47`
+- Location: `tests/test_errors.py:60-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `extrair_falsos_positivos`, `len`, `pd.DataFrame`, `range`, `set`
+- Calls: `_df_com_indice`, `extrair_falsos_positivos`, `len`, `set`
 
 _Missing docstring._
 
 #### `test_extrair_fn`
 
 ```python
-def test_extrair_fn(dados) -> None
+def test_extrair_fn(y_true_y_pred) -> None
 ```
 
-- Location: `tests/test_errors.py:50-55`
+- Location: `tests/test_errors.py:67-71`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `extrair_falsos_negativos`, `len`, `pd.DataFrame`, `range`
+- Calls: `_df_com_indice`, `extrair_falsos_negativos`, `len`
 
 _Missing docstring._
 
@@ -5208,13 +6122,13 @@ _Missing docstring._
 def test_metricas_por_grupo_coluna_renomeada() -> None
 ```
 
-- Location: `tests/test_errors.py:58-67`
+- Location: `tests/test_errors.py:78-87`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `metricas_por_grupo`, `np.tile`, `pd.DataFrame`, `pd.Series`
 
-A coluna de prevalência chama-se `taxa_positivos`, não `positivos`.
+A coluna de prevalência chama-se ``taxa_positivos``, não ``positivos``.
 
 #### `test_metricas_por_grupo_ignora_abaixo_de_min_n`
 
@@ -5222,13 +6136,13 @@ A coluna de prevalência chama-se `taxa_positivos`, não `positivos`.
 def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None
 ```
 
-- Location: `tests/test_errors.py:70-77`
+- Location: `tests/test_errors.py:90-98`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `metricas_por_grupo`, `pd.DataFrame`, `pd.Series`, `set`
 
-_Missing docstring._
+Grupo com menos de ``min_n`` é excluído do resultado.
 
 #### `test_metricas_por_grupo_coluna_ausente`
 
@@ -5236,7 +6150,7 @@ _Missing docstring._
 def test_metricas_por_grupo_coluna_ausente() -> None
 ```
 
-- Location: `tests/test_errors.py:80-85`
+- Location: `tests/test_errors.py:101-104`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5250,13 +6164,13 @@ _Missing docstring._
 def test_metricas_por_grupo_tamanho_incompativel() -> None
 ```
 
-- Location: `tests/test_errors.py:88-93`
+- Location: `tests/test_errors.py:107-113`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `metricas_por_grupo`, `np.array`, `pd.DataFrame`, `pytest.raises`
 
-_Missing docstring._
+``df`` (5 linhas) com ``y`` (6 linhas) deve falhar antes de agregar.
 
 #### `test_top_erros_erro_absoluto`
 
@@ -5264,13 +6178,13 @@ _Missing docstring._
 def test_top_erros_erro_absoluto() -> None
 ```
 
-- Location: `tests/test_errors.py:96-104`
+- Location: `tests/test_errors.py:120-129`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `len`, `np.array`, `pd.DataFrame`, `range`, `top_erros`
 
-_Missing docstring._
+Adiciona ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs`` ao DataFrame.
 
 #### `test_top_erros_fp_ordena_por_prob_decrescente`
 
@@ -5278,7 +6192,7 @@ _Missing docstring._
 def test_top_erros_fp_ordena_por_prob_decrescente() -> None
 ```
 
-- Location: `tests/test_errors.py:107-115`
+- Location: `tests/test_errors.py:132-140`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5292,7 +6206,7 @@ _Missing docstring._
 def test_top_erros_fn_ordena_por_prob_crescente() -> None
 ```
 
-- Location: `tests/test_errors.py:118-126`
+- Location: `tests/test_errors.py:143-151`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5306,7 +6220,7 @@ _Missing docstring._
 def test_top_erros_criterio_invalido() -> None
 ```
 
-- Location: `tests/test_errors.py:129-134`
+- Location: `tests/test_errors.py:154-158`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5316,18 +6230,16 @@ _Missing docstring._
 
 ### `tests/test_features.py`
 
-- Module: `tests.test_features` · 317 lines
+- Module: `tests.test_features` · 283 lines
 - Internal imports: `src.features.engineering.ano_mes_internacao`, `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`, `src.features.engineering.sexo_categoria`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`
-- Module constants: `ENTRADAS_OBRIGATORIAS = ['nu_idade_n', 'tp_idade', 'cs_sexo', 'dt_sin_pri', 'dt_interna']`, `COLUNAS_DERIVADAS_ESPERADAS = {'cos_semana', 'mes_internacao', 'flag_intervalo_invalido', 'sin_semana', 'faixa_etaria', 'ano_internacao', 'flag_internacao_antes_sintomas', 'idade_anos', 'dias_sintomas_ate_internacao', 'sexo_categoria'}`
+- Module constants: `ENTRADAS_OBRIGATORIAS = ('nu_idade_n', 'tp_idade', 'cs_sexo', 'dt_sin_pri', 'dt_interna')`, `COLUNAS_DERIVADAS_ESPERADAS = frozenset({'idade_anos', 'dias_sintomas_ate_internacao', 'flag_intervalo_invalido', 'flag_internacao_antes_sintomas', 'sin_semana', 'cos_semana', 'faixa_etaria', 'sexo_categoria', 'ano_internacao', 'mes_internacao'})`
 
-Testes de engenharia de atributos — src/features/engineering.py.
+Testes de engenharia de atributos (``src/features/engineering.py``).
 
-Cobre funções puras e o orquestrador `montar_features`:
-contrato de cada derivada, casos inválidos, não-mutação da entrada,
-invariante de ponto-no-tempo e ponto único de verdade.
-
-Não testa parsing do YAML — responsabilidade de src/utils/config.py.
+Cobre funções puras e o orquestrador ``montar_features``: contrato de
+cada derivada, casos inválidos, não-mutação da entrada e invariantes de
+ponto-no-tempo. Não testa parsing do YAML.
 
 #### `df_base`
 
@@ -5335,18 +6247,19 @@ Não testa parsing do YAML — responsabilidade de src/utils/config.py.
 def df_base() -> pd.DataFrame
 ```
 
-- Location: `tests/test_features.py:38-56`
+- Location: `tests/test_features.py:54-70`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `pd.DataFrame`
 
-DataFrame mínimo com as colunas exigidas por `montar_features`.
+DataFrame mínimo com as colunas exigidas por ``montar_features``.
 
 Linhas:
+
 - 0: adulto (30a), 4 dias até internação, M
-- 1: bebê (6 meses), 5 dias, F
+- 1: bebé (6 meses), 5 dias, F
 - 2: adulto (40a), 5 dias, sexo ignorado
 - 3: recém-nascido (1 dia), 5 dias, M
 
@@ -5356,7 +6269,7 @@ Linhas:
 class TestIdadeEmAnos()
 ```
 
-- Location: `tests/test_features.py:59-87`
+- Location: `tests/test_features.py:73-101`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5370,7 +6283,7 @@ _Missing docstring._
 def test_anos_direto(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:60-61`
+- Location: `tests/test_features.py:74-75`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5384,7 +6297,7 @@ _Missing docstring._
 def test_meses_convertidos(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:63-64`
+- Location: `tests/test_features.py:77-78`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5398,7 +6311,7 @@ _Missing docstring._
 def test_dias_convertidos(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:66-67`
+- Location: `tests/test_features.py:80-81`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5412,7 +6325,7 @@ _Missing docstring._
 def test_retorna_float64(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:69-70`
+- Location: `tests/test_features.py:83-84`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5426,7 +6339,7 @@ _Missing docstring._
 def test_tipo_invalido_vira_nan(self) -> None
 ```
 
-- Location: `tests/test_features.py:72-74`
+- Location: `tests/test_features.py:86-88`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5440,7 +6353,7 @@ _Missing docstring._
 def test_idade_negativa_vira_nan(self) -> None
 ```
 
-- Location: `tests/test_features.py:76-78`
+- Location: `tests/test_features.py:90-92`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5454,7 +6367,7 @@ _Missing docstring._
 def test_idade_acima_de_120_vira_nan(self) -> None
 ```
 
-- Location: `tests/test_features.py:80-82`
+- Location: `tests/test_features.py:94-96`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5468,7 +6381,7 @@ _Missing docstring._
 def test_nao_muta_entrada(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:84-87`
+- Location: `tests/test_features.py:98-101`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5482,7 +6395,7 @@ _Missing docstring._
 class TestIntervaloSintomasInternacao()
 ```
 
-- Location: `tests/test_features.py:90-151`
+- Location: `tests/test_features.py:104-155`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5496,7 +6409,7 @@ _Missing docstring._
 def test_intervalo_positivo(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:91-93`
+- Location: `tests/test_features.py:105-107`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5510,7 +6423,7 @@ _Missing docstring._
 def test_tipos_das_colunas(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:95-99`
+- Location: `tests/test_features.py:109-113`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5524,7 +6437,7 @@ _Missing docstring._
 def test_negativo_seta_ambas_flags(self) -> None
 ```
 
-- Location: `tests/test_features.py:101-107`
+- Location: `tests/test_features.py:115-119`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5538,7 +6451,7 @@ _Missing docstring._
 def test_acima_do_limite_seta_flag_umbrella_sem_marcar_sinal(self) -> None
 ```
 
-- Location: `tests/test_features.py:109-115`
+- Location: `tests/test_features.py:121-125`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5552,7 +6465,7 @@ _Missing docstring._
 def test_data_ausente_seta_flag_umbrella(self) -> None
 ```
 
-- Location: `tests/test_features.py:117-123`
+- Location: `tests/test_features.py:127-131`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5566,7 +6479,7 @@ _Missing docstring._
 def test_politica_sinalizar_mantem_valor_bruto(self, monkeypatch: pytest.MonkeyPatch) -> None
 ```
 
-- Location: `tests/test_features.py:125-137`
+- Location: `tests/test_features.py:133-143`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5580,7 +6493,7 @@ Default: valor inválido fica visível, comunicado por flags.
 def test_politica_descartar_substitui_por_nan(self, monkeypatch: pytest.MonkeyPatch) -> None
 ```
 
-- Location: `tests/test_features.py:139-151`
+- Location: `tests/test_features.py:145-155`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5594,7 +6507,7 @@ _Missing docstring._
 class TestSazonalidade()
 ```
 
-- Location: `tests/test_features.py:154-178`
+- Location: `tests/test_features.py:158-179`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5608,7 +6521,7 @@ _Missing docstring._
 def test_gera_sin_e_cos_no_intervalo(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:155-159`
+- Location: `tests/test_features.py:159-163`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5622,7 +6535,7 @@ _Missing docstring._
 def test_mesma_semana_em_anos_diferentes_proxima(self) -> None
 ```
 
-- Location: `tests/test_features.py:161-167`
+- Location: `tests/test_features.py:165-169`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5636,7 +6549,7 @@ _Missing docstring._
 def test_data_nula_vira_nan(self) -> None
 ```
 
-- Location: `tests/test_features.py:169-173`
+- Location: `tests/test_features.py:171-174`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5650,7 +6563,7 @@ _Missing docstring._
 def test_coluna_ausente_levanta_keyerror(self) -> None
 ```
 
-- Location: `tests/test_features.py:175-178`
+- Location: `tests/test_features.py:176-179`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5664,7 +6577,7 @@ _Missing docstring._
 class TestFaixaEtaria()
 ```
 
-- Location: `tests/test_features.py:181-194`
+- Location: `tests/test_features.py:182-193`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5678,7 +6591,7 @@ _Missing docstring._
 def test_fronteiras_semiabertas(self) -> None
 ```
 
-- Location: `tests/test_features.py:182-185`
+- Location: `tests/test_features.py:183-185`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5706,7 +6619,7 @@ _Missing docstring._
 def test_retorna_categoria(self) -> None
 ```
 
-- Location: `tests/test_features.py:192-194`
+- Location: `tests/test_features.py:192-193`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5720,7 +6633,7 @@ _Missing docstring._
 class TestSexoCategoria()
 ```
 
-- Location: `tests/test_features.py:197-214`
+- Location: `tests/test_features.py:196-213`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5734,7 +6647,7 @@ _Missing docstring._
 def test_mapeamento(self, entrada: str | None, esperado: str) -> None
 ```
 
-- Location: `tests/test_features.py:208-210`
+- Location: `tests/test_features.py:207-209`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5749,7 +6662,7 @@ _Missing docstring._
 def test_retorna_categoria(self) -> None
 ```
 
-- Location: `tests/test_features.py:212-214`
+- Location: `tests/test_features.py:211-213`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5763,7 +6676,7 @@ _Missing docstring._
 class TestAnoMesInternacao()
 ```
 
-- Location: `tests/test_features.py:217-227`
+- Location: `tests/test_features.py:216-225`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5777,7 +6690,7 @@ _Missing docstring._
 def test_extrai_ano_e_mes(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:218-221`
+- Location: `tests/test_features.py:217-220`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5791,7 +6704,7 @@ _Missing docstring._
 def test_data_nula_vira_nan(self) -> None
 ```
 
-- Location: `tests/test_features.py:223-227`
+- Location: `tests/test_features.py:222-225`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5805,11 +6718,11 @@ _Missing docstring._
 class TestMontarFeatures()
 ```
 
-- Location: `tests/test_features.py:244-264`
+- Location: `tests/test_features.py:228-245`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `df_base.copy`, `montar_features`, `pd.testing.assert_frame_equal`, `proibidas.isdisjoint`, `set`, `sorted`
+- Calls: `df_base.copy`, `montar_features`, `pd.testing.assert_frame_equal`, `proibidas.isdisjoint`, `set`, `set.issubset`, `sorted`
 
 _Missing docstring._
 
@@ -5819,13 +6732,13 @@ _Missing docstring._
 def test_gera_todas_as_derivadas_do_yaml(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:245-249`
+- Location: `tests/test_features.py:229-232`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `montar_features`, `set`, `sorted`
 
-Trava o contrato entre features.engenharia.derivadas e a função.
+Trava o contrato entre ``features.engenharia.derivadas`` e a função.
 
 #### `TestMontarFeatures.test_nao_muta_entrada`
 
@@ -5833,7 +6746,7 @@ Trava o contrato entre features.engenharia.derivadas e a função.
 def test_nao_muta_entrada(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:251-254`
+- Location: `tests/test_features.py:234-237`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5847,11 +6760,11 @@ _Missing docstring._
 def test_preserva_colunas_originais(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:256-259`
+- Location: `tests/test_features.py:239-241`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `montar_features`
+- Calls: `montar_features`, `set`, `set.issubset`
 
 _Missing docstring._
 
@@ -5861,7 +6774,7 @@ _Missing docstring._
 def test_nao_gera_colunas_proibidas(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:261-264`
+- Location: `tests/test_features.py:243-245`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5875,15 +6788,13 @@ _Missing docstring._
 class TestPontoNoTempo()
 ```
 
-- Location: `tests/test_features.py:267-317`
+- Location: `tests/test_features.py:248-283`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `COLUNAS_DERIVADAS_ESPERADAS.issubset`, `copy`, `df_base.copy`, `list`, `montar_features`, `pd.testing.assert_frame_equal`, `pd.to_datetime`, `reset_index`
 
-Invariantes contra vazamento temporal.
-
-O ponto de previsão é a admissão hospitalar.
+Invariantes contra vazamento temporal — o ponto de previsão é a admissão.
 
 #### `TestPontoNoTempo.test_so_precisa_das_entradas_declaradas`
 
@@ -5891,14 +6802,13 @@ O ponto de previsão é a admissão hospitalar.
 def test_so_precisa_das_entradas_declaradas(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:274-282`
+- Location: `tests/test_features.py:251-254`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `COLUNAS_DERIVADAS_ESPERADAS.issubset`, `copy`, `montar_features`
+- Calls: `COLUNAS_DERIVADAS_ESPERADAS.issubset`, `copy`, `list`, `montar_features`
 
-Se `montar_features` só depende de features.engenharia.entradas,
-um df com exatamente essas colunas deve bastar.
+Um df com só as entradas declaradas deve bastar para as derivadas.
 
 #### `TestPontoNoTempo.test_colunas_pos_admissao_nao_influenciam`
 
@@ -5906,7 +6816,7 @@ um df com exatamente essas colunas deve bastar.
 def test_colunas_pos_admissao_nao_influenciam(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:284-303`
+- Location: `tests/test_features.py:256-273`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -5920,30 +6830,28 @@ Injetar colunas pós-alta não pode alterar a saída.
 def test_ordem_das_linhas_nao_altera_derivadas(self, df_base: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_features.py:305-317`
+- Location: `tests/test_features.py:275-283`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `list`, `montar_features`, `pd.testing.assert_frame_equal`, `reset_index`
 
-Derivadas devem ser pointwise — sem dependência de ordem.
+Derivadas são pointwise — sem dependência de ordem.
 
 ### `tests/test_leakage.py`
 
-- Module: `tests.test_leakage` · 279 lines
-- Internal imports: `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.models.pipeline`, `src.utils.config`
+- Module: `tests.test_leakage` · 121 lines
+- Internal imports: `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config`
 - External imports: `__future__.annotations`, `pandas`, `pyarrow.parquet`, `pytest`
 
 Testes anti-vazamento de dados.
 
-Protegem contra:
-- inclusão do alvo nas features;
-- inclusão de colunas posteriores ao desfecho;
-- quebra da ordem temporal entre treino, validação e holdout;
-- duplicação de identificadores quando houver chave adequada.
+Cobrem:
 
-Fonte única de verdade: `configs/supervised.yaml`, lido via
-`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
+- consistência entre ``features.proibidas`` e ``pipeline.FEATURES``;
+- proibição do alvo nas features;
+- contrato de ``check_leakage`` (coluna proibida, alvo, lista vazia);
+- duplicidade de identificadores no Parquet (slow).
 
 #### `proibidas`
 
@@ -5951,14 +6859,14 @@ Fonte única de verdade: `configs/supervised.yaml`, lido via
 def proibidas() -> set[str]
 ```
 
-- Location: `tests/test_leakage.py:23-25`
+- Location: `tests/test_leakage.py:26-28`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `C.cfg`, `set`
 
-Colunas proibidas declaradas em `features.proibidas` do YAML.
+Conjunto ``features.proibidas`` do ``supervised.yaml``.
 
 #### `features_finais`
 
@@ -5966,29 +6874,14 @@ Colunas proibidas declaradas em `features.proibidas` do YAML.
 def features_finais() -> set[str]
 ```
 
-- Location: `tests/test_leakage.py:29-32`
+- Location: `tests/test_leakage.py:32-35`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
 - Decorators: `pytest.fixture`
 - Calls: `set`
 
-Lista final de features exposta por `src.models.pipeline`.
-
-#### `_forcar_status_gate`
-
-```python
-def _forcar_status_gate(monkeypatch: pytest.MonkeyPatch, nome_gate: str, status: str) -> None
-```
-
-- Location: `tests/test_leakage.py:35-52`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `monkeypatch.setattr`
-
-Faz `C.cfg("gates", nome_gate)` devolver `{"status": status}`,
-ignorando o YAML real apenas para esse gate.
+``pipeline.FEATURES`` — features efetivamente usadas pelo modelo.
 
 #### `test_proibidas_nao_vazia`
 
@@ -5996,7 +6889,7 @@ ignorando o YAML real apenas para esse gate.
 def test_proibidas_nao_vazia(proibidas: set[str]) -> None
 ```
 
-- Location: `tests/test_leakage.py:55-60`
+- Location: `tests/test_leakage.py:38-39`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6009,7 +6902,7 @@ _Missing docstring._
 def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None
 ```
 
-- Location: `tests/test_leakage.py:63-67`
+- Location: `tests/test_leakage.py:42-43`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6023,7 +6916,7 @@ _Missing docstring._
 def test_features_finais_sem_proibidas(features_finais: set[str], proibidas: set[str]) -> None
 ```
 
-- Location: `tests/test_leakage.py:70-77`
+- Location: `tests/test_leakage.py:46-51`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6037,7 +6930,7 @@ _Missing docstring._
 def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None
 ```
 
-- Location: `tests/test_leakage.py:80-82`
+- Location: `tests/test_leakage.py:54-55`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6045,13 +6938,13 @@ def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None
 
 _Missing docstring._
 
-#### `test_check_leakage_passa_quando_X_limpo`
+#### `test_check_leakage_passa_com_X_limpo`
 
 ```python
-def test_check_leakage_passa_quando_X_limpo() -> None
+def test_check_leakage_passa_com_X_limpo() -> None
 ```
 
-- Location: `tests/test_leakage.py:85-89`
+- Location: `tests/test_leakage.py:62-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6065,7 +6958,7 @@ _Missing docstring._
 def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None
 ```
 
-- Location: `tests/test_leakage.py:92-103`
+- Location: `tests/test_leakage.py:67-74`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6079,7 +6972,7 @@ _Missing docstring._
 def test_check_leakage_levanta_para_alvo() -> None
 ```
 
-- Location: `tests/test_leakage.py:106-113`
+- Location: `tests/test_leakage.py:77-82`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6093,98 +6986,13 @@ _Missing docstring._
 def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None
 ```
 
-- Location: `tests/test_leakage.py:116-124`
+- Location: `tests/test_leakage.py:85-91`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `check_leakage`, `pd.DataFrame`, `pytest.raises`
 
-Lista vazia desliga proibidas, mas o alvo continua sendo checado.
-
-#### `test_split_temporal_3way_respeita_ordem`
-
-```python
-def test_split_temporal_3way_respeita_ordem() -> None
-```
-
-- Location: `tests/test_leakage.py:127-147`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `max`, `min`, `pd.DataFrame`, `pd.date_range`, `range`, `split_temporal_3way`
-
-_Missing docstring._
-
-#### `test_split_temporal_3way_rejeita_nat_por_default`
-
-```python
-def test_split_temporal_3way_rejeita_nat_por_default() -> None
-```
-
-- Location: `tests/test_leakage.py:150-163`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `pd.DataFrame`, `pd.Timestamp`, `pytest.raises`, `split_temporal_3way`
-
-_Missing docstring._
-
-#### `test_split_temporal_3way_dropa_nat_quando_pedido`
-
-```python
-def test_split_temporal_3way_dropa_nat_quando_pedido() -> None
-```
-
-- Location: `tests/test_leakage.py:166-181`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `len`, `pd.DataFrame`, `pd.date_range`, `range`, `split_temporal_3way`
-
-_Missing docstring._
-
-#### `test_temporal_split_bloqueia_holdout_antes_de_concluir`
-
-```python
-def test_temporal_split_bloqueia_holdout_antes_de_concluir() -> None
-```
-
-- Location: `tests/test_leakage.py:184-195`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `TemporalSplit`, `pd.DataFrame`, `pd.date_range`, `pytest.raises`, `range`, `split.holdout`
-
-_Missing docstring._
-
-#### `test_concluir_selecao_exige_gate_g9_holdout`
-
-```python
-def test_concluir_selecao_exige_gate_g9_holdout(monkeypatch: pytest.MonkeyPatch) -> None
-```
-
-- Location: `tests/test_leakage.py:198-218`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `TemporalSplit`, `_forcar_status_gate`, `pd.DataFrame`, `pd.date_range`, `pytest.raises`, `range`, `split.concluir_selecao`
-
-`concluir_selecao` só libera o holdout quando `gates.G9_holdout`
-estiver `aprovado`; com o gate pendente, deve levantar RuntimeError.
-
-#### `test_concluir_selecao_libera_holdout_quando_gate_aprovado`
-
-```python
-def test_concluir_selecao_libera_holdout_quando_gate_aprovado(monkeypatch: pytest.MonkeyPatch) -> None
-```
-
-- Location: `tests/test_leakage.py:221-237`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `TemporalSplit`, `_forcar_status_gate`, `pd.DataFrame`, `pd.date_range`, `range`, `split.concluir_selecao`, `split.holdout`
-
-Com o gate `G9_holdout` aprovado (simulado), libera o holdout.
+``forbidden_columns=[]`` ainda soma ``DEFAULT_LEAKAGE_COLUMNS`` + alvo.
 
 #### `test_dataset_sem_identificadores_duplicados`
 
@@ -6192,22 +7000,23 @@ Com o gate `G9_holdout` aprovado (simulado), libera o holdout.
 def test_dataset_sem_identificadores_duplicados(parquet_disponivel) -> None
 ```
 
-- Location: `tests/test_leakage.py:240-279`
+- Location: `tests/test_leakage.py:99-121`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
+- Decorators: `pytest.mark.slow`
 - Calls: `dropna`, `dropna.astype`, `dropna.astype.str.strip`, `ids.duplicated`, `ids.duplicated.sum`, `ids.ne`, `int`, `len`, `next`, `pd.read_parquet`, `pq.read_schema`, `pytest.skip`, `set`
 
-Checa duplicidade apenas se houver coluna que sirva como
-identificador da notificação. UF e data não formam chave única.
+Taxa de ``nu_notific`` (ou equivalente) duplicado deve ser < 5%.
 
 ### `tests/test_metrics.py`
 
-- Module: `tests.test_metrics` · 157 lines
+- Module: `tests.test_metrics` · 185 lines
 - Internal imports: `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`
+- Module constants: `_CHAVES_METRICAS_COMPLETAS = ('auc', 'ap', 'brier', 'f1', 'precision', 'recall', 'accuracy', 'limiar', 'n')`
 
-Testes das métricas em `src.evaluation.metrics`.
+Testes das métricas em ``src.evaluation.metrics``.
 
 #### `y_true`
 
@@ -6215,14 +7024,14 @@ Testes das métricas em `src.evaluation.metrics`.
 def y_true() -> np.ndarray
 ```
 
-- Location: `tests/test_metrics.py:24-25`
+- Location: `tests/test_metrics.py:24-26`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `np.array`
 
-_Missing docstring._
+10 rótulos binários — 6 positivos (1), 4 negativos (0).
 
 #### `y_prob`
 
@@ -6230,14 +7039,14 @@ _Missing docstring._
 def y_prob() -> np.ndarray
 ```
 
-- Location: `tests/test_metrics.py:29-30`
+- Location: `tests/test_metrics.py:30-32`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
 - Calls: `np.array`
 
-_Missing docstring._
+10 probabilidades em ``[0, 1]`` correlacionadas com ``y_true``.
 
 #### `test_auc_perfeito`
 
@@ -6245,13 +7054,13 @@ _Missing docstring._
 def test_auc_perfeito() -> None
 ```
 
-- Location: `tests/test_metrics.py:33-36`
+- Location: `tests/test_metrics.py:47-51`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `auc`, `np.array`, `pytest.approx`
 
-_Missing docstring._
+Classificador com separação perfeita → AUC = 1.0.
 
 #### `test_auc_constante_e_meio`
 
@@ -6259,13 +7068,13 @@ _Missing docstring._
 def test_auc_constante_e_meio() -> None
 ```
 
-- Location: `tests/test_metrics.py:39-42`
+- Location: `tests/test_metrics.py:54-58`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `auc`, `np.array`, `pytest.approx`
 
-_Missing docstring._
+Probabilidades constantes → AUC = 0.5 por construção.
 
 #### `test_metricas_individuais_retornam_float`
 
@@ -6273,7 +7082,7 @@ _Missing docstring._
 def test_metricas_individuais_retornam_float(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:45-50`
+- Location: `tests/test_metrics.py:65-70`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6287,7 +7096,7 @@ _Missing docstring._
 def test_average_precision_em_intervalo(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:53-58`
+- Location: `tests/test_metrics.py:73-77`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6301,7 +7110,7 @@ _Missing docstring._
 def test_brier_em_intervalo(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:61-62`
+- Location: `tests/test_metrics.py:80-81`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6315,7 +7124,7 @@ _Missing docstring._
 def test_f1_precision_recall(y_true: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:65-70`
+- Location: `tests/test_metrics.py:88-93`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6329,7 +7138,7 @@ _Missing docstring._
 def test_accuracy_perfeita() -> None
 ```
 
-- Location: `tests/test_metrics.py:73-75`
+- Location: `tests/test_metrics.py:96-98`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6343,13 +7152,13 @@ _Missing docstring._
 def test_zero_division_nao_quebra() -> None
 ```
 
-- Location: `tests/test_metrics.py:78-83`
+- Location: `tests/test_metrics.py:101-107`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `f1`, `np.zeros`, `precision`, `recall`
 
-_Missing docstring._
+``y_true`` e ``y_pred`` sem positivos → métricas devolvem 0.0, não ``ZeroDivisionError``.
 
 #### `test_metricas_completas_chaves`
 
@@ -6357,7 +7166,7 @@ _Missing docstring._
 def test_metricas_completas_chaves(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:86-104`
+- Location: `tests/test_metrics.py:114-122`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6371,13 +7180,13 @@ _Missing docstring._
 def test_metricas_completas_aceita_series(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:107-112`
+- Location: `tests/test_metrics.py:125-131`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `metricas_completas`, `pd.Series`
 
-_Missing docstring._
+``metricas_completas`` deve aceitar ``pd.Series`` como entrada.
 
 #### `test_metricas_por_limiar`
 
@@ -6385,7 +7194,7 @@ _Missing docstring._
 def test_metricas_por_limiar(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:115-123`
+- Location: `tests/test_metrics.py:138-146`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6399,7 +7208,7 @@ _Missing docstring._
 def test_ic_bootstrap_retorna_tres_floats(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:126-134`
+- Location: `tests/test_metrics.py:153-161`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6413,13 +7222,13 @@ _Missing docstring._
 def test_ic_bootstrap_deterministico(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:137-143`
+- Location: `tests/test_metrics.py:164-171`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `ic_bootstrap`
 
-_Missing docstring._
+Mesma seed → mesmo resultado.
 
 #### `test_ic_bootstrap_metrica_customizada`
 
@@ -6427,7 +7236,7 @@ _Missing docstring._
 def test_ic_bootstrap_metrica_customizada(y_true: np.ndarray, y_prob: np.ndarray) -> None
 ```
 
-- Location: `tests/test_metrics.py:146-157`
+- Location: `tests/test_metrics.py:174-185`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6437,18 +7246,16 @@ _Missing docstring._
 
 ### `tests/test_model_pipelines.py`
 
-- Module: `tests.test_model_pipelines` · 174 lines
+- Module: `tests.test_model_pipelines` · 167 lines
 - Internal imports: `src.models.baseline.build_baseline_pipeline`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline`, `src.utils.config`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`, `sklearn.dummy.DummyClassifier`, `sklearn.ensemble.HistGradientBoostingClassifier`, `sklearn.linear_model.LogisticRegression`, `sklearn.pipeline.Pipeline`, `typing.Callable`
-- Module constants: `_CONSTRUTORES = [('baseline', lambda: build_baseline_pipeline()), ('logistic', lambda: build_logistic_pipeline(max_iter=500)), ('boosting', lambda: build_boosting_pipeline(max_iter=30))]`, `_IDS = [nome for nome, _ in _CONSTRUTORES]`
+- Module constants: `_CONSTRUTORES = [('baseline', lambda: build_baseline_pipeline(), DummyClassifier), ('logistic', lambda: build_logistic_pipeline(max_iter=500), LogisticRegression), ('boosting', lambda: build_boosting_pipeline(max_iter=30), HistGradientBoostingClassifier)]`, `_IDS = [nome for nome, _, _ in _CONSTRUTORES]`
 
 Testes rápidos dos construtores de pipeline de modelos supervisionados.
 
-Cobrem `build_baseline_pipeline`, `build_logistic_pipeline` e
-`build_boosting_pipeline`. Não dependem do Parquet nem fazem I/O pesado.
-
-A lista de features vem de `src.models.pipeline`, que por sua vez lê
-`configs/supervised.yaml` — sem hard-code.
+Cobrem baseline, logística e boosting. Não dependem do Parquet nem fazem
+I/O pesado. As features vêm de ``src.models.pipeline`` (que lê o
+``supervised.yaml``) — sem hard-code.
 
 #### `_df_features`
 
@@ -6456,19 +7263,19 @@ A lista de features vem de `src.models.pipeline`, que por sua vez lê
 def _df_features(n: int=200, seed: int=42) -> tuple[pd.DataFrame, pd.Series]
 ```
 
-- Location: `tests/test_model_pipelines.py:30-63`
+- Location: `tests/test_model_pipelines.py:28-53`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Defaults: `n=200`, `seed=42`
 - Calls: `np.concatenate`, `np.ones`, `np.random.default_rng`, `np.zeros`, `pd.DataFrame`, `pd.Series`, `pd.Series.sample`, `pd.Series.sample.reset_index`, `rng.choice`, `rng.normal`
 
-DataFrame sintético com exatamente as features exigidas pelo YAML.
+DataFrame sintético com exactamente as features exigidas pelo YAML.
 
-Numéricas recebem distribuição normal; categóricas recebem 3 níveis
-como strings. O alvo é balanceado 50/50 e depois embaralhado — isso
-garante as duas classes para `DummyClassifier(strategy="prior")` e
-para `LogisticRegression(class_weight="balanced")`.
+Numéricas com distribuição normal; categóricas com 3 níveis como
+strings. O alvo é balanceado 50/50 e depois embaralhado — garante as
+duas classes para ``DummyClassifier(strategy="prior")`` e para
+``LogisticRegression(class_weight="balanced")``.
 
 #### `_colunas_do_pre`
 
@@ -6476,83 +7283,59 @@ para `LogisticRegression(class_weight="balanced")`.
 def _colunas_do_pre(pipe: Pipeline) -> set[str]
 ```
 
-- Location: `tests/test_model_pipelines.py:66-74`
+- Location: `tests/test_model_pipelines.py:56-66`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `colunas.update`, `isinstance`, `set`
 
-Colunas declaradas no ColumnTransformer do pipeline.
+Colunas declaradas no ``ColumnTransformer`` do pipeline.
 
-#### `test_build_baseline_pipeline_retorna_pipeline`
+``ColumnTransformer.transformers`` é uma lista de
+``(nome, transformer, colunas)`` — extraímos a terceira posição.
+
+#### `test_pipeline_retorna_pipeline`
 
 ```python
-def test_build_baseline_pipeline_retorna_pipeline() -> None
+def test_pipeline_retorna_pipeline(nome: str, ctor: Callable[[], Pipeline], clf_esperado: type) -> None
 ```
 
-- Location: `tests/test_model_pipelines.py:87-91`
+- Location: `tests/test_model_pipelines.py:84-93`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `build_baseline_pipeline`, `isinstance`, `list`, `pipe.named_steps.keys`
+- Decorators: `pytest.mark.parametrize(('nome', 'ctor', 'clf_esperado'), _CONSTRUTORES, ids=_IDS)`
+- Calls: `ctor`, `isinstance`, `list`, `pipe.named_steps.keys`, `pytest.mark.parametrize`
 
-_Missing docstring._
+Cada construtor devolve ``Pipeline(pre, clf)`` com o classificador correto.
 
-#### `test_build_logistic_pipeline_retorna_pipeline`
+#### `test_pipeline_nao_inclui_proibidas`
 
 ```python
-def test_build_logistic_pipeline_retorna_pipeline() -> None
+def test_pipeline_nao_inclui_proibidas(nome: str, ctor: Callable[[], Pipeline], clf_esperado: type) -> None
 ```
 
-- Location: `tests/test_model_pipelines.py:94-98`
+- Location: `tests/test_model_pipelines.py:97-112`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `build_logistic_pipeline`, `isinstance`, `list`, `pipe.named_steps.keys`
-
-_Missing docstring._
-
-#### `test_build_boosting_pipeline_retorna_pipeline`
-
-```python
-def test_build_boosting_pipeline_retorna_pipeline() -> None
-```
-
-- Location: `tests/test_model_pipelines.py:101-105`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `build_boosting_pipeline`, `isinstance`, `list`, `pipe.named_steps.keys`
-
-_Missing docstring._
-
-#### `test_pipelines_fit_predict_proba`
-
-```python
-def test_pipelines_fit_predict_proba(nome: str, ctor: Callable[[], Pipeline]) -> None
-```
-
-- Location: `tests/test_model_pipelines.py:109-126`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Decorators: `pytest.mark.parametrize(('nome', 'ctor'), _CONSTRUTORES, ids=_IDS)`
-- Calls: `_df_features`, `all`, `ctor`, `len`, `np.allclose`, `np.isfinite`, `np.isfinite.all`, `pipe.fit`, `pipe.predict_proba`, `proba.sum`, `pytest.mark.parametrize`
-
-_Missing docstring._
-
-#### `test_pipelines_nao_incluem_proibidas`
-
-```python
-def test_pipelines_nao_incluem_proibidas(nome: str, ctor: Callable[[], Pipeline]) -> None
-```
-
-- Location: `tests/test_model_pipelines.py:130-145`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Decorators: `pytest.mark.parametrize(('nome', 'ctor'), _CONSTRUTORES, ids=_IDS)`
+- Decorators: `pytest.mark.parametrize(('nome', 'ctor', 'clf_esperado'), _CONSTRUTORES, ids=_IDS)`
 - Calls: `C.cfg`, `_colunas_do_pre`, `ctor`, `pytest.mark.parametrize`, `set`, `sorted`
+
+_Missing docstring._
+
+#### `test_pipeline_fit_predict_proba`
+
+```python
+def test_pipeline_fit_predict_proba(nome: str, ctor: Callable[[], Pipeline], clf_esperado: type) -> None
+```
+
+- Location: `tests/test_model_pipelines.py:120-132`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `pytest.mark.parametrize(('nome', 'ctor', 'clf_esperado'), _CONSTRUTORES, ids=_IDS)`
+- Calls: `_df_features`, `all`, `ctor`, `ctor.fit`, `len`, `np.allclose`, `np.isfinite`, `np.isfinite.all`, `pipe.predict_proba`, `proba.sum`, `pytest.mark.parametrize`
 
 _Missing docstring._
 
@@ -6562,16 +7345,15 @@ _Missing docstring._
 def test_pipelines_usam_features_do_yaml() -> None
 ```
 
-- Location: `tests/test_model_pipelines.py:148-165`
+- Location: `tests/test_model_pipelines.py:139-154`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_colunas_do_pre`, `ctor`, `set`, `sorted`
 
-O pré-processador de cada pipeline precisa expor exatamente o
-conjunto `FEATURES_NUMERICAS + FEATURES_CATEGORICAS` derivado do
-YAML. Serve como canário contra features fora do YAML ou filtros
-silenciosos.
+Pré-processador expõe ``FEATURES_NUMERICAS + FEATURES_CATEGORICAS`` do YAML.
+
+Canário contra features fora do YAML ou filtros silenciosos.
 
 #### `test_logistic_pipeline_solver_invalido`
 
@@ -6579,25 +7361,26 @@ silenciosos.
 def test_logistic_pipeline_solver_invalido() -> None
 ```
 
-- Location: `tests/test_model_pipelines.py:168-174`
+- Location: `tests/test_model_pipelines.py:161-167`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `build_logistic_pipeline`, `pytest.raises`
 
-`l1_ratio=1.0` (L1 puro) exige `liblinear` ou `saga`; com `lbfgs`,
-o construtor deve levantar `ValueError`.
+``l1_ratio=1.0`` (L1 puro) exige ``liblinear`` ou ``saga``.
+
+Com ``lbfgs`` o construtor deve levantar ``ValueError``.
 
 ### `tests/test_pipeline.py`
 
-- Module: `tests.test_pipeline` · 83 lines
+- Module: `tests.test_pipeline` · 82 lines
 - Internal imports: `src.models.pipeline.build_pipeline`, `src.utils.env`, `src.utils.storage.get_parquet`, `src.utils.storage.read_srag`
 - External imports: `__future__.annotations`, `pandas`, `pathlib.Path`, `pytest`
 
-Testes do pipeline de ingestão: read_srag, get_parquet e build_pipeline.
+Testes do pipeline de ingestão: ``read_srag``, ``get_parquet`` e
+``build_pipeline``.
 
-Testes que tocam arquivos grandes são marcados com `@pytest.mark.slow`.
-Os testes de diretório são rápidos e não recebem esse marcador.
+Testes que tocam no Parquet são marcados com ``@pytest.mark.slow``.
 
 #### `test_read_srag_retorna_dataframe`
 
@@ -6605,7 +7388,7 @@ Os testes de diretório são rápidos e não recebem esse marcador.
 def test_read_srag_retorna_dataframe(parquet_disponivel: Path | None) -> None
 ```
 
-- Location: `tests/test_pipeline.py:19-29`
+- Location: `tests/test_pipeline.py:25-33`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6620,14 +7403,14 @@ _Missing docstring._
 def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> None
 ```
 
-- Location: `tests/test_pipeline.py:33-48`
+- Location: `tests/test_pipeline.py:37-49`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.mark.slow`
 - Calls: `caminho_1.resolve`, `caminho_1.stat`, `caminho_2.resolve`, `caminho_2.stat`, `get_parquet`, `pytest.skip`
 
-`force=False` reutiliza o arquivo existente (mesmo mtime e tamanho).
+``force=False`` reutiliza o arquivo existente (mesmo mtime e tamanho).
 
 #### `test_build_pipeline_falha_feature_ausente`
 
@@ -6635,7 +7418,7 @@ def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> Non
 def test_build_pipeline_falha_feature_ausente() -> None
 ```
 
-- Location: `tests/test_pipeline.py:51-57`
+- Location: `tests/test_pipeline.py:56-59`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6649,7 +7432,7 @@ _Missing docstring._
 def test_build_pipeline_strict_false_avisa_mas_continua(caplog: pytest.LogCaptureFixture) -> None
 ```
 
-- Location: `tests/test_pipeline.py:60-71`
+- Location: `tests/test_pipeline.py:62-70`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6657,56 +7440,566 @@ def test_build_pipeline_strict_false_avisa_mas_continua(caplog: pytest.LogCaptur
 
 _Missing docstring._
 
-#### `test_raw_dir_foi_criado`
+#### `test_diretorio_padrao_foi_criado`
 
 ```python
-def test_raw_dir_foi_criado() -> None
+def test_diretorio_padrao_foi_criado(nome_dir: str) -> None
 ```
 
-- Location: `tests/test_pipeline.py:74-77`
+- Location: `tests/test_pipeline.py:78-82`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `env.RAW.exists`, `env.RAW.is_dir`, `env.garantir_diretorios`
+- Decorators: `pytest.mark.parametrize('nome_dir', ['RAW', 'PROCESSED'])`
+- Calls: `caminho.is_dir`, `env.garantir_diretorios`, `getattr`, `pytest.mark.parametrize`
+
+``env.garantir_diretorios`` cria os diretórios esperados.
+
+### `tests/test_regras_pessoa_a.py`
+
+- Module: `tests.test_regras_pessoa_a` · 507 lines
+- Internal imports: `src.protocolo.verificacoes`
+- External imports: `inspect`, `json`, `numpy`, `pandas`, `pathlib.Path`, `pytest`
+
+Testes das regras da Pessoa A (``src.protocolo.verificacoes``).
+
+Cobre A1–A4, casos limite de datas, leitura compacta (colunas
+``category``) e o contrato de exportação consumido pelo C2.
+
+#### `cfg`
+
+```python
+def cfg() -> dict
+```
+
+- Location: `tests/test_regras_pessoa_a.py:23-24`
+- Visibility: `public`
+- Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
+- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/config.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
+- Decorators: `pytest.fixture(scope='module')`
+- Calls: `pytest.fixture`, `v.load_config`
 
 _Missing docstring._
 
-#### `test_processed_dir_foi_criado`
+#### `demo`
 
 ```python
-def test_processed_dir_foi_criado() -> None
+def demo() -> pd.DataFrame
 ```
 
-- Location: `tests/test_pipeline.py:80-83`
+- Location: `tests/test_regras_pessoa_a.py:28-29`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `env.PROCESSED.exists`, `env.PROCESSED.is_dir`, `env.garantir_diretorios`
+- Decorators: `pytest.fixture(scope='module')`
+- Calls: `pytest.fixture`, `v.make_demo`, `v.prepare`
+
+_Missing docstring._
+
+#### `_escrever_yaml`
+
+```python
+def _escrever_yaml(tmp_path: Path, numericas: list[str], categoricas: list[str], *, proibidas: list[str] | None=None, grupos: list[str] | None=None) -> Path
+```
+
+- Location: `tests/test_regras_pessoa_a.py:32-64`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `proibidas=None`, `grupos=None`
+- Calls: `caminho.write_text`, `join`, `linhas.append`, `lst`
+- File literals: `supervised.yaml`
+
+Escreve ``supervised.yaml`` mínimo para testes de exportação.
+
+Devolve o ``Path``. Cobre os campos consumidos por ``a1_export_dataset``
+e ``validar_contrato_c2``: alvo, coluna de tempo, features e (opcional)
+grupos de avaliação.
+
+#### `_base_texto`
+
+```python
+def _base_texto(n: int=15000) -> pd.DataFrame
+```
+
+- Location: `tests/test_regras_pessoa_a.py:67-75`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `n=15000`
+- Calls: `astype`, `astype.astype`, `astype.astype.replace`, `c.lower`, `dt.strftime`, `v.make_demo`
+
+``make_demo`` com datas como texto ISO e códigos como strings.
+
+#### `_como_categoria`
+
+```python
+def _como_categoria(df: pd.DataFrame) -> pd.DataFrame
+```
+
+- Location: `tests/test_regras_pessoa_a.py:78-84`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `astype`, `df.copy`, `pd.api.types.is_string_dtype`
+
+Converte todas as colunas string (excepto ``nu_notific``) em ``category``.
+
+#### `test_alvo_desconhecido_nao_vira_cura`
+
+```python
+def test_alvo_desconhecido_nao_vira_cura(cfg)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:91-93`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `list`, `pd.Series`, `t.astype`, `v.make_target`
+
+_Missing docstring._
+
+#### `test_aliases_para_nomes_canonicos`
+
+```python
+def test_aliases_para_nomes_canonicos()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:96-98`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `pd.DataFrame`, `set`, `v.prepare`
+
+_Missing docstring._
+
+#### `test_parse_date_iso_e_br`
+
+```python
+def test_parse_date_iso_e_br()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:101-104`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `isna`, `isna.all`, `pd.Series`, `pd.Timestamp`, `v.parse_date`
+
+_Missing docstring._
+
+#### `test_waterfall_monotonico`
+
+```python
+def test_waterfall_monotonico(cfg, demo, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:107-112`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `len`, `sum`, `v.Report`, `v.a1_waterfall`
+
+_Missing docstring._
+
+#### `test_coorte_so_tem_cura_ou_obito`
+
+```python
+def test_coorte_so_tem_cura_ou_obito(cfg, demo)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:115-118`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `set`, `unique`, `v.a1_cohort`
+
+_Missing docstring._
+
+#### `test_datas_absurdas_nao_estouram`
+
+```python
+def test_datas_absurdas_nao_estouram(cfg, tmp_path, unidade)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:126-139`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Decorators: `pytest.mark.parametrize('unidade', ['s', 'ms', 'us', 'texto'])`
+- Calls: `d.isna`, `d.isna.tolist`, `np.array`, `pd.DataFrame`, `pd.Series`, `pytest.mark.parametrize`, `v.Report`, `v.a2_dates`, `v.a2_maturity`, `v.parse_date`
+
+_Missing docstring._
+
+#### `test_parse_date_formatos_mistos_e_ano_absurdo`
+
+```python
+def test_parse_date_formatos_mistos_e_ano_absurdo()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:142-145`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `eq`, `eq.all`, `isna`, `isna.all`, `pd.Series`, `pd.Timestamp`, `v.parse_date`
+
+_Missing docstring._
+
+#### `test_parse_date_categorica_igual_a_texto`
+
+```python
+def test_parse_date_categorica_igual_a_texto()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:148-153`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `a.dropna`, `a.dropna.tolist`, `a.isna`, `a.isna.tolist`, `b.dropna`, `b.dropna.tolist`, `b.isna`, `b.isna.tolist`, `pd.Series`, `s.astype`, `v.parse_date`
+
+_Missing docstring._
+
+#### `test_variavel_proibida_gera_falha`
+
+```python
+def test_variavel_proibida_gera_falha(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:160-163`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `v.Report`, `v.a3_forbidden`
+
+_Missing docstring._
+
+#### `test_evolucao_no_clustering_gera_falha`
+
+```python
+def test_evolucao_no_clustering_gera_falha(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:166-169`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `v.Report`, `v.a3_forbidden`
+
+_Missing docstring._
+
+#### `test_auditoria_supervised_aponta_fracao_e_dt_notific`
+
+```python
+def test_auditoria_supervised_aponta_fracao_e_dt_notific(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:172-181`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `v.Report`, `v.a3_config_audit`
+
+_Missing docstring._
+
+#### `test_auditoria_yaml_contra_schema_fisico`
+
+```python
+def test_auditoria_yaml_contra_schema_fisico(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:184-195`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `v.Report`, `v.a3_config_audit`
+
+_Missing docstring._
+
+#### `test_auditoria_nao_acusa_derivadas_como_ausentes`
+
+```python
+def test_auditoria_nao_acusa_derivadas_como_ausentes(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:198-206`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `v.Report`, `v.a3_config_audit`
+
+_Missing docstring._
+
+#### `test_exporta_dataset_para_o_c2`
+
+```python
+def test_exporta_dataset_para_o_c2(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:213-227`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `base.rename`, `c.lower`, `len`, `pd.read_csv`, `set`, `unique`, `v.Report`, `v.a1_export_dataset`, `v.make_demo`, `v.prepare`
+- File literals: `dataset_supervisionado.csv`
+
+_Missing docstring._
+
+#### `test_export_cria_derivadas_pedidas_pelo_yaml`
+
+```python
+def test_export_cria_derivadas_pedidas_pelo_yaml(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:230-252`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `c.lower`, `pd.read_csv`, `v.Report`, `v.a1_export_dataset`, `v.make_demo`, `v.prepare`, `v.validar_contrato_c2`
+- File literals: `d.csv`
+
+_Missing docstring._
+
+#### `test_find_base_ignora_dataset_analitico`
+
+```python
+def test_find_base_ignora_dataset_analitico(tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:255-262`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `mkdir`, `v.find_base`, `write_bytes`, `write_text`
+- File literals: `dataset_supervisionado.parquet`, `srag.csv`
+
+_Missing docstring._
+
+#### `test_contrato_c2_dataset_valido`
+
+```python
+def test_contrato_c2_dataset_valido(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:265-277`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `c.lower`, `v.Report`, `v.a1_export_dataset`, `v.make_demo`, `v.prepare`, `v.validar_contrato_c2`
+- File literals: `dataset_supervisionado.csv`
+
+_Missing docstring._
+
+#### `test_contrato_c2_feature_inexistente_e_proibida_falham`
+
+```python
+def test_contrato_c2_feature_inexistente_e_proibida_falham(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:280-299`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `any`, `c.lower`, `startswith`, `v.Report`, `v.a1_export_dataset`, `v.make_demo`, `v.prepare`, `v.validar_contrato_c2`
+- File literals: `d.csv`
+
+_Missing docstring._
+
+#### `test_features_derivadas_valores`
+
+```python
+def test_features_derivadas_valores(cfg)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:306-321`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `between`, `between.all`, `d.upper`, `isna`, `isna.all`, `np.array`, `pd.DataFrame`, `pd.isna`, `set`, `tolist`, `v.add_derived`
+
+_Missing docstring._
+
+#### `test_derivadas_nao_dependem_do_desfecho`
+
+```python
+def test_derivadas_nao_dependem_do_desfecho(cfg)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:324-328`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `inspect.getsource`
+
+_Missing docstring._
+
+#### `test_split_aleatorio_proporcoes_estratos_e_reprodutibilidade`
+
+```python
+def test_split_aleatorio_proporcoes_estratos_e_reprodutibilidade()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:335-347`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `abs`, `all`, `np.array`, `pd.Series`, `pd.Series.value_counts`, `s.value_counts`, `s.value_counts.to_dict`, `v.split_aleatorio`
+
+_Missing docstring._
+
+#### `test_split_por_ordem_e_cronologico`
+
+```python
+def test_split_por_ordem_e_cronologico()
+```
+
+- Location: `tests/test_regras_pessoa_a.py:350-355`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `pd.DataFrame`, `pd.Series`, `pd.date_range`, `pd.to_datetime`, `pd.to_datetime.sample`, `pd.to_datetime.sample.to_numpy`, `t.max`, `t.min`, `v.split_por_ordem`
+
+_Missing docstring._
+
+#### `test_cenario_sem_2020_2021_exclui_os_anos`
+
+```python
+def test_cenario_sem_2020_2021_exclui_os_anos(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:358-387`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `abs`, `apply`, `c.lower`, `d_todos.groupby`, `fh.write`, `json.dumps`, `json.loads`, `len`, `mean`, `open`, `pd.read_csv`, `prev.max`, `prev.min`, `set`, `str`, `unique`, `v.Report`, `v.a3_split_aleatorio_cenario`, `v.make_demo`, `v.prepare`, `v.verificar_dataset_congelado`, `value_counts`
+- File literals: `dataset.csv`
+
+_Missing docstring._
+
+#### `test_benchmark_aleatorio_x_temporal_e_comparacao`
+
+```python
+def test_benchmark_aleatorio_x_temporal_e_comparacao(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:390-411`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `all`, `c.lower`, `items`, `json.dumps`, `json.loads`, `list`, `set`, `str`, `v.Report`, `v.a3_benchmark_split`, `v.a3_split_aleatorio_cenario`, `v.comparar_cenarios`, `v.make_demo`, `v.prepare`
+- File literals: `dataset.csv`
+
+_Missing docstring._
+
+#### `test_graficos_do_split_sao_gerados`
+
+```python
+def test_graficos_do_split_sao_gerados(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:414-433`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_escrever_yaml`, `c.lower`, `json.dumps`, `json.loads`, `list`, `p.exists`, `p.read_bytes`, `p.stat`, `pngs.append`, `str`, `v.Report`, `v.a3_split_aleatorio_cenario`, `v.grafico_comparacao_cenarios`, `v.grafico_split_cenario`, `v.make_demo`, `v.prepare`
+- File literals: `dataset.csv`, `split_comparacao_cenarios.png`, `split_sem_2020_2021.png`, `split_todos_2019_2025.png`
+
+_Missing docstring._
+
+#### `test_decision_table_alerta_complexidade_sem_ganho`
+
+```python
+def test_decision_table_alerta_complexidade_sem_ganho(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:440-447`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `pd.DataFrame`, `pd.read_csv`, `v.Report`, `v.a4_decision_table`
+- File literals: `a4_tabela_decisao.csv`
+
+_Missing docstring._
+
+#### `test_log_decision_upsert`
+
+```python
+def test_log_decision_upsert(tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:450-453`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `len`, `v.log_decision`
+
+_Missing docstring._
+
+#### `test_resultados_iguais_com_colunas_category`
+
+```python
+def test_resultados_iguais_com_colunas_category(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:460-479`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_base_texto`, `_como_categoria`, `base.copy`, `equals`, `fn`, `len`, `pd.read_csv`, `sum`, `v.Report`, `v.a1_cohort`, `v.a1_waterfall`, `v.prepare`
+- File literals: `a2_coerencia_datas.csv`
+
+O resultado do A1/A2 não muda quando o texto é lido como ``category``.
+
+#### `test_export_e_vazamento_com_category`
+
+```python
+def test_export_e_vazamento_com_category(cfg, tmp_path)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:482-492`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_base_texto`, `_como_categoria`, `_escrever_yaml`, `json.dumps`, `json.loads`, `str`, `v.Report`, `v.a1_cohort`, `v.a3_leak_scan`, `v.a3_split_aleatorio_cenario`, `v.prepare`, `v.validar_contrato_c2`
+- File literals: `d.csv`
+
+_Missing docstring._
+
+#### `test_colunas_minimas_sao_menos_que_as_classificadas`
+
+```python
+def test_colunas_minimas_sao_menos_que_as_classificadas(cfg)
+```
+
+- Location: `tests/test_regras_pessoa_a.py:499-507`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `set`, `v.colunas_necessarias`
 
 _Missing docstring._
 
 ### `tests/test_reproducibility.py`
 
-- Module: `tests.test_reproducibility` · 137 lines
+- Module: `tests.test_reproducibility` · 151 lines
 - Internal imports: `src.utils.config`, `src.utils.reproducibility`
-- External imports: `__future__.annotations`, `json`, `pathlib.Path`, `pytest`
+- External imports: `__future__.annotations`, `json`, `pathlib.Path`, `pytest`, `typing.Any`
+- Module constants: `_CAMPOS_METADATA = ('run_id', 'timestamp', 'modelo', 'seed', 'status', 'parametros', 'dataset', 'metricas', 'features', 'duracao_s', 'erro', 'data_version', 'gates', 'versoes', 'git', 'env', 'notas', 'dataset_sha256', 'supervised_yaml_sha256')`
 
-Testes do registro de execuções.
+Testes do registro de execuções (``src.utils.reproducibility``).
 
 #### `_ler_meta`
 
 ```python
-def _ler_meta(pasta: Path) -> dict
+def _ler_meta(pasta: Path) -> dict[str, Any]
 ```
 
-- Location: `tests/test_reproducibility.py:14-15`
+- Location: `tests/test_reproducibility.py:25-27`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `json.loads`, `read_text`
 - File literals: `metadata.json`
 
-_Missing docstring._
+Lê ``metadata.json`` de uma execução.
 
 #### `test_registrar_execucao_cria_pasta`
 
@@ -6714,7 +8007,7 @@ _Missing docstring._
 def test_registrar_execucao_cria_pasta(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:18-30`
+- Location: `tests/test_reproducibility.py:34-46`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6729,7 +8022,7 @@ _Missing docstring._
 def test_metadata_tem_campos_obrigatorios(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:33-63`
+- Location: `tests/test_reproducibility.py:49-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6743,7 +8036,7 @@ _Missing docstring._
 def test_metadata_grava_data_version(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:66-68`
+- Location: `tests/test_reproducibility.py:67-69`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6757,7 +8050,7 @@ _Missing docstring._
 def test_metadata_grava_gates(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:71-75`
+- Location: `tests/test_reproducibility.py:72-75`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6765,13 +8058,27 @@ def test_metadata_grava_gates(tmp_path: Path) -> None
 
 _Missing docstring._
 
+#### `test_seed_padrao_vem_do_config`
+
+```python
+def test_seed_padrao_vem_do_config(tmp_path: Path) -> None
+```
+
+- Location: `tests/test_reproducibility.py:78-81`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `R.registrar_execucao`, `_ler_meta`
+
+Sem ``seed`` explícito, usa ``config.SEED``.
+
 #### `test_run_context_manager_sucesso`
 
 ```python
 def test_run_context_manager_sucesso(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:78-91`
+- Location: `tests/test_reproducibility.py:88-101`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6785,7 +8092,7 @@ _Missing docstring._
 def test_run_registra_excecao(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:94-107`
+- Location: `tests/test_reproducibility.py:104-117`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6799,13 +8106,13 @@ Mesmo em exceção, o metadata é gravado — com status e erro.
 def test_run_nao_suprime_excecao(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:110-114`
+- Location: `tests/test_reproducibility.py:120-124`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `R.Run`, `ValueError`, `pytest.raises`
 
-O `__exit__` retorna False — a exceção propaga.
+O ``__exit__`` devolve ``False`` — a exceção propaga.
 
 #### `test_run_id_unico`
 
@@ -6813,13 +8120,13 @@ O `__exit__` retorna False — a exceção propaga.
 def test_run_id_unico(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:117-121`
+- Location: `tests/test_reproducibility.py:131-136`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `R.gerar_run_id`, `mkdir`
 
-_Missing docstring._
+Sufixo ``_NN`` evita colisão quando o ID base já existe.
 
 #### `test_listar_e_carregar`
 
@@ -6827,7 +8134,7 @@ _Missing docstring._
 def test_listar_e_carregar(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_reproducibility.py:124-132`
+- Location: `tests/test_reproducibility.py:143-151`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6835,30 +8142,17 @@ def test_listar_e_carregar(tmp_path: Path) -> None
 
 _Missing docstring._
 
-#### `test_seed_padrao_vem_do_config`
-
-```python
-def test_seed_padrao_vem_do_config(tmp_path: Path) -> None
-```
-
-- Location: `tests/test_reproducibility.py:135-137`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `R.registrar_execucao`, `_ler_meta`
-
-_Missing docstring._
-
 ### `tests/test_smoke.py`
 
-- Module: `tests.test_smoke` · 98 lines
-- Internal imports: `src.utils.config`, `src.utils.storage`
+- Module: `tests.test_smoke` · 102 lines
+- Internal imports: `src.utils.storage`
 - External imports: `__future__.annotations`, `pandas`, `pathlib.Path`, `pyarrow.parquet`, `pytest`
+- Module constants: `COLUNAS_ESPERADAS = frozenset({'sg_uf', 'dt_notific'})`
 
-Smoke tests: o dataset existe, abre, tem colunas e registros?
+Smoke tests do Parquet de SRAG.
 
-Todos os testes são marcados como `slow` via `pytestmark`.
-Rode com: pytest -m slow
+Verificam que o dataset existe, abre, tem o schema esperado e produz uma
+saída mínima. Todos os testes são marcados ``slow`` via ``pytestmark``.
 
 #### `parquet`
 
@@ -6866,26 +8160,41 @@ Rode com: pytest -m slow
 def parquet(parquet_disponivel: Path | None) -> Path
 ```
 
-- Location: `tests/test_smoke.py:22-29`
+- Location: `tests/test_smoke.py:27-34`
 - Visibility: `public`
-- Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_temporal.py`
+- Tested by: `tests/test_config.py`, `tests/test_leakage.py`
+- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_config.py`, `tests/test_leakage.py`
 - Decorators: `pytest.fixture`
 - Calls: `pytest.skip`
 
-Versão obrigatória de `parquet_disponivel`, com skip se ausente.
+``parquet_disponivel`` obrigatório — faz skip se ausente.
 
-#### `test_parquet_existe`
+#### `schema_colunas`
 
 ```python
-def test_parquet_existe(parquet: Path) -> None
+def schema_colunas(parquet: Path) -> set[str]
 ```
 
-- Location: `tests/test_smoke.py:32-34`
+- Location: `tests/test_smoke.py:38-40`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `parquet.exists`, `parquet.stat`
+- Decorators: `pytest.fixture(scope='module')`
+- Calls: `pq.read_schema`, `pytest.fixture`, `set`
+
+Nome das colunas do Parquet — lido uma vez por módulo.
+
+#### `test_parquet_existe_e_nao_vazio`
+
+```python
+def test_parquet_existe_e_nao_vazio(parquet: Path) -> None
+```
+
+- Location: `tests/test_smoke.py:47-49`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `parquet.is_file`, `parquet.stat`
 
 _Missing docstring._
 
@@ -6895,7 +8204,7 @@ _Missing docstring._
 def test_parquet_tem_magic_bytes(parquet: Path) -> None
 ```
 
-- Location: `tests/test_smoke.py:37-40`
+- Location: `tests/test_smoke.py:52-55`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -6906,28 +8215,27 @@ _Missing docstring._
 #### `test_parquet_abre`
 
 ```python
-def test_parquet_abre(parquet: Path) -> None
+def test_parquet_abre(schema_colunas: set[str]) -> None
 ```
 
-- Location: `tests/test_smoke.py:43-47`
+- Location: `tests/test_smoke.py:58-59`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `len`, `pq.read_schema`
 
 _Missing docstring._
 
 #### `test_parquet_tem_colunas_esperadas`
 
 ```python
-def test_parquet_tem_colunas_esperadas(parquet: Path) -> None
+def test_parquet_tem_colunas_esperadas(schema_colunas: set[str]) -> None
 ```
 
-- Location: `tests/test_smoke.py:50-59`
+- Location: `tests/test_smoke.py:62-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `pq.read_schema`, `set`
+- Calls: `sorted`
 
 _Missing docstring._
 
@@ -6937,25 +8245,11 @@ _Missing docstring._
 def test_parquet_tem_registros(parquet: Path) -> None
 ```
 
-- Location: `tests/test_smoke.py:62-64`
+- Location: `tests/test_smoke.py:71-73`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `len`, `pd.read_parquet`
-
-_Missing docstring._
-
-#### `test_leitura_de_uma_coluna`
-
-```python
-def test_leitura_de_uma_coluna(parquet: Path) -> None
-```
-
-- Location: `tests/test_smoke.py:67-70`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `pd.read_parquet`
 
 _Missing docstring._
 
@@ -6965,13 +8259,13 @@ _Missing docstring._
 def test_produz_saida_pequena(parquet: Path) -> None
 ```
 
-- Location: `tests/test_smoke.py:73-77`
+- Location: `tests/test_smoke.py:76-79`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `len`, `pd.read_parquet`, `pd.read_parquet.head`, `value_counts`, `value_counts.sum`
+- Calls: `len`, `pd.read_parquet`, `pd.read_parquet.head`
 
-Confirma que conseguimos produzir uma saída minúscula — o smoke final.
+O smoke final — produzir uma saída minúscula funciona ponta-a-ponta.
 
 #### `test_storage_read_srag`
 
@@ -6979,13 +8273,13 @@ Confirma que conseguimos produzir uma saída minúscula — o smoke final.
 def test_storage_read_srag(parquet: Path) -> None
 ```
 
-- Location: `tests/test_smoke.py:80-86`
+- Location: `tests/test_smoke.py:86-91`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `isinstance`, `len`, `storage.read_srag`
 
-_Missing docstring._
+``storage.read_srag`` devolve DataFrame não vazio com as colunas pedidas.
 
 #### `test_storage_read_srag_com_filtro`
 
@@ -6993,29 +8287,30 @@ _Missing docstring._
 def test_storage_read_srag_com_filtro(parquet: Path) -> None
 ```
 
-- Location: `tests/test_smoke.py:89-98`
+- Location: `tests/test_smoke.py:94-102`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `all`, `len`, `pytest.skip`, `storage.read_srag`
+- Calls: `all`, `pytest.skip`, `storage.read_srag`
 
-_Missing docstring._
+O filtro ``sg_uf == "SP"`` é aplicado no lado do Parquet.
 
 ### `tests/test_split.py`
 
-- Module: `tests.test_split` · 265 lines
+- Module: `tests.test_split` · 274 lines
 - Internal imports: `src.data.split.PARTICOES_CANONICAS`, `src.data.split.SplitWarning`, `src.data.split.criar_particoes_agrupadas`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`, `typing.Any`
 
-Testes para `src.data.split.criar_particoes_agrupadas`.
+Testes para ``src.data.split.criar_particoes_agrupadas``.
 
 Invariantes:
-    1. nenhum grupo em mais de uma partição;
-    2. proporções de linhas próximas de 70/15/15 (com tolerância);
-    3. mesma seed → mesma partição.
 
-Cobrem ainda: políticas de estratos pequenos, grupos com alvo
-heterogêneo (raise/warn) e validações de parâmetros/colunas.
+1. nenhum grupo em mais de uma partição;
+2. proporções de linhas próximas de 70/15/15 (com tolerância);
+3. mesma seed → mesma partição.
+
+Cobrem também políticas de estratos pequenos, grupos com alvo
+heterogéneo (raise/warn) e validações de parâmetros/colunas.
 
 #### `_df_estratificado`
 
@@ -7023,15 +8318,14 @@ heterogêneo (raise/warn) e validações de parâmetros/colunas.
 def _df_estratificado(n_grupos_classe0: int=30, n_grupos_classe1: int=20, linhas_por_grupo: int=3, seed: int=0) -> pd.DataFrame
 ```
 
-- Location: `tests/test_split.py:28-55`
+- Location: `tests/test_split.py:33-55`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Defaults: `n_grupos_classe0=30`, `n_grupos_classe1=20`, `linhas_por_grupo=3`, `seed=0`
 - Calls: `float`, `int`, `linhas.append`, `np.random.default_rng`, `pd.DataFrame`, `range`, `rng.integers`, `rng.normal`
 
-DataFrame com grupos homogêneos (alvo constante por grupo)
-e duas classes bem representadas.
+DataFrame com grupos homogéneos (alvo constante por grupo).
 
 #### `_df_grande`
 
@@ -7046,7 +8340,35 @@ def _df_grande(n_grupos_classe0: int=700, n_grupos_classe1: int=300) -> pd.DataF
 - Defaults: `n_grupos_classe0=700`, `n_grupos_classe1=300`
 - Calls: `_df_estratificado`
 
-Base grande o bastante para checar proporções com folga.
+Base grande o suficiente para checar proporções com folga.
+
+#### `_df_com_estrato_pequeno`
+
+```python
+def _df_com_estrato_pequeno() -> pd.DataFrame
+```
+
+- Location: `tests/test_split.py:71-73`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_df_estratificado`
+
+1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0.
+
+#### `_df_com_grupo_heterogeneo`
+
+```python
+def _df_com_grupo_heterogeneo() -> pd.DataFrame
+```
+
+- Location: `tests/test_split.py:76-81`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `_df_estratificado`
+
+``g0000`` (classe 0) recebe uma linha com alvo=1.
 
 #### `_split`
 
@@ -7054,13 +8376,28 @@ Base grande o bastante para checar proporções com folga.
 def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame
 ```
 
-- Location: `tests/test_split.py:71-79`
+- Location: `tests/test_split.py:84-92`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `criar_particoes_agrupadas`, `params.update`
 
-Chama `criar_particoes_agrupadas` com os defaults dos testes.
+``criar_particoes_agrupadas`` com os defaults dos testes.
+
+#### `_assert_proporcoes`
+
+```python
+def _assert_proporcoes(contagem: pd.Series, tol: float=0.05) -> None
+```
+
+- Location: `tests/test_split.py:95-99`
+- Visibility: `private`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Defaults: `tol=0.05`
+- Calls: `abs`
+
+Asserts de 70/15/15 sobre ``value_counts(normalize=True)``.
 
 #### `test_grupos_nao_cruzam_particoes`
 
@@ -7068,13 +8405,13 @@ Chama `criar_particoes_agrupadas` com os defaults dos testes.
 def test_grupos_nao_cruzam_particoes() -> None
 ```
 
-- Location: `tests/test_split.py:82-91`
+- Location: `tests/test_split.py:106-112`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_df_estratificado`, `_split`, `all`, `nunique`, `out.groupby`
 
-_Missing docstring._
+Nenhum ``nu_notific`` aparece em mais de uma partição.
 
 #### `test_nenhuma_linha_perdida`
 
@@ -7082,7 +8419,7 @@ _Missing docstring._
 def test_nenhuma_linha_perdida() -> None
 ```
 
-- Location: `tests/test_split.py:94-99`
+- Location: `tests/test_split.py:115-119`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7096,13 +8433,13 @@ _Missing docstring._
 def test_proporcoes_linhas_proximas_de_70_15_15() -> None
 ```
 
-- Location: `tests/test_split.py:102-111`
+- Location: `tests/test_split.py:126-129`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `_df_grande`, `_split`, `abs`, `value_counts`
+- Calls: `_assert_proporcoes`, `_df_grande`, `_split`, `value_counts`
 
-_Missing docstring._
+Grupos são atómicos; a proporção real de linhas oscila em torno do alvo.
 
 #### `test_proporcoes_grupos_proximas_de_70_15_15`
 
@@ -7110,11 +8447,11 @@ _Missing docstring._
 def test_proporcoes_grupos_proximas_de_70_15_15() -> None
 ```
 
-- Location: `tests/test_split.py:114-123`
+- Location: `tests/test_split.py:132-135`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `_df_grande`, `_split`, `abs`, `first`, `out.groupby`, `por_grupo.value_counts`
+- Calls: `_assert_proporcoes`, `_df_grande`, `_split`, `first`, `out.groupby`, `por_grupo.value_counts`
 
 _Missing docstring._
 
@@ -7124,7 +8461,7 @@ _Missing docstring._
 def test_estratificacao_preserva_proporcao_aproximada() -> None
 ```
 
-- Location: `tests/test_split.py:126-133`
+- Location: `tests/test_split.py:138-145`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7138,13 +8475,13 @@ _Missing docstring._
 def test_reprodutibilidade_mesma_seed() -> None
 ```
 
-- Location: `tests/test_split.py:136-140`
+- Location: `tests/test_split.py:152-157`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_df_estratificado`, `_split`, `pd.testing.assert_series_equal`
 
-_Missing docstring._
+Mesma seed → mesmas partições.
 
 #### `test_seeds_diferentes_produzem_splits_diferentes`
 
@@ -7152,7 +8489,7 @@ _Missing docstring._
 def test_seeds_diferentes_produzem_splits_diferentes() -> None
 ```
 
-- Location: `tests/test_split.py:143-147`
+- Location: `tests/test_split.py:160-164`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7160,27 +8497,13 @@ def test_seeds_diferentes_produzem_splits_diferentes() -> None
 
 _Missing docstring._
 
-#### `_df_com_estrato_pequeno`
-
-```python
-def _df_com_estrato_pequeno() -> pd.DataFrame
-```
-
-- Location: `tests/test_split.py:150-152`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_df_estratificado`
-
-1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0.
-
 #### `test_estrato_pequeno_raise_e_default`
 
 ```python
 def test_estrato_pequeno_raise_e_default() -> None
 ```
 
-- Location: `tests/test_split.py:155-157`
+- Location: `tests/test_split.py:171-173`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7194,7 +8517,7 @@ _Missing docstring._
 def test_estrato_pequeno_warn_teste_manda_para_teste() -> None
 ```
 
-- Location: `tests/test_split.py:160-167`
+- Location: `tests/test_split.py:176-183`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7208,7 +8531,7 @@ _Missing docstring._
 def test_estrato_pequeno_warn_treino_manda_para_treino() -> None
 ```
 
-- Location: `tests/test_split.py:170-178`
+- Location: `tests/test_split.py:186-191`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7222,25 +8545,11 @@ _Missing docstring._
 def test_estrato_pequeno_drop_remove_linhas() -> None
 ```
 
-- Location: `tests/test_split.py:181-188`
+- Location: `tests/test_split.py:194-201`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_df_com_estrato_pequeno`, `_split`, `len`, `pytest.warns`, `set`, `set.issubset`, `sum`, `unique`
-
-_Missing docstring._
-
-#### `_df_com_grupo_heterogeneo`
-
-```python
-def _df_com_grupo_heterogeneo() -> pd.DataFrame
-```
-
-- Location: `tests/test_split.py:191-195`
-- Visibility: `private`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_df_estratificado`
 
 _Missing docstring._
 
@@ -7250,7 +8559,7 @@ _Missing docstring._
 def test_grupo_heterogeneo_raise() -> None
 ```
 
-- Location: `tests/test_split.py:198-200`
+- Location: `tests/test_split.py:208-210`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7264,7 +8573,7 @@ _Missing docstring._
 def test_grupo_heterogeneo_warn() -> None
 ```
 
-- Location: `tests/test_split.py:203-208`
+- Location: `tests/test_split.py:213-215`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7278,7 +8587,7 @@ _Missing docstring._
 def test_coluna_alvo_ausente() -> None
 ```
 
-- Location: `tests/test_split.py:211-217`
+- Location: `tests/test_split.py:222-228`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7292,7 +8601,7 @@ _Missing docstring._
 def test_coluna_grupo_ausente() -> None
 ```
 
-- Location: `tests/test_split.py:220-226`
+- Location: `tests/test_split.py:231-237`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7306,7 +8615,7 @@ _Missing docstring._
 def test_partition_column_ja_existente() -> None
 ```
 
-- Location: `tests/test_split.py:229-233`
+- Location: `tests/test_split.py:240-244`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7317,14 +8626,15 @@ _Missing docstring._
 #### `test_frac_invalida`
 
 ```python
-def test_frac_invalida() -> None
+def test_frac_invalida(kwargs: dict, match: str) -> None
 ```
 
-- Location: `tests/test_split.py:236-246`
+- Location: `tests/test_split.py:256-258`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `_df_estratificado`, `_split`, `pytest.raises`
+- Decorators: `pytest.mark.parametrize('kwargs, match', [({'frac_treino': 0.0}, 'frac_treino'), ({'frac_validacao': 1.5}, 'frac_validacao'), ({'frac_treino': 0.7, 'frac_validacao': 0.4}, '< 1')], ids=['frac_treino_zero', 'frac_validacao_acima', 'soma_maior_que_1'])`
+- Calls: `_df_estratificado`, `_split`, `pytest.mark.parametrize`, `pytest.raises`
 
 _Missing docstring._
 
@@ -7334,7 +8644,7 @@ _Missing docstring._
 def test_min_grupos_abaixo_de_3() -> None
 ```
 
-- Location: `tests/test_split.py:249-251`
+- Location: `tests/test_split.py:261-263`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7348,7 +8658,7 @@ _Missing docstring._
 def test_politica_invalida() -> None
 ```
 
-- Location: `tests/test_split.py:254-259`
+- Location: `tests/test_split.py:266-269`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7362,7 +8672,7 @@ _Missing docstring._
 def test_df_vazio() -> None
 ```
 
-- Location: `tests/test_split.py:262-265`
+- Location: `tests/test_split.py:272-274`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7372,9 +8682,14 @@ _Missing docstring._
 
 ### `tests/test_supervised_artifact.py`
 
-- Module: `tests.test_supervised_artifact` · 69 lines
+- Module: `tests.test_supervised_artifact` · 85 lines
 - Internal imports: `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.persist_supervised_artifact`
 - External imports: `__future__.annotations`, `pandas`, `pathlib.Path`, `pytest`, `typing.Any`
+
+Testes do artefacto supervisionado (``src.data.supervised_artifact``).
+
+Cobrem o contrato de persistência/leitura: preservação da partição,
+validação do tipo de coorte e exigência das três partições.
 
 #### `_frame`
 
@@ -7382,13 +8697,16 @@ _Missing docstring._
 def _frame() -> pd.DataFrame
 ```
 
-- Location: `tests/test_supervised_artifact.py:15-29`
+- Location: `tests/test_supervised_artifact.py:21-31`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `pd.DataFrame`
 
-_Missing docstring._
+6 registos — 2 por partição, alvo alternado (0/1).
+
+Colunas mínimas para os testes: uma feature numérica, o alvo binário
+e a coluna de partição.
 
 #### `_persistir`
 
@@ -7396,13 +8714,16 @@ _Missing docstring._
 def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None
 ```
 
-- Location: `tests/test_supervised_artifact.py:32-42`
+- Location: `tests/test_supervised_artifact.py:34-49`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `params.update`, `persist_supervised_artifact`
 
-_Missing docstring._
+Grava ``frame`` como artefacto supervisionado em ``tmp_path``.
+
+Preenche os kwargs obrigatórios com valores mínimos e deixa
+``**kwargs`` sobrepor (ex.: ``source`` com conteúdo).
 
 #### `test_roundtrip_preserva_particao`
 
@@ -7410,13 +8731,13 @@ _Missing docstring._
 def test_roundtrip_preserva_particao(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_supervised_artifact.py:45-55`
+- Location: `tests/test_supervised_artifact.py:56-65`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_frame`, `_persistir`, `load_supervised_artifact`, `tolist`
 
-_Missing docstring._
+Gravar e ler preserva a partição, e o manifesto regista o estado inicial.
 
 #### `test_tipo_de_coorte_incorreto_falha`
 
@@ -7424,13 +8745,13 @@ _Missing docstring._
 def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_supervised_artifact.py:58-62`
+- Location: `tests/test_supervised_artifact.py:72-77`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_frame`, `_persistir`, `load_supervised_artifact`, `pytest.raises`
 
-_Missing docstring._
+Ler com ``expected_kind`` diferente do gravado deve falhar.
 
 #### `test_particoes_incompletas_falham`
 
@@ -7438,91 +8759,52 @@ _Missing docstring._
 def test_particoes_incompletas_falham(tmp_path: Path) -> None
 ```
 
-- Location: `tests/test_supervised_artifact.py:65-69`
+- Location: `tests/test_supervised_artifact.py:80-85`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `_frame`, `_frame.query`, `_persistir`, `pytest.raises`
 
-_Missing docstring._
+Dataset sem o bloco ``teste`` viola o contrato de partições.
 
 ### `tests/test_target.py`
 
-- Module: `tests.test_target` · 90 lines
+- Module: `tests.test_target` · 105 lines
 - Internal imports: `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config`
 - External imports: `__future__.annotations`, `numpy`, `pandas`, `pytest`
 
-Contrato do alvo binário: `evolucao` → {0, 1, NaN}.
+Contrato do alvo binário: ``evolucao`` → {0, 1, NaN}.
 
 #### `_df`
 
 ```python
-def _df(valores: list) -> pd.DataFrame
+def _df(valores: list[float | None]) -> pd.DataFrame
 ```
 
-- Location: `tests/test_target.py:12-13`
+- Location: `tests/test_target.py:13-18`
 - Visibility: `private`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `len`, `pd.DataFrame`, `range`
 
-_Missing docstring._
+DataFrame ``{"evolucao": valores, "feat": range(n)}``.
 
-#### `test_positivo_e_um`
+A coluna ``feat`` serve como índice rastreável nas asserts.
+
+#### `test_mapeamento_puro`
 
 ```python
-def test_positivo_e_um() -> None
+def test_mapeamento_puro(entrada, esperado) -> None
 ```
 
-- Location: `tests/test_target.py:16-18`
+- Location: `tests/test_target.py:36-43`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `_df`, `criar_alvo_binario`, `y.tolist`
+- Decorators: `pytest.mark.parametrize('entrada, esperado', [([2.0], [1.0]), ([1.0], [0.0]), ([3.0], [float('nan')]), ([9.0], [float('nan')]), ([np.nan], [float('nan')])], ids=['positivo', 'negativo', 'codigo_3', 'codigo_9', 'nan_entrada'])`
+- Calls: `_df`, `criar_alvo_binario`, `float`, `pd.isna`, `pytest.mark.parametrize`, `zip`
 
-_Missing docstring._
-
-#### `test_negativo_e_zero`
-
-```python
-def test_negativo_e_zero() -> None
-```
-
-- Location: `tests/test_target.py:21-23`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_df`, `criar_alvo_binario`, `y.tolist`
-
-_Missing docstring._
-
-#### `test_codigos_3_e_9_viram_nan`
-
-```python
-def test_codigos_3_e_9_viram_nan() -> None
-```
-
-- Location: `tests/test_target.py:26-28`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_df`, `criar_alvo_binario`, `y.isna`, `y.isna.all`
-
-_Missing docstring._
-
-#### `test_nan_de_entrada_permanece_nan`
-
-```python
-def test_nan_de_entrada_permanece_nan() -> None
-```
-
-- Location: `tests/test_target.py:31-35`
-- Visibility: `public`
-- Tested by: not found statically
-- Consumed by: not found statically
-- Calls: `_df`, `criar_alvo_binario`, `pd.isna`
-
-_Missing docstring._
+``2.0``→1, ``1.0``→0, qualquer outro→NaN.
 
 #### `test_mistura_completa`
 
@@ -7530,7 +8812,7 @@ _Missing docstring._
 def test_mistura_completa() -> None
 ```
 
-- Location: `tests/test_target.py:38-42`
+- Location: `tests/test_target.py:46-50`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7544,7 +8826,7 @@ _Missing docstring._
 def test_filtrar_remove_nan() -> None
 ```
 
-- Location: `tests/test_target.py:45-54`
+- Location: `tests/test_target.py:57-64`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7558,7 +8840,7 @@ _Missing docstring._
 def test_filtrar_exige_indice_alinhado() -> None
 ```
 
-- Location: `tests/test_target.py:57-61`
+- Location: `tests/test_target.py:67-71`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7572,7 +8854,7 @@ _Missing docstring._
 def test_positivos_e_negativos_nao_se_sobrepoem() -> None
 ```
 
-- Location: `tests/test_target.py:64-66`
+- Location: `tests/test_target.py:78-80`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7586,7 +8868,7 @@ _Missing docstring._
 def test_positivos_vazio_levanta() -> None
 ```
 
-- Location: `tests/test_target.py:69-71`
+- Location: `tests/test_target.py:83-85`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7600,7 +8882,7 @@ _Missing docstring._
 def test_negativos_vazio_levanta() -> None
 ```
 
-- Location: `tests/test_target.py:74-76`
+- Location: `tests/test_target.py:88-90`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
@@ -7614,195 +8896,393 @@ _Missing docstring._
 def test_default_vem_do_yaml() -> None
 ```
 
-- Location: `tests/test_target.py:79-90`
+- Location: `tests/test_target.py:97-105`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Calls: `C.cfg`, `_df`, `criar_alvo_binario`, `float`, `y.tolist`
 
-Sem argumentos, usa `target.positivos` e `target.negativos` do YAML.
+Sem argumentos, usa ``target.positivos`` e ``target.negativos`` do YAML.
 
 ### `tests/test_temporal.py`
 
-- Module: `tests.test_temporal` · 150 lines
-- Internal imports: `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config`
-- External imports: `__future__.annotations`, `pandas`, `pyarrow.parquet`, `pytest`
+- Module: `tests.test_temporal` · 175 lines
+- Internal imports: `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.utils.config`
+- External imports: `__future__.annotations`, `pandas`, `pytest`
 
-Testes anti-vazamento de dados.
+Testes do split temporal em três blocos e da trava do holdout.
 
-Protegem contra:
-- inclusão do alvo nas features;
-- inclusão de colunas posteriores ao desfecho;
-- duplicação de identificadores quando houver chave adequada.
+Cobrem garantia de não sobreposição temporal, validação de frações e
+coluna temporal, tratamento de ``NaT`` e liberação do holdout apenas com
+``G9_holdout`` aprovado.
 
-Split temporal e trava do gate ``G9_holdout`` são testados em
-``tests/test_temporal.py`` — não duplicar aqui.
-
-Fonte única de verdade: `configs/supervised.yaml`, lido via
-`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
-
-#### `proibidas`
+#### `df_temporal`
 
 ```python
-def proibidas() -> set[str]
+def df_temporal() -> pd.DataFrame
 ```
 
-- Location: `tests/test_temporal.py:25-27`
+- Location: `tests/test_temporal.py:19-24`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
 - Decorators: `pytest.fixture`
-- Calls: `C.cfg`, `set`
+- Calls: `pd.DataFrame`, `pd.date_range`, `range`
 
-Colunas proibidas declaradas em `features.proibidas` do YAML.
+100 dias consecutivos a partir de 2020-01-01, coluna ``x`` = range(100).
 
-#### `features_finais`
+#### `df_temporal_com_nat`
 
 ```python
-def features_finais() -> set[str]
+def df_temporal_com_nat(df_temporal: pd.DataFrame) -> pd.DataFrame
 ```
 
-- Location: `tests/test_temporal.py:31-34`
+- Location: `tests/test_temporal.py:28-32`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- Consumed by: not found statically
 - Decorators: `pytest.fixture`
-- Calls: `set`
+- Calls: `df_temporal.copy`
 
-Lista final de features exposta por `src.models.pipeline`.
+``df_temporal`` com ``NaT`` na linha 5 da coluna ``data``.
 
-#### `test_proibidas_nao_vazia`
+#### `test_split_temporal_ordem_correta`
 
 ```python
-def test_proibidas_nao_vazia(proibidas: set[str]) -> None
+def test_split_temporal_ordem_correta(df_temporal: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:37-42`
+- Location: `tests/test_temporal.py:39-47`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
+- Calls: `len`, `max`, `min`, `split_temporal_3way`
+
+Sem sobreposição temporal entre blocos; proporções 70/15/15.
+
+#### `test_split_temporal_preserva_ordem`
+
+```python
+def test_split_temporal_preserva_ordem(df_temporal: pd.DataFrame) -> None
+```
+
+- Location: `tests/test_temporal.py:50-55`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_alvo_esta_entre_proibidas`
+#### `test_fracoes_invalidas`
 
 ```python
-def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None
+def test_fracoes_invalidas(df_temporal: pd.DataFrame, kwargs: dict) -> None
 ```
 
-- Location: `tests/test_temporal.py:45-49`
+- Location: `tests/test_temporal.py:79-81`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`
+- Decorators: `pytest.mark.parametrize('kwargs', [{'frac_treino': 0}, {'frac_treino': 1}, {'frac_validacao': 0}, {'frac_validacao': 1}, {'frac_treino': 0.8, 'frac_validacao': 0.3}], ids=['frac_treino_zero', 'frac_treino_um', 'frac_validacao_zero', 'frac_validacao_um', 'soma_maior_que_1'])`
+- Calls: `pytest.mark.parametrize`, `pytest.raises`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_features_finais_sem_proibidas`
+#### `test_coluna_tempo_ausente`
 
 ```python
-def test_features_finais_sem_proibidas(features_finais: set[str], proibidas: set[str]) -> None
+def test_coluna_tempo_ausente(df_temporal: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:52-59`
+- Location: `tests/test_temporal.py:84-86`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `sorted`
+- Calls: `pytest.raises`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_features_finais_nao_inclui_alvo`
+#### `test_coluna_tempo_nao_datetime`
 
 ```python
-def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None
+def test_coluna_tempo_nao_datetime(df_temporal: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:62-64`
+- Location: `tests/test_temporal.py:89-93`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`
+- Calls: `astype`, `df_temporal.copy`, `pytest.raises`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_check_leakage_passa_quando_X_limpo`
+#### `test_on_nat_raise`
 
 ```python
-def test_check_leakage_passa_quando_X_limpo() -> None
+def test_on_nat_raise(df_temporal_com_nat: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:67-71`
+- Location: `tests/test_temporal.py:100-102`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `check_leakage`, `pd.DataFrame`
+- Calls: `pytest.raises`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_check_leakage_levanta_para_proibida`
+#### `test_on_nat_drop`
 
 ```python
-def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None
+def test_on_nat_drop(df_temporal_com_nat: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:74-85`
+- Location: `tests/test_temporal.py:105-109`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `check_leakage`, `pd.DataFrame`, `pytest.raises`, `sorted`, `str`
+- Calls: `len`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_check_leakage_levanta_para_alvo`
+#### `test_on_nat_invalido`
 
 ```python
-def test_check_leakage_levanta_para_alvo() -> None
+def test_on_nat_invalido(df_temporal: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:88-95`
+- Location: `tests/test_temporal.py:112-115`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`, `check_leakage`, `pd.DataFrame`, `pytest.raises`
+- Calls: `pytest.raises`, `split_temporal_3way`
 
 _Missing docstring._
 
-#### `test_check_leakage_lista_vazia_ainda_verifica_alvo`
+#### `test_dataset_pequeno`
 
 ```python
-def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None
+def test_dataset_pequeno() -> None
 ```
 
-- Location: `tests/test_temporal.py:98-106`
+- Location: `tests/test_temporal.py:118-121`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `C.cfg`, `check_leakage`, `pd.DataFrame`, `pytest.raises`
+- Calls: `pd.DataFrame`, `pd.date_range`, `pytest.raises`, `split_temporal_3way`
 
-Lista vazia desliga proibidas, mas o alvo continua sendo checado.
+_Missing docstring._
 
-#### `test_dataset_sem_identificadores_duplicados`
+#### `test_holdout_bloqueado_por_padrao`
 
 ```python
-def test_dataset_sem_identificadores_duplicados(parquet_disponivel) -> None
+def test_holdout_bloqueado_por_padrao(df_temporal: pd.DataFrame) -> None
 ```
 
-- Location: `tests/test_temporal.py:109-150`
+- Location: `tests/test_temporal.py:128-132`
 - Visibility: `public`
 - Tested by: not found statically
 - Consumed by: not found statically
-- Calls: `dropna`, `dropna.astype`, `dropna.astype.str.strip`, `ids.duplicated`, `ids.duplicated.sum`, `ids.ne`, `int`, `len`, `next`, `pd.read_parquet`, `pq.read_schema`, `pytest.skip`, `set`
+- Calls: `TemporalSplit`, `pytest.raises`, `split.holdout`
 
-Checa duplicidade apenas se houver coluna que sirva como
-identificador da notificação. UF e data não formam chave única.
+_Missing docstring._
+
+#### `test_holdout_liberado_apos_gate`
+
+```python
+def test_holdout_liberado_apos_gate(df_temporal: pd.DataFrame, monkeypatch: pytest.MonkeyPatch) -> None
+```
+
+- Location: `tests/test_temporal.py:135-146`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `TemporalSplit`, `len`, `monkeypatch.setattr`, `split.concluir_selecao`, `split.holdout`
+
+Com ``G9_holdout`` aprovado, ``concluir_selecao()`` libera o holdout.
+
+#### `test_holdout_bloqueado_sem_gate`
+
+```python
+def test_holdout_bloqueado_sem_gate(df_temporal: pd.DataFrame, monkeypatch: pytest.MonkeyPatch) -> None
+```
+
+- Location: `tests/test_temporal.py:149-158`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `TemporalSplit`, `monkeypatch.setattr`, `pytest.raises`, `split.concluir_selecao`
+
+Com ``G9_holdout`` pendente, ``concluir_selecao()`` levanta ``RuntimeError``.
+
+#### `test_treino_validacao_nao_expoe_holdout`
+
+```python
+def test_treino_validacao_nao_expoe_holdout(df_temporal: pd.DataFrame) -> None
+```
+
+- Location: `tests/test_temporal.py:161-166`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `TemporalSplit`, `split.treino_validacao`
+
+_Missing docstring._
+
+#### `test_resumo_marca_holdout_bloqueado`
+
+```python
+def test_resumo_marca_holdout_bloqueado(df_temporal: pd.DataFrame) -> None
+```
+
+- Location: `tests/test_temporal.py:169-175`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `TemporalSplit`, `TemporalSplit.resumo`
+
+_Missing docstring._
+
+### `tools/clean_project.py`
+
+- Module: `tools.clean_project` · 136 lines
+- Internal imports: none
+- External imports: `__future__.annotations`, `argparse`, `pathlib.Path`, `shutil`
+- Module constants: `PROJECT_ROOT = Path(__file__).resolve().parent.parent`, `DIRECTORIES_TO_CLEAN = ['outputs', 'reports', 'models', 'logs', '.pytest_cache', '.ipynb_checkpoints', '.mypy_cache', '.ruff_cache', '.tox', '.nox']`, `FILE_PATTERNS = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg', '*.log', '*.tmp', '*.joblib', '*.pkl', '*.pickle', '*.h5', '*.hdf5', '*.pt', '*.pth', '*.onnx', '*.npy', '*.npz']`, `PROTECTED_FOLDERS = {'tests', 'venv', '.git', 'notebooks', 'tools', 'src', 'configs', 'env', 'data/analytical', 'docs', '.venv', 'data/external', 'data/raw'}`
+
+#### `remove_file`
+
+```python
+def remove_file(path: Path, dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:48-53`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `path.unlink`, `print`
+
+_Missing docstring._
+
+#### `remove_directory`
+
+```python
+def remove_directory(path: Path, dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:56-61`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `print`, `shutil.rmtree`
+
+_Missing docstring._
+
+#### `clean_directory_contents`
+
+```python
+def clean_directory_contents(path: Path, dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:64-74`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `child.is_dir`, `path.exists`, `path.iterdir`, `remove_directory`, `remove_file`
+
+Remove conteúdo mas preserva o diretório e os .gitkeep.
+
+#### `clean_directories`
+
+```python
+def clean_directories(dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:77-81`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `clean_directory_contents`, `path.exists`
+
+_Missing docstring._
+
+#### `clean_pycache`
+
+```python
+def clean_pycache(dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:84-86`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `PROJECT_ROOT.rglob`, `remove_directory`
+
+_Missing docstring._
+
+#### `clean_generated_files`
+
+```python
+def clean_generated_files(dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:89-94`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `PROJECT_ROOT.rglob`, `any`, `remove_file`, `str`
+
+_Missing docstring._
+
+#### `clean_processed_data`
+
+```python
+def clean_processed_data(dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:97-100`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `clean_directory_contents`, `processed_folder.exists`
+
+_Missing docstring._
+
+#### `clean_reference`
+
+```python
+def clean_reference(dry_run: bool) -> None
+```
+
+- Location: `tools/clean_project.py:103-107`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: not found statically
+- Calls: `path.exists`, `remove_file`
+- File literals: `PROJECT_COMPLETE_REFERENCE.json`, `PROJECT_COMPLETE_REFERENCE.md`
+
+_Missing docstring._
+
+#### `main`
+
+```python
+def main() -> None
+```
+
+- Location: `tools/clean_project.py:110-132`
+- Visibility: `public`
+- Tested by: not found statically
+- Consumed by: `tools/update_project_reference.py`
+- Calls: `argparse.ArgumentParser`, `clean_directories`, `clean_generated_files`, `clean_processed_data`, `clean_pycache`, `clean_reference`, `parser.add_argument`, `parser.parse_args`, `print`
+
+_Missing docstring._
 
 ### `tools/update_project_reference.py`
 
 - Module: `tools.update_project_reference` · 2382 lines
 - Internal imports: none
 - External imports: `__future__.annotations`, `argparse`, `ast`, `collections.Counter`, `collections.defaultdict`, `dataclasses.asdict`, `dataclasses.dataclass`, `dataclasses.field`, `datetime.datetime`, `datetime.timezone`, `hashlib`, `importlib.metadata`, `io`, `json`, `os`, `pathlib.Path`, `platform`, `re`, `shlex`, `shutil`, `subprocess`, `sys`, `tempfile`, `tomllib`, `typing.Any`, `xml.etree.ElementTree`, `yaml`, `zipfile`
-- Module constants: `SCHEMA_VERSION = 4`, `OUTPUT_DIR = Path('docs')`, `OUTPUT_MD_NAME = 'PROJECT_COMPLETE_REFERENCE.md'`, `OUTPUT_JSON_NAME = 'PROJECT_COMPLETE_REFERENCE.json'`, `PARTS_DIR_NAME = 'project_reference_parts'`, `DEFAULT_MAX_INLINE_BYTES = 4000000`, `DEFAULT_MAX_OUTPUT_CHARS = 6000`, `DEFAULT_MAX_ARTIFACT_BYTES = 300000`, `DEFAULT_MAX_CSV_ROWS = 60`, `DEFAULT_MAX_DIFF_CHARS = 400000`, `DEFAULT_GIT_LOG = 40`, `DEFAULT_SPLIT_MB = 1.0`, `MAX_INVENTORY_ENTRIES = 30000`, `MAX_DOCSTRING_CHARS = 4000`, `MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 200`, `EXCLUDED_DIRS_ANYWHERE = {'.idea', '.pytest_cache', '.vscode', '.git', '.eggs', 'dist', 'venv', 'env', '.mypy_cache', '.tox', '.nox', '__pycache__', '.ruff_cache', '.env', 'site-packages', '.ipynb_checkpoints', 'node_modules', 'build', '.venv'}`, `ARTIFACT_DIRS_AT_ROOT = {'models', 'outputs', 'reports', 'data', 'artifacts', 'logs', 'mlruns'}`, `ARTIFACT_EXCLUDED_DIR_NAMES = {'tmp', 'cache', 'raw', 'predicoes', 'predictions'}`, `EXCLUDED_FILES = {'.env', 'pip_inspect-venv.json', OUTPUT_MD_NAME, OUTPUT_JSON_NAME}`, `KEYS_ONLY_FILES = {'paths.local.json'}`, `TEXT_SUFFIXES = {'.ps1', '.js', '.json5', '.py', '.pyi', '.sh', '.rst', '.csv', '.R', '.json', '.cfg', '.css', '.ini', '.sql', '.toml', '.bat', '.yml', '.r', '.html', '.cmd', '.psm1', '.tsv', '.txt', '.md', '.yaml'}`, `ARTIFACT_TEXT_SUFFIXES = {'.csv', '.yml', '.txt', '.log', '.json', '.yaml', '.md', '.tsv'}`, `OFFICE_SUFFIXES = {'.pptx', '.docx'}`, `SPECIAL_NAMES = {'README', 'LICENSE', 'environment.yml', 'tox.ini', '.gitattributes', 'setup.cfg', 'pyproject.toml', 'Dockerfile', 'requirements.txt', '.gitignore', 'pytest.ini', 'Makefile', '.env.example', '.pre-commit-config.yaml'}`, `LANG = {'.py': 'python', '.pyi': 'python', '.md': 'markdown', '.rst': 'rst', '.yaml': 'yaml', '.yml': 'yaml', '.toml': 'toml', '.json': 'json', '.json5': 'json5', '.ini': 'ini', '.cfg': 'ini', '.sql': 'sql', '.ps1': 'powershell', '.psm1': 'powershell', '.sh': 'bash', '.bat': 'bat', '.cmd': 'bat', '.csv'...`, `LIKELY_BINARY_SUFFIXES = {'.pickle', '.ppt', '.gif', '.dbf', '.pt', '.joblib', '.sqlite', '.tar', '.parquet', '.h5', '.pkl', '.webp', '.pdf', '.feather', '.xls', '.bz2', '.jpg', '.hdf5', '.xlsx', '.arrow', '.gz', '.pth', '.svg', '.xz', '.exe', '.db', '.png', '.7z', '.npz', '.onnx', '.zip', '.jpeg', '.npy', '.doc', '.dll'}`, `IMPORTANT_UNTRACKED_PREFIXES = ('src/', 'tests/', 'configs/', 'docs/', 'notebooks/', 'tools/', 'scripts/')`, `IMPORT_TO_DIST = {'sklearn': 'scikit-learn', 'yaml': 'pyyaml', 'dotenv': 'python-dotenv', 'PIL': 'pillow', 'cv2': 'opencv-python', 'bs4': 'beautifulsoup4', 'docx': 'python-docx', 'pptx': 'python-pptx', 'dateutil': 'python-dateutil', 'IPython': 'ipython', 'jwt': 'pyjwt', 'skimage': 'scikit-image', 'google': 'googl...`, `KEY_PACKAGES = ('scikit-learn', 'pandas', 'numpy', 'scipy', 'pyarrow', 'pyyaml', 'joblib', 'matplotlib', 'seaborn', 'python-dotenv', 'requests', 'pytest', 'ipykernel', 'jupyter', 'nbformat', 'statsmodels', 'shap')`, `ENV_RE = re.compile('(?:os\\.getenv|os\\.environ\\.get|os\\.environ\\[|get_env|get_secret|getenv)\\(?\\s*[\'\\"]([A-Za-z_][A-Za-z0-9_]*)[\'\\"]')`, `SECRET_RE = re.compile('(?im)^(\\s*[A-Za-z_][A-Za-z0-9_.-]*?(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[A-Za-z0-9_.-]*\\s*[:=]\\s*)([^\\n#]+)')`, `PRIVATE_KEY_RE = re.compile('-----BEGIN [^-]+ PRIVATE KEY-----.*?-----END [^-]+ PRIVATE KEY-----', re.DOTALL)`, `URL_CREDENTIAL_RE = re.compile('(?i)(https?://[^\\s/:]+:)([^@\\s]+)(@)')`, `GITHUB_TOKEN_RE = re.compile('\\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b')`, `WINDOWS_USER_RE = re.compile('(?i)\\b[A-Z]:[\\\\/]+Users[\\\\/]+[^\\\\/\\s\\"\'<>|]+')`, `POSIX_HOME_RE = re.compile('(?<![A-Za-z0-9_])/(?:home|Users)/[^/\\s\\"\'<>|]+')`, `ANSI_RE = re.compile('\\x1b\\[[0-9;]*[A-Za-z]')`, `BACKTICK_RUN_RE = re.compile('`+')`, `HEADING_RE = re.compile('^\\s{0,3}(#{1,6})\\s+(.+?)\\s*$', re.MULTILINE)`, `FILE_LITERAL_RE = re.compile('[\'\\"]([^\'\\"\\n]+\\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md|html|txt))[\'\\"]', re.IGNORECASE)`, `GATE_RE = re.compile('\\bG\\d+_[A-Za-z0-9_]+\\b')`, `TODO_RE = re.compile('(?i)\\b(TODO|FIXME|XXX|HACK|PENDENTE)\\b[:\\s-]*(.{0,140})')`, `MOJIBAKE_RE = re.compile('(?:├|┤|Ã[\\u0080-\\u00BF¡-¿]|Â[\\u00A0-\\u00BF ]|â€|\\uFFFD)')`, `CONTEXT = '# Project Complete Reference\n\n> **Generated file. Do not edit manually.**\n> Generated by `tools/update_project_reference.py` (schema v{schema}).\n> Static snapshot of the repository and of the local working folder.\n\n## 1. Purpose\n\nThis reference lets a person or an AI diagnose the SRAG pr...`, `SEVERITY_ORDER = {'high': 0, 'medium': 1, 'low': 2}`
+- Module constants: `SCHEMA_VERSION = 4`, `OUTPUT_DIR = Path('docs')`, `OUTPUT_MD_NAME = 'PROJECT_COMPLETE_REFERENCE.md'`, `OUTPUT_JSON_NAME = 'PROJECT_COMPLETE_REFERENCE.json'`, `PARTS_DIR_NAME = 'project_reference_parts'`, `DEFAULT_MAX_INLINE_BYTES = 4000000`, `DEFAULT_MAX_OUTPUT_CHARS = 6000`, `DEFAULT_MAX_ARTIFACT_BYTES = 300000`, `DEFAULT_MAX_CSV_ROWS = 60`, `DEFAULT_MAX_DIFF_CHARS = 400000`, `DEFAULT_GIT_LOG = 40`, `DEFAULT_SPLIT_MB = 1.0`, `MAX_INVENTORY_ENTRIES = 30000`, `MAX_DOCSTRING_CHARS = 4000`, `MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 200`, `EXCLUDED_DIRS_ANYWHERE = {'env', '.git', '__pycache__', 'node_modules', '.ipynb_checkpoints', '.mypy_cache', 'venv', '.ruff_cache', 'build', '.venv', '.eggs', '.idea', '.nox', 'site-packages', '.pytest_cache', '.env', '.tox', 'dist', '.vscode'}`, `ARTIFACT_DIRS_AT_ROOT = {'mlruns', 'artifacts', 'logs', 'reports', 'data', 'outputs', 'models'}`, `ARTIFACT_EXCLUDED_DIR_NAMES = {'raw', 'tmp', 'predictions', 'predicoes', 'cache'}`, `EXCLUDED_FILES = {'.env', 'pip_inspect-venv.json', OUTPUT_MD_NAME, OUTPUT_JSON_NAME}`, `KEYS_ONLY_FILES = {'paths.local.json'}`, `TEXT_SUFFIXES = {'.rst', '.psm1', '.json5', '.bat', '.json', '.cmd', '.ini', '.pyi', '.html', '.ps1', '.r', '.py', '.cfg', '.yml', '.js', '.sh', '.toml', '.tsv', '.yaml', '.sql', '.md', '.R', '.txt', '.csv', '.css'}`, `ARTIFACT_TEXT_SUFFIXES = {'.log', '.tsv', '.yaml', '.yml', '.json', '.md', '.txt', '.csv'}`, `OFFICE_SUFFIXES = {'.docx', '.pptx'}`, `SPECIAL_NAMES = {'pyproject.toml', 'Dockerfile', '.pre-commit-config.yaml', 'environment.yml', 'tox.ini', 'setup.cfg', '.gitignore', '.gitattributes', 'LICENSE', 'requirements.txt', 'README', 'Makefile', 'pytest.ini', '.env.example'}`, `LANG = {'.py': 'python', '.pyi': 'python', '.md': 'markdown', '.rst': 'rst', '.yaml': 'yaml', '.yml': 'yaml', '.toml': 'toml', '.json': 'json', '.json5': 'json5', '.ini': 'ini', '.cfg': 'ini', '.sql': 'sql', '.ps1': 'powershell', '.psm1': 'powershell', '.sh': 'bash', '.bat': 'bat', '.cmd': 'bat', '.csv'...`, `LIKELY_BINARY_SUFFIXES = {'.dll', '.svg', '.pdf', '.xlsx', '.jpeg', '.pkl', '.webp', '.doc', '.bz2', '.7z', '.pth', '.joblib', '.ppt', '.jpg', '.h5', '.feather', '.xz', '.npy', '.pt', '.exe', '.arrow', '.parquet', '.db', '.png', '.hdf5', '.gz', '.tar', '.dbf', '.pickle', '.gif', '.sqlite', '.npz', '.onnx', '.zip', '.xls'}`, `IMPORTANT_UNTRACKED_PREFIXES = ('src/', 'tests/', 'configs/', 'docs/', 'notebooks/', 'tools/', 'scripts/')`, `IMPORT_TO_DIST = {'sklearn': 'scikit-learn', 'yaml': 'pyyaml', 'dotenv': 'python-dotenv', 'PIL': 'pillow', 'cv2': 'opencv-python', 'bs4': 'beautifulsoup4', 'docx': 'python-docx', 'pptx': 'python-pptx', 'dateutil': 'python-dateutil', 'IPython': 'ipython', 'jwt': 'pyjwt', 'skimage': 'scikit-image', 'google': 'googl...`, `KEY_PACKAGES = ('scikit-learn', 'pandas', 'numpy', 'scipy', 'pyarrow', 'pyyaml', 'joblib', 'matplotlib', 'seaborn', 'python-dotenv', 'requests', 'pytest', 'ipykernel', 'jupyter', 'nbformat', 'statsmodels', 'shap')`, `ENV_RE = re.compile('(?:os\\.getenv|os\\.environ\\.get|os\\.environ\\[|get_env|get_secret|getenv)\\(?\\s*[\'\\"]([A-Za-z_][A-Za-z0-9_]*)[\'\\"]')`, `SECRET_RE = re.compile('(?im)^(\\s*[A-Za-z_][A-Za-z0-9_.-]*?(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[A-Za-z0-9_.-]*\\s*[:=]\\s*)([^\\n#]+)')`, `PRIVATE_KEY_RE = re.compile('-----BEGIN [^-]+ PRIVATE KEY-----.*?-----END [^-]+ PRIVATE KEY-----', re.DOTALL)`, `URL_CREDENTIAL_RE = re.compile('(?i)(https?://[^\\s/:]+:)([^@\\s]+)(@)')`, `GITHUB_TOKEN_RE = re.compile('\\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b')`, `WINDOWS_USER_RE = re.compile('(?i)\\b[A-Z]:[\\\\/]+Users[\\\\/]+[^\\\\/\\s\\"\'<>|]+')`, `POSIX_HOME_RE = re.compile('(?<![A-Za-z0-9_])/(?:home|Users)/[^/\\s\\"\'<>|]+')`, `ANSI_RE = re.compile('\\x1b\\[[0-9;]*[A-Za-z]')`, `BACKTICK_RUN_RE = re.compile('`+')`, `HEADING_RE = re.compile('^\\s{0,3}(#{1,6})\\s+(.+?)\\s*$', re.MULTILINE)`, `FILE_LITERAL_RE = re.compile('[\'\\"]([^\'\\"\\n]+\\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md|html|txt))[\'\\"]', re.IGNORECASE)`, `GATE_RE = re.compile('\\bG\\d+_[A-Za-z0-9_]+\\b')`, `TODO_RE = re.compile('(?i)\\b(TODO|FIXME|XXX|HACK|PENDENTE)\\b[:\\s-]*(.{0,140})')`, `MOJIBAKE_RE = re.compile('(?:├|┤|Ã[\\u0080-\\u00BF¡-¿]|Â[\\u00A0-\\u00BF ]|â€|\\uFFFD)')`, `CONTEXT = '# Project Complete Reference\n\n> **Generated file. Do not edit manually.**\n> Generated by `tools/update_project_reference.py` (schema v{schema}).\n> Static snapshot of the repository and of the local working folder.\n\n## 1. Purpose\n\nThis reference lets a person or an AI diagnose the SRAG pr...`, `SEVERITY_ORDER = {'high': 0, 'medium': 1, 'low': 2}`
 
 Generate a complete, AI-oriented diagnostic snapshot of the SRAG repository.
 
@@ -8952,7 +10432,7 @@ def parse_args() -> argparse.Namespace
 - Location: `tools/update_project_reference.py:2297-2329`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
+- Consumed by: `tools/clean_project.py`
 - Calls: `argparse.ArgumentParser`, `enumerate`, `parser.add_argument`, `parser.parse_args`, `startswith`
 - File literals: `configs/supervised.yaml`
 
@@ -8967,7 +10447,7 @@ def main() -> int
 - Location: `tools/update_project_reference.py:2332-2378`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: not found statically
+- Consumed by: `tools/clean_project.py`
 - Calls: `a.get`, `atomic_write`, `build_reference`, `enumerate`, `human_bytes`, `int`, `json.dumps`, `len`, `machine.get`, `old.unlink`, `output_json.stat`, `output_md.stat`, `parse_args`, `part.stat`, `parts_dir.exists`, `parts_dir.glob`, `print`, `root_dir`, `split_document`, `stream.reconfigure`, `sum`, `written_parts.append`
 - File literals: `part_*.md`, `part_{index:02d}_of_{len(parts):02d}.md`
 
@@ -8982,22 +10462,24 @@ _Missing docstring._
 | `src.data.cohort_source` | `src.utils.hashing.sha256_file` |
 | `src.data.split` | none |
 | `src.data.supervised_artifact` | `src.utils.hashing.sha256_file` |
-| `src.evaluation` | `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros`, `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way` |
+| `src.evaluation` | `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.CriterioTop`, `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros`, `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.ArrayLike`, `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.especificidade`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.log_loss`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall`, `src.evaluation.metrics.sensibilidade`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way` |
 | `src.evaluation.calibration` | `src.evaluation.metrics._to_int_labels`, `src.evaluation.metrics._to_np` |
 | `src.evaluation.errors` | `src.evaluation.metrics._to_int_labels`, `src.evaluation.metrics._to_np`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall` |
 | `src.evaluation.leakage` | `src.utils.config` |
 | `src.evaluation.metrics` | none |
 | `src.evaluation.temporal` | `src.utils.config` |
-| `src.features` | `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade` |
+| `src.features` | `src.features.engineering.COLUNAS_DERIVADAS`, `src.features.engineering.ano_mes_internacao`, `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`, `src.features.engineering.sexo_categoria` |
 | `src.features.engineering` | `src.utils.config` |
 | `src.features.normalization` | none |
-| `src.models` | `src.models.baseline.build_baseline_pipeline`, `src.models.baseline.evaluate_baseline`, `src.models.boosting.build_boosting_pipeline`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline.ALVO`, `src.models.pipeline.COLUNA_TEMPO`, `src.models.pipeline.FEATURES`, `src.models.pipeline.FEATURES_CATEGORICAS`, `src.models.pipeline.FEATURES_NUMERICAS`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.models.pipeline.random_state` |
+| `src.models` | `src.models.baseline.DummyStrategy`, `src.models.baseline.build_baseline_pipeline`, `src.models.baseline.evaluate_baseline`, `src.models.boosting.build_boosting_pipeline`, `src.models.calibration.MetodoCalibracao`, `src.models.calibration.Metrica`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.Finalista`, `src.models.factory.build_finalista`, `src.models.factory.finalistas_disponiveis`, `src.models.logistic.Penalty`, `src.models.logistic.Solver`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline.ALVO`, `src.models.pipeline.AUSENTE`, `src.models.pipeline.COLUNA_TEMPO`, `src.models.pipeline.FEATURES`, `src.models.pipeline.FEATURES_CATEGORICAS`, `src.models.pipeline.FEATURES_NUMERICAS`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.models.pipeline.random_state` |
 | `src.models.baseline` | `src.evaluation.metrics.metricas_completas`, `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state` |
 | `src.models.boosting` | `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state` |
 | `src.models.calibration` | `src.evaluation.metrics.metricas_por_limiar` |
 | `src.models.factory` | `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config` |
 | `src.models.logistic` | `src.models.pipeline.build_preprocessor`, `src.models.pipeline.random_state`, `src.utils.config` |
 | `src.models.pipeline` | `src.utils.config` |
+| `src.protocolo` | none |
+| `src.protocolo.verificacoes` | `src.utils.config`, `src.utils.storage` |
 | `src.utils` | none |
 | `src.utils.config` | none |
 | `src.utils.env` | `src.utils.config` |
@@ -9010,35 +10492,42 @@ _Missing docstring._
 | `tests.test_config` | `src.models.pipeline`, `src.utils.config`, `src.utils.env` |
 | `tests.test_errors` | `src.evaluation.errors.extrair_falsos_negativos`, `src.evaluation.errors.extrair_falsos_positivos`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.errors.top_erros` |
 | `tests.test_features` | `src.features.engineering.ano_mes_internacao`, `src.features.engineering.faixa_etaria`, `src.features.engineering.idade_em_anos`, `src.features.engineering.intervalo_sintomas_internacao`, `src.features.engineering.montar_features`, `src.features.engineering.sazonalidade`, `src.features.engineering.sexo_categoria` |
-| `tests.test_leakage` | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.models.pipeline`, `src.utils.config` |
+| `tests.test_leakage` | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config` |
 | `tests.test_metrics` | `src.evaluation.metrics.accuracy`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.f1`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.evaluation.metrics.metricas_por_limiar`, `src.evaluation.metrics.precision`, `src.evaluation.metrics.recall` |
 | `tests.test_model_pipelines` | `src.models.baseline.build_baseline_pipeline`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.models.pipeline`, `src.utils.config` |
 | `tests.test_pipeline` | `src.models.pipeline.build_pipeline`, `src.utils.env`, `src.utils.storage.get_parquet`, `src.utils.storage.read_srag` |
+| `tests.test_regras_pessoa_a` | `src.protocolo.verificacoes` |
 | `tests.test_reproducibility` | `src.utils.config`, `src.utils.reproducibility` |
-| `tests.test_smoke` | `src.utils.config`, `src.utils.storage` |
+| `tests.test_smoke` | `src.utils.storage` |
 | `tests.test_split` | `src.data.split.PARTICOES_CANONICAS`, `src.data.split.SplitWarning`, `src.data.split.criar_particoes_agrupadas` |
 | `tests.test_supervised_artifact` | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.persist_supervised_artifact` |
 | `tests.test_target` | `src.models.pipeline.criar_alvo_binario`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config` |
-| `tests.test_temporal` | `src.evaluation.leakage.LeakageError`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline`, `src.utils.config` |
+| `tests.test_temporal` | `src.evaluation.temporal.TemporalSplit`, `src.evaluation.temporal.split_temporal_3way`, `src.utils.config` |
+| `tools.clean_project` | none |
 | `tools.update_project_reference` | none |
 
 ## 14. Notebook orchestration inventory
 
 | Notebook | Code/MD cells | Executed | Out of order | Errors | Internal imports | Local functions |
 |---|---|---|---|---|---|---|
-| `notebooks/00_acesso_dados_parquet.ipynb` | 6/6 | 0/6 | no | 0 | `src.utils.storage` | none |
-| `notebooks/01_extracao.ipynb` | 5/6 | 0/5 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage.get_parquet` | none |
-| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | 41/8 | 41/41 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `converter_data_mista`, `definir_cor_ausencia`, `calcular_preenchimento_por_grupo`, `definir_cor_cardinalidade`, `texto_normalizado`, `valores_frequentes`, `missing_condicional`, `variacao_preenchimento_por_ano`, `tipo_analitico` |
-| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | 119/28 | 119/119 | no | 0 | `src.utils.config`, `src.utils.env` | `encontrar_raiz_projeto`, `normalizar_resposta_clinica`, `criar_tabela_clinica_por_ano`, `calcular_variacao_clinica`, `criar_grafico_clinico_temporal`, `resumir_amplitude_temporal`, `calcular_ic_wilson`, `calcular_odds_ratio_bruta`, `criar_tabela_obito_categorica`, `criar_tabela_obito_indicadores`, `criar_grafico_odds_ratio`, `preparar_matriz_clinica_heatmap`, `exibir_heatmap_percentual`, `criar_tabela_obito_categoria_ano`, `exibir_letalidade_sim_nao`, `selecionar_colunas_por_tipo`, `criar_preprocessador_clustering`, `preparar_matriz_clustering`, `identificar_bloco_feature`, `diagnosticar_matriz_processada`, `executar_pca_diagnostico`, `obter_quantidade_componentes`, `criar_representacao_pca`, `avaliar_valores_k`, `selecionar_candidatos_k`, `calcular_estabilidade_candidato`, `criar_tabela_loadings`, `preparar_sensibilidade_sem_ausencia`, `normalizar_binaria_para_perfil`, `calcular_perfis_matriz` |
-| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | 26/22 | 26/26 | no | 0 | `src.data.cohort_source.load_cohort`, `src.data.split.criar_particoes_agrupadas`, `src.data.supervised_artifact.persist_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.features.montar_features`, `src.models.pipeline.criar_alvo_binario`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `calcular_metricas_piloto`, `executar_piloto`, `selecionar_amostra_estratificada`, `calcular_metricas_comparaveis`, `executar_modelo_comparavel` |
+| `notebooks/00_acesso_dados_parquet.ipynb` | 6/6 | 6/6 | no | 0 | `src.utils.storage` | none |
+| `notebooks/01_extracao.ipynb` | 5/6 | 5/5 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage.get_parquet` | none |
+| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | 42/8 | 0/42 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `converter_data_mista`, `definir_cor_ausencia`, `calcular_preenchimento_por_grupo`, `definir_cor_cardinalidade`, `texto_normalizado`, `valores_frequentes`, `missing_condicional`, `variacao_preenchimento_por_ano`, `tipo_analitico` |
+| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | 119/28 | 0/119 | no | 0 | `src.utils.config`, `src.utils.env` | `encontrar_raiz_projeto`, `normalizar_resposta_clinica`, `criar_tabela_clinica_por_ano`, `calcular_variacao_clinica`, `criar_grafico_clinico_temporal`, `resumir_amplitude_temporal`, `calcular_ic_wilson`, `calcular_odds_ratio_bruta`, `criar_tabela_obito_categorica`, `criar_tabela_obito_indicadores`, `criar_grafico_odds_ratio`, `preparar_matriz_clinica_heatmap`, `exibir_heatmap_percentual`, `criar_tabela_obito_categoria_ano`, `exibir_letalidade_sim_nao`, `selecionar_colunas_por_tipo`, `criar_preprocessador_clustering`, `preparar_matriz_clustering`, `identificar_bloco_feature`, `diagnosticar_matriz_processada`, `executar_pca_diagnostico`, `obter_quantidade_componentes`, `criar_representacao_pca`, `avaliar_valores_k`, `selecionar_candidatos_k`, `calcular_estabilidade_candidato`, `criar_tabela_loadings`, `preparar_sensibilidade_sem_ausencia`, `normalizar_binaria_para_perfil`, `calcular_perfis_matriz` |
+| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | 28/22 | 28/28 | no | 0 | `src.data.cohort_source.load_cohort`, `src.data.supervised_artifact.persist_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.features.montar_features`, `src.models.pipeline.criar_alvo_binario`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `amostrar_treino_estratificado`, `calcular_metricas_piloto`, `executar_piloto`, `selecionar_amostra_estratificada`, `calcular_metricas_comparaveis`, `executar_modelo_comparavel` |
 | `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` | 9/11 | 9/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.utils.config` | `encontrar_raiz_projeto`, `construct_mapping_unique`, `manifesto_mais_recente`, `UniqueKeyLoader` |
 | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` | 14/1 | 0/14 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `normalizar_codigo`, `converter_data_mista_segura`, `adicionar_etapa_waterfall` |
-| `notebooks/C/C1_smoke_test.ipynb` | 6/1 | 0/6 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.reproducibility`, `src.utils.storage` | none |
-| `notebooks/C/C2_pipeline_supervisionado.ipynb` | 13/10 | 0/13 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_alvo_do_split` |
-| `notebooks/C/C3_baseline_logistica.ipynb` | 12/12 | 0/12 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.baseline.build_baseline_pipeline`, `src.models.baseline.evaluate_baseline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
-| `notebooks/C/C4_boosting.ipynb` | 15/14 | 0/15 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_subamostrar`, `_linha_busca`, `busca_limitada_boosting`, `busca_limitada_logistica`, `_linha`, `_fmt_scalar`, `_montar_proposta_yaml` |
-| `notebooks/C/C5_calibracao_limiar.ipynb` | 16/13 | 0/16 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.metricas_completas`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `construir_finalista` |
-| `notebooks/C/C6_validacao_final.ipynb` | 22/20 | 0/22 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.features.engineering.faixa_etaria`, `src.models.calibration.calibrar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_localizar_manifesto_c5`, `_reproduzir_split_val_cal`, `_hash_indices`, `construir_finalista`, `_safe_float`, `_marcar_g9_executado` |
+| `notebooks/A/A1_coorte_protocolo.ipynb` | 9/11 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A2_qualidade_elegibilidade.ipynb` | 9/10 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A3_desenho_experimental.ipynb` | 8/9 | 0/8 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | 7/8 | 0/7 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A4_decisao_candidatos.ipynb` | 5/7 | 0/5 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/C/C1_smoke_test.ipynb` | 3/1 | 0/3 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | none |
+| `notebooks/C/C2_pipeline_supervisionado.ipynb` | 7/7 | 0/7 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_alvo_do_split` |
+| `notebooks/C/C3_baseline_logistica.ipynb` | 6/4 | 0/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.baseline.evaluate_baseline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
+| `notebooks/C/C4_boosting.ipynb` | 9/6 | 0/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_subamostrar`, `_busca_limitada`, `_candidatos_boosting`, `_candidatos_logistica`, `_fmt`, `_montar_proposta_yaml` |
+| `notebooks/C/C5_calibracao_limiar.ipynb` | 6/4 | 0/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.metricas_completas`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
+| `notebooks/C/C6_validacao_final.ipynb` | 9/6 | 0/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.features.engineering.faixa_etaria`, `src.models.calibration.calibrar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_reproduzir_split_val_cal`, `_localizar_manifesto_c5`, `_marcar_g9_executado` |
 
 ### `notebooks/00_acesso_dados_parquet.ipynb` headings
 
@@ -9209,117 +10698,132 @@ Referenced files: `_manifesto.json`, `supervised.yaml`, `{prefixo}_calibracao_br
 
 Referenced files: `coorte_provisoria_b.parquet`, `coorte_provisoria_b_auditoria_duplicidades.csv`, `coorte_provisoria_b_auditoria_temporal.csv`, `coorte_provisoria_b_resumo.csv`, `coorte_provisoria_b_waterfall.csv`, `dicionario_variaveis_v1.csv`
 
+### `notebooks/A/A1_coorte_protocolo.ipynb` headings
+
+- A1 | 07–08/10 — Fechar códigos, protocolo e coorte
+- 1. Fichas e dicionários (manual)
+- 2. Colunas essenciais e tabela de códigos
+- 3. Ponto de previsão e campos posteriores
+- 4. Coorte estrita — waterfall
+- 5. Inspeção das exclusões
+- 6. Alvo e categorias separadas
+- 7. Tabela de decisões
+- 8. Exportar a população analítica (v0.1, provisória)
+- 9. Fechamento
+- Checklist de saída (08/10)
+
+Referenced files: `a1_alvo_por_ano.csv`, `a1_amostra_exclusoes_*.csv`, `a1_tabela_codigos.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A2_qualidade_elegibilidade.ipynb` headings
+
+- A2 | 09–10/10 — Auditar qualidade, datas e elegibilidade
+- 1. Vazios, ignorados e campos inexistentes por ano
+- 2. Coerência de datas e idade
+- 3. Duplicidades
+- 4. Maturidade de EVOLUCAO por mês de internação
+- 5. Matriz de elegibilidade
+- 6. Tabela de decisões
+- 7. Exportar a população analítica (v1.0)
+- 8. Fechamento
+- Checklist de saída (10/10)
+
+Referenced files: `Ver a2_coerencia_datas.csv`, `Ver a2_duplicidades.csv`, `Ver a2_maturidade_evolucao_por_mes.csv`, `a2_campos_inexistentes_por_ano.csv`, `a2_coerencia_datas.csv`, `a2_duplicidades.csv`, `a2_matriz_elegibilidade.csv`, `a2_maturidade_evolucao_por_mes.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A3_desenho_experimental.ipynb` headings
+
+- A3 | 11–14/10 — Revisar desenho experimental e pilotos
+- 1. Auditoria do `supervised.yaml` contra as decisões da Pessoa A
+- 2. O desfecho não pode aparecer no clustering
+- 3. Divisão temporal e proteção do holdout
+- 4. Varredura de vazamento
+- 5. Métricas excessivamente altas e auditoria dos logs de B e C
+- 6. Análises guiadas (manuais — registre a interpretação)
+- 7. Decisões e atas dos Gates 2 e 3
+- 8. Fechamento
+
+Referenced files: `a3_split_temporal.csv`, `a3_varredura_vazamento.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`
+
+### `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` headings
+
+- A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
+- 1. Cenários
+- 2. Coorte, dataset e checagens por cenário
+- 3. Benchmark: split aleatório × temporal (treino → validação)
+- 4. Comparação entre os cenários
+- 5. Decisões
+- 6. Fechamento
+- Como o C pode usar a coluna `split`
+- Checklist
+
+Referenced files: `a1_waterfall_{nome}.csv`, `a3_benchmark_split_*.csv`, `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A4_decisao_candidatos.ipynb` headings
+
+- A4 | 15–17/10 — Avaliar candidatos e registrar decisão
+- 1. Tabela comparável de candidatos
+- 2. Revisão por candidato (manual)
+- 3. Decisões e ata de 17/10
+- 4. População analítica congelada
+- 5. Fechamento
+- Checklist de saída (17/10)
+
+Referenced files: `a4_tabela_decisao.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `outputs/tables/resultados_cv.csv`
+
 ### `notebooks/C/C1_smoke_test.ipynb` headings
 
-- C1 — Smoke Test e Reprodutibilidade
-- Objetivo
-- Pré-requisito
-- Verificações
+- C1 — Smoke Test
 
 ### `notebooks/C/C2_pipeline_supervisionado.ipynb` headings
 
 - C2 — Pipeline Supervisionado
-- Objetivo
-- Pré-requisito
-- 1. Bootstrap — imports
-- 2. Carregar o artefato supervisionado canônico
-- 3. Definição do alvo, coluna de partição e features
-- 4. Recuperar as partições a partir do artefato
-- 5. Separação X / y e checagem de leakage
-- 6. Construir o pipeline
-- 7. Persistir o pipeline e o resumo da partição
-- 8. Registrar execução
-- 9. Resultado esperado
+- Carregar o artefato supervisionado
+- Materializar partições
+- X / y e checagem de leakage
+- Construir o pipeline
+- Persistir artefatos
+- Registar execução
 
 Referenced files: `preprocessor.joblib`, `preprocessor_ajustado.joblib`, `split_info.json`
 
 ### `notebooks/C/C3_baseline_logistica.ipynb` headings
 
 - C3 — Baseline e Regressão Logística
-- Objetivo
-- Pré-requisito
-- 1. Bootstrap — imports
-- 2. Carregar o artefato supervisionado canônico
-- 3. Recuperar as partições via `split_partitions`
-- 4. Checagem de leakage
-- 5. Baseline — `DummyClassifier`
-- 6. Regressão Logística
-- 7. Comparação na validação
-- 8. Predições de validação
-- 9. Persistência dos artefatos
-- 10. Registro da execução
-- 11. Conclusão — baseline vs logística
+- Carregar artefacto e materializar partições
+- Baseline e Regressão Logística
+- Comparação e persistência
 
-Referenced files: `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{prefixo}_metricas.csv`, `{prefixo}_predicoes_validacao.parquet`
+Referenced files: `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_validacao.parquet`
 
 ### `notebooks/C/C4_boosting.ipynb` headings
 
 - C4 — Boosting
-- Objetivo
-- Pré-requisito
-- 1. Bootstrap — imports
-- 2. Carregar o artefato supervisionado canônico
-- 3. Recuperar as partições via `split_partitions`
-- 4. Checagem de leakage
-- 5. Logística de referência (retreinada)
-- 6. Boosting — configuração de referência
-- 7. Busca limitada de hiperparâmetros (somente se G6 aprovado)
-- 8. Comparação na validação — logística vs boosting
-- 9. Predições de validação
-- 10. Persistência dos artefatos
-- 10.1 Proposta de atualização do YAML
-- 11. Registro da execução
-- 12. Conclusão
+- Carregar artefacto e materializar partições
+- Modelos de referência
+- Busca limitada (somente se G6 aprovado)
+- Comparação, predições e persistência
+- Proposta de atualização do YAML
 
 Referenced files: `{prefixo}_busca_boosting.csv`, `{prefixo}_busca_logistica.csv`, `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_validacao.parquet`, `{prefixo}_proposta_yaml.yaml`
 
 ### `notebooks/C/C5_calibracao_limiar.ipynb` headings
 
 - C5 — Calibração e Escolha de Limiar
-- Objetivo
-- Sobre o split honesto da validação
-- Pré-requisito
-- 1. Bootstrap — imports
-- 2. Carregar o artefato supervisionado canônico
-- 3. Recuperar partições + split honesto da validação
-- 4. Carregar a shortlist de finalistas
-- 5. Treinar cada finalista e calibrar
-- 6. Escolher o melhor método de calibração por finalista
-- 7. Escolher o limiar operacional
-- 8. Diagnósticos de calibração
-- 9. Persistir artefatos
-- 10. Proposta de atualização do `supervised.yaml`
-- 11. Registro da execução
-- 12. Conclusão
+- Carregar artefacto e preparar validação
+- Calibrar finalistas e escolher limiar
+- Diagnósticos e persistência
 
-Referenced files: `{prefixo}_escolhas_calibracao.csv`, `{prefixo}_limiares_escolhidos.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_val_meas.parquet`, `{prefixo}_{nome}_curva_confiabilidade.csv`, `{prefixo}_{nome}_tabela_limiar.csv`
+Referenced files: `{prefixo}_escolhas.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_val_meas.parquet`, `{prefixo}_{nome}_curva.csv`, `{prefixo}_{nome}_limiar.csv`
 
 ### `notebooks/C/C6_validacao_final.ipynb` headings
 
-- C6 — Validação Final (abertura única do teste)
-- Objetivo
-- Pré-requisito
-- 1. Bootstrap
-- 2. Verificar gates `G7`, `G8` e `G9`
-- 3. Carregar o artefato supervisionado canônico
-- 4. Guarda contra reabertura do teste
-- 5. Ler a configuração congelada do `supervised.yaml`
-- 6. Validar contrato e separar treino/validação/teste
-- 6b. Reproduzir o split honesto do C5 (crítico para o limiar congelado)
-- 7. Reconstruir o pipeline a partir da configuração congelada
-- 8. Abrir o teste — predição única
-- 9. Métricas agregadas no teste
-- 10. Intervalos de confiança por bootstrap
-- 11. Análise de erros — falsos negativos primeiro
-- 12. Métricas por ano
-- 13. Métricas por grupo
-- 14. Calibração por ano
-- 15. Persistir resultados finais
-- 16. Registrar execução
-- 17. Marcar `G9_holdout` como `executado`
-- 18. Conclusão final
+- C6 — Validação Final
+- Verificar gates e carregar configuração congelada
+- Reproduzir split do C5 e calibrar
+- Abrir o teste — predição única
+- IC bootstrap, erros e avaliação estratificada
+- Persistir, registar e marcar G9 como executado
 
-Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*_manifesto.json`, `supervised.yaml`, `{prefixo}_analise_erros.csv`, `{prefixo}_calibracao_por_ano.csv`, `{prefixo}_curva_confiabilidade_{ano}.csv`, `{prefixo}_fn_amostra.csv`, `{prefixo}_ic_bootstrap.csv`, `{prefixo}_manifesto.json`, `{prefixo}_matriz_confusao.csv`, `{prefixo}_metricas.csv`, `{prefixo}_metricas_por_ano.csv`, `{prefixo}_por_grupo_{grupo}.csv`, `{prefixo}_predicoes_teste.parquet`
+Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*_manifesto.json`, `supervised.yaml`, `{prefixo}_analise_erros.csv`, `{prefixo}_calibracao_por_ano.csv`, `{prefixo}_curva_{ano}.csv`, `{prefixo}_fn_amostra.csv`, `{prefixo}_ic_bootstrap.csv`, `{prefixo}_manifesto.json`, `{prefixo}_matriz_confusao.csv`, `{prefixo}_metricas.csv`, `{prefixo}_metricas_por_ano.csv`, `{prefixo}_por_grupo_{grupo}.csv`, `{prefixo}_predicoes_teste.parquet`
 
 
 ## 15. Environment variables, file literals and TODOs
@@ -9337,16 +10841,43 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 ### File names referenced in code
 
 - `### requirements.txt` ← `tools/update_project_reference.py`
+- `*.joblib` ← `tools/clean_project.py`
+- `*.jpg` ← `tools/clean_project.py`
+- `*.pkl` ← `tools/clean_project.py`
+- `*.png` ← `tools/clean_project.py`
+- `.meta.json` ← `src/protocolo/verificacoes.py`
 - `.pre-commit-config.yaml` ← `tools/update_project_reference.py`
 - `03_pilotos_curvas_pr_roc_calibracao.png` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `03_pilotos_metricas_por_ano.png` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `C5_calibracao_limiar_*_manifesto.json` ← `notebooks/C/C6_validacao_final.ipynb`
 - `C6_validacao_final_*_manifesto.json` ← `notebooks/C/C6_validacao_final.ipynb`
-- `PROJECT_COMPLETE_REFERENCE.json` ← `tools/update_project_reference.py`
-- `PROJECT_COMPLETE_REFERENCE.md` ← `tools/update_project_reference.py`
+- `PROJECT_COMPLETE_REFERENCE.json` ← `tools/clean_project.py`, `tools/update_project_reference.py`
+- `PROJECT_COMPLETE_REFERENCE.md` ← `tools/clean_project.py`, `tools/update_project_reference.py`
+- `Ver a2_coerencia_datas.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `Ver a2_duplicidades.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `Ver a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
 - `_manifesto.json` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
+- `a1_alvo_por_ano.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
+- `a1_amostra_exclusoes_*.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
+- `a1_tabela_codigos.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
+- `a1_waterfall_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- `a2_campos_inexistentes_por_ano.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `a2_coerencia_datas.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- `a2_duplicidades.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `a2_matriz_elegibilidade.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- `a3_benchmark_split_*.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- `a3_split_aleatorio_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `a3_split_aleatorio_{nome}_por_ano.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `a3_split_aleatorio_{n}.csv` ← `src/protocolo/verificacoes.py`
+- `a3_split_aleatorio_{n}_por_ano.csv` ← `src/protocolo/verificacoes.py`
+- `a3_split_temporal.csv` ← `notebooks/A/A3_desenho_experimental.ipynb`
+- `a3_varredura_vazamento.csv` ← `notebooks/A/A3_desenho_experimental.ipynb`
+- `a4_tabela_decisao.csv` ← `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- `ata_*.md` ← `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- `configs/decisoes.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `src/protocolo/verificacoes.py`
 - `configs/paths.local.json` ← `tools/update_project_reference.py`
-- `configs/supervised.yaml` ← `tools/update_project_reference.py`
+- `configs/supervised.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tools/update_project_reference.py`
 - `coorte.parquet` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
 - `coorte_final.parquet` ← `src/data/cohort_source.py`, `tests/test_cohort_source.py`
 - `coorte_provisoria.parquet` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
@@ -9355,7 +10886,16 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `coorte_provisoria_b_auditoria_temporal.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
 - `coorte_provisoria_b_resumo.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
 - `coorte_provisoria_b_waterfall.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
-- `dataset_supervisionado.parquet` ← `src/data/supervised_artifact.py`, `src/utils/reproducibility.py`
+- `d.csv` ← `tests/test_regras_pessoa_a.py`
+- `data/**/*.csv` ← `src/protocolo/verificacoes.py`
+- `data/**/*.parquet` ← `src/protocolo/verificacoes.py`
+- `data/analytical/dataset_supervisionado.parquet` ← `src/protocolo/verificacoes.py`
+- `data/raw/**/*.csv` ← `src/protocolo/verificacoes.py`
+- `data/raw/**/*.parquet` ← `src/protocolo/verificacoes.py`
+- `dataset.csv` ← `tests/test_regras_pessoa_a.py`
+- `dataset_supervisionado.csv` ← `tests/test_regras_pessoa_a.py`
+- `dataset_supervisionado.parquet` ← `src/data/supervised_artifact.py`, `tests/test_regras_pessoa_a.py`
+- `decisoes.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
 - `dicionario_variaveis_revisao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
 - `dicionario_variaveis_v1.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
 - `eda_01_auditoria_datas_pos_corte.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
@@ -9443,6 +10983,7 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `https://example.org/dados/srag_teste.parquet` ← `tests/test_config.py`
 - `manifesto_supervisionado.json` ← `src/data/supervised_artifact.py`
 - `metadata.json` ← `src/utils/reproducibility.py`, `tests/test_reproducibility.py`
+- `outputs/tables/resultados_cv.csv` ← `notebooks/A/A4_decisao_candidatos.ipynb`
 - `part_*.md` ← `tools/update_project_reference.py`
 - `part_{index:02d}_of_{len(parts):02d}.md` ← `tools/update_project_reference.py`
 - `paths.local.json` ← `tools/update_project_reference.py`
@@ -9450,13 +10991,21 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `preprocessor.joblib` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
 - `preprocessor_ajustado.joblib` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
 - `requirements.txt` ← `tools/update_project_reference.py`
+- `split_comparacao_cenarios.png` ← `src/protocolo/verificacoes.py`, `tests/test_regras_pessoa_a.py`
 - `split_info.json` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- `split_sem_2020_2021.png` ← `tests/test_regras_pessoa_a.py`
+- `split_todos_2019_2025.png` ← `tests/test_regras_pessoa_a.py`
+- `split_{nome}.png` ← `src/protocolo/verificacoes.py`
+- `srag.csv` ← `tests/test_regras_pessoa_a.py`
 - `srag.parquet` ← `src/utils/config.py`
 - `summary.txt` ← `src/utils/reproducibility.py`, `tests/test_reproducibility.py`
-- `supervised.yaml` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tools/update_project_reference.py`
+- `supervised.yaml` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_regras_pessoa_a.py`, `tools/update_project_reference.py`
 - `supervisionado_registros_conflitantes_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `supervisionado_resumo_conflitos_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `supervisionado_waterfall_conflitos_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
+- `tabela_decisoes.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv` ← `src/protocolo/verificacoes.py`
+- `{name}.csv` ← `src/protocolo/verificacoes.py`
 - `{prefixo_comparacao}_amostras.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `{prefixo_comparacao}_manifesto.json` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `{prefixo_comparacao}_metricas.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
@@ -9470,14 +11019,13 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `{prefixo}_calibracao_por_ano.csv` ← `notebooks/C/C6_validacao_final.ipynb`
 - `{prefixo}_comparacao.csv` ← `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`
 - `{prefixo}_contrato.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo}_curva_confiabilidade_{ano}.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_escolhas_calibracao.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
+- `{prefixo}_curva_{ano}.csv` ← `notebooks/C/C6_validacao_final.ipynb`
+- `{prefixo}_escolhas.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
 - `{prefixo}_fn_amostra.csv` ← `notebooks/C/C6_validacao_final.ipynb`
 - `{prefixo}_ic_bootstrap.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_limiares_escolhidos.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
 - `{prefixo}_manifesto.json` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
 - `{prefixo}_matriz_confusao.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_metricas.csv` ← `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
+- `{prefixo}_metricas.csv` ← `notebooks/C/C6_validacao_final.ipynb`
 - `{prefixo}_metricas_por_ano.csv` ← `notebooks/C/C6_validacao_final.ipynb`
 - `{prefixo}_metricas_validacao.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
 - `{prefixo}_particoes.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
@@ -9489,42 +11037,40 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `{prefixo}_shortlist.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
 - `{prefixo}_temporal.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
 - `{prefixo}_transicao.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `{prefixo}_{nome}_curva_confiabilidade.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
-- `{prefixo}_{nome}_tabela_limiar.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
+- `{prefixo}_{nome}_curva.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
+- `{prefixo}_{nome}_limiar.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
+- `{self.nome}.md` ← `src/protocolo/verificacoes.py`
 
 ### TODO / FIXME / PENDENTE markers
 
-- `configs/supervised.yaml:454: pendente > aprovado  -> (apenas G9_holdout) executado`
-- `configs/supervised.yaml:466: pendente `
-- `configs/supervised.yaml:497: pendente `
-- `configs/supervised.yaml:504: pendente `
-- `configs/supervised.yaml:511: pendente `
-- `configs/supervised.yaml:518: pendente > aprovado -> executado.`
-- `configs/supervised.yaml:521: pendente `
+- `configs/supervised.yaml:334: pendente `
+- `configs/supervised.yaml:365: pendente `
+- `configs/supervised.yaml:372: pendente `
+- `configs/supervised.yaml:379: pendente `
+- `configs/supervised.yaml:386: pendente > aprovado -> executado.`
+- `configs/supervised.yaml:389: pendente `
 - `docs/decisoes.md:697: pendente .`
 - `README.md:305: Pendente Confirmar coorte`
 - `README.md:319: Pendente Selecionar finalista e`
 - `README.md:323: Pendente Escolher método com`
 - `README.md:326: Pendente Definir limiar usando`
 - `README.md:329: Pendente Liberar e executar o`
-- `src/data/split.py:138: todo nulo são`
-- `src/data/split.py:172: todo nulo em {target_column!r}. "`
-- `src/utils/config.py:199: pendente . "`
-- `tests/test_errors.py:134: xxx ")  # type: ignore[arg-type]`
-- `tests/test_leakage.py:203: pendente , deve levantar RuntimeError.`
-- `tests/test_leakage.py:207: pendente ")`
+- `src/data/split.py:110: todo `
+- `src/data/split.py:137: todo nulo em {target_column!r}. "`
+- `src/utils/config.py:192: pendente . "`
+- `tests/test_errors.py:158: xxx ")  # type: ignore[arg-type]`
+- `tests/test_temporal.py:153: pendente , ``concluir_selecao()`` levanta ``RuntimeError``."""`
+- `tests/test_temporal.py:154: pendente "})`
 - `tools/update_project_reference.py:52: TODO /FIXME markers;`
 - `tools/update_project_reference.py:200: TODO |FIXME|XXX|HACK|PENDENTE)\b[:\s-]*(.{0,140})")`
 - `tools/update_project_reference.py:2236: TODO / FIXME / PENDENTE markers", "", *([f"- `{t}`" for t in todos] or ["- None."])]`
 - `notebooks/02_eda/03_supervisionado_pilotos.ipynb:364: pendente até a coorte definitiva.`
 - `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb:837: pendente .`
-- `notebooks/C/C4_boosting.ipynb:242: pendente , as células registram isso e seguem sem buscar — a comparação final usará as configurações de referência.`
-- `notebooks/C/C4_boosting.ipynb:244: todo o treino.`
-- `notebooks/C/C4_boosting.ipynb:489: pendente — buscas limitadas não executadas.")`
-- `notebooks/C/C4_boosting.ipynb:793: pendente as buscas limitadas não foram executadas. "`
-- `notebooks/C/C5_calibracao_limiar.ipynb:109: pendente ")`
-- `notebooks/C/C5_calibracao_limiar.ipynb:110: pendente ")`
-- `notebooks/C/C6_validacao_final.ipynb:563: todo o projeto em que a partição de teste é usada. Nada aqui é usado para reajustar o modelo, a calibração ou o limiar.`
+- `notebooks/C/C4_boosting.ipynb:88: pendente .`
+- `notebooks/C/C4_boosting.ipynb:238: pendente — busca limitada não executada. Comparação usará referências.")`
+- `notebooks/C/C4_boosting.ipynb:365: pendente ou busca vazia).")`
+- `notebooks/C/C5_calibracao_limiar.ipynb:59: pendente ")`
+- `notebooks/C/C5_calibracao_limiar.ipynb:60: pendente ")`
 
 ## 16. Git history and uncommitted changes
 
@@ -9532,22 +11078,33 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 
 ```text
 ## main...origin/main
- M tools/update_project_reference.py
 ```
 
 ### Branches
 
 ```text
-* main                              77e5332 [origin/main] Novo teste dos EDAs
+* main                              b1bad98 [origin/main] Revisao dos EDA 03 e 04
   mateus/eda-inicial                827ed00 [origin/mateus/eda-inicial: ahead 2] Merge branch 'mateus/eda-inicial' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador into mateus/eda-inicial
   remotes/origin/HEAD               -> origin/main
-  remotes/origin/main               77e5332 Novo teste dos EDAs
+  remotes/origin/main               b1bad98 Revisao dos EDA 03 e 04
   remotes/origin/mateus/eda-inicial 5469e38 Atualiza Base de Dados para novo Parquet v2 em Releases
 ```
 
 ### Last 40 commits
 
 ```text
+b1bad98 2026-10-16 00:51:25 -0300 mateus-so
+    Revisao dos EDA 03 e 04
+4953a45 2026-10-15 21:58:22 -0300 Ivan-S-Oliveira
+    aplicação de clean code
+ad22293 2026-10-15 20:41:56 -0300 Ivan-S-Oliveira
+    atualizando a limpeza tool
+ebe34b8 2026-10-15 20:34:49 -0300 Ivan-S-Oliveira
+    correções de arquivos e criação de uma rquivo de limpeza
+e80c218 2026-10-15 15:42:55 -0300 eduhudsonste-lgtm
+    Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
+4ca9bbc 2026-10-15 10:01:35 -0300 eduhudsonste-lgtm
+    Atualização
 77e5332 2026-10-15 08:49:51 -0300 mateus-so
     Novo teste dos EDAs
 ffebb5a 2026-10-14 20:02:22 -0300 Ivan-S-Oliveira
@@ -9556,6 +11113,8 @@ c8556f3 2026-10-14 19:48:45 -0300 Ivan-S-Oliveira
     correção de erros em tests e data
 54eee57 2026-10-14 19:26:11 -0300 Ivan-S-Oliveira
     atualização do README
+2de2c58 2026-10-14 19:21:52 -0300 eduhudsonste-lgtm
+    teste
 c4a1470 2026-10-14 18:35:28 -0300 eduhudsonste-lgtm
     TETE
 eb76126 2026-10-14 18:35:19 -0300 eduhudsonste-lgtm
@@ -9614,3563 +11173,18 @@ b12e787 2026-10-11 22:35:07 -0300 mateus-so
     EDA 01 - Finalizado, Ajustes em URLs e manifest
 6bea8ab 2026-10-09 22:17:47 -0300 mateus-so
     EDA 01 - Recorte inicial aprimorado
-a4c2ae2 2026-10-09 22:01:07 -0300 mateus-so
-    EDA 01 - Recorte inicial, duplicidades e volume de internação por ano
-26b4456 2026-10-09 21:59:15 -0300 Ivan-S-Oliveira
-    correção de testes
-d2028b7 2026-10-09 21:08:33 -0300 mateus-so
-    Update EDA 01 - limpeza
-208f868 2026-10-09 20:44:53 -0300 Ivan-S-Oliveira
-    adicionando src/analitico pra data
-0f565b5 2026-10-09 20:36:25 -0300 Ivan-S-Oliveira
-    implementar src/features
-63c6a22 2026-10-09 19:58:28 -0300 mateus-so
-    Resolve conflitos mantendo a versao local
-477fdfc 2026-10-09 19:43:50 -0300 mateus-so
-    EDA - Primeira Passagem
 ```
 
 ### Diff stat (working tree vs HEAD)
 
 ```text
- tools/update_project_reference.py | 3020 ++++++++++++++++++++++---------------
- 1 file changed, 1817 insertions(+), 1203 deletions(-)
+no changes
 ```
 
 ### Full diff (working tree vs HEAD)
 
 ```diff
-diff --git a/tools/update_project_reference.py b/tools/update_project_reference.py
-index 4772824..f9bd321 100644
---- a/tools/update_project_reference.py
-+++ b/tools/update_project_reference.py
-@@ -1,118 +1,180 @@
- #!/usr/bin/env python3
--r"""Generate an AI-oriented, static snapshot of a Python/ML Git repository.
-+r"""Generate a complete, AI-oriented diagnostic snapshot of the SRAG repository.
- 
--Run from the repository root:
-+Run from anywhere inside the repository, preferably with the project venv
-+(so installed package versions are the real ones):
- 
-     .\.venv\Scripts\python.exe tools\update_project_reference.py
--
--Creates:
--
--    docs/PROJECT_COMPLETE_REFERENCE.md
--    docs/PROJECT_COMPLETE_REFERENCE.json
--
--Design goals
--------------
--1. Show what exists now, not only what older plans describe.
--2. Help a person or an AI reuse existing modules before adding new code.
--3. Keep configuration, source, tests, notebooks and consumers connected.
--4. Surface inconsistencies without importing or executing project code.
--5. Include useful summaries of large notebooks instead of silently omitting them.
--6. Include relevant untracked files in a clearly labelled working-tree section.
--7. Never copy notebook outputs, data files, model files, secrets or local paths.
--
--The analysis is static. It uses Git, pathlib, json and Python AST. PyYAML is
--used when available; if it is unavailable, YAML is still included as source but
--semantic YAML checks are skipped and reported transparently.
-+    .\.venv\Scripts\python.exe tools\update_project_reference.py --split-mb 4
-+    .\.venv\Scripts\python.exe tools\update_project_reference.py --run-tests --pytest-args "-m 'not slow'"
-+
-+Creates (default):
-+
-+    docs/PROJECT_COMPLETE_REFERENCE.md     full human/AI-readable snapshot
-+    docs/PROJECT_COMPLETE_REFERENCE.json   machine-readable summary
-+    docs/project_reference_parts/          the same Markdown split into parts
-+                                           (default 1 MB each; --no-split to disable)
-+
-+What the snapshot contains
-+--------------------------
-+1.  Git state: branch, commit, remote, status, recent log, diff stat and the
-+    full diff of uncommitted changes (capped).
-+2.  Full path inventory of the working folder, including ignored and local
-+    folders (data/, outputs/, models/, reports/), with size, modification time
-+    and Git state. File contents of data are never copied.
-+3.  Full source of every relevant text file: .py, .ipynb, .md, .yaml, .yml,
-+    .toml, .json, .csv (capped), .txt, .ini, .cfg, .ps1, .sh, .sql, etc.
-+4.  Notebooks: every cell source, execution counts and, by default, the TEXT
-+    outputs (streams, text/plain results, errors and tracebacks). Images and
-+    HTML are replaced by placeholders. Execution order problems are reported.
-+5.  Small text artifacts produced by the project (manifests, waterfalls,
-+    summary tables under outputs/, reports/, data/ manifests), capped by size
-+    and number of CSV rows. Prediction folders are never included.
-+6.  Text extracted from .docx and .pptx documents (plans, reports).
-+7.  Python environment: interpreter, platform and every installed package
-+    version (scikit-learn, pandas, numpy, ...).
-+8.  Parsed configuration: full YAML summary, gates table, duplicate YAML keys,
-+    pyproject.toml validity and dependency lists.
-+9.  Static API catalog: every module, function, class, method, signature,
-+    docstring, consumers and tests.
-+10. Static diagnostics ("attention report"), including:
-+    - internal imports of modules or names that do not exist;
-+    - calls to project functions with keyword arguments they do not accept
-+      or with too many positional arguments;
-+    - gate names used in code/docs that are absent from the YAML;
-+    - YAML keys never referenced by code (possible dead configuration);
-+    - feature contract problems (forbidden features, derived features);
-+    - third-party imports missing from requirements.txt/pyproject.toml and
-+      unpinned dependencies;
-+    - duplicated symbols and notebook-local functions duplicating src/;
-+    - notebooks executed out of order, never executed, or with saved errors;
-+    - documents pointing to paths that do not exist;
-+    - mojibake/encoding problems; TODO/FIXME markers;
-+    - untracked relevant files.
-+11. Optional: pytest results (--run-tests). This is the only option that
-+    imports and executes project code.
-+
-+Safety
-+------
-+Secrets and credentials are redacted. Absolute local paths are replaced by
-+<REPO> and <HOME>. .env files and binary data (Parquet, models, images) are
-+never copied. Notebook outputs can be disabled with --no-notebook-outputs.
- """
--
- from __future__ import annotations
- 
- import argparse
- import ast
- import hashlib
-+import importlib.metadata as importlib_metadata
- import json
- import os
-+import platform
- import re
-+import shutil
- import subprocess
- import sys
- import tempfile
-+import zipfile
- from collections import Counter, defaultdict
- from dataclasses import asdict, dataclass, field
- from datetime import datetime, timezone
- from pathlib import Path
--from typing import Any, Iterable, Iterator
-+from typing import Any
- 
- try:
-     import yaml  # type: ignore
- except Exception:  # pragma: no cover
-     yaml = None
- 
-+try:
-+    import tomllib  # Python 3.11+
-+except Exception:  # pragma: no cover
-+    tomllib = None
-+
-+SCHEMA_VERSION = 4
-+
-+OUTPUT_DIR = Path("docs")
-+OUTPUT_MD_NAME = "PROJECT_COMPLETE_REFERENCE.md"
-+OUTPUT_JSON_NAME = "PROJECT_COMPLETE_REFERENCE.json"
-+PARTS_DIR_NAME = "project_reference_parts"
- 
--OUTPUT_MD = Path("docs/PROJECT_COMPLETE_REFERENCE.md")
--OUTPUT_JSON = Path("docs/PROJECT_COMPLETE_REFERENCE.json")
- DEFAULT_MAX_INLINE_BYTES = 4_000_000
-+DEFAULT_MAX_OUTPUT_CHARS = 6_000
-+DEFAULT_MAX_ARTIFACT_BYTES = 300_000
-+DEFAULT_MAX_CSV_ROWS = 60
-+DEFAULT_MAX_DIFF_CHARS = 400_000
-+DEFAULT_GIT_LOG = 40
-+DEFAULT_SPLIT_MB = 1.0
-+MAX_INVENTORY_ENTRIES = 30_000
- MAX_DOCSTRING_CHARS = 4_000
--MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 160
-+MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 200
- 
-+# Never walked (tooling, caches, virtual environments).
- EXCLUDED_DIRS_ANYWHERE = {
--    ".git",
--    ".venv",
--    "venv",
--    "env",
--    "__pycache__",
--    ".pytest_cache",
--    ".mypy_cache",
--    ".ruff_cache",
--    ".tox",
--    ".nox",
--    ".ipynb_checkpoints",
--    "node_modules",
-+    ".git", ".venv", "venv", "env", ".env", "__pycache__", ".pytest_cache",
-+    ".mypy_cache", ".ruff_cache", ".tox", ".nox", ".ipynb_checkpoints",
-+    "node_modules", ".idea", ".vscode", "site-packages", ".eggs",
-+    "build", "dist",
- }
--EXCLUDED_DIRS_AT_ROOT = {
--    "data",
--    "outputs",
--    "models",
--    "logs",
--    "artifacts",
--    "mlruns",
-+# Walked for the path inventory and small text artifacts, never as source.
-+ARTIFACT_DIRS_AT_ROOT = {
-+    "data", "outputs", "models", "logs", "artifacts", "mlruns", "reports",
- }
-+# Never copied, even when small and textual.
-+ARTIFACT_EXCLUDED_DIR_NAMES = {"predictions", "predicoes", "raw", "cache", "tmp"}
- EXCLUDED_FILES = {
--    ".env",
--    "paths.local.json",
--    "pip_inspect-venv.json",
--    OUTPUT_MD.name,
--    OUTPUT_JSON.name,
-+    ".env", "pip_inspect-venv.json", OUTPUT_MD_NAME, OUTPUT_JSON_NAME,
- }
-+# Files whose existence and keys are reported, but whose values are redacted.
-+KEYS_ONLY_FILES = {"paths.local.json"}
-+
- TEXT_SUFFIXES = {
--    ".py", ".pyi", ".md", ".rst", ".txt", ".yaml", ".yml", ".toml",
--    ".ini", ".cfg", ".json", ".json5", ".sql", ".ps1", ".sh", ".bat",
--    ".csv", ".tsv",
-+    ".py", ".pyi", ".md", ".rst", ".txt", ".yaml", ".yml", ".toml", ".ini",
-+    ".cfg", ".json", ".json5", ".sql", ".ps1", ".psm1", ".sh", ".bat",
-+    ".cmd", ".csv", ".tsv", ".html", ".css", ".js", ".r", ".R",
- }
-+ARTIFACT_TEXT_SUFFIXES = {".json", ".yaml", ".yml", ".md", ".txt", ".csv", ".tsv", ".log"}
-+OFFICE_SUFFIXES = {".docx", ".pptx"}
- SPECIAL_NAMES = {
--    "README", "README.md", "LICENSE", "Makefile", "Dockerfile",
--    "requirements.txt", "pyproject.toml", "pytest.ini", ".env.example",
--    ".gitignore", ".gitattributes", "CONTRIBUTING.md",
-+    "README", "LICENSE", "Makefile", "Dockerfile", "requirements.txt",
-+    "pyproject.toml", "pytest.ini", "setup.cfg", "tox.ini", ".env.example",
-+    ".gitignore", ".gitattributes", ".pre-commit-config.yaml", "environment.yml",
- }
- LANG = {
-     ".py": "python", ".pyi": "python", ".md": "markdown", ".rst": "rst",
-     ".yaml": "yaml", ".yml": "yaml", ".toml": "toml", ".json": "json",
-     ".json5": "json5", ".ini": "ini", ".cfg": "ini", ".sql": "sql",
--    ".ps1": "powershell", ".sh": "bash", ".bat": "bat", ".csv": "csv",
--    ".tsv": "tsv",
-+    ".ps1": "powershell", ".psm1": "powershell", ".sh": "bash", ".bat": "bat",
-+    ".cmd": "bat", ".csv": "csv", ".tsv": "tsv", ".html": "html", ".css": "css",
-+    ".js": "javascript", ".log": "text", ".r": "r",
- }
- LIKELY_BINARY_SUFFIXES = {
--    ".parquet", ".feather", ".arrow", ".pkl", ".pickle", ".joblib",
--    ".onnx", ".pt", ".pth", ".h5", ".hdf5", ".npy", ".npz", ".pdf",
--    ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".png", ".jpg",
--    ".jpeg", ".gif", ".webp", ".zip", ".7z", ".gz", ".tar",
-+    ".parquet", ".feather", ".arrow", ".pkl", ".pickle", ".joblib", ".onnx",
-+    ".pt", ".pth", ".h5", ".hdf5", ".npy", ".npz", ".pdf", ".doc", ".ppt",
-+    ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".zip",
-+    ".7z", ".gz", ".tar", ".bz2", ".xz", ".dbf", ".db", ".sqlite", ".exe", ".dll",
- }
- IMPORTANT_UNTRACKED_PREFIXES = (
-     "src/", "tests/", "configs/", "docs/", "notebooks/", "tools/", "scripts/",
- )
- 
-+# Import name -> distribution name, for the dependency check.
-+IMPORT_TO_DIST = {
-+    "sklearn": "scikit-learn", "yaml": "pyyaml", "dotenv": "python-dotenv",
-+    "PIL": "pillow", "cv2": "opencv-python", "bs4": "beautifulsoup4",
-+    "docx": "python-docx", "pptx": "python-pptx", "dateutil": "python-dateutil",
-+    "IPython": "ipython", "jwt": "pyjwt", "skimage": "scikit-image",
-+    "google": "google-api-python-client", "snowflake": "snowflake-connector-python",
-+}
-+KEY_PACKAGES = (
-+    "scikit-learn", "pandas", "numpy", "scipy", "pyarrow", "pyyaml", "joblib",
-+    "matplotlib", "seaborn", "python-dotenv", "requests", "pytest",
-+    "ipykernel", "jupyter", "nbformat", "statsmodels", "shap",
-+)
-+
- ENV_RE = re.compile(
--    r"(?:os\.getenv|os\.environ\.get|get_env|get_secret)"
--    r"\(\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]"
-+    r"(?:os\.getenv|os\.environ\.get|os\.environ\[|get_env|get_secret|getenv)"
-+    r"\(?\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]"
- )
- SECRET_RE = re.compile(
-     r"(?im)^(\s*[A-Za-z_][A-Za-z0-9_.-]*?"
-@@ -124,29 +186,33 @@ PRIVATE_KEY_RE = re.compile(
-     re.DOTALL,
- )
- URL_CREDENTIAL_RE = [REDACTED]
--WINDOWS_ABS_RE = re.compile(r"(?i)\b[A-Z]:\\(?:[^\n\r\t\"']+)")
--HOME_PATH_RE = re.compile(r"(?<![A-Za-z0-9_])/(?:home|Users)/[^\s\"']+")
-+GITHUB_TOKEN_RE = re.compile(r"\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b")
-+WINDOWS_USER_RE = re.compile(r"(?i)\b[A-Z]:[\\/]+Users[\\/]+[^\\/\s\"'<>|]+")
-+POSIX_HOME_RE = re.compile(r"(?<![A-Za-z0-9_])/(?:home|Users)/[^/\s\"'<>|]+")
-+ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
- BACKTICK_RUN_RE = re.compile(r"`+")
- HEADING_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
- FILE_LITERAL_RE = re.compile(
--    r"['\"]([^'\"]+\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md))['\"]",
-+    r"['\"]([^'\"\n]+\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md|html|txt))['\"]",
-     re.IGNORECASE,
- )
--
-+GATE_RE = re.compile(r"\bG\d+_[A-Za-z0-9_]+\b")
-+TODO_RE = re.compile(r"(?i)\b(TODO|FIXME|XXX|HACK|PENDENTE)\b[:\s-]*(.{0,140})")
-+MOJIBAKE_RE = re.compile(r"(?:├|┤|Ã[\u0080-\u00BF¡-¿]|Â[\u00A0-\u00BF ]|â€|\uFFFD)")
- 
- CONTEXT = """# Project Complete Reference
- 
- > **Generated file. Do not edit manually.**
--> Generated by `tools/update_project_reference.py`.
--> Treat this document as a static snapshot, not as executable proof.
-+> Generated by `tools/update_project_reference.py` (schema v{schema}).
-+> Static snapshot of the repository and of the local working folder.
- 
- ## 1. Purpose
- 
--This reference is designed for a person or an AI continuing the SRAG project
--without prior conversation context. It connects current Git state, configuration,
--Python APIs, imports, consumers, tests, notebooks, decisions and static contract
--checks. Its main goal is to encourage reuse and coherent extension instead of
--creating disconnected helper functions and competing pipelines.
-+This reference lets a person or an AI diagnose the SRAG project without prior
-+conversation context and without access to the machine. It contains the full
-+source of code, notebooks (with text outputs), configuration and documentation,
-+plus the Git state, the local path inventory, installed package versions,
-+parsed configuration and static consistency checks.
- 
- ## 2. Methodological guardrails
- 
-@@ -155,46 +221,40 @@ creating disconnected helper functions and competing pipelines.
- - Do not make causal claims from predictive associations.
- - Never use the final test partition for model, hyperparameter, calibration or
-   threshold selection.
--- The active partition, target, feature, seed, calibration, threshold and gate
--  contracts come from `configs/supervised.yaml` and executable tests.
--- Temporal analyses may be robustness analyses and must not silently replace the
--  configured primary partition.
--- Original data, Parquets, trained models, outputs, secrets and local paths do not
--  belong in Git or in this reference.
--
--## 3. Required workflow for any AI
--
--1. Read the Executive continuation map and Attention report.
--2. Search the symbol index before proposing a new function or class.
--3. Open the implementation, its tests and its known consumers.
--4. Reuse or extend the canonical module when the responsibility already exists.
--5. Keep reusable logic in `src/`; notebooks should orchestrate, explain and plot.
--6. Keep decisions and parameters in `configs/`; keep artifacts in `outputs/` or
--   `reports/` according to project conventions.
--7. Treat untracked code as working-tree evidence, not as committed architecture.
--8. A new public function needs a documented gap, canonical module, typing,
--   docstring, tests and updated documentation.
--9. If configuration, code, tests and older plans disagree, report the conflict.
--   Do not choose silently.
--10. After relevant changes, run tests, review the diff and regenerate this file.
-+- Partition, target, features, seed, calibration, threshold and gates come from
-+  `configs/supervised.yaml` and executable tests.
-+- Original data, Parquets, trained models, secrets and local paths are never
-+  copied into this reference (only their paths, sizes and dates).
-+
-+## 3. How to use this reference (any AI)
-+
-+1. Read Sections 6 (executive map) and 7 (attention report).
-+2. Check Section 8 (configuration and gates) and Section 9 (environment).
-+3. Search Section 12 (API catalog) before proposing any new function.
-+4. Check Sections 13 to 15 for imports, tests and notebook orchestration.
-+5. Read the exact implementation in Section 17 (full source).
-+6. Use Section 18 (artifacts) and notebook outputs as evidence of what was
-+   actually executed; use Section 10 (inventory) to know what exists locally.
-+7. If code, configuration, tests, notebooks and plans disagree, report the
-+   conflict explicitly; never choose silently.
- 
- ## 4. Evidence precedence
- 
--1. Current executable code and current tests.
-+1. Current executable code and tests.
- 2. Active configuration and explicit decision records.
--3. Current notebooks as orchestration evidence.
--4. Generated snapshot sections in this document.
--5. Older plans and roadmaps as historical intent only.
-+3. Notebook sources and saved outputs (outputs may be stale: check execution
-+   counts and artifact dates).
-+4. Generated artifacts (manifests, tables).
-+5. Older plans and roadmaps (historical intent only).
- 
- ## 5. Status vocabulary
- 
- - **Implemented:** executable code exists in the current snapshot.
- - **Configured:** an active value, rule or gate exists in configuration.
--- **Tested:** at least one static test reference was found for the symbol/module.
--- **Consumed:** at least one static import or call reference was found.
-+- **Tested / Consumed:** a static reference was found in tests / other code.
- - **Working tree:** relevant but not tracked in the current commit.
--- **Planned:** described in text but not confirmed in executable code.
--- **Attention:** mismatch, duplication risk, stale reference or unresolved contract.
-+- **Local only:** exists in the folder but is ignored by Git.
-+- **Attention:** mismatch, duplication risk, stale reference or broken contract.
- """
- 
- 
-@@ -206,6 +266,16 @@ class GitEntry:
-     exists: bool = True
- 
- 
-+@dataclass
-+class CallSite:
-+    name: str
-+    location: str
-+    keywords: list[str]
-+    n_positional: int
-+    has_star_args: bool
-+    has_star_kwargs: bool
-+
-+
- @dataclass
- class Symbol:
-     module: str
-@@ -219,10 +289,14 @@ class Symbol:
-     docstring: str
-     decorators: list[str] = field(default_factory=list)
-     calls: list[str] = field(default_factory=list)
--    imports: list[str] = field(default_factory=list)
-     env_vars: list[str] = field(default_factory=list)
-     file_literals: list[str] = field(default_factory=list)
-     is_private: bool = False
-+    params: list[str] = field(default_factory=list)
-+    n_positional_params: int = 0
-+    has_varargs: bool = False
-+    has_varkw: bool = False
-+    defaults: dict[str, str] = field(default_factory=dict)
- 
- 
- @dataclass
-@@ -234,11 +308,16 @@ class PythonFileAnalysis:
-     imports: list[str]
-     internal_imports: list[str]
-     external_imports: list[str]
-+    import_from: list[dict[str, Any]]
-     calls: list[str]
-+    call_sites: list[CallSite]
-     symbols: list[Symbol]
-+    top_level_names: list[str]
-     constants: dict[str, str]
-     env_vars: list[str]
-     file_literals: list[str]
-+    has_star_import: bool = False
-+    lines: int = 0
- 
- 
- @dataclass
-@@ -248,17 +327,24 @@ class NotebookAnalysis:
-     code_cells: int
-     markdown_cells: int
-     kernel: dict[str, Any]
-+    language_version: str
-     headings: list[str]
-     imports: list[str]
-     internal_imports: list[str]
-+    import_from: list[dict[str, Any]]
-     functions: list[Symbol]
-     classes: list[Symbol]
-     assignments: list[str]
-     file_literals: list[str]
-     env_vars: list[str]
-     parse_errors: list[str]
-+    call_sites: list[CallSite]
-     code_lines: int
--    outputs_omitted: bool = True
-+    executed_cells: int
-+    execution_counts: list[int | None]
-+    out_of_order: bool
-+    error_outputs: list[str]
-+    outputs_included: bool
- 
- 
- @dataclass
-@@ -270,11 +356,16 @@ class Attention:
-     recommendation: str = ""
- 
- 
-+# ---------------------------------------------------------------------------
-+# Generic helpers
-+# ---------------------------------------------------------------------------
-+
- def run_command(
-     args: list[str],
-     *,
-     cwd: Path,
-     check: bool = True,
-+    timeout: int | None = None,
- ) -> subprocess.CompletedProcess[str]:
-     result = subprocess.run(
-         args,
-@@ -283,141 +374,86 @@ def run_command(
-         text=True,
-         encoding="utf-8",
-         errors="replace",
-+        timeout=timeout,
-     )
-     if check and result.returncode:
-         raise RuntimeError(
--            result.stderr.strip()
--            or result.stdout.strip()
-+            result.stderr.strip() or result.stdout.strip()
-             or f"Command failed: {' '.join(args)}"
-         )
-     return result
- 
- 
- def git(root: Path, *args: str, check: bool = True) -> str:
--    return run_command(["git", *args], cwd=root, check=check).stdout
-+    return run_command(["git", "-c", "core.quotepath=false", *args], cwd=root, check=check).stdout
- 
- 
- def root_dir() -> Path:
-     result = subprocess.run(
-         ["git", "rev-parse", "--show-toplevel"],
--        capture_output=True,
--        text=True,
--        encoding="utf-8",
--        errors="replace",
-+        capture_output=True, text=True, encoding="utf-8", errors="replace",
-     )
-     if result.returncode:
-         raise RuntimeError("Run inside the Git repository.")
-     return Path(result.stdout.strip()).resolve()
- 
- 
--def normalize_path(path: Path) -> str:
--    return path.as_posix()
--
--
- def module_name(path: Path) -> str:
--    without_suffix = path.with_suffix("")
--    parts = list(without_suffix.parts)
-+    parts = list(path.with_suffix("").parts)
-     if parts and parts[-1] == "__init__":
-         parts = parts[:-1]
-     return ".".join(parts)
- 
- 
--def parse_porcelain_status(root: Path) -> dict[str, str]:
--    raw = git(root, "status", "--porcelain=v1", "-z")
--    items = raw.split("\0")
--    status: dict[str, str] = {}
--    i = 0
--    while i < len(items):
--        item = items[i]
--        if not item:
--            i += 1
--            continue
--        code = item[:2]
--        path_text = item[3:]
--        if code[0] in {"R", "C"} and i + 1 < len(items):
--            new_path = items[i + 1]
--            status[new_path] = code
--            i += 2
--        else:
--            status[path_text] = code
--            i += 1
--    return status
--
--
--def collect_git_entries(root: Path) -> list[GitEntry]:
--    status_map = parse_porcelain_status(root)
--    tracked_paths = {
--        line.strip()
--        for line in git(root, "ls-files").splitlines()
--        if line.strip()
--    }
--    untracked_paths = {
--        line.strip()
--        for line in git(
--            root,
--            "ls-files",
--            "--others",
--            "--exclude-standard",
--        ).splitlines()
--        if line.strip()
--    }
--    entries: list[GitEntry] = []
--    for value in sorted(tracked_paths | untracked_paths, key=str.lower):
--        rel = Path(value)
--        exists = (root / rel).is_file()
--        entries.append(
--            GitEntry(
--                path=rel.as_posix(),
--                tracked=value in tracked_paths,
--                status=status_map.get(value, ""),
--                exists=exists,
--            )
--        )
--    return entries
-+def sha256_bytes(data: bytes) -> str:
-+    return hashlib.sha256(data).hexdigest()
- 
- 
--def include_path(path: Path, *, tracked: bool) -> bool:
--    parts = path.parts
--    if any(part in EXCLUDED_DIRS_ANYWHERE for part in parts):
--        return False
--    if parts and parts[0] in EXCLUDED_DIRS_AT_ROOT:
--        return False
--    if path.name in EXCLUDED_FILES:
--        return False
--    if path.name.startswith(".env") and path.name != ".env.example":
--        return False
--    if not tracked and not path.as_posix().startswith(IMPORTANT_UNTRACKED_PREFIXES):
--        return False
--    return (
--        path.suffix.lower() in TEXT_SUFFIXES
--        or path.suffix.lower() == ".ipynb"
--        or path.name in SPECIAL_NAMES
--    )
-+def human_bytes(value: int) -> str:
-+    size = float(value)
-+    for unit in ("B", "KB", "MB", "GB"):
-+        if size < 1024 or unit == "GB":
-+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
-+        size /= 1024
-+    return f"{value} B"
- 
- 
--def sha256_bytes(data: bytes) -> str:
--    return hashlib.sha256(data).hexdigest()
-+class Redactor:
-+    """Removes secrets and replaces absolute local paths."""
- 
-+    def __init__(self, root: Path) -> None:
-+        variants = {str(root), root.as_posix(), str(root).replace("\\", "\\\\")}
-+        self.root_variants = sorted((v for v in variants if v), key=len, reverse=True)
-+        home = Path.home()
-+        self.home_variants = sorted(
-+            {str(home), home.as_posix(), str(home).replace("\\", "\\\\")}, key=len, reverse=True
-+        )
- 
--def redact(text: str) -> tuple[str, list[str]]:
--    warnings: list[str] = []
--    if PRIVATE_KEY_RE.search(text):
--        text = PRIVATE_KEY_RE.sub("[REDACTED_PRIVATE_KEY]", text)
--        warnings.append("private key redacted")
--    if SECRET_RE.search(text):
--        text = SECRET_RE.sub(r"\1[REDACTED]", text)
--        warnings.append("possible secret assignment redacted")
--    if URL_CREDENTIAL_RE.search(text):
--        text = URL_CREDENTIAL_RE.sub(r"\1[REDACTED]\3", text)
--        warnings.append("credentials in URL redacted")
--    return text, warnings
-+    def __call__(self, text: str) -> tuple[str, list[str]]:
-+        warnings: list[str] = []
-+        if PRIVATE_KEY_RE.search(text):
-+            text = PRIVATE_KEY_RE.sub("[REDACTED_PRIVATE_KEY]", text)
-+            warnings.append("private key redacted")
-+        if GITHUB_TOKEN_RE.search(text):
-+            text = GITHUB_TOKEN_RE.sub("[REDACTED_TOKEN]", text)
-+            warnings.append("token redacted")
-+        if SECRET_RE.search(text):
-+            text = SECRET_RE.sub(r"\1[REDACTED]", text)
-+            warnings.append("possible secret assignment redacted")
-+        if URL_CREDENTIAL_RE.search(text):
-+            text = URL_CREDENTIAL_RE.sub(r"\1[REDACTED]\3", text)
-+            warnings.append("credentials in URL redacted")
-+        for value in self.root_variants:
-+            text = text.replace(value, "<REPO>")
-+        for value in self.home_variants:
-+            text = text.replace(value, "<HOME>")
-+        text = WINDOWS_USER_RE.sub("<HOME>", text)
-+        text = POSIX_HOME_RE.sub("<HOME>", text)
-+        return text, warnings
- 
- 
- def fence_for(text: str) -> str:
--    longest = max(
--        (len(match.group(0)) for match in BACKTICK_RUN_RE.finditer(text)),
--        default=0,
--    )
-+    longest = max((len(m.group(0)) for m in BACKTICK_RUN_RE.finditer(text)), default=0)
-     return "`" * max(3, longest + 1)
- 
- 
-@@ -426,6 +462,14 @@ def code_block(text: str, lexer: str = "text") -> str:
-     return f"{fence}{lexer}\n{text}\n{fence}"
- 
- 
-+def truncate(text: str, limit: int, label: str = "characters") -> str:
-+    if limit <= 0 or len(text) <= limit:
-+        return text
-+    head = text[: int(limit * 0.7)]
-+    tail = text[-int(limit * 0.3):]
-+    return f"{head}\n... [{len(text) - len(head) - len(tail)} {label} omitted] ...\n{tail}"
-+
-+
- def safe_unparse(node: ast.AST | None, default: str = "") -> str:
-     if node is None:
-         return default
-@@ -437,20 +481,12 @@ def safe_unparse(node: ast.AST | None, default: str = "") -> str:
- 
- def literal_preview(node: ast.AST, max_chars: int = 300) -> str:
-     try:
--        value = ast.literal_eval(node)
--        text = repr(value)
-+        text = repr(ast.literal_eval(node))
-     except Exception:
-         text = safe_unparse(node, "<dynamic>")
-     return text if len(text) <= max_chars else text[: max_chars - 3] + "..."
- 
- 
--def function_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
--    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
--    args = safe_unparse(node.args, "...")
--    returns = f" -> {safe_unparse(node.returns)}" if node.returns else ""
--    return f"{prefix} {node.name}({args}){returns}"
--
--
- def dotted_name(node: ast.AST) -> str | None:
-     if isinstance(node, ast.Name):
-         return node.id
-@@ -462,31 +498,235 @@ def dotted_name(node: ast.AST) -> str | None:
-     return None
- 
- 
--def imported_names(tree: ast.AST) -> list[str]:
-+def env_names(text: str) -> list[str]:
-+    return sorted(set(ENV_RE.findall(text)))
-+
-+
-+def file_literals(text: str) -> list[str]:
-+    return sorted({m.group(1) for m in FILE_LITERAL_RE.finditer(text)})
-+
-+
-+def atomic_write(path: Path, text: str) -> None:
-+    path.parent.mkdir(parents=True, exist_ok=True)
-+    data = text.encode("utf-8")
-+    if path.exists() and path.read_bytes() == data:
-+        return
-+    with tempfile.NamedTemporaryFile("wb", delete=False, dir=path.parent) as handle:
-+        handle.write(data)
-+        temporary = Path(handle.name)
-+    temporary.replace(path)
-+
-+
-+# ---------------------------------------------------------------------------
-+# Git and filesystem inventory
-+# ---------------------------------------------------------------------------
-+
-+def parse_porcelain_status(root: Path) -> dict[str, str]:
-+    raw = git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
-+    items = raw.split("\0")
-+    status: dict[str, str] = {}
-+    i = 0
-+    while i < len(items):
-+        item = items[i]
-+        if not item:
-+            i += 1
-+            continue
-+        code, path_text = item[:2], item[3:]
-+        if code[0] in {"R", "C"} and i + 1 < len(items):
-+            status[path_text] = code
-+            i += 2
-+        else:
-+            status[path_text] = code
-+            i += 1
-+    return status
-+
-+
-+def collect_git_entries(root: Path) -> tuple[list[GitEntry], set[str], set[str]]:
-+    status_map = parse_porcelain_status(root)
-+    tracked = {line.strip() for line in git(root, "ls-files").splitlines() if line.strip()}
-+    untracked = {
-+        line.strip()
-+        for line in git(root, "ls-files", "--others", "--exclude-standard").splitlines()
-+        if line.strip()
-+    }
-+    entries = [
-+        GitEntry(
-+            path=Path(value).as_posix(),
-+            tracked=value in tracked,
-+            status=status_map.get(value, ""),
-+            exists=(root / value).is_file(),
-+        )
-+        for value in sorted(tracked | untracked, key=str.lower)
-+    ]
-+    return entries, tracked, untracked
-+
-+
-+def walk_inventory(
-+    root: Path,
-+    tracked: set[str],
-+    untracked: set[str],
-+) -> tuple[list[dict[str, Any]], bool]:
-+    """All files in the working folder, except tooling/caches/venvs."""
-+    rows: list[dict[str, Any]] = []
-+    truncated = False
-+    for current, dirs, files in os.walk(root):
-+        dirs[:] = sorted(d for d in dirs if d not in EXCLUDED_DIRS_ANYWHERE)
-+        for name in sorted(files):
-+            absolute = Path(current) / name
-+            rel = absolute.relative_to(root).as_posix()
-+            try:
-+                stat = absolute.stat()
-+            except OSError:
-+                continue
-+            if rel in tracked:
-+                state = "tracked"
-+            elif rel in untracked:
-+                state = "untracked"
-+            else:
-+                state = "ignored"
-+            rows.append(
-+                {
-+                    "path": rel,
-+                    "git": state,
-+                    "bytes": stat.st_size,
-+                    "modified_utc": datetime.fromtimestamp(stat.st_mtime, timezone.utc)
-+                    .strftime("%Y-%m-%d %H:%M"),
-+                }
-+            )
-+            if len(rows) >= MAX_INVENTORY_ENTRIES:
-+                return rows, True
-+    return rows, truncated
-+
-+
-+def is_artifact_path(path: Path) -> bool:
-+    return bool(path.parts) and path.parts[0] in ARTIFACT_DIRS_AT_ROOT
-+
-+
-+def include_source(path: Path, *, tracked: bool) -> bool:
-+    parts = path.parts
-+    if any(part in EXCLUDED_DIRS_ANYWHERE for part in parts):
-+        return False
-+    if is_artifact_path(path):
-+        return False
-+    if path.name in EXCLUDED_FILES or path.parent.name == PARTS_DIR_NAME:
-+        return False
-+    if path.name.startswith(".env") and path.name != ".env.example":
-+        return False
-+    if not tracked and not path.as_posix().startswith(IMPORTANT_UNTRACKED_PREFIXES):
-+        if len(parts) != 1:  # untracked root files (pyproject, README) are allowed
-+            return False
-+    suffix = path.suffix.lower()
-+    return (
-+        suffix in TEXT_SUFFIXES
-+        or suffix == ".ipynb"
-+        or suffix in OFFICE_SUFFIXES
-+        or path.name in SPECIAL_NAMES
-+        or path.name in KEYS_ONLY_FILES
-+    )
-+
-+
-+def include_artifact(path: Path, size: int, max_bytes: int) -> bool:
-+    if not is_artifact_path(path):
-+        return False
-+    if any(part.lower() in ARTIFACT_EXCLUDED_DIR_NAMES for part in path.parts):
-+        return False
-+    if path.name.startswith(".env"):
-+        return False
-+    if path.suffix.lower() not in ARTIFACT_TEXT_SUFFIXES:
-+        return False
-+    # Raw/large CSVs are only previewed (head), so allow them up to 50x.
-+    limit = max_bytes * 50 if path.suffix.lower() in {".csv", ".tsv"} else max_bytes
-+    return size <= limit
-+
-+
-+# ---------------------------------------------------------------------------
-+# Python AST analysis
-+# ---------------------------------------------------------------------------
-+
-+def imported_names(tree: ast.AST) -> tuple[list[str], list[dict[str, Any]], bool]:
-     imports: set[str] = set()
-+    froms: list[dict[str, Any]] = []
-+    star = False
-     for node in ast.walk(tree):
-         if isinstance(node, ast.Import):
-             for alias in node.names:
-                 imports.add(alias.name)
-         elif isinstance(node, ast.ImportFrom):
-             prefix = "." * node.level + (node.module or "")
--            for alias in node.names:
--                imports.add(f"{prefix}.{alias.name}".strip("."))
--    return sorted(imports)
-+            names = [alias.name for alias in node.names]
-+            if "*" in names:
-+                star = True
-+            froms.append(
-+                {"module": prefix, "names": names, "lineno": getattr(node, "lineno", 0)}
-+            )
-+            for name in names:
-+                imports.add(f"{prefix}.{name}".strip("."))
-+    return sorted(imports), froms, star
- 
- 
- def call_names(tree: ast.AST) -> list[str]:
--    values = {
--        name
--        for node in ast.walk(tree)
--        if isinstance(node, ast.Call)
--        for name in [dotted_name(node.func)]
--        if name
--    }
--    return sorted(values)
-+    return sorted(
-+        {
-+            name
-+            for node in ast.walk(tree)
-+            if isinstance(node, ast.Call)
-+            for name in [dotted_name(node.func)]
-+            if name
-+        }
-+    )
-+
-+
-+def call_sites(tree: ast.AST, label: str) -> list[CallSite]:
-+    sites: list[CallSite] = []
-+    for node in ast.walk(tree):
-+        if not isinstance(node, ast.Call):
-+            continue
-+        name = dotted_name(node.func)
-+        if not name:
-+            continue
-+        sites.append(
-+            CallSite(
-+                name=name,
-+                location=f"{label}:{getattr(node, 'lineno', 0)}",
-+                keywords=[kw.arg for kw in node.keywords if kw.arg],
-+                n_positional=sum(not isinstance(a, ast.Starred) for a in node.args),
-+                has_star_args=any(isinstance(a, ast.Starred) for a in node.args),
-+                has_star_kwargs=any(kw.arg is None for kw in node.keywords),
-+            )
-+        )
-+    return sites
- 
- 
--def assigned_constant_names(tree: ast.Module) -> dict[str, str]:
-+def top_level_names(tree: ast.Module) -> list[str]:
-+    names: set[str] = set()
-+    for node in tree.body:
-+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-+            names.add(node.name)
-+        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
-+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-+            for target in targets:
-+                for sub in ast.walk(target):
-+                    if isinstance(sub, ast.Name):
-+                        names.add(sub.id)
-+        elif isinstance(node, ast.Import):
-+            for alias in node.names:
-+                names.add((alias.asname or alias.name).split(".")[0])
-+        elif isinstance(node, ast.ImportFrom):
-+            for alias in node.names:
-+                names.add(alias.asname or alias.name)
-+        elif isinstance(node, (ast.If, ast.Try)):
-+            # Conditional definitions (try/except ImportError, if TYPE_CHECKING)
-+            for sub in ast.walk(node):
-+                if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-+                    names.add(sub.name)
-+                elif isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store):
-+                    names.add(sub.id)
-+                elif isinstance(sub, ast.alias):
-+                    names.add((sub.asname or sub.name).split(".")[0])
-+    return sorted(names)
-+
-+
-+def assigned_constants(tree: ast.Module) -> dict[str, str]:
-     constants: dict[str, str] = {}
-     for node in tree.body:
-         if isinstance(node, ast.Assign) and len(node.targets) == 1:
-@@ -499,12 +739,10 @@ def assigned_constant_names(tree: ast.Module) -> dict[str, str]:
-     return constants
- 
- 
--def env_names(text: str) -> list[str]:
--    return sorted(set(ENV_RE.findall(text)))
--
--
--def file_literals(text: str) -> list[str]:
--    return sorted(set(match.group(1) for match in FILE_LITERAL_RE.finditer(text)))
-+def function_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
-+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
-+    returns = f" -> {safe_unparse(node.returns)}" if node.returns else ""
-+    return f"{prefix} {node.name}({safe_unparse(node.args, '...')}){returns}"
- 
- 
- def extract_symbol(
-@@ -512,17 +750,50 @@ def extract_symbol(
-     *,
-     path: Path,
-     module: str,
--    parent: str = "",
--    file_imports: list[str],
-     text: str,
-+    parent: str = "",
- ) -> Symbol:
-     qualname = f"{parent}.{node.name}" if parent else node.name
-+    params: list[str] = []
-+    n_pos = 0
-+    has_varargs = has_varkw = False
-+    defaults: dict[str, str] = {}
-     if isinstance(node, ast.ClassDef):
--        signature = f"class {node.name}"
--        kind = "class"
-+        signature, kind = f"class {node.name}({', '.join(safe_unparse(b) for b in node.bases)})", "class"
-+        # A class call uses __init__ (or dataclass fields): handled loosely.
-+        init = next(
-+            (
-+                child for child in node.body
-+                if isinstance(child, ast.FunctionDef) and child.name == "__init__"
-+            ),
-+            None,
-+        )
-+        if init is not None:
-+            args = init.args
-+            positional = [a.arg for a in args.posonlyargs + args.args][1:]
-+            params = positional + [a.arg for a in args.kwonlyargs]
-+            n_pos = len(positional)
-+            has_varargs = args.vararg is not None
-+            has_varkw = args.kwarg is not None
-+        else:
-+            has_varargs = has_varkw = True  # unknown (dataclass, inheritance)
-     else:
-         signature = function_signature(node)
--        kind = "function" if not parent else "method"
-+        kind = "method" if parent else "function"
-+        args = node.args
-+        positional = [a.arg for a in args.posonlyargs + args.args]
-+        if parent and positional and positional[0] in {"self", "cls"}:
-+            positional = positional[1:]
-+        params = positional + [a.arg for a in args.kwonlyargs]
-+        n_pos = len(positional)
-+        has_varargs = args.vararg is not None
-+        has_varkw = args.kwarg is not None
-+        pos_defaults = args.defaults
-+        for arg, default in zip((args.posonlyargs + args.args)[-len(pos_defaults):] if pos_defaults else [], pos_defaults):
-+            defaults[arg.arg] = literal_preview(default, 120)
-+        for arg, default in zip(args.kwonlyargs, args.kw_defaults):
-+            if default is not None:
-+                defaults[arg.arg] = literal_preview(default, 120)
-     doc = (ast.get_docstring(node) or "").strip()
-     if len(doc) > MAX_DOCSTRING_CHARS:
-         doc = doc[: MAX_DOCSTRING_CHARS - 3] + "..."
-@@ -539,62 +810,41 @@ def extract_symbol(
-         docstring=doc,
-         decorators=[safe_unparse(d) for d in node.decorator_list],
-         calls=call_names(node),
--        imports=file_imports,
-         env_vars=env_names(segment),
-         file_literals=file_literals(segment),
-         is_private=node.name.startswith("_"),
-+        params=params,
-+        n_positional_params=n_pos,
-+        has_varargs=has_varargs,
-+        has_varkw=has_varkw,
-+        defaults=defaults,
-     )
- 
- 
- def analyze_python(path: Path, text: str, internal_roots: set[str]) -> PythonFileAnalysis:
-     module = module_name(path)
-+    lines = len(text.splitlines())
-     try:
-         tree = ast.parse(text, filename=path.as_posix())
-     except SyntaxError as exc:
-         return PythonFileAnalysis(
--            path=path.as_posix(),
--            module=module,
--            docstring="",
--            parse_error=str(exc),
--            imports=[],
--            internal_imports=[],
--            external_imports=[],
--            calls=[],
--            symbols=[],
--            constants={},
--            env_vars=env_names(text),
--            file_literals=file_literals(text),
-+            path=path.as_posix(), module=module, docstring="", parse_error=str(exc),
-+            imports=[], internal_imports=[], external_imports=[], import_from=[],
-+            calls=[], call_sites=[], symbols=[], top_level_names=[], constants={},
-+            env_vars=env_names(text), file_literals=file_literals(text), lines=lines,
-         )
--    imports = imported_names(tree)
--    internal = sorted(
--        value
--        for value in imports
--        if value.split(".")[0] in internal_roots
--    )
-+    imports, froms, star = imported_names(tree)
-+    internal = sorted(v for v in imports if v.split(".")[0] in internal_roots or v.startswith("."))
-     external = sorted(set(imports) - set(internal))
-     symbols: list[Symbol] = []
-     for node in tree.body:
-         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
--            top = extract_symbol(
--                node,
--                path=path,
--                module=module,
--                file_imports=imports,
--                text=text,
--            )
--            symbols.append(top)
-+            symbols.append(extract_symbol(node, path=path, module=module, text=text))
-             if isinstance(node, ast.ClassDef):
-                 for child in node.body:
-                     if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                         symbols.append(
--                            extract_symbol(
--                                child,
--                                path=path,
--                                module=module,
--                                parent=node.name,
--                                file_imports=imports,
--                                text=text,
--                            )
-+                            extract_symbol(child, path=path, module=module, text=text, parent=node.name)
-                         )
-     return PythonFileAnalysis(
-         path=path.as_posix(),
-@@ -604,72 +854,57 @@ def analyze_python(path: Path, text: str, internal_roots: set[str]) -> PythonFil
-         imports=imports,
-         internal_imports=internal,
-         external_imports=external,
-+        import_from=froms,
-         calls=call_names(tree),
-+        call_sites=call_sites(tree, path.as_posix()),
-         symbols=symbols,
--        constants=assigned_constant_names(tree),
-+        top_level_names=top_level_names(tree),
-+        constants=assigned_constants(tree),
-         env_vars=env_names(text),
-         file_literals=file_literals(text),
-+        has_star_import=star,
-+        lines=lines,
-     )
- 
- 
--def notebook_code_analysis(
--    path: Path,
--    source: str,
--    cell_number: int,
--    internal_roots: set[str],
--) -> tuple[list[str], list[str], list[Symbol], list[Symbol], list[str], list[str], list[str]]:
--    label = Path(f"{path.as_posix()}#cell-{cell_number}.py")
--    try:
--        tree = ast.parse(source, filename=label.as_posix())
--    except SyntaxError as exc:
--        return [], [], [], [], [], [], [f"Cell {cell_number}: {exc}"]
--    imports = imported_names(tree)
--    internal = sorted(
--        value for value in imports if value.split(".")[0] in internal_roots
--    )
--    functions: list[Symbol] = []
--    classes: list[Symbol] = []
--    assignments: list[str] = []
--    for node in tree.body:
--        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
--            functions.append(
--                extract_symbol(
--                    node,
--                    path=label,
--                    module=f"notebook:{path.as_posix()}",
--                    file_imports=imports,
--                    text=source,
--                )
--            )
--        elif isinstance(node, ast.ClassDef):
--            classes.append(
--                extract_symbol(
--                    node,
--                    path=label,
--                    module=f"notebook:{path.as_posix()}",
--                    file_imports=imports,
--                    text=source,
--                )
--            )
--        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
--            targets: list[ast.expr] = (
--                node.targets if isinstance(node, ast.Assign) else [node.target]
--            )
--            for target in targets:
--                if isinstance(target, ast.Name) and (
--                    target.id.isupper()
--                    or target.id.lower().endswith(("_dir", "_path", "_file"))
--                ):
--                    assignments.append(target.id)
--    return (
--        imports,
--        internal,
--        functions,
--        classes,
--        assignments,
--        file_literals(source),
--        [],
--    )
-+# ---------------------------------------------------------------------------
-+# Notebooks
-+# ---------------------------------------------------------------------------
-+
-+def strip_magics(source: str) -> str:
-+    """Comment out IPython magics/shell lines so the cell can be parsed."""
-+    lines = []
-+    for line in source.splitlines():
-+        stripped = line.lstrip()
-+        if stripped.startswith(("%", "!", "?")) or stripped.endswith("?"):
-+            lines.append("# " + line)
-+        else:
-+            lines.append(line)
-+    return "\n".join(lines)
-+
-+
-+def render_output(output: dict[str, Any], max_chars: int, redactor: Redactor) -> tuple[str, str]:
-+    """Return (kind, text) for one notebook output."""
-+    kind = output.get("output_type", "unknown")
-+    if kind == "stream":
-+        text = "".join(output.get("text", []))
-+        label = f"stream:{output.get('name', 'stdout')}"
-+    elif kind in {"execute_result", "display_data"}:
-+        data = output.get("data", {})
-+        omitted = [mime for mime in data if mime != "text/plain"]
-+        text = "".join(data.get("text/plain", []))
-+        if omitted:
-+            text += ("\n" if text else "") + f"[non-text output omitted: {', '.join(sorted(omitted))}]"
-+        label = kind
-+    elif kind == "error":
-+        trace = "\n".join(output.get("traceback", []))
-+        text = f"{output.get('ename', '')}: {output.get('evalue', '')}\n{trace}"
-+        label = "error"
-+    else:
-+        text, label = json.dumps(output)[:500], kind
-+    text = ANSI_RE.sub("", text)
-+    text, _ = redactor(text)
-+    return label, truncate(text.rstrip(), max_chars)
- 
- 
- def analyze_notebook(
-@@ -681,168 +916,219 @@ def analyze_notebook(
-     headings: list[str] = []
-     imports: set[str] = set()
-     internal_imports: set[str] = set()
-+    froms: list[dict[str, Any]] = []
-     functions: list[Symbol] = []
-     classes: list[Symbol] = []
-     assignments: set[str] = set()
-     literals: set[str] = set()
-     envs: set[str] = set()
-     parse_errors: list[str] = []
--    code_lines = 0
--    code_cells = 0
--    markdown_cells = 0
--    cell_summaries: list[dict[str, Any]] = []
-+    sites: list[CallSite] = []
-+    errors: list[str] = []
-+    counts: list[int | None] = []
-+    code_lines = code_cells = markdown_cells = executed = 0
-     for number, cell in enumerate(nb.get("cells", []), 1):
-         kind = cell.get("cell_type", "unknown")
-         source = "".join(cell.get("source", []))
-         if kind == "markdown":
-             markdown_cells += 1
--            for _, title in HEADING_RE.findall(source):
--                headings.append(title.strip())
--        elif kind == "code":
--            code_cells += 1
--            code_lines += len(source.splitlines())
--            (
--                cell_imports,
--                cell_internal,
--                cell_functions,
--                cell_classes,
--                cell_assignments,
--                cell_literals,
--                cell_errors,
--            ) = notebook_code_analysis(path, source, number, internal_roots)
--            imports.update(cell_imports)
--            internal_imports.update(cell_internal)
--            functions.extend(cell_functions)
--            classes.extend(cell_classes)
--            assignments.update(cell_assignments)
--            literals.update(cell_literals)
--            envs.update(env_names(source))
--            parse_errors.extend(cell_errors)
--        cell_summaries.append(
--            {
--                "number": number,
--                "type": kind,
--                "lines": len(source.splitlines()),
--                "heading": next(
--                    (title.strip() for _, title in HEADING_RE.findall(source)),
--                    "",
--                ),
--            }
--        )
-+            headings.extend(title.strip() for _, title in HEADING_RE.findall(source))
-+            continue
-+        if kind != "code":
-+            continue
-+        code_cells += 1
-+        code_lines += len(source.splitlines())
-+        count = cell.get("execution_count")
-+        counts.append(count)
-+        if count is not None:
-+            executed += 1
-+        for output in cell.get("outputs", []):
-+            if output.get("output_type") == "error":
-+                errors.append(f"cell {number}: {output.get('ename', '')}: {str(output.get('evalue', ''))[:200]}")
-+        label = f"{path.as_posix()}#cell-{number}"
-+        try:
-+            tree = ast.parse(strip_magics(source), filename=label)
-+        except SyntaxError as exc:
-+            parse_errors.append(f"Cell {number}: {exc}")
-+            continue
-+        cell_imports, cell_froms, _ = imported_names(tree)
-+        imports.update(cell_imports)
-+        internal_imports.update(v for v in cell_imports if v.split(".")[0] in internal_roots)
-+        for item in cell_froms:
-+            froms.append({**item, "cell": number})
-+        sites.extend(call_sites(tree, label))
-+        for node in tree.body:
-+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-+                functions.append(extract_symbol(node, path=Path(label), module=f"notebook:{path.as_posix()}", text=source))
-+            elif isinstance(node, ast.ClassDef):
-+                classes.append(extract_symbol(node, path=Path(label), module=f"notebook:{path.as_posix()}", text=source))
-+            elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-+                for target in targets:
-+                    if isinstance(target, ast.Name) and (
-+                        target.id.isupper() or target.id.lower().endswith(("_dir", "_path", "_file"))
-+                    ):
-+                        assignments.add(target.id)
-+        literals.update(file_literals(source))
-+        envs.update(env_names(source))
-+    numeric = [c for c in counts if c is not None]
-+    out_of_order = any(b < a for a, b in zip(numeric, numeric[1:]))
-+    meta = nb.get("metadata", {})
-     analysis = NotebookAnalysis(
-         path=path.as_posix(),
-         cells=len(nb.get("cells", [])),
-         code_cells=code_cells,
-         markdown_cells=markdown_cells,
--        kernel=nb.get("metadata", {}).get("kernelspec", {}),
-+        kernel=meta.get("kernelspec", {}),
-+        language_version=str(meta.get("language_info", {}).get("version", "")),
-         headings=headings,
-         imports=sorted(imports),
-         internal_imports=sorted(internal_imports),
-+        import_from=froms,
-         functions=functions,
-         classes=classes,
-         assignments=sorted(assignments),
-         file_literals=sorted(literals),
-         env_vars=sorted(envs),
-         parse_errors=parse_errors,
-+        call_sites=sites,
-         code_lines=code_lines,
-+        executed_cells=executed,
-+        execution_counts=counts,
-+        out_of_order=out_of_order,
-+        error_outputs=errors,
-+        outputs_included=False,
-     )
--    return analysis, {"notebook": nb, "cells": cell_summaries}
--
--
--def notebook_full_source(nb: dict[str, Any]) -> str:
--    blocks: list[str] = []
--    for number, cell in enumerate(nb.get("cells", []), 1):
--        kind = cell.get("cell_type", "unknown")
--        source = "".join(cell.get("source", [])).rstrip()
--        lexer = "python" if kind == "code" else "markdown"
--        blocks.append(
--            f"### Cell {number} [{kind}]\n\n{code_block(source, lexer)}"
--        )
--    return "\n\n".join(blocks)
-+    return analysis, nb
- 
- 
--def notebook_reduced_source(
-+def notebook_source_markdown(
-     nb: dict[str, Any],
-     analysis: NotebookAnalysis,
-+    *,
-+    include_outputs: bool,
-+    max_output_chars: int,
-+    reduced: bool,
-+    redactor: Redactor,
- ) -> str:
--    parts = [
--        "Large notebook reduced view. Outputs are omitted.",
--        "",
--        f"- Cells: `{analysis.cells}`",
--        f"- Code cells: `{analysis.code_cells}`",
--        f"- Markdown cells: `{analysis.markdown_cells}`",
--        f"- Code lines: `{analysis.code_lines}`",
--        "",
--        "### Headings",
-+    parts: list[str] = [
-+        f"- Cells: `{analysis.cells}` (`{analysis.code_cells}` code, `{analysis.markdown_cells}` markdown)",
-+        f"- Code cells executed: `{analysis.executed_cells}` of `{analysis.code_cells}`"
-+        + (" — **executed out of order**" if analysis.out_of_order else ""),
-+        f"- Kernel: `{analysis.kernel.get('display_name', '')}`; Python `{analysis.language_version}`",
-+        f"- Outputs: `{'text outputs included' if include_outputs else 'omitted'}`"
-+        + ("; **reduced view** (notebook above size limit)" if reduced else ""),
-         "",
-     ]
--    parts.extend(f"- {heading}" for heading in analysis.headings)
--    parts += ["", "### Functions/classes defined in notebook", ""]
--    symbols = analysis.functions + analysis.classes
--    if symbols:
--        parts.extend(
--            f"- `{symbol.signature}` at `{symbol.path}:{symbol.lineno}`"
--            for symbol in symbols
--        )
--    else:
--        parts.append("- None detected.")
--    parts += ["", "### Selected cell source", ""]
-     for number, cell in enumerate(nb.get("cells", []), 1):
-         kind = cell.get("cell_type", "unknown")
--        source = "".join(cell.get("source", [])).rstrip()
--        if kind == "markdown":
--            if HEADING_RE.search(source):
--                parts.append(
--                    f"#### Cell {number} [markdown]\n\n{code_block(source, 'markdown')}"
--                )
--        elif kind == "code":
--            lines = source.splitlines()
--            selected = (
--                any(
--                    token in source
--                    for token in (
--                        "def ", "class ", "from src", "import src",
--                        "Pipeline(", "ColumnTransformer(", "to_csv(",
--                        "to_parquet(", "Run(", "read_parquet(",
-+        source, _ = redactor("".join(cell.get("source", [])).rstrip())
-+        if kind == "code":
-+            count = cell.get("execution_count")
-+            if reduced:
-+                lines = source.splitlines()
-+                if len(lines) > MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL:
-+                    source = "\n".join(lines[:MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL]) + (
-+                        f"\n# ... {len(lines) - MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL} lines omitted ..."
-                     )
--                )
--                or number <= 3
-+            parts.append(f"### Cell {number} [code] · In [{count if count is not None else ' '}]")
-+            parts.append("")
-+            parts.append(code_block(source, "python"))
-+            if include_outputs:
-+                for out_index, output in enumerate(cell.get("outputs", []), 1):
-+                    label, text = render_output(output, max_output_chars, redactor)
-+                    if not text:
-+                        continue
-+                    parts.append("")
-+                    parts.append(f"**Output {out_index} ({label})**")
-+                    parts.append("")
-+                    parts.append(code_block(text, "text"))
-+        else:
-+            parts.append(f"### Cell {number} [{kind}]")
-+            parts.append("")
-+            parts.append(code_block(source, "markdown"))
-+        parts.append("")
-+    return "\n".join(parts).rstrip()
-+
-+
-+# ---------------------------------------------------------------------------
-+# Office documents and artifacts
-+# ---------------------------------------------------------------------------
-+
-+def office_text(data: bytes, suffix: str) -> str:
-+    """Plain text of .docx/.pptx using only the standard library."""
-+    import io
-+    from xml.etree import ElementTree as ET
-+
-+    texts: list[str] = []
-+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
-+        if suffix == ".docx":
-+            names = ["word/document.xml"]
-+        else:
-+            names = sorted(
-+                (n for n in archive.namelist() if re.match(r"ppt/slides/slide\d+\.xml$", n)),
-+                key=lambda n: int(re.findall(r"\d+", n)[-1]),
-             )
--            if selected:
--                clipped = lines[:MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL]
--                if len(lines) > len(clipped):
--                    clipped.append(
--                        f"# ... {len(lines) - len(clipped)} lines omitted from this cell ..."
--                    )
--                parts.append(
--                    f"#### Cell {number} [code]\n\n"
--                    f"{code_block(chr(10).join(clipped), 'python')}"
--                )
--    return "\n\n".join(parts)
-+        for index, name in enumerate(names, 1):
-+            if name not in archive.namelist():
-+                continue
-+            root = ET.fromstring(archive.read(name))
-+            if suffix == ".pptx":
-+                texts.append(f"--- slide {index} ---")
-+            for paragraph in root.iter():
-+                tag = paragraph.tag.rsplit("}", 1)[-1]
-+                if tag == "p":
-+                    line = "".join(
-+                        (node.text or "")
-+                        for node in paragraph.iter()
-+                        if node.tag.rsplit("}", 1)[-1] in {"t", "tab"}
-+                    ).strip()
-+                    if line:
-+                        texts.append(line)
-+                elif tag == "tr" and suffix == ".docx":
-+                    pass
-+    return "\n".join(texts)
-+
-+
-+def csv_preview(text: str, max_rows: int) -> tuple[str, int]:
-+    lines = text.splitlines()
-+    total = max(0, len(lines) - 1)
-+    if len(lines) <= max_rows + 1:
-+        return text, total
-+    return "\n".join(lines[: max_rows + 1]) + f"\n... [{total - max_rows} more rows omitted]", total
-+
-+
-+def keys_only_json(text: str) -> str:
-+    try:
-+        data = json.loads(text)
-+    except Exception:
-+        return "[could not parse; values hidden]"
-+
-+    def mask(value: Any) -> Any:
-+        if isinstance(value, dict):
-+            return {k: mask(v) for k, v in value.items()}
-+        if isinstance(value, list):
-+            return [mask(v) for v in value[:5]]
-+        return f"<{type(value).__name__}>"
- 
-+    return json.dumps(mask(data), ensure_ascii=False, indent=2)
-+
-+
-+# ---------------------------------------------------------------------------
-+# Configuration, environment and dependency files
-+# ---------------------------------------------------------------------------
- 
- def flatten_mapping(value: Any, prefix: str = "") -> dict[str, Any]:
-     result: dict[str, Any] = {}
--    if isinstance(value, dict):
-+    if isinstance(value, dict) and value:
-         for key, child in value.items():
-             new_prefix = f"{prefix}.{key}" if prefix else str(key)
-             result.update(flatten_mapping(child, new_prefix))
--    elif isinstance(value, list):
--        result[prefix] = value
-     else:
-         result[prefix] = value
-     return result
- 
- 
--def load_yaml_safely(path: Path) -> tuple[Any | None, str | None]:
--    if yaml is None:
--        return None, "PyYAML not available"
--    try:
--        return yaml.safe_load(path.read_text(encoding="utf-8-sig")), None
--    except Exception as exc:
--        return None, repr(exc)
--
--
- def nested_get(mapping: Any, *keys: str, default: Any = None) -> Any:
-     current = mapping
-     for key in keys:
-@@ -852,914 +1138,1242 @@ def nested_get(mapping: Any, *keys: str, default: Any = None) -> Any:
-     return current
- 
- 
--def all_python_names(analyses: list[PythonFileAnalysis]) -> set[str]:
--    values: set[str] = set()
--    for analysis in analyses:
--        values.update(symbol.name for symbol in analysis.symbols)
--    return values
-+def load_yaml_strict(text: str) -> tuple[Any | None, str | None, list[str]]:
-+    """Parse YAML; also report duplicated keys (safe_load silently keeps the last)."""
-+    if yaml is None:
-+        return None, "PyYAML not available", []
-+    duplicates: list[str] = []
-+
-+    class DupLoader(yaml.SafeLoader):  # type: ignore[misc]
-+        pass
-+
-+    def construct_mapping(loader: Any, node: Any, deep: bool = False) -> Any:
-+        seen: set[Any] = set()
-+        for key_node, _ in node.value:
-+            key = loader.construct_object(key_node, deep=deep)
-+            if key in seen:
-+                duplicates.append(f"{key!r} (line {key_node.start_mark.line + 1})")
-+            seen.add(key)
-+        return yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
-+
-+    DupLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
-+    try:
-+        return yaml.load(text, Loader=DupLoader), None, duplicates  # noqa: S506
-+    except Exception as exc:
-+        return None, repr(exc), duplicates
- 
- 
--def index_consumers(
--    symbols: list[Symbol],
--    python_files: list[PythonFileAnalysis],
--    notebooks: list[NotebookAnalysis],
-+def parse_requirements(text: str) -> dict[str, str]:
-+    deps: dict[str, str] = {}
-+    for line in text.splitlines():
-+        line = line.split("#", 1)[0].strip()
-+        if not line or line.startswith(("-", "git+", "http")):
-+            continue
-+        match = re.match(r"([A-Za-z0-9_.\-\[\]]+)\s*(.*)", line)
-+        if match:
-+            name = re.sub(r"\[.*\]", "", match.group(1)).lower().replace("_", "-")
-+            deps[name] = match.group(2).strip()
-+    return deps
-+
-+
-+def parse_pyproject(text: str) -> tuple[dict[str, Any] | None, str | None]:
-+    if tomllib is None:
-+        return None, "tomllib unavailable (Python < 3.11)"
-+    try:
-+        return tomllib.loads(text), None
-+    except Exception as exc:
-+        return None, repr(exc)
-+
-+
-+def pyproject_dependencies(data: dict[str, Any]) -> dict[str, str]:
-+    deps: dict[str, str] = {}
-+    values = list(nested_get(data, "project", "dependencies", default=[]) or [])
-+    for group in (nested_get(data, "project", "optional-dependencies", default={}) or {}).values():
-+        values.extend(group or [])
-+    for item in values:
-+        match = re.match(r"([A-Za-z0-9_.\-\[\]]+)\s*(.*)", str(item))
-+        if match:
-+            name = re.sub(r"\[.*\]", "", match.group(1)).lower().replace("_", "-")
-+            deps[name] = match.group(2).strip()
-+    return deps
-+
-+
-+def installed_packages() -> dict[str, str]:
-+    packages: dict[str, str] = {}
-+    for dist in importlib_metadata.distributions():
-+        try:
-+            name = (dist.metadata["Name"] or "").lower().replace("_", "-")
-+        except Exception:
-+            continue
-+        if name:
-+            packages[name] = dist.version
-+    return dict(sorted(packages.items()))
-+
-+
-+def top_level_import_map() -> dict[str, str]:
-+    """Import name -> distribution, from installed metadata when available."""
-+    mapping = {k: v for k, v in IMPORT_TO_DIST.items()}
-+    try:
-+        for top, dists in importlib_metadata.packages_distributions().items():
-+            if dists:
-+                mapping.setdefault(top, dists[0].lower().replace("_", "-"))
-+    except Exception:
-+        pass
-+    return mapping
-+
-+
-+def run_tests(root: Path, extra: str, timeout: int) -> dict[str, Any]:
-+    args = [sys.executable, "-m", "pytest", "-q", "-rfEs", "--no-header", "-p", "no:cacheprovider"]
-+    if extra:
-+        import shlex
-+        args += shlex.split(extra, posix=(os.name != "nt"))
-+    try:
-+        result = run_command(args, cwd=root, check=False, timeout=timeout)
-+        output = (result.stdout + "\n" + result.stderr).strip()
-+        return {"command": " ".join(args[1:]), "returncode": result.returncode, "output": output}
-+    except subprocess.TimeoutExpired:
-+        return {"command": " ".join(args[1:]), "returncode": None, "output": f"Timeout after {timeout}s"}
-+    except Exception as exc:
-+        return {"command": " ".join(args[1:]), "returncode": None, "output": repr(exc)}
-+
-+
-+# ---------------------------------------------------------------------------
-+# Static diagnostics
-+# ---------------------------------------------------------------------------
-+
-+def index_consumers(
-+    symbols: list[Symbol],
-+    python_files: list[PythonFileAnalysis],
-+    notebooks: list[NotebookAnalysis],
- ) -> dict[str, list[str]]:
-     consumers: dict[str, set[str]] = defaultdict(set)
-     by_name: defaultdict[str, list[Symbol]] = defaultdict(list)
-     for symbol in symbols:
-         by_name[symbol.name].append(symbol)
--    for analysis in python_files:
--        haystack = set(analysis.calls) | set(analysis.imports)
--        for name, matches in by_name.items():
--            if any(
--                item == name
--                or item.endswith(f".{name}")
--                for item in haystack
--            ):
--                for match in matches:
--                    if analysis.path != match.path:
--                        consumers[f"{match.module}.{match.qualname}"].add(analysis.path)
--    for notebook in notebooks:
--        haystack = set(notebook.imports)
--        for name, matches in by_name.items():
--            if any(item == name or item.endswith(f".{name}") for item in haystack):
--                for match in matches:
--                    consumers[f"{match.module}.{match.qualname}"].add(notebook.path)
--    return {
--        key: sorted(values)
--        for key, values in sorted(consumers.items())
--    }
-+    sources: list[tuple[str, set[str]]] = [
-+        (a.path, set(a.calls) | set(a.imports)) for a in python_files
-+    ] + [
-+        (n.path, set(n.imports) | {s.name for s in n.call_sites}) for n in notebooks
-+    ]
-+    for path, haystack in sources:
-+        tails = {item.rsplit(".", 1)[-1] for item in haystack}
-+        for name in tails & set(by_name):
-+            for match in by_name[name]:
-+                if path != match.path:
-+                    consumers[f"{match.module}.{match.qualname}"].add(path)
-+    return {key: sorted(values) for key, values in sorted(consumers.items())}
- 
- 
--def index_tests(
--    symbols: list[Symbol],
--    python_files: list[PythonFileAnalysis],
--) -> dict[str, list[str]]:
-+def index_tests(symbols: list[Symbol], python_files: list[PythonFileAnalysis]) -> dict[str, list[str]]:
-+    tests: dict[str, set[str]] = defaultdict(set)
-     test_files = [
--        item for item in python_files
--        if item.path.startswith("tests/") or Path(item.path).name.startswith("test_")
-+        f for f in python_files
-+        if f.path.startswith("tests/") or Path(f.path).name.startswith("test_")
-     ]
--    tests: dict[str, set[str]] = defaultdict(set)
--    for symbol in symbols:
--        key = f"{symbol.module}.{symbol.qualname}"
--        for test in test_files:
--            if (
--                symbol.name in test.calls
--                or any(value.endswith(f".{symbol.name}") for value in test.calls)
--                or any(value.endswith(f".{symbol.name}") for value in test.imports)
--            ):
--                tests[key].add(test.path)
-+    for test in test_files:
-+        tails = {v.rsplit(".", 1)[-1] for v in set(test.calls) | set(test.imports)}
-+        for symbol in symbols:
-+            if symbol.name in tails and symbol.path != test.path:
-+                tests[f"{symbol.module}.{symbol.qualname}"].add(test.path)
-     return {key: sorted(values) for key, values in sorted(tests.items())}
- 
- 
--def notebook_duplicate_symbols(
-+def resolve_relative(module: str, current: str, is_package: bool) -> str:
-+    if not module.startswith("."):
-+        return module
-+    level = len(module) - len(module.lstrip("."))
-+    base = current.split(".")
-+    if not is_package:
-+        base = base[:-1]
-+    base = base[: len(base) - (level - 1)] if level > 1 else base
-+    rest = module.lstrip(".")
-+    return ".".join([*base, rest] if rest else base)
-+
-+
-+def import_integrity_attention(
-+    python_files: list[PythonFileAnalysis],
-     notebooks: list[NotebookAnalysis],
-+    internal_roots: set[str],
-+) -> list[Attention]:
-+    modules = {f.module: f for f in python_files}
-+    packages = {m.rsplit(".", 1)[0] for m in modules if "." in m}
-+    missing_modules: defaultdict[str, set[str]] = defaultdict(set)
-+    missing_names: defaultdict[str, set[str]] = defaultdict(set)
-+
-+    def check(module: str, names: list[str], where: str) -> None:
-+        if module.split(".")[0] not in internal_roots:
-+            return
-+        if module not in modules and module not in packages:
-+            missing_modules[module].add(where)
-+            return
-+        target = modules.get(module)
-+        if target is None or target.has_star_import or target.parse_error:
-+            return
-+        defined = set(target.top_level_names)
-+        for name in names:
-+            if name == "*" or name in defined:
-+                continue
-+            if f"{module}.{name}" in modules or f"{module}.{name}" in packages:
-+                continue
-+            missing_names[f"{module}.{name}"].add(where)
-+
-+    for f in python_files:
-+        is_pkg = f.path.endswith("__init__.py")
-+        for item in f.import_from:
-+            module = resolve_relative(item["module"], f.module, is_pkg)
-+            check(module, item["names"], f"{f.path}:{item['lineno']}")
-+        for value in f.imports:
-+            if "." not in value and value in internal_roots:
-+                continue
-+    for nb in notebooks:
-+        for item in nb.import_from:
-+            check(item["module"], item["names"], f"{nb.path}#cell-{item.get('cell')}")
-+    attention = [
-+        Attention(
-+            "high", "internal-import-missing-module",
-+            f"Import of internal module `{name}`, which does not exist in the snapshot.",
-+            sorted(paths),
-+            "Check branch completeness, renamed modules or stale imports before recreating code.",
-+        )
-+        for name, paths in sorted(missing_modules.items())
-+    ]
-+    attention += [
-+        Attention(
-+            "high", "internal-import-missing-name",
-+            f"`{name.rsplit('.', 1)[1]}` is imported from `{name.rsplit('.', 1)[0]}`, "
-+            "but that module does not define or re-export it.",
-+            sorted(paths),
-+            "Export the name in the module (or its __init__) or fix the import.",
-+        )
-+        for name, paths in sorted(missing_names.items())
-+    ]
-+    return attention
-+
-+
-+def call_signature_attention(
-+    symbols: list[Symbol],
-     python_files: list[PythonFileAnalysis],
-+    notebooks: list[NotebookAnalysis],
- ) -> list[Attention]:
--    canonical_names: defaultdict[str, list[str]] = defaultdict(list)
--    for analysis in python_files:
--        if analysis.path.startswith("src/"):
--            for symbol in analysis.symbols:
--                if symbol.kind in {"function", "class"}:
--                    canonical_names[symbol.name].append(symbol.path)
--    attention: list[Attention] = []
--    for notebook in notebooks:
--        for symbol in notebook.functions + notebook.classes:
--            if symbol.name in canonical_names:
--                attention.append(
--                    Attention(
--                        severity="medium",
--                        category="notebook-duplication-risk",
--                        message=(
--                            f"Notebook defines `{symbol.name}`, a name already present in src."
--                        ),
--                        evidence=[symbol.path, *sorted(set(canonical_names[symbol.name]))],
--                        recommendation=(
--                            "Open both implementations before editing. Reuse or extend the src "
--                            "contract when responsibilities overlap."
--                        ),
--                    )
-+    """Calls to project functions with keywords they do not accept."""
-+    candidates: defaultdict[str, list[Symbol]] = defaultdict(list)
-+    for symbol in symbols:
-+        if symbol.kind in {"function", "class"} and symbol.path.startswith("src/"):
-+            candidates[symbol.name].append(symbol)
-+    unique = {name: items[0] for name, items in candidates.items() if len(items) == 1}
-+    local_defs: dict[str, set[str]] = defaultdict(set)
-+    for f in python_files:
-+        local_defs[f.path].update(s.name for s in f.symbols if s.kind in {"function", "class"})
-+    for nb in notebooks:
-+        local_defs[nb.path].update(s.name for s in nb.functions + nb.classes)
-+
-+    problems: list[Attention] = []
-+    sources = [(f.path, f.call_sites) for f in python_files] + [(n.path, n.call_sites) for n in notebooks]
-+    for path, sites in sources:
-+        for site in sites:
-+            tail = site.name.rsplit(".", 1)[-1]
-+            target = unique.get(tail)
-+            if target is None or path == target.path or tail in local_defs[path]:
-+                continue
-+            if "." in site.name and site.name.split(".")[0] in {"self", "cls"}:
-+                continue
-+            issues: list[str] = []
-+            if not target.has_varkw:
-+                bad = [k for k in site.keywords if k not in target.params]
-+                if bad:
-+                    issues.append(f"unknown keyword(s) {bad}")
-+            if not target.has_varargs and not site.has_star_args and site.n_positional > target.n_positional_params:
-+                issues.append(
-+                    f"{site.n_positional} positional args, accepts {target.n_positional_params}"
-                 )
--            else:
--                attention.append(
-+            if issues:
-+                problems.append(
-                     Attention(
--                        severity="low",
--                        category="notebook-reusable-logic",
--                        message=f"Notebook-local reusable candidate: `{symbol.name}`.",
--                        evidence=[symbol.path],
--                        recommendation=(
--                            "Keep it in the notebook if it is single-use orchestration; move it "
--                            "to src with tests if another notebook needs it."
--                        ),
-+                        "high", "call-signature-mismatch",
-+                        f"Call to `{target.module}.{target.name}` does not match its signature: "
-+                        + "; ".join(issues) + ".",
-+                        [site.location, f"definition: {target.path}:{target.lineno} `{target.signature}`"],
-+                        "Fix the call or the function signature; this raises TypeError when executed.",
-                     )
-                 )
--    return attention
-+    return problems
- 
- 
--def duplicate_symbol_attention(symbols: list[Symbol]) -> list[Attention]:
--    grouped: defaultdict[str, list[Symbol]] = defaultdict(list)
--    for symbol in symbols:
--        if symbol.kind in {"function", "class"}:
--            grouped[symbol.name].append(symbol)
--    attention: list[Attention] = []
--    for name, matches in grouped.items():
--        unique_paths = sorted({item.path for item in matches})
--        if len(unique_paths) > 1:
--            attention.append(
--                Attention(
--                    severity="medium",
--                    category="duplicate-symbol-name",
--                    message=f"Symbol name `{name}` exists in multiple files.",
--                    evidence=unique_paths,
--                    recommendation=(
--                        "Confirm whether these are distinct responsibilities or competing "
--                        "implementations before creating another symbol with the same role."
--                    ),
--                )
--            )
--    return attention
-+def gate_attention(
-+    gate_names: set[str],
-+    files_text: dict[str, str],
-+    notebook_sources: dict[str, str],
-+) -> list[Attention]:
-+    if not gate_names:
-+        return []
-+    found: defaultdict[str, set[str]] = defaultdict(set)
-+    for path, text in {**files_text, **notebook_sources}.items():
-+        if path.endswith(("supervised.yaml", OUTPUT_MD_NAME)):
-+            continue
-+        for match in GATE_RE.findall(text):
-+            found[match].add(path)
-+    stale = {name: paths for name, paths in found.items() if name not in gate_names}
-+    return [
-+        Attention(
-+            "medium", "gate-name-not-in-yaml",
-+            f"`{name}` is referenced but does not exist in `gates` of the active YAML.",
-+            sorted(paths),
-+            "Update the reference (code, docstring, notebook or document) to an existing gate.",
-+        )
-+        for name, paths in sorted(stale.items())
-+    ]
- 
- 
--def config_contract_attention(
--    config: Any,
--    python_files: list[PythonFileAnalysis],
--    notebooks: list[NotebookAnalysis],
--) -> list[Attention]:
-+def config_contract_attention(config: Any, python_files: list[PythonFileAnalysis]) -> list[Attention]:
-     if not isinstance(config, dict):
-         return []
-     attention: list[Attention] = []
--    feature_lists: dict[str, list[str]] = {}
--    for key in ("numericas", "categoricas", "final", "proibidas"):
--        value = nested_get(config, "features", key, default=[])
--        if isinstance(value, list):
--            feature_lists[key] = [str(item) for item in value]
--    derived = nested_get(config, "features", "engenharia", "derivadas", default=[])
--    inputs = nested_get(config, "features", "engenharia", "entradas", default=[])
--    if isinstance(derived, list):
--        feature_lists["derivadas"] = [str(item) for item in derived]
--    if isinstance(inputs, list):
--        feature_lists["entradas"] = [str(item) for item in inputs]
--    active_features = set(feature_lists.get("final") or [])
--    if not active_features:
--        active_features = set(feature_lists.get("numericas", [])) | set(
--            feature_lists.get("categoricas", [])
--        )
--    prohibited = set(feature_lists.get("proibidas", []))
--    overlap = sorted(active_features & prohibited)
--    if overlap:
--        attention.append(
--            Attention(
--                severity="high",
--                category="feature-leakage-contract",
--                message="Configured model features overlap `features.proibidas`.",
--                evidence=overlap,
--                recommendation="Remove the overlap or formally revise the configuration and tests.",
--            )
--        )
--    declared_derived = set(feature_lists.get("derivadas", []))
-+
-+    def as_list(*keys: str) -> list[str]:
-+        value = nested_get(config, *keys, default=[])
-+        return [str(v) for v in value] if isinstance(value, list) else []
-+
-+    final = as_list("features", "final")
-+    active = set(final) or set(as_list("features", "numericas")) | set(as_list("features", "categoricas"))
-+    prohibited = set(as_list("features", "proibidas"))
-+    if active & prohibited:
-+        attention.append(Attention(
-+            "high", "feature-leakage-contract",
-+            "Configured model features overlap `features.proibidas`.",
-+            sorted(active & prohibited), "Remove the overlap or revise configuration and tests."))
-+    target = nested_get(config, "target", "coluna")
-+    if target and target not in prohibited:
-+        attention.append(Attention(
-+            "high", "feature-leakage-contract", "`target.coluna` is not in `features.proibidas`.",
-+            [str(target)], "Add the raw target to the forbidden list."))
-+    derived = set(as_list("features", "engenharia", "derivadas"))
-+    model_features = set(as_list("features", "numericas")) | set(as_list("features", "categoricas"))
-+    unused_derived = sorted(derived - model_features - set(final))
-+    if unused_derived:
-+        attention.append(Attention(
-+            "low", "derived-not-used-as-feature",
-+            "Derived columns produced by feature engineering but absent from the model feature lists.",
-+            unused_derived, "Confirm whether they are intentionally descriptive-only or missing from the model."))
-     source_text = "\n".join(
--        " ".join(item.calls + list(item.constants) + item.file_literals)
--        for item in python_files
--        if item.path.startswith("src/features/") or item.path.startswith("src/data/")
-+        " ".join(f.calls + list(f.constants) + list(f.constants.values()) + f.file_literals + f.top_level_names)
-+        for f in python_files if f.path.startswith(("src/features/", "src/data/"))
-     )
--    missing_evidence = sorted(
--        value for value in declared_derived if value not in source_text
--    )
--    if missing_evidence:
--        attention.append(
--            Attention(
--                severity="medium",
--                category="derived-feature-contract",
--                message=(
--                    "Configured derived features were not found as static names in "
--                    "src/features or src/data."
--                ),
--                evidence=missing_evidence,
--                recommendation=(
--                    "Confirm whether the names are generated dynamically, stale, or missing "
--                    "from the canonical engineering implementation."
--                ),
--            )
--        )
--    gate_mapping = nested_get(config, "gates", default={})
--    gate_names = set(gate_mapping) if isinstance(gate_mapping, dict) else set()
--    code_gate_literals: set[str] = set()
--    gate_re = re.compile(r"\bG\d+_[A-Za-z0-9_]+\b")
--    for item in python_files:
--        path = Path(item.path)
--        if path.suffix == ".py":
--            code_gate_literals.update(
--                gate_re.findall(" ".join(item.calls + item.file_literals + list(item.constants.values())))
--            )
--    for notebook in notebooks:
--        code_gate_literals.update(gate_re.findall(" ".join(notebook.file_literals)))
--    stale_gates = sorted(code_gate_literals - gate_names)
--    if stale_gates:
--        attention.append(
--            Attention(
--                severity="high",
--                category="gate-contract",
--                message="Code/notebooks reference gate names absent from active YAML.",
--                evidence=stale_gates,
--                recommendation="Align code, tests and YAML gate names in one change.",
--            )
--        )
-+    absent = sorted(v for v in derived if v not in source_text)
-+    if absent:
-+        attention.append(Attention(
-+            "medium", "derived-feature-contract",
-+            "Configured derived features not found as static names in src/features or src/data.",
-+            absent, "Confirm whether names are dynamic, stale or missing from the implementation."))
-     fractions = nested_get(config, "temporal", "fracao", default={})
-     if isinstance(fractions, dict):
--        numeric = [value for value in fractions.values() if isinstance(value, (int, float))]
-+        numeric = [v for v in fractions.values() if isinstance(v, (int, float))]
-         if numeric and abs(sum(numeric) - 1.0) > 1e-9:
--            attention.append(
--                Attention(
--                    severity="high",
--                    category="split-contract",
--                    message="Configured split fractions do not sum to 1.",
--                    evidence=[repr(fractions)],
--                    recommendation="Correct the active split contract before model development.",
--                )
--            )
-+            attention.append(Attention(
-+                "high", "split-contract", "Split fractions do not sum to 1.", [repr(fractions)],
-+                "Correct the split contract."))
-+    models = nested_get(config, "models", default={}) or {}
-+    closed = set(as_list("selecao_modelos", "familias_encerradas"))
-+    for name in sorted(closed):
-+        if nested_get(models, name, "ativa") is True:
-+            attention.append(Attention(
-+                "low", "config-consistency",
-+                f"`models.{name}.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`.",
-+                [f"models.{name}.ativa"], "Set `ativa: false` or remove the family from the closed list."))
-+    finalists = as_list("selecao_modelos", "finalistas")
-+    for name in finalists:
-+        if name not in models:
-+            attention.append(Attention(
-+                "medium", "config-consistency",
-+                f"Finalist `{name}` has no section in `models` (factory names must match).",
-+                [f"selecao_modelos.finalistas: {finalists}", f"models: {sorted(models)}"],
-+                "Use the same names or declare an explicit alias in code."))
-+    gates = nested_get(config, "gates", default={}) or {}
-+    numbers = sorted(int(m.group(1)) for k in gates for m in [re.match(r"G(\d+)_", str(k))] if m)
-+    if numbers:
-+        gaps = [f"G{n}" for n in range(numbers[0], numbers[-1] + 1) if n not in numbers]
-+        if gaps:
-+            attention.append(Attention(
-+                "low", "gate-numbering", "Gate numbering has gaps.", gaps,
-+                "Document why the gate does not exist or renumber."))
-     return attention
- 
- 
--def import_integrity_attention(
-+def unused_config_keys_attention(config: Any, code_text: str) -> list[Attention]:
-+    if not isinstance(config, dict):
-+        return []
-+    unused: list[str] = []
-+    for key in flatten_mapping(config):
-+        parts = key.split(".")
-+        if parts[0] in {"gates", "selecao_modelos"}:
-+            continue
-+        leaf = next((p for p in reversed(parts) if not p.isdigit()), parts[-1])
-+        if not re.search(rf"['\"]{re.escape(leaf)}['\"]", code_text):
-+            unused.append(key)
-+    if not unused:
-+        return []
-+    return [Attention(
-+        "low", "config-key-not-referenced",
-+        f"{len(unused)} YAML keys whose name never appears as a string literal in code or notebooks "
-+        "(possible dead configuration, or keys read dynamically).",
-+        unused[:80], "Remove dead keys or make the code read them; keep documentation keys commented.")]
-+
-+
-+def dependency_attention(
-     python_files: list[PythonFileAnalysis],
--    available_modules: set[str],
-+    notebooks: list[NotebookAnalysis],
-+    requirements: dict[str, str] | None,
-+    pyproject_deps: dict[str, str] | None,
-+    import_map: dict[str, str],
-+    internal_roots: set[str],
- ) -> list[Attention]:
--    missing: defaultdict[str, set[str]] = defaultdict(set)
--    roots = {module.split(".")[0] for module in available_modules}
--    for analysis in python_files:
--        for value in analysis.internal_imports:
--            candidate = value
--            if candidate in available_modules:
--                continue
--            if any(module.startswith(candidate + ".") for module in available_modules):
--                continue
-+    stdlib = set(getattr(sys, "stdlib_module_names", ()))
-+    used: defaultdict[str, set[str]] = defaultdict(set)
-+    for f in python_files:
-+        for value in f.external_imports:
-+            used[value.split(".")[0]].add(f.path)
-+    for nb in notebooks:
-+        for value in nb.imports:
-+            used[value.split(".")[0]].add(nb.path)
-+    third_party = {
-+        top: paths for top, paths in used.items()
-+        if top and top not in stdlib and top not in internal_roots and not top.startswith("_")
-+        and top not in {"__future__"}
-+    }
-+    attention: list[Attention] = []
-+    for label, deps in (("requirements.txt", requirements), ("pyproject.toml", pyproject_deps)):
-+        if deps is None:
-+            continue
-+        missing = []
-+        for top, paths in sorted(third_party.items()):
-+            dist = import_map.get(top, top).lower().replace("_", "-")
-+            if dist not in deps and top.lower() not in deps:
-+                missing.append(f"{top} (distribution `{dist}`) used in {sorted(paths)[0]}")
-+        if missing:
-+            attention.append(Attention(
-+                "medium", "dependency-not-declared",
-+                f"Third-party imports not declared in `{label}`.", missing,
-+                "Declare them (with a minimum version) in a single source of dependencies."))
-+        unpinned = sorted(name for name, spec in deps.items() if not spec)
-+        if unpinned:
-+            attention.append(Attention(
-+                "low", "dependency-unpinned", f"Dependencies without version constraint in `{label}`.",
-+                unpinned, "Add minimum versions for reproducibility (at least scikit-learn, pandas, numpy)."))
-+    return attention
-+
- 
--            # `from pkg.module import symbol` is recorded as
--            # `pkg.module.symbol`. If `symbol` is not a submodule, the
--            # real target module is the parent path. Test it (and its
--            # descendants) before declaring the import broken.
--            parent = candidate.rsplit(".", 1)[0]
--            if parent and parent != candidate:
--                if parent in available_modules:
--                    continue
--                if any(
--                    module.startswith(parent + ".")
--                    for module in available_modules
--                ):
--                    continue
--
--            if candidate.split(".")[0] in roots:
--                missing[candidate].add(analysis.path)
-+def duplicate_symbol_attention(symbols: list[Symbol]) -> list[Attention]:
-+    grouped: defaultdict[str, set[str]] = defaultdict(set)
-+    for symbol in symbols:
-+        if symbol.kind in {"function", "class"} and not symbol.path.startswith("tests/") and symbol.name != "main":
-+            grouped[symbol.name].add(symbol.path)
-     return [
-         Attention(
--            severity="high",
--            category="internal-import-integrity",
--            message=f"Internal import `{name}` has no matching tracked/working-tree module.",
--            evidence=sorted(paths),
--            recommendation="Check branch completeness, rename history or stale imports before recreating the module.",
--        )
--        for name, paths in sorted(missing.items())
-+            "medium", "duplicate-symbol-name", f"`{name}` is defined in multiple files.",
-+            sorted(paths), "Confirm distinct responsibilities or consolidate competing implementations.")
-+        for name, paths in sorted(grouped.items()) if len(paths) > 1
-     ]
- 
- 
--def stale_document_attention(
--    files_text: dict[str, str],
--    existing_paths: set[str],
--) -> list[Attention]:
-+def notebook_attention(notebooks: list[NotebookAnalysis], python_files: list[PythonFileAnalysis]) -> list[Attention]:
-+    canonical: defaultdict[str, list[str]] = defaultdict(list)
-+    for f in python_files:
-+        if f.path.startswith("src/"):
-+            for s in f.symbols:
-+                if s.kind in {"function", "class"}:
-+                    canonical[s.name].append(s.path)
-     attention: list[Attention] = []
-+    for nb in notebooks:
-+        for s in nb.functions + nb.classes:
-+            if s.name in canonical:
-+                attention.append(Attention(
-+                    "medium", "notebook-duplicates-src",
-+                    f"Notebook defines `{s.name}`, already present in src.",
-+                    [s.path, *sorted(set(canonical[s.name]))],
-+                    "Use the src implementation, or extend it if behaviour differs."))
-+        local = [s.name for s in nb.functions + nb.classes if s.name not in canonical]
-+        if local:
-+            attention.append(Attention(
-+                "low", "notebook-local-functions",
-+                f"`{nb.path}` defines {len(local)} local functions/classes.",
-+                local, "Keep single-use orchestration in the notebook; move reusable logic to src with tests."))
-+        if nb.out_of_order:
-+            attention.append(Attention(
-+                "medium", "notebook-execution-order",
-+                f"`{nb.path}` was saved with cells executed out of order.",
-+                [str(nb.execution_counts)], "Restart the kernel and run all cells before trusting saved outputs."))
-+        if nb.code_cells and nb.executed_cells < nb.code_cells:
-+            attention.append(Attention(
-+                "low", "notebook-not-fully-executed",
-+                f"`{nb.path}`: {nb.code_cells - nb.executed_cells} of {nb.code_cells} code cells have no saved execution.",
-+                [], "Outputs may be partial; re-run before using results."))
-+        if nb.error_outputs:
-+            attention.append(Attention(
-+                "high", "notebook-saved-errors", f"`{nb.path}` was saved with error outputs.",
-+                nb.error_outputs[:20], "Fix the error and re-run, or clear the stale output."))
-+        if nb.parse_errors:
-+            attention.append(Attention(
-+                "medium", "notebook-parse-error", f"`{nb.path}` has code cells that could not be parsed.",
-+                nb.parse_errors[:20], "Check syntax (magics are already tolerated)."))
-+    return attention
-+
-+
-+def stale_document_attention(files_text: dict[str, str], existing_paths: set[str]) -> list[Attention]:
-     path_re = re.compile(
--        r"(?<![A-Za-z0-9_.-])((?:src|tests|notebooks|configs|tools|docs)/"
--        r"[A-Za-z0-9_./ -]+\.(?:py|ipynb|yaml|yml|md|csv))"
-+        r"(?<![A-Za-z0-9_./-])((?:src|tests|notebooks|configs|tools|docs|data|outputs)/"
-+        r"[A-Za-z0-9_./-]+\.(?:py|ipynb|yaml|yml|md|csv|json|parquet|toml))"
-     )
-+    existing_dirs = {str(Path(p).parent.as_posix()) for p in existing_paths}
-+    attention: list[Attention] = []
-     for path, text in files_text.items():
--        if not (
--            path.lower().endswith((".md", ".rst", ".txt"))
--            or Path(path).name.upper().startswith("README")
--        ):
-+        if not path.lower().endswith((".md", ".rst", ".txt", ".py", ".yaml", ".yml")):
-             continue
--        references = sorted(set(match.group(1).strip() for match in path_re.finditer(text)))
--        missing = [value for value in references if value not in existing_paths]
-+        refs = sorted({m.group(1) for m in path_re.finditer(text)})
-+        missing = [
-+            r for r in refs
-+            if r not in existing_paths and "{" not in r and "*" not in r and r not in existing_dirs
-+        ]
-         if missing:
--            attention.append(
--                Attention(
--                    severity="medium",
--                    category="stale-document-path",
--                    message=f"Documentation `{path}` references paths absent from the snapshot.",
--                    evidence=missing[:30],
--                    recommendation="Confirm whether the documentation is historical or needs updating.",
--                )
--            )
-+            attention.append(Attention(
-+                "low" if path.endswith(".py") else "medium", "reference-to-missing-path",
-+                f"`{path}` references paths absent from the working folder.", missing[:40],
-+                "Confirm whether the reference is historical, generated at runtime, or stale."))
-     return attention
- 
- 
--def working_tree_attention(entries: list[GitEntry]) -> list[Attention]:
--    relevant = [entry.path for entry in entries if not entry.tracked and entry.exists]
--    if not relevant:
--        return []
--    return [
--        Attention(
--            severity="high",
--            category="untracked-relevant-files",
--            message="Relevant working-tree files are not part of the current commit.",
--            evidence=relevant,
--            recommendation=(
--                "Review and add intentional source/config/test/notebook files before treating "
--                "the snapshot as a committed project state."
--            ),
--        )
--    ]
--
--
--def test_inventory(python_files: list[PythonFileAnalysis]) -> list[dict[str, Any]]:
--    rows: list[dict[str, Any]] = []
--    for analysis in python_files:
--        if not (
--            analysis.path.startswith("tests/")
--            or Path(analysis.path).name.startswith("test_")
--        ):
-+def text_quality_attention(files_text: dict[str, str], notebook_sources: dict[str, str]) -> tuple[list[Attention], list[str]]:
-+    mojibake: list[str] = []
-+    todos: list[str] = []
-+    for path, text in {**files_text, **notebook_sources}.items():
-+        if path.endswith(OUTPUT_MD_NAME):
-             continue
--        tests = [
--            symbol
--            for symbol in analysis.symbols
--            if symbol.kind == "function" and symbol.name.startswith("test_")
--        ]
--        rows.append(
--            {
--                "path": analysis.path,
--                "tests": [symbol.name for symbol in tests],
--                "count": len(tests),
--                "imports": analysis.internal_imports,
--            }
--        )
--    return rows
-+        for number, line in enumerate(text.splitlines(), 1):
-+            if MOJIBAKE_RE.search(line):
-+                mojibake.append(f"{path}:{number}: {line.strip()[:100]}")
-+            match = TODO_RE.search(line)
-+            if match and not path.endswith(".csv"):
-+                todos.append(f"{path}:{number}: {match.group(1)} {match.group(2).strip()}")
-+    attention = []
-+    if mojibake:
-+        attention.append(Attention(
-+            "low", "encoding-mojibake", "Text with likely encoding corruption (file saved with the wrong encoding).",
-+            mojibake[:40], "Fix the characters and save the file as UTF-8."))
-+    return attention, todos
- 
- 
--def render_attention(attention: list[Attention]) -> str:
--    if not attention:
--        return "- No static inconsistencies detected by this generator."
--    order = {"high": 0, "medium": 1, "low": 2}
--    blocks: list[str] = []
--    for index, item in enumerate(
--        sorted(attention, key=lambda value: (order.get(value.severity, 9), value.category, value.message)),
--        1,
--    ):
--        blocks += [
--            f"### A{index}. {item.severity.upper()} — {item.category}",
--            "",
--            item.message,
--            "",
--            "**Evidence**",
--            "",
--            *(f"- `{value}`" for value in item.evidence),
--            "",
--            f"**Recommended action:** {item.recommendation}",
--            "",
--        ]
--    return "\n".join(blocks).rstrip()
-+def working_tree_attention(entries: list[GitEntry]) -> list[Attention]:
-+    relevant = [e.path for e in entries if not e.tracked and e.exists and e.path.startswith(IMPORTANT_UNTRACKED_PREFIXES)]
-+    modified = [f"{e.path} ({e.status.strip()})" for e in entries if e.tracked and e.status.strip()]
-+    attention = []
-+    if relevant:
-+        attention.append(Attention(
-+            "high", "untracked-relevant-files", "Relevant files exist only in the working tree (not committed).",
-+            relevant, "Commit intentional files or remove them before treating the snapshot as the project state."))
-+    if modified:
-+        attention.append(Attention(
-+            "medium", "uncommitted-changes", "Tracked files with uncommitted changes.", modified[:60],
-+            "Review Section 16 (diff) and commit or discard."))
-+    return attention
- 
- 
--def symbol_markdown(
--    symbol: Symbol,
-+def symbol_quality_attention(
-+    symbols: list[Symbol],
-     consumers: dict[str, list[str]],
-     tests: dict[str, list[str]],
--) -> str:
-+) -> list[Attention]:
-+    public = [
-+        s for s in symbols
-+        if s.path.startswith("src/") and not s.is_private and s.kind in {"function", "class"}
-+    ]
-+    orphan = [f"{s.module}.{s.name}" for s in public if not consumers.get(f"{s.module}.{s.qualname}") and not tests.get(f"{s.module}.{s.qualname}")]
-+    untested = [f"{s.module}.{s.name}" for s in public if not tests.get(f"{s.module}.{s.qualname}")]
-+    nodoc = [f"{s.module}.{s.name}" for s in public if not s.docstring]
-+    out = []
-+    if orphan:
-+        out.append(Attention("low", "public-symbol-unused",
-+                             "Public src symbols with no detected consumer and no test (possibly dead code).",
-+                             orphan, "Remove, test, or document why they exist."))
-+    if untested:
-+        out.append(Attention("low", "public-symbol-untested",
-+                             f"{len(untested)} public src symbols without a detected test.", untested,
-+                             "Prioritise tests for functions used by notebooks C2–C6."))
-+    if nodoc:
-+        out.append(Attention("low", "missing-docstring", "Public src symbols without docstring.", nodoc,
-+                             "Add a short docstring with purpose, parameters and returned value."))
-+    return out
-+
-+
-+# ---------------------------------------------------------------------------
-+# Rendering
-+# ---------------------------------------------------------------------------
-+
-+SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
-+
-+
-+def render_attention(attention: list[Attention]) -> str:
-+    if not attention:
-+        return "- No static inconsistencies detected."
-+    counts = Counter(a.severity for a in attention)
-+    lines = [
-+        f"Totals: **{counts.get('high', 0)} high**, {counts.get('medium', 0)} medium, {counts.get('low', 0)} low.",
-+        "",
-+        "| # | Severity | Category | Message |",
-+        "|---|---|---|---|",
-+    ]
-+    ordered = sorted(attention, key=lambda a: (SEVERITY_ORDER.get(a.severity, 9), a.category, a.message))
-+    for i, a in enumerate(ordered, 1):
-+        lines.append(f"| A{i} | {a.severity.upper()} | {a.category} | {a.message.replace('|', '/')} |")
-+    lines.append("")
-+    for i, a in enumerate(ordered, 1):
-+        lines += [f"### A{i}. {a.severity.upper()} — {a.category}", "", a.message, ""]
-+        if a.evidence:
-+            lines += ["**Evidence**", "", *(f"- `{v}`" for v in a.evidence), ""]
-+        if a.recommendation:
-+            lines += [f"**Recommended action:** {a.recommendation}", ""]
-+    return "\n".join(lines).rstrip()
-+
-+
-+def render_symbol(symbol: Symbol, consumers: dict[str, list[str]], tests: dict[str, list[str]]) -> str:
-     key = f"{symbol.module}.{symbol.qualname}"
-     lines = [
--        f"#### `{symbol.signature}`",
-+        f"#### `{symbol.qualname}`",
-         "",
--        f"- Location: `{symbol.path}:{symbol.lineno}`",
--        f"- Qualified name: `{key}`",
-+        code_block(symbol.signature, "python"),
-+        "",
-+        f"- Location: `{symbol.path}:{symbol.lineno}-{symbol.end_lineno}`",
-         f"- Visibility: `{'private' if symbol.is_private else 'public'}`",
--        f"- Tested by: {', '.join(f'`{p}`' for p in tests.get(key, [])) or 'not found statically'}",
--        f"- Consumed by: {', '.join(f'`{p}`' for p in consumers.get(key, [])) or 'not found statically'}",
-+        "- Tested by: " + (", ".join(f"`{p}`" for p in tests.get(key, [])) or "not found statically"),
-+        "- Consumed by: " + (", ".join(f"`{p}`" for p in consumers.get(key, [])) or "not found statically"),
-     ]
-+    if symbol.defaults:
-+        lines.append("- Defaults: " + ", ".join(f"`{k}={v}`" for k, v in symbol.defaults.items()))
-     if symbol.decorators:
--        lines.append("- Decorators: " + ", ".join(f"`{value}`" for value in symbol.decorators))
-+        lines.append("- Decorators: " + ", ".join(f"`{d}`" for d in symbol.decorators))
-     if symbol.calls:
--        lines.append("- Calls: " + ", ".join(f"`{value}`" for value in symbol.calls[:30]))
--    lines += ["", symbol.docstring or "**Missing docstring.**", ""]
-+        lines.append("- Calls: " + ", ".join(f"`{c}`" for c in symbol.calls[:40]))
-+    if symbol.env_vars:
-+        lines.append("- Environment variables: " + ", ".join(f"`{e}`" for e in symbol.env_vars))
-+    if symbol.file_literals:
-+        lines.append("- File literals: " + ", ".join(f"`{e}`" for e in symbol.file_literals))
-+    lines += ["", symbol.docstring or "_Missing docstring._", ""]
-     return "\n".join(lines)
- 
- 
--def render_python_api(
--    python_files: list[PythonFileAnalysis],
--    consumers: dict[str, list[str]],
--    tests: dict[str, list[str]],
--) -> str:
-+def render_python_api(python_files: list[PythonFileAnalysis], consumers: dict, tests: dict) -> str:
-     parts: list[str] = []
--    for analysis in sorted(python_files, key=lambda item: item.path.lower()):
--        parts += [f"### `{analysis.path}`", ""]
--        if analysis.parse_error:
--            parts += [f"- Parse error: `{analysis.parse_error}`", ""]
-+    for f in sorted(python_files, key=lambda x: x.path.lower()):
-+        parts += [f"### `{f.path}`", ""]
-+        if f.parse_error:
-+            parts += [f"- **Parse error:** `{f.parse_error}`", ""]
-             continue
--        if analysis.docstring:
--            parts += [analysis.docstring, ""]
-         parts += [
--            f"- Module: `{analysis.module}`",
--            "- Internal imports: "
--            + (", ".join(f"`{value}`" for value in analysis.internal_imports) or "none"),
--            "- External imports: "
--            + (", ".join(f"`{value}`" for value in analysis.external_imports) or "none"),
--            "",
--        ]
--        top_symbols = [
--            value for value in analysis.symbols
--            if value.kind in {"function", "class"}
-+            f"- Module: `{f.module}` · {f.lines} lines",
-+            "- Internal imports: " + (", ".join(f"`{v}`" for v in f.internal_imports) or "none"),
-+            "- External imports: " + (", ".join(f"`{v}`" for v in f.external_imports) or "none"),
-         ]
--        if not top_symbols:
--            parts += ["- No top-level functions or classes detected.", ""]
--        else:
--            for symbol in top_symbols:
--                parts.append(symbol_markdown(symbol, consumers, tests))
--                methods = [
--                    value for value in analysis.symbols
--                    if value.kind == "method" and value.qualname.startswith(symbol.name + ".")
--                ]
--                for method in methods:
--                    parts.append(symbol_markdown(method, consumers, tests))
-+        if f.constants:
-+            parts.append("- Module constants: " + ", ".join(f"`{k} = {v}`" for k, v in f.constants.items()))
-+        if f.env_vars:
-+            parts.append("- Environment variables: " + ", ".join(f"`{e}`" for e in f.env_vars))
-+        parts.append("")
-+        if f.docstring:
-+            parts += [f.docstring, ""]
-+        for symbol in f.symbols:
-+            parts.append(render_symbol(symbol, consumers, tests))
-     return "\n".join(parts).rstrip()
- 
- 
--def render_notebook_inventory(notebooks: list[NotebookAnalysis]) -> str:
--    parts: list[str] = []
--    for item in sorted(notebooks, key=lambda value: value.path.lower()):
--        parts += [
--            f"### `{item.path}`",
--            "",
--            f"- Cells: `{item.cells}` (`{item.code_cells}` code, `{item.markdown_cells}` markdown)",
--            f"- Code lines: `{item.code_lines}`",
--            "- Internal imports: "
--            + (", ".join(f"`{value}`" for value in item.internal_imports) or "none"),
--            "- Notebook-defined functions/classes: "
--            + (
--                ", ".join(f"`{value.name}`" for value in item.functions + item.classes)
--                or "none"
--            ),
--            "- Referenced artifacts: "
--            + (", ".join(f"`{value}`" for value in item.file_literals) or "none"),
--            "",
--            "**Headings**",
--            "",
--            *(f"- {heading}" for heading in item.headings),
--            "",
--        ]
--        if item.parse_errors:
--            parts += ["**Code-cell parse notes**", ""]
--            parts.extend(f"- `{value}`" for value in item.parse_errors)
--            parts.append("")
--    return "\n".join(parts).rstrip()
--
--
--def render_dependency_map(python_files: list[PythonFileAnalysis]) -> str:
--    lines = ["| Module | Internal dependencies |", "|---|---|"]
--    for item in sorted(python_files, key=lambda value: value.module.lower()):
--        if item.path.startswith("src/"):
--            deps = ", ".join(f"`{value}`" for value in item.internal_imports) or "none"
--            lines.append(f"| `{item.module}` | {deps} |")
--    return "\n".join(lines)
--
--
--def render_test_inventory(rows: list[dict[str, Any]]) -> str:
-+def render_table(headers: list[str], rows: list[list[str]]) -> str:
-     if not rows:
--        return "- No test files detected."
--    lines = ["| Test file | Tests | Internal imports |", "|---|---:|---|"]
--    for row in rows:
--        imports = ", ".join(f"`{value}`" for value in row["imports"]) or "none"
--        lines.append(f"| `{row['path']}` | {row['count']} | {imports} |")
--    return "\n".join(lines)
--
--
--def source_section(
--    *,
--    rel: Path,
--    data: bytes,
--    text: str | None,
--    digest: str,
--    tracked: bool,
--    status: str,
--    max_inline_bytes: int,
--    notebook_payload: dict[str, Any] | None,
--    notebook_analysis: NotebookAnalysis | None,
--    warnings: list[str],
--) -> str:
--    header = [
--        f"## `{rel.as_posix()}`",
--        "",
--        f"- Git: `{'tracked' if tracked else 'working tree / untracked'}`",
--        f"- Status: `{status or 'clean'}`",
--        f"- SHA-256: `{digest}`",
--        f"- Bytes: `{len(data)}`",
--    ]
--    if warnings:
--        header.append("- Security: " + "; ".join(warnings))
--    header.append("")
--    if rel.suffix.lower() == ".ipynb":
--        assert notebook_payload is not None and notebook_analysis is not None
--        nb = notebook_payload["notebook"]
--        if len(data) <= max_inline_bytes:
--            body = notebook_full_source(nb)
-+        return "- None."
-+    out = ["| " + " | ".join(headers) + " |", "|" + "---|" * len(headers)]
-+    out += ["| " + " | ".join(str(c).replace("|", "/").replace("\n", " ") for c in row) + " |" for row in rows]
-+    return "\n".join(out)
-+
-+
-+def render_tree(inventory: list[dict[str, Any]]) -> str:
-+    """Directory tree with file counts and sizes."""
-+    dirs: defaultdict[str, list[int]] = defaultdict(lambda: [0, 0])
-+    for row in inventory:
-+        parent = str(Path(row["path"]).parent.as_posix())
-+        while True:
-+            dirs[parent][0] += 1
-+            dirs[parent][1] += row["bytes"]
-+            if parent in {".", ""}:
-+                break
-+            parent = str(Path(parent).parent.as_posix())
-+    lines = []
-+    for d in sorted(dirs):
-+        depth = 0 if d == "." else d.count("/") + 1
-+        name = "./" if d == "." else Path(d).name + "/"
-+        lines.append(f"{'  ' * depth}{name}  ({dirs[d][0]} files, {human_bytes(dirs[d][1])})")
-+    return code_block("\n".join(lines), "text")
-+
-+
-+def split_document(document: str, max_bytes: int) -> list[str]:
-+    """Split on level-2 headings, keeping parts under max_bytes when possible."""
-+    chunks: list[str] = []
-+    current: list[str] = []
-+    in_fence = None
-+    for line in document.splitlines(keepends=True):
-+        fence = re.match(r"^(`{3,})", line)
-+        if fence:
-+            if in_fence is None:
-+                in_fence = fence.group(1)
-+            elif line.strip() == in_fence:
-+                in_fence = None
-+        if in_fence is None and line.startswith("## ") and current:
-+            chunks.append("".join(current))
-+            current = []
-+        current.append(line)
-+    if current:
-+        chunks.append("".join(current))
-+    parts: list[str] = []
-+    buffer = ""
-+    for chunk in chunks:
-+        if buffer and len((buffer + chunk).encode("utf-8")) > max_bytes:
-+            parts.append(buffer)
-+            buffer = ""
-+        if len(chunk.encode("utf-8")) > max_bytes:
-+            lines = chunk.splitlines(keepends=True)
-+            piece = ""
-+            for line in lines:
-+                if piece and len((piece + line).encode("utf-8")) > max_bytes:
-+                    parts.append(piece + "\n\n_(section continues in the next part)_\n")
-+                    piece = ""
-+                piece += line
-+            buffer = piece
-         else:
--            body = notebook_reduced_source(nb, notebook_analysis)
--        return "\n".join(header) + body + "\n"
--    if text is None:
--        return "\n".join(header) + "_No textual source included._\n"
--    if len(data) > max_inline_bytes:
--        preview_lines = text.splitlines()[:400]
--        body = code_block(
--            "\n".join(preview_lines)
--            + f"\n# ... file truncated; {max(0, len(text.splitlines()) - 400)} lines omitted ...",
--            LANG.get(rel.suffix.lower(), "text"),
--        )
--    else:
--        body = code_block(text.rstrip(), LANG.get(rel.suffix.lower(), "text"))
--    return "\n".join(header) + body + "\n"
-+            buffer += chunk
-+    if buffer:
-+        parts.append(buffer)
-+    return parts
- 
- 
--def atomic_write(path: Path, text: str) -> None:
--    path.parent.mkdir(parents=True, exist_ok=True)
--    data = text.encode("utf-8")
--    if path.exists() and path.read_bytes() == data:
--        return
--    with tempfile.NamedTemporaryFile("wb", delete=False, dir=path.parent) as handle:
--        handle.write(data)
--        temporary = Path(handle.name)
--    temporary.replace(path)
-+# ---------------------------------------------------------------------------
-+# Build
-+# ---------------------------------------------------------------------------
- 
-+def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
-+    redactor = Redactor(root)
-+    entries, tracked, untracked = collect_git_entries(root)
-+    inventory, inventory_truncated = walk_inventory(root, tracked, untracked)
-+    inv_by_path = {row["path"]: row for row in inventory}
-+    existing_paths = set(inv_by_path)
- 
--def build_reference(root: Path, *, max_inline_bytes: int) -> tuple[str, dict[str, Any]]:
--    entries = collect_git_entries(root)
--    selected_entries = [
--        entry
--        for entry in entries
--        if entry.exists and include_path(Path(entry.path), tracked=entry.tracked)
--    ]
--    existing_paths = {entry.path for entry in entries if entry.exists}
-     internal_roots = {
--        Path(entry.path).parts[0]
--        for entry in entries
--        if entry.exists and Path(entry.path).suffix.lower() in {".py", ".pyi"}
--    }
--    internal_roots.update({"src", "tests", "tools"})
-+        Path(e.path).parts[0] for e in entries
-+        if e.exists and Path(e.path).suffix.lower() in {".py", ".pyi"} and len(Path(e.path).parts) > 1
-+    } | {"src", "tests", "tools"}
-+
-+    selected: list[tuple[Path, bool, str]] = []
-+    seen: set[str] = set()
-+    for e in entries:
-+        if e.exists and include_source(Path(e.path), tracked=e.tracked):
-+            selected.append((Path(e.path), e.tracked, e.status))
-+            seen.add(e.path)
-+    ignored_sources: list[str] = []
-+    for row in inventory:
-+        rel_path = Path(row["path"])
-+        if (
-+            row["git"] == "ignored"
-+            and row["path"] not in seen
-+            and row["path"].startswith(IMPORTANT_UNTRACKED_PREFIXES)
-+            and include_source(rel_path, tracked=True)
-+        ):
-+            selected.append((rel_path, False, "!! ignored by .gitignore"))
-+            ignored_sources.append(row["path"])
- 
-     python_files: list[PythonFileAnalysis] = []
-     notebooks: list[NotebookAnalysis] = []
--    notebook_payloads: dict[str, dict[str, Any]] = {}
-     files_text: dict[str, str] = {}
-+    notebook_text: dict[str, str] = {}
-     file_records: list[dict[str, Any]] = []
-     source_sections: list[str] = []
-     skipped: list[str] = []
-+    yaml_docs: dict[str, dict[str, Any]] = {}
-     config: Any = None
-     config_error: str | None = None
-+    yaml_duplicates: dict[str, list[str]] = {}
-+    pyproject_data: dict[str, Any] | None = None
-+    pyproject_error: str | None = None
-+    requirements: dict[str, str] | None = None
- 
--    for entry in selected_entries:
--        rel = Path(entry.path)
-+    for rel, is_tracked, status in selected:
-         absolute = root / rel
-         data = absolute.read_bytes()
-         digest = sha256_bytes(data)
-         suffix = rel.suffix.lower()
--        warnings: list[str] = []
--        text: str | None = None
--        nb_analysis: NotebookAnalysis | None = None
--        nb_payload: dict[str, Any] | None = None
--
-+        header = [
-+            f"## `{rel.as_posix()}`",
-+            "",
-+            f"- Git: `{'tracked' if is_tracked else 'untracked (working tree)'}` · status `{status.strip() or 'clean'}`",
-+            f"- Size: `{human_bytes(len(data))}` · modified `{inv_by_path.get(rel.as_posix(), {}).get('modified_utc', '?')} UTC`",
-+            f"- SHA-256: `{digest}`",
-+        ]
-+        record = {
-+            "path": rel.as_posix(), "tracked": is_tracked, "status": status, "sha256": digest,
-+            "bytes": len(data), "type": suffix.lstrip(".") or rel.name,
-+        }
-         if suffix in LIKELY_BINARY_SUFFIXES:
--            skipped.append(f"{rel.as_posix()} (binary asset)")
-+            skipped.append(f"{rel.as_posix()} (binary)")
-             continue
--
-         if suffix == ".ipynb":
-             try:
--                nb_analysis, nb_payload = analyze_notebook(rel, data, internal_roots)
--                notebooks.append(nb_analysis)
--                notebook_payloads[rel.as_posix()] = nb_payload
-+                analysis, nb = analyze_notebook(rel, data, internal_roots)
-             except Exception as exc:
-                 skipped.append(f"{rel.as_posix()} (notebook parse error: {exc!r})")
-                 continue
--        else:
--            if b"\x00" in data[:8192]:
--                skipped.append(f"{rel.as_posix()} (binary content)")
-+            reduced = len(data) > args.max_inline_bytes
-+            analysis.outputs_included = args.notebook_outputs
-+            notebooks.append(analysis)
-+            notebook_text[rel.as_posix()] = "\n".join(
-+                "".join(c.get("source", [])) for c in nb.get("cells", [])
-+            )
-+            body = notebook_source_markdown(
-+                nb, analysis, include_outputs=args.notebook_outputs,
-+                max_output_chars=args.max_output_chars, reduced=reduced, redactor=redactor,
-+            )
-+            source_sections.append("\n".join(header) + "\n\n" + body + "\n")
-+            file_records.append(record)
-+            continue
-+        if suffix in OFFICE_SUFFIXES:
-+            try:
-+                text = office_text(data, suffix)
-+            except Exception as exc:
-+                skipped.append(f"{rel.as_posix()} (office parse error: {exc!r})")
-                 continue
--            decoded = data.decode("utf-8-sig", errors="replace")
--            text, warnings = redact(decoded)
-+            text, warnings = redactor(text)
-             files_text[rel.as_posix()] = text
--            if suffix in {".py", ".pyi"}:
--                python_files.append(analyze_python(rel, text, internal_roots))
--            if rel.as_posix() == "configs/supervised.yaml":
--                config, config_error = load_yaml_safely(absolute)
--
--        file_records.append(
--            {
--                "path": rel.as_posix(),
--                "tracked": entry.tracked,
--                "status": entry.status,
--                "sha256": digest,
--                "bytes": len(data),
--                "type": "notebook" if suffix == ".ipynb" else suffix.lstrip(".") or "text",
--            }
--        )
--        source_sections.append(
--            source_section(
--                rel=rel,
--                data=data,
--                text=text,
--                digest=digest,
--                tracked=entry.tracked,
--                status=entry.status,
--                max_inline_bytes=max_inline_bytes,
--                notebook_payload=nb_payload,
--                notebook_analysis=nb_analysis,
--                warnings=warnings,
-+            header.append("- Content: plain text extracted (formatting, tables layout and images not preserved)")
-+            source_sections.append("\n".join(header) + "\n\n" + code_block(truncate(text, args.max_inline_bytes), "text") + "\n")
-+            file_records.append(record)
-+            continue
-+        if b"\x00" in data[:8192]:
-+            skipped.append(f"{rel.as_posix()} (binary content)")
-+            continue
-+        decoded = data.decode("utf-8-sig", errors="replace")
-+        text, warnings = redactor(decoded)
-+        if rel.as_posix() == "tools/update_project_reference.py":
-+            text, warnings = decoded, []  # the generator's own regexes look like secrets
-+            for value in redactor.root_variants:
-+                text = text.replace(value, "<REPO>")
-+        files_text[rel.as_posix()] = text
-+        if warnings:
-+            header.append("- Security: " + "; ".join(warnings))
-+        if suffix in {".py", ".pyi"}:
-+            python_files.append(analyze_python(rel, text, internal_roots))
-+        elif suffix in {".yaml", ".yml"}:
-+            parsed, error, dups = load_yaml_strict(decoded)
-+            yaml_docs[rel.as_posix()] = {"error": error, "duplicates": dups}
-+            if dups:
-+                yaml_duplicates[rel.as_posix()] = dups
-+            if rel.as_posix() == args.config:
-+                config, config_error = parsed, error
-+        elif rel.name == "pyproject.toml":
-+            pyproject_data, pyproject_error = parse_pyproject(decoded)
-+        elif rel.name == "requirements.txt" and len(rel.parts) == 1:
-+            requirements = parse_requirements(decoded)
-+        if suffix in {".csv", ".tsv"} and len(data) > args.max_artifact_bytes:
-+            preview, total = csv_preview(text, args.max_csv_rows)
-+            header.append(f"- Content: first {args.max_csv_rows} of {total} rows")
-+            body = code_block(preview, "csv")
-+        elif len(data) > args.max_inline_bytes:
-+            body = code_block(truncate(text, args.max_inline_bytes), LANG.get(suffix, "text"))
-+        else:
-+            body = code_block(text.rstrip(), LANG.get(suffix, "text"))
-+        source_sections.append("\n".join(header) + "\n\n" + body + "\n")
-+        file_records.append(record)
-+
-+    # Small text artifacts (outputs/, data/ manifests, reports/)
-+    artifact_sections: list[str] = []
-+    artifact_records: list[dict[str, Any]] = []
-+    if args.artifacts:
-+        for row in inventory:
-+            rel = Path(row["path"])
-+            if not include_artifact(rel, row["bytes"], args.max_artifact_bytes):
-+                continue
-+            try:
-+                raw = (root / rel).read_bytes()
-+            except OSError:
-+                continue
-+            if b"\x00" in raw[:8192]:
-+                continue
-+            text, _ = redactor(raw.decode("utf-8-sig", errors="replace"))
-+            suffix = rel.suffix.lower()
-+            note = ""
-+            if suffix in {".csv", ".tsv"}:
-+                text, total = csv_preview(text, args.max_csv_rows)
-+                note = f" · {total} rows" + (f" (first {args.max_csv_rows} shown)" if total > args.max_csv_rows else "")
-+            else:
-+                text = truncate(text, args.max_artifact_bytes)
-+            artifact_sections.append(
-+                f"### `{rel.as_posix()}`\n\n- Git: `{row['git']}` · `{human_bytes(row['bytes'])}` · "
-+                f"modified `{row['modified_utc']} UTC`{note}\n\n"
-+                + code_block(text.rstrip(), LANG.get(suffix, "text")) + "\n"
-             )
--        )
-+            artifact_records.append(row)
-+            if suffix in {".yaml", ".yml"}:
-+                files_text[rel.as_posix()] = text
- 
--    symbols = [symbol for item in python_files for symbol in item.symbols]
--    available_modules = {item.module for item in python_files}
-+    # Indexes and diagnostics
-+    symbols = [s for f in python_files for s in f.symbols]
-     consumers = index_consumers(symbols, python_files, notebooks)
-     tests = index_tests(symbols, python_files)
--    tests_summary = test_inventory(python_files)
-+    import_map = top_level_import_map()
-+    packages = installed_packages()
-+    pyproject_deps = pyproject_dependencies(pyproject_data) if pyproject_data else None
-+    gates = nested_get(config, "gates", default={}) if isinstance(config, dict) else {}
-+    gate_names = set(gates) if isinstance(gates, dict) else set()
-+    code_text = "\n".join(
-+        [t for p, t in files_text.items() if p.endswith(".py")] + list(notebook_text.values())
-+    )
- 
-     attention: list[Attention] = []
--    attention.extend(working_tree_attention(entries))
--    attention.extend(import_integrity_attention(python_files, available_modules))
--    attention.extend(duplicate_symbol_attention(symbols))
--    attention.extend(notebook_duplicate_symbols(notebooks, python_files))
--    attention.extend(config_contract_attention(config, python_files, notebooks))
--    attention.extend(stale_document_attention(files_text, existing_paths))
--    for item in python_files:
--        if item.parse_error:
--            attention.append(
--                Attention(
--                    severity="high",
--                    category="python-parse-error",
--                    message=f"Python source could not be parsed: `{item.path}`.",
--                    evidence=[item.parse_error],
--                    recommendation="Fix syntax or confirm interpreter compatibility.",
--                )
--            )
-+    attention += working_tree_attention(entries)
-+    if ignored_sources:
-+        attention.append(Attention(
-+            "high", "source-ignored-by-git",
-+            "Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub.",
-+            ignored_sources,
-+            "Fix .gitignore (anchor root folders, e.g. `/data/` instead of `data/`) and commit the files."))
-+    attention += import_integrity_attention(python_files, notebooks, internal_roots)
-+    attention += call_signature_attention(symbols, python_files, notebooks)
-+    attention += config_contract_attention(config, python_files)
-+    attention += gate_attention(gate_names, files_text, notebook_text)
-+    attention += unused_config_keys_attention(config, code_text)
-+    attention += dependency_attention(python_files, notebooks, requirements, pyproject_deps, import_map, internal_roots)
-+    attention += duplicate_symbol_attention(symbols)
-+    attention += notebook_attention(notebooks, python_files)
-+    attention += stale_document_attention(files_text, existing_paths)
-+    quality, todos = text_quality_attention(files_text, notebook_text)
-+    attention += quality
-+    attention += symbol_quality_attention(symbols, consumers, tests)
-+    for f in python_files:
-+        if f.parse_error:
-+            attention.append(Attention("high", "python-parse-error", f"`{f.path}` could not be parsed.",
-+                                       [f.parse_error], "Fix syntax or check interpreter compatibility."))
-     if config_error:
--        attention.append(
--            Attention(
--                severity="high",
--                category="yaml-analysis-unavailable",
--                message="Semantic analysis of `configs/supervised.yaml` was not completed.",
--                evidence=[config_error],
--                recommendation="Install PyYAML or fix the YAML and regenerate the reference.",
--            )
--        )
--
-+        attention.append(Attention("high", "yaml-error", f"`{args.config}` could not be analysed.",
-+                                   [config_error], "Fix the YAML (or install PyYAML) and regenerate."))
-+    for path, dups in yaml_duplicates.items():
-+        attention.append(Attention("high", "yaml-duplicate-keys",
-+                                   f"`{path}` has duplicated keys; yaml.safe_load silently keeps the last value.",
-+                                   dups, "Remove the duplicates."))
-+    if pyproject_error:
-+        attention.append(Attention("high", "pyproject-invalid", "`pyproject.toml` is not valid TOML.",
-+                                   [pyproject_error], "Fix it; `pip install -e .` fails with an invalid pyproject."))
-+    if inventory_truncated:
-+        attention.append(Attention("low", "inventory-truncated",
-+                                   f"Path inventory stopped at {MAX_INVENTORY_ENTRIES} files.", [],
-+                                   "Exclude large generated folders or raise MAX_INVENTORY_ENTRIES."))
-+
-+    tests_result = run_tests(root, args.pytest_args, args.test_timeout) if args.run_tests else None
-+    if tests_result and tests_result["returncode"] not in (0, None):
-+        attention.append(Attention("high", "tests-failing", "pytest returned a non-zero exit code.",
-+                                   [tests_result["output"].splitlines()[-1] if tests_result["output"] else ""],
-+                                   "See Section 11."))
-+
-+    # Git details
-     branch = git(root, "branch", "--show-current").strip() or "detached"
--    commit = git(root, "rev-parse", "HEAD").strip()
--    status_text = git(root, "status", "--short").rstrip() or "clean working tree"
--    remote = git(root, "remote", "get-url", "origin", check=False).strip()
--    generated = datetime.now(timezone.utc).isoformat()
--
--    tracked_selected = [record for record in file_records if record["tracked"]]
--    untracked_selected = [record for record in file_records if not record["tracked"]]
--    env_index: defaultdict[str, set[str]] = defaultdict(set)
--    for item in python_files:
--        for name in item.env_vars:
--            env_index[name].add(item.path)
--    for item in notebooks:
--        for name in item.env_vars:
--            env_index[name].add(item.path)
--
--    public_symbols = [
--        symbol for symbol in symbols
--        if not symbol.is_private and symbol.kind in {"function", "class"}
--    ]
--    tested_count = sum(
--        bool(tests.get(f"{symbol.module}.{symbol.qualname}"))
--        for symbol in public_symbols
--    )
--    consumed_count = sum(
--        bool(consumers.get(f"{symbol.module}.{symbol.qualname}"))
--        for symbol in public_symbols
--    )
--
--    continuation_lines = [
--        "## 6. Executive continuation map",
--        "",
--        f"- Branch: `{branch}`",
--        f"- Commit: `{commit}`",
--        f"- Git status: `{'clean' if status_text == 'clean working tree' else 'has changes'}`",
--        f"- Tracked relevant files included: `{len(tracked_selected)}`",
--        f"- Relevant untracked files included: `{len(untracked_selected)}`",
--        f"- Python modules analyzed: `{len(python_files)}`",
--        f"- Notebooks analyzed: `{len(notebooks)}`",
--        f"- Public top-level functions/classes: `{len(public_symbols)}`",
--        f"- Public symbols with detected tests: `{tested_count}`",
--        f"- Public symbols with detected consumers: `{consumed_count}`",
--        f"- Static attention items: `{len(attention)}`",
--        "",
--        "### Canonical responsibility map",
--        "",
--        "| Responsibility | Inspect first |",
--        "|---|---|",
--        "| Data access and Parquet contract | `src/utils/storage.py`, `src/utils/config.py` |",
--        "| Cohort and analytical datasets | `src/data/`, active notebooks, cohort tests |",
--        "| Feature engineering | `src/features/`, feature tests, `configs/supervised.yaml` |",
--        "| Split and leakage prevention | active split module, `src/evaluation/leakage.py`, split tests |",
--        "| Models and pipelines | `src/models/`, pipeline tests, active pilot notebook |",
--        "| Metrics and calibration | `src/evaluation/`, model calibration module, tests |",
--        "| Experiment logging | `src/utils/reproducibility.py` and `Run` consumers |",
--        "| Methodological decisions | `configs/supervised.yaml`, `docs/decisoes.md` |",
--        "| Current orchestration | notebooks, but migrate repeated logic to `src/` |",
--        "",
--        "### Immediate continuation protocol",
-+    commit = git(root, "rev-parse", "HEAD", check=False).strip() or "no commits"
-+    remote, _ = redactor(git(root, "remote", "get-url", "origin", check=False).strip())
-+    status_text = git(root, "status", "--short", "--branch").rstrip() or "clean"
-+    log_text = git(root, "log", f"-{args.git_log}", "--date=iso", "--pretty=format:%h %ad %an%n    %s", check=False).rstrip()
-+    branches = git(root, "branch", "-a", "-vv", check=False).rstrip()
-+    ahead_behind = git(root, "rev-list", "--left-right", "--count", "HEAD...@{upstream}", check=False).strip()
-+    diff_stat = git(root, "diff", "HEAD", "--stat", check=False).rstrip()
-+    diff_text = ""
-+    if args.include_diff:
-+        raw_diff = git(root, "diff", "HEAD", "--", ".", ":(exclude)docs/" + OUTPUT_MD_NAME,
-+                       ":(exclude)docs/" + OUTPUT_JSON_NAME, check=False)
-+        diff_text = truncate(redactor(raw_diff)[0], args.max_diff_chars)
-+    gitignore_check = git(root, "check-ignore", "-v", "--no-index", *[
-+        p for p in ("data/", "outputs/", "models/", ".env", "configs/paths.local.json") if (root / p).exists()
-+    ], check=False).strip() if any((root / p).exists() for p in ("data", "outputs", "models", ".env")) else ""
-+
-+    generated = datetime.now(timezone.utc).isoformat(timespec="seconds")
-+    counts = Counter(a.severity for a in attention)
-+    public = [s for s in symbols if s.path.startswith("src/") and not s.is_private and s.kind in {"function", "class"}]
-+
-+    # ---- Section 6
-+    sec6 = [
-+        "## 6. Executive continuation map", "",
-+        f"- Generated (UTC): `{generated}` · branch `{branch}` · commit `{commit[:12]}`",
-+        f"- Git status: `{'clean' if status_text.count(chr(10)) == 0 else 'has changes'}`; upstream ahead/behind: `{ahead_behind or 'n/a'}`",
-+        f"- Files in working folder (inventory): `{len(inventory)}` "
-+        f"(tracked `{sum(r['git'] == 'tracked' for r in inventory)}`, untracked `{sum(r['git'] == 'untracked' for r in inventory)}`, "
-+        f"ignored/local `{sum(r['git'] == 'ignored' for r in inventory)}`)",
-+        f"- Source files with full content: `{len(file_records)}`; artifacts included: `{len(artifact_records)}`",
-+        f"- Python modules: `{len(python_files)}` · notebooks: `{len(notebooks)}` · public src symbols: `{len(public)}`",
-+        f"- Public src symbols with tests: `{sum(bool(tests.get(f'{s.module}.{s.qualname}')) for s in public)}` · with consumers: "
-+        f"`{sum(bool(consumers.get(f'{s.module}.{s.qualname}')) for s in public)}`",
-+        f"- Attention items: **{counts.get('high', 0)} high**, {counts.get('medium', 0)} medium, {counts.get('low', 0)} low",
-+        f"- Tests executed: `{'yes, exit ' + str(tests_result['returncode']) if tests_result else 'no (use --run-tests)'}`",
-         "",
--        "1. Resolve HIGH attention items before introducing a competing implementation.",
--        "2. Search Section 10 by symbol name and responsibility.",
--        "3. Review Section 11 for imports and likely blast radius.",
--        "4. Review Section 12 for tests covering the affected contract.",
--        "5. Review Section 13 for notebook-local functions that may need extraction.",
--        "6. Use Section 15 source boundaries to inspect exact implementations.",
-+        "### Canonical responsibility map", "",
-+        render_table(["Responsibility", "Inspect first"], [
-+            ["Data access and Parquet", "`src/utils/storage.py`, `src/utils/config.py`"],
-+            ["Cohort and supervised artifact", "`src/data/`, cohort notebooks, `tests/test_cohort_source.py`"],
-+            ["Feature engineering", "`src/features/`, `tests/test_features.py`, YAML `features`"],
-+            ["Split and leakage", "`src/data/split.py`, `src/evaluation/leakage.py`, split tests"],
-+            ["Models and pipelines", "`src/models/`, `tests/test_model_pipelines.py`"],
-+            ["Metrics, calibration, errors", "`src/evaluation/`, `src/models/calibration.py`"],
-+            ["Experiment logging", "`src/utils/reproducibility.py`"],
-+            ["Decisions and gates", f"`{args.config}`, `docs/decisoes.md`"],
-+        ]),
-     ]
- 
--    config_section = ["## 8. Active configuration summary", ""]
-+    # ---- Section 8: configuration
-+    sec8 = ["## 8. Configuration", ""]
-     if isinstance(config, dict):
--        flattened = flatten_mapping(config)
--        important_prefixes = (
--            "seed", "target", "coluna_tempo", "periodo", "features.numericas",
--            "features.categoricas", "features.final", "features.proibidas",
--            "features.engenharia", "temporal", "models", "tuning", "calibracao",
--            "limiar", "avaliacao", "gates", "selecao_modelos",
--        )
--        for key, value in flattened.items():
--            if any(key == prefix or key.startswith(prefix + ".") for prefix in important_prefixes):
--                preview = repr(value)
--                if len(preview) > 500:
--                    preview = preview[:497] + "..."
--                config_section.append(f"- `{key}`: `{preview}`")
-+        if gate_names:
-+            sec8 += ["### Gates", "", render_table(
-+                ["Gate", "Status", "Approved by", "Date", "Description"],
-+                [[f"`{k}`", str(nested_get(gates, k, "status")), str(nested_get(gates, k, "aprovado_por")),
-+                  str(nested_get(gates, k, "data")), str(nested_get(gates, k, "descricao") or "").strip()[:160]]
-+                 for k in gates]), ""]
-+        sec8 += ["### Flattened active configuration", "", f"Source: `{args.config}`", ""]
-+        sec8 += [f"- `{k}`: `{repr(v)[:400]}`" for k, v in flatten_mapping(config).items()]
-+    else:
-+        sec8.append(f"- Configuration unavailable: `{config_error}`")
-+    sec8 += ["", "### YAML files", "", render_table(
-+        ["File", "Parse", "Duplicated keys"],
-+        [[f"`{p}`", "ok" if not d["error"] else d["error"][:80], ", ".join(d["duplicates"]) or "none"]
-+         for p, d in sorted(yaml_docs.items())])]
-+    sec8 += ["", "### pyproject.toml", ""]
-+    if pyproject_data is not None:
-+        sec8 += [
-+            f"- Valid TOML: yes · name `{nested_get(pyproject_data, 'project', 'name')}` · "
-+            f"requires-python `{nested_get(pyproject_data, 'project', 'requires-python')}`",
-+            "- Dependencies: " + (", ".join(f"`{k}{v}`" for k, v in (pyproject_deps or {}).items()) or "none"),
-+        ]
-     else:
--        config_section.append(f"- Semantic YAML summary unavailable: `{config_error}`")
-+        sec8.append(f"- {pyproject_error or 'not found'}")
-+    sec8 += ["", "### requirements.txt", "",
-+             "- " + (", ".join(f"`{k}{v}`" for k, v in requirements.items()) if requirements else "not found")]
-+
-+    # ---- Section 9: environment
-+    key_rows = []
-+    declared = {**(requirements or {}), **(pyproject_deps or {})}
-+    for name in KEY_PACKAGES:
-+        if name in packages or name in declared:
-+            key_rows.append([f"`{name}`", packages.get(name, "**not installed**"),
-+                             (requirements or {}).get(name, "—") if requirements is not None else "n/a",
-+                             (pyproject_deps or {}).get(name, "—") if pyproject_deps is not None else "n/a"])
-+    sec9 = [
-+        "## 9. Python environment", "",
-+        f"- Interpreter: `{sys.version.split()[0]}` · implementation `{platform.python_implementation()}`",
-+        f"- Executable inside repo venv: `{'yes' if str(root).lower() in sys.executable.lower() else 'no (results reflect another interpreter)'}`",
-+        f"- Platform: `{platform.platform()}`",
-+        f"- PyYAML available: `{yaml is not None}` · tomllib available: `{tomllib is not None}`",
-+        "", "### Key packages: installed vs declared", "",
-+        render_table(["Package", "Installed", "requirements.txt", "pyproject.toml"], key_rows),
-+        "", "### All installed distributions", "",
-+        code_block("\n".join(f"{k}=={v}" for k, v in packages.items()), "text"),
-+    ]
- 
--    file_list_lines = [
--        "## 9. Repository inventory",
--        "",
--        "### Tracked relevant files",
--        "",
--        *(f"- `{record['path']}`" for record in tracked_selected),
--        "",
--        "### Relevant working-tree files not in the commit",
--        "",
--        *(
--            [f"- `{record['path']}` ({record['status'] or 'untracked'})" for record in untracked_selected]
--            or ["- None."]
--        ),
--        "",
--        "### Skipped or reduced assets",
--        "",
--        *(
--            [f"- `{value}`" for value in skipped]
--            if skipped
--            else ["- None."]
--        ),
-+    # ---- Section 10: inventory
-+    sec10 = [
-+        "## 10. Path inventory of the working folder", "",
-+        "Contents of data/models are never copied. `ignored` = exists locally but is ignored by Git.", "",
-+        "### Directory tree", "", render_tree(inventory), "",
-+        "### All files", "",
-+        render_table(["Path", "Git", "Size", "Modified (UTC)"],
-+                     [[f"`{r['path']}`", r["git"], human_bytes(r["bytes"]), r["modified_utc"]] for r in inventory]),
-+        "", "### Skipped files", "", *(f"- `{s}`" for s in skipped), *([] if skipped else ["- None."]),
-+        "", "### .gitignore check for local folders", "", code_block(gitignore_check or "n/a", "text"),
-     ]
- 
--    env_lines = ["## 14. Environment variables referenced", ""]
--    if env_index:
--        for name, paths in sorted(env_index.items()):
--            env_lines.append(
--                f"- `{name}`: " + ", ".join(f"`{path}`" for path in sorted(paths))
--            )
-+    # ---- Section 11: tests
-+    test_rows = []
-+    for f in python_files:
-+        if f.path.startswith("tests/") or Path(f.path).name.startswith("test_"):
-+            names = [s.qualname for s in f.symbols if s.name.startswith("test_")]
-+            test_rows.append([f"`{f.path}`", str(len(names)), ", ".join(f"`{v}`" for v in f.internal_imports) or "none"])
-+    sec11 = ["## 11. Tests", "", render_table(["Test file", "Tests", "Internal imports"], test_rows), ""]
-+    if tests_result:
-+        sec11 += [f"### pytest result (exit `{tests_result['returncode']}`)", "",
-+                  f"Command: `{tests_result['command']}`", "",
-+                  code_block(truncate(redactor(tests_result["output"])[0], 60_000), "text")]
-     else:
--        env_lines.append("- None detected.")
--    env_lines += ["", "Only variable names are documented; values are never collected."]
-+        sec11.append("pytest was not executed. Use `--run-tests` (optionally `--pytest-args \"-m 'not slow'\"`).")
-+
-+    # ---- Section 13/14/15
-+    dep_rows = [[f"`{f.module}`", ", ".join(f"`{v}`" for v in f.internal_imports) or "none"]
-+                for f in sorted(python_files, key=lambda x: x.module)]
-+    sec13 = ["## 13. Internal dependency map", "", render_table(["Module", "Internal imports"], dep_rows)]
-+    nb_rows = [[f"`{n.path}`", f"{n.code_cells}/{n.markdown_cells}", f"{n.executed_cells}/{n.code_cells}",
-+                "yes" if n.out_of_order else "no", str(len(n.error_outputs)),
-+                ", ".join(f"`{v}`" for v in n.internal_imports) or "none",
-+                ", ".join(f"`{s.name}`" for s in n.functions + n.classes) or "none"]
-+               for n in sorted(notebooks, key=lambda x: x.path)]
-+    sec14 = ["## 14. Notebook orchestration inventory", "",
-+             render_table(["Notebook", "Code/MD cells", "Executed", "Out of order", "Errors",
-+                           "Internal imports", "Local functions"], nb_rows), ""]
-+    for n in sorted(notebooks, key=lambda x: x.path):
-+        sec14 += [f"### `{n.path}` headings", "", *(f"- {h}" for h in n.headings), ""]
-+        if n.file_literals:
-+            sec14 += ["Referenced files: " + ", ".join(f"`{v}`" for v in n.file_literals), ""]
-+    env_index: defaultdict[str, set[str]] = defaultdict(set)
-+    for f in python_files:
-+        for e in f.env_vars:
-+            env_index[e].add(f.path)
-+    for n in notebooks:
-+        for e in n.env_vars:
-+            env_index[e].add(n.path)
-+    lit_index: defaultdict[str, set[str]] = defaultdict(set)
-+    for f in python_files:
-+        for lit in f.file_literals:
-+            lit_index[lit].add(f.path)
-+    for n in notebooks:
-+        for lit in n.file_literals:
-+            lit_index[lit].add(n.path)
-+    sec15 = ["## 15. Environment variables, file literals and TODOs", "",
-+             "### Environment variables (names only)", "",
-+             *([f"- `{k}`: " + ", ".join(f"`{p}`" for p in sorted(v)) for k, v in sorted(env_index.items())] or ["- None."]),
-+             "", "### File names referenced in code", "",
-+             *([f"- `{k}` ← " + ", ".join(f"`{p}`" for p in sorted(v)) for k, v in sorted(lit_index.items())] or ["- None."]),
-+             "", "### TODO / FIXME / PENDENTE markers", "", *([f"- `{t}`" for t in todos] or ["- None."])]
-+
-+    sec16 = ["## 16. Git history and uncommitted changes", "",
-+             "### Status", "", code_block(status_text, "text"), "",
-+             "### Branches", "", code_block(redactor(branches)[0] or "n/a", "text"), "",
-+             f"### Last {args.git_log} commits", "", code_block(redactor(log_text)[0] or "no commits", "text"), "",
-+             "### Diff stat (working tree vs HEAD)", "", code_block(diff_stat or "no changes", "text")]
-+    if args.include_diff:
-+        sec16 += ["", "### Full diff (working tree vs HEAD)", "", code_block(diff_text or "no changes", "diff")]
- 
-     document_parts = [
--        CONTEXT.rstrip(),
--        "",
--        *continuation_lines,
--        "",
--        "## 7. Static attention report",
--        "",
--        render_attention(attention),
--        "",
--        *config_section,
--        "",
--        *file_list_lines,
--        "",
--        "## 10. Python API and reuse catalog",
--        "",
--        "Generated with Python AST. Project modules are not imported or executed.",
--        "",
--        render_python_api(python_files, consumers, tests),
--        "",
--        "## 11. Internal dependency map",
--        "",
--        render_dependency_map(python_files),
--        "",
--        "## 12. Test inventory and static coverage links",
--        "",
--        render_test_inventory(tests_summary),
--        "",
--        "## 13. Notebook orchestration inventory",
--        "",
--        render_notebook_inventory(notebooks),
--        "",
--        *env_lines,
--        "",
--        "## 15. Complete or reduced source by file",
--        "",
--        "Tracked and relevant working-tree files are separated in metadata. Notebook outputs are omitted. Large notebooks use a reduced static view rather than disappearing from the snapshot.",
--        "",
--        "\n".join(source_sections).rstrip(),
--        "",
--        "## 16. Snapshot provenance",
-+        CONTEXT.format(schema=SCHEMA_VERSION).rstrip(), "",
-+        *sec6, "",
-+        "## 7. Static attention report", "", render_attention(attention), "",
-+        *sec8, "", *sec9, "", *sec10, "", *sec11, "",
-+        "## 12. Python API and reuse catalog", "",
-+        "Generated with Python AST; project modules are not imported.", "",
-+        render_python_api(python_files, consumers, tests), "",
-+        *sec13, "", *sec14, "", *sec15, "", *sec16, "",
-+        "## 17. Full source by file", "",
-+        "Every relevant file of the repository, including untracked files in source folders. "
-+        "Notebooks include cell sources and, unless disabled, text outputs.", "",
-+        "\n".join(source_sections).rstrip(), "",
-+        "## 18. Local artifacts (small text files from data/, outputs/, reports/, models/)", "",
-+        ("\n".join(artifact_sections).rstrip() if artifact_sections else "- None included (use defaults or check --no-artifacts)."),
-         "",
-+        "## 19. Snapshot provenance", "",
-         f"- Generated UTC: `{generated}`",
--        f"- Branch: `{branch}`",
--        f"- Commit: `{commit}`",
-+        f"- Branch / commit: `{branch}` / `{commit}`",
-         f"- Origin: `{remote or 'not configured'}`",
--        f"- Python used by generator: `{sys.version.split()[0]}`",
--        f"- PyYAML available: `{yaml is not None}`",
--        "",
--        "### Git status at generation",
--        "",
--        code_block(status_text, "text"),
-+        f"- Generator options: `{ {k: (str(v) if isinstance(v, Path) else v) for k, v in vars(args).items()} }`",
-     ]
-     document = "\n".join(document_parts).rstrip() + "\n"
- 
-     machine = {
--        "schema_version": 2,
-+        "schema_version": SCHEMA_VERSION,
-         "generated_utc": generated,
--        "repository": {
--            "branch": branch,
--            "commit": commit,
--            "origin": remote or None,
--            "status": status_text,
--        },
-+        "repository": {"branch": branch, "commit": commit, "origin": remote or None,
-+                       "status": status_text, "ahead_behind": ahead_behind},
-+        "environment": {"python": sys.version.split()[0], "platform": platform.platform(), "packages": packages},
-+        "inventory": inventory,
-         "files": file_records,
--        "python_files": [asdict(item) for item in python_files],
--        "notebooks": [asdict(item) for item in notebooks],
-+        "artifacts": artifact_records,
-+        "python_files": [asdict(f) for f in python_files],
-+        "notebooks": [asdict(n) for n in notebooks],
-         "consumers": consumers,
-         "tests_by_symbol": tests,
--        "test_inventory": tests_summary,
--        "attention": [asdict(item) for item in attention],
--        "environment_variables": {
--            name: sorted(paths) for name, paths in sorted(env_index.items())
--        },
--        "config_summary": flatten_mapping(config) if isinstance(config, dict) else None,
-+        "attention": [asdict(a) for a in attention],
-+        "environment_variables": {k: sorted(v) for k, v in sorted(env_index.items())},
-+        "config": config if isinstance(config, (dict, list)) else None,
-         "config_error": config_error,
-+        "yaml_files": yaml_docs,
-+        "pyproject": {"valid": pyproject_data is not None, "error": pyproject_error, "dependencies": pyproject_deps},
-+        "requirements": requirements,
-+        "tests_result": tests_result,
-+        "todos": todos,
-         "skipped": skipped,
-     }
-     return document, machine
- 
- 
- def parse_args() -> argparse.Namespace:
-+    # argparse rejects values that start with "-" (e.g. --pytest-args "-m 'not slow'").
-+    argv = sys.argv[1:]
-+    for index, value in enumerate(argv[:-1]):
-+        if value == "--pytest-args" and argv[index + 1].startswith("-"):
-+            argv[index : index + 2] = [f"--pytest-args={argv[index + 1]}"]
-+            break
-     parser = argparse.ArgumentParser(
--        description="Generate an AI-oriented static reference of the current Git repository."
--    )
--    parser.add_argument(
--        "--output-md",
--        type=Path,
--        default=OUTPUT_MD,
--        help=f"Markdown destination (default: {OUTPUT_MD.as_posix()})",
--    )
--    parser.add_argument(
--        "--output-json",
--        type=Path,
--        default=OUTPUT_JSON,
--        help=f"JSON destination (default: {OUTPUT_JSON.as_posix()})",
--    )
--    parser.add_argument(
--        "--max-inline-bytes",
--        type=int,
--        default=DEFAULT_MAX_INLINE_BYTES,
--        help="Maximum bytes before text or notebook source uses a reduced view.",
--    )
--    parser.add_argument(
--        "--fail-on-high",
--        action="store_true",
--        help="Return exit code 2 when HIGH attention items are detected.",
--    )
--    return parser.parse_args()
-+        description="Generate a complete diagnostic snapshot of the repository for review by a person or an AI.")
-+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR, help="Destination folder (default: docs).")
-+    parser.add_argument("--config", default="configs/supervised.yaml", help="Main YAML configuration (relative path).")
-+    parser.add_argument("--split-mb", type=float, default=DEFAULT_SPLIT_MB,
-+                        help=f"Size of each part in docs/{PARTS_DIR_NAME}/ (default: {DEFAULT_SPLIT_MB} MB).")
-+    parser.add_argument("--no-split", dest="split", action="store_false",
-+                        help=f"Do not write docs/{PARTS_DIR_NAME}/.")
-+    parser.add_argument("--no-notebook-outputs", dest="notebook_outputs", action="store_false",
-+                        help="Omit notebook outputs (sources only).")
-+    parser.add_argument("--max-output-chars", type=int, default=DEFAULT_MAX_OUTPUT_CHARS,
-+                        help="Maximum characters per notebook output.")
-+    parser.add_argument("--no-artifacts", dest="artifacts", action="store_false",
-+                        help="Do not include small text artifacts from data/, outputs/, reports/, models/.")
-+    parser.add_argument("--max-artifact-bytes", type=int, default=DEFAULT_MAX_ARTIFACT_BYTES)
-+    parser.add_argument("--max-csv-rows", type=int, default=DEFAULT_MAX_CSV_ROWS)
-+    parser.add_argument("--max-inline-bytes", type=int, default=DEFAULT_MAX_INLINE_BYTES,
-+                        help="Files above this size are truncated (notebooks use a reduced view).")
-+    parser.add_argument("--git-log", type=int, default=DEFAULT_GIT_LOG, help="Number of recent commits to list.")
-+    parser.add_argument("--no-diff", dest="include_diff", action="store_false", help="Omit the full uncommitted diff.")
-+    parser.add_argument("--max-diff-chars", type=int, default=DEFAULT_MAX_DIFF_CHARS)
-+    parser.add_argument("--run-tests", action="store_true", help="Run pytest and include the result (executes project code).")
-+    parser.add_argument("--pytest-args", default="", help="Extra pytest arguments, e.g. \"-m 'not slow'\".")
-+    parser.add_argument("--test-timeout", type=int, default=1800)
-+    parser.add_argument("--fail-on-high", action="store_true", help="Exit with code 2 if HIGH attention items exist.")
-+    return parser.parse_args(argv)
- 
- 
- def main() -> int:
-+    for stream in (sys.stdout, sys.stderr):
-+        try:
-+            stream.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles
-+        except Exception:
-+            pass
-     args = parse_args()
-     root = root_dir()
--    document, machine = build_reference(
--        root,
--        max_inline_bytes=args.max_inline_bytes,
--    )
--    output_md = root / args.output_md
--    output_json = root / args.output_json
-+    document, machine = build_reference(root, args)
-+    out_dir = root / args.output_dir
-+    output_md = out_dir / OUTPUT_MD_NAME
-+    output_json = out_dir / OUTPUT_JSON_NAME
-     atomic_write(output_md, document)
--    atomic_write(
--        output_json,
--        json.dumps(machine, ensure_ascii=False, indent=2, default=str) + "\n",
--    )
--    high_count = sum(
--        item.get("severity") == "high"
--        for item in machine.get("attention", [])
--    )
--    print(f"Updated: {output_md}")
--    print(f"Updated: {output_json}")
--    print(f"Files documented: {len(machine['files'])}")
--    print(f"Python modules analyzed: {len(machine['python_files'])}")
--    print(f"Notebooks analyzed: {len(machine['notebooks'])}")
--    print(f"Attention items: {len(machine['attention'])} ({high_count} high)")
--    if args.fail_on_high and high_count:
-+    atomic_write(output_json, json.dumps(machine, ensure_ascii=False, indent=2, default=str) + "\n")
-+
-+    parts_dir = out_dir / PARTS_DIR_NAME
-+    if parts_dir.exists():
-+        for old in parts_dir.glob("part_*.md"):
-+            old.unlink()
-+    written_parts: list[Path] = []
-+    if args.split and args.split_mb > 0:
-+        parts = split_document(document, int(args.split_mb * 1024 * 1024))
-+        for index, part in enumerate(parts, 1):
-+            target = parts_dir / f"part_{index:02d}_of_{len(parts):02d}.md"
-+            header = f"<!-- PROJECT_COMPLETE_REFERENCE part {index}/{len(parts)} -->\n"
-+            atomic_write(target, header + part)
-+            written_parts.append(target)
-+
-+    high = sum(a.get("severity") == "high" for a in machine["attention"])
-+    print(f"update_project_reference.py schema v{SCHEMA_VERSION}")
-+    print(f"Updated: {output_md} ({human_bytes(output_md.stat().st_size)})")
-+    print(f"Updated: {output_json} ({human_bytes(output_json.stat().st_size)})")
-+    if written_parts:
-+        print(f"Parts:   {len(written_parts)} file(s) in {parts_dir}")
-+        for part in written_parts:
-+            print(f"         {part.name} ({human_bytes(part.stat().st_size)})")
-+    else:
-+        print("Parts:   not written (--no-split)")
-+    print(f"Inventory: {len(machine['inventory'])} files, full source: {len(machine['files'])}, "
-+          f"artifacts: {len(machine['artifacts'])}")
-+    print(f"Python modules: {len(machine['python_files'])}, notebooks: {len(machine['notebooks'])}")
-+    print(f"Attention items: {len(machine['attention'])} ({high} high)")
-+    if machine.get("tests_result"):
-+        print(f"pytest exit code: {machine['tests_result']['returncode']}")
-+    if args.fail_on_high and high:
-         return 2
-     return 0
- 
-
+no changes
 ```
 
 ## 17. Full source by file
@@ -13374,172 +11388,493 @@ outputs/predictions/*
 /REPOSITORY_SNAPSHOT.json
 ```
 
+## `configs/decisoes.yaml`
+
+- Git: `tracked` · status `clean`
+- Size: `6.1 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `8a15f7be19ceaadce2afca9756a02bec266027eecf7cd9f2691e3e23b147b888`
+
+```yaml
+# =============================================================================
+# Config de decisões da Pessoa A — v0.1 (fonte de verdade para A1–A4)
+# =============================================================================
+# Cada valor abaixo é uma DECISÃO. Enquanto `status_decisoes` estiver como
+# "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
+# Ao confirmar: atualizar o valor, mudar o status para "aprovada" e registrar
+# em outputs/tables/pessoa_a/tabela_decisoes.csv (v.log_decision).
+#
+# `cols`: nomes canônicos SIVEP. Nomes alternativos da base (ex.: internado ->
+# HOSPITAL) são tratados em ALIASES no módulo src/protocolo/verificacoes.py.
+# Os Gates G1 (alvo/features) e G2 (janela temporal) do supervised.yaml são
+# aprovados por A com base nestas decisões.
+# =============================================================================
+versao: '0.4'
+status_decisoes:
+  ponto_de_previsao:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  coorte_estrita:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  alvo:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  evolucao_desconhecida:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  periodos:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  acoes_inconsistencias_datas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  variaveis_proibidas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  variaveis_condicionais:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  maturidade_evolucao:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  features_derivadas:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  split_aleatorio_70_15_15:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+  cenario_sem_2020_2021:
+    status: proposta
+    responsavel: Pessoa A
+    data: null
+cols:
+  hospital: HOSPITAL
+  dt_interna: DT_INTERNA
+  evolucao: EVOLUCAO
+  tp_idade: TP_IDADE
+  nu_idade: NU_IDADE_N
+  dt_nasc: DT_NASC
+  dt_sin_pri: DT_SIN_PRI
+  dt_notific: DT_NOTIFIC
+  dt_evoluca: DT_EVOLUCA
+  dt_encerra: DT_ENCERRA
+  nu_notific: NU_NOTIFIC
+dev_years:
+- 2022
+- 2023
+- 2024
+holdout_years:
+- 2025
+min_date: '2009-01-01'
+expected_codes:
+  HOSPITAL:
+  - '1'
+  - '2'
+  - '9'
+  EVOLUCAO:
+  - '1'
+  - '2'
+  - '3'
+  - '9'
+  TP_IDADE:
+  - '1'
+  - '2'
+  - '3'
+  UTI:
+  - '1'
+  - '2'
+  - '9'
+  FEBRE:
+  - '1'
+  - '2'
+  - '9'
+  TOSSE:
+  - '1'
+  - '2'
+  - '9'
+  DISPNEIA:
+  - '1'
+  - '2'
+  - '9'
+  SATURACAO:
+  - '1'
+  - '2'
+  - '9'
+target_positive: '2'
+target_negative: '1'
+target_separate:
+- '3'
+closed_codes:
+- '1'
+- '2'
+- '3'
+drop_date_inconsistencies: false
+maturity_min_closed_pct: 90.0
+date_rules:
+- - dt_nasc
+  - dt_sin_pri
+  - Nascimento posterior ao início dos sintomas
+  - excluir
+- - dt_sin_pri
+  - dt_notific
+  - Início dos sintomas posterior à notificação
+  - manter com flag
+- - dt_sin_pri
+  - dt_interna
+  - Início dos sintomas posterior à internação
+  - manter com flag
+- - dt_interna
+  - dt_evoluca
+  - Evolução anterior à internação
+  - excluir
+- - dt_evoluca
+  - dt_encerra
+  - Encerramento anterior à evolução
+  - manter com flag
+max_symptom_to_admission_days: 30
+max_age_years: 120
+forbidden_vars:
+- EVOLUCAO
+- DT_EVOLUCA
+- DT_ENCERRA
+- CLASSI_FIN
+- CLASSI_OUT
+- CRITERIO
+- UTI
+- DT_ENTUTI
+- DT_SAIDUTI
+- SUPORT_VEN
+- ANTIVIRAL
+- DT_ANTIVIR
+- DT_COLETA
+- TP_AMOSTRA
+- PCR_RESUL
+- DT_PCR
+- RES_AN
+- DT_RES_AN
+- RES_IGG
+- RES_IGM
+- RES_IGA
+- DT_RES
+- POS_PCRFLU
+- POS_PCROUT
+- HOSPITAL
+- EVOLUCAO_COVID19
+- SOROLOGIA
+- PCR
+- UTILIZOUVNI
+- TP_ANTIVIR
+- TRAT_COV
+- TIPO_TRAT
+- DT_TRT_COV
+- OUT_ANTIV
+- OUT_TRAT
+- DT_DIGITA
+conditional_vars:
+- SATURACAO
+- VACINA
+- VACINA_COV
+- DOSE_1_COV
+- DOSE_2_COV
+- DOSE_REF
+- SG_UF
+- SG_UF_NOT
+- CO_MUN_RES
+- ID_MN_RESI
+- CS_ZONA
+- SURTO_SG
+- CO_REGIONA
+- CO_MUN_NOT
+- CO_PAIS
+- CO_RG_RESI
+- SG_UF_INTE
+- CO_RG_INTE
+- CO_MU_INTE
+- DT_UT_DOSE
+- MAE_VAC
+- DT_VAC_MAE
+- M_AMAMENTA
+- DT_DOSEUNI
+- DT_1_DOSE
+- DT_2_DOSE
+- DOSE_2REF
+- DOSE_ADIC
+- DOS_RE_BI
+- PAC_COCBO
+- PAC_DSCBO
+- POV_CT
+- TP_POV_CT
+- ESTRANG
+- OUTRO_SIN
+- OUTRO_DES
+- OBES_IMC
+- OUT_MORBI
+- MORB_DESC
+allowed_vars:
+- CS_SEXO
+- NU_IDADE_N
+- TP_IDADE
+- CS_RACA
+- CS_GESTANT
+- FEBRE
+- TOSSE
+- GARGANTA
+- DISPNEIA
+- DESC_RESP
+- DIARREIA
+- VOMITO
+- DOR_ABD
+- FADIGA
+- PERD_OLFT
+- PERD_PALA
+- CARDIOPATI
+- HEMATOLOGI
+- SIND_DOWN
+- HEPATICA
+- ASMA
+- DIABETES
+- NEUROLOGIC
+- PNEUMOPATI
+- IMUNODEPRE
+- RENAL
+- OBESIDADE
+- DT_SIN_PRI
+- DT_INTERNA
+- DT_NOTIFIC
+- SEM_PRI
+- CS_ETINIA
+- CS_ESCOL_N
+- AVE_SUINO
+- OUT_ANIM
+- PUERPERA
+- TABAG
+leak_auc_threshold: 0.9
+leak_max_categories: 50
+leak_sample: 200000
+suspicious_metric_threshold: 0.95
+log_required_keys:
+  timestamp: timestamp|data_hora|datetime
+  versão: vers[aã]o|version
+  seed: seed|semente
+  config: config
+  variáveis: features|vari[aá]veis|columns
+  folds: fold
+  parâmetros: params|par[aâ]metros|hiperpar
+  artefatos: artefato|artifact|output
+decision_min_pr_auc_gain: 0.01
+decision_max_cv_ratio: 0.1
+exclusion_sample_rows: 50
+dataset_analitico:
+  path: data/analytical/dataset_supervisionado.parquet
+experimentos_split:
+  seed: 42
+  fracoes:
+    treino: 0.7
+    validacao: 0.15
+    holdout: 0.15
+  estratificar_por_alvo: true
+  bench_max_linhas: 200000
+  cenarios:
+    todos_2019_2025:
+      anos:
+      - 2019
+      - 2020
+      - 2021
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      descricao: Base completa 2019-2025
+    sem_2020_2021:
+      anos:
+      - 2019
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      descricao: Remove 2020 e 2021 (anos de pandemia)
+derivadas:
+  intervalo_max_dias: 30
+  periodo_semanas: 52.1775
+  faixas_etarias:
+    bins:
+    - 0
+    - 1
+    - 5
+    - 12
+    - 18
+    - 30
+    - 40
+    - 50
+    - 60
+    - 70
+    - 80
+    - 200
+    labels:
+    - <1
+    - 1-4
+    - 5-11
+    - 12-17
+    - 18-29
+    - 30-39
+    - 40-49
+    - 50-59
+    - 60-69
+    - 70-79
+    - 80+
+```
+
 ## `configs/dicionario_variaveis_v1.csv`
 
 - Git: `tracked` · status `clean`
-- Size: `45.7 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `7c87f4bd34e3075d8a93d5ae8285638693238709f3cfff4d64cd13fbc9e3a2a9`
+- Size: `45.4 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `5122f54bab9bab23a56d67158609368d8b165346de244b2d202e6ad122ced7e8`
 
 ```csv
 coluna,nome_amigavel,grupo,existe_no_dataframe,dtype_atual,tipo_analitico_inferido,uso_inicial_sugerido,aplicabilidade,transformacao_sugerida,risco_temporal,quantidade_total,quantidade_preenchida,quantidade_ausente,percentual_preenchido,percentual_ausente,valores_distintos_sem_ausente,valores_frequentes_amostra,n_populacao_aplicavel,n_preenchido_aplicavel,percentual_preenchido_aplicavel,preenchimento_min_ano,preenchimento_max_ano,amplitude_preenchimento_ano,anos_observados,ponto_de_decisao,decisao_final_usuario,justificativa_decisao_final
-nu_notific,Numero da notificacao,estrutura_coorte,True,object,codigo_identificador,estrutura_coorte,Populacao geral,Identificador tecnico; nao usar como preditor,baixo,4666910,4666910,0,100.0,0.0,4666881,31736177754051: 2 | 31743770891762: 2 | 31747221217548: 2 | 31737727549117: 2 | 31748270369373: 2 | 31741286280540: 2 | 31744118738694: 2 | 31736344210476: 2 | 31736866916969: 2 | 31741716994694: 2,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_notific,Data da notificacao,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,Auditoria temporal; nao usar data bruta,baixo,4666910,4666910,0,100.0,0.0,2829,2021-03-22: 13895 | 2021-03-15: 13842 | 2021-03-29: 13471 | 2021-04-05: 13000 | 2021-03-30: 12242 | 2021-03-24: 12083 | 2021-03-16: 11765 | 2021-03-08: 11606 | 2021-03-25: 11587 | 2021-03-18: 11465,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,Derivar intervalo entre sintomas e internacao,baixo,4666910,4666910,0,100.0,0.0,2828,2021-03-01: 16153 | 2021-03-10: 14229 | 2021-03-15: 13257 | 2021-03-20: 13175 | 2021-04-01: 12788 | 2021-03-08: 11973 | 2021-05-10: 11626 | 2021-03-12: 11291 | 2021-03-05: 11231 | 2021-06-01: 11188,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,derivar_atributo,"Fonte para o intervalo entre sintomas e internação e para atributos
+nu_notific,Numero da notificacao,estrutura_coorte,True,str,codigo_identificador,estrutura_coorte,Populacao geral,Identificador tecnico; nao usar como preditor,baixo,4666910,4666910,0,100.0,0.0,4666881,31744638947734: 2 | 31739904591826: 2 | 31748044066509: 2 | 31746458224089: 2 | 31744827529781: 2 | 31738324913116: 2 | 31745324608735: 2 | 31741716994694: 2 | 31736177754051: 2 | 31744265580768: 2,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_notific,Data da notificacao,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,Auditoria temporal; nao usar data bruta,baixo,4666910,4666910,0,100.0,0.0,2829,2021-03-22: 13895 | 2021-03-15: 13842 | 2021-03-29: 13471 | 2021-04-05: 13000 | 2021-03-30: 12242 | 2021-03-24: 12083 | 2021-03-16: 11765 | 2021-03-08: 11606 | 2021-03-25: 11587 | 2021-03-18: 11465,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,Derivar intervalo entre sintomas e internacao,baixo,4666910,4666910,0,100.0,0.0,2828,2021-03-01: 16153 | 2021-03-10: 14229 | 2021-03-15: 13257 | 2021-03-20: 13175 | 2021-04-01: 12788 | 2021-03-08: 11973 | 2021-05-10: 11626 | 2021-03-12: 11291 | 2021-03-05: 11231 | 2021-06-01: 11188,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,derivar_atributo,"Fonte para o intervalo entre sintomas e internação e para atributos
 sazonais. A data bruta não será fornecida diretamente aos modelos."
-sem_pri,Semana epidemiologica dos primeiros sintomas,estrutura_coorte,True,object,categorica_alta_cardinalidade,auditoria_temporal,Populacao geral,Auditar contra a semana derivada de dt_sin_pri; não utilizar diretamente como preditora,baixo,4666910,4666910,0,100.0,0.0,53,20: 147061 | 21: 142729 | 19: 140364 | 22: 138504 | 23: 135988 | 18: 131345 | 24: 124948 | 25: 123079 | 17: 122626 | 11: 115162,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-hospital,Houve internacao?,estrutura_coorte,True,object,categorica,estrutura_coorte,Populacao geral,Filtro de elegibilidade,baixo,4666910,4547680,119230,97.445205,2.554795,3,1: 4434657 | None: 119230 | 2: 102957 | 9: 10066,4666910,4547680,97.445205,99.995793,100.0,0.004207,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_interna,Data da internacao por SRAG,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,"Ancora temporal; derivar ano, mes, semana e intervalos",confirmar_momento_medicao,4666910,4362665,304245,93.480804,6.519196,2953,None: 304245 | 2021-03-23: 11196 | 2021-03-22: 10912 | 2021-03-15: 10823 | 2021-03-16: 10717 | 2021-03-18: 10622 | 2021-03-17: 10554 | 2021-03-24: 10390 | 2021-03-29: 10231 | 2021-03-25: 10176,4666910,4362665,93.480804,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,estrutura_coorte,"Âncora temporal da coorte. Intervalos negativos não serão excluídos
+sem_pri,Semana epidemiologica dos primeiros sintomas,estrutura_coorte,True,str,categorica_alta_cardinalidade,auditoria_temporal,Populacao geral,Auditar contra a semana derivada de dt_sin_pri; não utilizar diretamente como preditora,baixo,4666910,4666910,0,100.0,0.0,53,20: 147061 | 21: 142729 | 19: 140364 | 22: 138504 | 23: 135988 | 18: 131345 | 24: 124948 | 25: 123079 | 17: 122626 | 11: 115162,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+hospital,Houve internacao?,estrutura_coorte,True,str,categorica,estrutura_coorte,Populacao geral,Filtro de elegibilidade,baixo,4666910,4547680,119230,97.445205,2.554795,3,1: 4434657 | nan: 119230 | 2: 102957 | 9: 10066,4666910,4547680,97.445205,99.995793,100.0,0.004207,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_interna,Data da internacao por SRAG,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,"Ancora temporal; derivar ano, mes, semana e intervalos",confirmar_momento_medicao,4666910,4362665,304245,93.480804,6.519196,2953,nan: 304245 | 2021-03-23: 11196 | 2021-03-22: 10912 | 2021-03-15: 10823 | 2021-03-16: 10717 | 2021-03-18: 10622 | 2021-03-17: 10554 | 2021-03-24: 10390 | 2021-03-29: 10231 | 2021-03-25: 10176,4666910,4362665,93.480804,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,estrutura_coorte,"Âncora temporal da coorte. Intervalos negativos não serão excluídos
 automaticamente. A decisão dependerá da avaliação de nosocomial,
 magnitude, quantidade e distribuição dos casos."
-cs_sexo,Sexo,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,3,M: 2483220 | F: 2182883 | I: 807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-nu_idade_n,Idade informada,demografia_contexto_social,True,object,numerica_a_validar,modelo_a_nucleo,Populacao geral,Combinar com tp_idade para criar idade_anos,baixo,4666910,4666910,0,100.0,0.0,139,1: 228045 | 2: 155966 | 3: 114180 | 4: 93272 | 5: 79788 | 66: 70994 | 68: 70283 | 67: 70138 | 6: 70121 | 70: 69654,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,Combinar com nu_idade_n,baixo,4666910,4666910,0,100.0,0.0,3,3: 4230167 | 2: 404936 | 1: 31807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_gestant,Situacao gestacional,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,8,6: 3172671 | 5: 1277145 | 9: 171169 | 3: 24944 | 2: 11702 | 1: 5311 | 4: 2475 | 0: 1493,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_raca,Raca ou cor,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4621769,45141,99.032743,0.967257,6,1: 1916760 | 4: 1742909 | 9: 709787 | 2: 195476 | None: 45141 | 3: 41240 | 5: 15597,4666910,4621769,99.032743,96.300347,100.0,3.699653,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_etinia,Etnia indigena,demografia_contexto_social,True,object,categorica_alta_cardinalidade,exploracao_subgrupo,Registros com raca ou cor indigena,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,11055,4655855,0.236881,99.763119,310,"None: 4655855 | KAINGANG (CAINGANGUE): 911 | YANOMAMI: 903 | TERENA: 705 | MAKUXI (MACUXI, MACHUSI, PEMON): 575 | GUARANI KAIOWA (PAI TAVYTERA): 574 | XAVANTE (A'UWE, AKWE, AWEN, AKWEN): 351 | GUARANI: 274 | TICUNA (TIKUNA, TUKUNA, MAGUTA): 254 | GUAJAJARA (TENETEHARA): 248",15597,11055,70.879015,0.087245,0.903354,0.816109,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar o uso detalhado depois da EDA no denominador indígena. | Confirmar se cs_raca = 5 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-cs_escol_n,Escolaridade,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3078146,1588764,65.956832,34.043168,7,None: 1588764 | 9: 1304194 | 1: 425935 | 3: 382584 | 5: 337951 | 2: 250435 | 0: 213463 | 4: 163584,4666910,3078146,65.956832,62.710219,92.335682,29.625463,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-cs_zona,Zona de residencia,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4202868,464042,90.056761,9.943239,4,1: 3886050 | None: 464042 | 2: 240467 | 9: 48321 | 3: 28030,4666910,4202868,90.056761,89.642113,97.570722,7.92861,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3879320,787590,83.123951,16.876049,4,2: 3178090 | None: 787590 | 9: 656220 | 1: 37968 | 3: 7042,4666910,3879320,83.123951,83.150597,96.64318,13.492583,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-out_anim,Especificacao do outro animal,exposicao_animal,True,object,texto_livre,exploracao_texto,Registros com contato com outro animal,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,5276,4661634,0.113051,99.886949,575,"None: 4661634 | CACHORRO: 2282 | GATO: 651 | CAO: 221 | GATO E CACHORRO: 154 | CACHORRO E GATO: 135 | GATOS: 123 | CACHORROS: 106 | BOVINOS: 83 | GATO, CACHORRO: 78",7042,5276,74.921897,0.0,0.324085,0.324085,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar se ave_suino = 3 significa outro animal | Avaliar apenas no denominador aplicavel ou em sensibilidade,decidir_depois_da_eda,"Preservar para EDA e possível categorização simples. Não utilizar texto
+cs_sexo,Sexo,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,3,M: 2483220 | F: 2182883 | I: 807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+nu_idade_n,Idade informada,demografia_contexto_social,True,str,numerica_a_validar,modelo_a_nucleo,Populacao geral,Combinar com tp_idade para criar idade_anos,baixo,4666910,4666910,0,100.0,0.0,139,1: 228045 | 2: 155966 | 3: 114180 | 4: 93272 | 5: 79788 | 66: 70994 | 68: 70283 | 67: 70138 | 6: 70121 | 70: 69654,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,Combinar com nu_idade_n,baixo,4666910,4666910,0,100.0,0.0,3,3: 4230167 | 2: 404936 | 1: 31807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_gestant,Situacao gestacional,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,8,6: 3172671 | 5: 1277145 | 9: 171169 | 3: 24944 | 2: 11702 | 1: 5311 | 4: 2475 | 0: 1493,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_raca,Raca ou cor,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4621769,45141,99.032743,0.967257,6,1: 1916760 | 4: 1742909 | 9: 709787 | 2: 195476 | nan: 45141 | 3: 41240 | 5: 15597,4666910,4621769,99.032743,96.300347,100.0,3.699653,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_etinia,Etnia indigena,demografia_contexto_social,True,str,categorica_alta_cardinalidade,exploracao_subgrupo,Registros com raca ou cor indigena,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,11055,4655855,0.236881,99.763119,310,"nan: 4655855 | KAINGANG (CAINGANGUE): 911 | YANOMAMI: 903 | TERENA: 705 | MAKUXI (MACUXI, MACHUSI, PEMON): 575 | GUARANI KAIOWA (PAI TAVYTERA): 574 | XAVANTE (A'UWE, AKWE, AWEN, AKWEN): 351 | GUARANI: 274 | TICUNA (TIKUNA, TUKUNA, MAGUTA): 254 | GUAJAJARA (TENETEHARA): 248",15597,11055,70.879015,0.087245,0.903354,0.816109,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar o uso detalhado depois da EDA no denominador indígena. | Confirmar se cs_raca = 5 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+cs_escol_n,Escolaridade,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3078146,1588764,65.956832,34.043168,7,nan: 1588764 | 9: 1304194 | 1: 425935 | 3: 382584 | 5: 337951 | 2: 250435 | 0: 213463 | 4: 163584,4666910,3078146,65.956832,62.710219,92.335682,29.625463,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+cs_zona,Zona de residencia,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4202868,464042,90.056761,9.943239,4,1: 3886050 | nan: 464042 | 2: 240467 | 9: 48321 | 3: 28030,4666910,4202868,90.056761,89.642113,97.570722,7.92861,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3879320,787590,83.123951,16.876049,4,2: 3178090 | nan: 787590 | 9: 656220 | 1: 37968 | 3: 7042,4666910,3879320,83.123951,83.150597,96.64318,13.492583,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+out_anim,Especificacao do outro animal,exposicao_animal,True,str,texto_livre,exploracao_texto,Registros com contato com outro animal,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,5276,4661634,0.113051,99.886949,575,"nan: 4661634 | CACHORRO: 2282 | GATO: 651 | CAO: 221 | GATO E CACHORRO: 154 | CACHORRO E GATO: 135 | GATOS: 123 | CACHORROS: 106 | BOVINOS: 83 | GATO, CACHORRO: 78",7042,5276,74.921897,0.0,0.324085,0.324085,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar se ave_suino = 3 significa outro animal | Avaliar apenas no denominador aplicavel ou em sensibilidade,decidir_depois_da_eda,"Preservar para EDA e possível categorização simples. Não utilizar texto
 bruto e não implementar NLP antes do Fine Tuning."
-febre,Febre,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3974141,692769,85.155724,14.844276,3,1: 2591242 | 2: 1332459 | None: 692769 | 9: 50440,4666910,3974141,85.155724,81.615824,99.655064,18.039239,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-tosse,Tosse,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4151309,515601,88.951983,11.048017,3,1: 3269426 | 2: 841028 | None: 515601 | 9: 40855,4666910,4151309,88.951983,87.375381,99.589862,12.214481,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-garganta,Dor de garganta,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3397787,1269123,72.805925,27.194075,3,2: 2601701 | None: 1269123 | 1: 690020 | 9: 106066,4666910,3397787,72.805925,69.341677,97.64644,28.304763,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dispneia,Dispneia,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4095646,571264,87.759267,12.240733,3,1: 3129529 | 2: 927058 | None: 571264 | 9: 39059,4666910,4095646,87.759267,84.186073,99.223893,15.037821,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-desc_resp,Desconforto respiratorio,sintomas,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3864965,801945,82.81636,17.18364,3,1: 2675879 | 2: 1141844 | None: 801945 | 9: 47242,4666910,3864965,82.81636,78.784634,99.127143,20.342508,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,modelo_b_ampliado,"Indicador clínico relevante, mas mais dependente da avaliação e do
+febre,Febre,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3974141,692769,85.155724,14.844276,3,1: 2591242 | 2: 1332459 | nan: 692769 | 9: 50440,4666910,3974141,85.155724,81.615824,99.655064,18.039239,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+tosse,Tosse,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4151309,515601,88.951983,11.048017,3,1: 3269426 | 2: 841028 | nan: 515601 | 9: 40855,4666910,4151309,88.951983,87.375381,99.589862,12.214481,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+garganta,Dor de garganta,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3397787,1269123,72.805925,27.194075,3,2: 2601701 | nan: 1269123 | 1: 690020 | 9: 106066,4666910,3397787,72.805925,69.341677,97.64644,28.304763,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dispneia,Dispneia,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4095646,571264,87.759267,12.240733,3,1: 3129529 | 2: 927058 | nan: 571264 | 9: 39059,4666910,4095646,87.759267,84.186073,99.223893,15.037821,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+desc_resp,Desconforto respiratorio,sintomas,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3864965,801945,82.81636,17.18364,3,1: 2675879 | 2: 1141844 | nan: 801945 | 9: 47242,4666910,3864965,82.81636,78.784634,99.127143,20.342508,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,modelo_b_ampliado,"Indicador clínico relevante, mas mais dependente da avaliação e do
 momento de registro. Entrará no modelo ampliado e será removido se a
 auditoria indicar informação posterior à admissão."
-saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3902459,764451,83.619761,16.380239,3,1: 2662991 | 2: 1182588 | None: 764451 | 9: 56880,4666910,3902459,83.619761,79.99198,98.300557,18.308578,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_a_nucleo,"Medida clínica objetiva e plausivelmente disponível na avaliação inicial.
+saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3902459,764451,83.619761,16.380239,3,1: 2662991 | 2: 1182588 | nan: 764451 | 9: 56880,4666910,3902459,83.619761,79.99198,98.300557,18.308578,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_a_nucleo,"Medida clínica objetiva e plausivelmente disponível na avaliação inicial.
 Será executada análise adicional sem a variável para verificar robustez
 e possível incerteza temporal."
-diarreia,Diarreia,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3347243,1319667,71.722896,28.277104,3,2: 2776075 | None: 1319667 | 1: 490113 | 9: 81055,4666910,3347243,71.722896,67.358781,97.166895,29.808114,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-vomito,Vomito,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3328265,1338645,71.316246,28.683754,3,2: 2799043 | None: 1338645 | 1: 446387 | 9: 82835,4666910,3328265,71.316246,67.969448,97.244716,29.275268,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dor_abd,Dor abdominal,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2893923,1772987,62.009402,37.990598,3,2: 2557015 | None: 1772987 | 1: 242023 | 9: 94885,4666910,2893923,62.009402,0.298664,81.816972,81.518308,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-fadiga,Fadiga,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3016522,1650388,64.636387,35.363613,3,2: 2082171 | None: 1650388 | 1: 849058 | 9: 85293,4666910,3016522,64.636387,0.530024,83.397485,82.867461,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-perd_olft,Perda do olfato,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2901187,1765723,62.165051,37.834949,3,2: 2554232 | None: 1765723 | 1: 222298 | 9: 124657,4666910,2901187,62.165051,0.294458,81.389768,81.09531,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-perd_pala,Perda do paladar,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2897585,1769325,62.08787,37.91213,3,2: 2545564 | None: 1769325 | 1: 225711 | 9: 126310,4666910,2897585,62.08787,0.294458,81.205866,80.911408,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1602819,3064091,34.344331,65.655669,3,None: 3064091 | 2: 1555545 | 9: 31933 | 1: 15341,4666910,1602819,34.344331,29.465768,42.126211,12.660443,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2024307,2642603,43.375745,56.624255,3,None: 2642603 | 1: 1179265 | 2: 824780 | 9: 20262,4666910,2024307,43.375745,32.579667,53.638927,21.05926,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1612274,3054636,34.546927,65.453073,3,None: 3054636 | 2: 1539111 | 1: 37781 | 9: 35382,4666910,1612274,34.546927,29.915224,42.4288,12.513576,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-sind_down,Sindrome de Down,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606783,3060127,34.429269,65.570731,3,None: 3060127 | 2: 1554601 | 9: 31616 | 1: 20566,4666910,1606783,34.429269,29.8226,42.247915,12.425315,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606063,3060847,34.413841,65.586159,3,None: 3060847 | 2: 1535046 | 1: 35840 | 9: 35177,4666910,1606063,34.413841,29.754471,42.325491,12.57102,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-asma,Asma,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1657557,3009353,35.517227,64.482773,3,None: 3009353 | 2: 1423942 | 1: 201102 | 9: 32513,4666910,1657557,35.517227,31.482907,43.194983,11.712076,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-diabetes,Diabetes mellitus,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1892139,2774771,40.543722,59.456278,3,None: 2774771 | 2: 1072007 | 1: 796296 | 9: 23836,4666910,1892139,40.543722,31.433962,50.182418,18.748456,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1658809,3008101,35.544054,64.455946,3,None: 3008101 | 2: 1424664 | 1: 201166 | 9: 32979,4666910,1658809,35.544054,30.579078,43.563907,12.984829,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1659172,3007738,35.551832,64.448168,3,None: 3007738 | 2: 1417902 | 1: 207229 | 9: 34041,4666910,1659172,35.551832,30.759654,43.600232,12.840579,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1633101,3033809,34.993197,65.006803,3,None: 3033809 | 2: 1473478 | 1: 124818 | 9: 34805,4666910,1633101,34.993197,30.245963,42.88013,12.634167,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-renal,Doenca renal cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1638143,3028767,35.101234,64.898766,3,None: 3028767 | 2: 1459573 | 1: 145686 | 9: 32884,4666910,1638143,35.101234,29.989831,43.23837,13.248539,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-obesidade,Obesidade,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1663572,3003338,35.646113,64.353887,3,None: 3003338 | 2: 1380985 | 1: 238237 | 9: 44350,4666910,1663572,35.646113,29.647687,43.327465,13.679778,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-tabag,Tabagismo,comorbidades_fatores_risco,True,object,categorica,indisponivel_se_100pct_vazio,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,0,4666910,0.0,100.0,0,None: 4666910,4666910,0,0.0,0.0,0.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Coluna 100% vazia na versao atual; manter documentada e fora dos modelos,,
-outro_sin,Apresentou outros sintomas?,sintomas,True,object,categorica,exploracao_texto,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3335209,1331701,71.465038,28.534962,3,2: 1836150 | 1: 1399463 | None: 1331701 | 9: 99596,4666910,3335209,71.465038,69.011723,92.045431,23.033708,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-outro_des,Descricao dos outros sintomas,sintomas,True,object,texto_livre,exploracao_texto,Registros com outro sintoma informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1377047,3289863,29.506611,70.493389,251506,None: 3289863 | CORIZA: 139084 | CEFALEIA: 99168 | MIALGIA: 92792 | ASTENIA: 28823 | DOR TORACICA: 27503 | INAPETENCIA: 25170 | CONGESTAO NASAL: 14750 | CANSACO: 12703 | FRAQUEZA: 12668,1399463,1377045,98.3981,21.827742,31.433562,9.60582,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
+diarreia,Diarreia,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3347243,1319667,71.722896,28.277104,3,2: 2776075 | nan: 1319667 | 1: 490113 | 9: 81055,4666910,3347243,71.722896,67.358781,97.166895,29.808114,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+vomito,Vomito,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3328265,1338645,71.316246,28.683754,3,2: 2799043 | nan: 1338645 | 1: 446387 | 9: 82835,4666910,3328265,71.316246,67.969448,97.244716,29.275268,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dor_abd,Dor abdominal,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2893923,1772987,62.009402,37.990598,3,2: 2557015 | nan: 1772987 | 1: 242023 | 9: 94885,4666910,2893923,62.009402,0.298664,81.816972,81.518308,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+fadiga,Fadiga,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3016522,1650388,64.636387,35.363613,3,2: 2082171 | nan: 1650388 | 1: 849058 | 9: 85293,4666910,3016522,64.636387,0.530024,83.397485,82.867461,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+perd_olft,Perda do olfato,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2901187,1765723,62.165051,37.834949,3,2: 2554232 | nan: 1765723 | 1: 222298 | 9: 124657,4666910,2901187,62.165051,0.294458,81.389768,81.09531,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+perd_pala,Perda do paladar,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2897585,1769325,62.08787,37.91213,3,2: 2545564 | nan: 1769325 | 1: 225711 | 9: 126310,4666910,2897585,62.08787,0.294458,81.205866,80.911408,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1602819,3064091,34.344331,65.655669,3,nan: 3064091 | 2: 1555545 | 9: 31933 | 1: 15341,4666910,1602819,34.344331,29.465768,42.126211,12.660443,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2024307,2642603,43.375745,56.624255,3,nan: 2642603 | 1: 1179265 | 2: 824780 | 9: 20262,4666910,2024307,43.375745,32.579667,53.638927,21.05926,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1612274,3054636,34.546927,65.453073,3,nan: 3054636 | 2: 1539111 | 1: 37781 | 9: 35382,4666910,1612274,34.546927,29.915224,42.4288,12.513576,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+sind_down,Sindrome de Down,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606783,3060127,34.429269,65.570731,3,nan: 3060127 | 2: 1554601 | 9: 31616 | 1: 20566,4666910,1606783,34.429269,29.8226,42.247915,12.425315,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606063,3060847,34.413841,65.586159,3,nan: 3060847 | 2: 1535046 | 1: 35840 | 9: 35177,4666910,1606063,34.413841,29.754471,42.325491,12.57102,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+asma,Asma,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1657557,3009353,35.517227,64.482773,3,nan: 3009353 | 2: 1423942 | 1: 201102 | 9: 32513,4666910,1657557,35.517227,31.482907,43.194983,11.712076,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+diabetes,Diabetes mellitus,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1892139,2774771,40.543722,59.456278,3,nan: 2774771 | 2: 1072007 | 1: 796296 | 9: 23836,4666910,1892139,40.543722,31.433962,50.182418,18.748456,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1658809,3008101,35.544054,64.455946,3,nan: 3008101 | 2: 1424664 | 1: 201166 | 9: 32979,4666910,1658809,35.544054,30.579078,43.563907,12.984829,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1659172,3007738,35.551832,64.448168,3,nan: 3007738 | 2: 1417902 | 1: 207229 | 9: 34041,4666910,1659172,35.551832,30.759654,43.600232,12.840579,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1633101,3033809,34.993197,65.006803,3,nan: 3033809 | 2: 1473478 | 1: 124818 | 9: 34805,4666910,1633101,34.993197,30.245963,42.88013,12.634167,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+renal,Doenca renal cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1638143,3028767,35.101234,64.898766,3,nan: 3028767 | 2: 1459573 | 1: 145686 | 9: 32884,4666910,1638143,35.101234,29.989831,43.23837,13.248539,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+obesidade,Obesidade,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1663572,3003338,35.646113,64.353887,3,nan: 3003338 | 2: 1380985 | 1: 238237 | 9: 44350,4666910,1663572,35.646113,29.647687,43.327465,13.679778,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+tabag,Tabagismo,comorbidades_fatores_risco,True,str,categorica,indisponivel_se_100pct_vazio,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,0,4666910,0.0,100.0,0,nan: 4666910,4666910,0,0.0,0.0,0.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Coluna 100% vazia na versao atual; manter documentada e fora dos modelos,,
+outro_sin,Apresentou outros sintomas?,sintomas,True,str,categorica,exploracao_texto,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3335209,1331701,71.465038,28.534962,3,2: 1836150 | 1: 1399463 | nan: 1331701 | 9: 99596,4666910,3335209,71.465038,69.011723,92.045431,23.033708,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+outro_des,Descricao dos outros sintomas,sintomas,True,str,texto_livre,exploracao_texto,Registros com outro sintoma informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1377047,3289863,29.506611,70.493389,251506,nan: 3289863 | CORIZA: 139084 | CEFALEIA: 99168 | MIALGIA: 92792 | ASTENIA: 28823 | DOR TORACICA: 27503 | INAPETENCIA: 25170 | CONGESTAO NASAL: 14750 | CANSACO: 12703 | FRAQUEZA: 12668,1399463,1377045,98.3981,21.827742,31.433562,9.60582,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
 Categorizar somente se os termos frequentes acrescentarem informação
 não representada pelas variáveis estruturadas."
-obes_imc,IMC registrado,comorbidades_fatores_risco,True,object,numerica_a_validar,reavaliar_apos_eda,Registros com obesidade informada,Converter para numero e validar faixa plausivel,baixo,4666910,54304,4612606,1.163596,98.836404,1011,None: 4612606 | 30: 8049 | 0: 3976 | 40: 3703 | 35: 3132 | 0.10: 2054 | 32: 1640 | 31: 1238 | 38: 997 | 33: 896,238237,54304,22.794108,0.212414,2.38402,2.171606,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar somente depois da auditoria de valores e faixas plausíveis. | Decidir se IMC entra no Modelo C ou somente na EDA | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-out_morbi,Outro fator de risco?,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1917320,2749590,41.083286,58.916714,3,None: 2749590 | 1: 1075640 | 2: 815180 | 9: 26500,4666910,1917320,41.083286,32.055047,49.541284,17.486237,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-morb_desc,Descricao de outro fator de risco,comorbidades_fatores_risco,True,object,texto_livre,exploracao_texto,Registros com outro fator de risco informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1063125,3603785,22.780062,77.219938,232631,None: 3603785 | HAS: 254251 | HIPERTENSAO: 22890 | HIPOTIREOIDISMO: 19748 | DPOC: 19636 | TABAGISTA: 15439 | OBESIDADE: 13661 | EX TABAGISTA: 12091 | ALZHEIMER: 10179 | HIPERTENSAO ARTERIAL: 7891,1075640,1063125,98.836507,14.787728,27.142864,12.355135,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
+obes_imc,IMC registrado,comorbidades_fatores_risco,True,str,numerica_a_validar,reavaliar_apos_eda,Registros com obesidade informada,Converter para numero e validar faixa plausivel,baixo,4666910,54304,4612606,1.163596,98.836404,1011,nan: 4612606 | 30: 8049 | 0: 3976 | 40: 3703 | 35: 3132 | 0.10: 2054 | 32: 1640 | 31: 1238 | 38: 997 | 33: 896,238237,54304,22.794108,0.212414,2.38402,2.171606,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar somente depois da auditoria de valores e faixas plausíveis. | Decidir se IMC entra no Modelo C ou somente na EDA | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+out_morbi,Outro fator de risco?,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1917320,2749590,41.083286,58.916714,3,nan: 2749590 | 1: 1075640 | 2: 815180 | 9: 26500,4666910,1917320,41.083286,32.055047,49.541284,17.486237,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+morb_desc,Descricao de outro fator de risco,comorbidades_fatores_risco,True,str,texto_livre,exploracao_texto,Registros com outro fator de risco informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1063125,3603785,22.780062,77.219938,232631,nan: 3603785 | HAS: 254251 | HIPERTENSAO: 22890 | HIPOTIREOIDISMO: 19748 | DPOC: 19636 | TABAGISTA: 15439 | OBESIDADE: 13661 | EX TABAGISTA: 12091 | ALZHEIMER: 10179 | HIPERTENSAO ARTERIAL: 7891,1075640,1063125,98.836507,14.787728,27.142864,12.355135,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
 Categorizar somente se houver ganho claro e suficiente antes do
 congelamento das features."
-out_antiv,Outro antiviral utilizado,tratamentos,True,object,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,17328,4649582,0.371295,99.628705,3273,None: 4649582 | azitromicina: 2658 | AZITROMICINA: 1953 | tamiflu: 1286 | CEFTRIAXONA: 1015 | TAMIFLU: 648 | ceftriaxona + azitromicina: 261 | cloroquina: 255 | ivermectina: 211 | IVERMECTINA: 209,4666910,17328,0.371295,0.136382,0.700499,0.564117,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e
+out_antiv,Outro antiviral utilizado,tratamentos,True,str,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,17328,4649582,0.371295,99.628705,3273,nan: 4649582 | azitromicina: 2658 | AZITROMICINA: 1953 | tamiflu: 1286 | CEFTRIAXONA: 1015 | TAMIFLU: 648 | ceftriaxona + azitromicina: 261 | cloroquina: 255 | ivermectina: 211 | IVERMECTINA: 209,4666910,17328,0.371295,0.136382,0.700499,0.564117,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e
 risco temporal. Preservado somente para auditoria ou exploração."
-out_trat,Outro tratamento para COVID-19,tratamentos,True,object,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,2794,4664116,0.059868,99.940132,555,None: 4664116 | AZITROMICINA: 352 | REMDESIVIR: 306 | CEFTRIAXONA: 221 | RENDESIVIR: 220 | VEKLURY: 107 | RENDESEVIR: 91 | OSELTAMIVIR: 86 | AMPICILINA: 81 | ROCEFIN: 69,4666910,2794,0.059868,0.0,0.251019,0.251019,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e risco temporal. Preservado somente para auditoria ou exploração."
-sg_uf_not,UF da unidade notificadora,geografia_notificacao,True,object,categorica,exploracao_eda,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4656289,10621,99.772419,0.227581,27,SP: 1306611 | MG: 521998 | RJ: 385820 | PR: 380639 | RS: 256895 | CE: 197156 | SC: 187571 | PE: 176695 | BA: 176306 | GO: 137685,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Representa o local de notificação, não necessariamente o contexto de
+out_trat,Outro tratamento para COVID-19,tratamentos,True,str,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,2794,4664116,0.059868,99.940132,555,nan: 4664116 | AZITROMICINA: 352 | REMDESIVIR: 306 | CEFTRIAXONA: 221 | RENDESIVIR: 220 | VEKLURY: 107 | RENDESEVIR: 91 | OSELTAMIVIR: 86 | AMPICILINA: 81 | ROCEFIN: 69,4666910,2794,0.059868,0.0,0.251019,0.251019,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e risco temporal. Preservado somente para auditoria ou exploração."
+sg_uf_not,UF da unidade notificadora,geografia_notificacao,True,str,categorica,exploracao_eda,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4656289,10621,99.772419,0.227581,27,SP: 1306611 | MG: 521998 | RJ: 385820 | PR: 380639 | RS: 256895 | CE: 197156 | SC: 187571 | PE: 176695 | BA: 176306 | GO: 137685,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Representa o local de notificação, não necessariamente o contexto de
 residência. Será utilizada inicialmente em EDA e auditoria territorial."
-co_regiona,Regional de saude da notificacao,geografia_notificacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4091580,575330,87.672143,12.327857,312,None: 575330 | 1331: 412862 | 1449: 210422 | 1342: 148214 | 1356: 141721 | 1497: 128910 | 1519: 112066 | 1380: 94014 | 1332: 84036 | 1354: 74126,4666910,4091580,87.672143,86.305237,89.986329,3.681091,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mun_not,Municipio da notificacao,geografia_notificacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4656289,10621,99.772419,0.227581,3661,355030: 412862 | 330455: 175160 | 310620: 149102 | 530010: 121098 | 230440: 111904 | 261160: 105038 | 410690: 102808 | 292740: 80258 | 350950: 72942 | 520870: 59831,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_pais,Pais de residencia,geografia_residencia,True,object,categorica_alta_cardinalidade,derivar_atributo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666906,4,99.999914,8.6e-05,57,1: 4666022 | 126: 448 | 68: 149 | 138: 55 | 32: 33 | 45: 26 | 7: 19 | 199: 17 | 107: 14 | 41: 12,4666910,4666906,99.999914,99.99369,100.0,0.00631,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar o código do Brasil antes de derivar residente_brasil.,,
-sg_uf,UF de residencia,geografia_residencia,True,object,categorica,modelo_b_ampliado,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4666026,884,99.981058,0.018942,27,SP: 1301367 | MG: 524022 | RJ: 386412 | PR: 379585 | RS: 257423 | CE: 196933 | SC: 187448 | BA: 177563 | PE: 175844 | GO: 151110,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_b_ampliado,"UF de residência será a representação geográfica inicial por equilibrar
+co_regiona,Regional de saude da notificacao,geografia_notificacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4091580,575330,87.672143,12.327857,312,nan: 575330 | 1331: 412862 | 1449: 210422 | 1342: 148214 | 1356: 141721 | 1497: 128910 | 1519: 112066 | 1380: 94014 | 1332: 84036 | 1354: 74126,4666910,4091580,87.672143,86.305237,89.986329,3.681091,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mun_not,Municipio da notificacao,geografia_notificacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4656289,10621,99.772419,0.227581,3661,355030: 412862 | 330455: 175160 | 310620: 149102 | 530010: 121098 | 230440: 111904 | 261160: 105038 | 410690: 102808 | 292740: 80258 | 350950: 72942 | 520870: 59831,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_pais,Pais de residencia,geografia_residencia,True,str,categorica_alta_cardinalidade,derivar_atributo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666906,4,99.999914,8.6e-05,57,1: 4666022 | 126: 448 | 68: 149 | 138: 55 | 32: 33 | 45: 26 | 7: 19 | 199: 17 | 107: 14 | 41: 12,4666910,4666906,99.999914,99.99369,100.0,0.00631,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar o código do Brasil antes de derivar residente_brasil.,,
+sg_uf,UF de residencia,geografia_residencia,True,str,categorica,modelo_b_ampliado,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4666026,884,99.981058,0.018942,27,SP: 1301367 | MG: 524022 | RJ: 386412 | PR: 379585 | RS: 257423 | CE: 196933 | SC: 187448 | BA: 177563 | PE: 175844 | GO: 151110,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_b_ampliado,"UF de residência será a representação geográfica inicial por equilibrar
 contexto territorial, cardinalidade, eficiência e interpretabilidade."
-co_rg_resi,Regional de saude de residencia,geografia_residencia,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4121105,545805,88.304788,11.695212,320,None: 545805 | 1331: 365944 | 1449: 200737 | 1342: 148381 | 1356: 132082 | 1497: 110282 | 1519: 86834 | 1333: 85283 | 1380: 82689 | 1332: 81679,4666910,4121105,88.304788,86.673696,91.202019,4.528323,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mun_res,Municipio de residencia,geografia_residencia,True,object,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4666026,884,99.981058,0.018942,5604,355030: 365944 | 330455: 157048 | 310620: 106643 | 230440: 84242 | 410690: 74571 | 292740: 60049 | 350950: 59262 | 261160: 54010 | 351880: 50275 | 130260: 48958,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,decidir_depois_do_modelo_principal,"Município de residência será preservado na coorte e na EDA. Depois do
+co_rg_resi,Regional de saude de residencia,geografia_residencia,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4121105,545805,88.304788,11.695212,320,nan: 545805 | 1331: 365944 | 1449: 200737 | 1342: 148381 | 1356: 132082 | 1497: 110282 | 1519: 86834 | 1333: 85283 | 1380: 82689 | 1332: 81679,4666910,4121105,88.304788,86.673696,91.202019,4.528323,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mun_res,Municipio de residencia,geografia_residencia,True,str,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4666026,884,99.981058,0.018942,5604,355030: 365944 | 330455: 157048 | 310620: 106643 | 230440: 84242 | 410690: 74571 | 292740: 60049 | 350950: 59262 | 261160: 54010 | 351880: 50275 | 130260: 48958,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,decidir_depois_do_modelo_principal,"Município de residência será preservado na coorte e na EDA. Depois do
 modelo principal, será avaliado se a granularidade municipal acrescenta
 valor suficiente para justificar sua alta cardinalidade."
-sg_uf_inte,UF de internacao,geografia_internacao,True,object,categorica,derivar_atributo,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4152803,514107,88.983996,11.016004,27,SP: 1155790 | None: 514107 | MG: 483408 | PR: 364385 | RJ: 336527 | RS: 238915 | SC: 170997 | CE: 161673 | BA: 153517 | PE: 147272,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_rg_inte,Regional de saude de internacao,geografia_internacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,3656505,1010405,78.349593,21.650407,312,None: 1010405 | 1331: 365038 | 1449: 197528 | 1342: 138169 | 1356: 135657 | 1497: 106905 | 1519: 89888 | 1380: 83825 | 1354: 72666 | 1332: 71402,4666910,3656505,78.349593,81.691325,86.213061,4.521736,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mu_inte,Municipio de internacao,geografia_internacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4152803,514107,88.983996,11.016004,3028,None: 514107 | 355030: 365038 | 330455: 153675 | 310620: 148836 | 530010: 110860 | 410690: 102368 | 230440: 89768 | 261160: 86657 | 292740: 72435 | 350950: 70855,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-vacina,Recebeu vacina contra influenza?,vacinacao_influenza,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3472523,1194387,74.407327,25.592673,3,2: 1613042 | 9: 1308435 | None: 1194387 | 1: 551046,4666910,3472523,74.407327,55.814522,95.708475,39.893952,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dt_ut_dose,Data da ultima dose contra influenza,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Registros vacinados contra influenza,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,390041,4276869,8.357586,91.642414,3072,None: 4276869 | 2020-04-01: 9854 | 2020-04-15: 6336 | 2020-04-20: 5450 | 2020-03-23: 5446 | 2020-04-10: 4873 | 2020-03-30: 4544 | 2020-04-30: 3865 | 2020-03-01: 3744 | 2020-05-20: 3474,551046,385069,69.879647,3.490166,26.965997,23.475831,"2019,2020,2021,2022,2023,2024,2025,2026",Usar somente doses anteriores ou iguais a internacao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-mae_vac,Mae vacinada contra influenza?,vacinacao_influenza,True,object,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,104358,4562552,2.236126,97.763874,3,None: 4562552 | 9: 57960 | 2: 34825 | 1: 11573,4666910,104358,2.236126,0.757728,12.714271,11.956542,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-dt_vac_mae,Data da vacinacao materna,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,5645,4661265,0.120958,99.879042,1767,None: 4661265 | 2019-04-16: 81 | 2019-04-15: 81 | 2019-04-10: 61 | 2019-05-15: 59 | 2018-05-15: 34 | 2019-05-10: 32 | 2019-04-30: 29 | 2019-05-20: 29 | 2020-05-20: 29,4666910,5645,0.120958,0.032823,2.288358,2.255536,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-m_amamenta,Mae amamenta a crianca?,vacinacao_influenza,True,object,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,93755,4573155,2.008931,97.991069,3,None: 4573155 | 1: 40310 | 9: 33647 | 2: 19798,4666910,93755,2.008931,0.566717,11.397623,10.830906,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-dt_doseuni,Data da dose unica infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,17601,4649309,0.377145,99.622855,1561,None: 4649309 | 2026-03-28: 617 | 2026-04-10: 213 | 2025-05-10: 186 | 2026-04-09: 181 | 2026-03-30: 181 | 2026-03-31: 179 | 2026-04-17: 175 | 2026-04-11: 171 | 2026-04-06: 170,4666910,17601,0.377145,0.005672,4.04157,4.035899,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dt_1_dose,Data da primeira dose infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,18626,4648284,0.399108,99.600892,1820,None: 4648284 | 2026-03-28: 278 | 2026-04-10: 192 | 2026-04-14: 179 | 2026-04-06: 179 | 2026-04-13: 175 | 2026-03-30: 171 | 2026-04-08: 159 | 2026-04-09: 155 | 2026-04-07: 148,4666910,18626,0.399108,0.005068,4.445015,4.439946,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dt_2_dose,Data da segunda dose infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,10895,4656015,0.233452,99.766548,1732,None: 4656015 | 2026-05-18: 63 | 2026-05-13: 60 | 2026-05-11: 58 | 2026-05-06: 57 | 2026-05-15: 53 | 2026-05-07: 53 | 2026-05-22: 53 | 2026-05-28: 51 | 2026-05-04: 50,4666910,10895,0.233452,0.004042,2.218231,2.214188,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3135685,1531225,67.189747,32.810253,3,None: 1531225 | 2: 1411179 | 1: 1353811 | 9: 370695,4666910,3135685,67.189747,1.314544,99.992396,98.677852,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dose_1_cov,Data da primeira dose contra COVID-19,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1211162,3455748,25.952118,74.047882,2060,None: 3455748 | 26/03/2021: 18515 | 25/03/2021: 17614 | 23/03/2021: 17313 | 24/03/2021: 17098 | 03/03/2021: 16796 | 22/09/2021: 16299 | 30/03/2021: 16057 | 19/03/2021: 15419 | 01/03/2021: 15047,4666910,1211162,25.952118,0.105164,56.994227,56.889064,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_2_cov,Data da segunda dose contra COVID-19,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1024809,3642101,21.959048,78.040952,1960,None: 3642101 | 04/06/2021: 19758 | 20/04/2021: 14797 | 22/04/2021: 13998 | 16/04/2021: 13642 | 19/04/2021: 13610 | 23/04/2021: 11904 | 09/04/2021: 11442 | 26/04/2021: 11204 | 05/04/2021: 11102,4666910,1024809,21.959048,0.075718,53.258787,53.18307,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_ref,Data da dose de reforco,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,473540,4193370,10.146757,89.853243,1205,None: 4193370 | 27/10/2021: 4506 | 14/10/2021: 4429 | 28/10/2021: 4349 | 18/11/2021: 4344 | 26/10/2021: 4274 | 15/10/2021: 4215 | 20/10/2021: 4170 | 19/10/2021: 4060 | 21/10/2021: 4038,4666910,473540,10.146757,0.025239,30.313433,30.288194,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_2ref,Data da segunda dose de reforco,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,195149,4471761,4.181546,95.818454,757,None: 4471761 | 05/04/2022: 3471 | 06/04/2022: 3340 | 07/04/2022: 3127 | 12/04/2022: 2919 | 19/04/2022: 2861 | 08/04/2022: 2844 | 13/04/2022: 2837 | 11/04/2022: 2815 | 20/04/2022: 2611,4666910,195149,4.181546,0.010516,17.575121,17.564605,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_adic,Data da dose adicional,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,21152,4645758,0.453234,99.546766,773,None: 4645758 | 29/09/2021: 197 | 30/09/2021: 175 | 05/04/2022: 172 | 08/10/2021: 168 | 07/10/2021: 165 | 06/04/2022: 163 | 08/04/2022: 160 | 11/04/2022: 156 | 07/04/2022: 155,4666910,21152,0.453234,0.004207,1.935927,1.93172,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dos_re_bi,Data do reforco bivalente,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,110916,4555994,2.376648,97.623352,773,None: 4555994 | 07/03/2023: 2749 | 01/03/2023: 2626 | 28/02/2023: 2511 | 08/03/2023: 2425 | 02/03/2023: 2407 | 06/03/2023: 2384 | 09/03/2023: 2229 | 03/03/2023: 2163 | 10/03/2023: 2054,4666910,110916,2.376648,0.00631,10.833418,10.827108,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-pac_cocbo,Codigo da ocupacao,demografia_contexto_social,True,object,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Agrupar ocupacoes; evitar codigo bruto no piloto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,None: 4583721 | XXX: 11805 | 622020: 6046 | 621005: 3680 | 141410: 2529 | 715210: 2447 | 512105: 2125 | 231205: 1634 | 782305: 1477 | 322205: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar agrupamento por grandes grupos da CBO depois do modelo principal. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-pac_dscbo,Descricao da ocupacao,demografia_contexto_social,True,object,texto_livre,apoio_interpretacao,Populacao geral,Usar para apoiar agrupamento; nao usar texto bruto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,None: 4583721 | NAO INFORMADO: 11805 | TRABALHADOR VOLANTE DA AGRICULTURA: 6046 | TRABALHADOR AGROPECUARIO EM GERAL: 3680 | COMERCIANTE VAREJISTA: 2529 | PEDREIRO: 2447 | EMPREGADO  DOMESTICO  NOS SERVICOS GERAIS: 2125 | PROFESSOR DA  EDUCACAO DE JOVENS E ADULTOS DO ENSINO FUNDAMENTAL (PRIMEIRA A QUARTA SERIE): 1634 | MOTORISTA DE CARRO DE PASSEIO: 1477 | TECNICO DE ENFERMAGEM: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Utilizar inicialmente somente para apoiar a interpretação da CBO. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-pov_ct,Pertence a povo ou comunidade tradicional?,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3600642,1066268,77.152591,22.847409,2,2: 3588126 | None: 1066268 | 1: 12516,4666910,3600642,77.152591,1.716269,100.0,98.283731,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar inclusão no Modelo B depois da EDA descritiva do campo. | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-tp_pov_ct,Povo ou comunidade tradicional,demografia_contexto_social,True,object,categorica_alta_cardinalidade,exploracao_subgrupo,Registros pertencentes a povo ou comunidade tradicional,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,12557,4654353,0.269065,99.730935,46,None: 4654353 | POVOS INDIGENAS: 6189 | OUTROS: 4254 | RIBEIRINHOS: 440 | POVOS QUILOMBOLAS: 317 | MIGRANTES: 278 | ACAMPADA: 205 | TRABALHADORES RURAIS ASSALARIADOS: 193 | ASSENTADA: 134 | APATRIDAS: 94,12516,12516,100.0,0.0,0.782653,0.782653,"2019,2020,2021,2022,2023,2024,2025,2026",Manter inicialmente em EDA e subgrupos. | Confirmar se pov_ct = 1 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-estrang,Paciente estrangeiro?,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2913734,1753176,62.433902,37.566098,2,2: 2892463 | None: 1753176 | 1: 21271,4666910,2913734,62.433902,0.471133,95.868617,95.397484,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-antiviral,Usou antiviral contra influenza?,tratamentos,True,object,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,3890102,776808,83.354982,16.645018,3,2: 2931268 | None: 776808 | 9: 565275 | 1: 393559,4666910,3890102,83.354982,82.613363,98.870544,16.25718,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+sg_uf_inte,UF de internacao,geografia_internacao,True,str,categorica,derivar_atributo,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4152803,514107,88.983996,11.016004,27,SP: 1155790 | nan: 514107 | MG: 483408 | PR: 364385 | RJ: 336527 | RS: 238915 | SC: 170997 | CE: 161673 | BA: 153517 | PE: 147272,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_rg_inte,Regional de saude de internacao,geografia_internacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,3656505,1010405,78.349593,21.650407,312,nan: 1010405 | 1331: 365038 | 1449: 197528 | 1342: 138169 | 1356: 135657 | 1497: 106905 | 1519: 89888 | 1380: 83825 | 1354: 72666 | 1332: 71402,4666910,3656505,78.349593,81.691325,86.213061,4.521736,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mu_inte,Municipio de internacao,geografia_internacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4152803,514107,88.983996,11.016004,3028,nan: 514107 | 355030: 365038 | 330455: 153675 | 310620: 148836 | 530010: 110860 | 410690: 102368 | 230440: 89768 | 261160: 86657 | 292740: 72435 | 350950: 70855,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+vacina,Recebeu vacina contra influenza?,vacinacao_influenza,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3472523,1194387,74.407327,25.592673,3,2: 1613042 | 9: 1308435 | nan: 1194387 | 1: 551046,4666910,3472523,74.407327,55.814522,95.708475,39.893952,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dt_ut_dose,Data da ultima dose contra influenza,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Registros vacinados contra influenza,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,390041,4276869,8.357586,91.642414,3072,nan: 4276869 | 2020-04-01: 9854 | 2020-04-15: 6336 | 2020-04-20: 5450 | 2020-03-23: 5446 | 2020-04-10: 4873 | 2020-03-30: 4544 | 2020-04-30: 3865 | 2020-03-01: 3744 | 2020-05-20: 3474,551046,385069,69.879647,3.490166,26.965997,23.475831,"2019,2020,2021,2022,2023,2024,2025,2026",Usar somente doses anteriores ou iguais a internacao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+mae_vac,Mae vacinada contra influenza?,vacinacao_influenza,True,str,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,104358,4562552,2.236126,97.763874,3,nan: 4562552 | 9: 57960 | 2: 34825 | 1: 11573,4666910,104358,2.236126,0.757728,12.714271,11.956542,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+dt_vac_mae,Data da vacinacao materna,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,5645,4661265,0.120958,99.879042,1767,nan: 4661265 | 2019-04-15: 81 | 2019-04-16: 81 | 2019-04-10: 61 | 2019-05-15: 59 | 2018-05-15: 34 | 2019-05-10: 32 | 2020-05-20: 29 | 2019-04-30: 29 | 2019-05-20: 29,4666910,5645,0.120958,0.032823,2.288358,2.255536,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+m_amamenta,Mae amamenta a crianca?,vacinacao_influenza,True,str,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,93755,4573155,2.008931,97.991069,3,nan: 4573155 | 1: 40310 | 9: 33647 | 2: 19798,4666910,93755,2.008931,0.566717,11.397623,10.830906,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+dt_doseuni,Data da dose unica infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,17601,4649309,0.377145,99.622855,1561,nan: 4649309 | 2026-03-28: 617 | 2026-04-10: 213 | 2025-05-10: 186 | 2026-03-30: 181 | 2026-04-09: 181 | 2026-03-31: 179 | 2026-04-17: 175 | 2026-04-11: 171 | 2026-04-06: 170,4666910,17601,0.377145,0.005672,4.04157,4.035899,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dt_1_dose,Data da primeira dose infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,18626,4648284,0.399108,99.600892,1820,nan: 4648284 | 2026-03-28: 278 | 2026-04-10: 192 | 2026-04-06: 179 | 2026-04-14: 179 | 2026-04-13: 175 | 2026-03-30: 171 | 2026-04-08: 159 | 2026-04-09: 155 | 2026-04-07: 148,4666910,18626,0.399108,0.005068,4.445015,4.439946,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dt_2_dose,Data da segunda dose infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,10895,4656015,0.233452,99.766548,1732,nan: 4656015 | 2026-05-18: 63 | 2026-05-13: 60 | 2026-05-11: 58 | 2026-05-06: 57 | 2026-05-07: 53 | 2026-05-15: 53 | 2026-05-22: 53 | 2026-05-28: 51 | 2026-05-04: 50,4666910,10895,0.233452,0.004042,2.218231,2.214188,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3135685,1531225,67.189747,32.810253,3,nan: 1531225 | 2: 1411179 | 1: 1353811 | 9: 370695,4666910,3135685,67.189747,1.314544,99.992396,98.677852,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dose_1_cov,Data da primeira dose contra COVID-19,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1211162,3455748,25.952118,74.047882,2060,nan: 3455748 | 26/03/2021: 18515 | 25/03/2021: 17614 | 23/03/2021: 17313 | 24/03/2021: 17098 | 03/03/2021: 16796 | 22/09/2021: 16299 | 30/03/2021: 16057 | 19/03/2021: 15419 | 01/03/2021: 15047,4666910,1211162,25.952118,0.105164,56.994227,56.889064,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_2_cov,Data da segunda dose contra COVID-19,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1024809,3642101,21.959048,78.040952,1960,nan: 3642101 | 04/06/2021: 19758 | 20/04/2021: 14797 | 22/04/2021: 13998 | 16/04/2021: 13642 | 19/04/2021: 13610 | 23/04/2021: 11904 | 09/04/2021: 11442 | 26/04/2021: 11204 | 05/04/2021: 11102,4666910,1024809,21.959048,0.075718,53.258787,53.18307,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_ref,Data da dose de reforco,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,473540,4193370,10.146757,89.853243,1205,nan: 4193370 | 27/10/2021: 4506 | 14/10/2021: 4429 | 28/10/2021: 4349 | 18/11/2021: 4344 | 26/10/2021: 4274 | 15/10/2021: 4215 | 20/10/2021: 4170 | 19/10/2021: 4060 | 21/10/2021: 4038,4666910,473540,10.146757,0.025239,30.313433,30.288194,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_2ref,Data da segunda dose de reforco,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,195149,4471761,4.181546,95.818454,757,nan: 4471761 | 05/04/2022: 3471 | 06/04/2022: 3340 | 07/04/2022: 3127 | 12/04/2022: 2919 | 19/04/2022: 2861 | 08/04/2022: 2844 | 13/04/2022: 2837 | 11/04/2022: 2815 | 20/04/2022: 2611,4666910,195149,4.181546,0.010516,17.575121,17.564605,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_adic,Data da dose adicional,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,21152,4645758,0.453234,99.546766,773,nan: 4645758 | 29/09/2021: 197 | 30/09/2021: 175 | 05/04/2022: 172 | 08/10/2021: 168 | 07/10/2021: 165 | 06/04/2022: 163 | 08/04/2022: 160 | 11/04/2022: 156 | 07/04/2022: 155,4666910,21152,0.453234,0.004207,1.935927,1.93172,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dos_re_bi,Data do reforco bivalente,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,110916,4555994,2.376648,97.623352,773,nan: 4555994 | 07/03/2023: 2749 | 01/03/2023: 2626 | 28/02/2023: 2511 | 08/03/2023: 2425 | 02/03/2023: 2407 | 06/03/2023: 2384 | 09/03/2023: 2229 | 03/03/2023: 2163 | 10/03/2023: 2054,4666910,110916,2.376648,0.00631,10.833418,10.827108,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+pac_cocbo,Codigo da ocupacao,demografia_contexto_social,True,str,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Agrupar ocupacoes; evitar codigo bruto no piloto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,nan: 4583721 | XXX: 11805 | 622020: 6046 | 621005: 3680 | 141410: 2529 | 715210: 2447 | 512105: 2125 | 231205: 1634 | 782305: 1477 | 322205: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar agrupamento por grandes grupos da CBO depois do modelo principal. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+pac_dscbo,Descricao da ocupacao,demografia_contexto_social,True,str,texto_livre,apoio_interpretacao,Populacao geral,Usar para apoiar agrupamento; nao usar texto bruto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,nan: 4583721 | NAO INFORMADO: 11805 | TRABALHADOR VOLANTE DA AGRICULTURA: 6046 | TRABALHADOR AGROPECUARIO EM GERAL: 3680 | COMERCIANTE VAREJISTA: 2529 | PEDREIRO: 2447 | EMPREGADO  DOMESTICO  NOS SERVICOS GERAIS: 2125 | PROFESSOR DA  EDUCACAO DE JOVENS E ADULTOS DO ENSINO FUNDAMENTAL (PRIMEIRA A QUARTA SERIE): 1634 | MOTORISTA DE CARRO DE PASSEIO: 1477 | TECNICO DE ENFERMAGEM: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Utilizar inicialmente somente para apoiar a interpretação da CBO. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+pov_ct,Pertence a povo ou comunidade tradicional?,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3600642,1066268,77.152591,22.847409,2,2: 3588126 | nan: 1066268 | 1: 12516,4666910,3600642,77.152591,1.716269,100.0,98.283731,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar inclusão no Modelo B depois da EDA descritiva do campo. | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+tp_pov_ct,Povo ou comunidade tradicional,demografia_contexto_social,True,str,categorica_alta_cardinalidade,exploracao_subgrupo,Registros pertencentes a povo ou comunidade tradicional,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,12557,4654353,0.269065,99.730935,46,nan: 4654353 | POVOS INDIGENAS: 6189 | OUTROS: 4254 | RIBEIRINHOS: 440 | POVOS QUILOMBOLAS: 317 | MIGRANTES: 278 | ACAMPADA: 205 | TRABALHADORES RURAIS ASSALARIADOS: 193 | ASSENTADA: 134 | APATRIDAS: 94,12516,12516,100.0,0.0,0.782653,0.782653,"2019,2020,2021,2022,2023,2024,2025,2026",Manter inicialmente em EDA e subgrupos. | Confirmar se pov_ct = 1 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+estrang,Paciente estrangeiro?,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2913734,1753176,62.433902,37.566098,2,2: 2892463 | nan: 1753176 | 1: 21271,4666910,2913734,62.433902,0.471133,95.868617,95.397484,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+antiviral,Usou antiviral contra influenza?,tratamentos,True,str,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,3890102,776808,83.354982,16.645018,3,2: 2931268 | nan: 776808 | 9: 565275 | 1: 393559,4666910,3890102,83.354982,82.613363,98.870544,16.25718,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-tp_antivir,Tipo de antiviral utilizado,tratamentos,True,object,categorica,exploracao_eda,Registros com uso de antiviral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,366885,4300025,7.861412,92.138588,3,None: 4300025 | 1: 343669 | 3: 20953 | 2: 2263,393559,366875,93.219822,2.359789,61.236723,58.876934,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+tp_antivir,Tipo de antiviral utilizado,tratamentos,True,str,categorica,exploracao_eda,Registros com uso de antiviral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,366885,4300025,7.861412,92.138588,3,nan: 4300025 | 1: 343669 | 3: 20953 | 2: 2263,393559,366875,93.219822,2.359789,61.236723,58.876934,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-dt_antivir,Data de inicio do antiviral,tratamentos,True,object,data,exploracao_eda,Registros com uso de antiviral,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,347712,4319198,7.450583,92.549417,2856,None: 4319198 | 2020-05-05: 1330 | 2020-05-12: 1327 | 2020-04-27: 1320 | 2020-05-04: 1311 | 2020-05-19: 1297 | 2020-05-11: 1291 | 2020-05-18: 1288 | 2020-05-14: 1281 | 2020-05-06: 1273,393559,347702,88.348126,2.031382,61.23462,59.203238,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+dt_antivir,Data de inicio do antiviral,tratamentos,True,str,data,exploracao_eda,Registros com uso de antiviral,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,347712,4319198,7.450583,92.549417,2856,nan: 4319198 | 2020-05-05: 1330 | 2020-05-12: 1327 | 2020-04-27: 1320 | 2020-05-04: 1311 | 2020-05-19: 1297 | 2020-05-11: 1291 | 2020-05-18: 1288 | 2020-05-14: 1281 | 2020-05-06: 1273,393559,347702,88.348126,2.031382,61.23462,59.203238,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-trat_cov,Recebeu tratamento antiviral para COVID-19?,tratamentos,True,object,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,993122,3673788,21.280076,78.719924,3,None: 3673788 | 2: 856677 | 9: 125321 | 1: 11124,4666910,993122,21.280076,0.201914,83.009723,82.807809,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+trat_cov,Recebeu tratamento antiviral para COVID-19?,tratamentos,True,str,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,993122,3673788,21.280076,78.719924,3,nan: 3673788 | 2: 856677 | 9: 125321 | 1: 11124,4666910,993122,21.280076,0.201914,83.009723,82.807809,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-tipo_trat,Tipo de tratamento para COVID-19,tratamentos,True,object,categorica,exploracao_eda,Registros com tratamento para COVID-19,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,4784,4662126,0.102509,99.897491,3,None: 4662126 | 3: 3941 | 1: 671 | 2: 172,11124,4784,43.006113,0.0,0.392967,0.392967,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+tipo_trat,Tipo de tratamento para COVID-19,tratamentos,True,str,categorica,exploracao_eda,Registros com tratamento para COVID-19,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,4784,4662126,0.102509,99.897491,3,nan: 4662126 | 3: 3941 | 1: 671 | 2: 172,11124,4784,43.006113,0.0,0.392967,0.392967,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-dt_trt_cov,Data de inicio do tratamento para COVID-19,tratamentos,True,object,data,exploracao_eda,Registros com tratamento para COVID-19,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,3833,4663077,0.082131,99.917869,1378,None: 4663077 | 2022-11-23: 22 | 2022-11-25: 17 | 2022-11-29: 17 | 2022-11-15: 17 | 2022-11-21: 17 | 2022-11-22: 16 | 2022-12-01: 16 | 2022-11-14: 16 | 2022-11-18: 15,11124,3833,34.45703,0.0,0.327849,0.327849,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+dt_trt_cov,Data de inicio do tratamento para COVID-19,tratamentos,True,str,data,exploracao_eda,Registros com tratamento para COVID-19,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,3833,4663077,0.082131,99.917869,1378,nan: 4663077 | 2022-11-23: 22 | 2022-11-25: 17 | 2022-11-15: 17 | 2022-11-29: 17 | 2022-11-21: 17 | 2022-11-14: 16 | 2022-12-01: 16 | 2022-11-22: 16 | 2022-12-13: 15,11124,3833,34.45703,0.0,0.327849,0.327849,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-evolucao,Evolucao do caso,desfecho_auditoria,True,object,categorica,rotulo,Populacao geral,Mapear cura = 0 e obito por SRAG = 1,proibido_como_preditor,4666910,4326559,340351,92.707145,7.292855,4,1: 3200532 | 2: 936008 | None: 340351 | 9: 103570 | 3: 86449,4666910,4326559,92.707145,87.909978,96.233081,8.323102,"2019,2020,2021,2022,2023,2024,2025,2026",,rotulo,"Alvo principal restrito a evolucao = 1, cura codificada como 0, versus
+evolucao,Evolucao do caso,desfecho_auditoria,True,str,categorica,rotulo,Populacao geral,Mapear cura = 0 e obito por SRAG = 1,proibido_como_preditor,4666910,4326559,340351,92.707145,7.292855,4,1: 3200532 | 2: 936008 | nan: 340351 | 9: 103570 | 3: 86449,4666910,4326559,92.707145,87.909978,96.233081,8.323102,"2019,2020,2021,2022,2023,2024,2025,2026",,rotulo,"Alvo principal restrito a evolucao = 1, cura codificada como 0, versus
 evolucao = 2, óbito por SRAG codificado como 1. Evolucao = 3 e demais
 valores ficam fora do alvo principal."
-dt_evoluca,Data da alta ou do obito,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4014740,652170,86.025657,13.974343,2827,None: 652170 | 2021-03-30: 10021 | 2021-03-29: 9696 | 2021-03-31: 9599 | 2021-03-26: 9552 | 2021-03-25: 9500 | 2021-03-23: 9366 | 2021-04-01: 9308 | 2021-03-24: 9242 | 2021-03-22: 9056,4666910,4014740,86.025657,79.482318,89.567548,10.08523,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_encerra,Data do encerramento do caso,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4338057,328853,92.953517,7.046483,2820,None: 328853 | 2021-03-30: 11797 | 2021-04-05: 11714 | 2021-04-12: 11422 | 2021-04-19: 11416 | 2021-03-29: 11318 | 2021-03-25: 11008 | 2021-03-31: 10995 | 2021-06-14: 10958 | 2021-04-26: 10883,4666910,4338057,92.953517,87.85438,96.529604,8.675224,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_digita,Data de inclusao do registro no sistema,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4650091,16819,99.639612,0.360388,2764,None: 16819 | 2021-03-29: 14198 | 2021-04-05: 13826 | 2021-04-12: 13479 | 2021-03-22: 13409 | 2021-03-25: 13223 | 2021-04-06: 12827 | 2021-06-14: 12774 | 2021-06-07: 12650 | 2021-04-19: 12637,4666910,4650091,99.639612,65.518982,100.0,34.481018,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dt_evoluca,Data da alta ou do obito,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4014740,652170,86.025657,13.974343,2827,nan: 652170 | 2021-03-30: 10021 | 2021-03-29: 9696 | 2021-03-31: 9599 | 2021-03-26: 9552 | 2021-03-25: 9500 | 2021-03-23: 9366 | 2021-04-01: 9308 | 2021-03-24: 9242 | 2021-03-22: 9056,4666910,4014740,86.025657,79.482318,89.567548,10.08523,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_encerra,Data do encerramento do caso,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4338057,328853,92.953517,7.046483,2820,nan: 328853 | 2021-03-30: 11797 | 2021-04-05: 11714 | 2021-04-12: 11422 | 2021-04-19: 11416 | 2021-03-29: 11318 | 2021-03-25: 11008 | 2021-03-31: 10995 | 2021-06-14: 10958 | 2021-04-26: 10883,4666910,4338057,92.953517,87.85438,96.529604,8.675224,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_digita,Data de inclusao do registro no sistema,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4650091,16819,99.639612,0.360388,2764,nan: 16819 | 2021-03-29: 14198 | 2021-04-05: 13826 | 2021-04-12: 13479 | 2021-03-22: 13409 | 2021-03-25: 13223 | 2021-04-06: 12827 | 2021-06-14: 12774 | 2021-06-07: 12650 | 2021-04-19: 12637,4666910,4650091,99.639612,65.518982,100.0,34.481018,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
 ```
 
 ## `configs/supervised.yaml`
 
 - Git: `tracked` · status `clean`
-- Size: `15.3 KB` · modified `2026-10-14 22:03 UTC`
-- SHA-256: `ced8d5cad5268e995a8ba324b0ac3d094665bac9977b43c8a8ef806cc0d03cf8`
+- Size: `8.5 KB` · modified `2026-10-16 03:37 UTC`
+- SHA-256: `6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6`
 
 ```yaml
-# =============================================================================
-# Configuracao do pipeline supervisionado - Projeto Integrador SRAG
-# Atualizacao compativel com a estrutura atual do supervised.yaml
-# =============================================================================
-#
-# Decisoes alinhadas:
-# - periodo analitico: 2019 a 2026, inclusive;
-# - 2026 identificado como periodo parcial;
-# - split principal aleatorio 70% / 15% / 15%;
-# - estratificacao por alvo + ano de internacao;
-# - seed 42;
-# - teste aberto uma unica vez apos congelar modelo, calibracao e limiar;
-# - nenhuma informacao posterior a admissao entra em X;
-# - vazio, ignorado e nao aplicavel nao viram automaticamente "nao";
-# - clusters nao entram como features nem como alvo.
-#
-# A lista features.final permanece null ate a chegada e validacao da
-# coorte definitiva. Os nomes devem ser conferidos contra o schema final.
-# =============================================================================
-
 version: 2
 
-# -----------------------------------------------------------------------------
-# Reprodutibilidade
-# -----------------------------------------------------------------------------
 seed: 42
 
-# -----------------------------------------------------------------------------
-# Alvo
-# -----------------------------------------------------------------------------
 target:
   coluna: evolucao
   coluna_modelagem: alvo_obito_srag
@@ -13556,9 +11891,6 @@ target:
     negativos:
       - 1.0
 
-# -----------------------------------------------------------------------------
-# Periodo e ancora temporal
-# -----------------------------------------------------------------------------
 coluna_tempo: dt_interna
 
 periodo:
@@ -13569,16 +11901,11 @@ periodo:
   anos_parciais:
     - 2026
 
-# -----------------------------------------------------------------------------
-# Features
-# -----------------------------------------------------------------------------
 features:
-  # Base numerica do nucleo.
   numericas:
     - idade_anos
     - dias_sintomas_ate_internacao
 
-  # Categoricas e binarias do nucleo principal.
   categoricas:
     - sexo_categoria
     - cs_gestant
@@ -13610,31 +11937,14 @@ features:
     - obesidade
     - out_morbi
 
-  # Nao congelar antes da coorte definitiva.
   final: null
 
-  # Contexto avaliado somente como ganho incremental.
-  #
-  # `vacina` e `vacina_cov` sao historico de vacinacao (conhecido na
-  # admissao), mas sao contexto de saude publica, nao estado clinico
-  # individual. Mantidos fora do nucleo principal para que o modelo
-  # nao seja dominado por "vacinado vs nao" e preserve
-  # interpretabilidade clinica. Avaliados apenas como ganho
-  # incremental em sensibilidade. Decisao revisavel em G1.
   contexto_incremental:
     - cs_escol_n
     - sg_uf
     - vacina
     - vacina_cov
 
-  # Sensibilidades, fora do nucleo principal.
-  #
-  # `saturacao` e `desc_resp` sao proxies de gravidade no momento da
-  # admissao — informativos, mas fortemente correlacionados com o
-  # desfecho. Mantidos fora do nucleo para evitar que o modelo aprenda
-  # apenas "muito doente -> obito" e perca utilidade operacional.
-  # Avaliados como ganho incremental em sensibilidade. Decisao
-  # revisavel em G1.
   sensibilidade_gravidade_admissao:
     - saturacao
     - desc_resp
@@ -13655,7 +11965,6 @@ features:
       - n_comorbidades_confirmadas
       - n_comorbidades_avaliadas
 
-  # Colunas que nunca podem entrar em X.
   proibidas:
     - evolucao
     - alvo_obito_srag
@@ -13677,26 +11986,12 @@ features:
     - tipo_trat
     - dt_trt_cov
     - out_trat
-    - classificacao_final
-    - criterio_confirmacao
-    - sorologia
-    - pcr
     - cluster
     - cluster_rotulo
 
-  # Engenharia de atributos.
   engenharia:
-    # Limite (dias) para `dias_sintomas_ate_internacao`.
     intervalo_max_dias: 60
-
-    # Como tratar valores fora de [0, intervalo_max_dias]:
-    #   "sinalizar" (default) — mantem o valor bruto, marca nas flags.
-    #   "descartar"           — substitui o valor por NaN, mantendo flags.
-    # Alinhado com decisoes.md: sinalizar, nao corrigir em silencio.
     intervalo_politica: sinalizar
-
-    # Coluna usada para o par sin_semana / cos_semana.
-    # Reflete a sazonalidade viral melhor que a data de notificacao.
     coluna_sazonalidade: dt_sin_pri
 
     faixas_etarias:
@@ -13709,25 +12004,18 @@ features:
       - {nome: "60-79", min: 60, max: 80}
       - {nome: "80+", min: 80, max: null}
 
-    # Inventario exato das colunas produzidas por
-    # `src.features.engineering.montar_features`. Manter em sincronia
-    # com aquela funcao.
     derivadas:
-      # Numericas continuas
       - idade_anos
       - dias_sintomas_ate_internacao
       - sin_semana
       - cos_semana
       - ano_internacao
       - mes_internacao
-      # Flags binarias
       - flag_intervalo_invalido
       - flag_internacao_antes_sintomas
-      # Categoricas
       - faixa_etaria
       - sexo_categoria
 
-    # Colunas consumidas por `montar_features`.
     entradas:
       - nu_idade_n
       - tp_idade
@@ -13735,10 +12023,6 @@ features:
       - dt_sin_pri
       - dt_interna
 
-# -----------------------------------------------------------------------------
-# Split principal
-# -----------------------------------------------------------------------------
-# Mantem temporal.fracao por compatibilidade com consumidores atuais.
 temporal:
   modo: aleatorio_estratificado
   coluna_estratificacao_temporal: ano_internacao
@@ -13747,15 +12031,14 @@ temporal:
   gravar_particao_na_coorte: true
   coluna_particao: particao
   permitir_novo_sorteio: false
+  metodo_particao: hash_grupo_estratificado_v1
+  min_grupos_por_estrato: 3
   teste_aberto_uma_unica_vez: true
   fracao:
     treino: 0.70
     validacao: 0.15
     holdout: 0.15
 
-# -----------------------------------------------------------------------------
-# Tratamento de ausencia
-# -----------------------------------------------------------------------------
 missingness:
   vazio_nao_e_nao: true
   ignorado_nao_e_nao: true
@@ -13770,9 +12053,6 @@ missingness:
     pipeline_principal: false
     sensibilidade: true
 
-# -----------------------------------------------------------------------------
-# Modelos
-# -----------------------------------------------------------------------------
 models:
   baseline:
     strategy: prior
@@ -13785,11 +12065,6 @@ models:
       - 0.1
       - 1.0
       - 10.0
-    # Consumido por `src/models/logistic.py::_penalty_do_yaml`.
-    # Traduzido para `l1_ratio` (API nova do sklearn):
-    #   l2 -> l1_ratio=0.0 ; l1 -> l1_ratio=1.0 ;
-    #   elasticnet -> exige 0 < l1_ratio < 1 (o valor de `l1_ratio`
-    #   do YAML permanece).
     penalty: l2
     solver: lbfgs
     max_iter: 1000
@@ -13825,7 +12100,6 @@ models:
     class_weight: balanced
     n_jobs: -1
 
-  # Preserva a chave "boosting" esperada pelo YAML atual.
   boosting:
     learning_rate: null
     busca_learning_rate:
@@ -13849,9 +12123,6 @@ models:
     early_stopping: false
     class_weight: balanced
 
-# -----------------------------------------------------------------------------
-# Tuning
-# -----------------------------------------------------------------------------
 tuning:
   metrica_principal: pr_auc
   concentrar_nos_dois_melhores: true
@@ -13859,9 +12130,6 @@ tuning:
   teste_proibido_durante_tuning: true
   max_configuracoes_por_modelo: 30
 
-# -----------------------------------------------------------------------------
-# Calibracao
-# -----------------------------------------------------------------------------
 calibracao:
   ativa: true
   metodo: null
@@ -13871,9 +12139,6 @@ calibracao:
   fonte: validacao
   comparar_brier_antes_depois: true
 
-# -----------------------------------------------------------------------------
-# Limiar de decisao
-# -----------------------------------------------------------------------------
 limiar:
   default: 0.50
   otimo: null
@@ -13885,9 +12150,6 @@ limiar:
   min_precision: null
   selecionar_somente_na_validacao: true
 
-# -----------------------------------------------------------------------------
-# Metricas e avaliacao
-# -----------------------------------------------------------------------------
 avaliacao:
   metrica_principal: pr_auc
   metricas:
@@ -13918,9 +12180,6 @@ avaliacao:
     ativa: true
     priorizar_falsos_negativos: true
 
-# -----------------------------------------------------------------------------
-# Sensibilidades supervisionadas
-# -----------------------------------------------------------------------------
 sensibilidades:
   temporal:
     ativa: true
@@ -13933,42 +12192,12 @@ sensibilidades:
   alvo_qualquer_obito:
     ativa: true
 
-# -----------------------------------------------------------------------------
-# Clustering concluido como exploratorio
-# -----------------------------------------------------------------------------
-clustering:
-  status: encerrado_exploratorio
-  matriz_documentada: nucleo
-  quantidade_clusters_documentada: 2
-  aplicar_na_coorte_completa: false
-  usar_como_feature_supervisionada: false
-  usar_como_alvo: false
-  usar_como_fenotipo_clinico_definitivo: false
-  comparacoes_minimas_executadas:
-    - kmeans
-    - hca_ward
-    - dbscan
-
-# -----------------------------------------------------------------------------
-# Artefatos esperados da coorte final
-# -----------------------------------------------------------------------------
 artefatos_coorte:
   parquet: coorte_final.parquet
   waterfall: coorte_waterfall.csv
   variaveis: variaveis_finais.csv
   manifesto: manifesto_coorte.json
 
-# -----------------------------------------------------------------------------
-# Gates
-# -----------------------------------------------------------------------------
-#
-# Fluxo de estados:
-#   pendente  -> aprovado  -> (apenas G9_holdout) executado
-#
-# `aprovado` libera a etapa correspondente.
-# `executado` (terminal, irreversivel) registra que o holdout foi
-# efetivamente consultado. So existe para G9_holdout.
-# -----------------------------------------------------------------------------
 gates:
   G1_definicao_alvo_features:
     descricao: >
@@ -14005,7 +12234,7 @@ gates:
   G6_finalistas_tuning:
     descricao: >
       Selecionar no maximo dois finalistas e executar tuning limitado.
-      Ao final, preencher `selecao_modelos.finalista_escolhido`.
+      Ao final, preencher selecao_modelos.finalista_escolhido.
     status: pendente
     aprovado_por: null
     data: null
@@ -14033,8 +12262,6 @@ gates:
     status: pendente
     aprovado_por: null
     data: null
-    # Preenchidos automaticamente pelo C6 (célula de marcação de G9).
-    # NÃO remover: _marcar_g9_executado exige as duas chaves.
     executado_em: null
     n_acessos: 0
 
@@ -14048,8 +12275,6 @@ selecao_modelos:
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
-  # Preenchido ao final do C6 (gate G6). Valor deve constar em
-  # `finalistas`. `null` enquanto a escolha nao foi feita.
   finalista_escolhido: null
   familias_encerradas:
     - decision_tree
@@ -14895,12 +13120,12 @@ entregáveis do caminho crítico.
 ## `notebooks/00_acesso_dados_parquet.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `3.8 KB` · modified `2026-10-09 22:42 UTC`
-- SHA-256: `df9771cccd28603fd7eb9943ee004d5e38ce2f34f6353f2c6e2da33624023167`
+- Size: `18.4 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `8709801612d291d2371b2191fa692608e7fa0e02f0cc99e8122ebb55af99eb53`
 
 - Cells: `12` (`6` code, `6` markdown)
-- Code cells executed: `0` of `6`
-- Kernel: `Python 3`; Python `3.12.8`
+- Code cells executed: `6` of `6`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -14924,7 +13149,7 @@ Pré-requisitos:
 Deixe **todos os imports** aqui nesta primeira célula. Isso evita avisos do Pylance nas células seguintes (o analisador estático não acompanha a ordem de execução do kernel).
 ```
 
-### Cell 3 [code] · In [ ]
+### Cell 3 [code] · In [7]
 
 ```python
 from pathlib import Path
@@ -14940,13 +13165,19 @@ from src.utils import storage
 print("ROOT_DIR:", ROOT_DIR)
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR: <HOME>\Documents\GitHub\Projeto_Integrador
+```
+
 ### Cell 4 [markdown]
 
 ```markdown
 # 1. Diagnóstico rápido (rode isto antes de qualquer coisa)
 ```
 
-### Cell 5 [code] · In [ ]
+### Cell 5 [code] · In [8]
 
 ```python
 path = storage.get_parquet(force=False)
@@ -14959,11 +13190,223 @@ with open(path, "rb") as f:
     print("Primeiros 20 bytes:", f.read(20))
 ```
 
-### Cell 6 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Arquivo: <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Existe: True
+Tamanho: 303573013 bytes
+Primeiros 20 bytes: b'PAR1\x15\x04\x15\x80\x98\x80\x01\x15\x94\xad\x10L\x15\x80\x83\x10'
+```
+
+### Cell 6 [code] · In [9]
 
 ```python
 import pyarrow.parquet as pq
 pq.read_schema(path)
+```
+
+**Output 1 (execute_result)**
+
+```text
+id_registro: int64
+ano_arquivo: int16
+data_snapshot: date32[day]
+arquivo_origem: string
+nu_notific: string
+dt_notific: string
+sem_not: string
+dt_sin_pri: string
+sem_pri: string
+sg_uf_not: string
+id_regiona: string
+co_regiona: string
+id_municip: string
+co_mun_not: string
+cs_sexo: string
+dt_nasc: string
+nu_idade_n: string
+tp_idade: string
+cod_idade: string
+cs_gestant: string
+cs_raca: string
+cs_etinia: string
+cs_escol_n: string
+id_pais: string
+co_pais: string
+sg_uf: string
+id_rg_resi: string
+co_rg_resi: string
+id_mn_resi: string
+co_mun_res: string
+cs_zona: string
+nosocomial: string
+ave_suino: string
+febre: string
+tosse: string
+garganta: string
+dispneia: string
+desc_resp: string
+saturacao: string
+diarreia: string
+vomito: string
+outro_sin: string
+outro_des: string
+fator_risc: string
+puerpera: string
+cardiopati: string
+hematologi: string
+sind_down: string
+hepatica: string
+asma: string
+diabetes: string
+neurologic: string
+pneumopati: string
+imunodepre: string
+renal: string
+obesidade: string
+obes_imc: string
+out_morbi: string
+morb_desc: string
+tabag: string
+vacina: string
+dt_ut_dose: string
+mae_vac: string
+dt_vac_mae: string
+m_amamenta: string
+dt_doseuni: string
+dt_1_dose: string
+dt_2_dose: string
+antiviral: string
+tp_antivir: string
+out_antiv: string
+dt_antivir: string
+hospital: string
+dt_interna: string
+sg_uf_inte: string
+id_rg_inte: string
+co_rg_inte: string
+id_mn_inte: string
+co_mu_inte: string
+nm_un_inte: string
+uti: string
+dt_entuti: string
+dt_saiduti: string
+suport_ven: string
+raiox_res: string
+raiox_out: string
+dt_raiox: string
+amostra: string
+dt_coleta: string
+tp_amostra: string
+out_amost: string
+pcr_resul: string
+dt_pcr: string
+pos_pcrflu: string
+tp_flu_pcr: string
+pcr_fluasu: string
+fluasu_out: string
+pcr_flubli: string
+flubli_out: string
+pos_pcrout: string
+pcr_vsr: string
+pcr_para1: string
+pcr_para2: string
+pcr_para3: string
+pcr_para4: string
+pcr_adeno: string
+pcr_metap: string
+pcr_boca: string
+pcr_rino: string
+pcr_outro: string
+ds_pcr_out: string
+classi_fin: string
+classi_out: string
+criterio: string
+evolucao: string
+dt_evoluca: string
+dt_encerra: string
+dt_digita: string
+histo_vgm: string
+pais_vgm: string
+co_ps_vgm: string
+lo_ps_vgm: string
+dt_vgm: string
+dt_rt_vgm: string
+pcr_sars2: string
+pac_cocbo: string
+pac_dscbo: string
+out_anim: string
+dor_abd: string
+fadiga: string
+perd_olft: string
+perd_pala: string
+tomo_res: string
+tomo_out: string
+dt_tomo: string
+tp_tes_an: string
+dt_res_an: string
+res_an: string
+pos_an_flu: string
+tp_flu_an: string
+pos_an_out: string
+an_sars2: string
+an_vsr: string
+an_para1: string
+an_para2: string
+an_para3: string
+an_adeno: string
+an_outro: string
+ds_an_out: string
+tp_am_sor: string
+sor_out: string
+dt_co_sor: string
+tp_sor: string
+out_sor: string
+dt_res: string
+res_igg: string
+res_igm: string
+res_iga: string
+pov_ct: string
+tp_pov_ct: string
+tem_cpf: string
+estrang: string
+vacina_cov: string
+dose_1_cov: string
+dose_2_cov: string
+dose_ref: string
+dose_2ref: string
+dose_adic: string
+dos_re_bi: string
+fab_cov_1: string
+fab_cov_2: string
+fab_covrf: string
+fab_covrf2: string
+fab_adic: string
+fab_re_bi: string
+lote_1_cov: string
+lote_2_cov: string
+lote_ref: string
+lote_ref2: string
+lote_adic: string
+lot_re_bi: string
+fnt_in_cov: string
+trat_cov: string
+tipo_trat: string
+dt_trt_cov: string
+out_trat: string
+surto_sg: string
+co_detec: string
+vg_oms: string
+vg_omsout: string
+vg_lin: string
+vg_met: string
+vg_metout: string
+vg_dtres: string
+vg_enc: string
+vg_reinf: string
+vg_codest: string
+reinf: string
 ```
 
 ### Cell 7 [markdown]
@@ -14974,12 +13417,30 @@ pq.read_schema(path)
 Verifica se o Parquet é baixado/aberto corretamente.
 ```
 
-### Cell 8 [code] · In [ ]
+### Cell 8 [code] · In [10]
 
 ```python
 df = storage.read_srag(columns=["sg_uf"])
 print("shape:", df.shape)
 df.head()
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+shape: (4666910, 1)
+```
+
+**Output 2 (execute_result)**
+
+```text
+  sg_uf
+0    BA
+1    MA
+2    MT
+3    SP
+4    SE
+[non-text output omitted: text/html]
 ```
 
 ### Cell 9 [markdown]
@@ -14988,10 +13449,37 @@ df.head()
 ## 3. Coluna categórica — municípios únicos
 ```
 
-### Cell 10 [code] · In [ ]
+### Cell 10 [code] · In [11]
 
 ```python
 storage.read_srag(columns=["id_municip"]).drop_duplicates().head(20)
+```
+
+**Output 1 (execute_result)**
+
+```text
+                    id_municip
+0                     SALVADOR
+1   SANTA FILOMENA DO MARANHAO
+2                VARZEA GRANDE
+3                    SAO PAULO
+4     NOSSA SENHORA DO SOCORRO
+5                    FORTALEZA
+6            PRESIDENTE MEDICI
+7                       CARIRE
+8                    MARACANAU
+9     SAO GABRIEL DA CACHOEIRA
+10                     TIANGUA
+11                   PARINTINS
+12                      SEBERI
+13                    CASCAVEL
+14     BOM JESUS DO ITABAPOANA
+16                      SABARA
+17                     ITABUNA
+19                       CRATO
+20                     ARACAJU
+21                      SOBRAL
+[non-text output omitted: text/html]
 ```
 
 ### Cell 11 [markdown]
@@ -15002,7 +13490,7 @@ storage.read_srag(columns=["id_municip"]).drop_duplicates().head(20)
 Só as colunas necessárias e apenas linhas de SP.
 ```
 
-### Cell 12 [code] · In [ ]
+### Cell 12 [code] · In [12]
 
 ```python
 df_sp = storage.read_srag(
@@ -15014,15 +13502,33 @@ print("shape:", df_sp.shape)
 df_sp.head()
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+shape: (1301367, 3)
+```
+
+**Output 2 (execute_result)**
+
+```text
+   dt_notific sg_uf evolucao
+0  2026-06-17    SP     None
+1  2026-05-13    SP        1
+2  2026-08-25    SP        2
+3  2026-06-20    SP        1
+4  2026-01-19    SP        1
+[non-text output omitted: text/html]
+```
+
 ## `notebooks/01_extracao.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `5.9 KB` · modified `2026-10-14 01:55 UTC`
-- SHA-256: `f2665c50b7b77f68d8c0eda341240a44c39a106643da96e17efda4b93801aa01`
+- Size: `14.8 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `3858b9d342a7d04d37e80ca937f7ab8f61c48cd33bf06bea5057e50a1db2a975`
 
 - Cells: `11` (`5` code, `6` markdown)
-- Code cells executed: `0` of `5`
-- Kernel: `Python 3`; Python `3.12.8`
+- Code cells executed: `5` of `5`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -15064,7 +13570,7 @@ Aproveita `src.utils.env` para:
 - garantir que `data/raw`, `data/processed`, `data/treino` e `reports/figures` existam.
 ```
 
-### Cell 3 [code] · In [ ]
+### Cell 3 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -15099,6 +13605,16 @@ print("ROOT_DIR:", ROOT_DIR)
 print(env.resumo())
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR: <HOME>\Documents\GitHub\Projeto_Integrador
+ROOT_DIR         = <HOME>\Documents\GitHub\Projeto_Integrador
+ENV              = local
+.env encontrado? = False
+GITHUB_TOKEN?    = False
+```
+
 ### Cell 4 [markdown]
 
 ```markdown
@@ -15115,13 +13631,22 @@ override via variável de ambiente `SRAG_PARQUET_URL` — útil para apontar
 para uma release alternativa sem tocar no código.
 ```
 
-### Cell 5 [code] · In [ ]
+### Cell 5 [code] · In [2]
 
 ```python
 print(f"Repositório:  {C.GITHUB_REPO}")
 print(f"Versão:       {C.DATA_VERSION}")
 print(f"Arquivo:      {C.PARQUET_NAME}")
 print(f"URL canônica: {C.srag_parquet_url()}")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Repositório:  Ivan-S-Oliveira/Projeto_Integrador
+Versão:       dados-v2
+Arquivo:      srag.parquet
+URL canônica: https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
 ```
 
 ### Cell 6 [markdown]
@@ -15136,13 +13661,21 @@ sidecar `.sha256`.
 Se o arquivo já existir localmente, ele é **reutilizado** — não baixa de novo.
 ```
 
-### Cell 7 [code] · In [ ]
+### Cell 7 [code] · In [3]
 
 ```python
 parquet_path = get_parquet()
 
 print(f"\nParquet em: {parquet_path}")
 print(f"Tamanho:    {parquet_path.stat().st_size / 1024**2:.2f} MB")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+
+Parquet em: <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Tamanho:    289.51 MB
 ```
 
 ### Cell 8 [markdown]
@@ -15155,7 +13688,7 @@ As checagens mais profundas de schema e conteúdo ficam nos notebooks
 de preparação da coorte.
 ```
 
-### Cell 9 [code] · In [ ]
+### Cell 9 [code] · In [4]
 
 ```python
 df = pd.read_parquet(parquet_path)
@@ -15169,13 +13702,55 @@ if df.empty:
 df.head()
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Registros: 4,666,910
+Colunas:   198
+```
+
+**Output 2 (execute_result)**
+
+```text
+   id_registro  ano_arquivo data_snapshot               arquivo_origem  \
+0            0         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+1            1         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+2            2         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+3            3         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+4            4         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+
+       nu_notific  dt_notific sem_not  dt_sin_pri sem_pri sg_uf_not  ...  \
+0  31781201987679  2026-06-11      24  2026-06-02      23        BA  ...   
+1  31775652598724  2026-03-23      13  2026-03-22      13        MA  ...   
+2  31781205405890  2026-03-29      14  2026-03-23      13        MT  ...   
+3  31782407823707  2026-06-17      25  2026-06-15      25        SP  ...   
+4  31773493207022  2026-03-14      11  2026-03-09      11        SE  ...   
+
+  vg_oms vg_omsout vg_lin vg_met vg_metout vg_dtres vg_enc vg_reinf vg_codest  \
+0   None      None   None   None      None     None   None     None      None   
+1   None      None   None   None      None     None   None     None      None   
+2   None      None   None   None      None     None   None     None      None   
+3   None      None   None   None      None     None   None     None      None   
+4   None      None   None   None      None     None   None     None      None   
+
+  reinf  
+0     2  
+1     2  
+2     2  
+3     2  
+4     2  
+
+[5 rows x 198 columns]
+[non-text output omitted: text/html]
+```
+
 ### Cell 10 [markdown]
 
 ```markdown
 ## 5. Resumo da ingestão
 ```
 
-### Cell 11 [code] · In [ ]
+### Cell 11 [code] · In [5]
 
 ```python
 print(f"Parquet:   {parquet_path}")
@@ -15184,15 +13759,24 @@ print(f"Colunas:   {len(df.columns)}")
 print(f"Tamanho:   {parquet_path.stat().st_size / 1024**2:.2f} MB")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Parquet:   <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Registros: 4,666,910
+Colunas:   198
+Tamanho:   289.51 MB
+```
+
 ## `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `1.8 MB` · modified `2026-10-14 23:22 UTC`
-- SHA-256: `6e579daff5dfc22f5d30c9fbaa3d4095d4c76787e61444b114a5e6970646dc45`
+- Size: `206.2 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `37be27c82ba59850b6fb2131c9f542e1467289259071bcdb61054e61f2f35895`
 
-- Cells: `49` (`41` code, `8` markdown)
-- Code cells executed: `41` of `41`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Cells: `50` (`42` code, `8` markdown)
+- Code cells executed: `0` of `42`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -15235,7 +13819,7 @@ Este notebook não:
 As conclusões desta EDA são descritivas e não causais.
 ```
 
-### Cell 2 [code] · In [1]
+### Cell 2 [code] · In [ ]
 
 ```python
 from pathlib import Path
@@ -15286,16 +13870,7 @@ print(f"Sistema: {platform.system()} {platform.release()}")
 print(f"pandas: {pd.__version__}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Raiz do projeto: <REPO>
-Python: 3.14.7
-Sistema: Windows 11
-pandas: 3.0.6
-```
-
-### Cell 3 [code] · In [2]
+### Cell 3 [code] · In [ ]
 
 ```python
 print(C.resumo())
@@ -15306,37 +13881,7 @@ print(f"Diretório de tabelas: {C.TABLES_DIR}")
 print(f"Diretório de figuras: {C.FIGURES_DIR}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
-PARQUET_NAME      = srag.parquet
-DATA_VERSION      = dados-v2
-GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
-HTTP_TIMEOUT      = 180
-HTTP_TENTATIVAS   = 3
-SEED              = 42
-GITHUB_TOKEN?     = False
-SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
-SUPERVISED_SHA256 = ced8d5cad5268e995a8ba324b0ac3d094665bac9977b43c8a8ef806cc0d03cf8
-
-Release configurada: dados-v2
-Nome do arquivo: srag.parquet
-Diretório de tabelas: <REPO>\outputs\tables
-Diretório de figuras: <REPO>\reports\figures
-```
-
-### Cell 4 [code] · In [3]
+### Cell 4 [code] · In [ ]
 
 ```python
 import matplotlib.pyplot as plt
@@ -15389,13 +13934,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Configuração visual do Notebook 01 carregada.
-```
-
-### Cell 5 [code] · In [4]
+### Cell 5 [code] · In [ ]
 
 ```python
 COLUNAS_ESTRUTURA = [
@@ -15550,23 +14089,7 @@ print(f"Colunas de Desfecho: {len(COLUNAS_DESFECHO_AUDITORIA)}")
 print(f"Total sem duplicidades: {len(COLUNAS_EDA)}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Período definido para a coorte: 2019-2026
-Total de colunas da EDA: 88
-Colunas de estrutura: 6
-Colunas candidatas: 35
-Colunas complementares de texto: 7
-Colunas geográficas: 10
-Colunas Condicionais de Vacinação: 15
-Colunas Contexto Social: 5
-Colunas de auditoria: 6
-Colunas de Desfecho: 4
-Total sem duplicidades: 88
-```
-
-### Cell 6 [code] · In [5]
+### Cell 6 [code] · In [ ]
 
 ```python
 quantidade_colunas_por_grupo = pd.DataFrame(
@@ -15732,29 +14255,7 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1100x600 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-                    grupo  quantidade_colunas
-0   Candidatas principais                  35
-1   Vacinação condicional                  15
-2               Geografia                  10
-3   Textos complementares                   7
-4               Estrutura                   6
-5  Tratamento e auditoria                   6
-6         Contexto social                   5
-7    Desfecho e auditoria                   4
-[non-text output omitted: text/html]
-```
-
-### Cell 7 [code] · In [6]
+### Cell 7 [code] · In [ ]
 
 ```python
 caminho_parquet = storage.get_parquet(force=False)
@@ -15767,15 +14268,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Arquivo: <REPO>\data\processed\dados-v2\srag.parquet
-Existe: True
-Tamanho do arquivo: 289.51 MB, 303,573,013.00 bytes
-```
-
-### Cell 8 [code] · In [7]
+### Cell 8 [code] · In [ ]
 
 ```python
 arquivo_parquet = pq.ParquetFile(caminho_parquet)
@@ -15798,15 +14291,7 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-        arquivo versao_dados  numero_linhas  numero_colunas  numero_row_groups
-0  srag.parquet     dados-v2        4666910             198                 28
-[non-text output omitted: text/html]
-```
-
-### Cell 9 [code] · In [8]
+### Cell 9 [code] · In [ ]
 
 ```python
 schema_df = pd.DataFrame(
@@ -15823,40 +14308,7 @@ display(schema_df.head(20))
 print(f"Total de campos no schema: {len(schema_df)}")
 ```
 
-**Output 1 (display_data)**
-
-```text
-            coluna   tipo_arrow
-0      id_registro        int64
-1      ano_arquivo        int16
-2    data_snapshot  date32[day]
-3   arquivo_origem       string
-4       nu_notific       string
-5       dt_notific       string
-6          sem_not       string
-7       dt_sin_pri       string
-8          sem_pri       string
-9        sg_uf_not       string
-10      id_regiona       string
-11      co_regiona       string
-12      id_municip       string
-13      co_mun_not       string
-14         cs_sexo       string
-15         dt_nasc       string
-16      nu_idade_n       string
-17        tp_idade       string
-18       cod_idade       string
-19      cs_gestant       string
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Total de campos no schema: 198
-```
-
-### Cell 10 [code] · In [9]
+### Cell 10 [code] · In [ ]
 
 ```python
 conjunto_colunas_disponiveis = set(colunas_disponiveis)
@@ -15897,33 +14349,7 @@ else:
     print("Todas as colunas solicitadas existem no Parquet.")
 ```
 
-**Output 1 (display_data)**
-
-```text
-        coluna                 grupo  existe_no_parquet
-0   nu_notific             estrutura               True
-1   dt_notific             estrutura               True
-2   dt_sin_pri             estrutura               True
-3      sem_pri             estrutura               True
-4     hospital             estrutura               True
-..         ...                   ...                ...
-83  dt_trt_cov  tratamento_auditoria               True
-84    evolucao    desfecho_auditoria               True
-85  dt_evoluca    desfecho_auditoria               True
-86  dt_encerra    desfecho_auditoria               True
-87   dt_digita    desfecho_auditoria               True
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Todas as colunas solicitadas existem no Parquet.
-```
-
-### Cell 11 [code] · In [10]
+### Cell 11 [code] · In [ ]
 
 ```python
 if colunas_ausentes:
@@ -15936,13 +14362,7 @@ if colunas_ausentes:
 print("Validação concluída. A leitura pode continuar.")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Validação concluída. A leitura pode continuar.
-```
-
-### Cell 12 [code] · In [11]
+### Cell 12 [code] · In [ ]
 
 ```python
 df = storage.read_srag(
@@ -15955,42 +14375,7 @@ print(f"Colunas carregadas: {df.shape[1]:,}")
 display(df.head())
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Linhas carregadas: 4,666,910
-Colunas carregadas: 88
-```
-
-**Output 2 (display_data)**
-
-```text
-       nu_notific  dt_notific  dt_sin_pri sem_pri hospital  dt_interna  \
-0  31781201987679  2026-06-11  2026-06-02      23        1  2026-06-11   
-1  31775652598724  2026-03-23  2026-03-22      13      NaN         NaN   
-2  31781205405890  2026-03-29  2026-03-23      13        2         NaN   
-3  31782407823707  2026-06-17  2026-06-15      25        1  2026-06-15   
-4  31773493207022  2026-03-14  2026-03-09      11        1  2026-03-10   
-
-  cs_sexo nu_idade_n tp_idade cs_gestant  ... antiviral tp_antivir dt_antivir  \
-0       F          1        2          6  ...         2        NaN        NaN   
-1       F         75        3          5  ...       NaN        NaN        NaN   
-2       F          4        3          6  ...         2        NaN        NaN   
-3       F         37        3          5  ...         2        NaN        NaN   
-4       F          4        3          6  ...       NaN        NaN        NaN   
-
-  trat_cov tipo_trat dt_trt_cov evolucao  dt_evoluca  dt_encerra   dt_digita  
-0        2       NaN        NaN        1  2026-06-19  2026-06-19  2026-06-11  
-1      NaN       NaN        NaN      NaN         NaN         NaN  2026-04-08  
-2        2       NaN        NaN        1  2026-03-31  2026-06-11  2026-06-11  
-3        2       NaN        NaN      NaN         NaN         NaN  2026-06-25  
-4      NaN       NaN        NaN        1         NaN         NaN  2026-03-14  
-
-[5 rows x 88 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 13 [code] · In [12]
+### Cell 13 [code] · In [ ]
 
 ```python
 if df.empty:
@@ -16010,16 +14395,7 @@ print(f"Quantidade de linhas: {len(df):,}")
 print(f"Quantidade de colunas: {df.shape[1]:,}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Dimensão: (4666910, 88)
-Índice único: True
-Quantidade de linhas: 4,666,910
-Quantidade de colunas: 88
-```
-
-### Cell 14 [code] · In [13]
+### Cell 14 [code] · In [ ]
 
 ```python
 tipos_memoria = pd.DataFrame(
@@ -16050,33 +14426,7 @@ print(f"Memória total: {memoria_total_mb:,.2f} MB")
 display(tipos_memoria)
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Memória total: 3,847.05 MB
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna tipo_pandas  memoria_mb
-0   nu_notific         str   92.276205
-1   dt_notific         str   80.112946
-2   dt_sin_pri         str   80.112946
-3    dt_digita         str   79.958382
-4   dt_interna         str   77.767781
-..         ...         ...         ...
-83    out_anim         str   36.205858
-84  dt_trt_cov         str   36.198720
-85    out_trat         str   36.197567
-86   tipo_trat         str   36.166728
-87       tabag         str   36.162166
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 15 [code] · In [14]
+### Cell 15 [code] · In [ ]
 
 ```python
 # ============================================================
@@ -16701,387 +15051,7 @@ display(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Datas do episódio: 3
-Datas de vacinação: 11
-Datas de tratamento: 2
-Datas de auditoria: 3
-Total de datas: 19
-Todas as colunas de data existem no DataFrame.
-Convertendo 1/19: dt_notific
-Convertendo 2/19: dt_sin_pri
-Convertendo 3/19: dt_interna
-Convertendo 4/19: dt_ut_dose
-Convertendo 5/19: dt_vac_mae
-Convertendo 6/19: dt_doseuni
-Convertendo 7/19: dt_1_dose
-Convertendo 8/19: dt_2_dose
-Convertendo 9/19: dose_1_cov
-Convertendo 10/19: dose_2_cov
-Convertendo 11/19: dose_ref
-Convertendo 12/19: dose_2ref
-Convertendo 13/19: dose_adic
-Convertendo 14/19: dos_re_bi
-Convertendo 15/19: dt_antivir
-Convertendo 16/19: dt_trt_cov
-Convertendo 17/19: dt_evoluca
-Convertendo 18/19: dt_encerra
-Convertendo 19/19: dt_digita
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  datas_antes_1900  datas_depois_2026  datas_fora_faixa
-2   dt_interna                21                 76                97
-8   dose_1_cov                13                 52                65
-9   dose_2_cov                25                 43                68
-10    dose_ref                 0                  4                 4
-11   dose_2ref                 0                  1                 1
-14  dt_antivir                 6                 19                25
-[non-text output omitted: text/html]
-```
-
-**Output 3 (display_data)**
-
-```text
-        coluna  quantidade_total  quantidade_original_preenchida  \
-0   dt_notific           4666910                         4666910   
-1   dt_sin_pri           4666910                         4666910   
-2   dt_interna           4666910                         4362665   
-3   dt_ut_dose           4666910                          390041   
-4   dt_vac_mae           4666910                            5645   
-5   dt_doseuni           4666910                           17601   
-6    dt_1_dose           4666910                           18626   
-7    dt_2_dose           4666910                           10895   
-8   dose_1_cov           4666910                         1211162   
-9   dose_2_cov           4666910                         1024809   
-10    dose_ref           4666910                          473540   
-11   dose_2ref           4666910                          195149   
-12   dose_adic           4666910                           21152   
-13   dos_re_bi           4666910                          110916   
-14  dt_antivir           4666910                          347712   
-15  dt_trt_cov           4666910                            3833   
-16  dt_evoluca           4666910                         4014740   
-17  dt_encerra           4666910                         4338057   
-18   dt_digita           4666910                         4650091   
-
-    quantidade_formato_iso  quantidade_formato_br  \
-0                  4666910                      0   
-1                  4666910                      0   
-2                  4362665                      0   
-3                   390041                      0   
-4                     5645                      0   
-5                    17601                      0   
-6                    18626                      0   
-7                    10895                      0   
-8                        0                1211162   
-9                        0                1024809   
-10                       0                 473540   
-11                       0                 195149   
-12                       0                  21152   
-13                       0                 110916   
-14                  347712                      0   
-15                    3833                      0   
-16                 4014740                      0   
-17                 4338057                      0   
-18                 4650091                      0   
-
-    quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
-0                                    0                            0   
-1                                    0                            0   
-2                                    0                           21   
-3                                    0                            0   
-4                                    0                            0   
-5                                    0                            0   
-6                                    0                            0   
-7                                    0                            0   
-8                                    0                           13   
-9                                    0                           25   
-10                                   0                            0   
-11                                   0                            0   
-12                                   0                            0   
-13                                   0                            0   
-14                                   0                            6   
-15                                   0                            0   
-16                                   0                            0   
-17                                   0                            0   
-18                                   0                            0   
-
-    quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
-0                              0                          0   
-1                              0                          0   
-2                             76                         97   
-3                              0                          0   
-4                              0          
-... [1141 characters omitted] ...
-                4362568   
-3                                     0                 390041   
-4                                     0                   5645   
-5                                     0                  17601   
-6                                     0                  18626   
-7                                     0                  10895   
-8                                     0                1211097   
-9                                     0                1024741   
-10                                    0                 473536   
-11                                    0                 195148   
-12                                    0                  21152   
-13                                    0                 110916   
-14                                    0                 347687   
-15                                    0                   3833   
-16                                    0                4014740   
-17                                    0                4338057   
-18                                    0                4650091   
-
-    quantidade_ausente_original  
-0                             0  
-1                             0  
-2                        304245  
-3                       4276869  
-4                       4661265  
-5                       4649309  
-6                       4648284  
-7                       4656015  
-8                       3455748  
-9                       3642101  
-10                      4193370  
-11                      4471761  
-12                      4645758  
-13                      4555994  
-14                      4319198  
-15                      4663077  
-16                       652170  
-17                       328853  
-18                        16819  
-[non-text output omitted: text/html]
-```
-
-**Output 4 (stream:stdout)**
-
-```text
-Colunas com problemas de formato, faixa ou calendário:
-```
-
-**Output 5 (display_data)**
-
-```text
-       coluna  quantidade_total  quantidade_original_preenchida  \
-0  dt_interna           4666910                         4362665   
-1  dose_1_cov           4666910                         1211162   
-2  dose_2_cov           4666910                         1024809   
-3    dose_ref           4666910                          473540   
-4   dose_2ref           4666910                          195149   
-5  dt_antivir           4666910                          347712   
-
-   quantidade_formato_iso  quantidade_formato_br  \
-0                 4362665                      0   
-1                       0                1211162   
-2                       0                1024809   
-3                       0                 473540   
-4                       0                 195149   
-5                  347712                      0   
-
-   quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
-0                                   0                           21   
-1                                   0                           13   
-2                                   0                           25   
-3                                   0                            0   
-4                                   0                            0   
-5                                   0                            6   
-
-   quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
-0                            76                         97   
-1                            52                         65   
-2                            43                         68   
-3                             4                          4   
-4                             1                          1   
-5                            19                         25   
-
-   quantidade_data_calendario_invalida  quantidade_convertida  \
-0                                    0                4362568   
-1                                    0                1211097   
-2                                    0                1024741   
-3                                    0                 473536   
-4                                    0                 195148   
-5                                    0                 347687   
-
-   quantidade_ausente_original  
-0                       304245  
-1                      3455748  
-2                      3642101  
-3                      4193370  
-4                      4471761  
-5                      4319198  
-[non-text output omitted: text/html]
-```
-
-**Output 6 (stream:stdout)**
-
-```text
-Amostra dos valores problemáticos:
-```
-
-**Output 7 (display_data)**
-
-```text
-        coluna  indice_original valor_original  ano_extraido  mes_extraido  \
-0   dt_interna            14859     2029-09-12          2029             9   
-1   dt_interna            35781     1772-04-01          1772             4   
-2   dt_interna            41220     2202-05-12          2202             5   
-3   dt_interna            42292     1695-01-29          1695             1   
-4   dt_interna            52957     2027-07-14          2027             7   
-..         ...              ...            ...           ...           ...   
-95  dt_interna          4475345     1695-08-27          1695             8   
-96  dt_interna          4628164     2109-07-10          2109             7   
-0   dose_1_cov           987131     04/03/3202          3202             3   
-1   dose_1_cov          1360847     03/03/3021          3021             3   
-2   dose_1_cov          1387928     26/10/3121          3121            10   
-
-    dia_extraido  formato_nao_reconhecido  ano_antes_limite  \
-0             12                    False             False   
-1              1                    False              True   
-2             12                    False             False   
-3             29                    False              True   
-4             14                    False             False   
-..           ...                      ...               ...   
-95            27                    False              True   
-96            10                    False             False   
-0              4                    False             False   
-1              3                    False             False   
-2             26                    False             False   
-
-    ano_depois_limite  data_calendario_invalida  
-0                True                     False  
-1               False                     False  
-2                True                     False  
-3               False                     False  
-4                True                     False  
-..                ...                       ...  
-95              False                     False  
-96               True                     False  
-0                True                     False  
-1                True                     False  
-2                True                     False  
-
-[100 rows x 10 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 8 (display_data)**
-
-```text
-        coluna data_minima_convertida data_maxima_convertida  \
-0   dt_notific             2018-12-30             2026-09-28   
-1   dt_sin_pri             2018-12-30             2026-09-26   
-2   dt_interna             1917-09-01             2026-12-29   
-3   dt_ut_dose             2009-03-02             2026-09-23   
-4   dt_vac_mae             1955-11-16             2026-09-21   
-5   dt_doseuni             2013-04-25             2026-09-18   
-6    dt_1_dose             2012-08-06             2026-09-22   
-7    dt_2_dose             2012-09-14             2026-09-22   
-8   dose_1_cov             1900-01-01             2026-12-23   
-9   dose_2_cov             1900-04-20             2026-10-30   
-10    dose_ref             1982-02-09             2026-12-19   
-11   dose_2ref             2020-04-12             2025-11-28   
-12   dose_adic             2021-01-19             2026-05-24   
-13   dos_re_bi             2021-03-27             2026-02-04   
-14  dt_antivir             2018-12-30             2026-12-03   
-15  dt_trt_cov             2020-03-15             2026-09-27   
-16  dt_evoluca             2019-01-01             2026-09-27   
-17  dt_encerra             2019-01-05             2026-09-27   
-18   dt_digita             2019-01-18             2026-09-28   
-
-    quantidade_total  quantidade_original_preenchida  \
-0            4666910                         4666910   
-1            4666910                         4666910   
-2            4666910                         4362665   
-3            4666910                          390041   
-4            4666910                            5645   
-5            4666910                           17601   
-6            4666910                           18626   
-7            4666910                           10895   
-8            4666910                         1211162   
-9            4666910                         1024809   
-10           4666910                          473540   
-11           4666910                          195149   
-12           4666910                           21152   
-13           4666910                          110916   
-14           4666910                          347712   
-15           4666910                            3833   
-16           4666910                         4014740   
-17           4666910                         4338057   
-18           4666910                         4650091   
-
-    quantidade_ausente_original  quantidade_convertida  \
-0                             0                4666910   
-1                             0                4666910   
-2                        304245                4362568   
-3                       4276869                 390041   
-4                       4661265                   5645   
-5                       4649309                  17601   
-6                       4648284                  18626   
-7                       4656015                  10895   
-8                       3455748                1211097   
-9                       3642101                1024741   
-10                      4193370                 473536   
-11                      4471761                 195148   
-12                      4645758                  21152   
-13                      4555994                 110916   
-14                      4319198                 347687   
-15                      4663077                   3833   
-16                       652170                4014740   
-17                       328853                4338057   
-18                        16819                4650091   
-
-    quantidade_formato_iso  quantidade_formato_br  \
-0                  4666910                      0   
-1                  4666910                      0   
-2                  4362665                      0   
-3                   390041                      0   
-4                     5645                      0   
-5                    17601                      0   
-6                    18626                      0   
-7                    10895                      0   
-8                        0                1211162   
-9                        0                1024809   
-10                       0                 473540   
-1
-... [1441 characters omitted] ...
-     0   
-12                                   0                                    0   
-13                                   0                                    0   
-14                                   0                                    0   
-15                                   0                                    0   
-16                                   0                                    0   
-17                                   0                                    0   
-18                                   0                                    0   
-
-    datas_antes_1900  datas_depois_2026  datas_fora_faixa  
-0                  0                  0                 0  
-1                  0                  0                 0  
-2                 21                 76                97  
-3                  0                  0                 0  
-4                  0                  0                 0  
-5                  0                  0                 0  
-6                  0                  0                 0  
-7                  0                  0                 0  
-8                 13                 52                65  
-9                 25                 43                68  
-10                 0                  4                 4  
-11                 0                  1                 1  
-12                 0                  0                 0  
-13                 0                  0                 0  
-14                 6                 19                25  
-15                 0                  0                 0  
-16                 0                  0                 0  
-17                 0                  0                 0  
-18                 0                  0                 0  
-[non-text output omitted: text/html]
-```
-
-### Cell 16 [code] · In [15]
+### Cell 16 [code] · In [ ]
 
 ```python
 import gc
@@ -17128,15 +15098,6 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Objetos temporários removidos: ['series_datas_convertidas', 'diagnosticos_conversao', 'problemas_conversao', 'colunas_com_problemas_df']
-Objetos coletados: 0
-datas_convertidas preservado: True
-resumo_datas preservado: True
-```
-
 ### Cell 17 [markdown]
 
 ```markdown
@@ -17156,7 +15117,7 @@ de cada campo. Uma quantidade absoluta maior não implica necessariamente
 uma proporção maior de erro.
 ```
 
-### Cell 18 [code] · In [16]
+### Cell 18 [code] · In [ ]
 
 ```python
 COLUNAS_DIAGNOSTICO_DATA = [
@@ -17456,51 +15417,7 @@ else:
     )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x500 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-       coluna  quantidade_original_preenchida  \
-0  dt_interna                         4362665   
-1  dose_2_cov                         1024809   
-2  dose_1_cov                         1211162   
-3  dt_antivir                          347712   
-4    dose_ref                          473540   
-5   dose_2ref                          195149   
-
-   quantidade_formato_nao_reconhecido  quantidade_ano_fora_faixa  \
-0                                   0                         97   
-1                                   0                         68   
-2                                   0                         65   
-3                                   0                         25   
-4                                   0                          4   
-5                                   0                          1   
-
-   quantidade_data_calendario_invalida  quantidade_problemas  \
-0                                    0                    97   
-1                                    0                    68   
-2                                    0                    65   
-3                                    0                    25   
-4                                    0                     4   
-5                                    0                     1   
-
-   percentual_problemas_entre_preenchidos  
-0                                0.002223  
-1                                0.006635  
-2                                0.005367  
-3                                0.007190  
-4                                0.000845  
-5                                0.000512  
-[non-text output omitted: text/html]
-```
-
-### Cell 19 [code] · In [17]
+### Cell 19 [code] · In [ ]
 
 ```python
 # ============================================================
@@ -17590,38 +15507,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Foram identificadas datas posteriores ao fechamento observado da base.
-```
-
-**Output 2 (display_data)**
-
-```text
-       coluna data_corte_observada  quantidade_posterior_corte  \
-0  dt_interna           2026-09-28                          17   
-1  dose_1_cov           2026-09-28                           3   
-2  dose_2_cov           2026-09-28                           1   
-3    dose_ref           2026-09-28                           1   
-4  dt_antivir           2026-09-28                           3   
-
-  menor_data_posterior_corte maior_data_posterior_corte  
-0                 2026-09-29                 2026-12-29  
-1                 2026-11-17                 2026-12-23  
-2                 2026-10-30                 2026-10-30  
-3                 2026-12-19                 2026-12-19  
-4                 2026-09-30                 2026-12-03  
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Internações posteriores ao corte observado: 17
-```
-
-### Cell 20 [code] · In [18]
+### Cell 20 [code] · In [ ]
 
 ```python
 
@@ -17685,13 +15571,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Conversão e auditoria das datas concluídas sem OutOfBoundsDatetime.
-```
-
-### Cell 21 [code] · In [19]
+### Cell 21 [code] · In [ ]
 
 ```python
 if "dt_notific" not in datas_convertidas.columns:
@@ -17723,23 +15603,7 @@ volume_por_ano["percentual"] = (
 display(volume_por_ano)
 ```
 
-**Output 1 (display_data)**
-
-```text
-   ano_notificacao  quantidade_registros  percentual
-0             2018                     3    0.000064
-1             2019                 48634    1.042103
-2             2020               1148787   24.615581
-3             2021               1773875   38.009625
-4             2022                582656   12.484835
-5             2023                284383    6.093604
-6             2024                268519    5.753679
-7             2025                334610    7.169840
-8             2026                225443    4.830670
-[non-text output omitted: text/html]
-```
-
-### Cell 22 [code] · In [20]
+### Cell 22 [code] · In [ ]
 
 ```python
 if "dt_interna" not in datas_convertidas.columns:
@@ -17771,32 +15635,7 @@ volume_por_ano_int["percentual"] = (
 display(volume_por_ano_int)
 ```
 
-**Output 1 (display_data)**
-
-```text
-    ano_internacao  quantidade_registros_int  percentual
-0           1917.0                         4    0.000086
-1           1918.0                         1    0.000021
-2           1941.0                         4    0.000086
-3           2009.0                         1    0.000021
-4           2011.0                         1    0.000021
-5           2012.0                         2    0.000043
-6           2016.0                         1    0.000021
-7           2017.0                         2    0.000043
-8           2018.0                        11    0.000236
-9           2019.0                     47545    1.018768
-10          2020.0                   1076375   23.063976
-11          2021.0                   1657394   35.513734
-12          2022.0                    536135   11.488008
-13          2023.0                    265671    5.692653
-14          2024.0                    253367    5.429010
-15          2025.0                    315616    6.762847
-16          2026.0                    210438    4.509151
-17             NaN                    304342    6.521274
-[non-text output omitted: text/html]
-```
-
-### Cell 23 [code] · In [21]
+### Cell 23 [code] · In [ ]
 
 ```python
 ANO_INCOMPLETO = 2026
@@ -17880,52 +15719,7 @@ status_periodos.loc[
 display(status_periodos)
 ```
 
-**Output 1 (display_data)**
-
-```text
-    ano_internacao  quantidade_registros_int  percentual   status_periodo  \
-0           1917.0                         4    0.000086     fora_periodo   
-1           1918.0                         1    0.000021     fora_periodo   
-2           1941.0                         4    0.000086     fora_periodo   
-3           2009.0                         1    0.000021     fora_periodo   
-4           2011.0                         1    0.000021     fora_periodo   
-5           2012.0                         2    0.000043     fora_periodo   
-6           2016.0                         1    0.000021     fora_periodo   
-7           2017.0                         2    0.000043     fora_periodo   
-8           2018.0                        11    0.000236     fora_periodo   
-9           2019.0                     47545    1.018768         completo   
-10          2020.0                   1076375   23.063976         completo   
-11          2021.0                   1657394   35.513734         completo   
-12          2022.0                    536135   11.488008         completo   
-13          2023.0                    265671    5.692653         completo   
-14          2024.0                    253367    5.429010         completo   
-15          2025.0                    315616    6.762847         completo   
-16          2026.0                    210438    4.509151       incompleto   
-17             NaN                    304342    6.521274  sem_data_valida   
-
-    dentro_periodo_coorte                                  observacao  
-0                   False  Ano fora do período definido para a coorte  
-1                   False  Ano fora do período definido para a coorte  
-2                   False  Ano fora do período definido para a coorte  
-3                   False  Ano fora do período definido para a coorte  
-4                   False  Ano fora do período definido para a coorte  
-5                   False  Ano fora do período definido para a coorte  
-6                   False  Ano fora do período definido para a coorte  
-7                   False  Ano fora do período definido para a coorte  
-8                   False  Ano fora do período definido para a coorte  
-9                    True                                              
-10                   True                                              
-11                   True                                              
-12                   True                                              
-13                   True                                              
-14                   True                                              
-15                   True                                              
-16                   True    Ano incompleto na versão atual dos dados  
-17                  False              Registro sem dt_interna válida  
-[non-text output omitted: text/html]
-```
-
-### Cell 24 [code] · In [22]
+### Cell 24 [code] · In [ ]
 
 ```python
 import matplotlib.pyplot as plt
@@ -17993,20 +15787,7 @@ print(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1000x500 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Figura salva em: <REPO>\reports\figures\eda_01_volume_por_ano_internacao.png
-```
-
-### Cell 25 [code] · In [23]
+### Cell 25 [code] · In [ ]
 
 ```python
 memoria_mb = (
@@ -18017,13 +15798,7 @@ memoria_mb = (
 print(f"Memória total utilizada: {memoria_mb:,.2f} MB")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Memória total utilizada: 3,847.05 MB
-```
-
-### Cell 26 [code] · In [24]
+### Cell 26 [code] · In [ ]
 
 ```python
 memoria_colunas = (
@@ -18038,27 +15813,7 @@ memoria_colunas = (
 display(memoria_colunas)
 ```
 
-**Output 1 (display_data)**
-
-```text
-        coluna  memoria_mb
-0   nu_notific   92.276079
-1   dt_sin_pri   80.112820
-2   dt_notific   80.112820
-3    dt_digita   79.958256
-4   dt_interna   77.767655
-..         ...         ...
-84  dt_trt_cov   36.198594
-85    out_trat   36.197441
-86   tipo_trat   36.166602
-87       tabag   36.162040
-88       Index    0.000126
-
-[89 rows x 2 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 27 [code] · In [25]
+### Cell 27 [code] · In [ ]
 
 ```python
 ausencias = pd.DataFrame(
@@ -18095,39 +15850,6 @@ ausencias = ausencias.sort_values(
 display(ausencias)
 ```
 
-**Output 1 (display_data)**
-
-```text
-        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
-0        tabag             4666910                      0          100.000000   
-1     out_trat             4664116                   2794           99.940132   
-2   dt_trt_cov             4663077                   3833           99.917869   
-3    tipo_trat             4662126                   4784           99.897491   
-4     out_anim             4661634                   5276           99.886949   
-..         ...                 ...                    ...                 ...   
-83  dt_notific                   0                4666910            0.000000   
-84     sem_pri                   0                4666910            0.000000   
-85  dt_sin_pri                   0                4666910            0.000000   
-86     cs_sexo                   0                4666910            0.000000   
-87  nu_idade_n                   0                4666910            0.000000   
-
-    percentual_preenchido  
-0                0.000000  
-1                0.059868  
-2                0.082131  
-3                0.102509  
-4                0.113051  
-..                    ...  
-83             100.000000  
-84             100.000000  
-85             100.000000  
-86             100.000000  
-87             100.000000  
-
-[88 rows x 5 columns]
-[non-text output omitted: text/html]
-```
-
 ### Cell 28 [markdown]
 
 ```markdown
@@ -18145,7 +15867,7 @@ O ranking é uma ferramenta de triagem e não determina automaticamente
 a exclusão de variáveis.
 ```
 
-### Cell 29 [code] · In [26]
+### Cell 29 [code] · In [ ]
 
 ```python
 import matplotlib.pyplot as plt
@@ -18429,47 +16151,7 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x4400 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
-0        tabag             4666910                      0          100.000000   
-1     out_trat             4664116                   2794           99.940132   
-2   dt_trt_cov             4663077                   3833           99.917869   
-3    tipo_trat             4662126                   4784           99.897491   
-4     out_anim             4661634                   5276           99.886949   
-..         ...                 ...                    ...                 ...   
-83  dt_sin_pri                   0                4666910            0.000000   
-84  nu_idade_n                   0                4666910            0.000000   
-85  nu_notific                   0                4666910            0.000000   
-86     sem_pri                   0                4666910            0.000000   
-87    tp_idade                   0                4666910            0.000000   
-
-    percentual_preenchido                  grupo  
-0                0.000000  candidatas_principais  
-1                0.059868   complementares_texto  
-2                0.082131   tratamento_auditoria  
-3                0.102509   tratamento_auditoria  
-4                0.113051  candidatas_principais  
-..                    ...                    ...  
-83             100.000000              estrutura  
-84             100.000000  candidatas_principais  
-85             100.000000              estrutura  
-86             100.000000              estrutura  
-87             100.000000  candidatas_principais  
-
-[88 rows x 6 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 30 [code] · In [27]
+### Cell 30 [code] · In [ ]
 
 ```python
 import gc
@@ -18680,158 +16362,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Processando colunas 1 até 5 de 88
-Processando colunas 6 até 10 de 88
-Processando colunas 11 até 15 de 88
-Processando colunas 16 até 20 de 88
-Processando colunas 21 até 25 de 88
-Processando colunas 26 até 30 de 88
-Processando colunas 31 até 35 de 88
-Processando colunas 36 até 40 de 88
-Processando colunas 41 até 45 de 88
-Processando colunas 46 até 50 de 88
-Processando colunas 51 até 55 de 88
-Processando colunas 56 até 60 de 88
-Processando colunas 61 até 65 de 88
-Processando colunas 66 até 70 de 88
-Processando colunas 71 até 75 de 88
-Processando colunas 76 até 80 de 88
-Processando colunas 81 até 85 de 88
-Processando colunas 86 até 88 de 88
-```
-
-**Output 2 (display_data)**
-
-```text
-   ano_notificacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
-0             2018       100.0       100.0       100.0    100.0      100.0   
-1             2019       100.0       100.0       100.0    100.0   99.44072   
-2             2020       100.0       100.0       100.0    100.0  97.624625   
-3             2021       100.0       100.0       100.0    100.0  97.372476   
-4             2022       100.0       100.0       100.0    100.0  96.706461   
-5             2023       100.0       100.0       100.0    100.0  97.215023   
-6             2024       100.0       100.0       100.0    100.0  97.840749   
-7             2025       100.0       100.0       100.0    100.0   97.96091   
-8             2026       100.0       100.0       100.0    100.0  97.635766   
-
-   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
-0       100.0    100.0       100.0     100.0  ...      100.0   66.666667   
-1   97.318748    100.0       100.0     100.0  ...  98.603857   60.762018   
-2   92.570772    100.0       100.0     100.0  ...  86.346381   14.819022   
-3   93.659249    100.0       100.0     100.0  ...  81.779043    2.246043   
-4   92.862856    100.0       100.0     100.0  ...  79.995915    3.612766   
-5   94.232778    100.0       100.0     100.0  ...  81.149365    5.872714   
-6   94.319955    100.0       100.0     100.0  ...   81.12871    8.117861   
-7   94.575476    100.0       100.0     100.0  ...  86.048833   11.776098   
-8   93.910212    100.0       100.0     100.0  ...   87.33915   12.552175   
-
-   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
-0   66.666667        0.0        0.0         0.0      100.0       100.0   
-1   60.759962    0.19328        0.0         0.0   94.18925   84.081096   
-2   14.513047   1.013939   0.016278    0.000783  93.641206   87.272401   
-3    1.929223   1.078881   0.007329    0.002988  91.929025   85.798999   
-4    3.271742  16.454821   0.171456    0.140735  91.922335   85.642815   
-5    5.345256  74.884223   0.420208    0.318584  94.987745     88.1533   
-6    7.524235  75.597258   0.359379    0.320275    94.4179   87.878325   
-7   10.798542  79.988643   0.273453    0.249544   95.45172   86.436747   
-8   11.804758  81.069716   0.174323     0.15525  86.790453   77.364123   
-
-   dt_encerra  dt_digita  
-0       100.0  66.666667  
-1   96.418144  65.419254  
-2   94.055643      100.0  
-3   92.465534      100.0  
-4   91.871018      100.0  
-5   94.461694      100.0  
-6   93.960949      100.0  
-7   95.267326      100.0  
-8   86.690649      100.0  
-
-[9 rows x 89 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Processando colunas 1 até 5 de 88
-Processando colunas 6 até 10 de 88
-Processando colunas 11 até 15 de 88
-Processando colunas 16 até 20 de 88
-Processando colunas 21 até 25 de 88
-Processando colunas 26 até 30 de 88
-Processando colunas 31 até 35 de 88
-Processando colunas 36 até 40 de 88
-Processando colunas 41 até 45 de 88
-Processando colunas 46 até 50 de 88
-Processando colunas 51 até 55 de 88
-Processando colunas 56 até 60 de 88
-Processando colunas 61 até 65 de 88
-Processando colunas 66 até 70 de 88
-Processando colunas 71 até 75 de 88
-Processando colunas 76 até 80 de 88
-Processando colunas 81 até 85 de 88
-Processando colunas 86 até 88 de 88
-```
-
-**Output 4 (display_data)**
-
-```text
-   ano_internacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
-0            2019       100.0       100.0       100.0    100.0  99.995793   
-1            2020       100.0       100.0       100.0    100.0  99.998978   
-2            2021       100.0       100.0       100.0    100.0  99.999759   
-3            2022       100.0       100.0       100.0    100.0  99.999627   
-4            2023       100.0       100.0       100.0    100.0  99.999247   
-5            2024       100.0       100.0       100.0    100.0      100.0   
-6            2025       100.0       100.0       100.0    100.0  99.999683   
-7            2026       100.0       100.0       100.0    100.0  99.999525   
-
-   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
-0       100.0    100.0       100.0     100.0  ...  98.870544   61.236723   
-1       100.0    100.0       100.0     100.0  ...  88.417234   15.679015   
-2       100.0    100.0       100.0     100.0  ...  84.119165    2.359789   
-3       100.0    100.0       100.0     100.0  ...  82.695963     3.71455   
-4       100.0    100.0       100.0     100.0  ...  83.231892    5.961885   
-5       100.0    100.0       100.0     100.0  ...  82.613363    8.373624   
-6       100.0    100.0       100.0     100.0  ...  87.510456   12.115039   
-7       100.0    100.0       100.0     100.0  ...  89.203471   12.875526   
-
-   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
-0    61.23462   0.201914        0.0         0.0  94.359028   84.612472   
-1   15.354779   1.060039    0.02592    0.000836  94.355777   88.829544   
-2    2.031382   1.122847   0.007421    0.003137  92.924676   87.289504   
-3     3.38273  17.762877   0.188199    0.156117  93.681629   87.734246   
-4     5.49326  77.100624   0.392967    0.327849  95.591164   89.567548   
-5    7.773309  77.156852   0.362715     0.32522  95.083417   89.083819   
-6   11.144872  81.539909   0.276602    0.254423  96.233081   88.193247   
-7   12.130414  83.009723   0.170597    0.153965  87.909978   79.482318   
-
-   dt_encerra  dt_digita  
-0   96.529604  65.518982  
-1   94.676298      100.0  
-2   93.480971      100.0  
-3   93.562069      100.0  
-4   95.104471      100.0  
-5   94.635055      100.0  
-6   95.954895      100.0  
-7    87.85438      100.0  
-
-[8 rows x 89 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 5 (stream:stdout)**
-
-```text
-Cálculo temporal concluído.
-Objetos coletados: 0
-```
-
-### Cell 31 [code] · In [28]
+### Cell 31 [code] · In [ ]
 
 ```python
 OBJETOS_RESTAURADOS_ESPERADOS = [
@@ -18922,15 +16453,6 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Restauração do Notebook 01 validada com sucesso.
-Datas convertidas: (4666910, 19)
-Preenchimento por notificação: (9, 89)
-Preenchimento por internação: (8, 89)
-```
-
 ### Cell 32 [markdown]
 
 ```markdown
@@ -18951,7 +16473,7 @@ O ano de 2026 possui cobertura parcial e deve ser interpretado
 separadamente.
 ```
 
-### Cell 33 [code] · In [29]
+### Cell 33 [code] · In [ ]
 
 ```python
 QUANTIDADE_VARIAVEIS_HEATMAP = 20
@@ -19189,41 +16711,7 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x1000 with 2 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  amplitude_pontos_percentuais  quantidade_anos_observados
-0   vacina_cov                     98.677852                           8
-1       pov_ct                     98.283731                           8
-2      estrang                     95.397484                           8
-3       fadiga                     82.867461                           8
-4     trat_cov                     82.807809                           8
-5      dor_abd                     81.518308                           8
-6    perd_olft                      81.09531                           8
-7    perd_pala                     80.911408                           8
-8   dt_antivir                     59.203238                           8
-9   tp_antivir                     58.876934                           8
-10  dose_1_cov                     56.889064                           8
-11  dose_2_cov                      53.18307                           8
-12      vacina                     39.893952                           8
-13   dt_digita                     34.481018                           8
-14    dose_ref                     30.288194                           8
-15    diarreia                     29.808114                           8
-16  cs_escol_n                     29.625463                           8
-17      vomito                     29.275268                           8
-18    garganta                     28.304763                           8
-19  dt_ut_dose                     23.475831                           8
-[non-text output omitted: text/html]
-```
-
-### Cell 34 [code] · In [30]
+### Cell 34 [code] · In [ ]
 
 ```python
 cardinalidade_variaveis = pd.DataFrame(
@@ -19262,26 +16750,6 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-        coluna  valores_distintos_sem_na  valores_distintos_com_na
-0   nu_notific                   4666881                   4666881
-1    outro_des                    251506                    251507
-2    morb_desc                    232631                    232632
-3   co_mun_res                      5604                      5605
-4   co_mun_not                      3661                      3662
-..         ...                       ...                       ...
-83     cs_sexo                         3                         3
-84    tp_idade                         3                         3
-85     estrang                         2                         3
-86      pov_ct                         2                         3
-87       tabag                         0                         1
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
 ### Cell 35 [markdown]
 
 ```markdown
@@ -19305,7 +16773,7 @@ Alta cardinalidade não determina exclusão automática, mas indica a
 necessidade de transformação, agrupamento ou uso somente para auditoria.
 ```
 
-### Cell 36 [code] · In [31]
+### Cell 36 [code] · In [ ]
 
 ```python
 QUANTIDADE_VARIAVEIS_CARDINALIDADE_GRAFICO = 40
@@ -19587,61 +17055,7 @@ display(
 )
 ```
 
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x900 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  valores_distintos_sem_na  valores_distintos_com_na
-0   nu_notific                   4666881                   4666881
-1    outro_des                    251506                    251507
-2    morb_desc                    232631                    232632
-3   co_mun_res                      5604                      5605
-4   co_mun_not                      3661                      3662
-5    out_antiv                      3273                      3274
-6   dt_ut_dose                      3072                      3073
-7   co_mu_inte                      3028                      3029
-8   dt_interna                      2953                      2954
-9   dt_antivir                      2856                      2857
-10  dt_notific                      2829                      2829
-11  dt_sin_pri                      2828                      2828
-12  dt_evoluca                      2827                      2828
-13  dt_encerra                      2820                      2821
-14   dt_digita                      2764                      2765
-15  dose_1_cov                      2060                      2061
-16  dose_2_cov                      1960                      1961
-17   dt_1_dose                      1820                      1821
-18  dt_vac_mae                      1767                      1768
-19   dt_2_dose                      1732                      1733
-20   pac_cocbo                      1628                      1629
-21   pac_dscbo                      1628                      1629
-22  dt_doseuni                      1561                      1562
-23  dt_trt_cov                      1378                      1379
-24    dose_ref                      1205                      1206
-25    obes_imc                      1011                      1012
-26   dos_re_bi                       773                       774
-27   dose_adic                       773                       774
-28   dose_2ref                       757                       758
-29    out_anim                       575                       576
-30    out_trat                       555                       556
-31  co_rg_resi                       320                       321
-32  co_regiona                       312                       313
-33  co_rg_inte                       312                       313
-34   cs_etinia                       310                       311
-35  nu_idade_n                       139                       139
-36     co_pais                        57                        58
-37     sem_pri                        53                        53
-38   tp_pov_ct                        46                        47
-39       sg_uf                        27                        28
-[non-text output omitted: text/html]
-```
-
-### Cell 37 [code] · In [32]
+### Cell 37 [code] · In [ ]
 
 ```python
 LIMITE_CARDINALIDADE = 30
@@ -19685,27 +17099,7 @@ frequencias_categoricas_df = pd.concat(
 display(frequencias_categoricas_df.head(100))
 ```
 
-**Output 1 (display_data)**
-
-```text
-        coluna valor  quantidade  percentual
-0    sg_uf_not    SP     1306611   27.997347
-1    sg_uf_not    MG      521998   11.185088
-2    sg_uf_not    RJ      385820    8.267140
-3    sg_uf_not    PR      380639    8.156125
-4    sg_uf_not    RS      256895    5.504606
-..         ...   ...         ...         ...
-95  cs_escol_n     3      382584    8.197801
-96  cs_escol_n     5      337951    7.241430
-97  cs_escol_n     2      250435    5.366184
-98  cs_escol_n     0      213463    4.573969
-99  cs_escol_n     4      163584    3.505189
-
-[100 rows x 4 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 38 [code] · In [33]
+### Cell 38 [code] · In [ ]
 
 ```python
 if "nu_notific" in df.columns:
@@ -19743,17 +17137,7 @@ else:
     )
 ```
 
-**Output 1 (display_data)**
-
-```text
-                              metrica    valor
-0                       linhas_totais  4666910
-1         identificadores_preenchidos  4666910
-2  linhas_com_identificador_duplicado       58
-[non-text output omitted: text/html]
-```
-
-### Cell 39 [code] · In [34]
+### Cell 39 [code] · In [ ]
 
 ```python
 REGRAS_AUDITORIA_TEMPORAL = [
@@ -19870,48 +17254,7 @@ auditoria_vazamento["existe_no_dataframe"] = (
 display(auditoria_vazamento)
 ```
 
-**Output 1 (display_data)**
-
-```text
-       coluna       uso_nesta_eda  candidata_feature_principal  \
-0    evolucao              rotulo                        False   
-1  dt_evoluca           auditoria                        False   
-2  dt_encerra           auditoria                        False   
-3   dt_digita           auditoria                        False   
-4   antiviral   eda_sensibilidade                        False   
-5  tp_antivir   eda_sensibilidade                        False   
-6  dt_antivir  auditoria_temporal                        False   
-7    trat_cov   eda_sensibilidade                        False   
-8   tipo_trat   eda_sensibilidade                        False   
-9  dt_trt_cov  auditoria_temporal                        False   
-
-       risco_temporal                                      justificativa  \
-0            desfecho  Fonte utilizada para construir o alvo. Não pod...   
-1  posterior_admissao  Data de alta ou óbito, posterior ao ponto de p...   
-2  posterior_admissao  Data de encerramento do caso, posterior ao pon...   
-3      administrativo       Data administrativa de inclusão do registro.   
-4          tratamento  A disponibilidade até a admissão precisa ser c...   
-5          tratamento  Tipo de tratamento condicionado ao uso de anti...   
-6          tratamento  Somente tratamentos iniciados até a admissão p...   
-7          tratamento  Pode representar decisão assistencial posterio...   
-8          tratamento  Tipo de tratamento condicionado ao registro de...   
-9          tratamento  Somente tratamentos iniciados até a admissão p...   
-
-   existe_no_dataframe  
-0                 True  
-1                 True  
-2                 True  
-3                 True  
-4                 True  
-5                 True  
-6                 True  
-7                 True  
-8                 True  
-9                 True  
-[non-text output omitted: text/html]
-```
-
-### Cell 40 [code] · In [35]
+### Cell 40 [code] · In [ ]
 
 ```python
 resumo_primeira_passagem = pd.DataFrame(
@@ -19946,24 +17289,7 @@ resumo_primeira_passagem = pd.DataFrame(
 display(resumo_primeira_passagem)
 ```
 
-**Output 1 (display_data)**
-
-```text
-                   metrica                valor
-0             versao_dados             dados-v2
-1                  arquivo         srag.parquet
-2           linhas_parquet              4666910
-3          colunas_parquet                  198
-4        linhas_carregadas              4666910
-5       colunas_carregadas                   88
-6               memoria_mb              3847.05
-7  data_minima_notificacao  2018-12-30 00:00:00
-8  data_maxima_notificacao  2026-09-28 00:00:00
-9         colunas_ausentes                    0
-[non-text output omitted: text/html]
-```
-
-### Cell 41 [code] · In [36]
+### Cell 41 [code] · In [ ]
 
 ```python
 C.TABLES_DIR.mkdir(
@@ -19974,13 +17300,7 @@ exist_ok=True,
 print(f"Tabelas serão salvas em: {C.TABLES_DIR}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Tabelas serão salvas em: <REPO>\outputs\tables
-```
-
-### Cell 42 [code] · In [37]
+### Cell 42 [code] · In [ ]
 
 ```python
 duplicidades_nu_notific = (
@@ -20004,7 +17324,7 @@ duplicidades_nu_notific = (
 )
 ```
 
-### Cell 43 [code] · In [38]
+### Cell 43 [code] · In [ ]
 
 ```python
 tabelas_exportacao = {
@@ -20090,27 +17410,7 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_faixa_datas.csv
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_datas_pos_corte.csv
-Salvo: <REPO>\outputs\tables\eda_01_volume_por_ano_notificacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_volume_por_ano_internacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_status_periodos.csv
-Salvo: <REPO>\outputs\tables\eda_01_tipos_memoria.csv
-Salvo: <REPO>\outputs\tables\eda_01_resumo_datas.csv
-Salvo: <REPO>\outputs\tables\eda_01_ausencias.csv
-Salvo: <REPO>\outputs\tables\eda_01_preenchimento_por_ano_notificacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_preenchimento_por_ano_internacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_cardinalidade.csv
-Salvo: <REPO>\outputs\tables\eda_01_frequencias_categoricas.csv
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_vazamento.csv
-Salvo: <REPO>\outputs\tables\eda_01_duplicidades_nu_notific.csv
-Exportação das tabelas da EDA 01 concluída.
-```
-
-### Cell 44 [code] · In [39]
+### Cell 44 [code] · In [ ]
 
 ```python
 colunas_desfecho_fora_das_candidatas = all(
@@ -20311,42 +17611,6 @@ if not all(verificacoes_finais.values()):
     )
 
 print("Primeira passagem concluída com sucesso.")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Datas fora da faixa identificadas na fonte: 260
-Datas COVID fora da faixa identificadas: 138
-Colunas ainda contendo datas convertidas fora da faixa: []
-```
-
-**Output 2 (display_data)**
-
-```text
-                                   verificacao  resultado
-0                          dataframe_nao_vazio       True
-1                colunas_solicitadas_presentes       True
-2                        dt_notific_disponivel       True
-3                        dt_interna_disponivel       True
-4                 desfecho_fora_das_candidatas       True
-5   tratamentos_fora_das_candidatas_principais       True
-6           datas_covid_incluidas_na_auditoria       True
-7                 auditoria_faixa_datas_criada       True
-8                 todas_colunas_data_auditadas       True
-9               datas_problematicas_bloqueadas       True
-10       ano_2026_identificado_como_incompleto       True
-11    anos_fora_periodo_nao_marcados_completos       True
-12            volume_por_ano_internacao_criado       True
-13     preenchimento_por_ano_internacao_criado       True
-14                    diretorio_tabelas_existe       True
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Primeira passagem concluída com sucesso.
 ```
 
 ### Cell 45 [markdown]
@@ -20805,7 +18069,7 @@ vazamento, a cardinalidade, a estabilidade entre anos e a contribuição
 incremental nos experimentos.
 ```
 
-### Cell 47 [code] · In [40]
+### Cell 47 [code] · In [ ]
 
 ```python
 # ============================================================
@@ -22265,241 +19529,6 @@ print(
 )
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Classificacao de USO_INICIAL validada com sucesso.
-Referência temporal preparada uma única vez para o dicionário.
-[01/88] Processando nu_notific
-[02/88] Processando dt_notific
-[03/88] Processando dt_sin_pri
-[04/88] Processando sem_pri
-[05/88] Processando hospital
-[06/88] Processando dt_interna
-[07/88] Processando cs_sexo
-[08/88] Processando nu_idade_n
-[09/88] Processando tp_idade
-[10/88] Processando cs_gestant
-[11/88] Processando cs_raca
-[12/88] Processando cs_etinia
-[13/88] Processando cs_escol_n
-[14/88] Processando cs_zona
-[15/88] Processando ave_suino
-[16/88] Processando out_anim
-[17/88] Processando febre
-[18/88] Processando tosse
-[19/88] Processando garganta
-[20/88] Processando dispneia
-[21/88] Processando desc_resp
-[22/88] Processando saturacao
-[23/88] Processando diarreia
-[24/88] Processando vomito
-[25/88] Processando dor_abd
-[26/88] Processando fadiga
-[27/88] Processando perd_olft
-[28/88] Processando perd_pala
-[29/88] Processando puerpera
-[30/88] Processando cardiopati
-[31/88] Processando hematologi
-[32/88] Processando sind_down
-[33/88] Processando hepatica
-[34/88] Processando asma
-[35/88] Processando diabetes
-[36/88] Processando neurologic
-[37/88] Processando pneumopati
-[38/88] Processando imunodepre
-[39/88] Processando renal
-[40/88] Processando obesidade
-[41/88] Processando tabag
-[42/88] Processando outro_sin
-[43/88] Processando outro_des
-[44/88] Processando obes_imc
-[45/88] Processando out_morbi
-[46/88] Processando morb_desc
-[47/88] Processando out_antiv
-[48/88] Processando out_trat
-[49/88] Processando sg_uf_not
-[50/88] Processando co_regiona
-[51/88] Processando co_mun_not
-[52/88] Processando co_pais
-[53/88] Processando sg_uf
-[54/88] Processando co_rg_resi
-[55/88] Processando co_mun_res
-[56/88] Processando sg_uf_inte
-[57/88] Processando co_rg_inte
-[58/88] Processando co_mu_inte
-[59/88] Processando vacina
-[60/88] Processando dt_ut_dose
-[61/88] Processando mae_vac
-[62/88] Processando dt_vac_mae
-[63/88] Processando m_amamenta
-[64/88] Processando dt_doseuni
-[65/88] Processando dt_1_dose
-[66/88] Processando dt_2_dose
-[67/88] Processando vacina_cov
-[68/88] Processando dose_1_cov
-[69/88] Processando dose_2_cov
-[70/88] Processando dose_ref
-[71/88] Processando dose_2ref
-[72/88] Processando dose_adic
-[73/88] Processando dos_re_bi
-[74/88] Processando pac_cocbo
-[75/88] Processando pac_dscbo
-[76/88] Processando pov_ct
-[77/88] Processando tp_pov_ct
-[78/88] Processando estrang
-[79/88] Processando antiviral
-[80/88] Processando tp_antivir
-[81/88] Processando dt_antivir
-[82/88] Processando trat_cov
-[83/88] Processando tipo_trat
-[84/88] Processando dt_trt_cov
-[85/88] Processando evolucao
-[86/88] Processando dt_evoluca
-[87/88] Processando dt_encerra
-[88/88] Processando dt_digita
-Montagem do dicionário concluída: 88 variáveis.
-
-================================================================================
-RESUMO DA GERAÇÃO DO DICIONÁRIO
-================================================================================
-{
-  "total_colunas_solicitadas": 88,
-  "total_colunas_geradas": 88,
-  "colunas_nao_encontradas": [],
-  "colunas_sem_nome_amigavel": [],
-  "colunas_sem_grupo": [],
-  "arquivo_completo": "<REPO>\\configs\\dicionario_variaveis_v1.csv",
-  "arquivo_revisao": "<REPO>\\outputs\\tables\\dicionario_variaveis_revisao.csv"
-}
-
-Quantidade de pontos de revisão: 36
-Dicionário operacional salvo em: <REPO>\configs\dicionario_variaveis_v1.csv
-Visão reduzida salva em: <REPO>\outputs\tables\dicionario_variaveis_revisao.csv
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna                                     nome_amigavel  \
-0   nu_notific                             Numero da notificacao   
-1   dt_notific                               Data da notificacao   
-2   dt_sin_pri                       Data dos primeiros sintomas   
-3      sem_pri      Semana epidemiologica dos primeiros sintomas   
-4     hospital                                 Houve internacao?   
-5   dt_interna                       Data da internacao por SRAG   
-6      cs_sexo                                              Sexo   
-7   nu_idade_n                                   Idade informada   
-8     tp_idade             Unidade da idade: dias, meses ou anos   
-9   cs_gestant                              Situacao gestacional   
-10     cs_raca                                       Raca ou cor   
-11   cs_etinia                                    Etnia indigena   
-12  cs_escol_n                                      Escolaridade   
-13     cs_zona                                Zona de residencia   
-14   ave_suino  Contato direto com aves, suinos ou outro animal?   
-15    out_anim                     Especificacao do outro animal   
-16       febre                                             Febre   
-17       tosse                                             Tosse   
-18    garganta                                   Dor de garganta   
-19    dispneia                                          Dispneia   
-
-                         grupo uso_inicial_sugerido  \
-0             estrutura_coorte     estrutura_coorte   
-1             estrutura_coorte     estrutura_coorte   
-2             estrutura_coorte     estrutura_coorte   
-3             estrutura_coorte   auditoria_temporal   
-4             estrutura_coorte     estrutura_coorte   
-5             estrutura_coorte     estrutura_coorte   
-6   demografia_contexto_social      modelo_a_nucleo   
-7   demografia_contexto_social      modelo_a_nucleo   
-8   demografia_contexto_social      modelo_a_nucleo   
-9   demografia_contexto_social      modelo_a_nucleo   
-10  demografia_contexto_social      modelo_a_nucleo   
-11  demografia_contexto_social  exploracao_subgrupo   
-12  demografia_contexto_social    modelo_b_ampliado   
-13  demografia_contexto_social      modelo_a_nucleo   
-14            exposicao_animal      modelo_a_nucleo   
-15            exposicao_animal     exploracao_texto   
-16                    sintomas      modelo_a_nucleo   
-17                    sintomas      modelo_a_nucleo   
-18                    sintomas      modelo_a_nucleo   
-19                    sintomas      modelo_a_nucleo   
-
-                            aplicabilidade  \
-0                          Populacao geral   
-1                          Populacao geral   
-2                          Populacao geral   
-3                          Populacao geral   
-4                          Populacao geral   
-5                          Populacao geral   
-6                          Populacao geral   
-7                          Populacao geral   
-8                          Populacao geral   
-9                          Populacao geral   
-10                         Populacao geral   
-11      Registros com raca ou cor indigena   
-12                         Populacao geral   
-13                         Populacao geral   
-14                         Populacao geral   
-15  Registros com contato com outro animal   
-16                         Populacao geral   
-17                         Populacao geral   
-18                         Populacao geral   
-19                         Populacao geral   
-
-                               transformacao_sugerida  \
-0       Identificador tecnico; nao usar como preditor   
-1             Auditoria temporal; nao usar data bruta   
-2       Derivar intervalo entre sintomas e internacao   
-3   Auditar contra a semana derivada de dt_sin_pri...   
-4                             Filtro de elegibilidade   
-5   Ancora temporal; derivar ano, mes, semana e in...   
-6    Categorica; preservar sim, nao, ignorado e vazio   
-7         Combinar com tp_idade para criar idade_anos   
-8                             Combinar com nu_idade_n   
-9    Categorica; preservar sim, nao, ignorado e vazio   
-10   Categorica; pres
-... [4964 characters omitted] ...
-                          
-13                                                                             
-14                                                                             
-15  Confirmar se ave_suino = 3 significa outro ani...  decidir_depois_da_eda   
-16                                                                             
-17                                                                             
-18  Preenchimento varia pelo menos 20 pontos perce...                          
-19                                                                             
-
-                          justificativa_decisao_final  
-0                                                      
-1                                                      
-2   Fonte para o intervalo entre sintomas e intern...  
-3                                                      
-4                                                      
-5   Âncora temporal da coorte. Intervalos negativo...  
-6                                                      
-7                                                      
-8                                                      
-9                                                      
-10                                                     
-11                                                     
-12                                                     
-13                                                     
-14                                                     
-15  Preservar para EDA e possível categorização si...  
-16                                                     
-17                                                     
-18                                                     
-19                                                     
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-
-Arquivo completo salvo em: <REPO>\configs\dicionario_variaveis_v1.csv
-```
-
 ### Cell 48 [markdown]
 
 ```markdown
@@ -22521,7 +19550,13 @@ As regras de aplicabilidade permanecem sujeitas à validação do
 dicionário e não representam decisões definitivas de modelagem.
 ```
 
-### Cell 49 [code] · In [41]
+### Cell 49 [code] · In [ ]
+
+```python
+
+```
+
+### Cell 50 [code] · In [ ]
 
 ```python
 COLUNAS_PREENCHIMENTO_APLICAVEL = [
@@ -22867,71 +19902,5 @@ display(
     )
     .reset_index(drop=True)
 )
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x5720 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna                                     aplicabilidade  \
-0    tp_pov_ct  Registros pertencentes a povo ou comunidade tr...   
-1   tp_antivir                     Registros com uso de antiviral   
-2   dt_antivir                     Registros com uso de antiviral   
-3    morb_desc       Registros com outro fator de risco informado   
-4     out_anim             Registros com contato com outro animal   
-..         ...                                                ...   
-83      vomito                                    Populacao geral   
-84    tp_idade                                    Populacao geral   
-85    trat_cov                                    Populacao geral   
-86      vacina                                    Populacao geral   
-87  vacina_cov                                    Populacao geral   
-
-    quantidade_total  quantidade_preenchida  n_populacao_aplicavel  \
-0            4666910                  12557                  12516   
-1            4666910                 366885                 393559   
-2            4666910                 347712                 393559   
-3            4666910                1063125                1075640   
-4            4666910                   5276                   7042   
-..               ...                    ...                    ...   
-83           4666910                3328265                4666910   
-84           4666910                4666910                4666910   
-85           4666910                 993122                4666910   
-86           4666910                3472523                4666910   
-87           4666910                3135685                4666910   
-
-    n_preenchido_aplicavel  percentual_preenchido  \
-0                    12516               0.269065   
-1                   366875               7.861412   
-2                   347702               7.450583   
-3                  1063125              22.780062   
-4                     5276               0.113051   
-..                     ...                    ...   
-83                 3328265              71.316246   
-84                 4666910             100.000000   
-85                  993122              21.280076   
-86                 3472523              74.407327   
-87                 3135685              67.189747   
-
-    percentual_preenchido_aplicavel  diferenca_pontos_percentuais  
-0                        100.000000                     99.730935  
-1                         93.219822                     85.358410  
-2                         88.348126                     80.897543  
-3                         98.836507                     76.056445  
-4                         74.921897                     74.808846  
-..                              ...                           ...  
-83                        71.316246                      0.000000  
-84                       100.000000                      0.000000  
-85                        21.280076                      0.000000  
-86                        74.407327                      0.000000  
-87                        67.189747                      0.000000  
-
-[88 rows x 9 columns]
-[non-text output omitted: text/html]
 ```
 

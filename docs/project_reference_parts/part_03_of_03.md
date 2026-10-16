@@ -1,952 +1,12 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 3/3 -->
-## `src/utils/reproducibility.py`
-
-- Git: `tracked` · status `clean`
-- Size: `13.1 KB` · modified `2026-10-14 22:03 UTC`
-- SHA-256: `3dad1d1621b2ccd9ad50881eeb0a8c1d7da99b3920beb32562e122a016b306cb`
-
-```python
-"""
-Registro de execuções para reprodutibilidade (critério C1).
-
-Cada execução gera `outputs/runs/<RUN_ID>/` com:
-    metadata.json   ← tudo estruturado
-    summary.txt     ← versão legível
-
-O metadata captura identificação (run_id, modelo, seed, timestamps),
-status (`success` | `error`), erro estruturado quando houver exceção,
-versão e SHA-256 do Parquet, estado dos gates, versões de bibliotecas,
-commit/branch e ambiente.
-
-Uso:
-    from src.utils.reproducibility import Run
-
-    with Run(
-        modelo="logistic",
-        parametros={"C": 1.0},
-        dataset_path=C.ANALYTICAL_DIR / "dataset_supervisionado.parquet",
-    ) as r:
-        ... treino ...
-        r.metrica(auc=0.82, accuracy=0.78)
-        r.anotar("split temporal por dt_notific")
-"""
-
-from __future__ import annotations
-
-import json
-import os
-import platform
-import subprocess
-import sys
-import time
-import traceback
-
-from datetime import datetime, timezone
-from importlib import metadata
-from pathlib import Path
-from typing import Any
-
-from src.utils import config as C
-
-
-RUNS_DIR: Path = C.RUNS_DIR
-
-
-def gerar_run_id(
-    modelo: str | None = None,
-    base_dir: Path | None = None,
-) -> str:
-    """
-    Gera um identificador único no formato
-    `YYYY-MM-DD_HHMMSS_micros[_modelo]`.
-
-    Se `base_dir` for informado, garante unicidade contra o sistema de
-    arquivos adicionando sufixo `_NN` em caso de colisão.
-    """
-    agora = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
-    candidato = f"{agora}_{modelo}" if modelo else agora
-
-    if base_dir is None:
-        return candidato
-
-    base = Path(base_dir)
-    run_id = candidato
-    contador = 1
-    while (base / run_id).exists():
-        run_id = f"{candidato}_{contador:02d}"
-        contador += 1
-
-    return run_id
-
-
-def _agora() -> dict[str, str]:
-    utc = datetime.now(timezone.utc)
-    return {
-        "utc":   utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "local": utc.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z"),
-    }
-
-
-def _coletar_gates() -> dict[str, str]:
-    """Estado atual de cada gate em `supervised.yaml` como `{nome: status}`."""
-    gates = C.cfg("gates") or {}
-    return {
-        nome: (info or {}).get("status", "desconhecido")
-        for nome, info in gates.items()
-    }
-
-
-def _resolver_dataset_sha256(
-    dataset_sha256: str | None,
-    dataset_path: Path | None,
-) -> str | None:
-    """
-    Resolve o SHA-256 do dataset por prioridade: valor explícito, sidecar
-    `<dataset_path>.sha256`, ou `None`.
-    """
-    if dataset_sha256:
-        return dataset_sha256
-    if dataset_path is None:
-        return None
-    try:
-        from src.utils.storage import read_sha256
-        return read_sha256(Path(dataset_path))
-    except Exception:
-        return None
-
-
-def _resumo(meta: dict[str, Any]) -> str:
-    """`summary.txt` curto e legível a partir do metadata."""
-    linhas = [
-        f"RUN_ID:   {meta['run_id']}",
-        f"MODELO:   {meta['modelo']}",
-        f"SEED:     {meta['seed']}",
-        f"STATUS:   {meta.get('status', 'desconhecido')}",
-    ]
-
-    if meta.get("data_version"):
-        linhas.append(f"DADOS:    {meta['data_version']}")
-    if meta.get("dataset_sha256"):
-        linhas.append(f"SHA-256:  {meta['dataset_sha256']}")
-
-    ds = meta.get("dataset") or {}
-    for k in ("n_rows", "train_rows", "valid_rows", "test_rows"):
-        if k in ds:
-            linhas.append(f"{k.upper():9s} {ds[k]:,}")
-
-    if meta.get("duracao_s") is not None:
-        linhas.append(f"DURACAO:  {meta['duracao_s']:.1f}s")
-
-    if meta.get("erro"):
-        err = meta["erro"]
-        linhas.append("")
-        linhas.append("ERRO:")
-        linhas.append(f"  tipo:     {err.get('tipo')}")
-        linhas.append(f"  mensagem: {err.get('mensagem')}")
-
-    if meta.get("metricas"):
-        linhas.append("")
-        linhas.append("MÉTRICAS:")
-        for k, v in meta["metricas"].items():
-            if isinstance(v, float):
-                linhas.append(f"  {k:20s} {v:.4f}")
-            else:
-                linhas.append(f"  {k:20s} {v}")
-
-    if meta.get("parametros"):
-        linhas.append("")
-        linhas.append("PARÂMETROS:")
-        for k, v in meta["parametros"].items():
-            linhas.append(f"  {k:20s} {v}")
-
-    if meta.get("gates"):
-        linhas.append("")
-        linhas.append("GATES:")
-        for nome, st in meta["gates"].items():
-            linhas.append(f"  {nome:34s} {st}")
-
-    if meta.get("notas"):
-        linhas.append("")
-        linhas.append(f"NOTAS: {meta['notas']}")
-
-    linhas.append("")
-    linhas.append(f"TIMESTAMP_UTC: {meta['timestamp']['utc']}")
-    return "\n".join(linhas) + "\n"
-
-
-def _versoes() -> dict[str, str | None]:
-    """Versões das bibliotecas fundamentais da execução."""
-    pacotes = [
-        "numpy",
-        "pandas",
-        "pyarrow",
-        "scikit-learn",
-        "scipy",
-        "matplotlib",
-        "seaborn",
-    ]
-    resultado: dict[str, str | None] = {
-        "python": platform.python_version(),
-    }
-    for pacote in pacotes:
-        try:
-            resultado[pacote] = metadata.version(pacote)
-        except metadata.PackageNotFoundError:
-            resultado[pacote] = None
-    return resultado
-
-
-def _git_info() -> dict[str, str | bool | None]:
-    """Commit, branch e estado da árvore de trabalho."""
-
-    def executar_git(args: list[str]) -> str | None:
-        try:
-            proc = subprocess.run(
-                ["git", *args],
-                cwd=C.ROOT_DIR,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                check=False,
-            )
-        except OSError:
-            return None
-        return proc.stdout.strip() if proc.returncode == 0 else None
-
-    status = executar_git(["status", "--porcelain"])
-    return {
-        "commit": executar_git(["rev-parse", "HEAD"]),
-        "branch": executar_git(["branch", "--show-current"]),
-        "dirty":  bool(status) if status is not None else None,
-    }
-
-
-def _env_info() -> dict[str, str | bool]:
-    """Informações não sensíveis do ambiente."""
-    return {
-        "python_executable": sys.executable,
-        "python_version":    platform.python_version(),
-        "platform":          platform.platform(),
-        "cwd":               str(Path.cwd()),
-        "ci":                bool(os.getenv("CI") or os.getenv("GITHUB_ACTIONS")),
-    }
-
-
-def registrar_execucao(
-    modelo: str,
-    *,
-    seed: int | None = None,
-    parametros: dict[str, Any] | None = None,
-    dataset: dict[str, Any] | None = None,
-    features: dict[str, Any] | None = None,
-    metricas: dict[str, Any] | None = None,
-    duracao_s: float | None = None,
-    notas: str | None = None,
-    run_id: str | None = None,
-    output_dir: Path | None = None,
-    status: str = "success",
-    erro: dict[str, Any] | None = None,
-    dataset_sha256: str | None = None,
-) -> Path:
-    """
-    Grava `metadata.json` + `summary.txt` em `outputs/runs/<RUN_ID>/`.
-
-    `status` deve ser `"success"` ou `"error"`; este último deve vir
-    acompanhado de `erro` (dict com `tipo`, `mensagem` e opcionalmente
-    `traceback`). Se `dataset_sha256` for None, fica ausente do metadata.
-    """
-    base = Path(output_dir) if output_dir is not None else RUNS_DIR
-
-    if run_id is None:
-        run_id = gerar_run_id(modelo=modelo, base_dir=base)
-
-    pasta = base / run_id
-    pasta.mkdir(parents=True, exist_ok=False)
-
-    meta: dict[str, Any] = {
-        "run_id":         pasta.name,
-        "timestamp":      _agora(),
-        "modelo":         modelo,
-        "seed":           seed if seed is not None else C.SEED,
-        "status":         status,
-        "erro":           erro,
-        "duracao_s":      duracao_s,
-        "parametros":     parametros or {},
-        "dataset":        dataset or {},
-        "dataset_sha256": dataset_sha256,
-        "data_version":   C.DATA_VERSION,
-        "features":       features or {},
-        "metricas":       metricas or {},
-        "gates":          _coletar_gates(),
-        "notas":          notas,
-        "versoes":        _versoes(),
-        "git":            _git_info(),
-        "env":            _env_info(),
-        "supervised_yaml_sha256": C.supervised_yaml_sha256(),
-    }
-
-    (pasta / "metadata.json").write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
-    (pasta / "summary.txt").write_text(_resumo(meta), encoding="utf-8")
-
-    print(f"[reproducibility] run registrado em: {pasta}")
-    return pasta
-
-
-def listar_runs(
-    output_dir: Path | None = None,
-) -> list[dict[str, Any]]:
-    """
-    Lista os metadados das execuções registradas, ordenados por `run_id`
-    decrescente. Cada item inclui o caminho da pasta em `"pasta"`.
-    """
-    raiz = Path(output_dir) if output_dir is not None else RUNS_DIR
-    if not raiz.exists():
-        return []
-
-    runs: list[dict[str, Any]] = []
-    for pasta in raiz.iterdir():
-        if not pasta.is_dir():
-            continue
-        metadata_path = pasta / "metadata.json"
-        if not metadata_path.exists():
-            continue
-        try:
-            meta = json.loads(metadata_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        meta["pasta"] = str(pasta)
-        runs.append(meta)
-
-    return sorted(
-        runs,
-        key=lambda item: str(item.get("run_id", "")),
-        reverse=True,
-    )
-
-
-def carregar_run(
-    run: str | Path,
-    output_dir: Path | None = None,
-) -> dict[str, Any]:
-    """Carrega o `metadata.json` de uma execução."""
-    caminho = Path(run)
-    if not caminho.is_absolute():
-        caminho = (Path(output_dir) if output_dir else RUNS_DIR) / caminho
-
-    metadata_path = caminho / "metadata.json"
-    if not metadata_path.exists():
-        raise FileNotFoundError(f"metadata.json não encontrado em {caminho}")
-
-    return json.loads(metadata_path.read_text(encoding="utf-8"))
-
-
-class Run:
-    """
-    Context manager de registro de execução.
-
-    Uso::
-
-        with Run(modelo="logistic", parametros={"C": 1.0}) as r:
-            ...
-            r.metrica(auc=0.82)
-
-    O metadata é gravado sempre ao sair do bloco, inclusive em caso de
-    exceção — com `status="error"` e `erro` estruturado. A exceção não
-    é suprimida.
-    """
-
-    def __init__(
-        self,
-        modelo: str,
-        *,
-        seed: int | None = None,
-        parametros: dict[str, Any] | None = None,
-        dataset: dict[str, Any] | None = None,
-        features: dict[str, Any] | None = None,
-        notas: str | None = None,
-        output_dir: Path | None = None,
-        dataset_path: Path | None = None,
-        dataset_sha256: str | None = None,
-    ) -> None:
-        self.modelo         = modelo
-        self.seed           = seed
-        self.parametros     = dict(parametros or {})
-        self.dataset        = dict(dataset or {})
-        self.features       = dict(features or {})
-        self.notas          = notas
-        self.output_dir     = output_dir
-        self.dataset_path   = dataset_path
-        self.dataset_sha256 = dataset_sha256
-        self._metricas: dict[str, Any] = {}
-        self._inicio: float | None = None
-        self.pasta: Path | None = None
-
-    def metrica(self, **kwargs: Any) -> "Run":
-        self._metricas.update(kwargs)
-        return self
-
-    def anotar(self, texto: str) -> "Run":
-        self.notas = f"{self.notas}\n{texto}" if self.notas else texto
-        return self
-
-    def add_dataset(self, **kwargs: Any) -> "Run":
-        self.dataset.update(kwargs)
-        return self
-
-    def __enter__(self) -> "Run":
-        self._inicio = time.perf_counter()
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> bool:
-        duracao = time.perf_counter() - self._inicio if self._inicio else None
-
-        status = "success"
-        erro: dict[str, Any] | None = None
-        if exc_type is not None:
-            status = "error"
-            erro = {
-                "tipo":      exc_type.__name__,
-                "modulo":    getattr(exc_type, "__module__", None),
-                "mensagem":  str(exc) if exc is not None else None,
-                "traceback": (
-                    "".join(traceback.format_exception(exc_type, exc, tb))
-                    if tb is not None else None
-                ),
-            }
-
-        sha = _resolver_dataset_sha256(
-            self.dataset_sha256,
-            self.dataset_path,
-        )
-
-        self.pasta = registrar_execucao(
-            modelo=self.modelo,
-            seed=self.seed,
-            parametros=self.parametros,
-            dataset=self.dataset,
-            features=self.features,
-            metricas=self._metricas,
-            duracao_s=duracao,
-            notas=self.notas,
-            output_dir=self.output_dir,
-            status=status,
-            erro=erro,
-            dataset_sha256=sha,
-        )
-        return False
-```
-
-## `src/utils/storage.py`
-
-- Git: `tracked` · status `clean`
-- Size: `8.8 KB` · modified `2026-10-14 22:03 UTC`
-- SHA-256: `b5facb82321b483072f759728218833587bb88df959287f56851130b80d95ad9`
-
-```python
-"""
-Contrato oficial de acesso ao Parquet de SRAG.
-
-Fluxo:
-    GitHub Release → data/processed/<DATA_VERSION>/srag.parquet
-
-Tenta primeiro o download público via URL de release. Se falhar e houver
-`GITHUB_TOKEN`, cai no asset privado via API do GitHub. Grava um sidecar
-`<arquivo>.sha256` com o hash do Parquet baixado — reprodutibilidade e
-registro no `Run`. `force=True` rebaixa e descarta o sidecar antigo.
-
-Requer `requests` e `pandas`. Constantes `C.HTTP_TIMEOUT`,
-`C.HTTP_TENTATIVAS` e `C.HTTP_BACKOFF` controlam o comportamento de rede.
-"""
-
-from __future__ import annotations
-
-import hashlib
-import time
-from pathlib import Path
-from typing import Iterable
-
-import pandas as pd
-import requests
-
-from src.utils import config as C
-from src.utils.env import PROCESSED, get_secret
-
-
-PARQUET_MAGIC: bytes = b"PAR1"
-_CHUNK: int = 8 * 1024 * 1024
-
-
-def _token() -> str | None:
-    """Devolve `GITHUB_TOKEN` se definido; caso contrário, `None`."""
-    return get_secret("GITHUB_TOKEN", obrigatorio=False)
-
-
-def sha256_path(parquet_path: Path) -> Path:
-    """Caminho do sidecar `.sha256` associado a um Parquet."""
-    return parquet_path.with_suffix(parquet_path.suffix + ".sha256")
-
-
-def read_sha256(parquet_path: Path) -> str | None:
-    """Lê o SHA-256 do sidecar, ou `None` se ele não existir."""
-    sidecar = sha256_path(parquet_path)
-    if not sidecar.exists():
-        return None
-    linha = sidecar.read_text(encoding="utf-8").strip()
-    return linha.split()[0] if linha else None
-
-
-def _abrir_stream(
-    url: str,
-    *,
-    headers: dict[str, str] | None,
-    tentativas: int,
-    backoff: float,
-    timeout: float,
-) -> requests.Response:
-    """
-    Abre um stream HTTP com retry linear.
-
-    4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
-    conexão são retentados até `tentativas` vezes, com espera
-    `backoff * tentativa` entre elas.
-    """
-    last_exc: Exception | None = None
-
-    for tentativa in range(1, tentativas + 1):
-        try:
-            r = requests.get(
-                url,
-                headers=headers or {},
-                stream=True,
-                timeout=timeout,
-                allow_redirects=True,
-            )
-        except requests.RequestException as exc:
-            last_exc = exc
-            if tentativa < tentativas:
-                time.sleep(backoff * tentativa)
-            continue
-
-        if r.ok:
-            return r
-
-        if 400 <= r.status_code < 500 and r.status_code != 429:
-            r.close()
-            r.raise_for_status()
-
-        status = r.status_code
-        r.close()
-        last_exc = requests.HTTPError(f"HTTP {status} em {url}")
-        if tentativa < tentativas:
-            time.sleep(backoff * tentativa)
-
-    assert last_exc is not None
-    raise last_exc
-
-
-def download_file(
-    url: str,
-    dest: Path,
-    *,
-    headers: dict[str, str] | None = None,
-    expected_magic: bytes | None = None,
-    expected_sha256: str | None = None,
-) -> str:
-    """
-    Baixa `url` para `dest` com verificação de magic bytes e SHA-256.
-
-    Retorna o SHA-256 hex do conteúdo e grava um sidecar `<dest>.sha256`
-    no formato `sha256sum`. O download passa por `<dest>.part`.
-
-    Levanta `RuntimeError` se o content-type indicar HTML/JSON, se o
-    magic não bater ou se o SHA-256 divergir; o `.part` é removido em
-    qualquer falha.
-    """
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    tmp.unlink(missing_ok=True)
-
-    h = hashlib.sha256()
-    first_bytes = b""
-    total = 0
-    done = 0
-
-    r = _abrir_stream(
-        url,
-        headers=headers,
-        tentativas=C.HTTP_TENTATIVAS,
-        backoff=C.HTTP_BACKOFF,
-        timeout=C.HTTP_TIMEOUT,
-    )
-    try:
-        ctype = r.headers.get("content-type", "").lower()
-        if "text/html" in ctype or "application/json" in ctype:
-            preview = next(r.iter_content(256), b"")
-            raise RuntimeError(
-                f"Download retornou {ctype!r} em vez de binário. "
-                f"URL: {url}\nPrimeiros bytes: {preview[:80]!r}"
-            )
-
-        total = int(r.headers.get("content-length", 0))
-        with open(tmp, "wb") as f:
-            for chunk in r.iter_content(_CHUNK):
-                if not chunk:
-                    continue
-                if not first_bytes:
-                    first_bytes = chunk[:16]
-                f.write(chunk)
-                h.update(chunk)
-                done += len(chunk)
-                if total:
-                    print(
-                        f"\rBaixando: {done / 1e6:.0f}/{total / 1e6:.0f} MB",
-                        end="",
-                        flush=True,
-                    )
-    except Exception:
-        tmp.unlink(missing_ok=True)
-        raise
-    finally:
-        r.close()
-
-    print()
-
-    if expected_magic and not first_bytes.startswith(expected_magic):
-        tmp.unlink(missing_ok=True)
-        raise RuntimeError(
-            f"Arquivo baixado não é válido. Esperado começar com "
-            f"{expected_magic!r}, recebido {first_bytes[:16]!r}. URL: {url}"
-        )
-
-    digest = h.hexdigest()
-
-    if expected_sha256 and digest.lower() != expected_sha256.lower():
-        tmp.unlink(missing_ok=True)
-        raise RuntimeError(
-            f"SHA-256 divergente para {url}.\n"
-            f"  esperado: {expected_sha256}\n"
-            f"  obtido:   {digest}"
-        )
-
-    tmp.replace(dest)
-    sha256_path(dest).write_text(
-        f"{digest}  {dest.name}\n", encoding="utf-8"
-    )
-    return digest
-
-
-def _private_asset_url(token: str) -> str:
-    """URL do asset Parquet via API do GitHub (repositório privado)."""
-    h = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-    }
-    url = (
-        f"https://api.github.com/repos/{C.GITHUB_REPO}/releases/tags/"
-        f"{C.DATA_VERSION}"
-    )
-    r = requests.get(url, headers=h, timeout=C.HTTP_TIMEOUT)
-    r.raise_for_status()
-
-    assets = r.json().get("assets", [])
-    asset = next((a for a in assets if a["name"] == C.PARQUET_NAME), None)
-    if asset is None:
-        nomes = [a["name"] for a in assets]
-        raise RuntimeError(
-            f"Asset {C.PARQUET_NAME!r} não encontrado na release "
-            f"{C.DATA_VERSION!r}. Disponíveis: {nomes}"
-        )
-    return asset["url"]
-
-
-def get_parquet(
-    force: bool = False,
-    *,
-    expected_sha256: str | None = None,
-) -> Path:
-    """
-    Devolve o caminho local do Parquet de SRAG, baixando se necessário.
-
-    Ordem de tentativas: release pública do GitHub; se falhar e
-    `GITHUB_TOKEN` estiver definido, asset privado via API do GitHub.
-
-    Com `force=True`, rebaixa mesmo que o arquivo já exista e descarta o
-    sidecar `.sha256` antigo. Se `expected_sha256` for informado, valida
-    o hash do arquivo baixado.
-
-    Efeitos colaterais: Parquet gravado em
-    `data/processed/<DATA_VERSION>/<PARQUET_NAME>`, sidecar `.sha256`
-    ao lado, e SHA-256 impresso no stdout para uso em logs/manifests.
-    """
-    folder = PROCESSED / C.DATA_VERSION
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / C.PARQUET_NAME
-
-    if path.exists() and not force:
-        return path
-
-    if force and path.exists():
-        path.unlink()
-        sha256_path(path).unlink(missing_ok=True)
-
-    public_url = (
-        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
-        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
-    )
-
-    try:
-        digest = download_file(
-            public_url,
-            path,
-            expected_magic=PARQUET_MAGIC,
-            expected_sha256=expected_sha256,
-        )
-    except (requests.HTTPError, RuntimeError):
-        token = _token()
-        if not token:
-            raise RuntimeError(
-                "Download falhou. Repositório privado ou asset inválido? "
-                "Cadastre o segredo GITHUB_TOKEN."
-            )
-        h = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/octet-stream",
-        }
-        digest = download_file(
-            _private_asset_url(token),
-            path,
-            headers=h,
-            expected_magic=PARQUET_MAGIC,
-            expected_sha256=expected_sha256,
-        )
-
-    print(f"[storage] SHA-256: {digest}")
-    return path
-
-
-def read_srag(
-    columns: Iterable[str] | None = None,
-    filters: list[tuple] | None = None,
-) -> pd.DataFrame:
-    """
-    Lê o Parquet de SRAG como DataFrame.
-
-    `columns` restringe o subconjunto carregado (pushdown do Parquet);
-    `filters` segue o formato de `pd.read_parquet(filters=...)`.
-    """
-    return pd.read_parquet(
-        get_parquet(),
-        columns=list(columns) if columns is not None else None,
-        filters=filters,
-    )
-```
-
-## `tests/conftest.py`
-
-- Git: `tracked` · status `clean`
-- Size: `619 B` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `3a68e574a37978bd6ef167e91f0e1de85c11cceca3e6d0fddc0b53ad597b051a`
-
-```python
-"""Fixtures e configuração de testes."""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-import pytest
-
-from src.utils import config as C
-
-
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        "markers",
-        "slow: testes que tocam arquivos grandes (Parquet de SRAG).",
-    )
-
-
-@pytest.fixture(scope="session")
-def parquet_disponivel() -> Path | None:
-    """Retorna o Parquet processado, ou None se ainda não foi gerado."""
-    caminho = C.PROCESSED_DIR / C.DATA_VERSION / C.PARQUET_NAME
-    return caminho if caminho.is_file() else None
-```
-
-## `tests/test_calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.8 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `a358e478c87b8f127d43f57aa8179dda3c0a80d15e5146488c5cef913df73705`
-
-```python
-"""Testes de calibração e escolha de limiar."""
-
-from __future__ import annotations
-
-import numpy as np
-import pandas as pd
-import pytest
-
-from src.models.calibration import calibrar, escolher_limiar
-
-
-@pytest.fixture
-def dados() -> tuple[np.ndarray, np.ndarray]:
-    y = np.array([0, 0, 1, 1, 1, 0, 1, 0, 1, 1])
-    p = np.array([0.1, 0.2, 0.8, 0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.75])
-    return y, p
-
-
-def test_escolher_limiar_retorna_dict(dados):
-    y, p = dados
-    r = escolher_limiar(y, p, metrica="f1")
-    assert {"limiar", "valor", "metrica", "auc", "brier", "tabela"} <= set(r)
-    assert r["metrica"] == "f1"
-    assert 0 < r["limiar"] < 1
-
-
-def test_escolher_limiar_metrica_invalida(dados):
-    y, p = dados
-    with pytest.raises(ValueError, match="metrica inválida"):
-        escolher_limiar(y, p, metrica="nao_existe")  # type: ignore[arg-type]
-
-
-def test_escolher_limiar_min_precision_respeitado():
-    y = np.array([0, 0, 1, 1])
-    p = np.array([0.1, 0.2, 0.8, 0.9])
-    r = escolher_limiar(y, p, metrica="recall", min_precision=0.9)
-    linha = r["tabela"][r["tabela"]["limiar"] == r["limiar"]]
-    assert linha["precision"].iloc[0] >= 0.9
-
-
-def test_escolher_limiar_min_precision_impossivel():
-    y = np.array([1, 0, 0, 0])
-    p = np.array([0.1, 0.9, 0.8, 0.85])
-    with pytest.raises(ValueError, match="precision"):
-        escolher_limiar(y, p, min_precision=0.5)
-
-
-def test_calibrar_requer_sklearn_16():
-    pytest.importorskip("sklearn.frozen")
-
-
-def test_calibrar_metodo_invalido():
-    pytest.importorskip("sklearn.frozen")
-    from sklearn.linear_model import LogisticRegression
-
-    X = pd.DataFrame({"a": [0.0, 1.0, 2.0, 3.0]})
-    y = pd.Series([0, 0, 1, 1])
-    modelo = LogisticRegression().fit(X, y)
-
-    with pytest.raises(ValueError, match="method inválido"):
-        calibrar(modelo, X, y, method="nao_existe")
-
-
-def test_calibrar_sigmoid_preserva_shape():
-    pytest.importorskip("sklearn.frozen")
-    from sklearn.linear_model import LogisticRegression
-
-    rng = np.random.RandomState(0)
-    X = pd.DataFrame({"a": rng.randn(200)})
-    y = pd.Series((X["a"] + rng.randn(200) * 0.1 > 0).astype(int))
-
-    modelo = LogisticRegression().fit(X, y)
-    cal = calibrar(modelo, X, y, method="sigmoid")
-
-    proba = cal.predict_proba(X)
-    assert proba.shape == (len(X), 2)
-    assert np.allclose(proba.sum(axis=1), 1.0)
-    assert np.all((proba >= 0) & (proba <= 1))
-
-
-def test_calibrar_isotonic_preserva_shape():
-    pytest.importorskip("sklearn.frozen")
-    from sklearn.linear_model import LogisticRegression
-
-    rng = np.random.RandomState(1)
-    X = pd.DataFrame({"a": rng.randn(500)})
-    y = pd.Series((X["a"] > 0).astype(int))
-
-    modelo = LogisticRegression().fit(X, y)
-    cal = calibrar(modelo, X, y, method="isotonic")
-    assert cal.predict_proba(X).shape == (len(X), 2)
-```
-
-## `tests/test_cohort_source.py`
-
-- Git: `tracked` · status `clean`
-- Size: `1.6 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `4e884913ed712bc5a09ee798d5575881fce2cebf8b614f3a58251d91468b662b`
-
-```python
-from pathlib import Path
-
-import pandas as pd
-import pytest
-
-from src.data.cohort_source import cohort_candidates, load_cohort, resolve_cohort_path
-
-
-def _write(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame({"value": [value]}).to_parquet(path, index=False)
-
-
-def test_padrao_permanece_provisorio(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.delenv("SRAG_COHORT_KIND", raising=False)
-    paths = cohort_candidates(tmp_path)
-    _write(paths["provisional"][1], 1)
-    _write(paths["final"][0], 2)
-
-    kind, path = resolve_cohort_path(tmp_path)
-
-    assert kind == "provisional"
-    assert path.name == "coorte_provisoria_b.parquet"
-
-
-def test_final_exige_escolha_explicita(tmp_path: Path) -> None:
-    path = cohort_candidates(tmp_path)["final"][0]
-    _write(path, 2)
-
-    frame, source = load_cohort(tmp_path, kind="final")
-
-    assert frame["value"].tolist() == [2]
-    assert source.kind == "final"
-    assert source.rows == 1
-    assert len(source.sha256) == 64
-
-
-def test_auto_prefere_final(tmp_path: Path) -> None:
-    paths = cohort_candidates(tmp_path)
-    _write(paths["provisional"][0], 1)
-    _write(paths["final"][0], 2)
-
-    kind, path = resolve_cohort_path(tmp_path, kind="auto")
-
-    assert kind == "final"
-    assert path.name == "coorte_final.parquet"
-
-
-def test_tipo_invalido_falha(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="provisional, final ou auto"):
-        resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
-```
-
 ## `tests/test_config.py`
 
 - Git: `tracked` · status `clean`
-- Size: `6.6 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `dc180168643b3277219edfbf6b17363d88dc7ce49641076b02db2ec9b8aa6818`
+- Size: `7.4 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `e9d6278318474900c708013ab29c1eaa30ed96c935b7a320868c01924ef7c5ca`
 
 ```python
-"""Valida a integridade do ambiente e da configuração do projeto."""
+"""Integridade do ambiente e da configuração do projeto."""
 
 from __future__ import annotations
 
@@ -959,100 +19,95 @@ from src.utils import config as C
 from src.utils import env
 
 
+def _url_parquet_esperada() -> str:
+    """URL canônica do Parquet na release pública."""
+    return (
+        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
+        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Raiz e diretórios
+# ---------------------------------------------------------------------------
+
 def test_root_dir_existe() -> None:
     assert C.ROOT_DIR.exists()
     assert C.ROOT_DIR.is_dir()
 
 
 def test_root_dir_calculado_a_partir_do_arquivo() -> None:
-    esperado = Path(C.__file__).resolve().parents[2]
-    assert C.ROOT_DIR == esperado
+    """``ROOT_DIR`` deriva de ``config.py`` (dois níveis acima: ``src/utils/``)."""
+    assert C.ROOT_DIR == Path(C.__file__).resolve().parents[2]
 
 
 @pytest.mark.parametrize(
     "chave",
-    [
-        "DATA_DIR",
-        "RAW_DIR",
-        "PROCESSED_DIR",
-        "REPORTS_DIR",
-        "MODELS_DIR",
-    ],
+    ["DATA_DIR", "RAW_DIR", "PROCESSED_DIR", "REPORTS_DIR", "MODELS_DIR"],
 )
 def test_diretorios_derivam_da_raiz(chave: str) -> None:
-    """
-    Diretórios do projeto devem derivar de ROOT_DIR.
+    """Diretórios públicos derivam de ``ROOT_DIR``.
 
-    Caminhos absolutos podem conter C:/Users ou OneDrive porque esse pode
-    ser o local real do clone; o que não pode existir é um caminho pessoal
-    gravado diretamente em config.py.
+    O clone pode estar em ``C:/Users`` ou ``OneDrive`` — o que não pode
+    é o caminho estar literalmente gravado em ``config.py``.
     """
     valor = getattr(C, chave)
     assert isinstance(valor, Path)
     assert valor.is_absolute()
-    assert C.ROOT_DIR in valor.parents, (
-        f"{chave}={valor} não deriva de ROOT_DIR={C.ROOT_DIR}"
-    )
+    assert C.ROOT_DIR in valor.parents, f"{chave}={valor} não deriva de {C.ROOT_DIR}"
 
 
-def test_config_nao_contem_caminho_pessoal_hardcoded() -> None:
+# ---------------------------------------------------------------------------
+# Sem caminhos pessoais hardcoded
+# ---------------------------------------------------------------------------
+
+def _encontrar_caminhos_hardcoded(fonte: str, nomes_de_caminho: set[str]) -> list[dict]:
+    """Inspeciona atribuições de ``nomes_de_caminho`` à procura de caminhos pessoais.
+
+    Só atribuições são olhadas — comentários, docstrings e mensagens podem
+    mencionar ``C:/Users`` ou ``/home`` sem serem configuração real.
     """
-    Examina apenas atribuições de constantes relacionadas a caminhos.
+    proibidos = ("c:/users/", "/home/", "/users/")
+    problemas: list[dict] = []
 
-    Comentários, docstrings e mensagens podem mencionar exemplos como
-    C:/Users ou /home sem representar configuração real.
-    """
-    caminho_config = Path(C.__file__)
-    fonte = caminho_config.read_text(encoding="utf-8")
-    arvore = ast.parse(fonte, filename=str(caminho_config))
-
-    nomes_de_caminho = {
-        "ROOT_DIR", "DATA_DIR", "RAW_DIR", "PROCESSED_DIR",
-        "TREINO_DIR", "CONFIGS_DIR", "MODELS_DIR", "OUTPUTS_DIR",
-        "RUNS_DIR", "LOGS_DIR", "REPORTS_DIR", "FIGURES_DIR",
-        "TABLES_DIR", "PREDICTIONS_DIR", "SUPERVISED_YAML",
-    }
-    proibidos = ["c:/users/", "/home/", "/users/"]
-
-    problemas = []
-
-    for no in ast.walk(arvore):
-        nome_alvo = None
-        valor = None
-
-        if isinstance(no, ast.Assign):
-            if len(no.targets) != 1:
-                continue
-            alvo = no.targets[0]
-            if isinstance(alvo, ast.Name):
-                nome_alvo = alvo.id
-                valor = no.value
+    for no in ast.walk(ast.parse(fonte)):
+        if isinstance(no, ast.Assign) and len(no.targets) == 1:
+            alvo, valor = no.targets[0], no.value
         elif isinstance(no, ast.AnnAssign):
-            alvo = no.target
-            if isinstance(alvo, ast.Name):
-                nome_alvo = alvo.id
-                valor = no.value
+            alvo, valor = no.target, no.value
+        else:
+            continue
 
-        if nome_alvo not in nomes_de_caminho or valor is None:
+        if valor is None or not isinstance(alvo, ast.Name) or alvo.id not in nomes_de_caminho:
             continue
 
         for item in ast.walk(valor):
             if not isinstance(item, ast.Constant) or not isinstance(item.value, str):
                 continue
             texto = item.value.replace("\\", "/").lower()
-            encontrados = [t for t in proibidos if t in texto]
-            if encontrados:
-                problemas.append({
-                    "constante": nome_alvo,
-                    "valor": item.value,
-                    "termos": encontrados,
-                })
+            if termos := [t for t in proibidos if t in texto]:
+                problemas.append({"constante": alvo.id, "valor": item.value, "termos": termos})
 
-    assert not problemas, (
-        "Foram encontrados caminhos pessoais hard-coded em constantes "
-        f"de configuração: {problemas}"
-    )
+    return problemas
 
+
+def test_config_nao_contem_caminho_pessoal_hardcoded() -> None:
+    """Nenhuma constante de caminho em ``config.py`` tem caminho pessoal literal."""
+    nomes_de_caminho = {
+        "ROOT_DIR", "DATA_DIR", "RAW_DIR", "PROCESSED_DIR",
+        "TREINO_DIR", "CONFIGS_DIR", "MODELS_DIR", "OUTPUTS_DIR",
+        "RUNS_DIR", "LOGS_DIR", "REPORTS_DIR", "FIGURES_DIR",
+        "TABLES_DIR", "PREDICTIONS_DIR", "SUPERVISED_YAML",
+    }
+    fonte = Path(C.__file__).read_text(encoding="utf-8")
+
+    problemas = _encontrar_caminhos_hardcoded(fonte, nomes_de_caminho)
+    assert not problemas, f"Caminhos pessoais hardcoded em constantes: {problemas}"
+
+
+# ---------------------------------------------------------------------------
+# Seed, versão e HTTP
+# ---------------------------------------------------------------------------
 
 def test_seed_definido() -> None:
     assert isinstance(C.SEED, int)
@@ -1063,44 +118,13 @@ def test_random_state_igual_ao_seed() -> None:
     assert C.RANDOM_STATE == C.SEED
 
 
-def test_repo_e_data_version_definidos() -> None:
-    assert C.GITHUB_REPO
-    assert "/" in C.GITHUB_REPO
+def test_repo_definido() -> None:
+    assert C.GITHUB_REPO and "/" in C.GITHUB_REPO
+
+
+def test_data_version_e_parquet_definidos() -> None:
     assert C.DATA_VERSION
     assert C.PARQUET_NAME.endswith(".parquet")
-
-
-def test_srag_parquet_url_padrao(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("SRAG_PARQUET_URL", raising=False)
-
-    url_esperada = (
-        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
-        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
-    )
-
-    assert C.srag_parquet_url() == url_esperada
-
-
-def test_srag_parquet_url_permite_sobrescrita(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    url_customizada = "https://example.org/dados/srag_teste.parquet"
-    monkeypatch.setenv("SRAG_PARQUET_URL", url_customizada)
-
-    assert C.srag_parquet_url() == url_customizada
-
-
-def test_srag_parquet_url_vazia_volta_ao_padrao(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("SRAG_PARQUET_URL", "   ")
-
-    url_esperada = (
-        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
-        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
-    )
-
-    assert C.srag_parquet_url() == url_esperada
 
 
 def test_parametros_http_razoaveis() -> None:
@@ -1109,6 +133,38 @@ def test_parametros_http_razoaveis() -> None:
     assert C.HTTP_BACKOFF >= 0
 
 
+# ---------------------------------------------------------------------------
+# URL do Parquet — prioridade da variável de ambiente
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "valor_env, esperado_override",
+    [
+        (None, False),
+        ("https://example.org/dados/srag_teste.parquet", True),
+        ("   ", False),
+    ],
+    ids=["sem_env", "env_customizada", "env_vazia"],
+)
+def test_srag_parquet_url(valor_env, esperado_override, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``SRAG_PARQUET_URL`` sobrepõe a URL padrão; vazia cai no padrão."""
+    if valor_env is None:
+        monkeypatch.delenv("SRAG_PARQUET_URL", raising=False)
+    else:
+        monkeypatch.setenv("SRAG_PARQUET_URL", valor_env)
+
+    url = C.srag_parquet_url()
+    if esperado_override:
+        assert valor_env is not None
+        assert url == valor_env.strip()
+    else:
+        assert url == _url_parquet_esperada()
+
+
+# ---------------------------------------------------------------------------
+# env.py
+# ---------------------------------------------------------------------------
+
 def test_env_aponta_para_mesma_raiz() -> None:
     assert env.ROOT == C.ROOT_DIR
 
@@ -1116,10 +172,7 @@ def test_env_aponta_para_mesma_raiz() -> None:
 def test_env_diretorios_padrao_existem() -> None:
     env.garantir_diretorios()
     for caminho in (env.RAW, env.PROCESSED, env.TREINO, env.FIGURES):
-        assert caminho.exists(), (
-            f"{caminho} não foi criado por env.garantir_diretorios()"
-        )
-        assert caminho.is_dir(), f"{caminho} existe, mas não é um diretório."
+        assert caminho.is_dir(), f"{caminho} não é diretório após garantir_diretorios()"
 
 
 def test_env_resumo_nao_quebra() -> None:
@@ -1128,31 +181,30 @@ def test_env_resumo_nao_quebra() -> None:
     assert "ENV" in texto
 
 
-def test_get_secret_obrigatorio_levanta_erro(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_get_secret_obrigatorio_levanta_erro(monkeypatch: pytest.MonkeyPatch) -> None:
     nome = "VAR_QUE_NAO_EXISTE_XYZ"
     monkeypatch.delenv(nome, raising=False)
     with pytest.raises(RuntimeError, match=nome):
         env.get_secret(nome)
 
 
-def test_get_secret_opcional_retorna_none(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_get_secret_opcional_retorna_none(monkeypatch: pytest.MonkeyPatch) -> None:
     nome = "VAR_OPCIONAL_XYZ"
     monkeypatch.delenv(nome, raising=False)
     assert env.get_secret(nome, obrigatorio=False) is None
 
 
+# ---------------------------------------------------------------------------
+# Schema do Parquet (slow)
+# ---------------------------------------------------------------------------
+
 @pytest.mark.slow
 def test_features_finais_existem_no_schema(parquet_disponivel) -> None:
-    """
-    Verifica se as colunas esperadas existem no Parquet.
+    """Colunas do ``supervised.yaml`` existem no Parquet (ou são derivadas).
 
-    Features derivadas (produzidas por `montar_features`) não existem no
-    Parquet bruto — são excluídas da checagem. As colunas de entrada
-    exigidas pela derivação são verificadas explicitamente.
+    Features derivadas (produzidas por ``montar_features``) não existem no
+    Parquet bruto — excluídas da checagem. As colunas de entrada exigidas
+    pela derivação são verificadas explicitamente.
     """
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
@@ -1161,25 +213,22 @@ def test_features_finais_existem_no_schema(parquet_disponivel) -> None:
     from src.models import pipeline
 
     colunas = set(pq.read_schema(parquet_disponivel).names)
-
     derivadas = set(C.cfg("features", "engenharia", "derivadas") or [])
-    base = set(pipeline.FEATURES) - derivadas
     entradas = set(C.cfg("features", "engenharia", "entradas") or [])
+    base = set(pipeline.FEATURES) - derivadas
 
     faltando = (base | entradas) - colunas
-    assert not faltando, (
-        f"Colunas exigidas não existem no Parquet: {sorted(faltando)}"
-    )
+    assert not faltando, f"Colunas ausentes no Parquet: {sorted(faltando)}"
 ```
 
 ## `tests/test_errors.py`
 
 - Git: `tracked` · status `clean`
-- Size: `4.2 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `a5fac6c4ac69a36e4ddf2f673b545ffa4805d8ba1b965790a3cefa9fef9b84cc`
+- Size: `5.5 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `7c4362c964cc4035939c32264b33a4e27cff1abf1cb40979616c1e8b55479164`
 
 ```python
-"""Testes de análise de erros em `src.evaluation.errors`."""
+"""Testes de análise de erros em ``src.evaluation.errors``."""
 
 from __future__ import annotations
 
@@ -1197,14 +246,28 @@ from src.evaluation.errors import (
 
 
 @pytest.fixture
-def dados() -> tuple[np.ndarray, np.ndarray]:
+def y_true_y_pred() -> tuple[np.ndarray, np.ndarray]:
+    """8 amostras com falsos positivos e negativos plantados.
+
+    Labels (não probabilidades) — para ``top_erros``, cada teste constrói
+    os seus próprios dados.
+    """
     y_true = np.array([0, 0, 1, 1, 0, 1, 0, 1])
     y_pred = np.array([0, 1, 1, 0, 0, 1, 1, 1])
     return y_true, y_pred
 
 
-def test_matriz_confusao_shape_e_valores(dados) -> None:
-    y_true, y_pred = dados
+def _df_com_indice(n: int) -> pd.DataFrame:
+    """DataFrame ``{"x": range(n)}`` — índice rastreável nos testes de extração."""
+    return pd.DataFrame({"x": range(n)})
+
+
+# ---------------------------------------------------------------------------
+# matriz_confusao
+# ---------------------------------------------------------------------------
+
+def test_matriz_confusao_shape_e_valores(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
     m = matriz_confusao(y_true, y_pred)
     assert {"pred_0", "pred_1"}.issubset(m.columns)
     assert {"real_0", "real_1"}.issubset(m.index)
@@ -1212,32 +275,38 @@ def test_matriz_confusao_shape_e_valores(dados) -> None:
     assert m.loc["real_1", "pred_0"] == 1
 
 
-def test_matriz_confusao_tem_totais(dados) -> None:
-    y_true, y_pred = dados
+def test_matriz_confusao_tem_totais(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
     m = matriz_confusao(y_true, y_pred)
     assert "total" in m.columns
     assert "total" in m.index
     assert m.loc["total", "total"] == len(y_true)
 
 
-def test_extrair_fp(dados) -> None:
-    y_true, y_pred = dados
-    df = pd.DataFrame({"x": range(len(y_true))})
-    fp = extrair_falsos_positivos(df, y_true, y_pred)
+# ---------------------------------------------------------------------------
+# extrair_falsos_*
+# ---------------------------------------------------------------------------
+
+def test_extrair_fp(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
+    fp = extrair_falsos_positivos(_df_com_indice(len(y_true)), y_true, y_pred)
     assert len(fp) == 2
     assert set(fp["x"]) == {1, 6}
 
 
-def test_extrair_fn(dados) -> None:
-    y_true, y_pred = dados
-    df = pd.DataFrame({"x": range(len(y_true))})
-    fn = extrair_falsos_negativos(df, y_true, y_pred)
+def test_extrair_fn(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
+    fn = extrair_falsos_negativos(_df_com_indice(len(y_true)), y_true, y_pred)
     assert len(fn) == 1
     assert fn["x"].iloc[0] == 3
 
 
+# ---------------------------------------------------------------------------
+# metricas_por_grupo
+# ---------------------------------------------------------------------------
+
 def test_metricas_por_grupo_coluna_renomeada() -> None:
-    """A coluna de prevalência chama-se `taxa_positivos`, não `positivos`."""
+    """A coluna de prevalência chama-se ``taxa_positivos``, não ``positivos``."""
     n = 300
     df = pd.DataFrame({"grupo": ["A"] * n + ["B"] * n})
     y = pd.Series(np.tile([0, 1], n))
@@ -1249,6 +318,7 @@ def test_metricas_por_grupo_coluna_renomeada() -> None:
 
 
 def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
+    """Grupo com menos de ``min_n`` é excluído do resultado."""
     df = pd.DataFrame({"grupo": ["A"] * 5 + ["B"] * 300})
     y = pd.Series([0, 1] * 152 + [0])
     p = pd.Series([0.1, 0.9] * 152 + [0.5])
@@ -1260,13 +330,12 @@ def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
 
 def test_metricas_por_grupo_coluna_ausente() -> None:
     df = pd.DataFrame({"outra": [1, 2]})
-    y = np.array([0, 1])
-    p = np.array([0.1, 0.9])
     with pytest.raises(KeyError):
-        metricas_por_grupo(df, y, p, "grupo")
+        metricas_por_grupo(df, np.array([0, 1]), np.array([0.1, 0.9]), "grupo")
 
 
 def test_metricas_por_grupo_tamanho_incompativel() -> None:
+    """``df`` (5 linhas) com ``y`` (6 linhas) deve falhar antes de agregar."""
     df = pd.DataFrame({"grupo": ["A"] * 5})
     y = np.array([0, 1, 0, 1, 0, 1])
     p = np.array([0.1, 0.9, 0.2, 0.8, 0.3, 0.7])
@@ -1274,7 +343,12 @@ def test_metricas_por_grupo_tamanho_incompativel() -> None:
         metricas_por_grupo(df, y, p, "grupo")
 
 
+# ---------------------------------------------------------------------------
+# top_erros
+# ---------------------------------------------------------------------------
+
 def test_top_erros_erro_absoluto() -> None:
+    """Adiciona ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs`` ao DataFrame."""
     df = pd.DataFrame({"x": range(6)})
     y_true = np.array([0, 0, 1, 1, 0, 1])
     y_prob = np.array([0.1, 0.9, 0.1, 0.9, 0.5, 0.5])
@@ -1309,27 +383,24 @@ def test_top_erros_fn_ordena_por_prob_crescente() -> None:
 
 def test_top_erros_criterio_invalido() -> None:
     df = pd.DataFrame({"x": [1, 2]})
-    y_true = np.array([0, 1])
-    y_prob = np.array([0.1, 0.9])
+    # Valor viola intencionalmente o Literal CriterioTop.
     with pytest.raises(ValueError, match="criterio inválido"):
-        top_erros(df, y_true, y_prob, criterio="xxx")  # type: ignore[arg-type]
+        top_erros(df, np.array([0, 1]), np.array([0.1, 0.9]), criterio="xxx")  # type: ignore[arg-type]
 ```
 
 ## `tests/test_features.py`
 
 - Git: `tracked` · status `clean`
-- Size: `11.5 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `657c35d55c5b7e2103d4cefa9a435cd11070573f036fbbb6d6c9fc37ffcd1ddd`
+- Size: `11.3 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `db4f5e070d3e0bc1ea7298a41d48a9628bc341d91ea8da80359c8444981dcfe0`
 
 ```python
 """
-Testes de engenharia de atributos — src/features/engineering.py.
+Testes de engenharia de atributos (``src/features/engineering.py``).
 
-Cobre funções puras e o orquestrador `montar_features`:
-contrato de cada derivada, casos inválidos, não-mutação da entrada,
-invariante de ponto-no-tempo e ponto único de verdade.
-
-Não testa parsing do YAML — responsabilidade de src/utils/config.py.
+Cobre funções puras e o orquestrador ``montar_features``: contrato de
+cada derivada, casos inválidos, não-mutação da entrada e invariantes de
+ponto-no-tempo. Não testa parsing do YAML.
 """
 
 from __future__ import annotations
@@ -1349,35 +420,51 @@ from src.features.engineering import (
 )
 
 
-ENTRADAS_OBRIGATORIAS = [
+# Conjunto mínimo de entradas exigido por ``montar_features``, alinhado
+# com ``features.engenharia.entradas`` do supervised.yaml.
+ENTRADAS_OBRIGATORIAS: tuple[str, ...] = (
     "nu_idade_n",
     "tp_idade",
     "cs_sexo",
     "dt_sin_pri",
     "dt_interna",
-]
+)
+
+# Derivadas que ``montar_features`` deve produzir. Deliberadamente
+# hardcoded (não importado de engineering) para travar mudanças
+# silenciosas no contrato.
+COLUNAS_DERIVADAS_ESPERADAS: frozenset[str] = frozenset({
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "flag_intervalo_invalido",
+    "flag_internacao_antes_sintomas",
+    "sin_semana",
+    "cos_semana",
+    "faixa_etaria",
+    "sexo_categoria",
+    "ano_internacao",
+    "mes_internacao",
+})
 
 
 @pytest.fixture
 def df_base() -> pd.DataFrame:
-    """
-    DataFrame mínimo com as colunas exigidas por `montar_features`.
+    """DataFrame mínimo com as colunas exigidas por ``montar_features``.
 
     Linhas:
+
     - 0: adulto (30a), 4 dias até internação, M
-    - 1: bebê (6 meses), 5 dias, F
+    - 1: bebé (6 meses), 5 dias, F
     - 2: adulto (40a), 5 dias, sexo ignorado
     - 3: recém-nascido (1 dia), 5 dias, M
     """
-    return pd.DataFrame(
-        {
-            "nu_idade_n": [30, 6, 40, 1],
-            "tp_idade":   [3, 2, 3, 1],
-            "cs_sexo":    ["M", "F", "I", "M"],
-            "dt_sin_pri": ["2024-01-01", "2024-03-15", "2024-06-20", "2024-09-05"],
-            "dt_interna": ["2024-01-05", "2024-03-20", "2024-06-25", "2024-09-10"],
-        }
-    )
+    return pd.DataFrame({
+        "nu_idade_n": [30, 6, 40, 1],
+        "tp_idade":   [3, 2, 3, 1],
+        "cs_sexo":    ["M", "F", "I", "M"],
+        "dt_sin_pri": ["2024-01-01", "2024-03-15", "2024-06-20", "2024-09-05"],
+        "dt_interna": ["2024-01-05", "2024-03-20", "2024-06-25", "2024-09-10"],
+    })
 
 
 class TestIdadeEmAnos:
@@ -1423,36 +510,28 @@ class TestIntervaloSintomasInternacao:
         assert out["flag_internacao_antes_sintomas"].dtype == np.int8
 
     def test_negativo_seta_ambas_flags(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         out = intervalo_sintomas_internacao(df)
         assert out["flag_internacao_antes_sintomas"].iloc[0] == 1
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
     def test_acima_do_limite_seta_flag_umbrella_sem_marcar_sinal(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-01"], "dt_interna": ["2024-06-01"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-01"], "dt_interna": ["2024-06-01"]})
         out = intervalo_sintomas_internacao(df)
         assert out["flag_intervalo_invalido"].iloc[0] == 1
         assert out["flag_internacao_antes_sintomas"].iloc[0] == 0
 
     def test_data_ausente_seta_flag_umbrella(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": [None], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": [None], "dt_interna": ["2024-01-05"]})
         out = intervalo_sintomas_internacao(df)
         assert pd.isna(out["dias_sintomas_ate_internacao"].iloc[0])
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
     def test_politica_sinalizar_mantem_valor_bruto(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Default: valor inválido fica visível, comunicado por flags."""
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         monkeypatch.setattr(
             "src.features.engineering._intervalo_politica",
             lambda: "sinalizar",
@@ -1461,11 +540,9 @@ class TestIntervaloSintomasInternacao:
         assert out["dias_sintomas_ate_internacao"].iloc[0] == pytest.approx(-5.0)
 
     def test_politica_descartar_substitui_por_nan(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         monkeypatch.setattr(
             "src.features.engineering._intervalo_politica",
             lambda: "descartar",
@@ -1483,16 +560,13 @@ class TestSazonalidade:
             assert out[col].between(-1.0, 1.0, inclusive="both").all()
 
     def test_mesma_semana_em_anos_diferentes_proxima(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2023-03-15", "2024-03-13"]}  # ~mesma semana ISO
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2023-03-15", "2024-03-13"]})  # mesma semana ISO
         out = sazonalidade(df)
         assert abs(out["sin_semana"].iloc[0] - out["sin_semana"].iloc[1]) < 0.1
         assert abs(out["cos_semana"].iloc[0] - out["cos_semana"].iloc[1]) < 0.1
 
     def test_data_nula_vira_nan(self) -> None:
-        df = pd.DataFrame({"dt_sin_pri": [None]})
-        out = sazonalidade(df)
+        out = sazonalidade(pd.DataFrame({"dt_sin_pri": [None]}))
         assert pd.isna(out["sin_semana"].iloc[0])
         assert pd.isna(out["cos_semana"].iloc[0])
 
@@ -1504,8 +578,7 @@ class TestSazonalidade:
 
 class TestFaixaEtaria:
     def test_fronteiras_semiabertas(self) -> None:
-        idades = pd.Series([0.0, 0.99, 1.0, 4.99, 5.0, 80.0, 120.0])
-        out = faixa_etaria(idades)
+        out = faixa_etaria(pd.Series([0.0, 0.99, 1.0, 4.99, 5.0, 80.0, 120.0]))
         assert list(out) == ["<1", "<1", "1-4", "1-4", "5-11", "80+", "80+"]
 
     def test_idade_nula_vira_desconhecida(self) -> None:
@@ -1514,19 +587,18 @@ class TestFaixaEtaria:
         assert out.iloc[1] == "18-39"
 
     def test_retorna_categoria(self) -> None:
-        out = faixa_etaria(pd.Series([30.0]))
-        assert isinstance(out.dtype, pd.CategoricalDtype)
+        assert isinstance(faixa_etaria(pd.Series([30.0])).dtype, pd.CategoricalDtype)
 
 
 class TestSexoCategoria:
     @pytest.mark.parametrize(
         "entrada, esperado",
         [
-            ("M", "masculino"),
-            ("f", "feminino"),
-            (" I ", "ignorado"),
-            ("X", "ausente"),
-            (None, "ausente"),
+            ("M",     "masculino"),
+            ("f",     "feminino"),
+            (" I ",   "ignorado"),
+            ("X",     "ausente"),
+            (None,    "ausente"),
         ],
     )
     def test_mapeamento(self, entrada: str | None, esperado: str) -> None:
@@ -1545,31 +617,15 @@ class TestAnoMesInternacao:
         assert out["mes_internacao"].tolist() == [1.0, 3.0, 6.0, 9.0]
 
     def test_data_nula_vira_nan(self) -> None:
-        df = pd.DataFrame({"dt_interna": [None]})
-        out = ano_mes_internacao(df)
+        out = ano_mes_internacao(pd.DataFrame({"dt_interna": [None]}))
         assert pd.isna(out["ano_internacao"].iloc[0])
         assert pd.isna(out["mes_internacao"].iloc[0])
 
 
-COLUNAS_DERIVADAS_ESPERADAS = {
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "flag_intervalo_invalido",
-    "flag_internacao_antes_sintomas",
-    "sin_semana",
-    "cos_semana",
-    "faixa_etaria",
-    "sexo_categoria",
-    "ano_internacao",
-    "mes_internacao",
-}
-
-
 class TestMontarFeatures:
     def test_gera_todas_as_derivadas_do_yaml(self, df_base: pd.DataFrame) -> None:
-        """Trava o contrato entre features.engenharia.derivadas e a função."""
-        out = montar_features(df_base)
-        faltando = COLUNAS_DERIVADAS_ESPERADAS - set(out.columns)
+        """Trava o contrato entre ``features.engenharia.derivadas`` e a função."""
+        faltando = COLUNAS_DERIVADAS_ESPERADAS - set(montar_features(df_base).columns)
         assert not faltando, f"Derivadas ausentes: {sorted(faltando)}"
 
     def test_nao_muta_entrada(self, df_base: pd.DataFrame) -> None:
@@ -1579,44 +635,31 @@ class TestMontarFeatures:
 
     def test_preserva_colunas_originais(self, df_base: pd.DataFrame) -> None:
         out = montar_features(df_base)
-        for col in df_base.columns:
-            assert col in out.columns
+        assert set(df_base.columns).issubset(out.columns)
 
     def test_nao_gera_colunas_proibidas(self, df_base: pd.DataFrame) -> None:
         proibidas = {"evolucao", "alvo_obito_srag", "dt_evoluca", "uti", "cluster"}
-        out = montar_features(df_base)
-        assert proibidas.isdisjoint(out.columns)
+        assert proibidas.isdisjoint(montar_features(df_base).columns)
 
 
 class TestPontoNoTempo:
-    """
-    Invariantes contra vazamento temporal.
-
-    O ponto de previsão é a admissão hospitalar.
-    """
+    """Invariantes contra vazamento temporal — o ponto de previsão é a admissão."""
 
     def test_so_precisa_das_entradas_declaradas(self, df_base: pd.DataFrame) -> None:
-        """
-        Se `montar_features` só depende de features.engenharia.entradas,
-        um df com exatamente essas colunas deve bastar.
-        """
-        df = df_base[ENTRADAS_OBRIGATORIAS].copy()
-        out = montar_features(df)
-        assert out is not None
+        """Um df com só as entradas declaradas deve bastar para as derivadas."""
+        out = montar_features(df_base[list(ENTRADAS_OBRIGATORIAS)].copy())
         assert COLUNAS_DERIVADAS_ESPERADAS.issubset(out.columns)
 
-    def test_colunas_pos_admissao_nao_influenciam(
-        self, df_base: pd.DataFrame
-    ) -> None:
+    def test_colunas_pos_admissao_nao_influenciam(self, df_base: pd.DataFrame) -> None:
         """Injetar colunas pós-alta não pode alterar a saída."""
         baseline = montar_features(df_base)
 
         df_contaminado = df_base.copy()
-        df_contaminado["evolucao"] = [1.0, 2.0, 1.0, 2.0]
+        df_contaminado["evolucao"]  = [1.0, 2.0, 1.0, 2.0]
         df_contaminado["dt_evoluca"] = pd.to_datetime(
             ["2024-02-01", "2024-04-01", "2024-07-01", "2024-10-01"]
         )
-        df_contaminado["uti"] = [0, 1, 0, 1]
+        df_contaminado["uti"]        = [0, 1, 0, 1]
         df_contaminado["suport_ven"] = [0, 1, 0, 0]
 
         contaminado = montar_features(df_contaminado)
@@ -1626,39 +669,33 @@ class TestPontoNoTempo:
             contaminado[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
         )
 
-    def test_ordem_das_linhas_nao_altera_derivadas(
-        self, df_base: pd.DataFrame
-    ) -> None:
-        """Derivadas devem ser pointwise — sem dependência de ordem."""
-        normal = montar_features(df_base)
+    def test_ordem_das_linhas_nao_altera_derivadas(self, df_base: pd.DataFrame) -> None:
+        """Derivadas são pointwise — sem dependência de ordem."""
+        normal    = montar_features(df_base)
         invertido = montar_features(df_base.iloc[::-1].reset_index(drop=True))
 
         pd.testing.assert_frame_equal(
             normal[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
-            invertido[list(COLUNAS_DERIVADAS_ESPERADAS)]
-            .iloc[::-1]
-            .reset_index(drop=True),
+            invertido[list(COLUNAS_DERIVADAS_ESPERADAS)].iloc[::-1].reset_index(drop=True),
         )
 ```
 
 ## `tests/test_leakage.py`
 
 - Git: `tracked` · status `clean`
-- Size: `8.2 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `1fe6e1ab07debe6766ead96638585f85553e72357180582025ad1af0489d03f0`
+- Size: `3.9 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `122506d41aa18213123b6ed3ddddcd38f68b16d69a8448e540708ef0d89a55f8`
 
 ```python
 """
 Testes anti-vazamento de dados.
 
-Protegem contra:
-- inclusão do alvo nas features;
-- inclusão de colunas posteriores ao desfecho;
-- quebra da ordem temporal entre treino, validação e holdout;
-- duplicação de identificadores quando houver chave adequada.
+Cobrem:
 
-Fonte única de verdade: `configs/supervised.yaml`, lido via
-`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
+- consistência entre ``features.proibidas`` e ``pipeline.FEATURES``;
+- proibição do alvo nas features;
+- contrato de ``check_leakage`` (coluna proibida, alvo, lista vazia);
+- duplicidade de identificadores no Parquet (slow).
 """
 
 from __future__ import annotations
@@ -1666,55 +703,33 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from src.evaluation.leakage import LeakageError, check_leakage
 from src.utils import config as C
 
 
+# ---------------------------------------------------------------------------
+# Contrato de configuração (features.proibidas ↔ FEATURES)
+# ---------------------------------------------------------------------------
+
 @pytest.fixture
 def proibidas() -> set[str]:
-    """Colunas proibidas declaradas em `features.proibidas` do YAML."""
+    """Conjunto ``features.proibidas`` do ``supervised.yaml``."""
     return set(C.cfg("features", "proibidas") or [])
 
 
 @pytest.fixture
 def features_finais() -> set[str]:
-    """Lista final de features exposta por `src.models.pipeline`."""
+    """``pipeline.FEATURES`` — features efetivamente usadas pelo modelo."""
     from src.models import pipeline
     return set(pipeline.FEATURES)
 
 
-def _forcar_status_gate(
-    monkeypatch: pytest.MonkeyPatch,
-    nome_gate: str,
-    status: str,
-) -> None:
-    """
-    Faz `C.cfg("gates", nome_gate)` devolver `{"status": status}`,
-    ignorando o YAML real apenas para esse gate.
-    """
-    monkeypatch.setattr(
-        C,
-        "cfg",
-        lambda *chaves, default=None: (
-            {"status": status}
-            if chaves == ("gates", nome_gate)
-            else default
-        ),
-    )
-
-
 def test_proibidas_nao_vazia(proibidas: set[str]) -> None:
-    assert proibidas, (
-        "features.proibidas está vazia no supervised.yaml — "
-        "ao menos o alvo e as colunas posteriores ao desfecho precisam "
-        "estar listadas."
-    )
+    assert proibidas
 
 
 def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo in proibidas, (
-        f"target.coluna ({alvo!r}) precisa estar em features.proibidas."
-    )
+    assert C.cfg("target", "coluna") in proibidas
 
 
 def test_features_finais_sem_proibidas(
@@ -1722,40 +737,33 @@ def test_features_finais_sem_proibidas(
     proibidas: set[str],
 ) -> None:
     vazamento = features_finais & proibidas
-    assert not vazamento, (
-        f"FEATURES contém colunas proibidas: {sorted(vazamento)}"
-    )
+    assert not vazamento, f"FEATURES contém colunas proibidas: {sorted(vazamento)}"
 
 
 def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo not in features_finais
+    assert C.cfg("target", "coluna") not in features_finais
 
 
-def test_check_leakage_passa_quando_X_limpo() -> None:
-    from src.evaluation.leakage import check_leakage
+# ---------------------------------------------------------------------------
+# Contrato de check_leakage
+# ---------------------------------------------------------------------------
 
+def test_check_leakage_passa_com_X_limpo() -> None:
     X = pd.DataFrame({"feat_a": [1, 2, 3], "feat_b": [4, 5, 6]})
     check_leakage(X)
 
 
 def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
     coluna = sorted(proibidas)[0]
     X = pd.DataFrame({coluna: [1, 2, 3], "feat_ok": [4, 5, 6]})
 
     with pytest.raises(LeakageError) as exc:
         check_leakage(X)
 
-    assert coluna in str(exc.value), (
-        "A mensagem de erro precisa citar a coluna problemática."
-    )
+    assert coluna in str(exc.value)
 
 
 def test_check_leakage_levanta_para_alvo() -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
     alvo = C.cfg("target", "coluna")
     X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
 
@@ -1764,9 +772,7 @@ def test_check_leakage_levanta_para_alvo() -> None:
 
 
 def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None:
-    """Lista vazia desliga proibidas, mas o alvo continua sendo checado."""
-    from src.evaluation.leakage import LeakageError, check_leakage
-
+    """``forbidden_columns=[]`` ainda soma ``DEFAULT_LEAKAGE_COLUMNS`` + alvo."""
     alvo = C.cfg("target", "coluna")
     X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
 
@@ -1774,169 +780,44 @@ def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None:
         check_leakage(X, forbidden_columns=[])
 
 
-def test_split_temporal_3way_respeita_ordem() -> None:
-    from src.evaluation.temporal import split_temporal_3way
+# ---------------------------------------------------------------------------
+# Identificadores no Parquet (slow)
+# ---------------------------------------------------------------------------
 
-    df = pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
-        "valor": range(100),
-    })
-
-    treino, validacao, holdout = split_temporal_3way(
-        df,
-        coluna_tempo="dt_notific",
-        frac_treino=0.70,
-        frac_validacao=0.15,
-    )
-
-    assert not treino.empty
-    assert not validacao.empty
-    assert not holdout.empty
-
-    assert treino["dt_notific"].max() <= validacao["dt_notific"].min()
-    assert validacao["dt_notific"].max() <= holdout["dt_notific"].min()
-
-
-def test_split_temporal_3way_rejeita_nat_por_default() -> None:
-    from src.evaluation.temporal import split_temporal_3way
-
-    df = pd.DataFrame({
-        "dt_notific": [
-            pd.Timestamp("2020-01-01"),
-            pd.NaT,
-            pd.Timestamp("2020-01-03"),
-        ],
-        "valor": [1, 2, 3],
-    })
-
-    with pytest.raises(ValueError, match="data inválida"):
-        split_temporal_3way(df, coluna_tempo="dt_notific")
-
-
-def test_split_temporal_3way_dropa_nat_quando_pedido() -> None:
-    from src.evaluation.temporal import split_temporal_3way
-
-    df = pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=10, freq="D"),
-        "valor": range(10),
-    })
-    df.loc[3, "dt_notific"] = pd.NaT
-
-    treino, validacao, holdout = split_temporal_3way(
-        df,
-        coluna_tempo="dt_notific",
-        on_nat="drop",
-    )
-
-    assert len(treino) + len(validacao) + len(holdout) == 9
-
-
-def test_temporal_split_bloqueia_holdout_antes_de_concluir() -> None:
-    from src.evaluation.temporal import TemporalSplit
-
-    df = pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
-        "valor": range(100),
-    })
-    split = TemporalSplit(df=df, coluna_tempo="dt_notific")
-
-    assert not split.holdout_liberado
-    with pytest.raises(RuntimeError, match="Holdout bloqueado"):
-        split.holdout()
-
-
-def test_concluir_selecao_exige_gate_g9_holdout(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """
-    `concluir_selecao` só libera o holdout quando `gates.G9_holdout`
-    estiver `aprovado`; com o gate pendente, deve levantar RuntimeError.
-    """
-    from src.evaluation.temporal import TemporalSplit
-
-    _forcar_status_gate(monkeypatch, "G9_holdout", "pendente")
-
-    df = pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
-        "valor": range(100),
-    })
-    split = TemporalSplit(df=df, coluna_tempo="dt_notific")
-
-    with pytest.raises(RuntimeError, match="G9_holdout"):
-        split.concluir_selecao()
-
-    assert not split.holdout_liberado
-
-
-def test_concluir_selecao_libera_holdout_quando_gate_aprovado(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Com o gate `G9_holdout` aprovado (simulado), libera o holdout."""
-    from src.evaluation.temporal import TemporalSplit
-
-    _forcar_status_gate(monkeypatch, "G9_holdout", "aprovado")
-
-    df = pd.DataFrame({
-        "dt_notific": pd.date_range("2020-01-01", periods=100, freq="D"),
-        "valor": range(100),
-    })
-    split = TemporalSplit(df=df, coluna_tempo="dt_notific")
-
-    split.concluir_selecao()
-    assert split.holdout_liberado
-    assert not split.holdout().empty
-
-
+@pytest.mark.slow
 def test_dataset_sem_identificadores_duplicados(parquet_disponivel) -> None:
-    """
-    Checa duplicidade apenas se houver coluna que sirva como
-    identificador da notificação. UF e data não formam chave única.
-    """
+    """Taxa de ``nu_notific`` (ou equivalente) duplicado deve ser < 5%."""
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
 
     import pyarrow.parquet as pq
 
     colunas = set(pq.read_schema(parquet_disponivel).names)
-
-    candidatas = [
-        "nu_notific",
-        "numero_notificacao",
-        "id_notificacao",
-        "id",
-    ]
+    candidatas = ("nu_notific", "numero_notificacao", "id_notificacao", "id")
     coluna_id = next((c for c in candidatas if c in colunas), None)
 
     if coluna_id is None:
-        pytest.skip(
-            "O Parquet não possui uma coluna identificadora adequada "
-            "para o teste de duplicidade."
-        )
+        pytest.skip("Sem coluna identificadora adequada.")
 
     df = pd.read_parquet(parquet_disponivel, columns=[coluna_id])
     ids = df[coluna_id].dropna().astype("string").str.strip()
     ids = ids[ids.ne("")]
 
     if ids.empty:
-        pytest.skip(f"A coluna {coluna_id} não possui identificadores válidos.")
+        pytest.skip(f"Coluna {coluna_id} sem identificadores válidos.")
 
-    quantidade_duplicada = int(ids.duplicated().sum())
-    taxa_duplicada = quantidade_duplicada / len(ids)
-
-    assert taxa_duplicada < 0.05, (
-        f"Alta taxa de identificadores duplicados em {coluna_id}: "
-        f"{quantidade_duplicada}/{len(ids)} ({taxa_duplicada:.1%})"
-    )
+    taxa = int(ids.duplicated().sum()) / len(ids)
+    assert taxa < 0.05, f"Taxa alta de duplicados em {coluna_id}: {taxa:.1%}"
 ```
 
 ## `tests/test_metrics.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.8 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `df282a53d2c7cc1bf9cf388f3227f7a2394b98c5e593079353ef83b393b7a510`
+- Size: `5.5 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `1251e53dbcb79353e211e590d332539869bb13d1671fa69eaf4ca35e892eb370`
 
 ```python
-"""Testes das métricas em `src.evaluation.metrics`."""
+"""Testes das métricas em ``src.evaluation.metrics``."""
 
 from __future__ import annotations
 
@@ -1960,25 +841,45 @@ from src.evaluation.metrics import (
 
 @pytest.fixture
 def y_true() -> np.ndarray:
+    """10 rótulos binários — 6 positivos (1), 4 negativos (0)."""
     return np.array([0, 0, 1, 1, 1, 0, 1, 0, 1, 1])
 
 
 @pytest.fixture
 def y_prob() -> np.ndarray:
+    """10 probabilidades em ``[0, 1]`` correlacionadas com ``y_true``."""
     return np.array([0.1, 0.2, 0.8, 0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.75])
 
 
+# Chaves contratuais de ``metricas_completas`` — a lista serve como
+# armadilha contra remoções silenciosas no módulo fonte.
+_CHAVES_METRICAS_COMPLETAS = (
+    "auc", "ap", "brier", "f1", "precision", "recall",
+    "accuracy", "limiar", "n",
+)
+
+
+# ---------------------------------------------------------------------------
+# AUC
+# ---------------------------------------------------------------------------
+
 def test_auc_perfeito() -> None:
+    """Classificador com separação perfeita → AUC = 1.0."""
     y = np.array([0, 0, 1, 1])
     p = np.array([0.1, 0.2, 0.8, 0.9])
     assert auc(y, p) == pytest.approx(1.0)
 
 
 def test_auc_constante_e_meio() -> None:
+    """Probabilidades constantes → AUC = 0.5 por construção."""
     y = np.array([0, 0, 1, 1])
     p = np.array([0.5, 0.5, 0.5, 0.5])
     assert auc(y, p) == pytest.approx(0.5)
 
+
+# ---------------------------------------------------------------------------
+# Métricas de probabilidade (aceitam y_prob)
+# ---------------------------------------------------------------------------
 
 def test_metricas_individuais_retornam_float(
     y_true: np.ndarray,
@@ -1992,13 +893,16 @@ def test_average_precision_em_intervalo(
     y_true: np.ndarray,
     y_prob: np.ndarray,
 ) -> None:
-    ap = average_precision(y_true, y_prob)
-    assert 0.0 <= ap <= 1.0
+    assert 0.0 <= average_precision(y_true, y_prob) <= 1.0
 
 
 def test_brier_em_intervalo(y_true: np.ndarray, y_prob: np.ndarray) -> None:
     assert 0.0 <= brier(y_true, y_prob) <= 1.0
 
+
+# ---------------------------------------------------------------------------
+# Métricas de classificação (aceitam y_pred duro)
+# ---------------------------------------------------------------------------
 
 def test_f1_precision_recall(y_true: np.ndarray) -> None:
     y_pred = np.array([0, 0, 1, 1, 1, 0, 0, 0, 1, 1])
@@ -2014,6 +918,7 @@ def test_accuracy_perfeita() -> None:
 
 
 def test_zero_division_nao_quebra() -> None:
+    """``y_true`` e ``y_pred`` sem positivos → métricas devolvem 0.0, não ``ZeroDivisionError``."""
     y_true = np.zeros(3, dtype=int)
     y_pred = np.zeros(3, dtype=int)
     assert f1(y_true, y_pred) == 0.0
@@ -2021,22 +926,16 @@ def test_zero_division_nao_quebra() -> None:
     assert recall(y_true, y_pred) == 0.0
 
 
+# ---------------------------------------------------------------------------
+# metricas_completas
+# ---------------------------------------------------------------------------
+
 def test_metricas_completas_chaves(
     y_true: np.ndarray,
     y_prob: np.ndarray,
 ) -> None:
     d = metricas_completas(y_true, y_prob, limiar=0.5)
-    for k in (
-        "auc",
-        "ap",
-        "brier",
-        "f1",
-        "precision",
-        "recall",
-        "accuracy",
-        "limiar",
-        "n",
-    ):
+    for k in _CHAVES_METRICAS_COMPLETAS:
         assert k in d
     assert d["limiar"] == 0.5
     assert d["n"] == float(len(y_true))
@@ -2046,9 +945,14 @@ def test_metricas_completas_aceita_series(
     y_true: np.ndarray,
     y_prob: np.ndarray,
 ) -> None:
+    """``metricas_completas`` deve aceitar ``pd.Series`` como entrada."""
     d = metricas_completas(pd.Series(y_true), pd.Series(y_prob))
     assert "auc" in d
 
+
+# ---------------------------------------------------------------------------
+# metricas_por_limiar
+# ---------------------------------------------------------------------------
 
 def test_metricas_por_limiar(
     y_true: np.ndarray,
@@ -2060,6 +964,10 @@ def test_metricas_por_limiar(
     assert (t["limiar"] > 0).all()
     assert (t["limiar"] < 1).all()
 
+
+# ---------------------------------------------------------------------------
+# ic_bootstrap
+# ---------------------------------------------------------------------------
 
 def test_ic_bootstrap_retorna_tres_floats(
     y_true: np.ndarray,
@@ -2076,6 +984,7 @@ def test_ic_bootstrap_deterministico(
     y_true: np.ndarray,
     y_prob: np.ndarray,
 ) -> None:
+    """Mesma seed → mesmo resultado."""
     a = ic_bootstrap(y_true, y_prob, n_boot=50, seed=42)
     b = ic_bootstrap(y_true, y_prob, n_boot=50, seed=42)
     assert a == b
@@ -2098,18 +1007,16 @@ def test_ic_bootstrap_metrica_customizada(
 ## `tests/test_model_pipelines.py`
 
 - Git: `tracked` · status `clean`
-- Size: `5.9 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `76d3a6c4d6ed6409bbdf2df8dd36fe244ed88b18142620672efed833f1d54e58`
+- Size: `6.2 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `5dd0bbc04fc6c0033ae84664fc9de929d70e6c05a8ca0c4f89ccdd5b8c581af6`
 
 ```python
 """
 Testes rápidos dos construtores de pipeline de modelos supervisionados.
 
-Cobrem `build_baseline_pipeline`, `build_logistic_pipeline` e
-`build_boosting_pipeline`. Não dependem do Parquet nem fazem I/O pesado.
-
-A lista de features vem de `src.models.pipeline`, que por sua vez lê
-`configs/supervised.yaml` — sem hard-code.
+Cobrem baseline, logística e boosting. Não dependem do Parquet nem fazem
+I/O pesado. As features vêm de ``src.models.pipeline`` (que lê o
+``supervised.yaml``) — sem hard-code.
 """
 
 from __future__ import annotations
@@ -2135,32 +1042,24 @@ def _df_features(
     n: int = 200,
     seed: int = 42,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """
-    DataFrame sintético com exatamente as features exigidas pelo YAML.
+    """DataFrame sintético com exactamente as features exigidas pelo YAML.
 
-    Numéricas recebem distribuição normal; categóricas recebem 3 níveis
-    como strings. O alvo é balanceado 50/50 e depois embaralhado — isso
-    garante as duas classes para `DummyClassifier(strategy="prior")` e
-    para `LogisticRegression(class_weight="balanced")`.
+    Numéricas com distribuição normal; categóricas com 3 níveis como
+    strings. O alvo é balanceado 50/50 e depois embaralhado — garante as
+    duas classes para ``DummyClassifier(strategy="prior")`` e para
+    ``LogisticRegression(class_weight="balanced")``.
     """
     rng = np.random.default_rng(seed)
     dados: dict[str, np.ndarray] = {}
 
     for coluna in P.FEATURES_NUMERICAS:
         dados[coluna] = rng.normal(loc=50.0, scale=15.0, size=n)
-
     for coluna in P.FEATURES_CATEGORICAS:
         dados[coluna] = rng.choice(["0", "1", "2"], size=n)
 
     X = pd.DataFrame(dados)
-
     y = pd.Series(
-        np.concatenate(
-            [
-                np.zeros(n // 2, dtype=int),
-                np.ones(n - n // 2, dtype=int),
-            ]
-        ),
+        np.concatenate([np.zeros(n // 2, dtype=int), np.ones(n - n // 2, dtype=int)]),
         name="alvo",
     ).sample(frac=1, random_state=seed).reset_index(drop=True)
 
@@ -2168,9 +1067,11 @@ def _df_features(
 
 
 def _colunas_do_pre(pipe: Pipeline) -> set[str]:
-    """Colunas declaradas no ColumnTransformer do pipeline."""
-    # ColumnTransformer.transformers é uma lista de
-    # (nome, transformer, colunas); extraímos a terceira posição.
+    """Colunas declaradas no ``ColumnTransformer`` do pipeline.
+
+    ``ColumnTransformer.transformers`` é uma lista de
+    ``(nome, transformer, colunas)`` — extraímos a terceira posição.
+    """
     colunas: set[str] = set()
     for _, _, cols in pipe.named_steps["pre"].transformers:
         if isinstance(cols, list):
@@ -2179,61 +1080,37 @@ def _colunas_do_pre(pipe: Pipeline) -> set[str]:
 
 
 # `max_iter` reduzido para manter os testes rápidos — smoke de fit, não tuning.
-_CONSTRUTORES: list[tuple[str, Callable[[], Pipeline]]] = [
-    ("baseline", lambda: build_baseline_pipeline()),
-    ("logistic", lambda: build_logistic_pipeline(max_iter=500)),
-    ("boosting", lambda: build_boosting_pipeline(max_iter=30)),
+_CONSTRUTORES: list[tuple[str, Callable[[], Pipeline], type]] = [
+    ("baseline", lambda: build_baseline_pipeline(), DummyClassifier),
+    ("logistic", lambda: build_logistic_pipeline(max_iter=500), LogisticRegression),
+    ("boosting", lambda: build_boosting_pipeline(max_iter=30), HistGradientBoostingClassifier),
 ]
 
-_IDS = [nome for nome, _ in _CONSTRUTORES]
+_IDS = [nome for nome, _, _ in _CONSTRUTORES]
 
 
-def test_build_baseline_pipeline_retorna_pipeline() -> None:
-    pipe = build_baseline_pipeline()
-    assert isinstance(pipe, Pipeline)
-    assert list(pipe.named_steps.keys()) == ["pre", "clf"]
-    assert isinstance(pipe.named_steps["clf"], DummyClassifier)
+# ---------------------------------------------------------------------------
+# Contrato do pipeline (estrutura)
+# ---------------------------------------------------------------------------
 
-
-def test_build_logistic_pipeline_retorna_pipeline() -> None:
-    pipe = build_logistic_pipeline()
-    assert isinstance(pipe, Pipeline)
-    assert list(pipe.named_steps.keys()) == ["pre", "clf"]
-    assert isinstance(pipe.named_steps["clf"], LogisticRegression)
-
-
-def test_build_boosting_pipeline_retorna_pipeline() -> None:
-    pipe = build_boosting_pipeline()
-    assert isinstance(pipe, Pipeline)
-    assert list(pipe.named_steps.keys()) == ["pre", "clf"]
-    assert isinstance(pipe.named_steps["clf"], HistGradientBoostingClassifier)
-
-
-@pytest.mark.parametrize(("nome", "ctor"), _CONSTRUTORES, ids=_IDS)
-def test_pipelines_fit_predict_proba(
+@pytest.mark.parametrize(("nome", "ctor", "clf_esperado"), _CONSTRUTORES, ids=_IDS)
+def test_pipeline_retorna_pipeline(
     nome: str,
     ctor: Callable[[], Pipeline],
+    clf_esperado: type,
 ) -> None:
-    X, y = _df_features(n=200)
+    """Cada construtor devolve ``Pipeline(pre, clf)`` com o classificador correto."""
     pipe = ctor()
-    pipe.fit(X, y)
-
-    proba = pipe.predict_proba(X)
-
-    assert proba.shape == (len(X), 2), f"{nome}: shape inesperado {proba.shape}"
-    assert np.isfinite(proba).all(), f"{nome}: probabilidades contêm NaN/Inf"
-    assert ((proba >= 0) & (proba <= 1)).all(), (
-        f"{nome}: probabilidades fora de [0, 1]"
-    )
-    assert np.allclose(proba.sum(axis=1), 1.0), (
-        f"{nome}: linhas de probabilidade não somam 1"
-    )
+    assert isinstance(pipe, Pipeline), nome
+    assert list(pipe.named_steps.keys()) == ["pre", "clf"], nome
+    assert isinstance(pipe.named_steps["clf"], clf_esperado), nome
 
 
-@pytest.mark.parametrize(("nome", "ctor"), _CONSTRUTORES, ids=_IDS)
-def test_pipelines_nao_incluem_proibidas(
+@pytest.mark.parametrize(("nome", "ctor", "clf_esperado"), _CONSTRUTORES, ids=_IDS)
+def test_pipeline_nao_inclui_proibidas(
     nome: str,
     ctor: Callable[[], Pipeline],
+    clf_esperado: type,
 ) -> None:
     proibidas = set(C.cfg("features", "proibidas") or [])
     assert proibidas, (
@@ -2244,22 +1121,43 @@ def test_pipelines_nao_incluem_proibidas(
 
     colisoes = _colunas_do_pre(ctor()) & proibidas
     assert not colisoes, (
-        f"{nome}: colunas proibidas presentes no pré-processador: "
-        f"{sorted(colisoes)}"
+        f"{nome}: colunas proibidas no pré-processador: {sorted(colisoes)}"
     )
 
 
+# ---------------------------------------------------------------------------
+# Comportamento (fit + predict_proba)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(("nome", "ctor", "clf_esperado"), _CONSTRUTORES, ids=_IDS)
+def test_pipeline_fit_predict_proba(
+    nome: str,
+    ctor: Callable[[], Pipeline],
+    clf_esperado: type,
+) -> None:
+    X, y = _df_features(n=200)
+    pipe = ctor().fit(X, y)
+    proba = pipe.predict_proba(X)
+
+    assert proba.shape == (len(X), 2), f"{nome}: shape {proba.shape}"
+    assert np.isfinite(proba).all(), f"{nome}: probabilidades com NaN/Inf"
+    assert ((proba >= 0) & (proba <= 1)).all(), f"{nome}: fora de [0, 1]"
+    assert np.allclose(proba.sum(axis=1), 1.0), f"{nome}: linhas não somam 1"
+
+
+# ---------------------------------------------------------------------------
+# Contrato de features
+# ---------------------------------------------------------------------------
+
 def test_pipelines_usam_features_do_yaml() -> None:
-    """
-    O pré-processador de cada pipeline precisa expor exatamente o
-    conjunto `FEATURES_NUMERICAS + FEATURES_CATEGORICAS` derivado do
-    YAML. Serve como canário contra features fora do YAML ou filtros
-    silenciosos.
+    """Pré-processador expõe ``FEATURES_NUMERICAS + FEATURES_CATEGORICAS`` do YAML.
+
+    Canário contra features fora do YAML ou filtros silenciosos.
     """
     esperadas = set(P.FEATURES_NUMERICAS) | set(P.FEATURES_CATEGORICAS)
     assert esperadas, "Nenhuma feature declarada em supervised.yaml."
 
-    for nome, ctor in _CONSTRUTORES:
+    for nome, ctor, _ in _CONSTRUTORES:
         colunas = _colunas_do_pre(ctor())
         faltando = esperadas - colunas
         extras = colunas - esperadas
@@ -2269,10 +1167,14 @@ def test_pipelines_usam_features_do_yaml() -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# Validação de parâmetros
+# ---------------------------------------------------------------------------
+
 def test_logistic_pipeline_solver_invalido() -> None:
-    """
-    `l1_ratio=1.0` (L1 puro) exige `liblinear` ou `saga`; com `lbfgs`,
-    o construtor deve levantar `ValueError`.
+    """``l1_ratio=1.0`` (L1 puro) exige ``liblinear`` ou ``saga``.
+
+    Com ``lbfgs`` o construtor deve levantar ``ValueError``.
     """
     with pytest.raises(ValueError, match="combinação inválida"):
         build_logistic_pipeline(l1_ratio=1.0, solver="lbfgs")
@@ -2281,15 +1183,15 @@ def test_logistic_pipeline_solver_invalido() -> None:
 ## `tests/test_pipeline.py`
 
 - Git: `tracked` · status `clean`
-- Size: `2.3 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `6a36380e4323723c2dd4c82dbdfff7b7ae44ff5eb35bc09f977288b9fa654cda`
+- Size: `2.7 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `0b547fc2d43446a0239bbb73659cfcb3cbbb362a90b86f8bf7e73dd7b35cbc00`
 
 ```python
 """
-Testes do pipeline de ingestão: read_srag, get_parquet e build_pipeline.
+Testes do pipeline de ingestão: ``read_srag``, ``get_parquet`` e
+``build_pipeline``.
 
-Testes que tocam arquivos grandes são marcados com `@pytest.mark.slow`.
-Os testes de diretório são rápidos e não recebem esse marcador.
+Testes que tocam no Parquet são marcados com ``@pytest.mark.slow``.
 """
 
 from __future__ import annotations
@@ -2299,15 +1201,19 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from src.models.pipeline import build_pipeline
 from src.utils import env
+from src.utils.storage import get_parquet, read_srag
 
+
+# ---------------------------------------------------------------------------
+# Ingestão do Parquet (slow)
+# ---------------------------------------------------------------------------
 
 @pytest.mark.slow
 def test_read_srag_retorna_dataframe(parquet_disponivel: Path | None) -> None:
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
-
-    from src.utils.storage import read_srag
 
     df = read_srag(columns=["sg_uf", "dt_notific"])
 
@@ -2318,15 +1224,12 @@ def test_read_srag_retorna_dataframe(parquet_disponivel: Path | None) -> None:
 
 @pytest.mark.slow
 def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> None:
-    """`force=False` reutiliza o arquivo existente (mesmo mtime e tamanho)."""
+    """``force=False`` reutiliza o arquivo existente (mesmo mtime e tamanho)."""
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
 
-    from src.utils.storage import get_parquet
-
     caminho_1 = get_parquet(force=False)
     estado_1 = caminho_1.stat()
-
     caminho_2 = get_parquet(force=False)
     estado_2 = caminho_2.stat()
 
@@ -2335,11 +1238,12 @@ def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> Non
     assert estado_1.st_size == estado_2.st_size
 
 
+# ---------------------------------------------------------------------------
+# build_pipeline
+# ---------------------------------------------------------------------------
+
 def test_build_pipeline_falha_feature_ausente() -> None:
-    from src.models.pipeline import build_pipeline
-
     X = pd.DataFrame({"nu_idade_n": [30.0, 40.0, 50.0]})
-
     with pytest.raises(KeyError, match="ausentes"):
         build_pipeline(X=X)
 
@@ -2347,10 +1251,7 @@ def test_build_pipeline_falha_feature_ausente() -> None:
 def test_build_pipeline_strict_false_avisa_mas_continua(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    from src.models.pipeline import build_pipeline
-
     X = pd.DataFrame({"nu_idade_n": [30.0, 40.0, 50.0]})
-
     with caplog.at_level("WARNING"):
         pipe = build_pipeline(X=X, strict=False)
 
@@ -2358,31 +1259,548 @@ def test_build_pipeline_strict_false_avisa_mas_continua(
     assert "ausentes" in caplog.text.lower()
 
 
-def test_raw_dir_foi_criado() -> None:
+# ---------------------------------------------------------------------------
+# Diretórios padrão
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("nome_dir", ["RAW", "PROCESSED"])
+def test_diretorio_padrao_foi_criado(nome_dir: str) -> None:
+    """``env.garantir_diretorios`` cria os diretórios esperados."""
     env.garantir_diretorios()
-    assert env.RAW.exists()
-    assert env.RAW.is_dir()
+    caminho = getattr(env, nome_dir)
+    assert caminho.is_dir(), f"{caminho} não é diretório"
+```
+
+## `tests/test_regras_pessoa_a.py`
+
+- Git: `tracked` · status `clean`
+- Size: `22.9 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `9b4f7be9ae95ffc9d1af19fd25f5182f4f3c57e8da0ad73e1cdf5aae7d3f74d7`
+
+```python
+"""
+Testes das regras da Pessoa A (``src.protocolo.verificacoes``).
+
+Cobre A1–A4, casos limite de datas, leitura compacta (colunas
+``category``) e o contrato de exportação consumido pelo C2.
+"""
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from src.protocolo import verificacoes as v
 
 
-def test_processed_dir_foi_criado() -> None:
-    env.garantir_diretorios()
-    assert env.PROCESSED.exists()
-    assert env.PROCESSED.is_dir()
+# ---------------------------------------------------------------------------
+# Fixtures e helpers
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def cfg() -> dict:
+    return v.load_config(None)
+
+
+@pytest.fixture(scope="module")
+def demo() -> pd.DataFrame:
+    return v.prepare(v.make_demo(n=3000)[0])
+
+
+def _escrever_yaml(
+    tmp_path: Path,
+    numericas: list[str],
+    categoricas: list[str],
+    *,
+    proibidas: list[str] | None = None,
+    grupos: list[str] | None = None,
+) -> Path:
+    """Escreve ``supervised.yaml`` mínimo para testes de exportação.
+
+    Devolve o ``Path``. Cobre os campos consumidos por ``a1_export_dataset``
+    e ``validar_contrato_c2``: alvo, coluna de tempo, features e (opcional)
+    grupos de avaliação.
+    """
+    def lst(items: list[str]) -> str:
+        return "[" + ", ".join(items) + "]"
+
+    features = (
+        f"{{numericas: {lst(numericas)}, categoricas: {lst(categoricas)}"
+        + (f", proibidas: {lst(proibidas)}" if proibidas else "")
+        + "}"
+    )
+    linhas = [
+        "target: {coluna: evolucao, positivos: [2.0]}",
+        "coluna_tempo: dt_notific",
+        f"features: {features}",
+    ]
+    if grupos:
+        linhas.append(f"avaliacao: {{grupos: {lst(grupos)}}}")
+
+    caminho = tmp_path / "supervised.yaml"
+    caminho.write_text("\n".join(linhas) + "\n", encoding="utf-8")
+    return caminho
+
+
+def _base_texto(n: int = 15_000) -> pd.DataFrame:
+    """``make_demo`` com datas como texto ISO e códigos como strings."""
+    base = v.make_demo(n=n, inicio="2019-01-01", anos=7)[0]
+    base.columns = [c.lower() for c in base.columns]
+    for c in ("dt_nasc", "dt_evoluca", "dt_encerra", "dt_sin_pri", "dt_interna", "dt_notific"):
+        base[c] = base[c].dt.strftime("%Y-%m-%d")
+    for c in ("evolucao", "hospital", "tp_idade"):
+        base[c] = base[c].astype("Int64").astype(str).replace("<NA>", None)
+    return base
+
+
+def _como_categoria(df: pd.DataFrame) -> pd.DataFrame:
+    """Converte todas as colunas string (excepto ``nu_notific``) em ``category``."""
+    d = df.copy()
+    for c in d.columns:
+        if (d[c].dtype == object or pd.api.types.is_string_dtype(d[c])) and c != "nu_notific":
+            d[c] = d[c].astype("category")
+    return d
+
+
+# ---------------------------------------------------------------------------
+# A1 — alvo, aliases, datas, waterfall, coorte
+# ---------------------------------------------------------------------------
+
+def test_alvo_desconhecido_nao_vira_cura(cfg):
+    t = v.make_target(pd.Series(["1", "2", "3", "9", None, "", "x", 1.0, 2.0]), cfg)
+    assert list(t.astype("object")) == [0, 1, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, 0, 1]
+
+
+def test_aliases_para_nomes_canonicos():
+    df = v.prepare(pd.DataFrame({"internado": [1], "dt_encerramento": ["2024-01-01"], "evolucao": [2]}))
+    assert {"HOSPITAL", "DT_ENCERRA", "EVOLUCAO"} <= set(df.columns)
+
+
+def test_parse_date_iso_e_br():
+    s = v.parse_date(pd.Series(["2024-03-05", "05/03/2024", "lixo", None]))
+    assert s.iloc[0] == s.iloc[1] == pd.Timestamp("2024-03-05")
+    assert s.iloc[2:].isna().all()
+
+
+def test_waterfall_monotonico(cfg, demo, tmp_path):
+    rep = v.Report(tmp_path)
+    wf = v.a1_waterfall(demo, cfg, rep)
+    assert wf["n_restante"].iloc[0] == len(demo)
+    assert wf["n_restante"].is_monotonic_decreasing
+    assert (wf["n_excluido"].iloc[1:].sum() + wf["n_restante"].iloc[-1]) == len(demo)
+
+
+def test_coorte_so_tem_cura_ou_obito(cfg, demo):
+    c = v.a1_cohort(demo, cfg)
+    assert set(c["_alvo"].unique()) <= {0, 1}
+    assert set(c["_ano"].unique()) <= set(cfg["dev_years"] + cfg["holdout_years"])
+
+
+# ---------------------------------------------------------------------------
+# A2 — datas absurdas, maturidade, formatos mistos
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("unidade", ["s", "ms", "us", "texto"])
+def test_datas_absurdas_nao_estouram(cfg, tmp_path, unidade):
+    datas = ["2024-03-05", "0001-01-01", "9999-12-31", "1850-05-05", "2024-01-01"]
+    col = (pd.Series(datas) if unidade == "texto"
+           else pd.Series(np.array(datas, dtype=f"datetime64[{unidade}]")))
+    outra = pd.Series(["2024-03-01"] * 5) if unidade == "texto" else pd.Series(
+        np.array(["2024-03-01"] * 5, dtype=f"datetime64[{unidade}]"))
+    d = v.parse_date(col)
+    assert d.isna().tolist() == [False, True, True, True, False]
+    df = pd.DataFrame({"DT_NASC": col, "DT_SIN_PRI": outra, "DT_NOTIFIC": outra, "DT_INTERNA": col,
+                       "DT_EVOLUCA": col, "DT_ENCERRA": outra, "HOSPITAL": 1, "EVOLUCAO": 1,
+                       "TP_IDADE": 3, "NU_IDADE_N": 40, "NU_NOTIFIC": "1"})
+    rep = v.Report(tmp_path)
+    v.a2_dates(df, cfg, rep)      # não pode levantar OverflowError
+    v.a2_maturity(df, cfg, rep)
+
+
+def test_parse_date_formatos_mistos_e_ano_absurdo():
+    s = v.parse_date(pd.Series(["2022-03-05", "05/03/2022", "05/03/2022 00:00:00", "2022/03/05", "2224-01-01", "lixo"]))
+    assert s.iloc[:4].eq(pd.Timestamp("2022-03-05")).all()
+    assert s.iloc[4:].isna().all()
+
+
+def test_parse_date_categorica_igual_a_texto():
+    s = pd.Series(["2022-03-05", "05/03/2022", None, "9999-12-31", "lixo", "2022-03-05"] * 50)
+    a = v.parse_date(s)
+    b = v.parse_date(s.astype("category"))
+    assert a.isna().tolist() == b.isna().tolist()
+    assert a.dropna().tolist() == b.dropna().tolist()
+
+
+# ---------------------------------------------------------------------------
+# A3 — auditoria de config e deteção de vazamento
+# ---------------------------------------------------------------------------
+
+def test_variavel_proibida_gera_falha(cfg, tmp_path):
+    rep = v.Report(tmp_path)
+    v.a3_forbidden(["NU_IDADE_N", "DT_EVOLUCA"], "supervisionado", cfg, rep)
+    assert rep.has_failure
+
+
+def test_evolucao_no_clustering_gera_falha(cfg, tmp_path):
+    rep = v.Report(tmp_path)
+    v.a3_forbidden(["EVOLUCAO", "FEBRE"], "clustering", cfg, rep)
+    assert rep.has_failure
+
+
+def test_auditoria_supervised_aponta_fracao_e_dt_notific(cfg, tmp_path):
+    y = {"target": {"positivos": [2.0], "descartar_ignorado": True}, "coluna_tempo": "dt_notific",
+         "temporal": {"modo": "fracao"}, "features": {"numericas": ["nu_idade_n"], "categoricas": ["febre"]}}
+    rep = v.Report(tmp_path)
+    v.a3_config_audit(y, cfg, rep)
+    checks = {f[1]: f[2] for f in rep.findings}
+    assert checks["Coluna temporal"] == v.WARN
+    assert checks["Split temporal"] == v.WARN
+    assert checks["Alvo: evolucao=3 e ausente"] == v.WARN
+    assert checks["Idade"] == v.WARN
+
+
+def test_auditoria_yaml_contra_schema_fisico(cfg, tmp_path):
+    schema = ["nu_notific", "hospital", "evolucao", "dt_evoluca", "dt_encerra", "cs_gestant", "nu_idade_n", "febre"]
+    y = {"target": {"positivos": [2.0]}, "coluna_tempo": "dt_notific", "temporal": {"modo": "fracao"},
+         "features": {"numericas": ["nu_idade_n"], "categoricas": ["tp_gestante", "internado", "febre"],
+                      "proibidas": ["evolucao", "dt_evolucao", "dt_encerramento"]}}
+    rep = v.Report(tmp_path)
+    v.a3_config_audit(y, cfg, rep, schema)
+    achados = {f[1]: f for f in rep.findings}
+    f1 = achados["Features do YAML x Parquet"]
+    assert f1[2] == v.FAIL and "tp_gestante" in f1[3] and "internado->hospital" in f1[3]
+    f2 = achados["`proibidas` do YAML x Parquet"]
+    assert f2[2] == v.WARN and "dt_evolucao->dt_evoluca" in f2[3] and "dt_encerramento->dt_encerra" in f2[3]
+
+
+def test_auditoria_nao_acusa_derivadas_como_ausentes(cfg, tmp_path):
+    y = {"target": {"positivos": [2.0]}, "coluna_tempo": "dt_notific", "temporal": {"modo": "fracao"},
+         "features": {"numericas": ["nu_idade_n", "idade_anos", "sin_semana"], "categoricas": ["faixa_etaria", "febre"],
+                      "proibidas": ["evolucao"]}}
+    rep = v.Report(tmp_path)
+    v.a3_config_audit(y, cfg, rep, ["nu_idade_n", "febre", "evolucao", "dt_notific"])
+    achados = {f[1]: f[2] for f in rep.findings}
+    assert achados["Features do YAML x Parquet"] == v.OK
+    assert achados["Features derivadas do YAML"] == v.OK
+
+
+# ---------------------------------------------------------------------------
+# A1 — exportação do dataset analítico
+# ---------------------------------------------------------------------------
+
+def test_exporta_dataset_para_o_c2(cfg, tmp_path):
+    base = v.make_demo(n=3000)[0]
+    base.columns = [c.lower() for c in base.columns]
+    base = base.rename(columns={"hospital": "internado"})
+    df = v.prepare(base)
+
+    y = _escrever_yaml(tmp_path, ["nu_idade_n"], ["febre", "internado"])
+    out = tmp_path / "dataset_supervisionado.csv"
+    meta = v.a1_export_dataset(df, cfg, v.Report(tmp_path), y, path=out)
+
+    d = pd.read_csv(out)
+    assert {"evolucao", "dt_notific", "nu_idade_n", "febre", "internado"} <= set(d.columns)
+    assert set(d["evolucao"].unique()) <= {1, 2}
+    assert d["dt_notific"].is_monotonic_increasing
+    assert "dt_evoluca" not in d.columns and meta["n_linhas"] == len(d)
+
+
+def test_export_cria_derivadas_pedidas_pelo_yaml(cfg, tmp_path):
+    base = v.make_demo(n=3000)[0]
+    base.columns = [c.lower() for c in base.columns]
+
+    y = _escrever_yaml(
+        tmp_path,
+        ["nu_idade_n", "idade_anos", "intervalo_sint_interna_dias",
+         "flag_intervalo_invalido", "sin_semana", "cos_semana"],
+        ["febre", "faixa_etaria"],
+        proibidas=["evolucao", "dt_evoluca"],
+        grupos=["cs_sexo", "faixa_etaria"],
+    )
+    out = tmp_path / "d.csv"
+    meta = v.a1_export_dataset(v.prepare(base), cfg, v.Report(tmp_path), y, path=out)
+
+    d = pd.read_csv(out)
+    for col in ("idade_anos", "intervalo_sint_interna_dias", "flag_intervalo_invalido",
+                "sin_semana", "cos_semana", "faixa_etaria", "cs_sexo"):
+        assert col in d.columns, col
+    assert meta["features_ausentes_na_base"] == []
+
+    rep = v.Report(tmp_path, "c")
+    assert v.validar_contrato_c2(out, y, rep) is True
+
+
+def test_find_base_ignora_dataset_analitico(tmp_path):
+    (tmp_path / "data" / "analytical").mkdir(parents=True)
+    (tmp_path / "data" / "raw").mkdir(parents=True)
+    (tmp_path / "data" / "analytical" / "dataset_supervisionado.parquet").write_bytes(b"x")
+    (tmp_path / "data" / "raw" / "srag.csv").write_text("a\n1\n")
+    base_encontrada = v.find_base(tmp_path)
+    assert base_encontrada is not None
+    assert base_encontrada.name == "srag.csv"
+
+
+def test_contrato_c2_dataset_valido(cfg, tmp_path):
+    base = v.make_demo(n=3000)[0]
+    base.columns = [c.lower() for c in base.columns]
+
+    y = _escrever_yaml(tmp_path, ["nu_idade_n"], ["febre", "dispneia"],
+                       proibidas=["evolucao", "dt_evoluca"])
+    out = tmp_path / "dataset_supervisionado.csv"
+    meta = v.a1_export_dataset(v.prepare(base), cfg, v.Report(tmp_path), y, path=out)
+
+    rep = v.Report(tmp_path, "contrato")
+    assert v.validar_contrato_c2(out, y, rep) is True
+    assert meta["descartadas_data_tempo_invalida"] >= 0
+    assert not rep.has_failure
+
+
+def test_contrato_c2_feature_inexistente_e_proibida_falham(cfg, tmp_path):
+    base = v.make_demo(n=2000)[0]
+    base.columns = [c.lower() for c in base.columns]
+
+    # Feature inexistente na base (tp_gestante)
+    y = _escrever_yaml(tmp_path, ["nu_idade_n"], ["febre", "tp_gestante"],
+                       proibidas=["evolucao", "dt_evoluca"])
+    out = tmp_path / "d.csv"
+    v.a1_export_dataset(v.prepare(base), cfg, v.Report(tmp_path), y, path=out)
+
+    rep = v.Report(tmp_path, "c1")
+    assert v.validar_contrato_c2(out, y, rep) is False
+    assert any(f[1] == "Colunas exigidas pelo C2" and f[2] == v.FAIL for f in rep.findings)
+
+    # Feature proibida no X (evolucao)
+    y2 = _escrever_yaml(tmp_path, ["nu_idade_n"], ["febre", "evolucao"],
+                        proibidas=["evolucao", "dt_evoluca"])
+    rep2 = v.Report(tmp_path, "c2")
+    v.validar_contrato_c2(out, y2, rep2)
+    assert any(f[1].startswith("check_leakage") and f[2] == v.FAIL for f in rep2.findings)
+
+
+# ---------------------------------------------------------------------------
+# Features derivadas
+# ---------------------------------------------------------------------------
+
+def test_features_derivadas_valores(cfg):
+    df = pd.DataFrame({
+        "NU_IDADE_N": [40, 24, 365, 150, 30, 5],
+        "TP_IDADE": [3, 2, 1, 3, 3, 3],                       # anos, meses, dias, anos(absurdo), anos, anos
+        "DT_SIN_PRI": ["2024-01-01", "2024-01-10", "2024-01-10", "2024-01-01", None, "2024-01-01"],
+        "DT_INTERNA": ["2024-01-03", "2024-01-05", "2024-01-20", "2024-03-01", "2024-01-03", "2024-01-08"],
+    })
+    criadas = v.add_derived(df, cfg)
+    assert set(criadas) == {d.upper() for d in v.DERIVADAS}
+    assert df["IDADE_ANOS"].iloc[:3].tolist() == [40.0, 2.0, 1.0] and pd.isna(df["IDADE_ANOS"].iloc[3])
+    assert df["FAIXA_ETARIA"].iloc[:3].tolist() == ["40-49", "1-4", "1-4"] and pd.isna(df["FAIXA_ETARIA"].iloc[3])
+    # intervalo: 2 dias ok | -5 (negativo) | 10 ok | 60 (>30) | ausente | 7 ok
+    assert df["FLAG_INTERVALO_INVALIDO"].tolist() == [0, 1, 0, 1, 1, 0]
+    assert df["INTERVALO_SINT_INTERNA_DIAS"].iloc[np.array([0, 2, 5])].tolist() == [2.0, 10.0, 7.0]
+    assert df["INTERVALO_SINT_INTERNA_DIAS"].iloc[np.array([1, 3, 4])].isna().all()
+    assert df["SIN_SEMANA"].between(-1, 1).all() and df["COS_SEMANA"].between(-1, 1).all()
+
+
+def test_derivadas_nao_dependem_do_desfecho(cfg):
+    import inspect
+    fonte = inspect.getsource(v.add_derived)
+    for proibido in ("EVOLUCAO", "dt_evoluca", "dt_encerra", "CLASSI_FIN"):
+        assert proibido not in fonte
+
+
+# ---------------------------------------------------------------------------
+# A3b — split aleatório e cenários
+# ---------------------------------------------------------------------------
+
+def test_split_aleatorio_proporcoes_estratos_e_reprodutibilidade():
+    n = 10_000
+    y = np.array(["1"] * 8_700 + ["2"] * 1_300)
+    a = v.split_aleatorio(n, y, seed=42)
+    b = v.split_aleatorio(n, y, seed=42)
+    c = v.split_aleatorio(n, y, seed=7)
+    assert (a == b).all() and not (a == c).all()
+
+    s = pd.Series(a)
+    assert s.value_counts().to_dict() == {"treino": 7000, "validacao": 1500, "holdout": 1500}
+    for classe, total in (("1", 8700), ("2", 1300)):
+        sub = pd.Series(a[y == classe]).value_counts()
+        assert abs(sub["treino"] - 0.70 * total) <= 1 and abs(sub["validacao"] - 0.15 * total) <= 1
+
+
+def test_split_por_ordem_e_cronologico():
+    t = pd.to_datetime(pd.Series(pd.date_range("2022-01-01", periods=1000))).sample(frac=1, random_state=1).to_numpy()
+    rot = v.split_por_ordem(t)
+    d = pd.DataFrame({"t": t, "r": rot})
+    assert d[d.r == "treino"].t.max() <= d[d.r == "validacao"].t.min()
+    assert d[d.r == "validacao"].t.max() <= d[d.r == "holdout"].t.min()
+
+
+def test_cenario_sem_2020_2021_exclui_os_anos(cfg, tmp_path):
+    base = v.make_demo(n=20_000, inicio="2019-01-01", anos=7)[0]
+    base.columns = [c.lower() for c in base.columns]
+    df = v.prepare(base)
+
+    y = _escrever_yaml(tmp_path, ["nu_idade_n", "idade_anos"], ["febre", "dispneia", "faixa_etaria"])
+    c2 = json.loads(json.dumps(cfg)); c2["dataset_analitico"]["path"] = str(tmp_path / "dataset.csv")
+    rep = v.Report(tmp_path)
+    cenarios = c2["experimentos_split"]["cenarios"]
+
+    m_todos = v.a3_split_aleatorio_cenario(df, c2, rep, "todos_2019_2025", cenarios["todos_2019_2025"]["anos"], y)
+    m_sem = v.a3_split_aleatorio_cenario(df, c2, rep, "sem_2020_2021", cenarios["sem_2020_2021"]["anos"], y)
+    d_todos = pd.read_csv(m_todos["arquivo"]); d_sem = pd.read_csv(m_sem["arquivo"])
+
+    assert {2019, 2020, 2021, 2022, 2023, 2024, 2025} <= set(d_todos["ano_internacao"].unique())
+    assert set(d_sem["ano_internacao"].unique()) == {2019, 2022, 2023, 2024, 2025}
+    assert len(d_sem) < len(d_todos)
+    assert set(d_todos["split"].unique()) == {"treino", "validacao", "holdout"}
+    assert abs(d_todos["split"].value_counts(normalize=True)["treino"] - 0.70) < 0.005
+
+    prev = d_todos.groupby("split")["evolucao"].apply(lambda s: (s == 2).mean())
+    assert prev.max() - prev.min() < 0.005
+
+    assert m_todos["arquivo"] != m_sem["arquivo"]
+    assert not [f for f in rep.findings if f[0] == "A3b" and f[2] == v.FAIL]
+
+    assert v.verificar_dataset_congelado(m_todos["arquivo"], rep) is True
+    with open(m_todos["arquivo"], "a", encoding="utf-8") as fh:
+        fh.write("\n")
+    assert v.verificar_dataset_congelado(m_todos["arquivo"], rep) is False
+
+
+def test_benchmark_aleatorio_x_temporal_e_comparacao(cfg, tmp_path):
+    base = v.make_demo(n=15_000, inicio="2019-01-01", anos=7)[0]
+    base.columns = [c.lower() for c in base.columns]
+    df = v.prepare(base)
+
+    y = _escrever_yaml(tmp_path, ["nu_idade_n", "idade_anos", "sin_semana", "cos_semana"],
+                       ["febre", "dispneia", "faixa_etaria"])
+    c2 = json.loads(json.dumps(cfg)); c2["dataset_analitico"]["path"] = str(tmp_path / "dataset.csv")
+    rep = v.Report(tmp_path)
+    metas, benchs = {}, {}
+
+    for nome, spec in c2["experimentos_split"]["cenarios"].items():
+        metas[nome] = v.a3_split_aleatorio_cenario(df, c2, rep, nome, spec["anos"], y)
+        benchs[nome] = v.a3_benchmark_split(metas[nome]["arquivo"], y, c2, rep, nome, max_rows=8_000)
+        assert {"aleatoria", "temporal_por_ordem"} == set(benchs[nome]["particao"])
+        lg = benchs[nome][benchs[nome]["modelo"] == "logistica"]
+        assert (lg["roc_auc"] > 0.6).all()      # sinal sintético (idade/dispneia) é aprendido
+
+    t = v.comparar_cenarios(metas, benchs, rep)
+    assert list(t["cenario"]) == ["todos_2019_2025", "sem_2020_2021"]
+    assert t.loc[0, "n_linhas"] > t.loc[1, "n_linhas"]
+    assert "pr_auc_aleatoria" in t.columns and "pr_auc_temporal_por_ordem" in t.columns
+
+
+def test_graficos_do_split_sao_gerados(cfg, tmp_path):
+    base = v.make_demo(n=12_000, inicio="2019-01-01", anos=7)[0]
+    base.columns = [c.lower() for c in base.columns]
+    df = v.prepare(base)
+
+    y = _escrever_yaml(tmp_path, ["nu_idade_n"], ["febre", "dispneia"])
+    c2 = json.loads(json.dumps(cfg)); c2["dataset_analitico"]["path"] = str(tmp_path / "dataset.csv")
+    rep = v.Report(tmp_path)
+    nomes = list(c2["experimentos_split"]["cenarios"])
+
+    for nome in nomes:
+        v.a3_split_aleatorio_cenario(df, c2, rep, nome, c2["experimentos_split"]["cenarios"][nome]["anos"], y)
+
+    figs = tmp_path / "figs"
+    pngs = [v.grafico_split_cenario(rep, c2, n, c2["experimentos_split"]["cenarios"][n]["anos"], figs) for n in nomes]
+    pngs.append(v.grafico_comparacao_cenarios(rep, c2, nomes, figs))
+
+    for p in pngs:
+        assert p.exists() and p.stat().st_size > 10_000 and p.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    assert {p.name for p in pngs} == {"split_todos_2019_2025.png", "split_sem_2020_2021.png", "split_comparacao_cenarios.png"}
+
+
+# ---------------------------------------------------------------------------
+# A4 — tabela de decisão e registo
+# ---------------------------------------------------------------------------
+
+def test_decision_table_alerta_complexidade_sem_ganho(cfg, tmp_path):
+    res = pd.DataFrame({"modelo": ["baseline"] * 2 + ["logistica"] * 2 + ["boosting"] * 2,
+                        "pr_auc": [.15, .15, .40, .40, .401, .401], "roc_auc": [.5] * 2 + [.8] * 2 + [.8] * 2,
+                        "brier": [.15] * 2 + [.10] * 2 + [.11] * 2})
+    rep = v.Report(tmp_path)
+    v.a4_decision_table(res, cfg, rep)
+    t = pd.read_csv(tmp_path / "a4_tabela_decisao.csv")
+    assert "não justifica" in t.loc[t["modelo"] == "boosting", "alertas_automaticos"].iloc[0]
+
+
+def test_log_decision_upsert(tmp_path):
+    v.log_decision(tmp_path, "D-01", "tema", "a")
+    t = v.log_decision(tmp_path, "D-01", "tema", "b")
+    assert len(t) == 1 and t.loc[0, "decisao"] == "b"
+
+
+# ---------------------------------------------------------------------------
+# Leitura compacta — colunas ``category``
+# ---------------------------------------------------------------------------
+
+def test_resultados_iguais_com_colunas_category(cfg, tmp_path):
+    """O resultado do A1/A2 não muda quando o texto é lido como ``category``."""
+    base = _base_texto()
+    d_txt, d_cat = v.prepare(base.copy()), v.prepare(_como_categoria(base))
+    r1, r2 = v.Report(tmp_path / "txt"), v.Report(tmp_path / "cat")
+
+    wf1, wf2 = v.a1_waterfall(d_txt, cfg, r1), v.a1_waterfall(d_cat, cfg, r2)
+    assert wf1[["n_excluido", "n_restante"]].equals(wf2[["n_excluido", "n_restante"]])
+
+    c1, c2 = v.a1_cohort(d_txt, cfg), v.a1_cohort(d_cat, cfg)
+    assert len(c1) == len(c2) and c1["_alvo"].sum() == c2["_alvo"].sum()
+
+    for fn in (v.a2_missing, v.a2_dates, v.a2_duplicates, v.a2_maturity, v.a2_eligibility):
+        fn(d_txt, cfg, r1)
+        fn(d_cat, cfg, r2)
+
+    d1 = pd.read_csv(tmp_path / "txt" / "a2_coerencia_datas.csv")
+    d2 = pd.read_csv(tmp_path / "cat" / "a2_coerencia_datas.csv")
+    assert d1[["regra", "n_violacoes"]].equals(d2[["regra", "n_violacoes"]])
+    assert [f[2] for f in r1.findings] == [f[2] for f in r2.findings]
+
+
+def test_export_e_vazamento_com_category(cfg, tmp_path):
+    y = _escrever_yaml(tmp_path, ["nu_idade_n", "idade_anos"], ["febre", "faixa_etaria", "cs_sexo"])
+    df = v.prepare(_como_categoria(_base_texto()))
+    c2 = json.loads(json.dumps(cfg)); c2["dataset_analitico"]["path"] = str(tmp_path / "d.csv")
+    rep = v.Report(tmp_path)
+
+    meta = v.a3_split_aleatorio_cenario(df, c2, rep, "todos_2019_2025", [2019, 2020, 2021, 2022, 2023, 2024, 2025], y)
+    assert meta["n_linhas"] > 0 and v.validar_contrato_c2(meta["arquivo"], y, rep) is True
+
+    v.a3_leak_scan(v.a1_cohort(df, c2), c2, rep)
+    assert not [f for f in rep.findings if f[2] == v.FAIL]
+
+
+# ---------------------------------------------------------------------------
+# Colunas necessárias do Parquet
+# ---------------------------------------------------------------------------
+
+def test_colunas_minimas_sao_menos_que_as_classificadas(cfg):
+    schema = ["nu_notific", "hospital", "evolucao", "dt_interna", "dt_notific", "dt_sin_pri", "nu_idade_n", "tp_idade",
+              "uti", "antiviral", "vacina_cov", "cs_raca", "coluna_x", "febre"]
+    minimas = v.colunas_necessarias(schema, cfg, None, modo="minimas")
+    classif = v.colunas_necessarias(schema, cfg, None, modo="classificadas")
+    assert set(minimas) < set(classif)
+    assert {"hospital", "evolucao", "dt_interna", "nu_idade_n", "tp_idade", "dt_sin_pri"} <= set(minimas)
+    assert not ({"antiviral", "vacina_cov", "coluna_x"} & set(minimas))
+    assert {"antiviral", "vacina_cov"} <= set(classif)
 ```
 
 ## `tests/test_reproducibility.py`
 
 - Git: `tracked` · status `clean`
-- Size: `4.0 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `c367348592478012dcbca5811d54e17a7ef667ee43f9c2b1eaeedd0dacb63382`
+- Size: `5.1 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `27ce4e8b0f95c728593a299998f26b53c8c39feb88b531a56c125f251acc6194`
 
 ```python
-"""Testes do registro de execuções."""
+"""Testes do registro de execuções (``src.utils.reproducibility``)."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -2390,9 +1808,24 @@ from src.utils import config as C
 from src.utils import reproducibility as R
 
 
-def _ler_meta(pasta: Path) -> dict:
+# Campos que ``registrar_execucao`` deve sempre gravar no metadata.
+# Serve como armadilha contra remoções silenciosas na estrutura do dict.
+_CAMPOS_METADATA: tuple[str, ...] = (
+    "run_id", "timestamp", "modelo", "seed", "status",
+    "parametros", "dataset", "metricas", "features",
+    "duracao_s", "erro", "data_version", "gates", "versoes",
+    "git", "env", "notas", "dataset_sha256", "supervised_yaml_sha256",
+)
+
+
+def _ler_meta(pasta: Path) -> dict[str, Any]:
+    """Lê ``metadata.json`` de uma execução."""
     return json.loads((pasta / "metadata.json").read_text(encoding="utf-8"))
 
+
+# ---------------------------------------------------------------------------
+# registrar_execucao — estrutura e conteúdo
+# ---------------------------------------------------------------------------
 
 def test_registrar_execucao_cria_pasta(tmp_path: Path) -> None:
     pasta = R.registrar_execucao(
@@ -2419,22 +1852,7 @@ def test_metadata_tem_campos_obrigatorios(tmp_path: Path) -> None:
     )
     meta = _ler_meta(pasta)
 
-    for chave in (
-        "run_id",
-        "timestamp",
-        "modelo",
-        "seed",
-        "parametros",
-        "dataset",
-        "metricas",
-        "versoes",
-        "git",
-        "env",
-        "duracao_s",
-        "status",
-        "data_version",
-        "gates",
-    ):
+    for chave in _CAMPOS_METADATA:
         assert chave in meta
 
     assert meta["seed"] == 7
@@ -2448,11 +1866,20 @@ def test_metadata_grava_data_version(tmp_path: Path) -> None:
 
 
 def test_metadata_grava_gates(tmp_path: Path) -> None:
-    pasta = R.registrar_execucao(modelo="gates", output_dir=tmp_path)
-    meta = _ler_meta(pasta)
+    meta = _ler_meta(R.registrar_execucao(modelo="gates", output_dir=tmp_path))
     assert isinstance(meta["gates"], dict)
     assert "G9_holdout" in meta["gates"]
 
+
+def test_seed_padrao_vem_do_config(tmp_path: Path) -> None:
+    """Sem ``seed`` explícito, usa ``config.SEED``."""
+    pasta = R.registrar_execucao(modelo="seed_default", output_dir=tmp_path)
+    assert _ler_meta(pasta)["seed"] == C.SEED
+
+
+# ---------------------------------------------------------------------------
+# Run como context manager
+# ---------------------------------------------------------------------------
 
 def test_run_context_manager_sucesso(tmp_path: Path) -> None:
     r: R.Run | None = None
@@ -2487,18 +1914,27 @@ def test_run_registra_excecao(tmp_path: Path) -> None:
 
 
 def test_run_nao_suprime_excecao(tmp_path: Path) -> None:
-    """O `__exit__` retorna False — a exceção propaga."""
+    """O ``__exit__`` devolve ``False`` — a exceção propaga."""
     with pytest.raises(ValueError):
         with R.Run(modelo="propaga", output_dir=tmp_path):
             raise ValueError("propaga")
 
 
+# ---------------------------------------------------------------------------
+# gerar_run_id
+# ---------------------------------------------------------------------------
+
 def test_run_id_unico(tmp_path: Path) -> None:
+    """Sufixo ``_NN`` evita colisão quando o ID base já existe."""
     a = R.gerar_run_id(modelo="dup", base_dir=tmp_path)
     (tmp_path / a).mkdir()
     b = R.gerar_run_id(modelo="dup", base_dir=tmp_path)
     assert a != b
 
+
+# ---------------------------------------------------------------------------
+# listar_runs / carregar_run
+# ---------------------------------------------------------------------------
 
 def test_listar_e_carregar(tmp_path: Path) -> None:
     R.registrar_execucao(modelo="a", output_dir=tmp_path)
@@ -2509,25 +1945,20 @@ def test_listar_e_carregar(tmp_path: Path) -> None:
 
     meta = R.carregar_run(runs[0]["run_id"], output_dir=tmp_path)
     assert meta["modelo"] in {"a", "b"}
-
-
-def test_seed_padrao_vem_do_config(tmp_path: Path) -> None:
-    pasta = R.registrar_execucao(modelo="seed_default", output_dir=tmp_path)
-    assert _ler_meta(pasta)["seed"] == C.SEED
 ```
 
 ## `tests/test_smoke.py`
 
 - Git: `tracked` · status `clean`
-- Size: `2.7 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `5cc267b0d1f02be909010b1235e5e1f93753fdbe86b4a3a85f74429424e9c59b`
+- Size: `3.2 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `f3161fc26862baaf40b068430fdf0f334f7c016964efec5340d393f3fbe782bc`
 
 ```python
 """
-Smoke tests: o dataset existe, abre, tem colunas e registros?
+Smoke tests do Parquet de SRAG.
 
-Todos os testes são marcados como `slow` via `pytestmark`.
-Rode com: pytest -m slow
+Verificam que o dataset existe, abre, tem o schema esperado e produz uma
+saída mínima. Todos os testes são marcados ``slow`` via ``pytestmark``.
 """
 
 from __future__ import annotations
@@ -2535,17 +1966,22 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
-from src.utils import config as C
+from src.utils import storage
 
 
 pytestmark = pytest.mark.slow
 
 
+# Colunas mínimas esperadas no SRAG; ajustar conforme o dicionário de dados.
+COLUNAS_ESPERADAS: frozenset[str] = frozenset({"sg_uf", "dt_notific"})
+
+
 @pytest.fixture
 def parquet(parquet_disponivel: Path | None) -> Path:
-    """Versão obrigatória de `parquet_disponivel`, com skip se ausente."""
+    """``parquet_disponivel`` obrigatório — faz skip se ausente."""
     if parquet_disponivel is None:
         pytest.skip(
             "Nenhum Parquet encontrado. Rode 00_acesso_dados_parquet.ipynb "
@@ -2554,8 +1990,18 @@ def parquet(parquet_disponivel: Path | None) -> Path:
     return parquet_disponivel
 
 
-def test_parquet_existe(parquet: Path) -> None:
-    assert parquet.exists()
+@pytest.fixture(scope="module")
+def schema_colunas(parquet: Path) -> set[str]:
+    """Nome das colunas do Parquet — lido uma vez por módulo."""
+    return set(pq.read_schema(parquet).names)
+
+
+# ---------------------------------------------------------------------------
+# Estrutura do arquivo
+# ---------------------------------------------------------------------------
+
+def test_parquet_existe_e_nao_vazio(parquet: Path) -> None:
+    assert parquet.is_file()
     assert parquet.stat().st_size > 0
 
 
@@ -2565,46 +2011,36 @@ def test_parquet_tem_magic_bytes(parquet: Path) -> None:
     assert magic == b"PAR1", f"Arquivo não é Parquet válido (magic={magic!r})"
 
 
-def test_parquet_abre(parquet: Path) -> None:
-    import pyarrow.parquet as pq
-
-    schema = pq.read_schema(parquet)
-    assert len(schema.names) > 0
+def test_parquet_abre(schema_colunas: set[str]) -> None:
+    assert schema_colunas
 
 
-def test_parquet_tem_colunas_esperadas(parquet: Path) -> None:
-    import pyarrow.parquet as pq
+def test_parquet_tem_colunas_esperadas(schema_colunas: set[str]) -> None:
+    faltando = COLUNAS_ESPERADAS - schema_colunas
+    assert not faltando, f"Colunas ausentes: {sorted(faltando)}"
 
-    colunas = set(pq.read_schema(parquet).names)
 
-    # Colunas mínimas esperadas no SRAG; ajustar conforme o dicionário de dados.
-    esperadas = {"sg_uf", "dt_notific"}
-    faltando = esperadas - colunas
-
-    assert not faltando, f"Colunas ausentes: {faltando}"
-
+# ---------------------------------------------------------------------------
+# Leitura via pandas
+# ---------------------------------------------------------------------------
 
 def test_parquet_tem_registros(parquet: Path) -> None:
     df = pd.read_parquet(parquet, columns=["sg_uf"])
     assert len(df) > 0
 
 
-def test_leitura_de_uma_coluna(parquet: Path) -> None:
-    df = pd.read_parquet(parquet, columns=["sg_uf"])
-    assert df.shape[1] == 1
-    assert "sg_uf" in df.columns
-
-
 def test_produz_saida_pequena(parquet: Path) -> None:
-    """Confirma que conseguimos produzir uma saída minúscula — o smoke final."""
+    """O smoke final — produzir uma saída minúscula funciona ponta-a-ponta."""
     df = pd.read_parquet(parquet, columns=["sg_uf"]).head(10)
     assert len(df) == 10
-    assert df["sg_uf"].value_counts().sum() == 10
 
+
+# ---------------------------------------------------------------------------
+# Leitura via storage.read_srag
+# ---------------------------------------------------------------------------
 
 def test_storage_read_srag(parquet: Path) -> None:
-    from src.utils import storage
-
+    """``storage.read_srag`` devolve DataFrame não vazio com as colunas pedidas."""
     df = storage.read_srag(columns=["sg_uf"])
     assert isinstance(df, pd.DataFrame)
     assert len(df) > 0
@@ -2612,13 +2048,12 @@ def test_storage_read_srag(parquet: Path) -> None:
 
 
 def test_storage_read_srag_com_filtro(parquet: Path) -> None:
-    from src.utils import storage
-
+    """O filtro ``sg_uf == "SP"`` é aplicado no lado do Parquet."""
     df = storage.read_srag(
         columns=["sg_uf"],
         filters=[("sg_uf", "==", "SP")],
     )
-    if len(df) == 0:
+    if df.empty:
         pytest.skip("Nenhum registro de SP no dataset.")
     assert (df["sg_uf"] == "SP").all()
 ```
@@ -2626,20 +2061,21 @@ def test_storage_read_srag_com_filtro(parquet: Path) -> None:
 ## `tests/test_split.py`
 
 - Git: `tracked` · status `clean`
-- Size: `8.1 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `de8ce98ef31c3f1017ac6bd0204b2df988db9c59b1a4d4b51d058e74f35b9ad5`
+- Size: `9.4 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `64427eee86a2c645dc367875cc93b984d65d716716fba3d1f498931894ab98e3`
 
 ```python
 """
-Testes para `src.data.split.criar_particoes_agrupadas`.
+Testes para ``src.data.split.criar_particoes_agrupadas``.
 
 Invariantes:
-    1. nenhum grupo em mais de uma partição;
-    2. proporções de linhas próximas de 70/15/15 (com tolerância);
-    3. mesma seed → mesma partição.
 
-Cobrem ainda: políticas de estratos pequenos, grupos com alvo
-heterogêneo (raise/warn) e validações de parâmetros/colunas.
+1. nenhum grupo em mais de uma partição;
+2. proporções de linhas próximas de 70/15/15 (com tolerância);
+3. mesma seed → mesma partição.
+
+Cobrem também políticas de estratos pequenos, grupos com alvo
+heterogéneo (raise/warn) e validações de parâmetros/colunas.
 """
 
 from __future__ import annotations
@@ -2657,16 +2093,17 @@ from src.data.split import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Fixtures sintéticas
+# ---------------------------------------------------------------------------
+
 def _df_estratificado(
     n_grupos_classe0: int = 30,
     n_grupos_classe1: int = 20,
     linhas_por_grupo: int = 3,
     seed: int = 0,
 ) -> pd.DataFrame:
-    """
-    DataFrame com grupos homogêneos (alvo constante por grupo)
-    e duas classes bem representadas.
-    """
+    """DataFrame com grupos homogéneos (alvo constante por grupo)."""
     rng = np.random.default_rng(seed)
     linhas = []
     gid = 0
@@ -2676,14 +2113,12 @@ def _df_estratificado(
             gid += 1
             n = int(rng.integers(1, linhas_por_grupo + 1))
             for i in range(n):
-                linhas.append(
-                    {
-                        "nu_notific": grupo,
-                        "alvo": classe,
-                        "valor": float(rng.normal()),
-                        "idx_linha": i,
-                    }
-                )
+                linhas.append({
+                    "nu_notific": grupo,
+                    "alvo": classe,
+                    "valor": float(rng.normal()),
+                    "idx_linha": i,
+                })
     return pd.DataFrame(linhas)
 
 
@@ -2691,7 +2126,7 @@ def _df_grande(
     n_grupos_classe0: int = 700,
     n_grupos_classe1: int = 300,
 ) -> pd.DataFrame:
-    """Base grande o bastante para checar proporções com folga."""
+    """Base grande o suficiente para checar proporções com folga."""
     return _df_estratificado(
         n_grupos_classe0=n_grupos_classe0,
         n_grupos_classe1=n_grupos_classe1,
@@ -2700,8 +2135,21 @@ def _df_grande(
     )
 
 
+def _df_com_estrato_pequeno() -> pd.DataFrame:
+    """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
+    return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
+
+
+def _df_com_grupo_heterogeneo() -> pd.DataFrame:
+    """``g0000`` (classe 0) recebe uma linha com alvo=1."""
+    df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
+    idx = df.index[df["nu_notific"] == "g0000"][0]
+    df.loc[idx, "alvo"] = 1
+    return df
+
+
 def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
-    """Chama `criar_particoes_agrupadas` com os defaults dos testes."""
+    """``criar_particoes_agrupadas`` com os defaults dos testes."""
     params: dict[str, Any] = {
         "target_column": "alvo",
         "group_column": "nu_notific",
@@ -2711,48 +2159,47 @@ def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
     return criar_particoes_agrupadas(df, **params)
 
 
-def test_grupos_nao_cruzam_particoes() -> None:
-    out = _split(_df_estratificado(), seed=42)
+def _assert_proporcoes(contagem: pd.Series, tol: float = 0.05) -> None:
+    """Asserts de 70/15/15 sobre ``value_counts(normalize=True)``."""
+    assert abs(contagem["treino"] - 0.70) < tol, contagem
+    assert abs(contagem["validacao"] - 0.15) < tol, contagem
+    assert abs(contagem["teste"] - 0.15) < tol, contagem
 
-    grupos_por_particao = (
-        out.groupby("nu_notific", observed=True)["particao"].nunique()
-    )
+
+# ---------------------------------------------------------------------------
+# Invariantes de partição
+# ---------------------------------------------------------------------------
+
+def test_grupos_nao_cruzam_particoes() -> None:
+    """Nenhum ``nu_notific`` aparece em mais de uma partição."""
+    out = _split(_df_estratificado(), seed=42)
+    grupos_por_particao = out.groupby("nu_notific", observed=True)["particao"].nunique()
     assert (grupos_por_particao == 1).all(), (
-        "Algum grupo aparece em mais de uma partição:\n"
-        f"{grupos_por_particao[grupos_por_particao > 1]}"
+        f"Grupos em mais de uma partição:\n{grupos_por_particao[grupos_por_particao > 1]}"
     )
 
 
 def test_nenhuma_linha_perdida() -> None:
     df = _df_estratificado()
     out = _split(df, seed=42)
-
     assert len(out) == len(df)
     assert set(out["particao"].unique()) == set(PARTICOES_CANONICAS)
 
 
+# ---------------------------------------------------------------------------
+# Proporções 70/15/15
+# ---------------------------------------------------------------------------
+
 def test_proporcoes_linhas_proximas_de_70_15_15() -> None:
+    """Grupos são atómicos; a proporção real de linhas oscila em torno do alvo."""
     out = _split(_df_grande(), seed=42)
-
-    contagem = out["particao"].value_counts(normalize=True)
-    # Grupos são atômicos; a proporção real de linhas oscila em torno do alvo.
-    tol = 0.05
-
-    assert abs(contagem["treino"] - 0.70) < tol, contagem
-    assert abs(contagem["validacao"] - 0.15) < tol, contagem
-    assert abs(contagem["teste"] - 0.15) < tol, contagem
+    _assert_proporcoes(out["particao"].value_counts(normalize=True))
 
 
 def test_proporcoes_grupos_proximas_de_70_15_15() -> None:
     out = _split(_df_grande(), seed=42)
-
     por_grupo = out.groupby("nu_notific", observed=True)["particao"].first()
-    contagem = por_grupo.value_counts(normalize=True)
-    tol = 0.05
-
-    assert abs(contagem["treino"] - 0.70) < tol, contagem
-    assert abs(contagem["validacao"] - 0.15) < tol, contagem
-    assert abs(contagem["teste"] - 0.15) < tol, contagem
+    _assert_proporcoes(por_grupo.value_counts(normalize=True))
 
 
 def test_estratificacao_preserva_proporcao_aproximada() -> None:
@@ -2765,7 +2212,12 @@ def test_estratificacao_preserva_proporcao_aproximada() -> None:
         assert abs(sub["alvo"].mean() - prevalencia_global) < 0.10
 
 
+# ---------------------------------------------------------------------------
+# Reprodutibilidade por seed
+# ---------------------------------------------------------------------------
+
 def test_reprodutibilidade_mesma_seed() -> None:
+    """Mesma seed → mesmas partições."""
     df = _df_estratificado()
     a = _split(df, seed=7)
     b = _split(df, seed=7)
@@ -2779,10 +2231,9 @@ def test_seeds_diferentes_produzem_splits_diferentes() -> None:
     assert not a["particao"].equals(b["particao"])
 
 
-def _df_com_estrato_pequeno() -> pd.DataFrame:
-    """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
-    return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
-
+# ---------------------------------------------------------------------------
+# Estratos pequenos — 4 políticas
+# ---------------------------------------------------------------------------
 
 def test_estrato_pequeno_raise_e_default() -> None:
     with pytest.raises(ValueError, match="Estrato"):
@@ -2801,10 +2252,7 @@ def test_estrato_pequeno_warn_teste_manda_para_teste() -> None:
 
 def test_estrato_pequeno_warn_treino_manda_para_treino() -> None:
     with pytest.warns(SplitWarning, match="Destinando ao treino"):
-        out = _split(
-            _df_com_estrato_pequeno(),
-            politica_estratos_pequenos="warn_treino",
-        )
+        out = _split(_df_com_estrato_pequeno(), politica_estratos_pequenos="warn_treino")
 
     linhas_classe1 = out[out["alvo"] == 1]
     assert (linhas_classe1["particao"] == "treino").all()
@@ -2820,12 +2268,9 @@ def test_estrato_pequeno_drop_remove_linhas() -> None:
     assert set(out["particao"].unique()).issubset(set(PARTICOES_CANONICAS))
 
 
-def _df_com_grupo_heterogeneo() -> pd.DataFrame:
-    df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
-    idx = df.index[df["nu_notific"] == "g0000"][0]
-    df.loc[idx, "alvo"] = 1
-    return df
-
+# ---------------------------------------------------------------------------
+# Grupos com alvo heterogéneo
+# ---------------------------------------------------------------------------
 
 def test_grupo_heterogeneo_raise() -> None:
     with pytest.raises(ValueError, match="mais de um valor distinto"):
@@ -2834,11 +2279,12 @@ def test_grupo_heterogeneo_raise() -> None:
 
 def test_grupo_heterogeneo_warn() -> None:
     with pytest.warns(SplitWarning, match="mais de um valor distinto"):
-        _split(
-            _df_com_grupo_heterogeneo(),
-            on_grupo_alvo_heterogeneo="warn",
-        )
+        _split(_df_com_grupo_heterogeneo(), on_grupo_alvo_heterogeneo="warn")
 
+
+# ---------------------------------------------------------------------------
+# Validação de parâmetros e colunas
+# ---------------------------------------------------------------------------
 
 def test_coluna_alvo_ausente() -> None:
     with pytest.raises(KeyError, match="alvo"):
@@ -2865,17 +2311,18 @@ def test_partition_column_ja_existente() -> None:
         _split(df)
 
 
-def test_frac_invalida() -> None:
-    df = _df_estratificado()
-
-    with pytest.raises(ValueError, match="frac_treino"):
-        _split(df, frac_treino=0.0)
-
-    with pytest.raises(ValueError, match="frac_validacao"):
-        _split(df, frac_validacao=1.5)
-
-    with pytest.raises(ValueError, match="< 1"):
-        _split(df, frac_treino=0.7, frac_validacao=0.4)
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"frac_treino": 0.0}, "frac_treino"),
+        ({"frac_validacao": 1.5}, "frac_validacao"),
+        ({"frac_treino": 0.7, "frac_validacao": 0.4}, "< 1"),
+    ],
+    ids=["frac_treino_zero", "frac_validacao_acima", "soma_maior_que_1"],
+)
+def test_frac_invalida(kwargs: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        _split(_df_estratificado(), **kwargs)
 
 
 def test_min_grupos_abaixo_de_3() -> None:
@@ -2884,26 +2331,29 @@ def test_min_grupos_abaixo_de_3() -> None:
 
 
 def test_politica_invalida() -> None:
+    # Valor viola intencionalmente o Literal PoliticaEstratosPequenos.
     with pytest.raises(ValueError, match="politica_estratos_pequenos"):
-        _split(
-            _df_estratificado(),
-            politica_estratos_pequenos="qualquer_coisa",  # type: ignore[arg-type]
-        )
+        _split(_df_estratificado(), politica_estratos_pequenos="qualquer_coisa")  # type: ignore[arg-type]
 
 
 def test_df_vazio() -> None:
-    df = pd.DataFrame({"alvo": [], "nu_notific": []})
     with pytest.raises(ValueError, match="vazio"):
-        _split(df)
+        _split(pd.DataFrame({"alvo": [], "nu_notific": []}))
 ```
 
 ## `tests/test_supervised_artifact.py`
 
 - Git: `tracked` · status `clean`
-- Size: `1.9 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `dd95bce9cc1e63a8fd9f834a51523e5f66239ae37688c881a057d708a6aa80f3`
+- Size: `3.0 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `a96b43cbaabb4dfc300bb4984a27705cea7d68b5c33607eedd157aeb1b2b7d44`
 
 ```python
+"""Testes do artefacto supervisionado (``src.data.supervised_artifact``).
+
+Cobrem o contrato de persistência/leitura: preservação da partição,
+validação do tipo de coorte e exigência das três partições.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -2919,49 +2369,58 @@ from src.data.supervised_artifact import (
 
 
 def _frame() -> pd.DataFrame:
-    return pd.DataFrame(
-        {
-            "idade_anos": [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
-            "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
-            "particao": [
-                "treino",
-                "treino",
-                "validacao",
-                "validacao",
-                "teste",
-                "teste",
-            ],
-        }
-    )
+    """6 registos — 2 por partição, alvo alternado (0/1).
+
+    Colunas mínimas para os testes: uma feature numérica, o alvo binário
+    e a coluna de partição.
+    """
+    return pd.DataFrame({
+        "idade_anos":      [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
+        "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
+        "particao":        ["treino", "treino", "validacao", "validacao", "teste", "teste"],
+    })
 
 
 def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
+    """Grava ``frame`` como artefacto supervisionado em ``tmp_path``.
+
+    Preenche os kwargs obrigatórios com valores mínimos e deixa
+    ``**kwargs`` sobrepor (ex.: ``source`` com conteúdo).
+    """
     params: dict[str, Any] = {
-        "source": {},
-        "feature_columns": ["idade_anos"],
-        "target_column": "alvo_obito_srag",
+        "source":           {},
+        "feature_columns":  ["idade_anos"],
+        "target_column":    "alvo_obito_srag",
         "partition_column": "particao",
-        "cohort_kind": "provisional",
-        "seed": 42,
+        "cohort_kind":      "provisional",
+        "seed":             42,
     }
     params.update(kwargs)
     persist_supervised_artifact(frame, root=tmp_path, **params)
 
 
+# ---------------------------------------------------------------------------
+# Contrato de round-trip
+# ---------------------------------------------------------------------------
+
 def test_roundtrip_preserva_particao(tmp_path: Path) -> None:
+    """Gravar e ler preserva a partição, e o manifesto regista o estado inicial."""
     frame = _frame()
     _persistir(tmp_path, frame, source={"kind": "provisional", "sha256": "abc"})
 
-    loaded, manifest = load_supervised_artifact(
-        tmp_path, expected_kind="provisional"
-    )
+    loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
 
     assert loaded["particao"].tolist() == frame["particao"].tolist()
     assert manifest["test_opened"] is False
     assert manifest["seed"] == 42
 
 
+# ---------------------------------------------------------------------------
+# Validações
+# ---------------------------------------------------------------------------
+
 def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
+    """Ler com ``expected_kind`` diferente do gravado deve falhar."""
     _persistir(tmp_path, _frame())
 
     with pytest.raises(RuntimeError, match="SRAG_COHORT_KIND"):
@@ -2969,6 +2428,7 @@ def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
 
 
 def test_particoes_incompletas_falham(tmp_path: Path) -> None:
+    """Dataset sem o bloco ``teste`` viola o contrato de partições."""
     frame = _frame().query("particao != 'teste'")
 
     with pytest.raises(ValueError, match="Particoes esperadas"):
@@ -2978,11 +2438,11 @@ def test_particoes_incompletas_falham(tmp_path: Path) -> None:
 ## `tests/test_target.py`
 
 - Git: `tracked` · status `clean`
-- Size: `2.7 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `c5bfc13ebc0a5452dec02eb1aedad9d1f8ee95274e7d36aef77912207a31c957`
+- Size: `3.7 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `d85c2169acc6f5354bd755e57e581a19a479be160515fcbac3260b4fcfb21aa7`
 
 ```python
-"""Contrato do alvo binário: `evolucao` → {0, 1, NaN}."""
+"""Contrato do alvo binário: ``evolucao`` → {0, 1, NaN}."""
 
 from __future__ import annotations
 
@@ -2991,32 +2451,40 @@ import pandas as pd
 import pytest
 
 from src.models.pipeline import criar_alvo_binario, filtrar_rotulos_validos
+from src.utils import config as C
 
 
-def _df(valores: list) -> pd.DataFrame:
+def _df(valores: list[float | None]) -> pd.DataFrame:
+    """DataFrame ``{"evolucao": valores, "feat": range(n)}``.
+
+    A coluna ``feat`` serve como índice rastreável nas asserts.
+    """
     return pd.DataFrame({"evolucao": valores, "feat": range(len(valores))})
 
 
-def test_positivo_e_um() -> None:
-    y = criar_alvo_binario(_df([2.0, 2.0]))
-    assert y.tolist() == [1.0, 1.0]
+# ---------------------------------------------------------------------------
+# Mapeamento evolucao → {0, 1, NaN}
+# ---------------------------------------------------------------------------
 
-
-def test_negativo_e_zero() -> None:
-    y = criar_alvo_binario(_df([1.0, 1.0]))
-    assert y.tolist() == [0.0, 0.0]
-
-
-def test_codigos_3_e_9_viram_nan() -> None:
-    y = criar_alvo_binario(_df([3.0, 9.0]))
-    assert y.isna().all()
-
-
-def test_nan_de_entrada_permanece_nan() -> None:
-    y = criar_alvo_binario(_df([np.nan, 1.0, 2.0]))
-    assert pd.isna(y.iloc[0])
-    assert y.iloc[1] == 0.0
-    assert y.iloc[2] == 1.0
+@pytest.mark.parametrize(
+    "entrada, esperado",
+    [
+        ([2.0],       [1.0]),
+        ([1.0],       [0.0]),
+        ([3.0],       [float("nan")]),
+        ([9.0],       [float("nan")]),
+        ([np.nan],    [float("nan")]),
+    ],
+    ids=["positivo", "negativo", "codigo_3", "codigo_9", "nan_entrada"],
+)
+def test_mapeamento_puro(entrada, esperado) -> None:
+    """``2.0``→1, ``1.0``→0, qualquer outro→NaN."""
+    y = criar_alvo_binario(_df(entrada))
+    for obtido, esperado_valor in zip(y, esperado):
+        if pd.isna(esperado_valor):
+            assert pd.isna(obtido)
+        else:
+            assert obtido == esperado_valor
 
 
 def test_mistura_completa() -> None:
@@ -3026,11 +2494,13 @@ def test_mistura_completa() -> None:
     assert y.iloc[2:].isna().all()
 
 
+# ---------------------------------------------------------------------------
+# filtrar_rotulos_validos
+# ---------------------------------------------------------------------------
+
 def test_filtrar_remove_nan() -> None:
     df = _df([1.0, 2.0, 3.0, 9.0, np.nan])
-    X = df[["feat"]]
-    y = criar_alvo_binario(df)
-    X_ok, y_ok = filtrar_rotulos_validos(X, y)
+    X_ok, y_ok = filtrar_rotulos_validos(df[["feat"]], criar_alvo_binario(df))
 
     assert len(y_ok) == 2
     assert y_ok.dtype == np.int8
@@ -3044,6 +2514,10 @@ def test_filtrar_exige_indice_alinhado() -> None:
     with pytest.raises(ValueError, match="mesmo índice"):
         filtrar_rotulos_validos(X, y)
 
+
+# ---------------------------------------------------------------------------
+# Validação de argumentos
+# ---------------------------------------------------------------------------
 
 def test_positivos_e_negativos_nao_se_sobrepoem() -> None:
     with pytest.raises(ValueError, match="sobrepor"):
@@ -3060,40 +2534,34 @@ def test_negativos_vazio_levanta() -> None:
         criar_alvo_binario(_df([1.0, 2.0]), positivos=[2.0], negativos=[])
 
 
-def test_default_vem_do_yaml() -> None:
-    """Sem argumentos, usa `target.positivos` e `target.negativos` do YAML."""
-    from src.utils import config as C
+# ---------------------------------------------------------------------------
+# Default vem do YAML
+# ---------------------------------------------------------------------------
 
+def test_default_vem_do_yaml() -> None:
+    """Sem argumentos, usa ``target.positivos`` e ``target.negativos`` do YAML."""
     pos = C.cfg("target", "positivos")
     neg = C.cfg("target", "negativos")
     assert pos, "target.positivos precisa estar definido no YAML"
     assert neg, "target.negativos precisa estar definido no YAML"
 
-    df = _df([float(pos[0]), float(neg[0])])
-    y = criar_alvo_binario(df)
+    y = criar_alvo_binario(_df([float(pos[0]), float(neg[0])]))
     assert y.tolist() == [1.0, 0.0]
 ```
 
 ## `tests/test_temporal.py`
 
 - Git: `tracked` · status `clean`
-- Size: `4.5 KB` · modified `2026-10-15 01:27 UTC`
-- SHA-256: `43361fd0913d4997cd6e576c48880d882cd9624f8c9ba30d2a5bb5410b0487ed`
+- Size: `5.9 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `8f3be3964a5456ddc4a6588aafc2c382e7525bc613eb9bb1d2ca25cd41a93fd0`
 
 ```python
 """
-Testes anti-vazamento de dados.
+Testes do split temporal em três blocos e da trava do holdout.
 
-Protegem contra:
-- inclusão do alvo nas features;
-- inclusão de colunas posteriores ao desfecho;
-- duplicação de identificadores quando houver chave adequada.
-
-Split temporal e trava do gate ``G9_holdout`` são testados em
-``tests/test_temporal.py`` — não duplicar aqui.
-
-Fonte única de verdade: `configs/supervised.yaml`, lido via
-`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
+Cobrem garantia de não sobreposição temporal, validação de frações e
+coluna temporal, tratamento de ``NaT`` e liberação do holdout apenas com
+``G9_holdout`` aprovado.
 """
 
 from __future__ import annotations
@@ -3101,141 +2569,318 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from src.evaluation.temporal import TemporalSplit, split_temporal_3way
 from src.utils import config as C
 
 
 @pytest.fixture
-def proibidas() -> set[str]:
-    """Colunas proibidas declaradas em `features.proibidas` do YAML."""
-    return set(C.cfg("features", "proibidas") or [])
+def df_temporal() -> pd.DataFrame:
+    """100 dias consecutivos a partir de 2020-01-01, coluna ``x`` = range(100)."""
+    return pd.DataFrame({
+        "data": pd.date_range("2020-01-01", periods=100, freq="D"),
+        "x":    range(100),
+    })
 
 
 @pytest.fixture
-def features_finais() -> set[str]:
-    """Lista final de features exposta por `src.models.pipeline`."""
-    from src.models import pipeline
-    return set(pipeline.FEATURES)
+def df_temporal_com_nat(df_temporal: pd.DataFrame) -> pd.DataFrame:
+    """``df_temporal`` com ``NaT`` na linha 5 da coluna ``data``."""
+    df = df_temporal.copy()
+    df.loc[5, "data"] = pd.NaT
+    return df
 
 
-def test_proibidas_nao_vazia(proibidas: set[str]) -> None:
-    assert proibidas, (
-        "features.proibidas está vazia no supervised.yaml — "
-        "ao menos o alvo e as colunas posteriores ao desfecho precisam "
-        "estar listadas."
+# ---------------------------------------------------------------------------
+# split_temporal_3way — ordem e proporções
+# ---------------------------------------------------------------------------
+
+def test_split_temporal_ordem_correta(df_temporal: pd.DataFrame) -> None:
+    """Sem sobreposição temporal entre blocos; proporções 70/15/15."""
+    treino, validacao, holdout = split_temporal_3way(df_temporal, "data")
+
+    assert treino["data"].max() <= validacao["data"].min()
+    assert validacao["data"].max() <= holdout["data"].min()
+    assert len(treino) == 70
+    assert len(validacao) == 15
+    assert len(holdout) == 15
+
+
+def test_split_temporal_preserva_ordem(df_temporal: pd.DataFrame) -> None:
+    treino, validacao, holdout = split_temporal_3way(df_temporal, "data")
+
+    assert treino["data"].is_monotonic_increasing
+    assert validacao["data"].is_monotonic_increasing
+    assert holdout["data"].is_monotonic_increasing
+
+
+# ---------------------------------------------------------------------------
+# split_temporal_3way — validações de parâmetros
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"frac_treino": 0},
+        {"frac_treino": 1},
+        {"frac_validacao": 0},
+        {"frac_validacao": 1},
+        {"frac_treino": 0.8, "frac_validacao": 0.3},
+    ],
+    ids=[
+        "frac_treino_zero",
+        "frac_treino_um",
+        "frac_validacao_zero",
+        "frac_validacao_um",
+        "soma_maior_que_1",
+    ],
+)
+def test_fracoes_invalidas(df_temporal: pd.DataFrame, kwargs: dict) -> None:
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal, "data", **kwargs)
+
+
+def test_coluna_tempo_ausente(df_temporal: pd.DataFrame) -> None:
+    with pytest.raises(KeyError):
+        split_temporal_3way(df_temporal, "coluna_inexistente")
+
+
+def test_coluna_tempo_nao_datetime(df_temporal: pd.DataFrame) -> None:
+    df = df_temporal.copy()
+    df["data"] = df["data"].astype(str)
+    with pytest.raises(TypeError):
+        split_temporal_3way(df, "data")
+
+
+# ---------------------------------------------------------------------------
+# split_temporal_3way — tratamento de NaT
+# ---------------------------------------------------------------------------
+
+def test_on_nat_raise(df_temporal_com_nat: pd.DataFrame) -> None:
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal_com_nat, "data", on_nat="raise")
+
+
+def test_on_nat_drop(df_temporal_com_nat: pd.DataFrame) -> None:
+    treino, validacao, holdout = split_temporal_3way(
+        df_temporal_com_nat, "data", on_nat="drop",
     )
+    assert len(treino) + len(validacao) + len(holdout) == 99
 
 
-def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo in proibidas, (
-        f"target.coluna ({alvo!r}) precisa estar em features.proibidas."
-    )
+def test_on_nat_invalido(df_temporal: pd.DataFrame) -> None:
+    # Valor viola intencionalmente o Literal OnNat.
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal, "data", on_nat="ignorar")  # type: ignore[arg-type]
 
 
-def test_features_finais_sem_proibidas(
-    features_finais: set[str],
-    proibidas: set[str],
+def test_dataset_pequeno() -> None:
+    df = pd.DataFrame({"data": pd.date_range("2020-01-01", periods=2)})
+    with pytest.raises(ValueError):
+        split_temporal_3way(df, "data")
+
+
+# ---------------------------------------------------------------------------
+# TemporalSplit — trava do holdout
+# ---------------------------------------------------------------------------
+
+def test_holdout_bloqueado_por_padrao(df_temporal: pd.DataFrame) -> None:
+    split = TemporalSplit(df_temporal, "data")
+    assert not split.holdout_liberado
+    with pytest.raises(RuntimeError):
+        split.holdout()
+
+
+def test_holdout_liberado_apos_gate(
+    df_temporal: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    vazamento = features_finais & proibidas
-    assert not vazamento, (
-        f"FEATURES contém colunas proibidas: {sorted(vazamento)}"
-    )
+    """Com ``G9_holdout`` aprovado, ``concluir_selecao()`` libera o holdout."""
+    monkeypatch.setattr(C, "cfg", lambda *a, **kw: {"status": "aprovado"})
+
+    split = TemporalSplit(df_temporal, "data")
+    split.concluir_selecao()
+
+    assert split.holdout_liberado
+    assert len(split.holdout()) == 15
 
 
-def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo not in features_finais
-
-
-def test_check_leakage_passa_quando_X_limpo() -> None:
-    from src.evaluation.leakage import check_leakage
-
-    X = pd.DataFrame({"feat_a": [1, 2, 3], "feat_b": [4, 5, 6]})
-    check_leakage(X)
-
-
-def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    coluna = sorted(proibidas)[0]
-    X = pd.DataFrame({coluna: [1, 2, 3], "feat_ok": [4, 5, 6]})
-
-    with pytest.raises(LeakageError) as exc:
-        check_leakage(X)
-
-    assert coluna in str(exc.value), (
-        "A mensagem de erro precisa citar a coluna problemática."
-    )
-
-
-def test_check_leakage_levanta_para_alvo() -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    alvo = C.cfg("target", "coluna")
-    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
-
-    with pytest.raises(LeakageError):
-        check_leakage(X)
-
-
-def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None:
-    """Lista vazia desliga proibidas, mas o alvo continua sendo checado."""
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    alvo = C.cfg("target", "coluna")
-    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
-
-    with pytest.raises(LeakageError):
-        check_leakage(X, forbidden_columns=[])
-
-
-def test_dataset_sem_identificadores_duplicados(
-    parquet_disponivel,
+def test_holdout_bloqueado_sem_gate(
+    df_temporal: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """
-    Checa duplicidade apenas se houver coluna que sirva como
-    identificador da notificação. UF e data não formam chave única.
-    """
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+    """Com ``G9_holdout`` pendente, ``concluir_selecao()`` levanta ``RuntimeError``."""
+    monkeypatch.setattr(C, "cfg", lambda *a, **kw: {"status": "pendente"})
 
-    import pyarrow.parquet as pq
+    split = TemporalSplit(df_temporal, "data")
+    with pytest.raises(RuntimeError):
+        split.concluir_selecao()
 
-    colunas = set(pq.read_schema(parquet_disponivel).names)
 
-    candidatas = [
-        "nu_notific",
-        "numero_notificacao",
-        "id_notificacao",
-        "id",
-    ]
-    coluna_id = next((c for c in candidatas if c in colunas), None)
+def test_treino_validacao_nao_expoe_holdout(df_temporal: pd.DataFrame) -> None:
+    split = TemporalSplit(df_temporal, "data")
+    treino, validacao = split.treino_validacao()
 
-    if coluna_id is None:
-        pytest.skip(
-            "O Parquet não possui uma coluna identificadora adequada "
-            "para o teste de duplicidade."
-        )
+    assert treino is split.treino
+    assert validacao is split.validacao
 
-    df = pd.read_parquet(parquet_disponivel, columns=[coluna_id])
-    ids = df[coluna_id].dropna().astype("string").str.strip()
-    ids = ids[ids.ne("")]
 
-    if ids.empty:
-        pytest.skip(f"A coluna {coluna_id} não possui identificadores válidos.")
+def test_resumo_marca_holdout_bloqueado(df_temporal: pd.DataFrame) -> None:
+    resumo = TemporalSplit(df_temporal, "data").resumo()
 
-    quantidade_duplicada = int(ids.duplicated().sum())
-    taxa_duplicada = quantidade_duplicada / len(ids)
+    assert "treino" in resumo
+    assert "validacao" in resumo
+    assert "holdout" in resumo
+    assert "bloqueado" in resumo
+```
 
-    assert taxa_duplicada < 0.05, (
-        f"Alta taxa de identificadores duplicados em {coluna_id}: "
-        f"{quantidade_duplicada}/{len(ids)} ({taxa_duplicada:.1%})"
+## `tools/clean_project.py`
+
+- Git: `tracked` · status `clean`
+- Size: `3.7 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `06775202d5495fc9c9bbe917b343da103153ec1a1c491c20b34c8e3cdd7260d6`
+
+```python
+from __future__ import annotations
+
+import argparse
+import shutil
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+DIRECTORIES_TO_CLEAN = [
+    "outputs",
+    "reports",
+    "models",
+    "logs",
+    ".pytest_cache",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+]
+
+FILE_PATTERNS = [
+    "*.png", "*.jpg", "*.jpeg", "*.gif", "*.svg",
+    "*.log", "*.tmp",
+    "*.joblib", "*.pkl", "*.pickle",
+    "*.h5", "*.hdf5",
+    "*.pt", "*.pth", "*.onnx",
+    "*.npy", "*.npz",
+]
+
+PROTECTED_FOLDERS = {
+    ".git",
+    ".venv",
+    "venv",
+    "env",
+    "notebooks",
+    "src",
+    "tests",
+    "tools",
+    "configs",
+    "docs",
+    "data/raw",
+    "data/analytical",
+    "data/external",
+}
+
+
+def remove_file(path: Path, dry_run: bool) -> None:
+    if dry_run:
+        print(f"[DRY RUN] FILE  {path}")
+        return
+    path.unlink(missing_ok=True)
+    print(f"[REMOVED] FILE  {path}")
+
+
+def remove_directory(path: Path, dry_run: bool) -> None:
+    if dry_run:
+        print(f"[DRY RUN] DIR   {path}")
+        return
+    shutil.rmtree(path, ignore_errors=True)
+    print(f"[REMOVED] DIR   {path}")
+
+
+def clean_directory_contents(path: Path, dry_run: bool) -> None:
+    """Remove conteúdo mas preserva o diretório e os .gitkeep."""
+    if not path.exists():
+        return
+    for child in path.iterdir():
+        if child.name == ".gitkeep":
+            continue
+        if child.is_dir():
+            remove_directory(child, dry_run)
+        else:
+            remove_file(child, dry_run)
+
+
+def clean_directories(dry_run: bool) -> None:
+    for directory in DIRECTORIES_TO_CLEAN:
+        path = PROJECT_ROOT / directory
+        if path.exists():
+            clean_directory_contents(path, dry_run)
+
+
+def clean_pycache(dry_run: bool) -> None:
+    for cache_dir in PROJECT_ROOT.rglob("__pycache__"):
+        remove_directory(cache_dir, dry_run)
+
+
+def clean_generated_files(dry_run: bool) -> None:
+    for pattern in FILE_PATTERNS:
+        for file_path in PROJECT_ROOT.rglob(pattern):
+            if any(protected in str(file_path) for protected in PROTECTED_FOLDERS):
+                continue
+            remove_file(file_path, dry_run)
+
+
+def clean_processed_data(dry_run: bool) -> None:
+    processed_folder = PROJECT_ROOT / "data" / "processed"
+    if processed_folder.exists():
+        clean_directory_contents(processed_folder, dry_run)
+
+
+def clean_reference(dry_run: bool) -> None:
+    for name in ("PROJECT_COMPLETE_REFERENCE.md", "PROJECT_COMPLETE_REFERENCE.json"):
+        path = PROJECT_ROOT / "docs" / name
+        if path.exists():
+            remove_file(path, dry_run)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Limpa artefactos gerados sem tocar em código, configs ou dados originais."
     )
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Mostra o que seria removido sem apagar.")
+    parser.add_argument("--clean-processed", action="store_true",
+                        help="Remove data/processed (obriga a re-download do Parquet).")
+    parser.add_argument("--clean-reference", action="store_true",
+                        help="Remove docs/PROJECT_COMPLETE_REFERENCE.{md,json}.")
+    args = parser.parse_args()
+
+    clean_directories(args.dry_run)
+    clean_pycache(args.dry_run)
+    clean_generated_files(args.dry_run)
+
+    if args.clean_processed:
+        clean_processed_data(args.dry_run)
+
+    if args.clean_reference:
+        clean_reference(args.dry_run)
+
+    print("\nLimpeza concluída.")
+
+
+if __name__ == "__main__":
+    main()
 ```
 
 ## `tools/update_project_reference.py`
 
-- Git: `tracked` · status `M`
+- Git: `tracked` · status `clean`
 - Size: `103.7 KB` · modified `2026-10-15 12:51 UTC`
 - SHA-256: `b7e910e208d84ce466c8718e858de196eea7ea6bf306cc87247d1af23f6b7b0d`
 
@@ -5699,12 +5344,12 @@ validacao:
 
 ### `data/analytical/manifesto_supervisionado.json`
 
-- Git: `ignored` · `1.6 KB` · modified `2026-10-14 23:44 UTC`
+- Git: `ignored` · `2.3 KB` · modified `2026-10-16 03:40 UTC`
 
 ```json
 {
   "schema_version": 2,
-  "generated_utc": "2026-10-14T23:44:05.778293+00:00",
+  "generated_utc": "2026-10-16T03:40:07.143029+00:00",
   "cohort_kind": "provisional",
   "source": {
     "kind": "provisional",
@@ -5715,9 +5360,9 @@ validacao:
     "columns": 125
   },
   "dataset_path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-  "dataset_sha256": "7653e525b944eef54d3b087e4ceb64fa9ba9d611c779325704716a38e95fcf40",
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
   "rows": 3915132,
-  "columns": 36,
+  "columns": 43,
   "feature_columns": [
     "idade_anos",
     "dias_sintomas_ate_internacao",
@@ -5751,15 +5396,59 @@ validacao:
     "obesidade",
     "out_morbi"
   ],
-  "numeric_columns": null,
-  "categorical_columns": null,
-  "audit_columns": [],
+  "numeric_columns": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao"
+  ],
+  "categorical_columns": [
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "audit_columns": [
+    "nu_notific",
+    "grupo_split",
+    "ano_internacao",
+    "sg_uf",
+    "faixa_etaria",
+    "cs_escol_n",
+    "vacina",
+    "vacina_cov",
+    "saturacao",
+    "desc_resp"
+  ],
   "target_column": "alvo_obito_srag",
   "partition_column": "particao",
   "partition_counts": {
-    "treino": 2740587,
-    "teste": 587274,
-    "validacao": 587271
+    "treino": 2740584,
+    "teste": 587276,
+    "validacao": 587272
   },
   "seed": 42,
   "test_opened": false
@@ -6378,6 +6067,465 @@ GATES:
 NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
 
 TIMESTAMP_UTC: 2026-10-14T23:46:18Z
+```
+
+### `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/metadata.json`
+
+- Git: `ignored` · `2.8 KB` · modified `2026-10-16 02:59 UTC`
+
+```json
+{
+  "run_id": "2026-10-15_235914_672066_03_supervisionado_pilotos",
+  "timestamp": {
+    "utc": "2026-10-16T02:59:14Z",
+    "local": "2026-10-15T23:59:14-0300"
+  },
+  "modelo": "03_supervisionado_pilotos",
+  "seed": 42,
+  "status": "success",
+  "erro": null,
+  "duracao_s": 1.3699987903237343e-05,
+  "parametros": {
+    "status_coorte": "provisoria",
+    "versao_execucao": "piloto_v1",
+    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_rows": 3915132,
+    "train_rows": 2740587,
+    "valid_rows": 587271,
+    "test_rows": 587274
+  },
+  "dataset_sha256": null,
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ],
+    "features_final_congelada": false
+  },
+  "metricas": {
+    "dummy_pr_auc": 0.21868609211079723,
+    "logistica_pr_auc": 0.44057383963272745,
+    "logistica_roc_auc": 0.775231023582668,
+    "logistica_brier": 0.19836948367684218
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "4953a4562a8def587a79259dec18371c633343b4",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "87786f6ecc437d2f80855d970c897083476e6fd5941997bd2c611b1f2de681ee"
+}
+```
+
+### `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/summary.txt`
+
+- Git: `ignored` · `1.1 KB` · modified `2026-10-16 02:59 UTC`
+
+```text
+RUN_ID:   2026-10-15_235914_672066_03_supervisionado_pilotos
+MODELO:   03_supervisionado_pilotos
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+N_ROWS     3,915,132
+TRAIN_ROWS 2,740,587
+VALID_ROWS 587,271
+TEST_ROWS  587,274
+DURACAO:  0.0s
+
+MÉTRICAS:
+  dummy_pr_auc         0.2187
+  logistica_pr_auc     0.4406
+  logistica_roc_auc    0.7752
+  logistica_brier      0.1984
+
+PARÂMETROS:
+  status_coorte        provisoria
+  versao_execucao      piloto_v1
+  split                aleatorio_estratificado_por_alvo_ano_com_grupo
+  teste_aberto         False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
+
+TIMESTAMP_UTC: 2026-10-16T02:59:14Z
+```
+
+### `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/metadata.json`
+
+- Git: `ignored` · `2.8 KB` · modified `2026-10-16 03:25 UTC`
+
+```json
+{
+  "run_id": "2026-10-16_002506_352890_03_supervisionado_pilotos",
+  "timestamp": {
+    "utc": "2026-10-16T03:25:06Z",
+    "local": "2026-10-16T00:25:06-0300"
+  },
+  "modelo": "03_supervisionado_pilotos",
+  "seed": 42,
+  "status": "success",
+  "erro": null,
+  "duracao_s": 1.3499986380338669e-05,
+  "parametros": {
+    "status_coorte": "provisoria",
+    "versao_execucao": "piloto_v1",
+    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_rows": 3915132,
+    "train_rows": 2740620,
+    "valid_rows": 586136,
+    "test_rows": 588376
+  },
+  "dataset_sha256": null,
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ],
+    "features_final_congelada": false
+  },
+  "metricas": {
+    "dummy_pr_auc": 0.21865403251122606,
+    "logistica_pr_auc": 0.44026295736440524,
+    "logistica_roc_auc": 0.7749898302178317,
+    "logistica_brier": 0.19812912680779646
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "4953a4562a8def587a79259dec18371c633343b4",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "87786f6ecc437d2f80855d970c897083476e6fd5941997bd2c611b1f2de681ee"
+}
+```
+
+### `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/summary.txt`
+
+- Git: `ignored` · `1.1 KB` · modified `2026-10-16 03:25 UTC`
+
+```text
+RUN_ID:   2026-10-16_002506_352890_03_supervisionado_pilotos
+MODELO:   03_supervisionado_pilotos
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+N_ROWS     3,915,132
+TRAIN_ROWS 2,740,620
+VALID_ROWS 586,136
+TEST_ROWS  588,376
+DURACAO:  0.0s
+
+MÉTRICAS:
+  dummy_pr_auc         0.2187
+  logistica_pr_auc     0.4403
+  logistica_roc_auc    0.7750
+  logistica_brier      0.1981
+
+PARÂMETROS:
+  status_coorte        provisoria
+  versao_execucao      piloto_v1
+  split                aleatorio_estratificado_por_alvo_ano_com_grupo
+  teste_aberto         False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
+
+TIMESTAMP_UTC: 2026-10-16T03:25:06Z
+```
+
+### `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/metadata.json`
+
+- Git: `ignored` · `2.8 KB` · modified `2026-10-16 03:41 UTC`
+
+```json
+{
+  "run_id": "2026-10-16_004101_436301_03_supervisionado_pilotos",
+  "timestamp": {
+    "utc": "2026-10-16T03:41:01Z",
+    "local": "2026-10-16T00:41:01-0300"
+  },
+  "modelo": "03_supervisionado_pilotos",
+  "seed": 42,
+  "status": "success",
+  "erro": null,
+  "duracao_s": 7.5998250395059586e-06,
+  "parametros": {
+    "status_coorte": "provisoria",
+    "versao_execucao": "piloto_v1",
+    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_rows": 3915132,
+    "train_rows": 2740584,
+    "valid_rows": 587272,
+    "test_rows": 587276
+  },
+  "dataset_sha256": null,
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ],
+    "features_final_congelada": false
+  },
+  "metricas": {
+    "dummy_pr_auc": 0.21868742252312387,
+    "logistica_pr_auc": 0.4405563015380145,
+    "logistica_roc_auc": 0.7751607183667255,
+    "logistica_brier": 0.1980742897570493
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "4953a4562a8def587a79259dec18371c633343b4",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
+}
+```
+
+### `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/summary.txt`
+
+- Git: `ignored` · `1.1 KB` · modified `2026-10-16 03:41 UTC`
+
+```text
+RUN_ID:   2026-10-16_004101_436301_03_supervisionado_pilotos
+MODELO:   03_supervisionado_pilotos
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+N_ROWS     3,915,132
+TRAIN_ROWS 2,740,584
+VALID_ROWS 587,272
+TEST_ROWS  587,276
+DURACAO:  0.0s
+
+MÉTRICAS:
+  dummy_pr_auc         0.2187
+  logistica_pr_auc     0.4406
+  logistica_roc_auc    0.7752
+  logistica_brier      0.1981
+
+PARÂMETROS:
+  status_coorte        provisoria
+  versao_execucao      piloto_v1
+  split                aleatorio_estratificado_por_alvo_ano_com_grupo
+  teste_aberto         False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
+
+TIMESTAMP_UTC: 2026-10-16T03:41:01Z
 ```
 
 ### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_amostras.csv`
@@ -7028,6 +7176,492 @@ logistica_C1_v2,0.18301817544279506,0.49627806440291294,0.3361152392578175,0.728
 random_forest_contida_v2,0.20399440218689455,0.4749971817717371,0.33602317996655773,0.7161846697293173,0.8541309512147335,0.11497450065572158,0.23643266359095655,0.27100277958484253,0.1379462814854162
 ```
 
+### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_amostras.csv`
+
+- Git: `ignored` · `212 B` · modified `2026-10-16 03:01 UTC` · 2 rows
+
+```csv
+particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
+treino,2740587,300000,0.21868563194673257,0.21868333333333334
+validacao,587271,120000,0.21868609211079723,0.21869166666666667
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_manifesto.json`
+
+- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:01 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v2_cinco_familias",
+  "carater": "comparacao_provisoria_de_integracao",
+  "seed": 42,
+  "n_treino_piloto": 300000,
+  "n_validacao_piloto": 120000,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "modelos": [
+    "dummy_prior_v2",
+    "logistica_C1_v2",
+    "arvore_rasa_v2",
+    "random_forest_contida_v2",
+    "hist_gradient_boosting_v2"
+  ],
+  "shortlist_provisoria": [
+    "hist_gradient_boosting_v2",
+    "logistica_C1_v2"
+  ],
+  "teste_aberto": false,
+  "limiar_selecionado": false,
+  "calibracao_aplicada": false,
+  "tuning_realizado": false,
+  "observacoes": [
+    "Resultados dependem da coorte provisória.",
+    "Amostras comparáveis foram usadas para controlar custo.",
+    "A shortlist não congela finalistas.",
+    "O teste permaneceu fechado.",
+    "Calibração e limiar pertencem à próxima etapa."
+  ],
+  "artefatos": {
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv",
+    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_amostras.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T030120Z_predicoes_validacao.parquet",
+    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
+    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
+  }
+}
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas.csv`
+
+- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:01 UTC` · 5 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
+0.7837338025141412,0.4577975780425485,0.19719355553237866,0.5098122866894198,0.3699626769405411,0.8196471440003048,0.6553,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,17.681844499893486,1.5374936999287456
+0.7742724458341613,0.43856004509006286,0.19910056824861047,0.5055658052772997,0.37446347995157564,0.7779217315093548,0.6672416666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.587622199906036,1.2053819000720978
+0.7665168716317146,0.4299862045991363,0.20138297179217352,0.4940412952099404,0.354431428429407,0.8151126014556263,0.6348833333333334,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,71.1057296001818,1.8488002999220043
+0.759284397951174,0.40228534443387626,0.2068909780780606,0.4922231331478124,0.3531146454605699,0.8121784856914225,0.6335416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,8.705420000012964,1.154251700034365
+0.5,0.21869166666666667,0.17086562166666663,0.0,0.0,0.0,0.7813083333333334,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.118621199857444,1.0784217999316752
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv`
+
+- Git: `ignored` · `5.2 KB` · modified `2026-10-16 03:01 UTC` · 40 rows
+
+```csv
+modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
+arvore_rasa_v2,2019,1355,163,0.12029520295202951,0.25618294661337704,0.7722315436241611,0.13273510512876757,0.25683723310132156
+arvore_rasa_v2,2020,29987,8388,0.2797212125254277,0.44608515893392486,0.720250887315007,0.24177495708969896,0.5229989687720558
+arvore_rasa_v2,2021,45324,12785,0.2820801341452652,0.43988752846501067,0.7106558775478871,0.2317449500902894,0.49832380157870104
+arvore_rasa_v2,2022,14664,2659,0.18132842334969995,0.3603111099229618,0.7745634849713962,0.21051625880764274,0.42780471751149857
+arvore_rasa_v2,2023,7363,724,0.09832948526415863,0.2982065466728109,0.8294313320168201,0.14307735417577414,0.2829710385148049
+arvore_rasa_v2,2024,7015,585,0.08339272986457591,0.261546747130475,0.8376020523454427,0.13589515715614278,0.2697817184015538
+arvore_rasa_v2,2025,8900,651,0.07314606741573033,0.2247244113330193,0.8265799196625612,0.1327358231436628,0.2584164339395812
+arvore_rasa_v2,2026,5392,288,0.05341246290801187,0.17873622364881353,0.83846207223093,0.11465230237319544,0.22582339678675914
+dummy_prior_v2,2019,1355,163,0.12029520295202951,0.12029520295202951,0.5,0.11550449129868798,0.21868333333333334
+dummy_prior_v2,2020,29987,8388,0.2797212125254277,0.2797212125254277,0.5,0.20520287848500085,0.21868333333333334
+dummy_prior_v2,2021,45324,12785,0.2820801341452652,0.2820801341452652,0.5,0.2065300864190421,0.21868333333333337
+dummy_prior_v2,2022,14664,2659,0.18132842334969995,0.18132842334969995,0.5,0.1498438155350973,0.21868333333333334
+dummy_prior_v2,2023,7363,724,0.09832948526415863,0.09832948526415863,0.5,0.10314584633690223,0.21868333333333334
+dummy_prior_v2,2024,7015,585,0.08339272986457591,0.08339272986457591,0.5,0.09474192985725033,0.21868333333333334
+dummy_prior_v2,2025,8900,651,0.07314606741573033,0.07314606741573033,0.5,0.08897681600811484,0.21868333333333334
+dummy_prior_v2,2026,5392,288,0.05341246290801187,0.05341246290801187,0.5,0.07787403232525551,0.2186833333333333
+hist_gradient_boosting_v2,2019,1355,163,0.12029520295202951,0.28745930015036397,0.7921367398196566,0.13406375508538068,0.26120407564571707
+hist_gradient_boosting_v2,2020,29987,8388,0.2797212125254277,0.510874944902731,0.7539260116490583,0.2337380637317967,0.5212712594470571
+hist_gradient_boosting_v2,2021,45324,12785,0.2820801341452652,0.48808251430763916,0.7373332392813592,0.21899203197293501,0.4826943399848201
+hist_gradient_boosting_v2,2022,14664,2659,0.18132842334969995,0.4150340682318508,0.7968962255447343,0.20103156704927577,0.41749244464931884
+hist_gradient_boosting_v2,2023,7363,724,0.09832948526415863,0.3679242282970099,0.8483983392959233,0.1351947036478361,0.27382611447688543
+hist_gradient_boosting_v2,2024,7015,585,0.08339272986457591,0.3117292798082803,0.8570197126184684,0.12791145133160842,0.2595455633776146
+hist_gradient_boosting_v2,2025,8900,651,0.07314606741573033,0.25062632936211743,0.8409368244421564,0.12607691261330622,0.2495485096608725
+hist_gradient_boosting_v2,2026,5392,288,0.05341246290801187,0.19735505575855672,0.8578361742424242,0.10833146252945079,0.21707997489681424
+logistica_C1_v2,2019,1355,163,0.12029520295202951,0.27886648420402027,0.777995944332359,0.13779899060352996,0.28052390755888873
+logistica_C1_v2,2020,29987,8388,0.2797212125254277,0.49627806440291294,0.7454688769060491,0.23313232567214978,0.518726405601904
+logistica_C1_v2,2021,45324,12785,0.2820801341452652,0.47829952070053683,0.7289671034390512,0.21809318472711914,0.47716017171172576
+logistica_C1_v2,2022,14664,2659,0.18132842334969995,0.4002593509577733,0.7912969226342478,0.2068711246693542,0.4328685933134279
+logistica_C1_v2,2023,7363,724,0.09832948526415863,0.3358602768626264,0.8418912936199038,0.14186083158917648,0.29932086022575843
+logistica_C1_v2,2024,7015,585,0.08339272986457591,0.2773719795919383,0.8435433531389985,0.13530229834466362,0.2859023462082121
+logistica_C1_v2,2025,8900,651,0.07314606741573033,0.2389680618999371,0.830904327834552,0.13274754432959163,0.2751367422542223
+logistica_C1_v2,2026,5392,288,0.05341246290801187,0.18301817544279506,0.845789522378962,0.11514795261481299,0.2448978904179417
+random_forest_contida_v2,2019,1355,163,0.12029520295202951,0.30895800640178117,0.7924429736072796,0.14754883625126058,0.3418388212678265
+random_forest_contida_v2,2020,29987,8388,0.2797212125254277,0.4749971817717371,0.7273694186949391,0.23643266359095652,0.5209719249838256
+random_forest_contida_v2,2021,45324,12785,0.2820801341452652,0.46129484831425405,0.7161846697293173,0.22442010867181497,0.49154709471432123
+random_forest_contida_v2,2022,14664,2659,0.18132842334969995,0.38258765054187344,0.7798093561053836,0.19946632636017925,0.43607756344093007
+random_forest_contida_v2,2023,7363,724,0.09832948526415863,0.3160220767092553,0.8320679993242677,0.14260424667953248,0.32754202259906146
+random_forest_contida_v2,2024,7015,585,0.08339272986457591,0.299455308465333,0.8461763102976166,0.13410453818733847,0.3145085245659218
+random_forest_contida_v2,2025,8900,651,0.07314606741573033,0.2408759653413334,0.8327555972431794,0.131331408138215,0.3041290265394911
+random_forest_contida_v2,2026,5392,288,0.05341246290801187,0.20399440218689455,0.8541309512147335,0.11497450065572158,0.2781408670049724
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv`
+
+- Git: `ignored` · `912 B` · modified `2026-10-16 03:01 UTC` · 4 rows
+
+```csv
+modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
+arvore_rasa_v2,0.17873622364881353,0.44608515893392486,0.30821008409004913,0.7106558775478871,0.83846207223093,0.11465230237319544,0.24177495708969896,0.26734893528511133,0.12780619468304288
+hist_gradient_boosting_v2,0.19735505575855672,0.510874944902731,0.35363571510231867,0.7373332392813592,0.8578361742424242,0.10833146252945079,0.2337380637317967,0.3135198891441743,0.12050293496106501
+logistica_C1_v2,0.18301817544279506,0.49627806440291294,0.3361152392578175,0.7289671034390512,0.845789522378962,0.11514795261481299,0.23313232567214978,0.3132598889601179,0.11682241893991074
+random_forest_contida_v2,0.20399440218689455,0.4749971817717371,0.33602317996655773,0.7161846697293173,0.8541309512147335,0.11497450065572158,0.23643266359095652,0.27100277958484253,0.1379462814854162
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_amostras.csv`
+
+- Git: `ignored` · `211 B` · modified `2026-10-16 03:26 UTC` · 2 rows
+
+```csv
+particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
+treino,2740620,300000,0.2186125767162175,0.21861333333333333
+validacao,586136,120000,0.21865403251122606,0.21865833333333334
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_manifesto.json`
+
+- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:26 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v2_cinco_familias",
+  "carater": "comparacao_provisoria_de_integracao",
+  "seed": 42,
+  "n_treino_piloto": 300000,
+  "n_validacao_piloto": 120000,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "modelos": [
+    "dummy_prior_v2",
+    "logistica_C1_v2",
+    "arvore_rasa_v2",
+    "random_forest_contida_v2",
+    "hist_gradient_boosting_v2"
+  ],
+  "shortlist_provisoria": [
+    "hist_gradient_boosting_v2",
+    "logistica_C1_v2"
+  ],
+  "teste_aberto": false,
+  "limiar_selecionado": false,
+  "calibracao_aplicada": false,
+  "tuning_realizado": false,
+  "observacoes": [
+    "Resultados dependem da coorte provisória.",
+    "Amostras comparáveis foram usadas para controlar custo.",
+    "A shortlist não congela finalistas.",
+    "O teste permaneceu fechado.",
+    "Calibração e limiar pertencem à próxima etapa."
+  ],
+  "artefatos": {
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv",
+    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_amostras.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T032647Z_predicoes_validacao.parquet",
+    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
+    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
+  }
+}
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas.csv`
+
+- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:26 UTC` · 5 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
+0.7854381459754272,0.46511988372289026,0.19591399211546381,0.5086482410255796,0.3707769091162921,0.8097488471359426,0.657925,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,11.12510609999299,1.7038799999281764
+0.7757959730311267,0.4441037099454647,0.19760302104966157,0.5056380861794927,0.37643485390578413,0.7698845230382255,0.670825,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.407828999916092,0.9214737999718636
+0.7682612526485143,0.434532197090352,0.2006861087655751,0.49444721664558505,0.3554576701037808,0.8119211860208088,0.6369583333333333,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,54.45230249990709,1.7206465997733176
+0.7615103388726303,0.40670703793942975,0.20542996953715997,0.49329172088952356,0.35345083671650657,0.8162277525820344,0.6333416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,7.0971053999383,1.1714217001572251
+0.5,0.21865833333333334,0.17084686862222226,0.0,0.0,0.0,0.7813416666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.040675699943677,0.977710000006482
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv`
+
+- Git: `ignored` · `5.1 KB` · modified `2026-10-16 03:26 UTC` · 40 rows
+
+```csv
+modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
+arvore_rasa_v2,2019,1342,166,0.12369597615499255,0.2682433138203361,0.7365533562822719,0.1411616809872305,0.2588171299104684
+arvore_rasa_v2,2020,30023,8360,0.278453185890817,0.4523143667507715,0.7243883690732793,0.2400973844756979,0.520568819291174
+arvore_rasa_v2,2021,45449,12836,0.2824264560276354,0.45250283237977196,0.7186199839612237,0.22879873130012723,0.49581870034676895
+arvore_rasa_v2,2022,14592,2653,0.18181195175438597,0.3442382470259642,0.7617138123948137,0.2128592676228337,0.4269152083492362
+arvore_rasa_v2,2023,7367,692,0.09393240124881228,0.28012479403765445,0.831595115931675,0.1402943182907454,0.27641648436215266
+arvore_rasa_v2,2024,6979,601,0.08611548932511821,0.25852782195827795,0.8248457285312605,0.1377712740010943,0.26966041068108904
+arvore_rasa_v2,2025,8867,632,0.0712755159580467,0.24069291487664007,0.8403319614488944,0.13031476844556802,0.25656833404777346
+arvore_rasa_v2,2026,5381,299,0.05556587994796506,0.20609677351320768,0.8381049122155841,0.11121401348079846,0.21918997746003202
+dummy_prior_v2,2019,1342,166,0.12369597615499255,0.12369597615499255,0.5,0.11740458633177676,0.21861333333333335
+dummy_prior_v2,2020,30023,8360,0.278453185890817,0.278453185890817,0.5,0.20449781711217255,0.21861333333333333
+dummy_prior_v2,2021,45449,12836,0.2824264560276354,0.2824264560276354,0.5,0.20673386759130358,0.21861333333333333
+dummy_prior_v2,2022,14592,2653,0.18181195175438597,0.18181195175438597,0.5,0.15011070763976606,0.21861333333333333
+dummy_prior_v2,2023,7367,692,0.09393240124881228,0.09393240124881228,0.5,0.10065444006990934,0.21861333333333335
+dummy_prior_v2,2024,6979,601,0.08611548932511821,0.08611548932511821,0.5,0.09625529049023895,0.21861333333333333
+dummy_prior_v2,2025,8867,632,0.0712755159580467,0.0712755159580467,0.5,0.08790374921187423,0.2186133333333333
+dummy_prior_v2,2026,5381,299,0.05556587994796506,0.05556587994796506,0.5,0.07906278498902723,0.21861333333333338
+hist_gradient_boosting_v2,2019,1342,166,0.12369597615499255,0.3050787008424183,0.7628473075977379,0.1398506943941787,0.2627820432450887
+hist_gradient_boosting_v2,2020,30023,8360,0.278453185890817,0.5120674457512532,0.7548250114244582,0.23276591523218196,0.5192658809925419
+hist_gradient_boosting_v2,2021,45449,12836,0.2824264560276354,0.5013728501557873,0.7397146488785638,0.21785588602960376,0.4810054082287621
+hist_gradient_boosting_v2,2022,14592,2653,0.18181195175438597,0.42172816137868513,0.7971125965206913,0.2003051990513586,0.41503273667096613
+hist_gradient_boosting_v2,2023,7367,692,0.09393240124881228,0.3309265119886693,0.8524351064060097,0.13211058334381415,0.2666420140554942
+hist_gradient_boosting_v2,2024,6979,601,0.08611548932511821,0.31442891140099793,0.8453621251087218,0.12818982577044055,0.2584430101421541
+hist_gradient_boosting_v2,2025,8867,632,0.0712755159580467,0.272777664047418,0.8532101903729835,0.12182187772788222,0.24507904216381612
+hist_gradient_boosting_v2,2026,5381,299,0.05556587994796506,0.21622435505389218,0.8530487957365428,0.10432868776938624,0.20886725450924717
+logistica_C1_v2,2019,1342,166,0.12369597615499255,0.2982157409603792,0.7419550651585934,0.14011325242965963,0.2755574196387101
+logistica_C1_v2,2020,30023,8360,0.278453185890817,0.4962705396832904,0.7462652292058847,0.23193217624501253,0.5158978714864526
+logistica_C1_v2,2021,45449,12836,0.2824264560276354,0.4866531998150035,0.7317871721934055,0.2163999918264269,0.4747146257874991
+logistica_C1_v2,2022,14592,2653,0.18181195175438597,0.3970210658529631,0.7855662628791469,0.20754925487406256,0.43034633902877667
+logistica_C1_v2,2023,7367,692,0.09393240124881228,0.31466246468509285,0.8422002121625424,0.13840208486988698,0.29229037882768366
+logistica_C1_v2,2024,6979,601,0.08611548932511821,0.2985793898407893,0.8359746142756742,0.13513907293065566,0.28444638790154847
+logistica_C1_v2,2025,8867,632,0.0712755159580467,0.25369421948251475,0.8441906266091781,0.12858901285927668,0.2726489806134789
+logistica_C1_v2,2026,5381,299,0.05556587994796506,0.21234494497666187,0.8456905413427152,0.11045648242157081,0.23715114266964818
+random_forest_contida_v2,2019,1342,166,0.12369597615499255,0.2967394146096136,0.7505429882796493,0.15392760709825884,0.3432529604716412
+random_forest_contida_v2,2020,30023,8360,0.278453185890817,0.4764224650016379,0.7286653046768826,0.23573624909696456,0.5195917432477899
+random_forest_contida_v2,2021,45449,12836,0.2824264560276354,0.4706516351992469,0.7189415891150358,0.22408685482284618,0.49191092322093083
+random_forest_contida_v2,2022,14592,2653,0.18181195175438597,0.3789560486927598,0.7750006969401911,0.19974872164865612,0.43430754332055943
+random_forest_contida_v2,2023,7367,692,0.09393240124881228,0.3016924890184959,0.8408093568011085,0.13814437371232294,0.3193374778492295
+random_forest_contida_v2,2024,6979,601,0.08611548932511821,0.29742514243489176,0.8371159648730113,0.134933993927624,0.3134310861692245
+random_forest_contida_v2,2025,8867,632,0.0712755159580467,0.25518394431940394,0.848707469660987,0.12840486183199173,0.3008361912461604
+random_forest_contida_v2,2026,5381,299,0.05556587994796506,0.216398258264822,0.846279872959715,0.11169227480773387,0.2695585967559024
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv`
+
+- Git: `ignored` · `913 B` · modified `2026-10-16 03:26 UTC` · 4 rows
+
+```csv
+modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
+arvore_rasa_v2,0.20609677351320768,0.45250283237977196,0.312842633045328,0.7186199839612237,0.8403319614488944,0.11121401348079846,0.2400973844756979,0.24640605886656428,0.12171197748767071
+hist_gradient_boosting_v2,0.21622435505389218,0.5120674457512532,0.35932557507739016,0.7397146488785638,0.8532101903729835,0.10432868776938624,0.23276591523218196,0.29584309069736103,0.11349554149441976
+logistica_C1_v2,0.21234494497666187,0.4962705396832904,0.34468019566208685,0.7317871721934055,0.8456905413427152,0.11045648242157081,0.23193217624501253,0.2839255947066285,0.11390336914930965
+random_forest_contida_v2,0.216398258264822,0.4764224650016379,0.33668367469260896,0.7189415891150358,0.848707469660987,0.11169227480773387,0.23573624909696456,0.26002420673681587,0.12976588054595117
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_amostras.csv`
+
+- Git: `ignored` · `212 B` · modified `2026-10-16 03:42 UTC` · 2 rows
+
+```csv
+particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
+treino,2740584,300000,0.21868441178960396,0.21868333333333334
+validacao,587272,120000,0.21868742252312387,0.21868333333333334
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_manifesto.json`
+
+- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:42 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v2_cinco_familias",
+  "carater": "comparacao_provisoria_de_integracao",
+  "seed": 42,
+  "n_treino_piloto": 300000,
+  "n_validacao_piloto": 120000,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "modelos": [
+    "dummy_prior_v2",
+    "logistica_C1_v2",
+    "arvore_rasa_v2",
+    "random_forest_contida_v2",
+    "hist_gradient_boosting_v2"
+  ],
+  "shortlist_provisoria": [
+    "hist_gradient_boosting_v2",
+    "logistica_C1_v2"
+  ],
+  "teste_aberto": false,
+  "limiar_selecionado": false,
+  "calibracao_aplicada": false,
+  "tuning_realizado": false,
+  "observacoes": [
+    "Resultados dependem da coorte provisória.",
+    "Amostras comparáveis foram usadas para controlar custo.",
+    "A shortlist não congela finalistas.",
+    "O teste permaneceu fechado.",
+    "Calibração e limiar pertencem à próxima etapa."
+  ],
+  "artefatos": {
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv",
+    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_amostras.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet",
+    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
+    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
+  }
+}
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas.csv`
+
+- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:42 UTC` · 5 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
+0.7833709454003838,0.4596864874551059,0.19632903073476674,0.5089796841341061,0.37006974611031307,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,9.506548200035468,1.6669316999614239
+0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,5.923188799992204,0.9672848999034613
+0.7651780559732301,0.42991604084878565,0.20114864848557457,0.4926865930508181,0.3536510465946251,0.8118664735919519,0.634375,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,53.28373220004141,1.5794817998539656
+0.756532095491909,0.39921961347201546,0.20657001421031662,0.4893024932682883,0.3473455220180111,0.827490282752839,0.6222583333333334,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,6.883358600083739,0.9537774999625981
+0.5,0.21868333333333334,0.1708609330555555,0.0,0.0,0.0,0.7813166666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,3.532367399893701,0.8906467999331653
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv`
+
+- Git: `ignored` · `5.2 KB` · modified `2026-10-16 03:42 UTC` · 40 rows
+
+```csv
+modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
+arvore_rasa_v2,2019,1334,160,0.1199400299850075,0.31103495861403446,0.7979610306643952,0.12758840563851523,0.2524652640157311
+arvore_rasa_v2,2020,30032,8402,0.2797682472029835,0.4515074952948283,0.7229043995094844,0.24028885773394879,0.5192341393917813
+arvore_rasa_v2,2021,45369,12790,0.28191055566576295,0.43680795724582233,0.7073288419193751,0.23198605432882535,0.496558940079144
+arvore_rasa_v2,2022,14589,2649,0.18157515936664612,0.34695670569584025,0.7638635956933275,0.21330302316912159,0.42760456259584456
+arvore_rasa_v2,2023,7377,706,0.0957028602412905,0.27259243341254386,0.8255586418403109,0.14122061701371155,0.276987178933185
+arvore_rasa_v2,2024,7034,586,0.08330963889678704,0.2367325111039219,0.8125265976591943,0.1363503264424084,0.26423552083668517
+arvore_rasa_v2,2025,8886,651,0.07326130992572587,0.23094441280974853,0.8281001532367653,0.1318170838269198,0.25912931698669744
+arvore_rasa_v2,2026,5379,298,0.055400632087748654,0.20227650155666232,0.8450349307658879,0.11020475887700545,0.21961792312835515
+dummy_prior_v2,2019,1334,160,0.1199400299850075,0.1199400299850075,0.5,0.11530465914834248,0.21868333333333334
+dummy_prior_v2,2020,30032,8402,0.2797682472029835,0.2797682472029835,0.5,0.20522934176241633,0.21868333333333337
+dummy_prior_v2,2021,45369,12790,0.28191055566576295,0.28191055566576295,0.5,0.2064346759138582,0.2186833333333334
+dummy_prior_v2,2022,14589,2649,0.18157515936664612,0.18157515936664612,0.5,0.14998263744276508,0.21868333333333334
+dummy_prior_v2,2023,7377,706,0.0957028602412905,0.0957028602412905,0.5,0.10166801954486918,0.21868333333333334
+dummy_prior_v2,2024,7034,586,0.08330963889678704,0.08330963889678704,0.5,0.09469518010907338,0.21868333333333334
+dummy_prior_v2,2025,8886,651,0.07326130992572587,0.07326130992572587,0.5,0.08904165528565533,0.21868333333333334
+dummy_prior_v2,2026,5379,298,0.055400632087748654,0.055400632087748654,0.5,0.07899264257808143,0.21868333333333334
+hist_gradient_boosting_v2,2019,1334,160,0.1199400299850075,0.3465693516022601,0.8124547487223169,0.13110543670886737,0.2676039147206479
+hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.5164997626409047,0.7580653638705004,0.23151814174484173,0.5182468041996628
+hist_gradient_boosting_v2,2021,45369,12790,0.28191055566576295,0.4879800499510862,0.7341272640191554,0.21919395126055652,0.4800796932090034
+hist_gradient_boosting_v2,2022,14589,2649,0.18157515936664612,0.4206282927794213,0.7952690500444846,0.20082233313259307,0.4149230955055803
+hist_gradient_boosting_v2,2023,7377,706,0.0957028602412905,0.32230062687583133,0.845449289406645,0.1332954113035727,0.2668442780746959
+hist_gradient_boosting_v2,2024,7034,586,0.08330963889678704,0.27949801665658786,0.8336151009070198,0.12889735485599105,0.2545488992692805
+hist_gradient_boosting_v2,2025,8886,651,0.07326130992572587,0.2618358631105581,0.8440987057415754,0.1240428892875915,0.24776638305867885
+hist_gradient_boosting_v2,2026,5379,298,0.055400632087748654,0.21691908816802885,0.8560976608472939,0.10503800938030636,0.21063424460470664
+logistica_C1_v2,2019,1334,160,0.1199400299850075,0.34252782043905955,0.8065960391822828,0.13126929489523306,0.2832903109703609
+logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5002695045987536,0.7494558568326257,0.23079501402819952,0.5160348408274956
+logistica_C1_v2,2021,45369,12790,0.28191055566576295,0.47676831757282606,0.725251437289345,0.2182677563384315,0.47489488020294707
+logistica_C1_v2,2022,14589,2649,0.18157515936664612,0.3982419945105877,0.7856544898899936,0.20725567925101124,0.4302675831396566
+logistica_C1_v2,2023,7377,706,0.0957028602412905,0.2946275487920166,0.8291804024268078,0.1410592491885203,0.2932824134819757
+logistica_C1_v2,2024,7034,586,0.08330963889678704,0.25917395137361576,0.8256064266296294,0.13508743915985752,0.2802211824752972
+logistica_C1_v2,2025,8886,651,0.07326130992572587,0.2462244144676162,0.8324111147485024,0.13024540290776948,0.272552470357743
+logistica_C1_v2,2026,5379,298,0.055400632087748654,0.22327198776182794,0.8452558485422068,0.11204739355874034,0.2393976573825986
+random_forest_contida_v2,2019,1334,160,0.1199400299850075,0.32572426198480253,0.8007905664395228,0.14916144376578358,0.3496393534401367
+random_forest_contida_v2,2020,30032,8402,0.2797682472029835,0.4760313531234205,0.7293101047094549,0.23487862905051657,0.5181114482469674
+random_forest_contida_v2,2021,45369,12790,0.28191055566576295,0.45705715051531104,0.7106745290169867,0.2253093920542841,0.49057310298612267
+random_forest_contida_v2,2022,14589,2649,0.18157515936664612,0.3883585268711113,0.7770167529480799,0.1992066532945187,0.4348338092351371
+random_forest_contida_v2,2023,7377,706,0.0957028602412905,0.3102233058174007,0.8332522953564603,0.14005422778055931,0.32473932034286557
+random_forest_contida_v2,2024,7034,586,0.08330963889678704,0.26557302373811287,0.821075429373555,0.1358453544198026,0.31438593293411254
+random_forest_contida_v2,2025,8886,651,0.07326130992572587,0.25951051724284785,0.8375352663736234,0.13068176776563886,0.3063814328044761
+random_forest_contida_v2,2026,5379,298,0.055400632087748654,0.22759773633077704,0.8514527737894432,0.11279779548692852,0.2751319441993206
+```
+
+### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv`
+
+- Git: `ignored` · `912 B` · modified `2026-10-16 03:42 UTC` · 4 rows
+
+```csv
+modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
+arvore_rasa_v2,0.20227650155666232,0.4515074952948283,0.31110662196667527,0.7073288419193751,0.8450349307658879,0.11020475887700545,0.24028885773394879,0.24923099373816598,0.1377060888465128
+hist_gradient_boosting_v2,0.21691908816802885,0.5164997626409047,0.3565288814730848,0.7341272640191554,0.8560976608472939,0.10503800938030636,0.23151814174484173,0.29958067447287584,0.12197039682813848
+logistica_C1_v2,0.22327198776182794,0.5002695045987536,0.3426381924395379,0.725251437289345,0.8452558485422068,0.11204739355874034,0.23079501402819952,0.2769975168369257,0.12000441125286176
+random_forest_contida_v2,0.22759773633077704,0.4760313531234205,0.338759484452973,0.7106745290169867,0.8514527737894432,0.11279779548692852,0.23487862905051657,0.24843361679264345,0.14077824477245648
+```
+
 ### `outputs/tables/03_pilotos_provisional_20261012T124857Z_contrato.csv`
 
 - Git: `ignored` · `213 B` · modified `2026-10-12 12:48 UTC` · 8 rows
@@ -7510,6 +8144,309 @@ particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
 teste,587274,128428,0.21868497498612233,2019,2026,587270,15.000107276076516
 treino,2740587,599327,0.21868563194673257,2019,2026,2740582,69.9998620736159
 validacao,587271,128428,0.21868609211079723,2019,2026,587267,15.000030650307576
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_contrato.csv`
+
+- Git: `ignored` · `213 B` · modified `2026-10-16 02:59 UTC` · 8 rows
+
+```csv
+item,resultado
+coorte_nao_vazia,True
+dt_interna_disponivel,True
+dt_interna_sem_nulos,True
+ano_disponivel,True
+alvo_disponivel,True
+alvo_binario,True
+features_sem_proibidas,True
+features_presentes,True
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_manifesto.json`
+
+- Git: `ignored` · `2.0 KB` · modified `2026-10-16 02:59 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v1",
+  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
+  "seed": 42,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "features_final_congelada": false,
+  "n_base_modelagem": 3915132,
+  "n_treino": 2740587,
+  "n_validacao": 587271,
+  "n_teste_criado_mas_nao_aberto": 587274,
+  "teste_aberto": false,
+  "quarentena_conflitos_split": {
+    "politica": "quarentena_provisoria",
+    "grupos_conflitantes": 2,
+    "linhas_excluidas": 4,
+    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
+  },
+  "artefatos": {
+    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_contrato.csv",
+    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_particoes.csv",
+    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T025913Z_predicoes_validacao.parquet"
+  }
+}
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv`
+
+- Git: `ignored` · `574 B` · modified `2026-10-16 02:59 UTC` · 2 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
+0.775231023582668,0.44057383963272745,0.19836948367684218,0.5056485259964325,0.37529325679111064,0.7747531690908525,0.6687151247039271,0.5,587271,logistica_piloto_C1,provisoria,piloto_v1,1000000,23.887339500011876,5.565829900093377
+0.5,0.21868609211079723,0.1708624852283169,0.0,0.0,0.0,0.7813139078892027,0.5,587271,dummy_prior,provisoria,piloto_v1,2740587,0.16530180000700057,0.011786699993535876
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_particoes.csv`
+
+- Git: `ignored` · `313 B` · modified `2026-10-16 02:59 UTC` · 3 rows
+
+```csv
+particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
+teste,587274,128428,0.21868497498612233,2019,2026,587270,15.000107276076516
+treino,2740587,599327,0.21868563194673257,2019,2026,2740582,69.9998620736159
+validacao,587271,128428,0.21868609211079723,2019,2026,587267,15.000030650307576
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_contrato.csv`
+
+- Git: `ignored` · `213 B` · modified `2026-10-16 03:25 UTC` · 8 rows
+
+```csv
+item,resultado
+coorte_nao_vazia,True
+dt_interna_disponivel,True
+dt_interna_sem_nulos,True
+ano_disponivel,True
+alvo_disponivel,True
+alvo_binario,True
+features_sem_proibidas,True
+features_presentes,True
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_manifesto.json`
+
+- Git: `ignored` · `2.0 KB` · modified `2026-10-16 03:25 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v1",
+  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
+  "seed": 42,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "features_final_congelada": false,
+  "n_base_modelagem": 3915132,
+  "n_treino": 2740620,
+  "n_validacao": 586136,
+  "n_teste_criado_mas_nao_aberto": 588376,
+  "teste_aberto": false,
+  "quarentena_conflitos_split": {
+    "politica": "quarentena_provisoria",
+    "grupos_conflitantes": 2,
+    "linhas_excluidas": 4,
+    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
+  },
+  "artefatos": {
+    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_contrato.csv",
+    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_particoes.csv",
+    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T032505Z_predicoes_validacao.parquet"
+  }
+}
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv`
+
+- Git: `ignored` · `571 B` · modified `2026-10-16 03:25 UTC` · 2 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
+0.7749898302178317,0.44026295736440524,0.19812912680779646,0.5056354628528861,0.37563347876022,0.7732461513252862,0.6693907216072721,0.5,586136,logistica_piloto_C1,provisoria,piloto_v1,1000000,19.8268175998237,6.868487499887124
+0.5,0.21865403251122606,0.17084444829638873,0.0,0.0,0.0,0.7813459674887739,0.5,586136,dummy_prior,provisoria,piloto_v1,2740620,0.15075719985179603,0.012463700026273727
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_particoes.csv`
+
+- Git: `ignored` · `312 B` · modified `2026-10-16 03:25 UTC` · 3 rows
+
+```csv
+particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
+treino,2740620,599134,0.2186125767162175,2019,2026,2740610,70.00070495707425
+validacao,586136,128161,0.21865403251122606,2019,2026,586134,14.97104056772543
+teste,588376,128888,0.21905720151739705,2019,2026,588375,15.028254475200326
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_contrato.csv`
+
+- Git: `ignored` · `213 B` · modified `2026-10-16 03:41 UTC` · 8 rows
+
+```csv
+item,resultado
+coorte_nao_vazia,True
+dt_interna_disponivel,True
+dt_interna_sem_nulos,True
+ano_disponivel,True
+alvo_disponivel,True
+alvo_binario,True
+features_sem_proibidas,True
+features_presentes,True
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_manifesto.json`
+
+- Git: `ignored` · `2.0 KB` · modified `2026-10-16 03:41 UTC`
+
+```json
+{
+  "status_coorte": "provisoria",
+  "versao_execucao": "piloto_v1",
+  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
+  "seed": 42,
+  "features": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "features_final_congelada": false,
+  "n_base_modelagem": 3915132,
+  "n_treino": 2740584,
+  "n_validacao": 587272,
+  "n_teste_criado_mas_nao_aberto": 587276,
+  "teste_aberto": false,
+  "quarentena_conflitos_split": {
+    "politica": "quarentena_provisoria",
+    "grupos_conflitantes": 2,
+    "linhas_excluidas": 4,
+    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
+  },
+  "artefatos": {
+    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_contrato.csv",
+    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_particoes.csv",
+    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T034100Z_predicoes_validacao.parquet"
+  }
+}
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv`
+
+- Git: `ignored` · `573 B` · modified `2026-10-16 03:41 UTC` · 2 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
+0.7751607183667255,0.4405563015380145,0.1980742897570493,0.5056971968518372,0.37570939963981415,0.7732132150838207,0.6694359683417564,0.5,587272,logistica_piloto_C1,provisoria,piloto_v1,1000000,20.387693400029093,4.755244900006801
+0.5,0.21868742252312387,0.17086323376238108,0.0,0.0,0.0,0.7813125774768761,0.5,587272,dummy_prior,provisoria,piloto_v1,2740584,1.2111138999462128,0.013503400143235922
+```
+
+### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_particoes.csv`
+
+- Git: `ignored` · `313 B` · modified `2026-10-16 03:41 UTC` · 3 rows
+
+```csv
+particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
+treino,2740584,599323,0.21868441178960396,2019,2026,2740574,69.99978544784697
+validacao,587272,128429,0.21868742252312387,2019,2026,587270,15.000056192230558
+teste,587276,128431,0.2186893385733454,2019,2026,587275,15.000158359922475
 ```
 
 ### `outputs/tables/04_handoff_provisional_20261012T123353Z_calibracao_bruta.csv`
@@ -8198,6 +9135,125 @@ logistica_C1_v2,2026,5392,288,0.0534124629080118,0.183018175442795,0.84578952237
 ### `outputs/tables/04_handoff_provisional_20261014T235131Z_transicao.csv`
 
 - Git: `ignored` · `742 B` · modified `2026-10-14 23:51 UTC` · 6 rows
+
+```csv
+componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
+Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
+Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
+Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
+Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
+Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
+Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
+```
+
+### `outputs/tables/04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv`
+
+- Git: `ignored` · `236 B` · modified `2026-10-16 03:46 UTC` · 2 rows
+
+```csv
+modelo,n,prevalencia,probabilidade_media,diferenca_media
+hist_gradient_boosting_v2,120000,0.21868333333333334,0.4237390097158091,0.20505567638247574
+logistica_C1_v2,120000,0.21868333333333334,0.429519905144712,0.21083657181137866
+```
+
+### `outputs/tables/04_handoff_provisional_20261016T034632Z_manifesto.json`
+
+- Git: `ignored` · `2.9 KB` · modified `2026-10-16 03:46 UTC`
+
+```json
+{
+  "tipo_coorte": "provisional",
+  "fonte_coorte": {
+    "kind": "provisional",
+    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
+    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
+    "size_bytes": 209678288,
+    "rows": 3915136,
+    "columns": 125
+  },
+  "dataset_supervisionado": {
+    "path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
+    "sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+    "rows": 3915132,
+    "columns": 43,
+    "partition_column": "particao",
+    "partition_counts": {
+      "treino": 2740584,
+      "teste": 587276,
+      "validacao": 587272
+    },
+    "seed": 42,
+    "test_opened": false
+  },
+  "status_execucao": "provisoria",
+  "shortlist_yaml": [
+    "hist_gradient_boosting",
+    "logistic"
+  ],
+  "shortlist_execucao": [
+    "hist_gradient_boosting_v2",
+    "logistica_C1_v2"
+  ],
+  "teste_consultado": false,
+  "tuning_realizado": false,
+  "calibracao_escolhida": false,
+  "limiar_escolhido": false,
+  "gate_g1": "pendente",
+  "gate_g6": "pendente",
+  "features_final_congelada": false,
+  "artefatos_origem_notebook03": {
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv",
+    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_manifesto.json",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet"
+  },
+  "artefatos_handoff": {
+    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_shortlist.csv",
+    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_temporal.csv",
+    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv",
+    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_transicao.csv"
+  }
+}
+```
+
+### `outputs/tables/04_handoff_provisional_20261016T034632Z_shortlist.csv`
+
+- Git: `ignored` · `650 B` · modified `2026-10-16 03:46 UTC` · 2 rows
+
+```csv
+roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
+0.7833709454003838,0.4596864874551059,0.1963290307347667,0.5089796841341061,0.370069746110313,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,9.506548200035468,1.666931699961424
+0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,5.923188799992204,0.9672848999034612
+```
+
+### `outputs/tables/04_handoff_provisional_20261016T034632Z_temporal.csv`
+
+- Git: `ignored` · `2.1 KB` · modified `2026-10-16 03:46 UTC` · 16 rows
+
+```csv
+modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
+hist_gradient_boosting_v2,2019,1334,160,0.1199400299850075,0.3465693516022601,0.8124547487223169,0.1311054367088673,0.2676039147206479
+hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.5164997626409047,0.7580653638705004,0.2315181417448417,0.5182468041996628
+hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4879800499510862,0.7341272640191554,0.2191939512605565,0.4800796932090034
+hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4206282927794213,0.7952690500444846,0.200822333132593,0.4149230955055803
+hist_gradient_boosting_v2,2023,7377,706,0.0957028602412905,0.3223006268758313,0.845449289406645,0.1332954113035727,0.2668442780746959
+hist_gradient_boosting_v2,2024,7034,586,0.083309638896787,0.2794980166565878,0.8336151009070198,0.128897354855991,0.2545488992692805
+hist_gradient_boosting_v2,2025,8886,651,0.0732613099257258,0.2618358631105581,0.8440987057415754,0.1240428892875915,0.2477663830586788
+hist_gradient_boosting_v2,2026,5379,298,0.0554006320877486,0.2169190881680288,0.8560976608472939,0.1050380093803063,0.2106342446047066
+logistica_C1_v2,2019,1334,160,0.1199400299850075,0.3425278204390595,0.8065960391822828,0.131269294895233,0.2832903109703609
+logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5002695045987536,0.7494558568326257,0.2307950140281995,0.5160348408274956
+logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.476768317572826,0.725251437289345,0.2182677563384315,0.474894880202947
+logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3982419945105877,0.7856544898899936,0.2072556792510112,0.4302675831396566
+logistica_C1_v2,2023,7377,706,0.0957028602412905,0.2946275487920166,0.8291804024268078,0.1410592491885203,0.2932824134819757
+logistica_C1_v2,2024,7034,586,0.083309638896787,0.2591739513736157,0.8256064266296294,0.1350874391598575,0.2802211824752972
+logistica_C1_v2,2025,8886,651,0.0732613099257258,0.2462244144676162,0.8324111147485024,0.1302454029077694,0.272552470357743
+logistica_C1_v2,2026,5379,298,0.0554006320877486,0.2232719877618279,0.8452558485422068,0.1120473935587403,0.2393976573825986
+```
+
+### `outputs/tables/04_handoff_provisional_20261016T034632Z_transicao.csv`
+
+- Git: `ignored` · `742 B` · modified `2026-10-16 03:46 UTC` · 6 rows
 
 ```csv
 componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
@@ -10232,7 +11288,7 @@ ano_internacao,quantidade_registros,percentual_coorte,periodo_completo
 
 ### `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv`
 
-- Git: `ignored` · `376 B` · modified `2026-10-14 23:31 UTC` · 4 rows
+- Git: `ignored` · `376 B` · modified `2026-10-16 03:39 UTC` · 4 rows
 
 ```csv
 indice_original,grupo_split,estrato_split,nu_notific,ano_internacao,alvo_obito_srag,evolucao,dt_interna
@@ -10244,7 +11300,7 @@ indice_original,grupo_split,estrato_split,nu_notific,ano_internacao,alvo_obito_s
 
 ### `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv`
 
-- Git: `ignored` · `154 B` · modified `2026-10-14 23:31 UTC` · 2 rows
+- Git: `ignored` · `154 B` · modified `2026-10-16 03:39 UTC` · 2 rows
 
 ```csv
 grupo_split,quantidade_linhas,quantidade_estratos,estratos_observados
@@ -10254,7 +11310,7 @@ grupo_split,quantidade_linhas,quantidade_estratos,estratos_observados
 
 ### `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv`
 
-- Git: `ignored` · `181 B` · modified `2026-10-14 23:31 UTC` · 1 rows
+- Git: `ignored` · `181 B` · modified `2026-10-16 03:39 UTC` · 1 rows
 
 ```csv
 etapa,politica,grupos_conflitantes,linhas_excluidas,linhas_restantes,status
@@ -10263,7 +11319,7 @@ quarentena_conflitos_split,quarentena_provisoria,2,4,3915132,provisoria_pendente
 
 ## 19. Snapshot provenance
 
-- Generated UTC: `2026-10-15T12:52:01+00:00`
-- Branch / commit: `main` / `77e533263f91aeee3430dcd5cfd5560fed7e8c53`
+- Generated UTC: `2026-10-16T22:09:12+00:00`
+- Branch / commit: `main` / `b1bad98768682c5f8ab4caf91a13486d44e2f956`
 - Origin: `https://github.com/Ivan-S-Oliveira/Projeto_Integrador.git`
 - Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': True, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 40, 'include_diff': True, 'max_diff_chars': 400000, 'run_tests': False, 'pytest_args': '', 'test_timeout': 1800, 'fail_on_high': False}`
