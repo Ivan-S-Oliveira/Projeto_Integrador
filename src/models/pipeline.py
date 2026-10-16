@@ -2,8 +2,8 @@
 Fundação dos modelos supervisionados.
 
 Fonte única de verdade para o pré-processamento e para a derivação do
-alvo binário a partir da coluna `evolucao`, além de leitura da config
-canônica (`configs/supervised.yaml`) e da conveniência `build_pipeline`.
+alvo binário a partir de ``evolucao``, além da leitura da config canônica
+(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
 
 Notebooks e demais modelos devem importar este módulo em vez de
 reimplementar o pré-processamento.
@@ -22,9 +22,24 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.utils import config as C
 
+__all__ = [
+    "ALVO",
+    "AUSENTE",
+    "COLUNA_TEMPO",
+    "FEATURES",
+    "FEATURES_CATEGORICAS",
+    "FEATURES_NUMERICAS",
+    "build_pipeline",
+    "build_preprocessor",
+    "criar_alvo_binario",
+    "filtrar_rotulos_validos",
+    "random_state",
+]
+
 logger = logging.getLogger(__name__)
 
-# Sem defaults próprios: se a config falhar, o import falha.
+# Sem defaults próprios: se a config falhar, o import falha — decisão
+# deliberada para que um YAML inválido impeça a modelagem cedo.
 ALVO: str = C.cfg("target", "coluna")
 COLUNA_TEMPO: str = C.cfg("coluna_tempo")
 
@@ -42,10 +57,12 @@ FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
 
 
 def _alvo_cfg_positivos() -> list[float]:
+    """Códigos de ``target.positivos`` do YAML, como floats."""
     return [float(v) for v in (C.cfg("target", "positivos") or [])]
 
 
 def _alvo_cfg_negativos() -> list[float]:
+    """Códigos de ``target.negativos`` do YAML, como floats."""
     return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
 
@@ -53,38 +70,26 @@ def build_preprocessor(
     numericas: Iterable[str] | None = None,
     categoricas: Iterable[str] | None = None,
 ) -> ColumnTransformer:
-    """
-    Constrói o `ColumnTransformer` de pré-processamento.
+    """``ColumnTransformer`` de pré-processamento.
 
-    - Numéricas: `SimpleImputer(strategy="median")` + `StandardScaler`.
-    - Categóricas: `SimpleImputer(strategy="constant",
-      fill_value=AUSENTE)` + `OneHotEncoder(handle_unknown="ignore")`.
-      O sentinela `AUSENTE` vem de
-      `missingness.categoricas.valor_ausente` no `supervised.yaml`,
-      mantendo o mesmo comportamento do Notebook 03.
+    - Numéricas: ``SimpleImputer(strategy="median")`` + ``StandardScaler``.
+    - Categóricas: ``SimpleImputer(strategy="constant", fill_value=AUSENTE)``
+      + ``OneHotEncoder(handle_unknown="ignore")``.
 
-    Parâmetros
-    ----------
-    numericas : iterable de str | None
-        Colunas numéricas. Se None, usa `FEATURES_NUMERICAS` (config).
-    categoricas : iterable de str | None
-        Colunas categóricas. Se None, usa `FEATURES_CATEGORICAS` (config).
-
-    Retorna
-    -------
-    ColumnTransformer pronto para ser encadeado em um `Pipeline`.
+    ``AUSENTE`` vem de ``missingness.categoricas.valor_ausente`` no YAML,
+    mantendo o mesmo comportamento do Notebook 03. ``None`` em cada
+    parâmetro usa a lista correspondente do YAML.
     """
     num = list(numericas) if numericas is not None else FEATURES_NUMERICAS
     cat = list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
 
     pipe_num = Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
+        ("scaler",  StandardScaler()),
     ])
-
     pipe_cat = Pipeline([
         ("imputer", SimpleImputer(strategy="constant", fill_value=AUSENTE)),
-        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ("onehot",  OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ])
 
     return ColumnTransformer(
@@ -103,29 +108,14 @@ def criar_alvo_binario(
     positivos: Iterable[float] | None = None,
     negativos: Iterable[float] | None = None,
 ) -> pd.Series:
-    """
-    Converte `evolucao` em alvo binário (float64, com NaN onde indefinido).
+    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
 
-        1 = óbito SRAG   (valores em `positivos`, default do YAML)
-        0 = cura         (valores em `negativos`, default do YAML)
-        NaN = qualquer outro valor (3.0, 9.0, nulos) → descartado adiante
-              por `filtrar_rotulos_validos`.
+    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
+    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
+    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
 
-    Por padrão, lê `target.coluna`, `target.positivos` e `target.negativos`
-    do `supervised.yaml`. Argumentos explícitos sobrepõem a config.
-
-    Parâmetros
-    ----------
-    alvo : str | None
-        Coluna de `df` usada como rótulo. Se None, usa `ALVO` (config).
-    positivos : iterable de float | None
-        Códigos que contam como positivo. Se None, lê do YAML.
-    negativos : iterable de float | None
-        Códigos que contam como negativo. Se None, lê do YAML.
-
-    Retorna
-    -------
-    pd.Series dtype float64 (usa NaN para indefinidos).
+    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
+    conjuntos se sobrepuserem ou se algum estiver vazio.
     """
     alvo = alvo if alvo is not None else ALVO
 
@@ -136,10 +126,9 @@ def criar_alvo_binario(
         float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
     }
 
-    if positivos_set & negativos_set:
+    if overlap := positivos_set & negativos_set:
         raise ValueError(
-            "`positivos` e `negativos` não podem se sobrepor: "
-            f"{sorted(positivos_set & negativos_set)}"
+            f"`positivos` e `negativos` não podem se sobrepor: {sorted(overlap)}"
         )
     if not positivos_set:
         raise ValueError("`target.positivos` está vazio na config.")
@@ -147,11 +136,9 @@ def criar_alvo_binario(
         raise ValueError("`target.negativos` está vazio na config.")
 
     valores = df[alvo].astype("float64")
-
     y = pd.Series(float("nan"), index=df.index, dtype="float64")
     y[valores.isin(negativos_set)] = 0
     y[valores.isin(positivos_set)] = 1
-
     return y
 
 
@@ -159,18 +146,19 @@ def filtrar_rotulos_validos(
     X: pd.DataFrame,
     y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """Remove linhas em que y é NaN. Retorna X, y alinhados (int8)."""
+    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
     if not y.index.equals(X.index):
         raise ValueError("X e y precisam ter o mesmo índice.")
 
     mascara = y.notna()
-    X_ok = X.loc[mascara].reset_index(drop=True)
-    y_ok = y.loc[mascara].astype("int8").reset_index(drop=True)
-    return X_ok, y_ok
+    return (
+        X.loc[mascara].reset_index(drop=True),
+        y.loc[mascara].astype("int8").reset_index(drop=True),
+    )
 
 
 def random_state() -> int:
-    """Seed canônica do projeto (vem de `config.SEED`)."""
+    """Seed canônica do projeto (``config.SEED``)."""
     return int(C.SEED)
 
 
@@ -182,19 +170,14 @@ def build_pipeline(
     features: Iterable[str] | None = None,
     strict: bool = True,
 ) -> Pipeline:
-    """
-    Constrói o Pipeline sklearn.
+    """Constrói o ``Pipeline`` sklearn.
 
-    - Se `classifier` for None, devolve só o pré-processamento (útil no C2,
-      que só inspeciona o pipeline).
-    - Se `classifier` for passado (C3+), anexa como etapa final.
-    - `features`: se None, usa `FEATURES` do módulo (que vem do YAML).
-    - `strict`: se True (default), levanta `KeyError` quando alguma feature
-      configurada estiver ausente em `X`. Se False, emite warning e segue
-      apenas com as features presentes.
-
-    As listas numéricas/categóricas vêm do `supervised.yaml`; se `X` for
-    passado, é feita uma verificação de presença das colunas.
+    - ``classifier=None`` → devolve só o pré-processamento (útil no C2).
+    - ``classifier`` passado (C3+) → anexa como etapa final.
+    - ``features=None`` → usa ``FEATURES`` do módulo.
+    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
+      estiver ausente em ``X``; ``False`` → emite warning e segue só com
+      as presentes.
     """
     num = list(FEATURES_NUMERICAS)
     cat = list(FEATURES_CATEGORICAS)
@@ -205,8 +188,7 @@ def build_pipeline(
         cat = [c for c in cat if c in fs]
 
     if X is not None:
-        ausentes = sorted((set(num) | set(cat)) - set(X.columns))
-        if ausentes:
+        if ausentes := sorted((set(num) | set(cat)) - set(X.columns)):
             msg = (
                 f"Features configuradas ausentes em X: {ausentes}. "
                 "Verifique `features` no supervised.yaml ou o DataFrame "

@@ -1,7 +1,7 @@
 """
 Avaliação de calibração de probabilidades.
 
-Complementa `src/models/calibration.py`:
+Complementa ``src/models/calibration.py``:
 
     src/models/calibration.py      → AJUSTA a calibração
     src/evaluation/calibration.py  → MEDE a qualidade da calibração
@@ -17,14 +17,27 @@ Métricas implementadas
 
 from __future__ import annotations
 
-from typing import Union
-
 import numpy as np
 import pandas as pd
 
 from src.evaluation.metrics import _to_int_labels, _to_np
 
-ArrayLike = Union[np.ndarray, pd.Series, list]
+ArrayLike = np.ndarray | pd.Series | list
+
+
+def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
+    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
+
+
+def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]:
+    return {
+        "bin_centro":    float((edges[b] + edges[b + 1]) / 2),
+        "freq_positiva": float("nan"),
+        "n":             0.0,
+        "gap":           float("nan"),
+    }
 
 
 def curva_confiabilidade(
@@ -41,11 +54,10 @@ def curva_confiabilidade(
         n             — número de amostras no bin
         gap           — |freq_positiva - bin_centro|
     """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    idx = np.clip(np.digitize(p, bins[1:-1], right=True), 0, n_bins - 1)
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    edges  = np.linspace(0.0, 1.0, n_bins + 1)
+    idx    = _bins_digitize(p, n_bins)
 
     linhas: list[dict[str, float]] = []
     for b in range(n_bins):
@@ -53,21 +65,16 @@ def curva_confiabilidade(
         n = int(m.sum())
 
         if n == 0:
-            linhas.append({
-                "bin_centro":    float((bins[b] + bins[b + 1]) / 2),
-                "freq_positiva": float("nan"),
-                "n":             0.0,
-                "gap":           float("nan"),
-            })
+            linhas.append(_linha_vazia(b, edges))
             continue
 
         centro = float(p[m].mean())
-        freq = float(y[m].mean())
+        freq   = float(y[m].mean())
         linhas.append({
             "bin_centro":    centro,
             "freq_positiva": freq,
             "n":             float(n),
-            "gap":           float(abs(freq - centro)),
+            "gap":           abs(freq - centro),
         })
 
     return pd.DataFrame(linhas)
@@ -80,13 +87,13 @@ def ece(
 ) -> float:
     """Expected Calibration Error — média ponderada dos gaps por bin."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    total = float(tabela["n"].sum())
+    total  = float(tabela["n"].sum())
 
     if total == 0:
         return float("nan")
 
     pesos = tabela["n"] / total
-    gaps = tabela["gap"].fillna(0.0)
+    gaps  = tabela["gap"].fillna(0.0)
     return float((pesos * gaps).sum())
 
 
@@ -97,7 +104,7 @@ def mce(
 ) -> float:
     """Maximum Calibration Error — o pior gap entre os bins."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    gaps = tabela["gap"].dropna()
+    gaps   = tabela["gap"].dropna()
 
     if gaps.empty:
         return float("nan")
@@ -129,31 +136,29 @@ def brier_decomposicao(
     n = len(y)
 
     if n == 0:
-        raise ValueError("y_true vazio.")
+        raise ValueError("y_true vazio — não há como decompor o Brier.")
 
-    base_rate = float(y.mean())
+    base_rate   = float(y.mean())
     uncertainty = base_rate * (1.0 - base_rate)
-    brier_obs = float(np.mean((p - y) ** 2))
-
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    idx = np.clip(np.digitize(p, bins[1:-1], right=True), 0, n_bins - 1)
+    brier_obs   = float(np.mean((p - y) ** 2))
+    idx         = _bins_digitize(p, n_bins)
 
     reliability = 0.0
-    resolution = 0.0
+    resolution  = 0.0
 
     for b in range(n_bins):
-        m = idx == b
+        m   = idx == b
         n_b = int(m.sum())
 
         if n_b == 0:
             continue
 
-        freq_obs = float(y[m].mean())
+        freq_obs  = float(y[m].mean())
         freq_pred = float(p[m].mean())
-        peso = n_b / n
+        peso      = n_b / n
 
         reliability += peso * (freq_obs - freq_pred) ** 2
-        resolution += peso * (freq_obs - base_rate) ** 2
+        resolution  += peso * (freq_obs - base_rate) ** 2
 
     return {
         "brier":       brier_obs,

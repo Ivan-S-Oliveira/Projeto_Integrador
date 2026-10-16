@@ -1,24 +1,21 @@
 """
-Métricas de classificação binária — todas retornam `float`.
+Métricas de classificação binária — todas retornam ``float``.
 
-Motivo: o scikit-learn retorna `Float | ndarray` para várias métricas,
-o que faz o Pylance reclamar. Aqui a gente encapsula e garante `float`.
+Encapsula o scikit-learn para garantir ``float``: em várias funções ele
+retorna ``Float | ndarray``, o que polui o type-checker.
 
-Também oferece:
-    - `metricas_por_limiar` → tabela varrendo limiares
-    - `ic_bootstrap`        → intervalo de confiança por bootstrap
+Oferece ainda:
+    - ``metricas_por_limiar`` → tabela varrendo limiares
+    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
 
-Convenção de nomes de chaves em `metricas_completas`
-----------------------------------------------------
-`ap` (average precision) e `pr_auc` (área sob a curva precision-recall)
-são a **mesma métrica** — a chave `pr_auc` é um alias mantido para
-compatibilidade com consumidores que usam essa nomenclatura (ex.: C4).
-Ambas apontam para o mesmo valor; não divergem.
+``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
+chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
+que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
 """
 
 from __future__ import annotations
 
-from typing import Callable, Union
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -50,7 +47,7 @@ __all__ = [
     "ic_bootstrap",
 ]
 
-ArrayLike = Union[np.ndarray, pd.Series, list]
+ArrayLike = np.ndarray | pd.Series | list
 
 
 def _to_np(x: ArrayLike) -> np.ndarray:
@@ -72,6 +69,12 @@ def _contagens_confusao(
     return tp, fp, tn, fn
 
 
+def _especificidade_de_contagens(tn: int, fp: int) -> float:
+    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
+    denom = tn + fp
+    return tn / denom if denom > 0 else 0.0
+
+
 def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
     return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
 
@@ -85,74 +88,44 @@ def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
 
 
 def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    """
-    Log loss (entropia cruzada binária).
-
-    Recebe probabilidades (não rótulos duros) e devolve `float`.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    return float(sk_log_loss(y, p, labels=[0, 1]))
+    """Log loss (entropia cruzada binária) sobre probabilidades."""
+    return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
 
 
 def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(
-        f1_score(
-            _to_int_labels(y_true),
-            _to_int_labels(y_pred),
-            zero_division=0,
-        )
-    )
+    return float(f1_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
 
 
 def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(
-        precision_score(
-            _to_int_labels(y_true),
-            _to_int_labels(y_pred),
-            zero_division=0,
-        )
-    )
+    return float(precision_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
 
 
 def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(
-        recall_score(
-            _to_int_labels(y_true),
-            _to_int_labels(y_pred),
-            zero_division=0,
-        )
-    )
+    return float(recall_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
 
 
 def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(
-        accuracy_score(_to_int_labels(y_true), _to_int_labels(y_pred))
-    )
+    return float(accuracy_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    ))
 
 
 def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """
-    Especificidade = TN / (TN + FP).
-
-    Ou seja, `recall` da classe negativa. Retorna 0.0 quando não há
-    nenhum negativo real (evita divisão por zero).
-    """
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-
-    _, fp, tn, _ = _contagens_confusao(y, p)
-    denom = tn + fp
-    return float(tn / denom) if denom > 0 else 0.0
+    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
+    _, fp, tn, _ = _contagens_confusao(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    )
+    return _especificidade_de_contagens(tn, fp)
 
 
 def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """
-    Sensibilidade = recall da classe positiva.
-
-    Alias semântico de `recall` — mantido para alinhar com o YAML,
-    que pede explicitamente "sensibilidade".
-    """
+    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
     return recall(y_true, y_pred)
 
 
@@ -162,22 +135,15 @@ def metricas_completas(
     limiar: float = 0.5,
 ) -> dict[str, float]:
     """
-    Retorna um dict com AUC, AP, pr_auc, Brier, log_loss, F1, precision,
-    recall, sensibilidade, especificidade e accuracy.
+    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
 
-    Pronto para `Run.metrica(**d)`.
-
-    Notas
-    -----
-    - `pr_auc` é **alias** de `ap` (ambos = `average_precision_score`),
-      mantido para compatibilidade com consumidores que usam esse nome
-      (ex.: C4). Os dois valores são idênticos.
+    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
+    mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
     """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
     y_pred = (p >= limiar).astype(int)
-
-    ap = average_precision(y, p)
+    ap     = average_precision(y, p)
 
     return {
         "auc":            auc(y, p),
@@ -202,20 +168,15 @@ def metricas_por_limiar(
     n_limiares: int = 101,
 ) -> pd.DataFrame:
     """
-    Tabela com métricas para cada limiar em [0.01, 0.99].
+    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
 
-    Colunas: limiar, tp, fp, tn, fn, f1, precision, recall,
-    sensibilidade, especificidade, accuracy, youden_j.
+    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
+    sensibilidade, especificidade, accuracy, youden_j``.
 
-    Usa as métricas deste próprio módulo — não há tabela paralela de lambdas.
-
-    Notas
-    -----
-    - `youden_j` = sensibilidade + especificidade − 1 = recall +
-      especificidade − 1. Índice de Youden, útil para escolher o limiar
-      que maximiza a separação entre as classes.
-    - `tp`, `fp`, `tn`, `fn` vêm da matriz de confusão no limiar corrente
-      e permitem derivar qualquer outra métrica a posteriori.
+    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
+    o limiar que maximiza a separação entre as classes. As contagens de
+    confusão ficam expostas para permitir derivar qualquer outra métrica
+    a posteriori — não há tabela paralela de lambdas.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
@@ -223,14 +184,12 @@ def metricas_por_limiar(
     linhas: list[dict[str, float]] = []
 
     for th in np.linspace(0.01, 0.99, n_limiares):
-        lim = float(th)
+        lim    = float(th)
         y_pred = (p >= lim).astype(int)
 
         tp, fp, tn, fn = _contagens_confusao(y, y_pred)
-
         rec = recall(y, y_pred)
-        esp = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
-        youden_j = rec + esp - 1.0
+        esp = _especificidade_de_contagens(tn, fp)
 
         linhas.append({
             "limiar":         lim,
@@ -244,7 +203,7 @@ def metricas_por_limiar(
             "sensibilidade":  rec,
             "especificidade": esp,
             "accuracy":       accuracy(y, y_pred),
-            "youden_j":       youden_j,
+            "youden_j":       rec + esp - 1.0,
         })
 
     return pd.DataFrame(linhas)
@@ -262,41 +221,31 @@ def ic_bootstrap(
     """
     Intervalo de confiança via bootstrap percentil.
 
-    Retorna (estimativa, limite_inferior, limite_superior).
-
-    Parâmetros
-    ----------
-    metrica : callable(y_true, y_prob) -> float
-        Função de métrica. Default: `auc`.
-    n_boot : int
-        Número de reamostragens.
-    alpha : float
-        Nível de significância (0.05 → IC 95%).
-    seed : int
-        Semente para reprodutibilidade.
+    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
+    degeneradas (uma única classe) são descartadas internamente. Métrica
+    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
     """
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
-
-    rng = np.random.default_rng(seed)
     n = len(y)
+
+    rng     = np.random.default_rng(seed)
     valores = np.empty(n_boot, dtype="float64")
 
     for i in range(n_boot):
         idx = rng.integers(0, n, size=n)
+        valores[i] = (
+            metrica(y[idx], p[idx]) if len(np.unique(y[idx])) >= 2 else np.nan
+        )
 
-        if len(np.unique(y[idx])) < 2:
-            valores[i] = np.nan
-            continue
-
-        valores[i] = metrica(y[idx], p[idx])
-
-    est = float(metrica(y, p))
+    est     = float(metrica(y, p))
     validos = valores[~np.isnan(valores)]
 
     if validos.size == 0:
         return est, float("nan"), float("nan")
 
-    inf = float(np.quantile(validos, alpha / 2))
-    sup = float(np.quantile(validos, 1 - alpha / 2))
-    return est, inf, sup
+    return (
+        est,
+        float(np.quantile(validos, alpha / 2)),
+        float(np.quantile(validos, 1 - alpha / 2)),
+    )

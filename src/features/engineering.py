@@ -1,4 +1,17 @@
+"""Engenharia de atributos do pipeline supervisionado.
+
+Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
+transforma colunas disponíveis na admissão hospitalar em atributos prontos
+para o modelo — nenhuma usa informação posterior ao desfecho.
+
+As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
+``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
+quando o YAML não define nada.
+"""
+
 from __future__ import annotations
+
+from typing import Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -16,8 +29,11 @@ __all__ = [
     "montar_features",
 ]
 
-_INTERVALO_MAX_DIAS_PADRAO: float = 60.0
-_SEMANAS_POR_ANO: float = 52.18
+PoliticaIntervalo = Literal["sinalizar", "descartar"]
+
+_INTERVALO_MAX_DIAS_PADRAO = 60.0
+_SEMANAS_POR_ANO           = 52.18
+_POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
 
 _FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
     ("<1",    0.0,   1.0),
@@ -49,18 +65,18 @@ def _intervalo_max_dias() -> float:
     return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
 
 
-def _intervalo_politica() -> str:
+def _intervalo_politica() -> PoliticaIntervalo:
     valor = C.cfg("features", "engenharia", "intervalo_politica")
     if valor is None:
         return "sinalizar"
 
     politica = str(valor).strip().lower()
-    if politica not in ("sinalizar", "descartar"):
+    if politica not in _POLITICAS_VALIDAS:
         raise ValueError(
             f"features.engenharia.intervalo_politica inválida: {valor!r}. "
-            "Use 'sinalizar' ou 'descartar'."
+            f"Use uma de {sorted(_POLITICAS_VALIDAS)}."
         )
-    return politica
+    return politica  # type: ignore[return-value]
 
 
 def _faixas_etarias() -> list[tuple[str, float, float | None]]:
@@ -86,32 +102,30 @@ def idade_em_anos(df: pd.DataFrame) -> pd.Series:
     a codificação é desconhecida, a idade é negativa ou excede 120.
     """
     idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
-    tipo = pd.to_numeric(df["tp_idade"], errors="coerce")
+    tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
 
-    valor = pd.Series(np.nan, index=df.index, dtype="float64")
+    anos = pd.Series(
+        np.select(
+            [tipo.eq(1), tipo.eq(2), tipo.eq(3)],
+            [idade / 365.25, idade / 12.0, idade],
+            default=np.nan,
+        ),
+        index=df.index,
+        dtype="float64",
+    )
 
-    mask_d = tipo == 1
-    mask_m = tipo == 2
-    mask_a = tipo == 3
-
-    valor[mask_d] = (idade[mask_d] / 365.25).to_numpy()
-    valor[mask_m] = (idade[mask_m] / 12.0).to_numpy()
-    valor[mask_a] = idade[mask_a].to_numpy()
-
-    invalido = idade.isna() | (idade < 0) | ~tipo.isin([1, 2, 3])
-    valor = valor.where(~invalido, np.nan)
-    valor = valor.where(valor <= 120.0, np.nan)
-
-    return valor
+    invalido = idade.isna() | idade.lt(0) | ~tipo.isin([1, 2, 3]) | anos.gt(120)
+    return anos.where(~invalido)
 
 
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
     """
     Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
 
-    Colunas: dias_sintomas_ate_internacao (float64), flag_intervalo_invalido
-    (int8), flag_internacao_antes_sintomas (int8). A política de valores
-    fora de [0, intervalo_max_dias] vem de features.engenharia.intervalo_politica.
+    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
+    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
+    fora de ``[0, intervalo_max_dias]`` vem de
+    ``features.engenharia.intervalo_politica``.
     """
     max_dias = _intervalo_max_dias()
     politica = _intervalo_politica()
@@ -119,29 +133,18 @@ def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
     dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
     dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
 
-    delta = pd.to_numeric(
-        (dt_int - dt_sin).dt.days, errors="coerce"
-    ).astype("float64")
+    delta = (dt_int - dt_sin).dt.days.astype("float64")
 
-    delta_arr = delta.to_numpy(dtype="float64", na_value=np.nan)
-    data_ausente = pd.isna(delta_arr)
-    negativo = (~data_ausente) & (delta_arr < 0)
-    acima_limite = (~data_ausente) & (delta_arr > float(max_dias))
+    invalido = delta.isna() | delta.lt(0) | delta.gt(max_dias)
+    negativo = delta.lt(0)
 
-    invalido = data_ausente | negativo | acima_limite
+    delta_final = delta.where(~invalido) if politica == "descartar" else delta
 
-    if politica == "descartar":
-        delta_final = delta.where(~invalido, np.nan).astype("float64")
-    else:
-        delta_final = delta
-
-    return pd.DataFrame(
-        {
-            "dias_sintomas_ate_internacao":   delta_final,
-            "flag_intervalo_invalido":        invalido.astype("int8"),
-            "flag_internacao_antes_sintomas": negativo.astype("int8"),
-        }
-    )
+    return pd.DataFrame({
+        "dias_sintomas_ate_internacao":   delta_final,
+        "flag_intervalo_invalido":        invalido.astype("int8"),
+        "flag_internacao_antes_sintomas": negativo.astype("int8"),
+    })
 
 
 def sazonalidade(
@@ -149,15 +152,13 @@ def sazonalidade(
     coluna_data: str | None = None,
 ) -> pd.DataFrame:
     """
-    Codifica a semana ISO como par (seno, cosseno) em 2π × (semana − 1)/52,18.
+    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
 
-    Coluna default: dt_sin_pri (ou features.engenharia.coluna_sazonalidade).
+    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
     Datas nulas resultam em NaN.
     """
     if coluna_data is None:
-        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade")
-    if coluna_data is None:
-        coluna_data = "dt_sin_pri"
+        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
     if coluna_data not in df.columns:
         raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
 
@@ -166,35 +167,32 @@ def sazonalidade(
     semana = pd.Series(np.nan, index=df.index, dtype="float64")
     mask = datas.notna()
     if mask.any():
-        iso = datas[mask].dt.isocalendar()
-        semana.loc[mask] = iso["week"].astype("float64").to_numpy()
+        semana.loc[mask] = (
+            datas[mask].dt.isocalendar()["week"].astype("float64").to_numpy()
+        )
 
     angulo = 2.0 * np.pi * (semana - 1.0) / _SEMANAS_POR_ANO
 
-    return pd.DataFrame(
-        {
-            "sin_semana": np.sin(angulo),
-            "cos_semana": np.cos(angulo),
-        }
-    )
+    return pd.DataFrame({
+        "sin_semana": np.sin(angulo),
+        "cos_semana": np.cos(angulo),
+    })
 
 
 def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
     """
-    Categoriza idade em faixas semiabertas [min, max) do YAML.
+    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
 
-    Idade nula vira a categoria explícita "desconhecida".
+    Idade nula vira a categoria explícita ``"desconhecida"``.
     """
     faixas = _faixas_etarias()
-    idade = pd.to_numeric(idade_anos, errors="coerce")
+    idade  = pd.to_numeric(idade_anos, errors="coerce")
 
     out = pd.Series("desconhecida", index=idade.index, dtype="object")
-
     for nome, lo, hi in faixas:
-        if hi is None:
-            mask = idade.notna() & (idade >= lo)
-        else:
-            mask = idade.notna() & (idade >= lo) & (idade < hi)
+        mask = idade.ge(lo)
+        if hi is not None:
+            mask &= idade.lt(hi)
         out[mask] = nome
 
     return out.astype("category")
@@ -202,41 +200,39 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
 
 def sexo_categoria(df: pd.DataFrame) -> pd.Series:
     """
-    Normaliza cs_sexo em categórica explícita.
+    Normaliza ``cs_sexo`` em categórica explícita.
 
-    M → masculino; F → feminino; I → ignorado; demais/nulo → ausente.
+    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
     """
     sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
 
     out = pd.Series("ausente", index=df.index, dtype="object")
-    out[sexo == "M"] = "masculino"
-    out[sexo == "F"] = "feminino"
-    out[sexo == "I"] = "ignorado"
+    out[sexo.eq("M")] = "masculino"
+    out[sexo.eq("F")] = "feminino"
+    out[sexo.eq("I")] = "ignorado"
 
     return out.astype("category")
 
 
 def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Extrai ano_internacao e mes_internacao de dt_interna como float64.
+    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
 
     Datas nulas resultam em NaN, mantendo compatibilidade com
-    SimpleImputer e StandardScaler.
+    ``SimpleImputer`` e ``StandardScaler``.
     """
     dt = pd.to_datetime(df["dt_interna"], errors="coerce")
 
-    return pd.DataFrame(
-        {
-            "ano_internacao": dt.dt.year.astype("float64"),
-            "mes_internacao": dt.dt.month.astype("float64"),
-        }
-    )
+    return pd.DataFrame({
+        "ano_internacao": dt.dt.year.astype("float64"),
+        "mes_internacao": dt.dt.month.astype("float64"),
+    })
 
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Aplica todas as derivações e devolve cópia de df com as colunas de
-    COLUNAS_DERIVADAS adicionadas. Não muta a entrada.
+    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
+    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
     """
     out = df.copy()
 

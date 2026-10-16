@@ -1,37 +1,26 @@
-"""
-Criação de partições agrupadas e estratificadas (treino / validação / teste).
+"""Partições agrupadas e estratificadas (treino / validação / teste).
 
 Garante simultaneamente:
 
-- **Estratificação**: cada partição preserva aproximadamente a proporção do
-  alvo (0/1), importante porque a prevalência de óbito é baixa.
-- **Agrupamento**: todas as linhas de um mesmo grupo (p.ex. paciente) caem em
-  uma única partição, evitando vazamento entre treino e avaliação.
+- **Estratificação**: cada partição preserva a proporção do alvo (0/1),
+  importante porque a prevalência de óbito é baixa.
+- **Agrupamento**: todas as linhas de um mesmo grupo caem numa única
+  partição, evitando vazamento entre treino e avaliação.
 
 Estratos pequenos demais para as três partições são tratados por
-`politica_estratos_pequenos`:
+``politica_estratos_pequenos``. Uso::
 
-- ``"raise"``        → levanta `ValueError` (default).
-- ``"warn_teste"``   → warning + estrato inteiro vai para `teste`.
-- ``"warn_treino"``  → warning + estrato inteiro vai para `treino`.
-- ``"drop"``         → warning + linhas do estrato removidas.
-
-Uso típico
-----------
     from src.data.split import criar_particoes_agrupadas
 
     df_part = criar_particoes_agrupadas(
-        df,
-        target_column="alvo",
-        group_column="nu_notific",
-        partition_column="particao",
+        df, target_column="alvo", group_column="nu_notific",
     )
 """
 
 from __future__ import annotations
 
 import warnings
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -42,28 +31,20 @@ __all__ = [
     "criar_particoes_agrupadas",
 ]
 
-
 PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
 
-PoliticaEstratosPequenos = Literal[
-    "raise", "warn_teste", "warn_treino", "drop"
-]
+PoliticaEstratosPequenos = Literal["raise", "warn_teste", "warn_treino", "drop"]
 PoliticaGrupoHeterogeneo = Literal["raise", "warn"]
 
-_POLITICAS_ESTRATOS_PEQUENOS: tuple[str, ...] = (
-    "raise", "warn_teste", "warn_treino", "drop"
-)
-_POLITICAS_GRUPO_HETEROGENEO: tuple[str, ...] = ("raise", "warn")
+_POLITICAS_ESTRATOS_PEQUENOS = frozenset(get_args(PoliticaEstratosPequenos))
+_POLITICAS_GRUPO_HETEROGENEO = frozenset(get_args(PoliticaGrupoHeterogeneo))
 
 
 class SplitWarning(UserWarning):
-    """
-    Emitido quando o split precisa tomar uma decisão não-trivial.
+    """Decisão não-trivial do split (estrato pequeno, grupo com alvo misto).
 
-    Casos que disparam: estratos pequenos demais para as três partições e
-    grupos com alvo heterogêneo. Filtre com
-    ``warnings.filterwarnings("ignore", category=SplitWarning)`` se a decisão
-    já foi tomada pelo grupo.
+    Filtre com ``warnings.filterwarnings("ignore", category=SplitWarning)``
+    se a decisão já foi tomada pelo grupo.
     """
 
 
@@ -81,7 +62,6 @@ def _validar_parametros(
 ) -> None:
     if df.empty:
         raise ValueError("DataFrame vazio — não há como criar partições.")
-
     if target_column not in df.columns:
         raise KeyError(f"Coluna de alvo ausente: {target_column!r}")
     if group_column not in df.columns:
@@ -89,37 +69,30 @@ def _validar_parametros(
     if partition_column in df.columns:
         raise ValueError(
             f"DataFrame já contém a coluna {partition_column!r}. "
-            "Remova-a ou escolha outro nome para `partition_column` — "
-            "o split não sobrescreve partições existentes."
+            "Remova-a ou escolha outro nome — o split não sobrescreve partições."
         )
 
-    if not (0.0 < frac_treino < 1.0):
+    if not 0.0 < frac_treino < 1.0:
         raise ValueError(f"frac_treino deve estar em (0, 1); recebido {frac_treino!r}.")
-    if not (0.0 < frac_validacao < 1.0):
-        raise ValueError(
-            f"frac_validacao deve estar em (0, 1); recebido {frac_validacao!r}."
-        )
+    if not 0.0 < frac_validacao < 1.0:
+        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {frac_validacao!r}.")
     if frac_treino + frac_validacao >= 1.0:
-        raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 (o restante vira `teste`)."
-        )
+        raise ValueError("frac_treino + frac_validacao deve ser < 1 (resto vira `teste`).")
 
     if min_grupos_por_estrato < len(PARTICOES_CANONICAS):
         raise ValueError(
             f"min_grupos_por_estrato deve ser >= {len(PARTICOES_CANONICAS)}; "
             f"recebido {min_grupos_por_estrato!r}."
         )
-
     if politica_estratos_pequenos not in _POLITICAS_ESTRATOS_PEQUENOS:
         raise ValueError(
             f"politica_estratos_pequenos inválida: {politica_estratos_pequenos!r}. "
-            f"Use uma de {_POLITICAS_ESTRATOS_PEQUENOS}."
+            f"Use uma de {sorted(_POLITICAS_ESTRATOS_PEQUENOS)}."
         )
-
     if on_grupo_alvo_heterogeneo not in _POLITICAS_GRUPO_HETEROGENEO:
         raise ValueError(
             f"on_grupo_alvo_heterogeneo inválido: {on_grupo_alvo_heterogeneo!r}. "
-            f"Use uma de {_POLITICAS_GRUPO_HETEROGENEO}."
+            f"Use uma de {sorted(_POLITICAS_GRUPO_HETEROGENEO)}."
         )
 
 
@@ -130,21 +103,18 @@ def _estrato_por_grupo(
     group_column: str,
     on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo,
 ) -> pd.Series:
-    """
-    Devolve uma `Series` indexada por grupo com o estrato (valor do alvo).
+    """Estrato (valor do alvo) por grupo.
 
     Grupos com mais de um valor distinto de alvo são tratados por
-    `on_grupo_alvo_heterogeneo`: ``"raise"`` levanta `ValueError`; ``"warn"``
-    emite `SplitWarning` e usa a moda por grupo. Grupos com alvo todo nulo são
-    descartados com `SplitWarning`.
+    ``on_grupo_alvo_heterogeneo``: ``"raise"`` levanta ``ValueError``;
+    ``"warn"`` emite ``SplitWarning`` e usa a moda. Grupos com alvo todo
+    nulo são descartados com ``SplitWarning``.
     """
-    nunique = (
-        df.groupby(group_column, observed=True)[target_column]
-          .nunique(dropna=True)
-    )
-    heterogeneos = nunique[nunique > 1]
+    agrupado = df.groupby(group_column, observed=True)[target_column]
 
-    if len(heterogeneos) > 0:
+    heterogeneos = agrupado.nunique(dropna=True)
+    heterogeneos = heterogeneos[heterogeneos > 1]
+    if not heterogeneos.empty:
         amostra = heterogeneos.index.tolist()[:5]
         msg = (
             f"{len(heterogeneos)} grupo(s) com mais de um valor distinto "
@@ -155,21 +125,16 @@ def _estrato_por_grupo(
                 msg + ". Resolva as inconsistências ou use "
                 "on_grupo_alvo_heterogeneo='warn'."
             )
-        warnings.warn(
-            msg + ". Usando a moda por grupo.",
-            SplitWarning,
-            stacklevel=3,
-        )
+        warnings.warn(msg + ". Usando a moda por grupo.", SplitWarning, stacklevel=3)
 
-    estrato = (
-        df.groupby(group_column, observed=True)[target_column]
-          .agg(lambda s: s.dropna().mode().iloc[0] if s.notna().any() else None)
+    estrato = agrupado.agg(
+        lambda s: s.dropna().mode().iloc[0] if s.notna().any() else None
     )
 
-    sem_alvo = estrato[estrato.isna()]
-    if len(sem_alvo) > 0:
+    if estrato.isna().any():
+        n = int(estrato.isna().sum())
         warnings.warn(
-            f"{len(sem_alvo)} grupo(s) com alvo todo nulo em {target_column!r}. "
+            f"{n} grupo(s) com alvo todo nulo em {target_column!r}. "
             "Serão descartados do split.",
             SplitWarning,
             stacklevel=3,
@@ -187,16 +152,13 @@ def _distribuir_tamanhos(
     frac_treino: float,
     frac_validacao: float,
 ) -> tuple[int, int, int]:
-    """Distribui `n >= 3` grupos em (treino, validacao, teste) com ≥1 por partição."""
+    """Distribui ``n >= 3`` grupos em (treino, validação, teste), ≥1 por partição."""
     if n < 3:
         raise ValueError(f"_distribuir_tamanhos requer n >= 3; recebido {n}.")
 
-    n_treino = max(1, int(n * frac_treino))
-    n_valid = max(1, int(n * frac_validacao))
-    n_teste = n - n_treino - n_valid
-    if n_teste < 1:
-        n_treino = n - n_valid - 1
-        n_teste = 1
+    n_valid  = max(1, int(n * frac_validacao))
+    n_teste  = max(1, n - max(1, int(n * frac_treino)) - n_valid)
+    n_treino = n - n_valid - n_teste
     return n_treino, n_valid, n_teste
 
 
@@ -222,19 +184,14 @@ def _aplicar_politica_estrato_pequeno(
             "politica_estratos_pequenos='warn_teste'|'warn_treino'|'drop'."
         )
 
-    destino_por_politica = {
-        "warn_teste": ("teste", "Destinando ao teste."),
-        "warn_treino": ("treino", "Destinando ao treino."),
-    }
-    if politica in destino_por_politica:
-        destino, sufixo = destino_por_politica[politica]
-        warnings.warn(f"{msg} {sufixo}", SplitWarning, stacklevel=2)
-        for g in grupos:
-            atribuicao[g] = destino
+    if politica == "drop":
+        warnings.warn(f"{msg} Descartando do resultado.", SplitWarning, stacklevel=2)
+        descartar.update(grupos)
         return
 
-    warnings.warn(f"{msg} Descartando do resultado.", SplitWarning, stacklevel=2)
-    descartar.update(grupos)
+    destino = "teste" if politica == "warn_teste" else "treino"
+    warnings.warn(f"{msg} Destinando ao {destino}.", SplitWarning, stacklevel=2)
+    atribuicao.update({g: destino for g in grupos})
 
 
 def criar_particoes_agrupadas(
@@ -250,48 +207,15 @@ def criar_particoes_agrupadas(
     politica_estratos_pequenos: PoliticaEstratosPequenos = "raise",
     on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo = "raise",
 ) -> pd.DataFrame:
-    """
-    Cria partições treino/validação/teste agrupadas por `group_column` e
-    estratificadas por `target_column`.
+    """Partições treino/validação/teste agrupadas e estratificadas.
 
-    Não muta `df`: devolve uma cópia com a coluna `partition_column` adicionada.
+    Não muta ``df``: devolve cópia com ``partition_column`` adicionada.
+    Grupos com alvo nulo e estratos descartados por ``"drop"`` não aparecem.
 
-    Parâmetros
-    ----------
-    df : pd.DataFrame
-        Base de entrada. Precisa conter `target_column` e `group_column`.
-    target_column : str
-        Coluna binária (0/1) usada como estrato.
-    group_column : str
-        Coluna de agrupamento (p.ex. `nu_notific`).
-    partition_column : str
-        Nome da coluna de saída. Não pode já existir em `df`.
-    frac_treino, frac_validacao : float
-        Frações alvo. `frac_teste = 1 - frac_treino - frac_validacao`.
-    seed : int
-        Semente do gerador. Mesmo `seed` + mesmo `df` → mesmo resultado.
-    min_grupos_por_estrato : int
-        Mínimo de grupos por estrato para permitir split em três partições.
-        Precisa ser ≥ 3.
-    politica_estratos_pequenos : {"raise", "warn_teste", "warn_treino", "drop"}
-        Comportamento para estratos abaixo de `min_grupos_por_estrato`.
-    on_grupo_alvo_heterogeneo : {"raise", "warn"}
-        Como tratar grupos com mais de um valor de alvo.
-
-    Retorno
-    -------
-    pd.DataFrame
-        Cópia de `df` com a coluna `partition_column` em
-        `{"treino", "validacao", "teste"}`. Grupos com alvo nulo e estratos
-        descartados por `politica_estratos_pequenos="drop"` não aparecem.
-
-    Levanta
-    ------
-    KeyError
-        Se `target_column` ou `group_column` não existirem em `df`.
-    ValueError
-        Parâmetros inválidos, DataFrame vazio, coluna de partição já presente,
-        ou estrato pequeno com política ``"raise"``.
+    Levanta ``KeyError`` se ``target_column`` ou ``group_column`` não
+    existirem em ``df``, e ``ValueError`` para parâmetros inválidos,
+    DataFrame vazio, coluna de partição já presente, ou estrato pequeno
+    com política ``"raise"``.
     """
     _validar_parametros(
         df,
@@ -312,7 +236,7 @@ def criar_particoes_agrupadas(
         on_grupo_alvo_heterogeneo=on_grupo_alvo_heterogeneo,
     )
 
-    rng = np.random.default_rng(seed)
+    rng       = np.random.default_rng(seed)
     atribuicao: dict[Any, str] = {}
     descartar: set[Any] = set()
 
@@ -331,15 +255,16 @@ def criar_particoes_agrupadas(
             )
             continue
 
-        n_treino, n_valid, _ = _distribuir_tamanhos(
-            len(grupos), frac_treino, frac_validacao
+        n_treino, n_valid, n_teste = _distribuir_tamanhos(
+            len(grupos), frac_treino, frac_validacao,
         )
-        for g in grupos[:n_treino]:
-            atribuicao[g] = "treino"
-        for g in grupos[n_treino:n_treino + n_valid]:
-            atribuicao[g] = "validacao"
-        for g in grupos[n_treino + n_valid:]:
-            atribuicao[g] = "teste"
+        fatias = {
+            "treino":    grupos[:n_treino],
+            "validacao": grupos[n_treino:n_treino + n_valid],
+            "teste":     grupos[n_treino + n_valid:],
+        }
+        for particao, membros in fatias.items():
+            atribuicao.update({g: particao for g in membros})
 
     out = df.copy()
     out[partition_column] = out[group_column].map(atribuicao)

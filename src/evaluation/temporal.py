@@ -1,52 +1,41 @@
 """
 Split temporal em três blocos + trava do holdout.
 
-⚠️  PAPEL ATUAL DESTE MÓDULO
-----------------------------
-O split **oficial** do projeto é o **aleatório estratificado**, gerado no
-Notebook 03 e persistido na coluna de partição do artefato supervisionado
-(`dataset_supervisionado.parquet`). Esse é o caminho usado por C2, C3, C5,
-C6 e G8.
+⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
+O split oficial do projeto é o **aleatório estratificado**, gerado no
+Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
+C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
+se mantém se eu treinar no passado e testar no futuro?".
 
-Este módulo (`TemporalSplit` / `split_temporal_3way`) é mantido como
-**ferramenta de sensibilidade temporal** — serve para responder perguntas
-do tipo "o desempenho se mantém se eu treinar no passado e testar no
-futuro?". Ele **não** é o caminho principal e **não** deve ser usado para
-gerar a partição consumida pelo pipeline supervisionado.
+Regra de ouro (quando usado):
+    treino + validacao → escolha de modelo
+    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
 
-Regra de ouro (quando usado como análise de sensibilidade):
-    ┌──────────────┬──────────────┬──────────────────┐
-    │   treino     │  validação   │     holdout      │
-    └──────────────┴──────────────┴──────────────────┘
-     mais antigo ───────────────────────► mais recente
-
-    - `treino` + `validação` → escolha de modelo, hiperparâmetros, limiar
-    - `holdout`               → UMA ÚNICA vez, no fim, após `concluir_selecao()`
-
-A classe `TemporalSplit` bloqueia o acesso ao holdout enquanto o gate
-`G9_holdout` não estiver aprovado — útil tanto no fluxo oficial quanto no
-de sensibilidade.
+A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
+``G9_holdout`` não estiver aprovado.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, get_args
 
 import pandas as pd
 
+from src.utils import config as C
+
 OnNat = Literal["raise", "drop"]
+_ON_NAT_VALORES = frozenset(get_args(OnNat))
 
 
 def _validar_fracao(nome: str, valor: float) -> None:
-    if not (0 < valor < 1):
-        raise ValueError(f"{nome} deve estar em (0, 1).")
+    if not 0 < valor < 1:
+        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
 
 
 def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
     if coluna_tempo not in df.columns:
         raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
-
     if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
         raise TypeError(
             f"Coluna temporal {coluna_tempo!r} não é datetime "
@@ -60,18 +49,17 @@ def _tratar_nat(
     coluna_tempo: str,
     on_nat: OnNat,
 ) -> pd.DataFrame:
+    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
     nat_mask = df[coluna_tempo].isna()
-    n_nat = int(nat_mask.sum())
+    n_nat    = int(nat_mask.sum())
 
     if not n_nat:
         return df
-
     if on_nat == "raise":
         raise ValueError(
             f"{n_nat} linha(s) com data inválida (NaT) em "
             f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
         )
-
     return df.loc[~nat_mask].reset_index(drop=True)
 
 
@@ -84,100 +72,57 @@ def split_temporal_3way(
     on_nat: OnNat = "raise",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Split temporal em treino / validação / holdout, **sem embaralhar**.
+    Divide em treino / validação / holdout, **sem embaralhar**.
 
-    Ferramenta de **sensibilidade temporal** — não é o split oficial do
-    projeto. Para o pipeline supervisionado, use a coluna de partição
-    persistida no artefato (ver `src.data.supervised_artifact`).
+    Garante, na ordem temporal::
 
-    Parâmetros
-    ----------
-    df : pd.DataFrame
-        Base completa.
-    coluna_tempo : str
-        Coluna usada para ordenar (ex.: "dt_notific").
-    frac_treino, frac_validacao : float
-        Frações do total. `frac_holdout = 1 - frac_treino - frac_validacao`.
-    on_nat : {"raise", "drop"}
-        Como tratar `NaT`/nulos em `coluna_tempo`:
-          - "raise" (default): levanta `ValueError` — falha explícita.
-          - "drop": remove as linhas com data inválida antes de ordenar.
-
-    Retorno
-    -------
-    (treino, validacao, holdout) : tuple de DataFrames
-
-    Garantias
-    ---------
         max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
         max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
+
+    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
+    remove essas linhas antes de ordenar.
     """
-    if on_nat not in ("raise", "drop"):
+    if on_nat not in _ON_NAT_VALORES:
         raise ValueError(
-            f"on_nat inválido: {on_nat!r} (esperado 'raise' ou 'drop')."
+            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
         )
 
-    _validar_fracao("frac_treino", frac_treino)
+    _validar_fracao("frac_treino",    frac_treino)
     _validar_fracao("frac_validacao", frac_validacao)
-
     if frac_treino + frac_validacao >= 1:
         raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 "
-            "(o restante vira holdout)."
+            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
         )
 
     _validar_coluna_tempo(df, coluna_tempo)
     df = _tratar_nat(df, coluna_tempo, on_nat)
 
-    ordenado = (
-        df.sort_values(coluna_tempo, kind="mergesort")
-          .reset_index(drop=True)
-    )
-
+    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
     n = len(ordenado)
     if n < 3:
         raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
 
     corte_treino = int(n * frac_treino)
-    corte_valid = int(n * (frac_treino + frac_validacao))
+    corte_valid  = int(n * (frac_treino + frac_validacao))
 
-    treino = ordenado.iloc[:corte_treino].reset_index(drop=True)
-    validacao = ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True)
-    holdout = ordenado.iloc[corte_valid:].reset_index(drop=True)
-
-    return treino, validacao, holdout
+    return (
+        ordenado.iloc[:corte_treino].reset_index(drop=True),
+        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
+        ordenado.iloc[corte_valid:].reset_index(drop=True),
+    )
 
 
 @dataclass
 class TemporalSplit:
-    """
-    Guarda os três blocos e controla o acesso ao holdout.
+    """Guarda os três blocos e controla o acesso ao holdout.
 
     ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
-    O split oficial do projeto é o **aleatório estratificado** persistido
-    no artefato supervisionado. Use esta classe apenas para análises do
-    tipo "treinar no passado, testar no futuro".
+    Uso típico::
 
-    Uso típico
-    ----------
         split = TemporalSplit(df, coluna_tempo="dt_notific")
-
-        # Fase 1 — escolha de modelo (SOMENTE treino + validação)
-        tr, va = split.treino_validacao()
-        modelo = ...
-        modelo.fit(tr[FEATURES], y_tr)
-
-        # Ao terminar a seleção (exige gate G9_holdout aprovado):
-        split.concluir_selecao()
-
-        # Fase 2 — avaliação final, UMA única vez
-        ho = split.holdout()
-        y_prob = modelo.predict_proba(ho[FEATURES])[:, 1]
-
-    Atributos
-    ---------
-    n_treino, n_validacao, n_holdout : int
-        Tamanhos de cada bloco (útil para logging).
+        tr, va = split.treino_validacao()  # seleção
+        split.concluir_selecao()           # exige G9_holdout aprovado
+        ho = split.holdout()               # avaliação, uma vez
     """
 
     df: pd.DataFrame
@@ -199,17 +144,12 @@ class TemporalSplit:
             frac_validacao=self.frac_validacao,
             on_nat=self.on_nat,
         )
-        self._treino = tr
+        self._treino    = tr
         self._validacao = va
-        self._holdout = ho
+        self._holdout   = ho
 
     def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Retorna (treino, validação).
-
-        Este é o único caminho para treinar e comparar modelos durante a
-        fase de seleção. O holdout NÃO é exposto aqui.
-        """
+        """``(treino, validacao)`` — único par para a fase de seleção."""
         return self._treino, self._validacao
 
     @property
@@ -221,37 +161,20 @@ class TemporalSplit:
         return self._validacao
 
     def concluir_selecao(self) -> None:
+        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
+
+        O gate é a autorização explícita — G7 e G8 tratam de decisões da
+        fase de seleção e devem ter sido fechados *antes* deste ponto.
+        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
         """
-        Marca a fase de seleção como encerrada e libera o holdout.
-
-        Só é permitido quando o gate `G9_holdout` estiver com
-        `status: aprovado` em `configs/supervised.yaml`. Caso contrário,
-        levanta `RuntimeError`.
-
-        O gate `G9_holdout` é a autorização explícita para a avaliação
-        final — independente de `G7_calibracao` e `G8_limiar`, que tratam
-        de decisões da fase de seleção. Ambos precisam ter sido aprovados
-        *antes* de se pedir `G9_holdout`; a verificação deles é feita no
-        fluxo de modelagem, não aqui. Esta função apenas certifica que a
-        transição para a fase de avaliação foi autorizada.
-
-        Deve ser chamada **uma única vez**, depois que o modelo final foi
-        escolhido, o limiar foi definido e a calibração foi ajustada.
-        """
-        from src.utils import config as C
-
-        gate = C.cfg("gates", "G9_holdout") or {}
-        status = (gate or {}).get("status")
-
+        gate   = C.cfg("gates", "G9_holdout") or {}
+        status = gate.get("status")
         if status != "aprovado":
             raise RuntimeError(
                 "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
-                f"(status atual: {status!r}).\n"
-                "Feche o gate G9 (liberação do holdout) em "
-                "`configs/supervised.yaml` antes de chamar "
-                "`concluir_selecao()`."
+                f"(status atual: {status!r}). Feche o gate em "
+                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
             )
-
         self._holdout_liberado = True
 
     @property
@@ -259,18 +182,10 @@ class TemporalSplit:
         return self._holdout_liberado
 
     def holdout(self) -> pd.DataFrame:
-        """
-        Retorna o bloco de holdout.
-
-        Levanta `RuntimeError` se `concluir_selecao()` ainda não foi
-        chamada. Isso impede que o holdout seja consultado durante a
-        escolha de modelo.
-        """
+        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
         if not self._holdout_liberado:
             raise RuntimeError(
-                "Holdout bloqueado.\n"
-                "Finalize a seleção de modelo e chame "
-                "`split.concluir_selecao()` antes de acessar o holdout."
+                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
             )
         return self._holdout
 
@@ -287,19 +202,18 @@ class TemporalSplit:
         return len(self._holdout)
 
     def resumo(self) -> str:
-        """Resumo legível do split — bom para log no `Run`."""
+        """Resumo legível — bom para log no ``Run``."""
+
         def _periodo(d: pd.DataFrame) -> str:
             if d.empty:
                 return "vazio"
-            ini = d[self.coluna_tempo].min()
-            fim = d[self.coluna_tempo].max()
-            return f"{ini} .. {fim}"
+            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
 
+        estado = "liberado" if self._holdout_liberado else "bloqueado"
         return (
             f"TemporalSplit(coluna={self.coluna_tempo!r}, "
             f"papel='sensibilidade_temporal')\n"
             f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
             f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
-            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  "
-            f"({'liberado' if self._holdout_liberado else 'bloqueado'})"
+            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
         )

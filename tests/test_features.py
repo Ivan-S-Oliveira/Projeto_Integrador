@@ -1,11 +1,9 @@
 """
-Testes de engenharia de atributos — src/features/engineering.py.
+Testes de engenharia de atributos (``src/features/engineering.py``).
 
-Cobre funções puras e o orquestrador `montar_features`:
-contrato de cada derivada, casos inválidos, não-mutação da entrada,
-invariante de ponto-no-tempo e ponto único de verdade.
-
-Não testa parsing do YAML — responsabilidade de src/utils/config.py.
+Cobre funções puras e o orquestrador ``montar_features``: contrato de
+cada derivada, casos inválidos, não-mutação da entrada e invariantes de
+ponto-no-tempo. Não testa parsing do YAML.
 """
 
 from __future__ import annotations
@@ -25,35 +23,51 @@ from src.features.engineering import (
 )
 
 
-ENTRADAS_OBRIGATORIAS = [
+# Conjunto mínimo de entradas exigido por ``montar_features``, alinhado
+# com ``features.engenharia.entradas`` do supervised.yaml.
+ENTRADAS_OBRIGATORIAS: tuple[str, ...] = (
     "nu_idade_n",
     "tp_idade",
     "cs_sexo",
     "dt_sin_pri",
     "dt_interna",
-]
+)
+
+# Derivadas que ``montar_features`` deve produzir. Deliberadamente
+# hardcoded (não importado de engineering) para travar mudanças
+# silenciosas no contrato.
+COLUNAS_DERIVADAS_ESPERADAS: frozenset[str] = frozenset({
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "flag_intervalo_invalido",
+    "flag_internacao_antes_sintomas",
+    "sin_semana",
+    "cos_semana",
+    "faixa_etaria",
+    "sexo_categoria",
+    "ano_internacao",
+    "mes_internacao",
+})
 
 
 @pytest.fixture
 def df_base() -> pd.DataFrame:
-    """
-    DataFrame mínimo com as colunas exigidas por `montar_features`.
+    """DataFrame mínimo com as colunas exigidas por ``montar_features``.
 
     Linhas:
+
     - 0: adulto (30a), 4 dias até internação, M
-    - 1: bebê (6 meses), 5 dias, F
+    - 1: bebé (6 meses), 5 dias, F
     - 2: adulto (40a), 5 dias, sexo ignorado
     - 3: recém-nascido (1 dia), 5 dias, M
     """
-    return pd.DataFrame(
-        {
-            "nu_idade_n": [30, 6, 40, 1],
-            "tp_idade":   [3, 2, 3, 1],
-            "cs_sexo":    ["M", "F", "I", "M"],
-            "dt_sin_pri": ["2024-01-01", "2024-03-15", "2024-06-20", "2024-09-05"],
-            "dt_interna": ["2024-01-05", "2024-03-20", "2024-06-25", "2024-09-10"],
-        }
-    )
+    return pd.DataFrame({
+        "nu_idade_n": [30, 6, 40, 1],
+        "tp_idade":   [3, 2, 3, 1],
+        "cs_sexo":    ["M", "F", "I", "M"],
+        "dt_sin_pri": ["2024-01-01", "2024-03-15", "2024-06-20", "2024-09-05"],
+        "dt_interna": ["2024-01-05", "2024-03-20", "2024-06-25", "2024-09-10"],
+    })
 
 
 class TestIdadeEmAnos:
@@ -99,36 +113,28 @@ class TestIntervaloSintomasInternacao:
         assert out["flag_internacao_antes_sintomas"].dtype == np.int8
 
     def test_negativo_seta_ambas_flags(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         out = intervalo_sintomas_internacao(df)
         assert out["flag_internacao_antes_sintomas"].iloc[0] == 1
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
     def test_acima_do_limite_seta_flag_umbrella_sem_marcar_sinal(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-01"], "dt_interna": ["2024-06-01"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-01"], "dt_interna": ["2024-06-01"]})
         out = intervalo_sintomas_internacao(df)
         assert out["flag_intervalo_invalido"].iloc[0] == 1
         assert out["flag_internacao_antes_sintomas"].iloc[0] == 0
 
     def test_data_ausente_seta_flag_umbrella(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": [None], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": [None], "dt_interna": ["2024-01-05"]})
         out = intervalo_sintomas_internacao(df)
         assert pd.isna(out["dias_sintomas_ate_internacao"].iloc[0])
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
     def test_politica_sinalizar_mantem_valor_bruto(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Default: valor inválido fica visível, comunicado por flags."""
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         monkeypatch.setattr(
             "src.features.engineering._intervalo_politica",
             lambda: "sinalizar",
@@ -137,11 +143,9 @@ class TestIntervaloSintomasInternacao:
         assert out["dias_sintomas_ate_internacao"].iloc[0] == pytest.approx(-5.0)
 
     def test_politica_descartar_substitui_por_nan(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]}
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         monkeypatch.setattr(
             "src.features.engineering._intervalo_politica",
             lambda: "descartar",
@@ -159,16 +163,13 @@ class TestSazonalidade:
             assert out[col].between(-1.0, 1.0, inclusive="both").all()
 
     def test_mesma_semana_em_anos_diferentes_proxima(self) -> None:
-        df = pd.DataFrame(
-            {"dt_sin_pri": ["2023-03-15", "2024-03-13"]}  # ~mesma semana ISO
-        )
+        df = pd.DataFrame({"dt_sin_pri": ["2023-03-15", "2024-03-13"]})  # mesma semana ISO
         out = sazonalidade(df)
         assert abs(out["sin_semana"].iloc[0] - out["sin_semana"].iloc[1]) < 0.1
         assert abs(out["cos_semana"].iloc[0] - out["cos_semana"].iloc[1]) < 0.1
 
     def test_data_nula_vira_nan(self) -> None:
-        df = pd.DataFrame({"dt_sin_pri": [None]})
-        out = sazonalidade(df)
+        out = sazonalidade(pd.DataFrame({"dt_sin_pri": [None]}))
         assert pd.isna(out["sin_semana"].iloc[0])
         assert pd.isna(out["cos_semana"].iloc[0])
 
@@ -180,8 +181,7 @@ class TestSazonalidade:
 
 class TestFaixaEtaria:
     def test_fronteiras_semiabertas(self) -> None:
-        idades = pd.Series([0.0, 0.99, 1.0, 4.99, 5.0, 80.0, 120.0])
-        out = faixa_etaria(idades)
+        out = faixa_etaria(pd.Series([0.0, 0.99, 1.0, 4.99, 5.0, 80.0, 120.0]))
         assert list(out) == ["<1", "<1", "1-4", "1-4", "5-11", "80+", "80+"]
 
     def test_idade_nula_vira_desconhecida(self) -> None:
@@ -190,19 +190,18 @@ class TestFaixaEtaria:
         assert out.iloc[1] == "18-39"
 
     def test_retorna_categoria(self) -> None:
-        out = faixa_etaria(pd.Series([30.0]))
-        assert isinstance(out.dtype, pd.CategoricalDtype)
+        assert isinstance(faixa_etaria(pd.Series([30.0])).dtype, pd.CategoricalDtype)
 
 
 class TestSexoCategoria:
     @pytest.mark.parametrize(
         "entrada, esperado",
         [
-            ("M", "masculino"),
-            ("f", "feminino"),
-            (" I ", "ignorado"),
-            ("X", "ausente"),
-            (None, "ausente"),
+            ("M",     "masculino"),
+            ("f",     "feminino"),
+            (" I ",   "ignorado"),
+            ("X",     "ausente"),
+            (None,    "ausente"),
         ],
     )
     def test_mapeamento(self, entrada: str | None, esperado: str) -> None:
@@ -221,31 +220,15 @@ class TestAnoMesInternacao:
         assert out["mes_internacao"].tolist() == [1.0, 3.0, 6.0, 9.0]
 
     def test_data_nula_vira_nan(self) -> None:
-        df = pd.DataFrame({"dt_interna": [None]})
-        out = ano_mes_internacao(df)
+        out = ano_mes_internacao(pd.DataFrame({"dt_interna": [None]}))
         assert pd.isna(out["ano_internacao"].iloc[0])
         assert pd.isna(out["mes_internacao"].iloc[0])
 
 
-COLUNAS_DERIVADAS_ESPERADAS = {
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "flag_intervalo_invalido",
-    "flag_internacao_antes_sintomas",
-    "sin_semana",
-    "cos_semana",
-    "faixa_etaria",
-    "sexo_categoria",
-    "ano_internacao",
-    "mes_internacao",
-}
-
-
 class TestMontarFeatures:
     def test_gera_todas_as_derivadas_do_yaml(self, df_base: pd.DataFrame) -> None:
-        """Trava o contrato entre features.engenharia.derivadas e a função."""
-        out = montar_features(df_base)
-        faltando = COLUNAS_DERIVADAS_ESPERADAS - set(out.columns)
+        """Trava o contrato entre ``features.engenharia.derivadas`` e a função."""
+        faltando = COLUNAS_DERIVADAS_ESPERADAS - set(montar_features(df_base).columns)
         assert not faltando, f"Derivadas ausentes: {sorted(faltando)}"
 
     def test_nao_muta_entrada(self, df_base: pd.DataFrame) -> None:
@@ -255,44 +238,31 @@ class TestMontarFeatures:
 
     def test_preserva_colunas_originais(self, df_base: pd.DataFrame) -> None:
         out = montar_features(df_base)
-        for col in df_base.columns:
-            assert col in out.columns
+        assert set(df_base.columns).issubset(out.columns)
 
     def test_nao_gera_colunas_proibidas(self, df_base: pd.DataFrame) -> None:
         proibidas = {"evolucao", "alvo_obito_srag", "dt_evoluca", "uti", "cluster"}
-        out = montar_features(df_base)
-        assert proibidas.isdisjoint(out.columns)
+        assert proibidas.isdisjoint(montar_features(df_base).columns)
 
 
 class TestPontoNoTempo:
-    """
-    Invariantes contra vazamento temporal.
-
-    O ponto de previsão é a admissão hospitalar.
-    """
+    """Invariantes contra vazamento temporal — o ponto de previsão é a admissão."""
 
     def test_so_precisa_das_entradas_declaradas(self, df_base: pd.DataFrame) -> None:
-        """
-        Se `montar_features` só depende de features.engenharia.entradas,
-        um df com exatamente essas colunas deve bastar.
-        """
-        df = df_base[ENTRADAS_OBRIGATORIAS].copy()
-        out = montar_features(df)
-        assert out is not None
+        """Um df com só as entradas declaradas deve bastar para as derivadas."""
+        out = montar_features(df_base[list(ENTRADAS_OBRIGATORIAS)].copy())
         assert COLUNAS_DERIVADAS_ESPERADAS.issubset(out.columns)
 
-    def test_colunas_pos_admissao_nao_influenciam(
-        self, df_base: pd.DataFrame
-    ) -> None:
+    def test_colunas_pos_admissao_nao_influenciam(self, df_base: pd.DataFrame) -> None:
         """Injetar colunas pós-alta não pode alterar a saída."""
         baseline = montar_features(df_base)
 
         df_contaminado = df_base.copy()
-        df_contaminado["evolucao"] = [1.0, 2.0, 1.0, 2.0]
+        df_contaminado["evolucao"]  = [1.0, 2.0, 1.0, 2.0]
         df_contaminado["dt_evoluca"] = pd.to_datetime(
             ["2024-02-01", "2024-04-01", "2024-07-01", "2024-10-01"]
         )
-        df_contaminado["uti"] = [0, 1, 0, 1]
+        df_contaminado["uti"]        = [0, 1, 0, 1]
         df_contaminado["suport_ven"] = [0, 1, 0, 0]
 
         contaminado = montar_features(df_contaminado)
@@ -302,16 +272,12 @@ class TestPontoNoTempo:
             contaminado[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
         )
 
-    def test_ordem_das_linhas_nao_altera_derivadas(
-        self, df_base: pd.DataFrame
-    ) -> None:
-        """Derivadas devem ser pointwise — sem dependência de ordem."""
-        normal = montar_features(df_base)
+    def test_ordem_das_linhas_nao_altera_derivadas(self, df_base: pd.DataFrame) -> None:
+        """Derivadas são pointwise — sem dependência de ordem."""
+        normal    = montar_features(df_base)
         invertido = montar_features(df_base.iloc[::-1].reset_index(drop=True))
 
         pd.testing.assert_frame_equal(
             normal[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
-            invertido[list(COLUNAS_DERIVADAS_ESPERADAS)]
-            .iloc[::-1]
-            .reset_index(drop=True),
+            invertido[list(COLUNAS_DERIVADAS_ESPERADAS)].iloc[::-1].reset_index(drop=True),
         )

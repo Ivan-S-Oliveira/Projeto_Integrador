@@ -1,8 +1,8 @@
-"""Hashing de arquivos para verificacao de integridade.
+"""Hashing de arquivos para verificação de integridade.
 
-Centraliza `sha256_file`, usado tanto pela resolucao de coorte
-(`src/data/cohort_source.py`) quanto pela persistencia do artefato
-supervisionado (`src/data/supervised_artifact.py`).
+Centraliza ``sha256_file``, usado tanto pela resolução de coorte
+(``src/data/cohort_source.py``) quanto pela persistência do artefato
+supervisionado (``src/data/supervised_artifact.py``).
 """
 
 from __future__ import annotations
@@ -16,10 +16,10 @@ _DEFAULT_CHUNK_SIZE = 1024 * 1024
 
 
 def sha256_file(path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE) -> str:
-    """Calcula SHA-256 de um arquivo sem carrega-lo integralmente em memoria.
+    """Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória.
 
-    Le em blocos de `chunk_size` bytes (default 1 MiB), permitindo hashear
-    arquivos grandes com memoria constante.
+    Lê em blocos de ``chunk_size`` bytes (default 1 MiB), permitindo
+    hashear arquivos grandes com memória constante.
     """
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
