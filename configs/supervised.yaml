@@ -158,6 +158,8 @@ temporal:
   gravar_particao_na_coorte: true
   coluna_particao: particao
   permitir_novo_sorteio: false
+  metodo_particao: hash_grupo_estratificado_v1
+  min_grupos_por_estrato: 3
   teste_aberto_uma_unica_vez: true
   fracao:
     treino: 0.70
