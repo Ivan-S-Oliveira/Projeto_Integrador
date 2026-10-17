@@ -57,13 +57,13 @@ parsed configuration and static consistency checks.
 
 ## 6. Executive continuation map
 
-- Generated (UTC): `2026-10-16T22:09:12+00:00` · branch `main` · commit `b1bad9876868`
+- Generated (UTC): `2026-10-17T16:15:24+00:00` · branch `main` · commit `3590d686d20a`
 - Git status: `clean`; upstream ahead/behind: `0	0`
-- Files in working folder (inventory): `390` (tracked `83`, untracked `0`, ignored/local `307`)
-- Source files with full content: `76`; artifacts included: `185`
-- Python modules: `48` · notebooks: `18` · public src symbols: `137`
+- Files in working folder (inventory): `271` (tracked `84`, untracked `0`, ignored/local `187`)
+- Source files with full content: `77`; artifacts included: `141`
+- Python modules: `48` · notebooks: `19` · public src symbols: `137`
 - Public src symbols with tests: `82` · with consumers: `118`
-- Attention items: **5 high**, 12 medium, 34 low
+- Attention items: **6 high**, 11 medium, 28 low
 - Tests executed: `no (use --run-tests)`
 
 ### Canonical responsibility map
@@ -81,7 +81,7 @@ parsed configuration and static consistency checks.
 
 ## 7. Static attention report
 
-Totals: **5 high**, 12 medium, 34 low.
+Totals: **6 high**, 11 medium, 28 low.
 
 | # | Severity | Category | Message |
 |---|---|---|---|
@@ -89,18 +89,18 @@ Totals: **5 high**, 12 medium, 34 low.
 | A2 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['capture_output', 'text', 'encoding', 'errors']. |
 | A3 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'check']. |
 | A4 | HIGH | call-signature-mismatch | Call to `src.protocolo.verificacoes.run` does not match its signature: unknown keyword(s) ['cwd', 'capture_output', 'text', 'encoding', 'errors', 'timeout']. |
-| A5 | HIGH | source-ignored-by-git | Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub. |
-| A6 | MEDIUM | config-consistency | Finalist `hist_gradient_boosting` has no section in `models` (factory names must match). |
-| A7 | MEDIUM | dependency-not-declared | Third-party imports not declared in `pyproject.toml`. |
-| A8 | MEDIUM | dependency-not-declared | Third-party imports not declared in `requirements.txt`. |
-| A9 | MEDIUM | duplicate-symbol-name | `resumo` is defined in multiple files. |
-| A10 | MEDIUM | gate-name-not-in-yaml | `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML. |
-| A11 | MEDIUM | gate-name-not-in-yaml | `G6_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A12 | MEDIUM | gate-name-not-in-yaml | `G7_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A13 | MEDIUM | gate-name-not-in-yaml | `G8_STATUS` is referenced but does not exist in `gates` of the active YAML. |
-| A14 | MEDIUM | notebook-parse-error | `notebooks/02_eda/03_supervisionado_pilotos.ipynb` has code cells that could not be parsed. |
-| A15 | MEDIUM | reference-to-missing-path | `README.md` references paths absent from the working folder. |
-| A16 | MEDIUM | reference-to-missing-path | `configs/decisoes.yaml` references paths absent from the working folder. |
+| A5 | HIGH | notebook-saved-errors | `notebooks/B/B_06_eda_temporal_clustering.ipynb` was saved with error outputs. |
+| A6 | HIGH | source-ignored-by-git | Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub. |
+| A7 | MEDIUM | config-consistency | Finalist `hist_gradient_boosting` has no section in `models` (factory names must match). |
+| A8 | MEDIUM | dependency-not-declared | Third-party imports not declared in `pyproject.toml`. |
+| A9 | MEDIUM | dependency-not-declared | Third-party imports not declared in `requirements.txt`. |
+| A10 | MEDIUM | duplicate-symbol-name | `resumo` is defined in multiple files. |
+| A11 | MEDIUM | gate-name-not-in-yaml | `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML. |
+| A12 | MEDIUM | gate-name-not-in-yaml | `G6_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A13 | MEDIUM | gate-name-not-in-yaml | `G7_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A14 | MEDIUM | gate-name-not-in-yaml | `G8_STATUS` is referenced but does not exist in `gates` of the active YAML. |
+| A15 | MEDIUM | notebook-parse-error | `notebooks/B/B_07_supervisionado_pilotos.ipynb` has code cells that could not be parsed. |
+| A16 | MEDIUM | reference-to-missing-path | `README.md` references paths absent from the working folder. |
 | A17 | MEDIUM | reference-to-missing-path | `docs/decisoes.md` references paths absent from the working folder. |
 | A18 | LOW | config-consistency | `models.decision_tree.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
 | A19 | LOW | config-consistency | `models.random_forest.ativa` is true, but the family is in `selecao_modelos.familias_encerradas`. |
@@ -110,32 +110,26 @@ Totals: **5 high**, 12 medium, 34 low.
 | A23 | LOW | encoding-mojibake | Text with likely encoding corruption (file saved with the wrong encoding). |
 | A24 | LOW | gate-numbering | Gate numbering has gaps. |
 | A25 | LOW | missing-docstring | Public src symbols without docstring. |
-| A26 | LOW | notebook-local-functions | `notebooks/02_eda/01_eda_primeira_passagem.ipynb` defines 10 local functions/classes. |
-| A27 | LOW | notebook-local-functions | `notebooks/02_eda/02_eda_temporal_clustering.ipynb` defines 30 local functions/classes. |
-| A28 | LOW | notebook-local-functions | `notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 7 local functions/classes. |
-| A29 | LOW | notebook-local-functions | `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes. |
-| A30 | LOW | notebook-local-functions | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes. |
-| A31 | LOW | notebook-local-functions | `notebooks/C/C2_pipeline_supervisionado.ipynb` defines 2 local functions/classes. |
-| A32 | LOW | notebook-local-functions | `notebooks/C/C3_baseline_logistica.ipynb` defines 1 local functions/classes. |
-| A33 | LOW | notebook-local-functions | `notebooks/C/C4_boosting.ipynb` defines 7 local functions/classes. |
-| A34 | LOW | notebook-local-functions | `notebooks/C/C5_calibracao_limiar.ipynb` defines 1 local functions/classes. |
-| A35 | LOW | notebook-local-functions | `notebooks/C/C6_validacao_final.ipynb` defines 4 local functions/classes. |
-| A36 | LOW | notebook-not-fully-executed | `notebooks/02_eda/01_eda_primeira_passagem.ipynb`: 42 of 42 code cells have no saved execution. |
-| A37 | LOW | notebook-not-fully-executed | `notebooks/02_eda/02_eda_temporal_clustering.ipynb`: 119 of 119 code cells have no saved execution. |
-| A38 | LOW | notebook-not-fully-executed | `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution. |
-| A39 | LOW | notebook-not-fully-executed | `notebooks/A/A1_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution. |
-| A40 | LOW | notebook-not-fully-executed | `notebooks/A/A2_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution. |
-| A41 | LOW | notebook-not-fully-executed | `notebooks/A/A3_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution. |
-| A42 | LOW | notebook-not-fully-executed | `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution. |
-| A43 | LOW | notebook-not-fully-executed | `notebooks/A/A4_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution. |
-| A44 | LOW | notebook-not-fully-executed | `notebooks/C/C1_smoke_test.ipynb`: 3 of 3 code cells have no saved execution. |
-| A45 | LOW | notebook-not-fully-executed | `notebooks/C/C2_pipeline_supervisionado.ipynb`: 7 of 7 code cells have no saved execution. |
-| A46 | LOW | notebook-not-fully-executed | `notebooks/C/C3_baseline_logistica.ipynb`: 6 of 6 code cells have no saved execution. |
-| A47 | LOW | notebook-not-fully-executed | `notebooks/C/C4_boosting.ipynb`: 9 of 9 code cells have no saved execution. |
-| A48 | LOW | notebook-not-fully-executed | `notebooks/C/C5_calibracao_limiar.ipynb`: 6 of 6 code cells have no saved execution. |
-| A49 | LOW | notebook-not-fully-executed | `notebooks/C/C6_validacao_final.ipynb`: 9 of 9 code cells have no saved execution. |
-| A50 | LOW | public-symbol-untested | 55 public src symbols without a detected test. |
-| A51 | LOW | public-symbol-unused | Public src symbols with no detected consumer and no test (possibly dead code). |
+| A26 | LOW | notebook-local-functions | `notebooks/B/B_05_eda_primeira_passagem.ipynb` defines 10 local functions/classes. |
+| A27 | LOW | notebook-local-functions | `notebooks/B/B_06_eda_temporal_clustering.ipynb` defines 30 local functions/classes. |
+| A28 | LOW | notebook-local-functions | `notebooks/B/B_07_supervisionado_pilotos.ipynb` defines 7 local functions/classes. |
+| A29 | LOW | notebook-local-functions | `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes. |
+| A30 | LOW | notebook-local-functions | `notebooks/B/___provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes. |
+| A31 | LOW | notebook-local-functions | `notebooks/C/C_11_pipeline_supervisionado.ipynb` defines 2 local functions/classes. |
+| A32 | LOW | notebook-local-functions | `notebooks/C/C_12_baseline_logistica.ipynb` defines 1 local functions/classes. |
+| A33 | LOW | notebook-local-functions | `notebooks/C/C_13_boosting.ipynb` defines 7 local functions/classes. |
+| A34 | LOW | notebook-local-functions | `notebooks/C/C_15_calibracao_limiar.ipynb` defines 1 local functions/classes. |
+| A35 | LOW | notebook-local-functions | `notebooks/C/C_16_validacao_final.ipynb` defines 4 local functions/classes. |
+| A36 | LOW | notebook-not-fully-executed | `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution. |
+| A37 | LOW | notebook-not-fully-executed | `notebooks/A/A_03_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution. |
+| A38 | LOW | notebook-not-fully-executed | `notebooks/A/A_04_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution. |
+| A39 | LOW | notebook-not-fully-executed | `notebooks/A/A_08_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution. |
+| A40 | LOW | notebook-not-fully-executed | `notebooks/A/A_14_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution. |
+| A41 | LOW | notebook-not-fully-executed | `notebooks/B/B_05_eda_primeira_passagem.ipynb`: 1 of 42 code cells have no saved execution. |
+| A42 | LOW | notebook-not-fully-executed | `notebooks/B/B_06_eda_temporal_clustering.ipynb`: 57 of 119 code cells have no saved execution. |
+| A43 | LOW | notebook-not-fully-executed | `notebooks/C/C_16_validacao_final.ipynb`: 9 of 9 code cells have no saved execution. |
+| A44 | LOW | public-symbol-untested | 55 public src symbols without a detected test. |
+| A45 | LOW | public-symbol-unused | Public src symbols with no detected consumer and no test (possibly dead code). |
 
 ### A1. HIGH — call-signature-mismatch
 
@@ -143,7 +137,7 @@ Call to `src.models.pipeline.criar_alvo_binario` does not match its signature: u
 
 **Evidence**
 
-- `notebooks/02_eda/03_supervisionado_pilotos.ipynb#cell-9:77`
+- `notebooks/B/B_07_supervisionado_pilotos.ipynb#cell-9:77`
 - `definition: src/models/pipeline.py:105 `def criar_alvo_binario(df: pd.DataFrame, alvo: str | None=None, positivos: Iterable[float] | None=None, negativos: Iterable[float] | None=None) -> pd.Series``
 
 **Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
@@ -181,7 +175,17 @@ Call to `src.protocolo.verificacoes.run` does not match its signature: unknown k
 
 **Recommended action:** Fix the call or the function signature; this raises TypeError when executed.
 
-### A5. HIGH — source-ignored-by-git
+### A5. HIGH — notebook-saved-errors
+
+`notebooks/B/B_06_eda_temporal_clustering.ipynb` was saved with error outputs.
+
+**Evidence**
+
+- `cell 70: MemoryError: Unable to allocate 2.71 GiB for an array with shape (93, 3915136) and data type object`
+
+**Recommended action:** Fix the error and re-run, or clear the stale output.
+
+### A6. HIGH — source-ignored-by-git
 
 Source/config/test/notebook files are ignored by .gitignore and therefore missing from GitHub.
 
@@ -191,7 +195,7 @@ Source/config/test/notebook files are ignored by .gitignore and therefore missin
 
 **Recommended action:** Fix .gitignore (anchor root folders, e.g. `/data/` instead of `data/`) and commit the files.
 
-### A6. MEDIUM — config-consistency
+### A7. MEDIUM — config-consistency
 
 Finalist `hist_gradient_boosting` has no section in `models` (factory names must match).
 
@@ -202,33 +206,33 @@ Finalist `hist_gradient_boosting` has no section in `models` (factory names must
 
 **Recommended action:** Use the same names or declare an explicit alias in code.
 
-### A7. MEDIUM — dependency-not-declared
+### A8. MEDIUM — dependency-not-declared
 
 Third-party imports not declared in `pyproject.toml`.
 
 **Evidence**
 
-- `IPython (distribution `ipython`) used in notebooks/02_eda/01_eda_primeira_passagem.ipynb`
+- `IPython (distribution `ipython`) used in notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
 - `dotenv (distribution `python-dotenv`) used in src/utils/env.py`
-- `joblib (distribution `joblib`) used in notebooks/C/C2_pipeline_supervisionado.ipynb`
-- `matplotlib (distribution `matplotlib`) used in notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `scipy (distribution `scipy`) used in notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `seaborn (distribution `seaborn`) used in notebooks/02_eda/01_eda_primeira_passagem.ipynb`
+- `joblib (distribution `joblib`) used in notebooks/C/C_11_pipeline_supervisionado.ipynb`
+- `matplotlib (distribution `matplotlib`) used in notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `scipy (distribution `scipy`) used in notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `seaborn (distribution `seaborn`) used in notebooks/B/B_05_eda_primeira_passagem.ipynb`
 
 **Recommended action:** Declare them (with a minimum version) in a single source of dependencies.
 
-### A8. MEDIUM — dependency-not-declared
+### A9. MEDIUM — dependency-not-declared
 
 Third-party imports not declared in `requirements.txt`.
 
 **Evidence**
 
-- `IPython (distribution `ipython`) used in notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `scipy (distribution `scipy`) used in notebooks/02_eda/02_eda_temporal_clustering.ipynb`
+- `IPython (distribution `ipython`) used in notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- `scipy (distribution `scipy`) used in notebooks/B/B_06_eda_temporal_clustering.ipynb`
 
 **Recommended action:** Declare them (with a minimum version) in a single source of dependencies.
 
-### A9. MEDIUM — duplicate-symbol-name
+### A10. MEDIUM — duplicate-symbol-name
 
 `resumo` is defined in multiple files.
 
@@ -239,73 +243,63 @@ Third-party imports not declared in `requirements.txt`.
 
 **Recommended action:** Confirm distinct responsibilities or consolidate competing implementations.
 
-### A10. MEDIUM — gate-name-not-in-yaml
+### A11. MEDIUM — gate-name-not-in-yaml
 
 `G6_APROVADO` is referenced but does not exist in `gates` of the active YAML.
 
 **Evidence**
 
-- `notebooks/C/C4_boosting.ipynb`
-
-**Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
-
-### A11. MEDIUM — gate-name-not-in-yaml
-
-`G6_STATUS` is referenced but does not exist in `gates` of the active YAML.
-
-**Evidence**
-
-- `notebooks/C/C4_boosting.ipynb`
+- `notebooks/C/C_13_boosting.ipynb`
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
 ### A12. MEDIUM — gate-name-not-in-yaml
 
-`G7_STATUS` is referenced but does not exist in `gates` of the active YAML.
+`G6_STATUS` is referenced but does not exist in `gates` of the active YAML.
 
 **Evidence**
 
-- `notebooks/C/C5_calibracao_limiar.ipynb`
+- `notebooks/C/C_13_boosting.ipynb`
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
 ### A13. MEDIUM — gate-name-not-in-yaml
 
+`G7_STATUS` is referenced but does not exist in `gates` of the active YAML.
+
+**Evidence**
+
+- `notebooks/C/C_15_calibracao_limiar.ipynb`
+
+**Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
+
+### A14. MEDIUM — gate-name-not-in-yaml
+
 `G8_STATUS` is referenced but does not exist in `gates` of the active YAML.
 
 **Evidence**
 
-- `notebooks/C/C5_calibracao_limiar.ipynb`
+- `notebooks/C/C_15_calibracao_limiar.ipynb`
 
 **Recommended action:** Update the reference (code, docstring, notebook or document) to an existing gate.
 
-### A14. MEDIUM — notebook-parse-error
+### A15. MEDIUM — notebook-parse-error
 
-`notebooks/02_eda/03_supervisionado_pilotos.ipynb` has code cells that could not be parsed.
+`notebooks/B/B_07_supervisionado_pilotos.ipynb` has code cells that could not be parsed.
 
 **Evidence**
 
-- `Cell 19: '(' was never closed (notebooks/02_eda/03_supervisionado_pilotos.ipynb#cell-19, line 133)`
+- `Cell 19: '(' was never closed (notebooks/B/B_07_supervisionado_pilotos.ipynb#cell-19, line 133)`
 
 **Recommended action:** Check syntax (magics are already tolerated).
 
-### A15. MEDIUM — reference-to-missing-path
+### A16. MEDIUM — reference-to-missing-path
 
 `README.md` references paths absent from the working folder.
 
 **Evidence**
 
 - `configs/dicionario_variaveis_v1_revisao.csv`
-
-**Recommended action:** Confirm whether the reference is historical, generated at runtime, or stale.
-
-### A16. MEDIUM — reference-to-missing-path
-
-`configs/decisoes.yaml` references paths absent from the working folder.
-
-**Evidence**
-
-- `outputs/tables/pessoa_a/tabela_decisoes.csv`
 
 **Recommended action:** Confirm whether the reference is historical, generated at runtime, or stale.
 
@@ -513,7 +507,7 @@ Public src symbols without docstring.
 
 ### A26. LOW — notebook-local-functions
 
-`notebooks/02_eda/01_eda_primeira_passagem.ipynb` defines 10 local functions/classes.
+`notebooks/B/B_05_eda_primeira_passagem.ipynb` defines 10 local functions/classes.
 
 **Evidence**
 
@@ -532,7 +526,7 @@ Public src symbols without docstring.
 
 ### A27. LOW — notebook-local-functions
 
-`notebooks/02_eda/02_eda_temporal_clustering.ipynb` defines 30 local functions/classes.
+`notebooks/B/B_06_eda_temporal_clustering.ipynb` defines 30 local functions/classes.
 
 **Evidence**
 
@@ -571,7 +565,7 @@ Public src symbols without docstring.
 
 ### A28. LOW — notebook-local-functions
 
-`notebooks/02_eda/03_supervisionado_pilotos.ipynb` defines 7 local functions/classes.
+`notebooks/B/B_07_supervisionado_pilotos.ipynb` defines 7 local functions/classes.
 
 **Evidence**
 
@@ -587,7 +581,7 @@ Public src symbols without docstring.
 
 ### A29. LOW — notebook-local-functions
 
-`notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes.
+`notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` defines 4 local functions/classes.
 
 **Evidence**
 
@@ -600,7 +594,7 @@ Public src symbols without docstring.
 
 ### A30. LOW — notebook-local-functions
 
-`notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes.
+`notebooks/B/___provisorio_construcao_coorte_b.ipynb` defines 4 local functions/classes.
 
 **Evidence**
 
@@ -613,7 +607,7 @@ Public src symbols without docstring.
 
 ### A31. LOW — notebook-local-functions
 
-`notebooks/C/C2_pipeline_supervisionado.ipynb` defines 2 local functions/classes.
+`notebooks/C/C_11_pipeline_supervisionado.ipynb` defines 2 local functions/classes.
 
 **Evidence**
 
@@ -624,7 +618,7 @@ Public src symbols without docstring.
 
 ### A32. LOW — notebook-local-functions
 
-`notebooks/C/C3_baseline_logistica.ipynb` defines 1 local functions/classes.
+`notebooks/C/C_12_baseline_logistica.ipynb` defines 1 local functions/classes.
 
 **Evidence**
 
@@ -634,7 +628,7 @@ Public src symbols without docstring.
 
 ### A33. LOW — notebook-local-functions
 
-`notebooks/C/C4_boosting.ipynb` defines 7 local functions/classes.
+`notebooks/C/C_13_boosting.ipynb` defines 7 local functions/classes.
 
 **Evidence**
 
@@ -650,7 +644,7 @@ Public src symbols without docstring.
 
 ### A34. LOW — notebook-local-functions
 
-`notebooks/C/C5_calibracao_limiar.ipynb` defines 1 local functions/classes.
+`notebooks/C/C_15_calibracao_limiar.ipynb` defines 1 local functions/classes.
 
 **Evidence**
 
@@ -660,7 +654,7 @@ Public src symbols without docstring.
 
 ### A35. LOW — notebook-local-functions
 
-`notebooks/C/C6_validacao_final.ipynb` defines 4 local functions/classes.
+`notebooks/C/C_16_validacao_final.ipynb` defines 4 local functions/classes.
 
 **Evidence**
 
@@ -673,89 +667,53 @@ Public src symbols without docstring.
 
 ### A36. LOW — notebook-not-fully-executed
 
-`notebooks/02_eda/01_eda_primeira_passagem.ipynb`: 42 of 42 code cells have no saved execution.
+`notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A37. LOW — notebook-not-fully-executed
 
-`notebooks/02_eda/02_eda_temporal_clustering.ipynb`: 119 of 119 code cells have no saved execution.
+`notebooks/A/A_03_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A38. LOW — notebook-not-fully-executed
 
-`notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`: 14 of 14 code cells have no saved execution.
+`notebooks/A/A_04_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A39. LOW — notebook-not-fully-executed
 
-`notebooks/A/A1_coorte_protocolo.ipynb`: 9 of 9 code cells have no saved execution.
+`notebooks/A/A_08_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A40. LOW — notebook-not-fully-executed
 
-`notebooks/A/A2_qualidade_elegibilidade.ipynb`: 9 of 9 code cells have no saved execution.
+`notebooks/A/A_14_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A41. LOW — notebook-not-fully-executed
 
-`notebooks/A/A3_desenho_experimental.ipynb`: 8 of 8 code cells have no saved execution.
+`notebooks/B/B_05_eda_primeira_passagem.ipynb`: 1 of 42 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A42. LOW — notebook-not-fully-executed
 
-`notebooks/A/A3b_split_aleatorio_cenarios.ipynb`: 7 of 7 code cells have no saved execution.
+`notebooks/B/B_06_eda_temporal_clustering.ipynb`: 57 of 119 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
 ### A43. LOW — notebook-not-fully-executed
 
-`notebooks/A/A4_decisao_candidatos.ipynb`: 5 of 5 code cells have no saved execution.
+`notebooks/C/C_16_validacao_final.ipynb`: 9 of 9 code cells have no saved execution.
 
 **Recommended action:** Outputs may be partial; re-run before using results.
 
-### A44. LOW — notebook-not-fully-executed
-
-`notebooks/C/C1_smoke_test.ipynb`: 3 of 3 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A45. LOW — notebook-not-fully-executed
-
-`notebooks/C/C2_pipeline_supervisionado.ipynb`: 7 of 7 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A46. LOW — notebook-not-fully-executed
-
-`notebooks/C/C3_baseline_logistica.ipynb`: 6 of 6 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A47. LOW — notebook-not-fully-executed
-
-`notebooks/C/C4_boosting.ipynb`: 9 of 9 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A48. LOW — notebook-not-fully-executed
-
-`notebooks/C/C5_calibracao_limiar.ipynb`: 6 of 6 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A49. LOW — notebook-not-fully-executed
-
-`notebooks/C/C6_validacao_final.ipynb`: 9 of 9 code cells have no saved execution.
-
-**Recommended action:** Outputs may be partial; re-run before using results.
-
-### A50. LOW — public-symbol-untested
+### A44. LOW — public-symbol-untested
 
 55 public src symbols without a detected test.
 
@@ -819,7 +777,7 @@ Public src symbols without docstring.
 
 **Recommended action:** Prioritise tests for functions used by notebooks C2–C6.
 
-### A51. LOW — public-symbol-unused
+### A45. LOW — public-symbol-unused
 
 Public src symbols with no detected consumer and no test (possibly dead code).
 
@@ -1199,32 +1157,33 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 ### Directory tree
 
 ```text
-./  (390 files, 1.2 GB)
-  configs/  (4 files, 60.1 KB)
-  data/  (10 files, 1.1 GB)
-    analytical/  (4 files, 317.9 MB)
+./  (271 files, 1.4 GB)
+  configs/  (4 files, 60.4 KB)
+  data/  (15 files, 1.4 GB)
+    analytical/  (9 files, 622.5 MB)
     processed/  (2 files, 525.9 MB)
       dados-v1/  (1 files, 236.4 MB)
       dados-v2/  (1 files, 289.5 MB)
     raw/  (2 files, 236.4 MB)
-  docs/  (6 files, 8.2 MB)
+  docs/  (6 files, 9.5 MB)
     project_reference_parts/  (3 files, 2.3 MB)
-  notebooks/  (19 files, 1.8 MB)
-    02_eda/  (5 files, 1.6 MB)
-    A/  (5 files, 54.9 KB)
-    C/  (6 files, 96.8 KB)
-  outputs/  (271 files, 128.2 MB)
-    imagens_notebook_02_temp/  (73 files, 10.4 MB)
-    predictions/  (15 files, 117.4 MB)
-    runs/  (14 files, 26.9 KB)
-      2026-10-11_231339_836520_03_supervisionado_pilotos/  (2 files, 3.9 KB)
-      2026-10-12_095946_799810_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-      2026-10-14_000946_434671_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-      2026-10-14_204618_338775_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-      2026-10-15_235914_672066_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-      2026-10-16_002506_352890_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-      2026-10-16_004101_436301_03_supervisionado_pilotos/  (2 files, 3.8 KB)
-    tables/  (169 files, 451.8 KB)
+  notebooks/  (20 files, 10.0 MB)
+    A/  (6 files, 419.9 KB)
+    B/  (5 files, 9.2 MB)
+    C/  (6 files, 308.7 KB)
+  outputs/  (146 files, 38.5 MB)
+    C2/  (3 files, 12.2 KB)
+    figures/  (3 files, 336.3 KB)
+      pessoa_a/  (3 files, 336.3 KB)
+    predictions/  (5 files, 37.6 MB)
+    runs/  (10 files, 19.7 KB)
+      2026-10-16_214409_272745_03_supervisionado_pilotos/  (2 files, 3.8 KB)
+      2026-10-16_215802_867822_C2_pipeline/  (2 files, 3.4 KB)
+      2026-10-16_220044_988905_C3_baseline_logistica/  (2 files, 3.9 KB)
+      2026-10-16_220744_784223_C4_boosting/  (2 files, 4.0 KB)
+      2026-10-16_231055_901408_C5_calibracao_limiar/  (2 files, 4.5 KB)
+    tables/  (125 files, 575.2 KB)
+      pessoa_a/  (44 files, 213.5 KB)
   reports/  (27 files, 2.9 MB)
     figures/  (27 files, 2.9 MB)
       supervisionado_03/  (2 files, 441.0 KB)
@@ -1248,343 +1207,224 @@ Contents of data/models are never copied. `ignored` = exists locally but is igno
 | `README.md` | tracked | 19.9 KB | 2026-10-15 01:27 |
 | `pyproject.toml` | tracked | 1.9 KB | 2026-10-14 22:03 |
 | `requirements.txt` | tracked | 129 B | 2026-10-14 22:03 |
-| `configs/decisoes.yaml` | tracked | 6.1 KB | 2026-10-16 01:28 |
-| `configs/dicionario_variaveis_v1.csv` | tracked | 45.4 KB | 2026-10-16 01:28 |
+| `configs/decisoes.yaml` | tracked | 6.1 KB | 2026-10-17 12:26 |
+| `configs/dicionario_variaveis_v1.csv` | tracked | 45.7 KB | 2026-10-17 14:03 |
 | `configs/paths.local.json` | ignored | 45 B | 2026-10-08 01:30 |
 | `configs/supervised.yaml` | tracked | 8.5 KB | 2026-10-16 03:37 |
 | `data/manifest_dados-v2.yaml` | tracked | 1.9 KB | 2026-10-10 16:31 |
 | `data/split.py` | tracked | 6.4 KB | 2026-10-14 02:12 |
 | `data/analytical/.gitkeep` | tracked | 0 B | 2026-10-08 01:16 |
 | `data/analytical/coorte_provisoria_b.parquet` | ignored | 200.0 MB | 2026-10-11 13:17 |
-| `data/analytical/dataset_supervisionado.parquet` | ignored | 118.0 MB | 2026-10-16 03:40 |
-| `data/analytical/manifesto_supervisionado.json` | ignored | 2.3 KB | 2026-10-16 03:40 |
+| `data/analytical/dataset_supervisionado.meta.json` | ignored | 1.6 KB | 2026-10-17 00:27 |
+| `data/analytical/dataset_supervisionado.parquet` | ignored | 118.0 MB | 2026-10-17 00:43 |
+| `data/analytical/dataset_supervisionado_sem_2020_2021.meta.json` | ignored | 1.9 KB | 2026-10-17 00:51 |
+| `data/analytical/dataset_supervisionado_sem_2020_2021.parquet` | ignored | 96.4 MB | 2026-10-17 00:51 |
+| `data/analytical/dataset_supervisionado_todos_2019_2025.meta.json` | ignored | 1.9 KB | 2026-10-17 00:50 |
+| `data/analytical/dataset_supervisionado_todos_2019_2025.parquet` | ignored | 208.1 MB | 2026-10-17 00:50 |
+| `data/analytical/manifesto_supervisionado.json` | ignored | 2.3 KB | 2026-10-17 00:43 |
 | `data/processed/dados-v1/srag.parquet` | ignored | 236.4 MB | 2026-10-08 02:35 |
 | `data/processed/dados-v2/srag.parquet` | ignored | 289.5 MB | 2026-10-09 19:44 |
 | `data/raw/.gitkeep` | tracked | 0 B | 2026-10-06 00:55 |
 | `data/raw/srag.parquet` | ignored | 236.4 MB | 2026-10-08 01:22 |
-| `docs/PROJECT_COMPLETE_REFERENCE.json` | ignored | 3.6 MB | 2026-10-15 12:52 |
-| `docs/PROJECT_COMPLETE_REFERENCE.md` | ignored | 2.3 MB | 2026-10-15 12:52 |
+| `docs/PROJECT_COMPLETE_REFERENCE.json` | ignored | 4.1 MB | 2026-10-17 11:54 |
+| `docs/PROJECT_COMPLETE_REFERENCE.md` | ignored | 3.1 MB | 2026-10-17 11:54 |
 | `docs/decisoes.md` | tracked | 27.7 KB | 2026-10-10 17:42 |
-| `docs/project_reference_parts/part_01_of_03.md` | tracked | 826.4 KB | 2026-10-15 12:52 |
-| `docs/project_reference_parts/part_02_of_03.md` | tracked | 1020.5 KB | 2026-10-15 12:52 |
-| `docs/project_reference_parts/part_03_of_03.md` | tracked | 493.7 KB | 2026-10-15 12:52 |
+| `docs/project_reference_parts/part_01_of_03.md` | tracked | 701.4 KB | 2026-10-17 14:01 |
+| `docs/project_reference_parts/part_02_of_03.md` | tracked | 1.0 MB | 2026-10-17 14:01 |
+| `docs/project_reference_parts/part_03_of_03.md` | tracked | 565.3 KB | 2026-10-17 14:01 |
 | `notebooks/.gitkeep` | tracked | 0 B | 2026-10-06 00:50 |
-| `notebooks/00_acesso_dados_parquet.ipynb` | tracked | 18.4 KB | 2026-10-16 01:28 |
-| `notebooks/01_extracao.ipynb` | tracked | 14.8 KB | 2026-10-16 01:28 |
-| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | tracked | 206.2 KB | 2026-10-16 01:28 |
-| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | tracked | 739.7 KB | 2026-10-16 01:28 |
-| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | tracked | 553.6 KB | 2026-10-16 03:43 |
-| `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` | tracked | 63.4 KB | 2026-10-16 03:46 |
-| `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` | tracked | 50.8 KB | 2026-10-14 22:03 |
-| `notebooks/A/A1_coorte_protocolo.ipynb` | tracked | 13.0 KB | 2026-10-16 01:28 |
-| `notebooks/A/A2_qualidade_elegibilidade.ipynb` | tracked | 10.5 KB | 2026-10-16 01:28 |
-| `notebooks/A/A3_desenho_experimental.ipynb` | tracked | 10.4 KB | 2026-10-16 01:28 |
-| `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | tracked | 12.1 KB | 2026-10-16 01:28 |
-| `notebooks/A/A4_decisao_candidatos.ipynb` | tracked | 8.9 KB | 2026-10-16 01:28 |
-| `notebooks/C/C1_smoke_test.ipynb` | tracked | 2.6 KB | 2026-10-16 01:28 |
-| `notebooks/C/C2_pipeline_supervisionado.ipynb` | tracked | 10.2 KB | 2026-10-16 01:28 |
-| `notebooks/C/C3_baseline_logistica.ipynb` | tracked | 10.7 KB | 2026-10-16 01:28 |
-| `notebooks/C/C4_boosting.ipynb` | tracked | 22.4 KB | 2026-10-16 01:28 |
-| `notebooks/C/C5_calibracao_limiar.ipynb` | tracked | 19.3 KB | 2026-10-16 01:28 |
-| `notebooks/C/C6_validacao_final.ipynb` | tracked | 31.5 KB | 2026-10-16 01:28 |
-| `outputs/imagens_notebook_02_temp/eda_02_001_volume_de_registros_por_ano_de_internacao.png` | ignored | 62.0 KB | 2026-10-11 19:56 |
-| `outputs/imagens_notebook_02_temp/eda_02_002_proporcao_observada_de_obito_por_srag_por_ano_de_internacao.png` | ignored | 99.2 KB | 2026-10-11 19:56 |
-| `outputs/imagens_notebook_02_temp/eda_02_003_idade_mediana_e_intervalo_interquartil_por_ano_de_internacao.png` | ignored | 114.3 KB | 2026-10-11 19:56 |
-| `outputs/imagens_notebook_02_temp/eda_02_004_composicao_da_coorte_por_faixa_etaria_e_ano_de_internacao.png` | ignored | 82.5 KB | 2026-10-11 19:56 |
-| `outputs/imagens_notebook_02_temp/eda_02_005_variaveis_candidatas_com_maior_variacao_de_preenchimento_entre_anos.png` | ignored | 110.5 KB | 2026-10-11 19:56 |
-| `outputs/imagens_notebook_02_temp/eda_02_006_sintomas_com_maior_variacao_temporal_entre_os_registros_com_resposta_valida.png` | ignored | 162.3 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_007_comorbidades_com_maior_variacao_temporal_entre_os_registros_com_resposta_valida.png` | ignored | 189.4 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_008_registro_de_vacinacao_entre_respostas_validas_por_ano_de_internacao.png` | ignored | 115.6 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_009_preenchimento_da_escolaridade_por_ano_de_internacao.png` | ignored | 75.9 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_010_participacao_das_ufs_de_residencia_mais_frequentes_por_ano.png` | ignored | 155.6 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_011_indicadores_com_maior_mudanca_temporal_entre_2019_e_2025.png` | ignored | 163.2 KB | 2026-10-11 19:59 |
-| `outputs/imagens_notebook_02_temp/eda_02_012_proporcao_observada_de_obito_por_srag_por_faixa_etaria.png` | ignored | 84.6 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_013_proporcao_observada_de_obito_por_numero_de_comorbidades.png` | ignored | 91.2 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_014_associacao_bruta_entre_sintomas_registrados_e_obito_por_srag.png` | ignored | 90.2 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_015_associacao_bruta_entre_comorbidades_registradas_e_obito_por_srag.png` | ignored | 104.3 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_016_diferenca_de_ausencia_entre_obitos_e_curas.png` | ignored | 108.6 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_017_presenca_registrada_dos_sintomas_por_ano_de_internacao.png` | ignored | 175.7 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_018_presenca_registrada_das_comorbidades_por_ano_de_internacao.png` | ignored | 182.8 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_019_sintomas_sem_resposta_valida_por_ano_de_internacao.png` | ignored | 173.5 KB | 2026-10-11 20:00 |
-| `outputs/imagens_notebook_02_temp/eda_02_020_comorbidades_sem_resposta_valida_por_ano_de_internacao.png` | ignored | 194.9 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_021_evolucao_anual_da_quantidade_de_indicadores_clinicos_registrados.png` | ignored | 195.9 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_022_obito_por_srag_segundo_faixa_etaria_e_ano_de_internacao.png` | ignored | 264.8 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_023_obito_por_srag_segundo_numero_de_comorbidades_e_ano.png` | ignored | 138.5 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_024_obito_por_srag_segundo_presenca_ou_ausencia_dos_principais_sintomas.png` | ignored | 107.0 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_025_obito_por_srag_segundo_presenca_ou_ausencia_das_principais_comorbidades.png` | ignored | 115.5 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_026_composicao_do_sexo_registrado_por_ano_de_internacao.png` | ignored | 71.5 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_027_obito_por_srag_segundo_sexo_registrado.png` | ignored | 61.9 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_028_obito_por_srag_segundo_sexo_registrado_e_ano_de_internacao.png` | ignored | 132.7 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_029_evolucao_mensal_do_volume_e_do_desfecho.png` | ignored | 278.5 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_030_volume_de_internacoes_segundo_ano_e_mes.png` | ignored | 150.7 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_031_obito_por_srag_segundo_ano_e_mes_da_internacao.png` | ignored | 292.1 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_032_composicao_das_matrizes_apos_o_pre_processamento.png` | ignored | 86.2 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_033_variancia_explicada_acumulada_pelo_pca.png` | ignored | 100.4 KB | 2026-10-11 20:01 |
-| `outputs/imagens_notebook_02_temp/eda_02_034_diagnostico_do_numero_de_clusters_no_espaco_pca_de_90.png` | ignored | 181.6 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_035_estabilidade_das_solucoes_candidatas.png` | ignored | 138.0 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_036_tamanho_das_solucoes_candidatas.png` | ignored | 75.1 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_037_projecao_bidimensional_das_solucoes_candidatas.png` | ignored | 839.0 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_038_features_com_maior_contribuicao_absoluta_para_o_pc1.png` | ignored | 148.5 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_039_maiores_diferencas_clinicas_entre_clusters_nucleo.png` | ignored | 103.7 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_040_maiores_diferencas_clinicas_entre_clusters_ampliada.png` | ignored | 103.9 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_041_composicao_temporal_dos_clusters_candidatos_do_nucleo.png` | ignored | 57.5 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_042_sensibilidade_sem_indicadores_de_ausencia.png` | ignored | 103.5 KB | 2026-10-11 20:02 |
-| `outputs/imagens_notebook_02_temp/eda_02_043_volume_de_registros_por_ano_de_internacao.png` | ignored | 62.0 KB | 2026-10-11 20:20 |
-| `outputs/imagens_notebook_02_temp/eda_02_044_proporcao_observada_de_obito_por_srag_por_ano_de_internacao.png` | ignored | 99.2 KB | 2026-10-11 20:20 |
-| `outputs/imagens_notebook_02_temp/eda_02_045_idade_mediana_e_intervalo_interquartil_por_ano_de_internacao.png` | ignored | 114.3 KB | 2026-10-11 20:20 |
-| `outputs/imagens_notebook_02_temp/eda_02_046_composicao_da_coorte_por_faixa_etaria_e_ano_de_internacao.png` | ignored | 82.5 KB | 2026-10-11 20:21 |
-| `outputs/imagens_notebook_02_temp/eda_02_047_variaveis_candidatas_com_maior_variacao_de_preenchimento_entre_anos.png` | ignored | 110.5 KB | 2026-10-11 20:21 |
-| `outputs/imagens_notebook_02_temp/eda_02_048_sintomas_com_maior_variacao_temporal_entre_os_registros_com_resposta_valida.png` | ignored | 162.3 KB | 2026-10-11 20:24 |
-| `outputs/imagens_notebook_02_temp/eda_02_049_comorbidades_com_maior_variacao_temporal_entre_os_registros_com_resposta_valida.png` | ignored | 189.4 KB | 2026-10-11 20:24 |
-| `outputs/imagens_notebook_02_temp/eda_02_050_registro_de_vacinacao_entre_respostas_validas_por_ano_de_internacao.png` | ignored | 115.6 KB | 2026-10-11 20:25 |
-| `outputs/imagens_notebook_02_temp/eda_02_051_preenchimento_da_escolaridade_por_ano_de_internacao.png` | ignored | 75.9 KB | 2026-10-11 20:25 |
-| `outputs/imagens_notebook_02_temp/eda_02_052_participacao_das_ufs_de_residencia_mais_frequentes_por_ano.png` | ignored | 155.6 KB | 2026-10-11 20:25 |
-| `outputs/imagens_notebook_02_temp/eda_02_053_indicadores_com_maior_mudanca_temporal_entre_2019_e_2025.png` | ignored | 163.2 KB | 2026-10-11 20:25 |
-| `outputs/imagens_notebook_02_temp/eda_02_054_proporcao_observada_de_obito_por_srag_por_faixa_etaria.png` | ignored | 84.6 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_055_proporcao_observada_de_obito_por_numero_de_comorbidades.png` | ignored | 91.2 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_056_associacao_bruta_entre_sintomas_registrados_e_obito_por_srag.png` | ignored | 90.2 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_057_associacao_bruta_entre_comorbidades_registradas_e_obito_por_srag.png` | ignored | 104.3 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_058_diferenca_de_ausencia_entre_obitos_e_curas.png` | ignored | 108.6 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_059_presenca_registrada_dos_sintomas_por_ano_de_internacao.png` | ignored | 175.7 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_060_presenca_registrada_das_comorbidades_por_ano_de_internacao.png` | ignored | 182.8 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_061_sintomas_sem_resposta_valida_por_ano_de_internacao.png` | ignored | 173.5 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_062_comorbidades_sem_resposta_valida_por_ano_de_internacao.png` | ignored | 194.9 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_063_evolucao_anual_da_quantidade_de_indicadores_clinicos_registrados.png` | ignored | 195.9 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_064_obito_por_srag_segundo_faixa_etaria_e_ano_de_internacao.png` | ignored | 264.8 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_065_obito_por_srag_segundo_numero_de_comorbidades_e_ano.png` | ignored | 138.5 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_066_obito_por_srag_segundo_presenca_ou_ausencia_dos_principais_sintomas.png` | ignored | 107.0 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_067_obito_por_srag_segundo_presenca_ou_ausencia_das_principais_comorbidades.png` | ignored | 115.5 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_068_composicao_do_sexo_registrado_por_ano_de_internacao.png` | ignored | 71.5 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_069_obito_por_srag_segundo_sexo_registrado.png` | ignored | 61.9 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_070_obito_por_srag_segundo_sexo_registrado_e_ano_de_internacao.png` | ignored | 132.7 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_071_evolucao_mensal_do_volume_e_do_desfecho.png` | ignored | 278.5 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_072_volume_de_internacoes_segundo_ano_e_mes.png` | ignored | 150.7 KB | 2026-10-11 20:27 |
-| `outputs/imagens_notebook_02_temp/eda_02_073_obito_por_srag_segundo_ano_e_mes_da_internacao.png` | ignored | 292.1 KB | 2026-10-11 20:27 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261012T022616Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-12 02:26 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-12 13:01 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261014T031127Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-14 03:11 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261014T234809Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-14 23:48 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261016T030120Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:01 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261016T032647Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:26 |
-| `outputs/predictions/03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-16 03:42 |
-| `outputs/predictions/03_pilotos_provisional_20261012T124857Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 12:48 |
-| `outputs/predictions/03_pilotos_provisoria_20261012T021331Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 02:13 |
-| `outputs/predictions/03_pilotos_provisoria_20261012T125945Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-12 12:59 |
-| `outputs/predictions/03_pilotos_provisoria_20261014T030944Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-14 03:09 |
-| `outputs/predictions/03_pilotos_provisoria_20261014T234615Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-14 23:46 |
-| `outputs/predictions/03_pilotos_provisoria_20261016T025913Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-16 02:59 |
-| `outputs/predictions/03_pilotos_provisoria_20261016T032505Z_predicoes_validacao.parquet` | ignored | 10.0 MB | 2026-10-16 03:25 |
-| `outputs/predictions/03_pilotos_provisoria_20261016T034100Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-16 03:41 |
-| `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-12 02:13 |
-| `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-12 02:13 |
-| `outputs/runs/2026-10-12_095946_799810_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-12 12:59 |
-| `outputs/runs/2026-10-12_095946_799810_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-12 12:59 |
-| `outputs/runs/2026-10-14_000946_434671_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-14 03:09 |
-| `outputs/runs/2026-10-14_000946_434671_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-14 03:09 |
-| `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-14 23:46 |
-| `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-14 23:46 |
-| `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 02:59 |
-| `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 02:59 |
-| `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 03:25 |
-| `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 03:25 |
-| `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/metadata.json` | ignored | 2.8 KB | 2026-10-16 03:41 |
-| `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-16 03:41 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_amostras.csv` | ignored | 211 B | 2026-10-12 02:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_manifesto.json` | ignored | 2.7 KB | 2026-10-12 02:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_metricas.csv` | ignored | 1.3 KB | 2026-10-12 02:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-12 02:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_variacao_temporal.csv` | ignored | 905 B | 2026-10-12 02:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_amostras.csv` | ignored | 211 B | 2026-10-12 13:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_manifesto.json` | ignored | 2.7 KB | 2026-10-12 13:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_metricas.csv` | ignored | 1.3 KB | 2026-10-12 13:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-12 13:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv` | ignored | 907 B | 2026-10-12 13:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_amostras.csv` | ignored | 212 B | 2026-10-14 03:11 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_manifesto.json` | ignored | 2.7 KB | 2026-10-14 03:11 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_metricas.csv` | ignored | 1.3 KB | 2026-10-14 03:11 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-14 03:11 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-14 03:11 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_amostras.csv` | ignored | 212 B | 2026-10-14 23:48 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_manifesto.json` | ignored | 2.7 KB | 2026-10-14 23:48 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas.csv` | ignored | 1.3 KB | 2026-10-14 23:48 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-14 23:48 |
-| `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-14 23:48 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_amostras.csv` | ignored | 212 B | 2026-10-16 03:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-16 03:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-16 03:01 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_amostras.csv` | ignored | 211 B | 2026-10-16 03:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv` | ignored | 5.1 KB | 2026-10-16 03:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv` | ignored | 913 B | 2026-10-16 03:26 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_amostras.csv` | ignored | 212 B | 2026-10-16 03:42 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_manifesto.json` | ignored | 2.7 KB | 2026-10-16 03:42 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas.csv` | ignored | 1.3 KB | 2026-10-16 03:42 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-16 03:42 |
-| `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv` | ignored | 912 B | 2026-10-16 03:42 |
-| `outputs/tables/03_pilotos_provisional_20261012T124857Z_contrato.csv` | ignored | 213 B | 2026-10-12 12:48 |
-| `outputs/tables/03_pilotos_provisional_20261012T124857Z_manifesto.json` | ignored | 1.7 KB | 2026-10-12 12:48 |
-| `outputs/tables/03_pilotos_provisional_20261012T124857Z_metricas_validacao.csv` | ignored | 540 B | 2026-10-12 12:48 |
-| `outputs/tables/03_pilotos_provisional_20261012T124857Z_particoes.csv` | ignored | 312 B | 2026-10-12 12:48 |
-| `outputs/tables/03_pilotos_provisoria_20261012T021331Z_contrato.csv` | ignored | 213 B | 2026-10-12 02:13 |
-| `outputs/tables/03_pilotos_provisoria_20261012T021331Z_manifesto.json` | ignored | 1.7 KB | 2026-10-12 02:13 |
-| `outputs/tables/03_pilotos_provisoria_20261012T021331Z_metricas_validacao.csv` | ignored | 540 B | 2026-10-12 02:13 |
-| `outputs/tables/03_pilotos_provisoria_20261012T021331Z_particoes.csv` | ignored | 312 B | 2026-10-12 02:13 |
-| `outputs/tables/03_pilotos_provisoria_20261012T125945Z_contrato.csv` | ignored | 213 B | 2026-10-12 12:59 |
-| `outputs/tables/03_pilotos_provisoria_20261012T125945Z_manifesto.json` | ignored | 1.7 KB | 2026-10-12 12:59 |
-| `outputs/tables/03_pilotos_provisoria_20261012T125945Z_metricas_validacao.csv` | ignored | 537 B | 2026-10-12 12:59 |
-| `outputs/tables/03_pilotos_provisoria_20261012T125945Z_particoes.csv` | ignored | 312 B | 2026-10-12 12:59 |
-| `outputs/tables/03_pilotos_provisoria_20261014T030944Z_contrato.csv` | ignored | 213 B | 2026-10-14 03:09 |
-| `outputs/tables/03_pilotos_provisoria_20261014T030944Z_manifesto.json` | ignored | 2.0 KB | 2026-10-14 03:09 |
-| `outputs/tables/03_pilotos_provisoria_20261014T030944Z_metricas_validacao.csv` | ignored | 536 B | 2026-10-14 03:09 |
-| `outputs/tables/03_pilotos_provisoria_20261014T030944Z_particoes.csv` | ignored | 313 B | 2026-10-14 03:09 |
-| `outputs/tables/03_pilotos_provisoria_20261014T234615Z_contrato.csv` | ignored | 213 B | 2026-10-14 23:46 |
-| `outputs/tables/03_pilotos_provisoria_20261014T234615Z_manifesto.json` | ignored | 2.0 KB | 2026-10-14 23:46 |
-| `outputs/tables/03_pilotos_provisoria_20261014T234615Z_metricas_validacao.csv` | ignored | 534 B | 2026-10-14 23:46 |
-| `outputs/tables/03_pilotos_provisoria_20261014T234615Z_particoes.csv` | ignored | 313 B | 2026-10-14 23:46 |
-| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_contrato.csv` | ignored | 213 B | 2026-10-16 02:59 |
-| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 02:59 |
-| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv` | ignored | 574 B | 2026-10-16 02:59 |
-| `outputs/tables/03_pilotos_provisoria_20261016T025913Z_particoes.csv` | ignored | 313 B | 2026-10-16 02:59 |
-| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_contrato.csv` | ignored | 213 B | 2026-10-16 03:25 |
-| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 03:25 |
-| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv` | ignored | 571 B | 2026-10-16 03:25 |
-| `outputs/tables/03_pilotos_provisoria_20261016T032505Z_particoes.csv` | ignored | 312 B | 2026-10-16 03:25 |
-| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_contrato.csv` | ignored | 213 B | 2026-10-16 03:41 |
-| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_manifesto.json` | ignored | 2.0 KB | 2026-10-16 03:41 |
-| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv` | ignored | 573 B | 2026-10-16 03:41 |
-| `outputs/tables/03_pilotos_provisoria_20261016T034100Z_particoes.csv` | ignored | 313 B | 2026-10-16 03:41 |
-| `outputs/tables/04_handoff_provisional_20261012T123353Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 12:33 |
-| `outputs/tables/04_handoff_provisional_20261012T123353Z_manifesto.json` | ignored | 2.5 KB | 2026-10-12 12:33 |
-| `outputs/tables/04_handoff_provisional_20261012T123353Z_shortlist.csv` | ignored | 638 B | 2026-10-12 12:33 |
-| `outputs/tables/04_handoff_provisional_20261012T123353Z_temporal.csv` | ignored | 2.1 KB | 2026-10-12 12:33 |
-| `outputs/tables/04_handoff_provisional_20261012T123353Z_transicao.csv` | ignored | 671 B | 2026-10-12 12:33 |
-| `outputs/tables/04_handoff_provisional_20261012T130545Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 13:05 |
-| `outputs/tables/04_handoff_provisional_20261012T130545Z_shortlist.csv` | ignored | 639 B | 2026-10-12 13:05 |
-| `outputs/tables/04_handoff_provisional_20261012T130545Z_temporal.csv` | ignored | 2.1 KB | 2026-10-12 13:05 |
-| `outputs/tables/04_handoff_provisional_20261012T130545Z_transicao.csv` | ignored | 689 B | 2026-10-12 13:05 |
-| `outputs/tables/04_handoff_provisional_20261012T130652Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 13:06 |
-| `outputs/tables/04_handoff_provisional_20261012T130652Z_shortlist.csv` | ignored | 639 B | 2026-10-12 13:06 |
-| `outputs/tables/04_handoff_provisional_20261012T130652Z_temporal.csv` | ignored | 2.1 KB | 2026-10-12 13:06 |
-| `outputs/tables/04_handoff_provisional_20261012T130652Z_transicao.csv` | ignored | 742 B | 2026-10-12 13:06 |
-| `outputs/tables/04_handoff_provisional_20261012T130722Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 13:07 |
-| `outputs/tables/04_handoff_provisional_20261012T130722Z_manifesto.json` | ignored | 2.9 KB | 2026-10-12 13:07 |
-| `outputs/tables/04_handoff_provisional_20261012T130722Z_shortlist.csv` | ignored | 639 B | 2026-10-12 13:07 |
-| `outputs/tables/04_handoff_provisional_20261012T130722Z_temporal.csv` | ignored | 2.1 KB | 2026-10-12 13:07 |
-| `outputs/tables/04_handoff_provisional_20261012T130722Z_transicao.csv` | ignored | 742 B | 2026-10-12 13:07 |
-| `outputs/tables/04_handoff_provisional_20261012T130953Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-12 13:09 |
-| `outputs/tables/04_handoff_provisional_20261012T130953Z_manifesto.json` | ignored | 2.9 KB | 2026-10-12 13:09 |
-| `outputs/tables/04_handoff_provisional_20261012T130953Z_shortlist.csv` | ignored | 639 B | 2026-10-12 13:09 |
-| `outputs/tables/04_handoff_provisional_20261012T130953Z_temporal.csv` | ignored | 2.1 KB | 2026-10-12 13:09 |
-| `outputs/tables/04_handoff_provisional_20261012T130953Z_transicao.csv` | ignored | 742 B | 2026-10-12 13:09 |
-| `outputs/tables/04_handoff_provisional_20261014T030209Z_calibracao_bruta.csv` | ignored | 238 B | 2026-10-14 03:02 |
-| `outputs/tables/04_handoff_provisional_20261014T030209Z_manifesto.json` | ignored | 2.9 KB | 2026-10-14 03:02 |
-| `outputs/tables/04_handoff_provisional_20261014T030209Z_shortlist.csv` | ignored | 639 B | 2026-10-14 03:02 |
-| `outputs/tables/04_handoff_provisional_20261014T030209Z_temporal.csv` | ignored | 2.1 KB | 2026-10-14 03:02 |
-| `outputs/tables/04_handoff_provisional_20261014T030209Z_transicao.csv` | ignored | 742 B | 2026-10-14 03:02 |
-| `outputs/tables/04_handoff_provisional_20261014T235131Z_calibracao_bruta.csv` | ignored | 239 B | 2026-10-14 23:51 |
-| `outputs/tables/04_handoff_provisional_20261014T235131Z_manifesto.json` | ignored | 2.9 KB | 2026-10-14 23:51 |
-| `outputs/tables/04_handoff_provisional_20261014T235131Z_shortlist.csv` | ignored | 640 B | 2026-10-14 23:51 |
-| `outputs/tables/04_handoff_provisional_20261014T235131Z_temporal.csv` | ignored | 2.1 KB | 2026-10-14 23:51 |
-| `outputs/tables/04_handoff_provisional_20261014T235131Z_transicao.csv` | ignored | 742 B | 2026-10-14 23:51 |
-| `outputs/tables/04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv` | ignored | 236 B | 2026-10-16 03:46 |
-| `outputs/tables/04_handoff_provisional_20261016T034632Z_manifesto.json` | ignored | 2.9 KB | 2026-10-16 03:46 |
-| `outputs/tables/04_handoff_provisional_20261016T034632Z_shortlist.csv` | ignored | 650 B | 2026-10-16 03:46 |
-| `outputs/tables/04_handoff_provisional_20261016T034632Z_temporal.csv` | ignored | 2.1 KB | 2026-10-16 03:46 |
-| `outputs/tables/04_handoff_provisional_20261016T034632Z_transicao.csv` | ignored | 742 B | 2026-10-16 03:46 |
-| `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv` | ignored | 772 B | 2026-10-11 13:17 |
-| `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv` | ignored | 448 B | 2026-10-11 13:17 |
-| `outputs/tables/coorte_provisoria_b_resumo.csv` | ignored | 512 B | 2026-10-11 13:17 |
-| `outputs/tables/coorte_provisoria_b_waterfall.csv` | ignored | 773 B | 2026-10-11 13:17 |
-| `outputs/tables/dicionario_variaveis_revisao.csv` | ignored | 24.8 KB | 2026-10-14 22:28 |
-| `outputs/tables/eda_01_auditoria_datas_pos_corte.csv` | ignored | 347 B | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_auditoria_faixa_datas.csv` | ignored | 408 B | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_auditoria_vazamento.csv` | ignored | 1.3 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_ausencias.csv` | ignored | 5.2 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_cardinalidade.csv` | ignored | 1.5 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_duplicidades_nu_notific.csv` | ignored | 4.0 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_frequencias_categoricas.csv` | ignored | 10.2 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_preenchimento_por_ano_internacao.csv` | ignored | 12.2 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_preenchimento_por_ano_notificacao.csv` | ignored | 12.9 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_resumo_datas.csv` | ignored | 1.8 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_resumo_primeira_passagem.csv` | ignored | 288 B | 2026-10-10 18:58 |
-| `outputs/tables/eda_01_status_colunas.csv` | ignored | 3.1 KB | 2026-10-10 18:58 |
-| `outputs/tables/eda_01_status_periodos.csv` | ignored | 1.4 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_tipos_memoria.csv` | ignored | 2.9 KB | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_volume_por_ano_internacao.csv` | ignored | 647 B | 2026-10-14 22:27 |
-| `outputs/tables/eda_01_volume_por_ano_notificacao.csv` | ignored | 333 B | 2026-10-14 22:27 |
-| `outputs/tables/eda_02_alvo_por_ano.csv` | ignored | 608 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_auditoria_idade.csv` | ignored | 331 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_ausencia_por_desfecho.csv` | ignored | 4.2 KB | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_cluster_ano_sensibilidade.csv` | ignored | 1.6 KB | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_cluster_desfecho_sensibilidade.csv` | ignored | 365 B | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_comorbidades_por_ano.csv` | ignored | 14.8 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_comparacao_original_sensibilidade.csv` | ignored | 825 B | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_contadores_clinicos_por_ano.csv` | ignored | 1.2 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_dbscan_varredura_minima.csv` | ignored | 502 B | 2026-10-14 23:30 |
-| `outputs/tables/eda_02_decisao_clustering.csv` | ignored | 706 B | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_decisao_clustering.json` | ignored | 766 B | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_diagnostico_final_clustering.csv` | ignored | 534 B | 2026-10-14 23:29 |
-| `outputs/tables/eda_02_escolaridade_por_ano.csv` | ignored | 2.5 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_faixa_etaria_por_ano.csv` | ignored | 3.1 KB | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_hca_dbscan_resumo_minimo.csv` | ignored | 627 B | 2026-10-14 23:30 |
-| `outputs/tables/eda_02_idade_por_ano.csv` | ignored | 951 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_obito_comorbidades.csv` | ignored | 3.8 KB | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_obito_faixa_etaria.csv` | ignored | 925 B | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_obito_numero_comorbidades.csv` | ignored | 576 B | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_obito_sintomas.csv` | ignored | 3.7 KB | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_perfis_binarios_clusters_sensibilidade.csv` | ignored | 11.9 KB | 2026-10-14 23:30 |
-| `outputs/tables/eda_02_perfis_numericos_clusters_sensibilidade.csv` | ignored | 2.7 KB | 2026-10-14 23:30 |
-| `outputs/tables/eda_02_perfis_sexo_clusters_sensibilidade.csv` | ignored | 696 B | 2026-10-14 23:30 |
-| `outputs/tables/eda_02_preenchimento_por_variavel_ano.csv` | ignored | 88.1 KB | 2026-10-14 23:23 |
-| `outputs/tables/eda_02_resumo_analise_desfecho.csv` | ignored | 367 B | 2026-10-14 23:28 |
-| `outputs/tables/eda_02_resumo_fonte.csv` | ignored | 237 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_resumo_fonte_provisorio.csv` | ignored | 261 B | 2026-10-11 13:27 |
-| `outputs/tables/eda_02_resumo_preenchimento_variaveis.csv` | ignored | 11.1 KB | 2026-10-14 23:23 |
-| `outputs/tables/eda_02_resumo_rupturas_temporais.csv` | ignored | 771 B | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_resumo_temporal.csv` | ignored | 836 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_resumo_uf_residencia.csv` | ignored | 981 B | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_rupturas_temporais.csv` | ignored | 21.6 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_sexo_por_ano.csv` | ignored | 1014 B | 2026-10-14 23:22 |
-| `outputs/tables/eda_02_sintomas_por_ano.csv` | ignored | 13.8 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_uf_residencia_por_ano.csv` | ignored | 7.4 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_vacinacao_por_ano.csv` | ignored | 2.6 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_variacao_comorbidades.csv` | ignored | 2.0 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_variacao_preenchimento.csv` | ignored | 12.6 KB | 2026-10-14 23:23 |
-| `outputs/tables/eda_02_variacao_sintomas.csv` | ignored | 1.9 KB | 2026-10-14 23:26 |
-| `outputs/tables/eda_02_volume_por_ano.csv` | ignored | 368 B | 2026-10-14 23:22 |
-| `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv` | ignored | 376 B | 2026-10-16 03:39 |
-| `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv` | ignored | 154 B | 2026-10-16 03:39 |
-| `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv` | ignored | 181 B | 2026-10-16 03:39 |
-| `reports/figures/eda_01_volume_por_ano_internacao.png` | ignored | 36.5 KB | 2026-10-14 22:27 |
-| `reports/figures/eda_02_ausencia_por_desfecho.png` | ignored | 99.0 KB | 2026-10-14 23:28 |
-| `reports/figures/eda_02_cobertura_clinica_clusters_sensibilidade.png` | ignored | 158.7 KB | 2026-10-14 23:30 |
-| `reports/figures/eda_02_comorbidades_por_ano.png` | ignored | 172.6 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_comparacao_original_sensibilidade.png` | ignored | 90.4 KB | 2026-10-14 23:29 |
-| `reports/figures/eda_02_composicao_temporal_sensibilidade.png` | ignored | 109.9 KB | 2026-10-14 23:29 |
-| `reports/figures/eda_02_dbscan_k_distance_minimo.png` | ignored | 58.3 KB | 2026-10-14 23:30 |
-| `reports/figures/eda_02_desfecho_clusters_sensibilidade.png` | ignored | 79.4 KB | 2026-10-14 23:29 |
-| `reports/figures/eda_02_escolaridade_preenchimento_por_ano.png` | ignored | 69.8 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_faixa_etaria_por_ano.png` | ignored | 71.1 KB | 2026-10-14 23:22 |
-| `reports/figures/eda_02_hca_dendrograma_minimo.png` | ignored | 98.9 KB | 2026-10-14 23:30 |
-| `reports/figures/eda_02_idade_por_ano.png` | ignored | 101.2 KB | 2026-10-14 23:22 |
-| `reports/figures/eda_02_obito_faixa_etaria.png` | ignored | 74.5 KB | 2026-10-14 23:28 |
-| `reports/figures/eda_02_obito_numero_comorbidades.png` | ignored | 81.5 KB | 2026-10-14 23:28 |
-| `reports/figures/eda_02_odds_ratio_comorbidades.png` | ignored | 96.2 KB | 2026-10-14 23:28 |
-| `reports/figures/eda_02_odds_ratio_sintomas.png` | ignored | 82.8 KB | 2026-10-14 23:28 |
-| `reports/figures/eda_02_perfis_numericos_clusters_sensibilidade.png` | ignored | 104.3 KB | 2026-10-14 23:30 |
-| `reports/figures/eda_02_prevalencia_clinica_clusters_sensibilidade.png` | ignored | 158.1 KB | 2026-10-14 23:30 |
-| `reports/figures/eda_02_principais_uf_residencia.png` | ignored | 141.7 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_proporcao_obito_por_ano.png` | ignored | 89.8 KB | 2026-10-14 23:22 |
-| `reports/figures/eda_02_rupturas_temporais.png` | ignored | 152.5 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_sintomas_por_ano.png` | ignored | 146.6 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_vacinacao_por_ano.png` | ignored | 104.8 KB | 2026-10-14 23:26 |
-| `reports/figures/eda_02_variacao_preenchimento.png` | ignored | 99.2 KB | 2026-10-14 23:22 |
-| `reports/figures/eda_02_volume_por_ano.png` | ignored | 55.1 KB | 2026-10-14 23:22 |
-| `reports/figures/supervisionado_03/03_pilotos_curvas_pr_roc_calibracao.png` | ignored | 225.3 KB | 2026-10-16 03:42 |
-| `reports/figures/supervisionado_03/03_pilotos_metricas_por_ano.png` | ignored | 215.6 KB | 2026-10-16 03:42 |
+| `notebooks/00_acesso_dados_parquet.ipynb` | tracked | 17.7 KB | 2026-10-16 23:50 |
+| `notebooks/01_extracao.ipynb` | tracked | 14.4 KB | 2026-10-17 00:21 |
+| `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | tracked | 12.1 KB | 2026-10-17 12:26 |
+| `notebooks/A/A_03_coorte_protocolo.ipynb` | tracked | 13.0 KB | 2026-10-17 14:28 |
+| `notebooks/A/A_04_qualidade_elegibilidade.ipynb` | tracked | 11.0 KB | 2026-10-17 14:31 |
+| `notebooks/A/A_08_desenho_experimental.ipynb` | tracked | 10.3 KB | 2026-10-17 14:31 |
+| `notebooks/A/A_09_split_aleatorio_cenarios.ipynb` | tracked | 364.8 KB | 2026-10-17 14:31 |
+| `notebooks/A/A_14_decisao_candidatos.ipynb` | tracked | 8.8 KB | 2026-10-17 14:31 |
+| `notebooks/B/B_05_eda_primeira_passagem.ipynb` | tracked | 1.8 MB | 2026-10-17 14:03 |
+| `notebooks/B/B_06_eda_temporal_clustering.ipynb` | tracked | 6.8 MB | 2026-10-17 14:03 |
+| `notebooks/B/B_07_supervisionado_pilotos.ipynb` | tracked | 553.6 KB | 2026-10-17 00:46 |
+| `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` | tracked | 63.4 KB | 2026-10-17 00:56 |
+| `notebooks/B/___provisorio_construcao_coorte_b.ipynb` | tracked | 95.4 KB | 2026-10-17 14:03 |
+| `notebooks/C/C_02_smoke_test.ipynb` | tracked | 4.9 KB | 2026-10-17 00:56 |
+| `notebooks/C/C_11_pipeline_supervisionado.ipynb` | tracked | 190.7 KB | 2026-10-17 00:58 |
+| `notebooks/C/C_12_baseline_logistica.ipynb` | tracked | 20.6 KB | 2026-10-17 01:00 |
+| `notebooks/C/C_13_boosting.ipynb` | tracked | 32.4 KB | 2026-10-17 02:01 |
+| `notebooks/C/C_15_calibracao_limiar.ipynb` | tracked | 28.6 KB | 2026-10-17 02:11 |
+| `notebooks/C/C_16_validacao_final.ipynb` | tracked | 31.5 KB | 2026-10-16 01:28 |
+| `outputs/C2/preprocessor.joblib` | ignored | 1.3 KB | 2026-10-17 00:58 |
+| `outputs/C2/preprocessor_ajustado.joblib` | ignored | 10.6 KB | 2026-10-17 00:58 |
+| `outputs/C2/split_info.json` | ignored | 280 B | 2026-10-17 00:58 |
+| `outputs/figures/pessoa_a/split_comparacao_cenarios.png` | ignored | 100.1 KB | 2026-10-17 00:52 |
+| `outputs/figures/pessoa_a/split_sem_2020_2021.png` | ignored | 113.5 KB | 2026-10-17 00:51 |
+| `outputs/figures/pessoa_a/split_todos_2019_2025.png` | ignored | 122.7 KB | 2026-10-17 00:51 |
+| `outputs/predictions/03_cinco_familias_provisoria_20261017T004540Z_predicoes_validacao.parquet` | ignored | 5.3 MB | 2026-10-17 00:45 |
+| `outputs/predictions/03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet` | ignored | 10.1 MB | 2026-10-17 00:44 |
+| `outputs/predictions/C3_baseline_logistica_provisional_20261017T010044Z_predicoes_validacao.parquet` | ignored | 4.8 MB | 2026-10-17 01:00 |
+| `outputs/predictions/C4_boosting_provisional_20261017T010744Z_predicoes_validacao.parquet` | ignored | 9.7 MB | 2026-10-17 01:07 |
+| `outputs/predictions/C5_calibracao_limiar_provisional_20261017T021055Z_predicoes_val_meas.parquet` | ignored | 7.8 MB | 2026-10-17 02:10 |
+| `outputs/runs/2026-10-16_214409_272745_03_supervisionado_pilotos/metadata.json` | ignored | 2.7 KB | 2026-10-17 00:44 |
+| `outputs/runs/2026-10-16_214409_272745_03_supervisionado_pilotos/summary.txt` | ignored | 1.1 KB | 2026-10-17 00:44 |
+| `outputs/runs/2026-10-16_215802_867822_C2_pipeline/metadata.json` | ignored | 2.5 KB | 2026-10-17 00:58 |
+| `outputs/runs/2026-10-16_215802_867822_C2_pipeline/summary.txt` | ignored | 915 B | 2026-10-17 00:58 |
+| `outputs/runs/2026-10-16_220044_988905_C3_baseline_logistica/metadata.json` | ignored | 2.8 KB | 2026-10-17 01:00 |
+| `outputs/runs/2026-10-16_220044_988905_C3_baseline_logistica/summary.txt` | ignored | 1.1 KB | 2026-10-17 01:00 |
+| `outputs/runs/2026-10-16_220744_784223_C4_boosting/metadata.json` | ignored | 2.9 KB | 2026-10-17 01:07 |
+| `outputs/runs/2026-10-16_220744_784223_C4_boosting/summary.txt` | ignored | 1.2 KB | 2026-10-17 01:07 |
+| `outputs/runs/2026-10-16_231055_901408_C5_calibracao_limiar/metadata.json` | ignored | 3.2 KB | 2026-10-17 02:10 |
+| `outputs/runs/2026-10-16_231055_901408_C5_calibracao_limiar/summary.txt` | ignored | 1.4 KB | 2026-10-17 02:10 |
+| `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_amostras.csv` | ignored | 212 B | 2026-10-17 00:45 |
+| `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_manifesto.json` | ignored | 2.7 KB | 2026-10-17 00:45 |
+| `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_metricas.csv` | ignored | 1.3 KB | 2026-10-17 00:45 |
+| `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_metricas_por_ano.csv` | ignored | 5.2 KB | 2026-10-17 00:45 |
+| `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_variacao_temporal.csv` | ignored | 911 B | 2026-10-17 00:45 |
+| `outputs/tables/03_pilotos_provisoria_20261017T004408Z_contrato.csv` | ignored | 213 B | 2026-10-17 00:44 |
+| `outputs/tables/03_pilotos_provisoria_20261017T004408Z_manifesto.json` | ignored | 2.0 KB | 2026-10-17 00:44 |
+| `outputs/tables/03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv` | ignored | 574 B | 2026-10-17 00:44 |
+| `outputs/tables/03_pilotos_provisoria_20261017T004408Z_particoes.csv` | ignored | 313 B | 2026-10-17 00:44 |
+| `outputs/tables/04_handoff_provisional_20261017T005359Z_calibracao_bruta.csv` | ignored | 236 B | 2026-10-17 00:53 |
+| `outputs/tables/04_handoff_provisional_20261017T005359Z_manifesto.json` | ignored | 2.9 KB | 2026-10-17 00:53 |
+| `outputs/tables/04_handoff_provisional_20261017T005359Z_shortlist.csv` | ignored | 650 B | 2026-10-17 00:53 |
+| `outputs/tables/04_handoff_provisional_20261017T005359Z_temporal.csv` | ignored | 2.1 KB | 2026-10-17 00:53 |
+| `outputs/tables/04_handoff_provisional_20261017T005359Z_transicao.csv` | ignored | 742 B | 2026-10-17 00:53 |
+| `outputs/tables/C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv` | ignored | 290 B | 2026-10-17 01:00 |
+| `outputs/tables/C3_baseline_logistica_provisional_20261017T010044Z_manifesto.json` | ignored | 1.6 KB | 2026-10-17 01:00 |
+| `outputs/tables/C4_boosting_provisional_20261017T010744Z_comparacao.csv` | ignored | 398 B | 2026-10-17 01:07 |
+| `outputs/tables/C4_boosting_provisional_20261017T010744Z_manifesto.json` | ignored | 1.8 KB | 2026-10-17 01:07 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv` | ignored | 327 B | 2026-10-17 02:10 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_hist_gradient_boosting_curva.csv` | ignored | 648 B | 2026-10-17 02:10 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_hist_gradient_boosting_limiar.csv` | ignored | 15.0 KB | 2026-10-17 02:10 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_logistic_curva.csv` | ignored | 627 B | 2026-10-17 02:10 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_logistic_limiar.csv` | ignored | 14.1 KB | 2026-10-17 02:10 |
+| `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_manifesto.json` | ignored | 3.2 KB | 2026-10-17 02:10 |
+| `outputs/tables/dicionario_variaveis_revisao.csv` | ignored | 24.8 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_auditoria_datas_pos_corte.csv` | ignored | 347 B | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_auditoria_faixa_datas.csv` | ignored | 408 B | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_auditoria_vazamento.csv` | ignored | 1.3 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_ausencias.csv` | ignored | 5.2 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_cardinalidade.csv` | ignored | 1.5 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_duplicidades_nu_notific.csv` | ignored | 4.0 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_frequencias_categoricas.csv` | ignored | 10.2 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_preenchimento_por_ano_internacao.csv` | ignored | 12.2 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_preenchimento_por_ano_notificacao.csv` | ignored | 12.9 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_resumo_datas.csv` | ignored | 1.8 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_status_periodos.csv` | ignored | 1.4 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_tipos_memoria.csv` | ignored | 2.9 KB | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_volume_por_ano_internacao.csv` | ignored | 647 B | 2026-10-17 00:33 |
+| `outputs/tables/eda_01_volume_por_ano_notificacao.csv` | ignored | 333 B | 2026-10-17 00:33 |
+| `outputs/tables/eda_02_alvo_por_ano.csv` | ignored | 608 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_auditoria_idade.csv` | ignored | 331 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_ausencia_por_desfecho.csv` | ignored | 4.2 KB | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_cluster_ano_sensibilidade.csv` | ignored | 1.6 KB | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_cluster_desfecho_sensibilidade.csv` | ignored | 365 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_comorbidades_por_ano.csv` | ignored | 14.8 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_comparacao_original_sensibilidade.csv` | ignored | 825 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_contadores_clinicos_por_ano.csv` | ignored | 1.2 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_dbscan_varredura_minima.csv` | ignored | 502 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_decisao_clustering.csv` | ignored | 706 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_decisao_clustering.json` | ignored | 766 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_diagnostico_final_clustering.csv` | ignored | 534 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_escolaridade_por_ano.csv` | ignored | 2.5 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_faixa_etaria_por_ano.csv` | ignored | 3.1 KB | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_hca_dbscan_resumo_minimo.csv` | ignored | 627 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_idade_por_ano.csv` | ignored | 951 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_obito_comorbidades.csv` | ignored | 3.8 KB | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_obito_faixa_etaria.csv` | ignored | 925 B | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_obito_numero_comorbidades.csv` | ignored | 576 B | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_obito_sintomas.csv` | ignored | 3.7 KB | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_perfis_binarios_clusters_sensibilidade.csv` | ignored | 11.9 KB | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_perfis_numericos_clusters_sensibilidade.csv` | ignored | 2.7 KB | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_perfis_sexo_clusters_sensibilidade.csv` | ignored | 696 B | 2026-10-17 00:40 |
+| `outputs/tables/eda_02_preenchimento_por_variavel_ano.csv` | ignored | 88.1 KB | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_resumo_analise_desfecho.csv` | ignored | 367 B | 2026-10-17 00:39 |
+| `outputs/tables/eda_02_resumo_fonte.csv` | ignored | 237 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_resumo_preenchimento_variaveis.csv` | ignored | 11.1 KB | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_resumo_rupturas_temporais.csv` | ignored | 771 B | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_resumo_temporal.csv` | ignored | 836 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_resumo_uf_residencia.csv` | ignored | 981 B | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_rupturas_temporais.csv` | ignored | 21.6 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_sexo_por_ano.csv` | ignored | 1014 B | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_sintomas_por_ano.csv` | ignored | 13.8 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_uf_residencia_por_ano.csv` | ignored | 7.4 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_vacinacao_por_ano.csv` | ignored | 2.6 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_variacao_comorbidades.csv` | ignored | 2.0 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_variacao_preenchimento.csv` | ignored | 12.6 KB | 2026-10-17 00:34 |
+| `outputs/tables/eda_02_variacao_sintomas.csv` | ignored | 1.9 KB | 2026-10-17 00:37 |
+| `outputs/tables/eda_02_volume_por_ano.csv` | ignored | 368 B | 2026-10-17 00:34 |
+| `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv` | ignored | 376 B | 2026-10-17 00:42 |
+| `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv` | ignored | 154 B | 2026-10-17 00:42 |
+| `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv` | ignored | 181 B | 2026-10-17 00:42 |
+| `outputs/tables/pessoa_a/a1_alvo_por_ano.csv` | ignored | 830 B | 2026-10-17 00:23 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_01.csv` | ignored | 3.5 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_02.csv` | ignored | 3.6 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_03.csv` | ignored | 4.1 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_04.csv` | ignored | 3.8 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_05.csv` | ignored | 4.5 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_01.csv` | ignored | 3.5 KB | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_02.csv` | ignored | 3.6 KB | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_03.csv` | ignored | 4.1 KB | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_04.csv` | ignored | 3.8 KB | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_05.csv` | ignored | 4.5 KB | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_01.csv` | ignored | 3.5 KB | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_02.csv` | ignored | 3.6 KB | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_03.csv` | ignored | 4.1 KB | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_04.csv` | ignored | 3.8 KB | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_05.csv` | ignored | 4.5 KB | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a1_tabela_codigos.csv` | ignored | 3.8 KB | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_waterfall.csv` | ignored | 555 B | 2026-10-17 00:22 |
+| `outputs/tables/pessoa_a/a1_waterfall_sem_2020_2021.csv` | ignored | 562 B | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a1_waterfall_todos_2019_2025.csv` | ignored | 573 B | 2026-10-17 00:50 |
+| `outputs/tables/pessoa_a/a2_campos_inexistentes_por_ano.csv` | ignored | 15.3 KB | 2026-10-17 00:25 |
+| `outputs/tables/pessoa_a/a2_coerencia_datas.csv` | ignored | 1.3 KB | 2026-10-17 00:25 |
+| `outputs/tables/pessoa_a/a2_duplicidades.csv` | ignored | 177 B | 2026-10-17 00:26 |
+| `outputs/tables/pessoa_a/a2_matriz_elegibilidade.csv` | ignored | 21.0 KB | 2026-10-17 00:27 |
+| `outputs/tables/pessoa_a/a2_maturidade_evolucao_por_mes.csv` | ignored | 4.2 KB | 2026-10-17 00:26 |
+| `outputs/tables/pessoa_a/a2_vazios_ignorados_por_ano.csv` | ignored | 87.7 KB | 2026-10-17 00:25 |
+| `outputs/tables/pessoa_a/a3_benchmark_split_sem_2020_2021.csv` | ignored | 416 B | 2026-10-17 00:52 |
+| `outputs/tables/pessoa_a/a3_benchmark_split_todos_2019_2025.csv` | ignored | 425 B | 2026-10-17 00:52 |
+| `outputs/tables/pessoa_a/a3_split_aleatorio_sem_2020_2021.csv` | ignored | 155 B | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a3_split_aleatorio_sem_2020_2021_por_ano.csv` | ignored | 166 B | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a3_split_aleatorio_todos_2019_2025.csv` | ignored | 158 B | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a3_split_aleatorio_todos_2019_2025_por_ano.csv` | ignored | 221 B | 2026-10-17 00:51 |
+| `outputs/tables/pessoa_a/a3_split_temporal.csv` | ignored | 197 B | 2026-10-17 00:49 |
+| `outputs/tables/pessoa_a/a3_varredura_vazamento.csv` | ignored | 889 B | 2026-10-17 00:49 |
+| `outputs/tables/pessoa_a/ata_17_10_fine_tuning.md` | ignored | 526 B | 2026-10-17 02:02 |
+| `outputs/tables/pessoa_a/ata_gate_2_11_10.md` | ignored | 2.0 KB | 2026-10-17 00:49 |
+| `outputs/tables/pessoa_a/ata_gate_3_14_10.md` | ignored | 2.0 KB | 2026-10-17 00:49 |
+| `outputs/tables/pessoa_a/comparacao_cenarios.csv` | ignored | 337 B | 2026-10-17 00:52 |
+| `outputs/tables/pessoa_a/relatorio_A1.md` | ignored | 1.1 KB | 2026-10-17 00:23 |
+| `outputs/tables/pessoa_a/relatorio_A2.md` | ignored | 1.4 KB | 2026-10-17 00:27 |
+| `outputs/tables/pessoa_a/relatorio_A3.md` | ignored | 2.4 KB | 2026-10-17 00:49 |
+| `outputs/tables/pessoa_a/relatorio_A3b.md` | ignored | 3.1 KB | 2026-10-17 00:52 |
+| `outputs/tables/pessoa_a/relatorio_A4.md` | ignored | 280 B | 2026-10-17 02:02 |
+| `outputs/tables/pessoa_a/tabela_decisoes.csv` | ignored | 3.0 KB | 2026-10-17 02:02 |
+| `reports/figures/eda_01_volume_por_ano_internacao.png` | ignored | 36.5 KB | 2026-10-17 00:32 |
+| `reports/figures/eda_02_ausencia_por_desfecho.png` | ignored | 99.0 KB | 2026-10-17 00:39 |
+| `reports/figures/eda_02_cobertura_clinica_clusters_sensibilidade.png` | ignored | 158.7 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_comorbidades_por_ano.png` | ignored | 172.6 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_comparacao_original_sensibilidade.png` | ignored | 90.4 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_composicao_temporal_sensibilidade.png` | ignored | 109.9 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_dbscan_k_distance_minimo.png` | ignored | 58.3 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_desfecho_clusters_sensibilidade.png` | ignored | 79.4 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_escolaridade_preenchimento_por_ano.png` | ignored | 69.8 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_faixa_etaria_por_ano.png` | ignored | 71.1 KB | 2026-10-17 00:34 |
+| `reports/figures/eda_02_hca_dendrograma_minimo.png` | ignored | 98.9 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_idade_por_ano.png` | ignored | 101.2 KB | 2026-10-17 00:34 |
+| `reports/figures/eda_02_obito_faixa_etaria.png` | ignored | 74.5 KB | 2026-10-17 00:39 |
+| `reports/figures/eda_02_obito_numero_comorbidades.png` | ignored | 81.5 KB | 2026-10-17 00:39 |
+| `reports/figures/eda_02_odds_ratio_comorbidades.png` | ignored | 96.2 KB | 2026-10-17 00:39 |
+| `reports/figures/eda_02_odds_ratio_sintomas.png` | ignored | 82.8 KB | 2026-10-17 00:39 |
+| `reports/figures/eda_02_perfis_numericos_clusters_sensibilidade.png` | ignored | 104.3 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_prevalencia_clinica_clusters_sensibilidade.png` | ignored | 158.1 KB | 2026-10-17 00:40 |
+| `reports/figures/eda_02_principais_uf_residencia.png` | ignored | 141.7 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_proporcao_obito_por_ano.png` | ignored | 89.8 KB | 2026-10-17 00:34 |
+| `reports/figures/eda_02_rupturas_temporais.png` | ignored | 152.5 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_sintomas_por_ano.png` | ignored | 146.6 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_vacinacao_por_ano.png` | ignored | 104.8 KB | 2026-10-17 00:37 |
+| `reports/figures/eda_02_variacao_preenchimento.png` | ignored | 99.2 KB | 2026-10-17 00:34 |
+| `reports/figures/eda_02_volume_por_ano.png` | ignored | 55.1 KB | 2026-10-17 00:34 |
+| `reports/figures/supervisionado_03/03_pilotos_curvas_pr_roc_calibracao.png` | ignored | 225.3 KB | 2026-10-17 00:45 |
+| `reports/figures/supervisionado_03/03_pilotos_metricas_por_ano.png` | ignored | 215.6 KB | 2026-10-17 00:45 |
 | `src/__init__.py` | tracked | 0 B | 2026-10-14 22:03 |
 | `src/data/__init__.py` | tracked | 0 B | 2026-10-06 02:28 |
 | `src/data/cohort_source.py` | tracked | 3.8 KB | 2026-10-16 01:28 |
@@ -1724,7 +1564,7 @@ def to_dict(self) -> dict[str, object]
 - Location: `src/data/cohort_source.py:45-46`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_regras_pessoa_a.py`
 - Calls: `asdict`
 
 _Missing docstring._
@@ -1799,7 +1639,7 @@ def load_cohort(root: Path, *, kind: CohortKind | None=None, explicit_path: Path
 - Location: `src/data/cohort_source.py:106-126`
 - Visibility: `public`
 - Tested by: `tests/test_cohort_source.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `tests/test_cohort_source.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `tests/test_cohort_source.py`
 - Defaults: `kind=None`, `explicit_path=None`, `columns=None`
 - Calls: `CohortSource`, `int`, `len`, `path.stat`, `pd.read_parquet`, `resolve_cohort_path`, `sha256_file`, `str`
 
@@ -2041,7 +1881,7 @@ def persist_supervised_artifact(frame: pd.DataFrame, *, root: Path, source: Mapp
 - Location: `src/data/supervised_artifact.py:174-233`
 - Visibility: `public`
 - Tested by: `tests/test_supervised_artifact.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `tests/test_supervised_artifact.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `tests/test_supervised_artifact.py`
 - Defaults: `numeric_columns=None`, `categorical_columns=None`, `audit_columns=None`, `overwrite=False`
 - Calls: `FileExistsError`, `_build_manifest`, `_paths`, `_resolver_grupos`, `dataset_path.exists`, `dataset_path.parent.mkdir`, `frame.to_parquet`, `json.dumps`, `manifest_path.exists`, `manifest_path.write_text`, `validate_supervised_frame`
 
@@ -2060,7 +1900,7 @@ def load_supervised_artifact(root: Path, *, expected_kind: str | None=None, colu
 - Location: `src/data/supervised_artifact.py:236-274`
 - Visibility: `public`
 - Tested by: `tests/test_supervised_artifact.py`
-- Consumed by: `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_supervised_artifact.py`
+- Consumed by: `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `tests/test_supervised_artifact.py`
 - Defaults: `expected_kind=None`, `columns=None`
 - Calls: `FileNotFoundError`, `RuntimeError`, `_paths`, `dataset_path.is_file`, `json.loads`, `list`, `manifest.get`, `manifest_path.is_file`, `manifest_path.read_text`, `pd.read_parquet`, `sha256_file`, `str`, `validate_supervised_frame`
 
@@ -2089,7 +1929,7 @@ def split_partitions(frame: pd.DataFrame, manifest: Mapping[str, Any]) -> tuple[
 - Location: `src/data/supervised_artifact.py:288-306`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`
+- Consumed by: `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`
 - Calls: `ValueError`, `_select_partition`
 
 Devolve ``(treino, validacao)`` a partir da coluna de particao canonica.
@@ -2183,7 +2023,7 @@ def curva_confiabilidade(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -
 - Location: `src/evaluation/calibration.py:43-80`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
 - Calls: `_bins_digitize`, `_linha_vazia`, `_to_int_labels`, `_to_np`, `abs`, `float`, `int`, `linhas.append`, `m.sum`, `mean`, `np.linspace`, `pd.DataFrame`, `range`
 
@@ -2204,7 +2044,7 @@ def ece(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> float
 - Location: `src/evaluation/calibration.py:83-97`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
 - Calls: `curva_confiabilidade`, `fillna`, `float`, `sum`
 
@@ -2219,7 +2059,7 @@ def mce(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> float
 - Location: `src/evaluation/calibration.py:100-112`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
 - Calls: `curva_confiabilidade`, `dropna`, `float`, `gaps.max`
 
@@ -2234,7 +2074,7 @@ def brier_decomposicao(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int=10) -> 
 - Location: `src/evaluation/calibration.py:115-169`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`
 - Defaults: `n_bins=10`
 - Calls: `ValueError`, `_bins_digitize`, `_to_int_labels`, `_to_np`, `float`, `int`, `len`, `m.sum`, `mean`, `np.mean`, `range`, `y.mean`
 
@@ -2286,7 +2126,7 @@ def matriz_confusao(y_true: ArrayLike, y_pred: ArrayLike) -> pd.DataFrame
 - Location: `src/evaluation/errors.py:45-72`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
 - Calls: `_to_int_labels`, `df.sum`, `int`, `pd.DataFrame`, `sum`
 
 Matriz de confusão 2×2 como DataFrame.
@@ -2345,7 +2185,7 @@ def metricas_por_grupo(df: pd.DataFrame, y_true: ArrayLike, y_prob: ArrayLike, c
 - Location: `src/evaluation/errors.py:107-159`
 - Visibility: `public`
 - Tested by: `tests/test_errors.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_errors.py`
 - Defaults: `limiar=0.5`, `min_n=30`
 - Calls: `KeyError`, `_to_int_labels`, `_to_np`, `_validar_tamanhos`, `astype`, `auc`, `df.reset_index`, `f1`, `float`, `grupos.dropna`, `grupos.dropna.unique`, `int`, `len`, `linhas.append`, `m.sum`, `np.unique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.DataFrame.sort_values.reset_index`, `precision`, `recall`, `str`, `to_numpy`, `y_g.mean`
 
@@ -2431,7 +2271,7 @@ def check_leakage(X: pd.DataFrame, *, forbidden_columns: Iterable[str] | None=No
 - Location: `src/evaluation/leakage.py:57-70`
 - Visibility: `public`
 - Tested by: `tests/test_leakage.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `src/evaluation/__init__.py`, `tests/test_leakage.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `src/evaluation/__init__.py`, `tests/test_leakage.py`
 - Defaults: `forbidden_columns=None`, `target_column=None`
 - Calls: `LeakageError`, `_resolve_forbidden_columns`, `join`, `set`, `sorted`
 
@@ -2523,7 +2363,7 @@ def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float
 - Location: `src/evaluation/metrics.py:78-79`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/evaluation/errors.py`, `tests/test_metrics.py`
 - Calls: `_to_int_labels`, `_to_np`, `float`, `roc_auc_score`
 
 _Missing docstring._
@@ -2537,7 +2377,7 @@ def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float
 - Location: `src/evaluation/metrics.py:82-83`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
 - Calls: `_to_int_labels`, `_to_np`, `average_precision_score`, `float`
 
 _Missing docstring._
@@ -2551,7 +2391,7 @@ def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float
 - Location: `src/evaluation/metrics.py:86-87`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
 - Calls: `_to_int_labels`, `_to_np`, `brier_score_loss`, `float`
 
 _Missing docstring._
@@ -2663,7 +2503,7 @@ def metricas_completas(y_true: ArrayLike, y_prob: ArrayLike, limiar: float=0.5) 
 - Location: `src/evaluation/metrics.py:132-162`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/models/baseline.py`, `tests/test_metrics.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `src/models/baseline.py`, `tests/test_metrics.py`
 - Defaults: `limiar=0.5`
 - Calls: `_to_int_labels`, `_to_np`, `accuracy`, `astype`, `auc`, `average_precision`, `brier`, `especificidade`, `f1`, `float`, `len`, `log_loss`, `precision`, `recall`, `sensibilidade`
 
@@ -2704,7 +2544,7 @@ def ic_bootstrap(y_true: ArrayLike, y_prob: ArrayLike, *, metrica: Callable[[Arr
 - Location: `src/evaluation/metrics.py:212-251`
 - Visibility: `public`
 - Tested by: `tests/test_metrics.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/__init__.py`, `tests/test_metrics.py`
 - Defaults: `metrica=auc`, `n_boot=200`, `alpha=0.05`, `seed=42`
 - Calls: `_to_int_labels`, `_to_np`, `float`, `len`, `metrica`, `np.empty`, `np.isnan`, `np.quantile`, `np.random.default_rng`, `np.unique`, `range`, `rng.integers`
 
@@ -2979,7 +2819,7 @@ def resumo(self) -> str
 - Location: `src/evaluation/temporal.py:204-219`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/utils/config.py`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
 - Calls: `_periodo`, `max`, `min`
 
 Resumo legível — bom para log no ``Run``.
@@ -3114,7 +2954,7 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series
 - Location: `src/features/engineering.py:182-198`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
-- Consumed by: `notebooks/C/C6_validacao_final.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
+- Consumed by: `notebooks/C/C_16_validacao_final.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
 - Calls: `_faixas_etarias`, `idade.ge`, `idade.lt`, `out.astype`, `pd.Series`, `pd.to_numeric`
 
 Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
@@ -3163,7 +3003,7 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame
 - Location: `src/features/engineering.py:232-257`
 - Visibility: `public`
 - Tested by: `tests/test_features.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `src/features/__init__.py`, `tests/test_features.py`
 - Calls: `ano_mes_internacao`, `df.copy`, `faixa_etaria`, `idade_em_anos`, `intervalo_sintomas_internacao`, `sazonalidade`, `sexo_categoria`
 
 Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
@@ -3228,7 +3068,7 @@ def evaluate_baseline(X_train: pd.DataFrame, y_train: pd.Series, X_eval: pd.Data
 - Location: `src/models/baseline.py:55-75`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `src/models/__init__.py`
+- Consumed by: `notebooks/C/C_12_baseline_logistica.ipynb`, `src/models/__init__.py`
 - Defaults: `strategy='prior'`
 - Calls: `build_baseline_pipeline`, `metricas_completas`, `pipe.fit`, `pipe.predict_proba`
 
@@ -3256,7 +3096,7 @@ def build_boosting_pipeline(*, learning_rate: float=0.05, max_iter: int=500, max
 - Location: `src/models/boosting.py:14-59`
 - Visibility: `public`
 - Tested by: `tests/test_model_pipelines.py`
-- Consumed by: `notebooks/C/C4_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
+- Consumed by: `notebooks/C/C_13_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
 - Defaults: `learning_rate=0.05`, `max_iter=500`, `max_depth=None`, `max_leaf_nodes=31`, `min_samples_leaf=20`, `l2_regularization=0.0`, `early_stopping=False`, `validation_fraction=0.1`, `n_iter_no_change=20`, `class_weight='balanced'`, `preprocessor=None`
 - Calls: `HistGradientBoostingClassifier`, `Pipeline`, `build_preprocessor`, `random_state`
 
@@ -3301,7 +3141,7 @@ def calibrar(pipeline, X_cal: pd.DataFrame, y_cal: pd.Series, *, method: MetodoC
 - Location: `src/models/calibration.py:38-68`
 - Visibility: `public`
 - Tested by: `tests/test_calibration.py`
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
 - Defaults: `method='isotonic'`
 - Calls: `CalibratedClassifierCV`, `FrozenEstimator`, `ValueError`, `modelo.fit`, `sorted`
 
@@ -3323,7 +3163,7 @@ def escolher_limiar(y_true: pd.Series | np.ndarray, y_prob: pd.Series | np.ndarr
 - Location: `src/models/calibration.py:71-128`
 - Visibility: `public`
 - Tested by: `tests/test_calibration.py`
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `src/models/__init__.py`, `tests/test_calibration.py`
 - Defaults: `metrica='f1'`, `n_limiares=101`, `min_precision=None`, `min_recall=None`
 - Calls: `ValueError`, `brier_score_loss`, `filtros.append`, `float`, `idxmax`, `join`, `metricas_por_limiar`, `np.asarray`, `np.asarray.ravel`, `np.asarray.ravel.astype`, `roc_auc_score`, `sorted`
 
@@ -3391,7 +3231,7 @@ def build_finalista(nome: str, *, preprocessor=None, **overrides: Any) -> Pipeli
 - Location: `src/models/factory.py:47-71`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/models/__init__.py`
+- Consumed by: `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/models/__init__.py`
 - Defaults: `preprocessor=None`
 - Calls: `ValueError`, `_kwargs_do_yaml`, `build_boosting_pipeline`, `build_logistic_pipeline`, `sorted`
 
@@ -3456,7 +3296,7 @@ def build_logistic_pipeline(*, C: float=1.0, l1_ratio: float=0.0, penalty: Penal
 - Location: `src/models/logistic.py:63-126`
 - Visibility: `public`
 - Tested by: `tests/test_model_pipelines.py`
-- Consumed by: `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
+- Consumed by: `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `src/models/__init__.py`, `src/models/factory.py`, `tests/test_model_pipelines.py`
 - Defaults: `C=1.0`, `l1_ratio=0.0`, `penalty=None`, `solver='lbfgs'`, `max_iter=1000`, `class_weight='balanced'`, `preprocessor=None`
 - Calls: `LogisticRegression`, `Pipeline`, `ValueError`, `_penalty_do_yaml`, `_tipo_penalidade`, `build_preprocessor`, `random_state`, `sorted`
 
@@ -3553,7 +3393,7 @@ def criar_alvo_binario(df: pd.DataFrame, alvo: str | None=None, positivos: Itera
 - Location: `src/models/pipeline.py:105-142`
 - Visibility: `public`
 - Tested by: `tests/test_target.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
 - Defaults: `alvo=None`, `positivos=None`, `negativos=None`
 - Calls: `ValueError`, `_alvo_cfg_negativos`, `_alvo_cfg_positivos`, `astype`, `float`, `pd.Series`, `sorted`, `valores.isin`
 
@@ -3575,7 +3415,7 @@ def filtrar_rotulos_validos(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame
 - Location: `src/models/pipeline.py:145-157`
 - Visibility: `public`
 - Tested by: `tests/test_target.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_target.py`
 - Calls: `ValueError`, `astype`, `astype.reset_index`, `reset_index`, `y.index.equals`, `y.notna`
 
 Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8).
@@ -3603,7 +3443,7 @@ def build_pipeline(X: pd.DataFrame | None=None, y: pd.Series | None=None, *, cla
 - Location: `src/models/pipeline.py:165-209`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_pipeline.py`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `src/models/__init__.py`, `tests/test_pipeline.py`
 - Defaults: `X=None`, `y=None`, `classifier=None`, `features=None`, `strict=True`
 - Calls: `KeyError`, `Pipeline`, `build_preprocessor`, `etapas.append`, `list`, `logger.warning`, `set`, `sorted`
 
@@ -3669,7 +3509,7 @@ def canon(name) -> str
 - Location: `src/protocolo/verificacoes.py:187-189`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`
 - Calls: `_ALT2CANON.get`, `str`, `str.strip`, `str.strip.upper`
 
 _Missing docstring._
@@ -3683,7 +3523,7 @@ class Report()
 - Location: `src/protocolo/verificacoes.py:195-225`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `Path`, `any`, `detail.replace`, `df.to_csv`, `join`, `lines.append`, `path.write_text`, `print`, `self.findings.append`, `self.out.mkdir`, `sum`
 - File literals: `{name}.csv`, `{self.nome}.md`
 
@@ -3713,7 +3553,7 @@ def add(self, stage: str, check: str, status: str, detail: str) -> None
 - Location: `src/protocolo/verificacoes.py:204-207`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/evaluation/leakage.py`, `tools/update_project_reference.py`
+- Consumed by: `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `src/evaluation/leakage.py`, `tools/update_project_reference.py`
 - Calls: `print`, `self.findings.append`
 
 _Missing docstring._
@@ -3742,7 +3582,7 @@ def write_md(self) -> Path
 - Location: `src/protocolo/verificacoes.py:212-221`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`
 - Calls: `detail.replace`, `join`, `lines.append`, `path.write_text`, `sum`
 - File literals: `{self.nome}.md`
 
@@ -3772,7 +3612,7 @@ def parse_date(s: pd.Series) -> pd.Series
 - Location: `src/protocolo/verificacoes.py:231-265`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `cats.to_numpy`, `getattr`, `isinstance`, `len`, `miss.any`, `np.array`, `np.datetime64`, `np.full`, `ok.any`, `out.astype`, `out.dt.tz_localize`, `out.isna`, `out.mask`, `parse_date`, `pd.Series`, `pd.api.types.is_datetime64_any_dtype`, `pd.to_datetime`, `s.astype`, `s.astype.str.strip`, `s.cat.categories.astype`, `s.cat.codes.to_numpy`, `t.notna`
 
 Converte para datetime64[ns] aceitando ISO (aaaa-mm-dd) e dd/mm/aaaa.
@@ -3833,7 +3673,7 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame
 - Location: `src/protocolo/verificacoes.py:294-310`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `canon`, `join`, `new.append`, `print`, `renamed.append`, `set`, `str`, `str.strip`, `str.strip.upper`, `zip`
 
 Padroniza nomes (maiúsculas + aliases -> nome canônico SIVEP). Renomeia IN-PLACE (sem copiar).
@@ -3874,7 +3714,7 @@ def a1_columns(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:325-333`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`
 - Calls: `has_cols`, `join`, `len`, `list`, `map`, `print`, `rep.add`, `values`
 
 _Missing docstring._
@@ -3888,7 +3728,7 @@ def a1_code_tables(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:336-355`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`
 - Calls: `code_str`, `code_str.fillna`, `items`, `join`, `pd.concat`, `pd.crosstab`, `rep.add`, `rep.save`, `rows.append`, `tab.insert`, `tab.reset_index`, `unexpected.append`, `year_labels`
 
 _Missing docstring._
@@ -3902,7 +3742,7 @@ def a1_waterfall(df, cfg, rep: Report, sufixo: str='') -> pd.DataFrame
 - Location: `src/protocolo/verificacoes.py:358-400`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `sufixo=''`
 - Calls: `_date_ok_mask`, `anos.isin`, `anos.isin.to_numpy`, `c.values`, `chr`, `code_str`, `dict`, `dict.fromkeys`, `dt.notna`, `enumerate`, `evo.isin`, `evo.isin.to_numpy`, `excl.any`, `excl.sum`, `fillna`, `fillna.to_numpy`, `head`, `int`, `kept.sum`, `len`, `list`, `max`, `np.ones`, `parse_date`, `pd.DataFrame`, `pd.Timestamp`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `remaining.sum`, `rep.add`, `rep.save`, `round`, `rows.append`, `steps.insert`, `sufixo.strip`, `to_numpy`
 
@@ -3931,7 +3771,7 @@ def a1_cohort(df, cfg) -> pd.DataFrame
 - Location: `src/protocolo/verificacoes.py:413-428`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `_date_ok_mask`, `code_str`, `copy`, `dt.dt.year.isin`, `dt.dt.year.isin.to_numpy`, `dt.notna`, `dt.year.astype`, `evo.isin`, `evo.isin.to_numpy`, `fillna`, `fillna.to_numpy`, `make_target`, `make_target.astype`, `parse_date`, `pd.Timestamp`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `to_numpy`
 
 Retorna a coorte final (mesmas regras do waterfall) com _ano e _alvo.
@@ -3945,7 +3785,7 @@ def a1_target(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:431-444`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`
 - Calls: `all`, `code_str`, `code_str.fillna`, `fillna`, `fillna.to_numpy`, `list`, `make_target`, `pd.Series`, `pd.crosstab`, `pd.isna`, `rep.add`, `rep.save`, `tab.reset_index`, `tab.sum`, `year_labels`, `zip`
 
 _Missing docstring._
@@ -3981,7 +3821,7 @@ def _analytical_path(cfg: dict) -> Path
 - Location: `src/protocolo/verificacoes.py:496-504`
 - Visibility: `private`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`
+- Consumed by: `notebooks/A/A_14_decisao_candidatos.ipynb`
 - Calls: `Path`
 
 Usa C.ANALYTICAL_DIR do projeto (como o C1/C2); senão, o caminho de configs/decisoes.yaml.
@@ -3995,7 +3835,7 @@ def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, v
 - Location: `src/protocolo/verificacoes.py:507-609`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `supervised_config=None`, `path=None`, `versao='0.1'`, `excluir_proibidas=False`, `extra_cols=()`, `split=None`, `rotulo=''`
 - Calls: `Path`, `Path.exists`, `_analytical_path`, `_sha256`, `a1_cohort`, `add_derived`, `aliases_aplicados.items`, `astype`, `astype.to_numpy`, `c_.lower`, `canon`, `col.lower`, `copy`, `df.attrs.get`, `dict`, `dict.fromkeys`, `f_.get`, `get`, `h.lower`, `int`, `isna`, `isna.sum`, `join`, `json.dumps`, `len`, `list`, `load_supervised_yaml`, `map`, `nome_final`, `nome_final.lower`, `orig.get`, `orig.get.lower`, `out.dropna`, `out.dropna.sort_values`, `out.to_csv`, `out.to_parquet`, `parse_date`, `path.parent.mkdir`, `path.with_suffix`, `path.with_suffix.write_text`
 - File literals: `.meta.json`
@@ -4016,7 +3856,7 @@ def validar_contrato_c2(path, supervised_config, rep: Report) -> bool
 - Location: `src/protocolo/verificacoes.py:612-669`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `Path`, `dict.fromkeys`, `dt.isna`, `dt.isna.sum`, `dt.max`, `dt.max.date`, `dt.min`, `dt.min.date`, `f.get`, `float`, `get`, `int`, `join`, `len`, `list`, `load_supervised_yaml`, `map`, `p.exists`, `pd.Series`, `pd.Series.dropna`, `pd.Series.dropna.astype`, `pd.Series.dropna.astype.unique`, `pd.read_csv`, `pd.read_parquet`, `pd.to_datetime`, `pq.ParquetFile`, `rep.add`, `set`, `sorted`, `str`, `str.lower`, `y.get`
 
 Confere o ARQUIVO gravado contra o que o C2 consome (células 6–16 do C2_pipeline_supervisionado).
@@ -4047,7 +3887,7 @@ def verificar_dataset_congelado(path, rep: Report) -> bool
 - Location: `src/protocolo/verificacoes.py:685-696`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `Path`, `_sha256`, `json.loads`, `meta.get`, `meta_p.exists`, `meta_p.read_text`, `p.exists`, `p.with_suffix`, `rep.add`
 - File literals: `.meta.json`
 
@@ -4134,7 +3974,7 @@ def a3_split_aleatorio_cenario(df, cfg, rep: Report, nome: str, anos, supervised
 - Location: `src/protocolo/verificacoes.py:786-800`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `supervised_config=None`, `versao='0.1'`, `excluir_proibidas=False`
 - Calls: `_analytical_path`, `_relatorio_split`, `a1_export_dataset`, `a1_waterfall`, `base.with_name`, `cfg_para_anos`, `int`
 
@@ -4149,7 +3989,7 @@ def a3_benchmark_split(path, supervised_config, cfg: dict, rep: Report, nome: st
 - Location: `src/protocolo/verificacoes.py:803-873`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `max_rows=200000`, `seed=42`
 - Calls: `ColumnTransformer`, `LogisticRegression`, `OneHotEncoder`, `Pipeline`, `SimpleImputer`, `StandardScaler`, `_ler`, `astype`, `astype.fillna`, `astype.fillna.astype`, `astype.to_numpy`, `average_precision_score`, `brier_score_loss`, `copy`, `d.dropna`, `d.dropna.reset_index`, `d.sample`, `d.sample.reset_index`, `dict`, `f.get`, `float`, `int`, `len`, `linhas.append`, `list`, `load_supervised_yaml`, `mean`, `np.mean`, `np.unique`, `pd.DataFrame`, `pd.to_datetime`, `pd.to_numeric`, `pipe.fit`, `pipe.predict_proba`, `rep.add`, `rep.save`, `roc_auc_score`, `round`, `set`, `set_index`
 
@@ -4181,7 +4021,7 @@ def grafico_split_cenario(rep: Report, cfg: dict, nome: str, anos=None, fig_dir=
 - Location: `src/protocolo/verificacoes.py:885-948`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `anos=None`, `fig_dir='outputs/figures/pessoa_a'`, `mostrar=False`
 - Calls: `Path`, `_rotulos_barras`, `ax.axhline`, `ax.bar`, `ax.hlines`, `ax.legend`, `ax.set_title`, `ax.set_xticks`, `ax.set_ylabel`, `ax.set_ylim`, `ax.text`, `comp.index.astype`, `destino.mkdir`, `enumerate`, `fig.savefig`, `fig.suptitle`, `fig.tight_layout`, `fr.values`, `int`, `join`, `len`, `map`, `max`, `np.zeros`, `pa.div`, `pa.sum`, `pd.read_csv`, `pd.read_csv.set_index`, `pd.read_csv.set_index.reindex`, `plt.close`, `plt.show`, `plt.subplots`, `prev.max`, `prev.min`, `range`, `sum`, `to_numpy`, `zip`
 - File literals: `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `split_{nome}.png`
@@ -4198,7 +4038,7 @@ def grafico_comparacao_cenarios(rep: Report, cfg: dict, nomes, fig_dir='outputs/
 - Location: `src/protocolo/verificacoes.py:951-1003`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `fig_dir='outputs/figures/pessoa_a'`, `mostrar=False`
 - Calls: `Path`, `_rotulos_barras`, `ax.axvspan`, `ax.bar`, `ax.legend`, `ax.set_title`, `ax.set_xticks`, `ax.set_ylabel`, `ax.set_ylim`, `ax.text`, `base.sum`, `destino.mkdir`, `enumerate`, `fig.savefig`, `fig.suptitle`, `fig.tight_layout`, `int`, `legend`, `len`, `list`, `max`, `np.arange`, `np.zeros`, `p.index.astype`, `p.sum`, `p.sum.max`, `pd.read_csv`, `pd.read_csv.set_index`, `pd.read_csv.set_index.reindex`, `plt.close`, `plt.show`, `plt.subplots`, `por_ano.values`, `range`, `reindex`, `resumo.values`, `set`, `set.union`, `sorted`, `to_numpy`
 - File literals: `a3_split_aleatorio_{n}.csv`, `a3_split_aleatorio_{n}_por_ano.csv`, `split_comparacao_cenarios.png`
@@ -4214,7 +4054,7 @@ def comparar_cenarios(metas: dict, benchs: dict, rep: Report) -> pd.DataFrame
 - Location: `src/protocolo/verificacoes.py:1006-1023`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `_ler`, `astype`, `benchs.get`, `dict`, `float`, `int`, `join`, `len`, `linhas.append`, `m.get`, `map`, `metas.items`, `pd.DataFrame`, `pd.to_numeric`, `rep.save`, `round`, `y.mean`, `y.sum`
 
 Tabela única: N, prevalência e desempenho (validação) por cenário.
@@ -4228,7 +4068,7 @@ def a2_missing(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1029-1054`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Consumed by: `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
 - Calls: `any`, `code_str`, `dict`, `fillna`, `fillna.groupby`, `fillna.groupby.mean`, `g.iterrows`, `inexistente.reset_index`, `int`, `isna.groupby`, `isna.groupby.agg`, `join`, `len`, `pd.DataFrame`, `pd.api.types.is_string_dtype`, `pivot`, `rep.add`, `rep.save`, `round`, `rows.append`, `s.astype`, `s.astype.str.strip`, `s.isna`, `set`, `year_labels`
 
 _Missing docstring._
@@ -4242,7 +4082,7 @@ def a2_dates(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1057-1100`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `age.notna`, `age.notna.sum`, `age_years`, `bad.sum`, `both.sum`, `crit.itertuples`, `d.isna`, `da.notna`, `db.notna`, `dict`, `fillna`, `gap.notna`, `gap.notna.sum`, `int`, `join`, `len`, `max`, `notna`, `parse_date`, `pd.DataFrame`, `pd.Timestamp.today`, `pd.Timestamp.today.normalize`, `raw_filled.sum`, `rep.add`, `rep.save`, `round`, `rows.append`, `set`, `sum`
 
 _Missing docstring._
@@ -4256,7 +4096,7 @@ def a2_duplicates(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1103-1119`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Consumed by: `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
 - Calls: `d.sum`, `d2.sum`, `df.duplicated`, `dict`, `drop_duplicates`, `duplicated`, `int`, `len`, `notna`, `nunique`, `pd.DataFrame`, `pd.util.hash_pandas_object`, `pd.util.hash_pandas_object.duplicated`, `pd.util.hash_pandas_object.duplicated.sum`, `rep.add`, `rep.save`, `rows.append`
 - File literals: `{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv`
 
@@ -4271,7 +4111,7 @@ def a2_maturity(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1122-1144`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `astype`, `code_str`, `code_str.isin`, `dt.notna`, `dt.notna.to_numpy`, `dt.to_period`, `dt.to_period.astype`, `enc.notna`, `fillna`, `fillna.to_numpy`, `head`, `isin`, `join`, `len`, `parse_date`, `pd.DataFrame`, `pd.Series`, `rep.add`, `rep.save`, `res.groupby`, `res.groupby.agg`, `res.groupby.agg.reset_index`, `round`, `x.mean`
 
 _Missing docstring._
@@ -4298,7 +4138,7 @@ def a2_eligibility(df, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1159-1181`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A2_qualidade_elegibilidade.ipynb`
+- Consumed by: `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
 - Calls: `canon`, `classify_variable`, `cont.get`, `df.attrs.get`, `df.sample`, `dict`, `fillna`, `float`, `int`, `len`, `mean`, `min`, `nunique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.api.types.is_string_dtype`, `rep.add`, `rep.save`, `round`, `rows.append`, `s.astype`, `s.astype.str.strip`, `s.isna`, `s.isna.mean`, `set`, `str`, `str.upper`, `value_counts`, `value_counts.to_dict`
 
 _Missing docstring._
@@ -4312,7 +4152,7 @@ def load_feature_list(path: str | Path) -> list[str]
 - Location: `src/protocolo/verificacoes.py:1187-1220`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`
 - Calls: `Path`, `ValueError`, `all`, `canon`, `find`, `isinstance`, `json.loads`, `ln.split`, `obj.values`, `p.read_text`, `strip`, `supervised_features`, `txt.splitlines`, `yaml.safe_load`
 
 Lê lista de features de .txt (1 por linha), .json ou .yaml/.yml.
@@ -4326,7 +4166,7 @@ def load_supervised_yaml(path: str | Path) -> dict
 - Location: `src/protocolo/verificacoes.py:1223-1226`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`
 - Calls: `Path`, `Path.read_text`, `yaml.safe_load`
 
 _Missing docstring._
@@ -4340,7 +4180,7 @@ def supervised_features(y: dict) -> list[str]
 - Location: `src/protocolo/verificacoes.py:1229-1233`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`
 - Calls: `canon`, `f.get`, `y.get`
 
 Features efetivas do configs/supervised.yaml: `final` se preenchida, senão numéricas + categóricas.
@@ -4354,7 +4194,7 @@ def a3_config_audit(y: dict, cfg: dict, rep: Report, schema_cols=None) -> None
 - Location: `src/protocolo/verificacoes.py:1236-1321`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `schema_cols=None`
 - Calls: `any`, `canon`, `f.get`, `float`, `get`, `h0.date`, `items`, `join`, `len`, `min`, `pd.Timestamp`, `rep.add`, `set`, `sorted`, `str`, `str.lower`, `supervised_features`, `t0.date`, `tg.get`, `tp.get`, `v1.date`, `y.get`
 
@@ -4369,7 +4209,7 @@ def a3_forbidden(features: list[str], label: str, cfg, rep: Report, must_exclude
 - Location: `src/protocolo/verificacoes.py:1324-1338`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `must_exclude_target=True`
 - Calls: `join`, `len`, `rep.add`, `set`, `sorted`, `v.upper`
 
@@ -4384,7 +4224,7 @@ def a3_temporal_split(cohort: pd.DataFrame, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1341-1365`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`
 - Calls: `abs`, `agg`, `agg.reset_index`, `cohort.assign`, `cohort.assign.groupby`, `isin`, `join`, `max`, `min`, `np.where`, `prev.get`, `problems.append`, `rep.add`, `rep.save`, `round`, `set`, `sorted`, `sum`, `tab.groupby`, `unique`, `x.mean`
 
 _Missing docstring._
@@ -4398,7 +4238,7 @@ def a3_leak_scan(cohort: pd.DataFrame, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1368-1402`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `abs`, `cohort.sample`, `data.groupby`, `dict`, `head`, `join`, `len`, `min`, `np.unique`, `pd.DataFrame`, `pd.DataFrame.sort_values`, `pd.api.types.is_numeric_dtype`, `rep.add`, `rep.save`, `roc_auc_score`, `round`, `rows.append`, `s.astype`, `s.astype.fillna`, `s.fillna`, `s.fillna.to_numpy`, `s.median`, `s.nunique`, `set`, `to_numpy`, `transform`, `transform.to_numpy`, `values`
 
 AUC univariada contra o alvo: valores ~1 sugerem vazamento (indicativo, não prova).
@@ -4412,7 +4252,7 @@ def a3_suspicious_metrics(results: pd.DataFrame, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1405-1417`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`
 - Calls: `any`, `c.lower`, `len`, `rep.add`, `results.copy`
 
 _Missing docstring._
@@ -4426,7 +4266,7 @@ def a3_audit_logs(logs_dir: str | Path, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1420-1441`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`
 - Calls: `Path`, `all`, `bool`, `d.exists`, `d.rglob`, `items`, `join`, `len`, `list`, `p.is_file`, `p.read_text`, `pd.DataFrame`, `re.search`, `rep.add`, `rep.save`, `rows.append`, `sorted`, `str`
 
 _Missing docstring._
@@ -4440,7 +4280,7 @@ def a4_decision_table(results: pd.DataFrame, cfg, rep: Report) -> None
 - Location: `src/protocolo/verificacoes.py:1447-1486`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
 - Calls: `agg`, `agg.iterrows`, `agg.reset_index`, `agg.round`, `c.lower`, `join`, `len`, `lower`, `lower.str.contains`, `n.append`, `notes.append`, `re.search`, `rep.add`, `rep.save`, `res.groupby`, `res.rename`, `results.copy`, `str.lower`, `sum`
 
 Espera colunas: modelo, [fold], roc_auc, pr_auc, brier (nomes case-insensitive).
@@ -4454,7 +4294,7 @@ def load_config(path: str | Path | None='configs/decisoes.yaml') -> dict
 - Location: `src/protocolo/verificacoes.py:1492-1500`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `path='configs/decisoes.yaml'`
 - Calls: `Path`, `Path.exists`, `Path.read_text`, `cfg.get`, `isinstance`, `items`, `json.dumps`, `json.loads`, `yaml.safe_load`
 - File literals: `configs/decisoes.yaml`
@@ -4504,7 +4344,7 @@ def carregar_base(path=None, demo: bool=False, sample: int=0, colunas='classific
 - Location: `src/protocolo/verificacoes.py:1534-1593`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`
 - Defaults: `path=None`, `demo=False`, `sample=0`, `colunas='classificadas'`, `cfg=None`, `supervised_config=None`, `compactar=True`
 - Calls: `FileNotFoundError`, `Path`, `Path.cwd`, `c.lower`, `colunas_necessarias`, `df.sample`, `find_base`, `isinstance`, `len`, `list`, `load_config`, `make_demo`, `p.exists`, `pd.read_csv`, `pd.read_parquet`, `pq.ParquetFile`, `pq.read_table`, `print`, `storage.get_parquet`, `str`, `str.lower`, `tabela.to_pandas`, `type`
 
@@ -4524,7 +4364,7 @@ def uso_memoria_gb(df: pd.DataFrame) -> float
 - Location: `src/protocolo/verificacoes.py:1596-1597`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`
 - Calls: `df.memory_usage`, `df.memory_usage.sum`, `float`
 
 _Missing docstring._
@@ -4538,7 +4378,7 @@ def log_decision(out, id: str, tema: str, decisao: str, etapa: str='', responsav
 - Location: `src/protocolo/verificacoes.py:1603-1613`
 - Visibility: `public`
 - Tested by: `tests/test_regras_pessoa_a.py`
-- Consumed by: `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- Consumed by: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
 - Defaults: `etapa=''`, `responsavel='Pessoa A'`, `status='proposta'`, `impacto=''`, `evidencia=''`
 - Calls: `Path`, `dict`, `path.exists`, `path.parent.mkdir`, `pd.DataFrame`, `pd.Timestamp.today`, `pd.Timestamp.today.date`, `pd.Timestamp.today.date.isoformat`, `pd.concat`, `pd.read_csv`, `pd.read_csv.fillna`, `t.to_csv`
 - File literals: `tabela_decisoes.csv`
@@ -4554,7 +4394,7 @@ def write_ata(out, nome: str, data: str, decisoes=(), pendencias=(), riscos=(), 
 - Location: `src/protocolo/verificacoes.py:1616-1634`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
+- Consumed by: `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`
 - Defaults: `decisoes=()`, `pendencias=()`, `riscos=()`, `shortlist=()`, `descartes=()`, `rep=None`
 - Calls: `Path`, `join`, `nome.lower`, `path.parent.mkdir`, `path.with_suffix`, `path.write_text`, `re.sub`, `re.sub.strip`, `sec`, `slug.startswith`
 
@@ -4705,7 +4545,7 @@ def carregar_supervised() -> dict[str, Any]
 - Location: `src/utils/config.py:118-139`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
 - Decorators: `lru_cache(maxsize=1)`
 - Calls: `FileNotFoundError`, `SUPERVISED_YAML.exists`, `SUPERVISED_YAML.read_text`, `ValueError`, `_interpolar_env`, `isinstance`, `lru_cache`, `type`, `yaml.safe_load`
 
@@ -4737,7 +4577,7 @@ def cfg(*chaves: str, default: Any=None) -> Any
 - Location: `src/utils/config.py:153-163`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
 - Defaults: `default=None`
 - Calls: `_get_nested`, `carregar_supervised`
 
@@ -4806,7 +4646,7 @@ def features_finais() -> list[str]
 - Location: `src/utils/config.py:198-207`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 - Calls: `cfg`, `f.get`, `list`
 
 Lista final de features.
@@ -4840,7 +4680,7 @@ def resumo() -> str
 - Location: `src/utils/config.py:222-247`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/utils/env.py`, `tests/test_config.py`, `tests/test_temporal.py`
 - Calls: `SUPERVISED_YAML.exists`, `bool`, `github_token`, `join`, `srag_parquet_url`, `supervised_yaml_sha256`
 
 Resumo legível das configurações ativas — usado em bootstrap de notebooks.
@@ -4870,7 +4710,7 @@ def garantir_diretorios() -> None
 - Location: `src/utils/env.py:37-43`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_pipeline.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_config.py`, `tests/test_pipeline.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `tests/test_config.py`, `tests/test_pipeline.py`
 - Calls: `p.mkdir`
 
 Cria todos os diretórios padrão do projeto, se ainda não existirem.
@@ -4886,7 +4726,7 @@ def carregar_dotenv(caminho: Path | None=None) -> bool
 - Location: `src/utils/env.py:46-65`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`
 - Defaults: `caminho=None`
 - Calls: `Path`, `caminho.exists`, `load_dotenv`
 
@@ -4954,7 +4794,7 @@ def resumo() -> str
 - Location: `src/utils/env.py:105-113`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_temporal.py`
-- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_config.py`, `tests/test_temporal.py`
+- Consumed by: `notebooks/01_extracao.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_config.py`, `tests/test_temporal.py`
 - Calls: `bool`, `exists`, `join`, `os.getenv`
 - Environment variables: `GITHUB_TOKEN`
 
@@ -5226,7 +5066,7 @@ class Run()
 - Location: `src/utils/reproducibility.py:320-402`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `tests/test_reproducibility.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `tests/test_reproducibility.py`
 - Calls: `_resolver_dataset_sha256`, `dict`, `getattr`, `join`, `registrar_execucao`, `self._metricas.update`, `self.dataset.update`, `str`, `time.perf_counter`, `traceback.format_exception`
 
 Context manager de registo de execução.
@@ -5259,7 +5099,7 @@ def metrica(self, **kwargs: Any) -> 'Run'
 - Location: `src/utils/reproducibility.py:354-356`
 - Visibility: `public`
 - Tested by: `tests/test_reproducibility.py`
-- Consumed by: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/metrics.py`, `tests/test_reproducibility.py`
+- Consumed by: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/metrics.py`, `tests/test_reproducibility.py`
 - Calls: `self._metricas.update`
 
 _Missing docstring._
@@ -5286,7 +5126,7 @@ def add_dataset(self, **kwargs: Any) -> 'Run'
 - Location: `src/utils/reproducibility.py:362-364`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 - Calls: `self.dataset.update`
 
 _Missing docstring._
@@ -5455,7 +5295,7 @@ def get_parquet(force: bool=False, *, expected_sha256: str | None=None) -> Path
 - Location: `src/utils/storage.py:216-274`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`
-- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/01_extracao.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_pipeline.py`
+- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/01_extracao.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_pipeline.py`
 - Defaults: `force=False`, `expected_sha256=None`
 - Calls: `RuntimeError`, `_private_asset_url`, `_token`, `download_file`, `folder.mkdir`, `path.exists`, `path.unlink`, `print`, `sha256_path`, `sha256_path.unlink`
 
@@ -5479,7 +5319,7 @@ def read_srag(columns: Iterable[str] | None=None, filters: list[tuple] | None=No
 - Location: `src/utils/storage.py:277-290`
 - Visibility: `public`
 - Tested by: `tests/test_pipeline.py`, `tests/test_smoke.py`
-- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `tests/test_pipeline.py`, `tests/test_smoke.py`
+- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `tests/test_pipeline.py`, `tests/test_smoke.py`
 - Defaults: `columns=None`, `filters=None`
 - Calls: `get_parquet`, `list`, `pd.read_parquet`
 
@@ -6877,7 +6717,7 @@ def features_finais() -> set[str]
 - Location: `tests/test_leakage.py:32-35`
 - Visibility: `public`
 - Tested by: not found statically
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 - Decorators: `pytest.fixture`
 - Calls: `set`
 
@@ -7475,7 +7315,7 @@ def cfg() -> dict
 - Location: `tests/test_regras_pessoa_a.py:23-24`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
-- Consumed by: `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/config.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
+- Consumed by: `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/evaluation/leakage.py`, `src/evaluation/temporal.py`, `src/features/engineering.py`, `src/models/factory.py`, `src/models/logistic.py`, `src/models/pipeline.py`, `src/utils/config.py`, `src/utils/reproducibility.py`, `tests/test_config.py`, `tests/test_leakage.py`, `tests/test_model_pipelines.py`, `tests/test_target.py`
 - Decorators: `pytest.fixture(scope='module')`
 - Calls: `pytest.fixture`, `v.load_config`
 
@@ -8163,7 +8003,7 @@ def parquet(parquet_disponivel: Path | None) -> Path
 - Location: `tests/test_smoke.py:27-34`
 - Visibility: `public`
 - Tested by: `tests/test_config.py`, `tests/test_leakage.py`
-- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C1_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_config.py`, `tests/test_leakage.py`
+- Consumed by: `notebooks/00_acesso_dados_parquet.ipynb`, `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `notebooks/C/C_02_smoke_test.ipynb`, `src/protocolo/verificacoes.py`, `tests/test_config.py`, `tests/test_leakage.py`
 - Decorators: `pytest.fixture`
 - Calls: `pytest.skip`
 
@@ -9148,7 +8988,7 @@ _Missing docstring._
 - Module: `tools.clean_project` · 136 lines
 - Internal imports: none
 - External imports: `__future__.annotations`, `argparse`, `pathlib.Path`, `shutil`
-- Module constants: `PROJECT_ROOT = Path(__file__).resolve().parent.parent`, `DIRECTORIES_TO_CLEAN = ['outputs', 'reports', 'models', 'logs', '.pytest_cache', '.ipynb_checkpoints', '.mypy_cache', '.ruff_cache', '.tox', '.nox']`, `FILE_PATTERNS = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg', '*.log', '*.tmp', '*.joblib', '*.pkl', '*.pickle', '*.h5', '*.hdf5', '*.pt', '*.pth', '*.onnx', '*.npy', '*.npz']`, `PROTECTED_FOLDERS = {'tests', 'venv', '.git', 'notebooks', 'tools', 'src', 'configs', 'env', 'data/analytical', 'docs', '.venv', 'data/external', 'data/raw'}`
+- Module constants: `PROJECT_ROOT = Path(__file__).resolve().parent.parent`, `DIRECTORIES_TO_CLEAN = ['outputs', 'reports', 'models', 'logs', '.pytest_cache', '.ipynb_checkpoints', '.mypy_cache', '.ruff_cache', '.tox', '.nox']`, `FILE_PATTERNS = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg', '*.log', '*.tmp', '*.joblib', '*.pkl', '*.pickle', '*.h5', '*.hdf5', '*.pt', '*.pth', '*.onnx', '*.npy', '*.npz']`, `PROTECTED_FOLDERS = {'tests', '.git', 'configs', 'data/external', 'src', 'tools', 'venv', '.venv', 'data/raw', 'docs', 'env', 'notebooks', 'data/analytical'}`
 
 #### `remove_file`
 
@@ -9282,7 +9122,7 @@ _Missing docstring._
 - Module: `tools.update_project_reference` · 2382 lines
 - Internal imports: none
 - External imports: `__future__.annotations`, `argparse`, `ast`, `collections.Counter`, `collections.defaultdict`, `dataclasses.asdict`, `dataclasses.dataclass`, `dataclasses.field`, `datetime.datetime`, `datetime.timezone`, `hashlib`, `importlib.metadata`, `io`, `json`, `os`, `pathlib.Path`, `platform`, `re`, `shlex`, `shutil`, `subprocess`, `sys`, `tempfile`, `tomllib`, `typing.Any`, `xml.etree.ElementTree`, `yaml`, `zipfile`
-- Module constants: `SCHEMA_VERSION = 4`, `OUTPUT_DIR = Path('docs')`, `OUTPUT_MD_NAME = 'PROJECT_COMPLETE_REFERENCE.md'`, `OUTPUT_JSON_NAME = 'PROJECT_COMPLETE_REFERENCE.json'`, `PARTS_DIR_NAME = 'project_reference_parts'`, `DEFAULT_MAX_INLINE_BYTES = 4000000`, `DEFAULT_MAX_OUTPUT_CHARS = 6000`, `DEFAULT_MAX_ARTIFACT_BYTES = 300000`, `DEFAULT_MAX_CSV_ROWS = 60`, `DEFAULT_MAX_DIFF_CHARS = 400000`, `DEFAULT_GIT_LOG = 40`, `DEFAULT_SPLIT_MB = 1.0`, `MAX_INVENTORY_ENTRIES = 30000`, `MAX_DOCSTRING_CHARS = 4000`, `MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 200`, `EXCLUDED_DIRS_ANYWHERE = {'env', '.git', '__pycache__', 'node_modules', '.ipynb_checkpoints', '.mypy_cache', 'venv', '.ruff_cache', 'build', '.venv', '.eggs', '.idea', '.nox', 'site-packages', '.pytest_cache', '.env', '.tox', 'dist', '.vscode'}`, `ARTIFACT_DIRS_AT_ROOT = {'mlruns', 'artifacts', 'logs', 'reports', 'data', 'outputs', 'models'}`, `ARTIFACT_EXCLUDED_DIR_NAMES = {'raw', 'tmp', 'predictions', 'predicoes', 'cache'}`, `EXCLUDED_FILES = {'.env', 'pip_inspect-venv.json', OUTPUT_MD_NAME, OUTPUT_JSON_NAME}`, `KEYS_ONLY_FILES = {'paths.local.json'}`, `TEXT_SUFFIXES = {'.rst', '.psm1', '.json5', '.bat', '.json', '.cmd', '.ini', '.pyi', '.html', '.ps1', '.r', '.py', '.cfg', '.yml', '.js', '.sh', '.toml', '.tsv', '.yaml', '.sql', '.md', '.R', '.txt', '.csv', '.css'}`, `ARTIFACT_TEXT_SUFFIXES = {'.log', '.tsv', '.yaml', '.yml', '.json', '.md', '.txt', '.csv'}`, `OFFICE_SUFFIXES = {'.docx', '.pptx'}`, `SPECIAL_NAMES = {'pyproject.toml', 'Dockerfile', '.pre-commit-config.yaml', 'environment.yml', 'tox.ini', 'setup.cfg', '.gitignore', '.gitattributes', 'LICENSE', 'requirements.txt', 'README', 'Makefile', 'pytest.ini', '.env.example'}`, `LANG = {'.py': 'python', '.pyi': 'python', '.md': 'markdown', '.rst': 'rst', '.yaml': 'yaml', '.yml': 'yaml', '.toml': 'toml', '.json': 'json', '.json5': 'json5', '.ini': 'ini', '.cfg': 'ini', '.sql': 'sql', '.ps1': 'powershell', '.psm1': 'powershell', '.sh': 'bash', '.bat': 'bat', '.cmd': 'bat', '.csv'...`, `LIKELY_BINARY_SUFFIXES = {'.dll', '.svg', '.pdf', '.xlsx', '.jpeg', '.pkl', '.webp', '.doc', '.bz2', '.7z', '.pth', '.joblib', '.ppt', '.jpg', '.h5', '.feather', '.xz', '.npy', '.pt', '.exe', '.arrow', '.parquet', '.db', '.png', '.hdf5', '.gz', '.tar', '.dbf', '.pickle', '.gif', '.sqlite', '.npz', '.onnx', '.zip', '.xls'}`, `IMPORTANT_UNTRACKED_PREFIXES = ('src/', 'tests/', 'configs/', 'docs/', 'notebooks/', 'tools/', 'scripts/')`, `IMPORT_TO_DIST = {'sklearn': 'scikit-learn', 'yaml': 'pyyaml', 'dotenv': 'python-dotenv', 'PIL': 'pillow', 'cv2': 'opencv-python', 'bs4': 'beautifulsoup4', 'docx': 'python-docx', 'pptx': 'python-pptx', 'dateutil': 'python-dateutil', 'IPython': 'ipython', 'jwt': 'pyjwt', 'skimage': 'scikit-image', 'google': 'googl...`, `KEY_PACKAGES = ('scikit-learn', 'pandas', 'numpy', 'scipy', 'pyarrow', 'pyyaml', 'joblib', 'matplotlib', 'seaborn', 'python-dotenv', 'requests', 'pytest', 'ipykernel', 'jupyter', 'nbformat', 'statsmodels', 'shap')`, `ENV_RE = re.compile('(?:os\\.getenv|os\\.environ\\.get|os\\.environ\\[|get_env|get_secret|getenv)\\(?\\s*[\'\\"]([A-Za-z_][A-Za-z0-9_]*)[\'\\"]')`, `SECRET_RE = re.compile('(?im)^(\\s*[A-Za-z_][A-Za-z0-9_.-]*?(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[A-Za-z0-9_.-]*\\s*[:=]\\s*)([^\\n#]+)')`, `PRIVATE_KEY_RE = re.compile('-----BEGIN [^-]+ PRIVATE KEY-----.*?-----END [^-]+ PRIVATE KEY-----', re.DOTALL)`, `URL_CREDENTIAL_RE = re.compile('(?i)(https?://[^\\s/:]+:)([^@\\s]+)(@)')`, `GITHUB_TOKEN_RE = re.compile('\\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b')`, `WINDOWS_USER_RE = re.compile('(?i)\\b[A-Z]:[\\\\/]+Users[\\\\/]+[^\\\\/\\s\\"\'<>|]+')`, `POSIX_HOME_RE = re.compile('(?<![A-Za-z0-9_])/(?:home|Users)/[^/\\s\\"\'<>|]+')`, `ANSI_RE = re.compile('\\x1b\\[[0-9;]*[A-Za-z]')`, `BACKTICK_RUN_RE = re.compile('`+')`, `HEADING_RE = re.compile('^\\s{0,3}(#{1,6})\\s+(.+?)\\s*$', re.MULTILINE)`, `FILE_LITERAL_RE = re.compile('[\'\\"]([^\'\\"\\n]+\\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md|html|txt))[\'\\"]', re.IGNORECASE)`, `GATE_RE = re.compile('\\bG\\d+_[A-Za-z0-9_]+\\b')`, `TODO_RE = re.compile('(?i)\\b(TODO|FIXME|XXX|HACK|PENDENTE)\\b[:\\s-]*(.{0,140})')`, `MOJIBAKE_RE = re.compile('(?:├|┤|Ã[\\u0080-\\u00BF¡-¿]|Â[\\u00A0-\\u00BF ]|â€|\\uFFFD)')`, `CONTEXT = '# Project Complete Reference\n\n> **Generated file. Do not edit manually.**\n> Generated by `tools/update_project_reference.py` (schema v{schema}).\n> Static snapshot of the repository and of the local working folder.\n\n## 1. Purpose\n\nThis reference lets a person or an AI diagnose the SRAG pr...`, `SEVERITY_ORDER = {'high': 0, 'medium': 1, 'low': 2}`
+- Module constants: `SCHEMA_VERSION = 4`, `OUTPUT_DIR = Path('docs')`, `OUTPUT_MD_NAME = 'PROJECT_COMPLETE_REFERENCE.md'`, `OUTPUT_JSON_NAME = 'PROJECT_COMPLETE_REFERENCE.json'`, `PARTS_DIR_NAME = 'project_reference_parts'`, `DEFAULT_MAX_INLINE_BYTES = 4000000`, `DEFAULT_MAX_OUTPUT_CHARS = 6000`, `DEFAULT_MAX_ARTIFACT_BYTES = 300000`, `DEFAULT_MAX_CSV_ROWS = 60`, `DEFAULT_MAX_DIFF_CHARS = 400000`, `DEFAULT_GIT_LOG = 40`, `DEFAULT_SPLIT_MB = 1.0`, `MAX_INVENTORY_ENTRIES = 30000`, `MAX_DOCSTRING_CHARS = 4000`, `MAX_SOURCE_LINES_PER_LARGE_NOTEBOOK_CELL = 200`, `EXCLUDED_DIRS_ANYWHERE = {'.idea', 'dist', '.mypy_cache', '.tox', '.nox', '.ruff_cache', 'env', '.pytest_cache', '.vscode', '.git', 'site-packages', 'build', 'venv', '__pycache__', 'node_modules', '.eggs', '.env', '.venv', '.ipynb_checkpoints'}`, `ARTIFACT_DIRS_AT_ROOT = {'artifacts', 'reports', 'data', 'models', 'mlruns', 'outputs', 'logs'}`, `ARTIFACT_EXCLUDED_DIR_NAMES = {'tmp', 'predicoes', 'raw', 'cache', 'predictions'}`, `EXCLUDED_FILES = {'.env', 'pip_inspect-venv.json', OUTPUT_MD_NAME, OUTPUT_JSON_NAME}`, `KEYS_ONLY_FILES = {'paths.local.json'}`, `TEXT_SUFFIXES = {'.json', '.rst', '.cfg', '.py', '.txt', '.sql', '.csv', '.css', '.json5', '.R', '.ps1', '.toml', '.cmd', '.sh', '.pyi', '.md', '.psm1', '.tsv', '.ini', '.yml', '.html', '.bat', '.r', '.js', '.yaml'}`, `ARTIFACT_TEXT_SUFFIXES = {'.md', '.tsv', '.yml', '.txt', '.csv', '.log', '.json', '.yaml'}`, `OFFICE_SUFFIXES = {'.docx', '.pptx'}`, `SPECIAL_NAMES = {'LICENSE', 'tox.ini', '.pre-commit-config.yaml', 'environment.yml', 'pytest.ini', 'requirements.txt', '.gitignore', 'README', 'Makefile', 'setup.cfg', 'Dockerfile', 'pyproject.toml', '.gitattributes', '.env.example'}`, `LANG = {'.py': 'python', '.pyi': 'python', '.md': 'markdown', '.rst': 'rst', '.yaml': 'yaml', '.yml': 'yaml', '.toml': 'toml', '.json': 'json', '.json5': 'json5', '.ini': 'ini', '.cfg': 'ini', '.sql': 'sql', '.ps1': 'powershell', '.psm1': 'powershell', '.sh': 'bash', '.bat': 'bat', '.cmd': 'bat', '.csv'...`, `LIKELY_BINARY_SUFFIXES = {'.exe', '.pt', '.jpg', '.webp', '.hdf5', '.png', '.gif', '.npy', '.parquet', '.pdf', '.h5', '.pkl', '.gz', '.npz', '.pickle', '.db', '.svg', '.jpeg', '.feather', '.joblib', '.doc', '.xls', '.zip', '.xz', '.ppt', '.7z', '.tar', '.bz2', '.xlsx', '.sqlite', '.pth', '.dll', '.arrow', '.onnx', '.dbf'}`, `IMPORTANT_UNTRACKED_PREFIXES = ('src/', 'tests/', 'configs/', 'docs/', 'notebooks/', 'tools/', 'scripts/')`, `IMPORT_TO_DIST = {'sklearn': 'scikit-learn', 'yaml': 'pyyaml', 'dotenv': 'python-dotenv', 'PIL': 'pillow', 'cv2': 'opencv-python', 'bs4': 'beautifulsoup4', 'docx': 'python-docx', 'pptx': 'python-pptx', 'dateutil': 'python-dateutil', 'IPython': 'ipython', 'jwt': 'pyjwt', 'skimage': 'scikit-image', 'google': 'googl...`, `KEY_PACKAGES = ('scikit-learn', 'pandas', 'numpy', 'scipy', 'pyarrow', 'pyyaml', 'joblib', 'matplotlib', 'seaborn', 'python-dotenv', 'requests', 'pytest', 'ipykernel', 'jupyter', 'nbformat', 'statsmodels', 'shap')`, `ENV_RE = re.compile('(?:os\\.getenv|os\\.environ\\.get|os\\.environ\\[|get_env|get_secret|getenv)\\(?\\s*[\'\\"]([A-Za-z_][A-Za-z0-9_]*)[\'\\"]')`, `SECRET_RE = re.compile('(?im)^(\\s*[A-Za-z_][A-Za-z0-9_.-]*?(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[A-Za-z0-9_.-]*\\s*[:=]\\s*)([^\\n#]+)')`, `PRIVATE_KEY_RE = re.compile('-----BEGIN [^-]+ PRIVATE KEY-----.*?-----END [^-]+ PRIVATE KEY-----', re.DOTALL)`, `URL_CREDENTIAL_RE = re.compile('(?i)(https?://[^\\s/:]+:)([^@\\s]+)(@)')`, `GITHUB_TOKEN_RE = re.compile('\\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b')`, `WINDOWS_USER_RE = re.compile('(?i)\\b[A-Z]:[\\\\/]+Users[\\\\/]+[^\\\\/\\s\\"\'<>|]+')`, `POSIX_HOME_RE = re.compile('(?<![A-Za-z0-9_])/(?:home|Users)/[^/\\s\\"\'<>|]+')`, `ANSI_RE = re.compile('\\x1b\\[[0-9;]*[A-Za-z]')`, `BACKTICK_RUN_RE = re.compile('`+')`, `HEADING_RE = re.compile('^\\s{0,3}(#{1,6})\\s+(.+?)\\s*$', re.MULTILINE)`, `FILE_LITERAL_RE = re.compile('[\'\\"]([^\'\\"\\n]+\\.(?:parquet|csv|json|yaml|yml|joblib|pkl|png|jpg|md|html|txt))[\'\\"]', re.IGNORECASE)`, `GATE_RE = re.compile('\\bG\\d+_[A-Za-z0-9_]+\\b')`, `TODO_RE = re.compile('(?i)\\b(TODO|FIXME|XXX|HACK|PENDENTE)\\b[:\\s-]*(.{0,140})')`, `MOJIBAKE_RE = re.compile('(?:├|┤|Ã[\\u0080-\\u00BF¡-¿]|Â[\\u00A0-\\u00BF ]|â€|\\uFFFD)')`, `CONTEXT = '# Project Complete Reference\n\n> **Generated file. Do not edit manually.**\n> Generated by `tools/update_project_reference.py` (schema v{schema}).\n> Static snapshot of the repository and of the local working folder.\n\n## 1. Purpose\n\nThis reference lets a person or an AI diagnose the SRAG pr...`, `SEVERITY_ORDER = {'high': 0, 'medium': 1, 'low': 2}`
 
 Generate a complete, AI-oriented diagnostic snapshot of the SRAG repository.
 
@@ -10512,22 +10352,23 @@ _Missing docstring._
 |---|---|---|---|---|---|---|
 | `notebooks/00_acesso_dados_parquet.ipynb` | 6/6 | 6/6 | no | 0 | `src.utils.storage` | none |
 | `notebooks/01_extracao.ipynb` | 5/6 | 5/5 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage.get_parquet` | none |
-| `notebooks/02_eda/01_eda_primeira_passagem.ipynb` | 42/8 | 0/42 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `converter_data_mista`, `definir_cor_ausencia`, `calcular_preenchimento_por_grupo`, `definir_cor_cardinalidade`, `texto_normalizado`, `valores_frequentes`, `missing_condicional`, `variacao_preenchimento_por_ano`, `tipo_analitico` |
-| `notebooks/02_eda/02_eda_temporal_clustering.ipynb` | 119/28 | 0/119 | no | 0 | `src.utils.config`, `src.utils.env` | `encontrar_raiz_projeto`, `normalizar_resposta_clinica`, `criar_tabela_clinica_por_ano`, `calcular_variacao_clinica`, `criar_grafico_clinico_temporal`, `resumir_amplitude_temporal`, `calcular_ic_wilson`, `calcular_odds_ratio_bruta`, `criar_tabela_obito_categorica`, `criar_tabela_obito_indicadores`, `criar_grafico_odds_ratio`, `preparar_matriz_clinica_heatmap`, `exibir_heatmap_percentual`, `criar_tabela_obito_categoria_ano`, `exibir_letalidade_sim_nao`, `selecionar_colunas_por_tipo`, `criar_preprocessador_clustering`, `preparar_matriz_clustering`, `identificar_bloco_feature`, `diagnosticar_matriz_processada`, `executar_pca_diagnostico`, `obter_quantidade_componentes`, `criar_representacao_pca`, `avaliar_valores_k`, `selecionar_candidatos_k`, `calcular_estabilidade_candidato`, `criar_tabela_loadings`, `preparar_sensibilidade_sem_ausencia`, `normalizar_binaria_para_perfil`, `calcular_perfis_matriz` |
-| `notebooks/02_eda/03_supervisionado_pilotos.ipynb` | 28/22 | 28/28 | no | 0 | `src.data.cohort_source.load_cohort`, `src.data.supervised_artifact.persist_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.features.montar_features`, `src.models.pipeline.criar_alvo_binario`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `amostrar_treino_estratificado`, `calcular_metricas_piloto`, `executar_piloto`, `selecionar_amostra_estratificada`, `calcular_metricas_comparaveis`, `executar_modelo_comparavel` |
-| `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` | 9/11 | 9/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.utils.config` | `encontrar_raiz_projeto`, `construct_mapping_unique`, `manifesto_mais_recente`, `UniqueKeyLoader` |
-| `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` | 14/1 | 0/14 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `normalizar_codigo`, `converter_data_mista_segura`, `adicionar_etapa_waterfall` |
-| `notebooks/A/A1_coorte_protocolo.ipynb` | 9/11 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
-| `notebooks/A/A2_qualidade_elegibilidade.ipynb` | 9/10 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
-| `notebooks/A/A3_desenho_experimental.ipynb` | 8/9 | 0/8 | no | 0 | `src.protocolo.verificacoes` | none |
 | `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | 7/8 | 0/7 | no | 0 | `src.protocolo.verificacoes` | none |
-| `notebooks/A/A4_decisao_candidatos.ipynb` | 5/7 | 0/5 | no | 0 | `src.protocolo.verificacoes` | none |
-| `notebooks/C/C1_smoke_test.ipynb` | 3/1 | 0/3 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | none |
-| `notebooks/C/C2_pipeline_supervisionado.ipynb` | 7/7 | 0/7 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_alvo_do_split` |
-| `notebooks/C/C3_baseline_logistica.ipynb` | 6/4 | 0/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.baseline.evaluate_baseline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
-| `notebooks/C/C4_boosting.ipynb` | 9/6 | 0/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_subamostrar`, `_busca_limitada`, `_candidatos_boosting`, `_candidatos_logistica`, `_fmt`, `_montar_proposta_yaml` |
-| `notebooks/C/C5_calibracao_limiar.ipynb` | 6/4 | 0/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.metricas_completas`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
-| `notebooks/C/C6_validacao_final.ipynb` | 9/6 | 0/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.features.engineering.faixa_etaria`, `src.models.calibration.calibrar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_reproduzir_split_val_cal`, `_localizar_manifesto_c5`, `_marcar_g9_executado` |
+| `notebooks/A/A_03_coorte_protocolo.ipynb` | 9/11 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A_04_qualidade_elegibilidade.ipynb` | 9/10 | 0/9 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A_08_desenho_experimental.ipynb` | 8/9 | 0/8 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A_09_split_aleatorio_cenarios.ipynb` | 7/8 | 7/7 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/A/A_14_decisao_candidatos.ipynb` | 5/7 | 0/5 | no | 0 | `src.protocolo.verificacoes` | none |
+| `notebooks/B/B_05_eda_primeira_passagem.ipynb` | 42/8 | 41/42 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `converter_data_mista`, `definir_cor_ausencia`, `calcular_preenchimento_por_grupo`, `definir_cor_cardinalidade`, `texto_normalizado`, `valores_frequentes`, `missing_condicional`, `variacao_preenchimento_por_ano`, `tipo_analitico` |
+| `notebooks/B/B_06_eda_temporal_clustering.ipynb` | 119/28 | 62/119 | no | 1 | `src.utils.config`, `src.utils.env` | `encontrar_raiz_projeto`, `normalizar_resposta_clinica`, `criar_tabela_clinica_por_ano`, `calcular_variacao_clinica`, `criar_grafico_clinico_temporal`, `resumir_amplitude_temporal`, `calcular_ic_wilson`, `calcular_odds_ratio_bruta`, `criar_tabela_obito_categorica`, `criar_tabela_obito_indicadores`, `criar_grafico_odds_ratio`, `preparar_matriz_clinica_heatmap`, `exibir_heatmap_percentual`, `criar_tabela_obito_categoria_ano`, `exibir_letalidade_sim_nao`, `selecionar_colunas_por_tipo`, `criar_preprocessador_clustering`, `preparar_matriz_clustering`, `identificar_bloco_feature`, `diagnosticar_matriz_processada`, `executar_pca_diagnostico`, `obter_quantidade_componentes`, `criar_representacao_pca`, `avaliar_valores_k`, `selecionar_candidatos_k`, `calcular_estabilidade_candidato`, `criar_tabela_loadings`, `preparar_sensibilidade_sem_ausencia`, `normalizar_binaria_para_perfil`, `calcular_perfis_matriz` |
+| `notebooks/B/B_07_supervisionado_pilotos.ipynb` | 28/22 | 28/28 | no | 0 | `src.data.cohort_source.load_cohort`, `src.data.supervised_artifact.persist_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.features.montar_features`, `src.models.pipeline.criar_alvo_binario`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `amostrar_treino_estratificado`, `calcular_metricas_piloto`, `executar_piloto`, `selecionar_amostra_estratificada`, `calcular_metricas_comparaveis`, `executar_modelo_comparavel` |
+| `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` | 9/11 | 9/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.utils.config` | `encontrar_raiz_projeto`, `construct_mapping_unique`, `manifesto_mais_recente`, `UniqueKeyLoader` |
+| `notebooks/B/___provisorio_construcao_coorte_b.ipynb` | 14/1 | 14/14 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | `encontrar_raiz_projeto`, `normalizar_codigo`, `converter_data_mista_segura`, `adicionar_etapa_waterfall` |
+| `notebooks/C/C_02_smoke_test.ipynb` | 3/1 | 3/3 | no | 0 | `src.utils.config`, `src.utils.env`, `src.utils.storage` | none |
+| `notebooks/C/C_11_pipeline_supervisionado.ipynb` | 7/7 | 7/7 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.leakage.check_leakage`, `src.models.pipeline.build_pipeline`, `src.models.pipeline.filtrar_rotulos_validos`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_alvo_do_split` |
+| `notebooks/C/C_12_baseline_logistica.ipynb` | 6/4 | 6/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.baseline.evaluate_baseline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
+| `notebooks/C/C_13_boosting.ipynb` | 9/6 | 9/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.metricas_completas`, `src.models.boosting.build_boosting_pipeline`, `src.models.logistic.build_logistic_pipeline`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_subamostrar`, `_busca_limitada`, `_candidatos_boosting`, `_candidatos_logistica`, `_fmt`, `_montar_proposta_yaml` |
+| `notebooks/C/C_15_calibracao_limiar.ipynb` | 6/4 | 6/6 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.data.supervised_artifact.split_partitions`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.leakage.check_leakage`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.metricas_completas`, `src.models.calibration.calibrar`, `src.models.calibration.escolher_limiar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto` |
+| `notebooks/C/C_16_validacao_final.ipynb` | 9/6 | 0/9 | no | 0 | `src.data.supervised_artifact.load_supervised_artifact`, `src.evaluation.calibration.brier_decomposicao`, `src.evaluation.calibration.curva_confiabilidade`, `src.evaluation.calibration.ece`, `src.evaluation.calibration.mce`, `src.evaluation.errors.matriz_confusao`, `src.evaluation.errors.metricas_por_grupo`, `src.evaluation.metrics.auc`, `src.evaluation.metrics.average_precision`, `src.evaluation.metrics.brier`, `src.evaluation.metrics.ic_bootstrap`, `src.evaluation.metrics.metricas_completas`, `src.features.engineering.faixa_etaria`, `src.models.calibration.calibrar`, `src.models.factory.build_finalista`, `src.utils.config`, `src.utils.env`, `src.utils.reproducibility.Run` | `encontrar_raiz_projeto`, `_reproduzir_split_val_cal`, `_localizar_manifesto_c5`, `_marcar_g9_executado` |
 
 ### `notebooks/00_acesso_dados_parquet.ipynb` headings
 
@@ -10547,7 +10388,92 @@ _Missing docstring._
 - 4. Leitura e verificação de sanidade
 - 5. Resumo da ingestão
 
-### `notebooks/02_eda/01_eda_primeira_passagem.ipynb` headings
+### `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` headings
+
+- A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
+- 1. Cenários
+- 2. Coorte, dataset e checagens por cenário
+- 3. Benchmark: split aleatório × temporal (treino → validação)
+- 4. Comparação entre os cenários
+- 5. Decisões
+- 6. Fechamento
+- Como o C pode usar a coluna `split`
+- Checklist
+
+Referenced files: `a1_waterfall_{nome}.csv`, `a3_benchmark_split_*.csv`, `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A_03_coorte_protocolo.ipynb` headings
+
+- A1 | 07–08/10 — Fechar códigos, protocolo e coorte
+- 1. Fichas e dicionários (manual)
+- 2. Colunas essenciais e tabela de códigos
+- 3. Ponto de previsão e campos posteriores
+- 4. Coorte estrita — waterfall
+- 5. Inspeção das exclusões
+- 6. Alvo e categorias separadas
+- 7. Tabela de decisões
+- 8. Exportar a população analítica (v0.1, provisória)
+- 9. Fechamento
+- Checklist de saída (08/10)
+
+Referenced files: `a1_alvo_por_ano.csv`, `a1_amostra_exclusoes_*.csv`, `a1_tabela_codigos.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A_04_qualidade_elegibilidade.ipynb` headings
+
+- A2 | 09 — Auditar qualidade, datas e elegibilidade
+- 1. Vazios, ignorados e campos inexistentes por ano
+- 2. Coerência de datas e idade
+- 3. Duplicidades
+- 4. Maturidade de EVOLUCAO por mês de internação
+- 5. Matriz de elegibilidade
+- 6. Tabela de decisões
+- 7. Exportar a população analítica (v1.0)
+- 8. Fechamento
+- Checklist de saída
+
+Referenced files: `Ver a2_coerencia_datas.csv`, `Ver a2_duplicidades.csv`, `Ver a2_maturidade_evolucao_por_mes.csv`, `a2_campos_inexistentes_por_ano.csv`, `a2_coerencia_datas.csv`, `a2_duplicidades.csv`, `a2_matriz_elegibilidade.csv`, `a2_maturidade_evolucao_por_mes.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A_08_desenho_experimental.ipynb` headings
+
+- A3 | 11– Revisar desenho experimental e pilotos
+- 1. Auditoria do `supervised.yaml` contra as decisões da Pessoa
+- 2. O desfecho não pode aparecer no clustering
+- 3. Divisão temporal e proteção do holdout
+- 4. Varredura de vazamento
+- 5. Métricas excessivamente altas e auditoria dos logs de B e C
+- 6. Análises guiadas (manuais — registre a interpretação)
+- 7. Decisões e atas dos Gates 2 e 3
+- 8. Fechamento
+
+Referenced files: `a3_split_temporal.csv`, `a3_varredura_vazamento.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`
+
+### `notebooks/A/A_09_split_aleatorio_cenarios.ipynb` headings
+
+- A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
+- 1. Cenários
+- 2. Coorte, dataset e checagens por cenário
+- 3. Benchmark: split aleatório × temporal (treino → validação)
+- 4. Comparação entre os cenários
+- 5. Decisões
+- 6. Fechamento
+- Como o C pode usar a coluna `split`
+- Checklist
+
+Referenced files: `a1_waterfall_{nome}.csv`, `a3_benchmark_split_*.csv`, `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
+
+### `notebooks/A/A_14_decisao_candidatos.ipynb` headings
+
+- A4 | 15– Avaliar candidatos e registrar decisão
+- 1. Tabela comparável de candidatos
+- 2. Revisão por candidato (manual)
+- 3. Decisões e ata de 17/10
+- 4. População analítica congelada
+- 5. Fechamento
+- Checklist de saída
+
+Referenced files: `a4_tabela_decisao.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `outputs/tables/resultados_cv.csv`
+
+### `notebooks/B/B_05_eda_primeira_passagem.ipynb` headings
 
 - EDA 01 — Primeira passagem pelo dataset SRAG
 - Objetivo
@@ -10579,7 +10505,7 @@ _Missing docstring._
 
 Referenced files: `dicionario_variaveis_revisao.csv`, `dicionario_variaveis_v1.csv`, `eda_01_auditoria_datas_pos_corte.csv`, `eda_01_auditoria_faixa_datas.csv`, `eda_01_auditoria_vazamento.csv`, `eda_01_ausencias.csv`, `eda_01_cardinalidade.csv`, `eda_01_duplicidades_nu_notific.csv`, `eda_01_frequencias_categoricas.csv`, `eda_01_preenchimento_por_ano_internacao.csv`, `eda_01_preenchimento_por_ano_notificacao.csv`, `eda_01_resumo_datas.csv`, `eda_01_status_periodos.csv`, `eda_01_tipos_memoria.csv`, `eda_01_volume_por_ano_internacao.csv`, `eda_01_volume_por_ano_internacao.png`, `eda_01_volume_por_ano_notificacao.csv`
 
-### `notebooks/02_eda/02_eda_temporal_clustering.ipynb` headings
+### `notebooks/B/B_06_eda_temporal_clustering.ipynb` headings
 
 - EDA 02 — Análise temporal e clustering
 - Objetivo
@@ -10641,7 +10567,7 @@ Referenced files: `dicionario_variaveis_revisao.csv`, `dicionario_variaveis_v1.c
 
 Referenced files: `coorte.parquet`, `coorte_provisoria.parquet`, `coorte_provisoria_b.parquet`, `dicionario_variaveis_v1.csv`, `eda_02_alvo_por_ano.csv`, `eda_02_auditoria_idade.csv`, `eda_02_ausencia_por_ano.csv`, `eda_02_ausencia_por_desfecho.csv`, `eda_02_ausencia_por_desfecho.png`, `eda_02_cluster_ano_sensibilidade.csv`, `eda_02_cluster_desfecho_sensibilidade.csv`, `eda_02_cobertura_clinica_clusters_sensibilidade.png`, `eda_02_cobertura_relevancia_features.csv`, `eda_02_cobertura_relevancia_features.png`, `eda_02_comorbidades_por_ano.csv`, `eda_02_comorbidades_por_ano.png`, `eda_02_comparacao_original_sensibilidade.csv`, `eda_02_comparacao_original_sensibilidade.png`, `eda_02_composicao_temporal_sensibilidade.png`, `eda_02_contadores_clinicos_por_ano.csv`, `eda_02_dbscan_k_distance_minimo.png`, `eda_02_dbscan_varredura_minima.csv`, `eda_02_decisao_clustering.csv`, `eda_02_decisao_clustering.json`, `eda_02_desfecho_clusters_sensibilidade.png`, `eda_02_diagnostico_final_clustering.csv`, `eda_02_escolaridade_por_ano.csv`, `eda_02_escolaridade_preenchimento_por_ano.png`, `eda_02_faixa_etaria_por_ano.csv`, `eda_02_faixa_etaria_por_ano.png`, `eda_02_hca_dbscan_resumo_minimo.csv`, `eda_02_hca_dendrograma_minimo.png`, `eda_02_idade_por_ano.csv`, `eda_02_idade_por_ano.png`, `eda_02_obito_comorbidades.csv`, `eda_02_obito_faixa_etaria.csv`, `eda_02_obito_faixa_etaria.png`, `eda_02_obito_numero_comorbidades.csv`, `eda_02_obito_numero_comorbidades.png`, `eda_02_obito_sintomas.csv`, `eda_02_odds_ratio_comorbidades.png`, `eda_02_odds_ratio_sintomas.png`, `eda_02_perfis_binarios_clusters_sensibilidade.csv`, `eda_02_perfis_numericos_clusters_sensibilidade.csv`, `eda_02_perfis_numericos_clusters_sensibilidade.png`, `eda_02_perfis_sexo_clusters_sensibilidade.csv`, `eda_02_preenchimento_por_variavel_ano.csv`, `eda_02_prevalencia_clinica_clusters_sensibilidade.png`, `eda_02_principais_uf_residencia.png`, `eda_02_proporcao_obito_por_ano.png`, `eda_02_resumo_analise_desfecho.csv`, `eda_02_resumo_fonte.csv`, `eda_02_resumo_preenchimento_variaveis.csv`, `eda_02_resumo_rupturas_temporais.csv`, `eda_02_resumo_temporal.csv`, `eda_02_resumo_uf_residencia.csv`, `eda_02_rupturas_temporais.csv`, `eda_02_rupturas_temporais.png`, `eda_02_sexo_por_ano.csv`, `eda_02_sintomas_por_ano.csv`, `eda_02_sintomas_por_ano.png`, `eda_02_uf_residencia_por_ano.csv`, `eda_02_vacinacao_por_ano.csv`, `eda_02_vacinacao_por_ano.png`, `eda_02_variacao_comorbidades.csv`, `eda_02_variacao_preenchimento.csv`, `eda_02_variacao_preenchimento.png`, `eda_02_variacao_sintomas.csv`, `eda_02_volume_por_ano.csv`, `eda_02_volume_por_ano.png`
 
-### `notebooks/02_eda/03_supervisionado_pilotos.ipynb` headings
+### `notebooks/B/B_07_supervisionado_pilotos.ipynb` headings
 
 - 03 — Supervisionado: pilotos com coorte provisória
 - Objetivo
@@ -10670,7 +10596,7 @@ Referenced files: `coorte.parquet`, `coorte_provisoria.parquet`, `coorte_proviso
 
 Referenced files: `03_pilotos_curvas_pr_roc_calibracao.png`, `03_pilotos_metricas_por_ano.png`, `supervisionado_registros_conflitantes_split_provisorio.csv`, `supervisionado_resumo_conflitos_split_provisorio.csv`, `supervisionado_waterfall_conflitos_split_provisorio.csv`, `{prefixo_comparacao}_amostras.csv`, `{prefixo_comparacao}_manifesto.json`, `{prefixo_comparacao}_metricas.csv`, `{prefixo_comparacao}_metricas_por_ano.csv`, `{prefixo_comparacao}_predicoes_validacao.parquet`, `{prefixo_comparacao}_variacao_temporal.csv`, `{prefixo}_contrato.csv`, `{prefixo}_manifesto.json`, `{prefixo}_metricas_validacao.csv`, `{prefixo}_particoes.csv`, `{prefixo}_predicoes_validacao.parquet`
 
-### `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb` headings
+### `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` headings
 
 - 04 — Consolidação da shortlist e transição de coorte
 - Objetivo
@@ -10688,7 +10614,7 @@ Referenced files: `03_pilotos_curvas_pr_roc_calibracao.png`, `03_pilotos_metrica
 
 Referenced files: `_manifesto.json`, `supervised.yaml`, `{prefixo}_calibracao_bruta.csv`, `{prefixo}_manifesto.json`, `{prefixo}_shortlist.csv`, `{prefixo}_temporal.csv`, `{prefixo}_transicao.csv`
 
-### `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb` headings
+### `notebooks/B/___provisorio_construcao_coorte_b.ipynb` headings
 
 - Construção provisória da coorte para a EDA 02
 - Objetivo
@@ -10698,82 +10624,11 @@ Referenced files: `_manifesto.json`, `supervised.yaml`, `{prefixo}_calibracao_br
 
 Referenced files: `coorte_provisoria_b.parquet`, `coorte_provisoria_b_auditoria_duplicidades.csv`, `coorte_provisoria_b_auditoria_temporal.csv`, `coorte_provisoria_b_resumo.csv`, `coorte_provisoria_b_waterfall.csv`, `dicionario_variaveis_v1.csv`
 
-### `notebooks/A/A1_coorte_protocolo.ipynb` headings
-
-- A1 | 07–08/10 — Fechar códigos, protocolo e coorte
-- 1. Fichas e dicionários (manual)
-- 2. Colunas essenciais e tabela de códigos
-- 3. Ponto de previsão e campos posteriores
-- 4. Coorte estrita — waterfall
-- 5. Inspeção das exclusões
-- 6. Alvo e categorias separadas
-- 7. Tabela de decisões
-- 8. Exportar a população analítica (v0.1, provisória)
-- 9. Fechamento
-- Checklist de saída (08/10)
-
-Referenced files: `a1_alvo_por_ano.csv`, `a1_amostra_exclusoes_*.csv`, `a1_tabela_codigos.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
-
-### `notebooks/A/A2_qualidade_elegibilidade.ipynb` headings
-
-- A2 | 09–10/10 — Auditar qualidade, datas e elegibilidade
-- 1. Vazios, ignorados e campos inexistentes por ano
-- 2. Coerência de datas e idade
-- 3. Duplicidades
-- 4. Maturidade de EVOLUCAO por mês de internação
-- 5. Matriz de elegibilidade
-- 6. Tabela de decisões
-- 7. Exportar a população analítica (v1.0)
-- 8. Fechamento
-- Checklist de saída (10/10)
-
-Referenced files: `Ver a2_coerencia_datas.csv`, `Ver a2_duplicidades.csv`, `Ver a2_maturidade_evolucao_por_mes.csv`, `a2_campos_inexistentes_por_ano.csv`, `a2_coerencia_datas.csv`, `a2_duplicidades.csv`, `a2_matriz_elegibilidade.csv`, `a2_maturidade_evolucao_por_mes.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
-
-### `notebooks/A/A3_desenho_experimental.ipynb` headings
-
-- A3 | 11–14/10 — Revisar desenho experimental e pilotos
-- 1. Auditoria do `supervised.yaml` contra as decisões da Pessoa A
-- 2. O desfecho não pode aparecer no clustering
-- 3. Divisão temporal e proteção do holdout
-- 4. Varredura de vazamento
-- 5. Métricas excessivamente altas e auditoria dos logs de B e C
-- 6. Análises guiadas (manuais — registre a interpretação)
-- 7. Decisões e atas dos Gates 2 e 3
-- 8. Fechamento
-
-Referenced files: `a3_split_temporal.csv`, `a3_varredura_vazamento.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`
-
-### `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` headings
-
-- A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
-- 1. Cenários
-- 2. Coorte, dataset e checagens por cenário
-- 3. Benchmark: split aleatório × temporal (treino → validação)
-- 4. Comparação entre os cenários
-- 5. Decisões
-- 6. Fechamento
-- Como o C pode usar a coluna `split`
-- Checklist
-
-Referenced files: `a1_waterfall_{nome}.csv`, `a3_benchmark_split_*.csv`, `a3_split_aleatorio_{nome}.csv`, `a3_split_aleatorio_{nome}_por_ano.csv`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `tabela_decisoes.csv`
-
-### `notebooks/A/A4_decisao_candidatos.ipynb` headings
-
-- A4 | 15–17/10 — Avaliar candidatos e registrar decisão
-- 1. Tabela comparável de candidatos
-- 2. Revisão por candidato (manual)
-- 3. Decisões e ata de 17/10
-- 4. População analítica congelada
-- 5. Fechamento
-- Checklist de saída (17/10)
-
-Referenced files: `a4_tabela_decisao.csv`, `ata_*.md`, `configs/decisoes.yaml`, `configs/supervised.yaml`, `decisoes.yaml`, `outputs/tables/resultados_cv.csv`
-
-### `notebooks/C/C1_smoke_test.ipynb` headings
+### `notebooks/C/C_02_smoke_test.ipynb` headings
 
 - C1 — Smoke Test
 
-### `notebooks/C/C2_pipeline_supervisionado.ipynb` headings
+### `notebooks/C/C_11_pipeline_supervisionado.ipynb` headings
 
 - C2 — Pipeline Supervisionado
 - Carregar o artefato supervisionado
@@ -10785,7 +10640,7 @@ Referenced files: `a4_tabela_decisao.csv`, `ata_*.md`, `configs/decisoes.yaml`, 
 
 Referenced files: `preprocessor.joblib`, `preprocessor_ajustado.joblib`, `split_info.json`
 
-### `notebooks/C/C3_baseline_logistica.ipynb` headings
+### `notebooks/C/C_12_baseline_logistica.ipynb` headings
 
 - C3 — Baseline e Regressão Logística
 - Carregar artefacto e materializar partições
@@ -10794,7 +10649,7 @@ Referenced files: `preprocessor.joblib`, `preprocessor_ajustado.joblib`, `split_
 
 Referenced files: `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_validacao.parquet`
 
-### `notebooks/C/C4_boosting.ipynb` headings
+### `notebooks/C/C_13_boosting.ipynb` headings
 
 - C4 — Boosting
 - Carregar artefacto e materializar partições
@@ -10805,7 +10660,7 @@ Referenced files: `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{pref
 
 Referenced files: `{prefixo}_busca_boosting.csv`, `{prefixo}_busca_logistica.csv`, `{prefixo}_comparacao.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_validacao.parquet`, `{prefixo}_proposta_yaml.yaml`
 
-### `notebooks/C/C5_calibracao_limiar.ipynb` headings
+### `notebooks/C/C_15_calibracao_limiar.ipynb` headings
 
 - C5 — Calibração e Escolha de Limiar
 - Carregar artefacto e preparar validação
@@ -10814,7 +10669,7 @@ Referenced files: `{prefixo}_busca_boosting.csv`, `{prefixo}_busca_logistica.csv
 
 Referenced files: `{prefixo}_escolhas.csv`, `{prefixo}_manifesto.json`, `{prefixo}_predicoes_val_meas.parquet`, `{prefixo}_{nome}_curva.csv`, `{prefixo}_{nome}_limiar.csv`
 
-### `notebooks/C/C6_validacao_final.ipynb` headings
+### `notebooks/C/C_16_validacao_final.ipynb` headings
 
 - C6 — Validação Final
 - Verificar gates e carregar configuração congelada
@@ -10833,9 +10688,9 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `CI`: `src/utils/env.py`, `src/utils/reproducibility.py`
 - `GITHUB_ACTIONS`: `src/utils/env.py`, `src/utils/reproducibility.py`
 - `GITHUB_TOKEN`: `src/utils/config.py`, `src/utils/env.py`, `src/utils/storage.py`
-- `SRAG_ALLOW_TEST_REOPEN`: `notebooks/C/C6_validacao_final.ipynb`
-- `SRAG_COHORT_KIND`: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C2_pipeline_supervisionado.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
-- `SRAG_NOTEBOOK_SMOKE`: `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
+- `SRAG_ALLOW_TEST_REOPEN`: `notebooks/C/C_16_validacao_final.ipynb`
+- `SRAG_COHORT_KIND`: `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C_11_pipeline_supervisionado.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`
+- `SRAG_NOTEBOOK_SMOKE`: `notebooks/B/B_07_supervisionado_pilotos.ipynb`
 - `SRAG_PARQUET_URL`: `src/utils/config.py`
 
 ### File names referenced in code
@@ -10847,45 +10702,45 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `*.png` ← `tools/clean_project.py`
 - `.meta.json` ← `src/protocolo/verificacoes.py`
 - `.pre-commit-config.yaml` ← `tools/update_project_reference.py`
-- `03_pilotos_curvas_pr_roc_calibracao.png` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `03_pilotos_metricas_por_ano.png` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `C5_calibracao_limiar_*_manifesto.json` ← `notebooks/C/C6_validacao_final.ipynb`
-- `C6_validacao_final_*_manifesto.json` ← `notebooks/C/C6_validacao_final.ipynb`
+- `03_pilotos_curvas_pr_roc_calibracao.png` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `03_pilotos_metricas_por_ano.png` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `C5_calibracao_limiar_*_manifesto.json` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `C6_validacao_final_*_manifesto.json` ← `notebooks/C/C_16_validacao_final.ipynb`
 - `PROJECT_COMPLETE_REFERENCE.json` ← `tools/clean_project.py`, `tools/update_project_reference.py`
 - `PROJECT_COMPLETE_REFERENCE.md` ← `tools/clean_project.py`, `tools/update_project_reference.py`
-- `Ver a2_coerencia_datas.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `Ver a2_duplicidades.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `Ver a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `_manifesto.json` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `a1_alvo_por_ano.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
-- `a1_amostra_exclusoes_*.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
-- `a1_tabela_codigos.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`
-- `a1_waterfall_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
-- `a2_campos_inexistentes_por_ano.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `a2_coerencia_datas.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
-- `a2_duplicidades.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `a2_matriz_elegibilidade.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-- `a3_benchmark_split_*.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
-- `a3_split_aleatorio_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
-- `a3_split_aleatorio_{nome}_por_ano.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `Ver a2_coerencia_datas.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `Ver a2_duplicidades.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `Ver a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `_manifesto.json` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
+- `a1_alvo_por_ano.csv` ← `notebooks/A/A_03_coorte_protocolo.ipynb`
+- `a1_amostra_exclusoes_*.csv` ← `notebooks/A/A_03_coorte_protocolo.ipynb`
+- `a1_tabela_codigos.csv` ← `notebooks/A/A_03_coorte_protocolo.ipynb`
+- `a1_waterfall_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`
+- `a2_campos_inexistentes_por_ano.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `a2_coerencia_datas.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `tests/test_regras_pessoa_a.py`
+- `a2_duplicidades.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `a2_matriz_elegibilidade.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `a2_maturidade_evolucao_por_mes.csv` ← `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+- `a3_benchmark_split_*.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`
+- `a3_split_aleatorio_{nome}.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `a3_split_aleatorio_{nome}_por_ano.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
 - `a3_split_aleatorio_{n}.csv` ← `src/protocolo/verificacoes.py`
 - `a3_split_aleatorio_{n}_por_ano.csv` ← `src/protocolo/verificacoes.py`
-- `a3_split_temporal.csv` ← `notebooks/A/A3_desenho_experimental.ipynb`
-- `a3_varredura_vazamento.csv` ← `notebooks/A/A3_desenho_experimental.ipynb`
-- `a4_tabela_decisao.csv` ← `notebooks/A/A4_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
-- `ata_*.md` ← `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
-- `configs/decisoes.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `src/protocolo/verificacoes.py`
+- `a3_split_temporal.csv` ← `notebooks/A/A_08_desenho_experimental.ipynb`
+- `a3_varredura_vazamento.csv` ← `notebooks/A/A_08_desenho_experimental.ipynb`
+- `a4_tabela_decisao.csv` ← `notebooks/A/A_14_decisao_candidatos.ipynb`, `tests/test_regras_pessoa_a.py`
+- `ata_*.md` ← `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`
+- `configs/decisoes.yaml` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`, `src/protocolo/verificacoes.py`
 - `configs/paths.local.json` ← `tools/update_project_reference.py`
-- `configs/supervised.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`, `tools/update_project_reference.py`
-- `coorte.parquet` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
+- `configs/supervised.yaml` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`, `tools/update_project_reference.py`
+- `coorte.parquet` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
 - `coorte_final.parquet` ← `src/data/cohort_source.py`, `tests/test_cohort_source.py`
-- `coorte_provisoria.parquet` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
-- `coorte_provisoria_b.parquet` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`, `src/data/cohort_source.py`, `tests/test_cohort_source.py`
-- `coorte_provisoria_b_auditoria_duplicidades.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
-- `coorte_provisoria_b_auditoria_temporal.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
-- `coorte_provisoria_b_resumo.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
-- `coorte_provisoria_b_waterfall.csv` ← `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
+- `coorte_provisoria.parquet` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `src/data/cohort_source.py`
+- `coorte_provisoria_b.parquet` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`, `src/data/cohort_source.py`, `tests/test_cohort_source.py`
+- `coorte_provisoria_b_auditoria_duplicidades.csv` ← `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
+- `coorte_provisoria_b_auditoria_temporal.csv` ← `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
+- `coorte_provisoria_b_resumo.csv` ← `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
+- `coorte_provisoria_b_waterfall.csv` ← `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
 - `d.csv` ← `tests/test_regras_pessoa_a.py`
 - `data/**/*.csv` ← `src/protocolo/verificacoes.py`
 - `data/**/*.parquet` ← `src/protocolo/verificacoes.py`
@@ -10895,150 +10750,150 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `dataset.csv` ← `tests/test_regras_pessoa_a.py`
 - `dataset_supervisionado.csv` ← `tests/test_regras_pessoa_a.py`
 - `dataset_supervisionado.parquet` ← `src/data/supervised_artifact.py`, `tests/test_regras_pessoa_a.py`
-- `decisoes.yaml` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3_desenho_experimental.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A4_decisao_candidatos.ipynb`
-- `dicionario_variaveis_revisao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `dicionario_variaveis_v1.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `notebooks/02_eda/02_eda_temporal_clustering.ipynb`, `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
-- `eda_01_auditoria_datas_pos_corte.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_auditoria_faixa_datas.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_auditoria_vazamento.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_ausencias.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_cardinalidade.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_duplicidades_nu_notific.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_frequencias_categoricas.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_preenchimento_por_ano_internacao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_preenchimento_por_ano_notificacao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_resumo_datas.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_status_periodos.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_tipos_memoria.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_volume_por_ano_internacao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_volume_por_ano_internacao.png` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_01_volume_por_ano_notificacao.csv` ← `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
-- `eda_02_alvo_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_auditoria_idade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_ausencia_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_ausencia_por_desfecho.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_ausencia_por_desfecho.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_cluster_ano_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_cluster_desfecho_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_cobertura_clinica_clusters_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_cobertura_relevancia_features.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_cobertura_relevancia_features.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_comorbidades_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_comorbidades_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_comparacao_original_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_comparacao_original_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_composicao_temporal_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_contadores_clinicos_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_dbscan_k_distance_minimo.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_dbscan_varredura_minima.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_decisao_clustering.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_decisao_clustering.json` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_desfecho_clusters_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_diagnostico_final_clustering.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_escolaridade_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_escolaridade_preenchimento_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_faixa_etaria_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_faixa_etaria_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_hca_dbscan_resumo_minimo.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_hca_dendrograma_minimo.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_idade_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_idade_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_comorbidades.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_faixa_etaria.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_faixa_etaria.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_numero_comorbidades.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_numero_comorbidades.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_obito_sintomas.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_odds_ratio_comorbidades.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_odds_ratio_sintomas.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_perfis_binarios_clusters_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_perfis_numericos_clusters_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_perfis_numericos_clusters_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_perfis_sexo_clusters_sensibilidade.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_preenchimento_por_variavel_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_prevalencia_clinica_clusters_sensibilidade.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_principais_uf_residencia.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_proporcao_obito_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_analise_desfecho.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_fonte.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_preenchimento_variaveis.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_rupturas_temporais.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_temporal.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_resumo_uf_residencia.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_rupturas_temporais.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_rupturas_temporais.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_sexo_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_sintomas_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_sintomas_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_uf_residencia_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_vacinacao_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_vacinacao_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_variacao_comorbidades.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_variacao_preenchimento.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_variacao_preenchimento.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_variacao_sintomas.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_volume_por_ano.csv` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
-- `eda_02_volume_por_ano.png` ← `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
+- `decisoes.yaml` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_08_desenho_experimental.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_14_decisao_candidatos.ipynb`
+- `dicionario_variaveis_revisao.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `dicionario_variaveis_v1.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`, `notebooks/B/B_06_eda_temporal_clustering.ipynb`, `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
+- `eda_01_auditoria_datas_pos_corte.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_auditoria_faixa_datas.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_auditoria_vazamento.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_ausencias.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_cardinalidade.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_duplicidades_nu_notific.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_frequencias_categoricas.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_preenchimento_por_ano_internacao.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_preenchimento_por_ano_notificacao.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_resumo_datas.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_status_periodos.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_tipos_memoria.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_volume_por_ano_internacao.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_volume_por_ano_internacao.png` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_01_volume_por_ano_notificacao.csv` ← `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+- `eda_02_alvo_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_auditoria_idade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_ausencia_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_ausencia_por_desfecho.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_ausencia_por_desfecho.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_cluster_ano_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_cluster_desfecho_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_cobertura_clinica_clusters_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_cobertura_relevancia_features.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_cobertura_relevancia_features.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_comorbidades_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_comorbidades_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_comparacao_original_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_comparacao_original_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_composicao_temporal_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_contadores_clinicos_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_dbscan_k_distance_minimo.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_dbscan_varredura_minima.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_decisao_clustering.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_decisao_clustering.json` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_desfecho_clusters_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_diagnostico_final_clustering.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_escolaridade_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_escolaridade_preenchimento_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_faixa_etaria_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_faixa_etaria_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_hca_dbscan_resumo_minimo.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_hca_dendrograma_minimo.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_idade_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_idade_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_comorbidades.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_faixa_etaria.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_faixa_etaria.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_numero_comorbidades.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_numero_comorbidades.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_obito_sintomas.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_odds_ratio_comorbidades.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_odds_ratio_sintomas.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_perfis_binarios_clusters_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_perfis_numericos_clusters_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_perfis_numericos_clusters_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_perfis_sexo_clusters_sensibilidade.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_preenchimento_por_variavel_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_prevalencia_clinica_clusters_sensibilidade.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_principais_uf_residencia.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_proporcao_obito_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_analise_desfecho.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_fonte.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_preenchimento_variaveis.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_rupturas_temporais.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_temporal.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_resumo_uf_residencia.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_rupturas_temporais.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_rupturas_temporais.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_sexo_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_sintomas_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_sintomas_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_uf_residencia_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_vacinacao_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_vacinacao_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_variacao_comorbidades.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_variacao_preenchimento.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_variacao_preenchimento.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_variacao_sintomas.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_volume_por_ano.csv` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
+- `eda_02_volume_por_ano.png` ← `notebooks/B/B_06_eda_temporal_clustering.ipynb`
 - `environment.yml` ← `tools/update_project_reference.py`
 - `https://example.org/dados/srag_teste.parquet` ← `tests/test_config.py`
 - `manifesto_supervisionado.json` ← `src/data/supervised_artifact.py`
 - `metadata.json` ← `src/utils/reproducibility.py`, `tests/test_reproducibility.py`
-- `outputs/tables/resultados_cv.csv` ← `notebooks/A/A4_decisao_candidatos.ipynb`
+- `outputs/tables/resultados_cv.csv` ← `notebooks/A/A_14_decisao_candidatos.ipynb`
 - `part_*.md` ← `tools/update_project_reference.py`
 - `part_{index:02d}_of_{len(parts):02d}.md` ← `tools/update_project_reference.py`
 - `paths.local.json` ← `tools/update_project_reference.py`
 - `pip_inspect-venv.json` ← `tools/update_project_reference.py`
-- `preprocessor.joblib` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
-- `preprocessor_ajustado.joblib` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- `preprocessor.joblib` ← `notebooks/C/C_11_pipeline_supervisionado.ipynb`
+- `preprocessor_ajustado.joblib` ← `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 - `requirements.txt` ← `tools/update_project_reference.py`
 - `split_comparacao_cenarios.png` ← `src/protocolo/verificacoes.py`, `tests/test_regras_pessoa_a.py`
-- `split_info.json` ← `notebooks/C/C2_pipeline_supervisionado.ipynb`
+- `split_info.json` ← `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 - `split_sem_2020_2021.png` ← `tests/test_regras_pessoa_a.py`
 - `split_todos_2019_2025.png` ← `tests/test_regras_pessoa_a.py`
 - `split_{nome}.png` ← `src/protocolo/verificacoes.py`
 - `srag.csv` ← `tests/test_regras_pessoa_a.py`
 - `srag.parquet` ← `src/utils/config.py`
 - `summary.txt` ← `src/utils/reproducibility.py`, `tests/test_reproducibility.py`
-- `supervised.yaml` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C6_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_regras_pessoa_a.py`, `tools/update_project_reference.py`
-- `supervisionado_registros_conflitantes_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `supervisionado_resumo_conflitos_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `supervisionado_waterfall_conflitos_split_provisorio.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `tabela_decisoes.csv` ← `notebooks/A/A1_coorte_protocolo.ipynb`, `notebooks/A/A2_qualidade_elegibilidade.ipynb`, `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
+- `supervised.yaml` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`, `src/utils/config.py`, `tests/test_regras_pessoa_a.py`, `tools/update_project_reference.py`
+- `supervisionado_registros_conflitantes_split_provisorio.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `supervisionado_resumo_conflitos_split_provisorio.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `supervisionado_waterfall_conflitos_split_provisorio.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `tabela_decisoes.csv` ← `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`, `notebooks/A/A_03_coorte_protocolo.ipynb`, `notebooks/A/A_04_qualidade_elegibilidade.ipynb`, `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`, `src/protocolo/verificacoes.py`
 - `{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv` ← `src/protocolo/verificacoes.py`
 - `{name}.csv` ← `src/protocolo/verificacoes.py`
-- `{prefixo_comparacao}_amostras.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo_comparacao}_manifesto.json` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo_comparacao}_metricas.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo_comparacao}_metricas_por_ano.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo_comparacao}_predicoes_validacao.parquet` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo_comparacao}_variacao_temporal.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo}_analise_erros.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_busca_boosting.csv` ← `notebooks/C/C4_boosting.ipynb`
-- `{prefixo}_busca_logistica.csv` ← `notebooks/C/C4_boosting.ipynb`
-- `{prefixo}_calibracao_bruta.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `{prefixo}_calibracao_por_ano.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_comparacao.csv` ← `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`
-- `{prefixo}_contrato.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo}_curva_{ano}.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_escolhas.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
-- `{prefixo}_fn_amostra.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_ic_bootstrap.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_manifesto.json` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`, `notebooks/C/C5_calibracao_limiar.ipynb`, `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_matriz_confusao.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_metricas.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_metricas_por_ano.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_metricas_validacao.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo}_particoes.csv` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
-- `{prefixo}_por_grupo_{grupo}.csv` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_predicoes_teste.parquet` ← `notebooks/C/C6_validacao_final.ipynb`
-- `{prefixo}_predicoes_val_meas.parquet` ← `notebooks/C/C5_calibracao_limiar.ipynb`
-- `{prefixo}_predicoes_validacao.parquet` ← `notebooks/02_eda/03_supervisionado_pilotos.ipynb`, `notebooks/C/C3_baseline_logistica.ipynb`, `notebooks/C/C4_boosting.ipynb`
-- `{prefixo}_proposta_yaml.yaml` ← `notebooks/C/C4_boosting.ipynb`
-- `{prefixo}_shortlist.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `{prefixo}_temporal.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `{prefixo}_transicao.csv` ← `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
-- `{prefixo}_{nome}_curva.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
-- `{prefixo}_{nome}_limiar.csv` ← `notebooks/C/C5_calibracao_limiar.ipynb`
+- `{prefixo_comparacao}_amostras.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo_comparacao}_manifesto.json` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo_comparacao}_metricas.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo_comparacao}_metricas_por_ano.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo_comparacao}_predicoes_validacao.parquet` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo_comparacao}_variacao_temporal.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo}_analise_erros.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_busca_boosting.csv` ← `notebooks/C/C_13_boosting.ipynb`
+- `{prefixo}_busca_logistica.csv` ← `notebooks/C/C_13_boosting.ipynb`
+- `{prefixo}_calibracao_bruta.csv` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
+- `{prefixo}_calibracao_por_ano.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_comparacao.csv` ← `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`
+- `{prefixo}_contrato.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo}_curva_{ano}.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_escolhas.csv` ← `notebooks/C/C_15_calibracao_limiar.ipynb`
+- `{prefixo}_fn_amostra.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_ic_bootstrap.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_manifesto.json` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`, `notebooks/C/C_15_calibracao_limiar.ipynb`, `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_matriz_confusao.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_metricas.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_metricas_por_ano.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_metricas_validacao.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo}_particoes.csv` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`
+- `{prefixo}_por_grupo_{grupo}.csv` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_predicoes_teste.parquet` ← `notebooks/C/C_16_validacao_final.ipynb`
+- `{prefixo}_predicoes_val_meas.parquet` ← `notebooks/C/C_15_calibracao_limiar.ipynb`
+- `{prefixo}_predicoes_validacao.parquet` ← `notebooks/B/B_07_supervisionado_pilotos.ipynb`, `notebooks/C/C_12_baseline_logistica.ipynb`, `notebooks/C/C_13_boosting.ipynb`
+- `{prefixo}_proposta_yaml.yaml` ← `notebooks/C/C_13_boosting.ipynb`
+- `{prefixo}_shortlist.csv` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
+- `{prefixo}_temporal.csv` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
+- `{prefixo}_transicao.csv` ← `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
+- `{prefixo}_{nome}_curva.csv` ← `notebooks/C/C_15_calibracao_limiar.ipynb`
+- `{prefixo}_{nome}_limiar.csv` ← `notebooks/C/C_15_calibracao_limiar.ipynb`
 - `{self.nome}.md` ← `src/protocolo/verificacoes.py`
 
 ### TODO / FIXME / PENDENTE markers
@@ -11064,13 +10919,13 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 - `tools/update_project_reference.py:52: TODO /FIXME markers;`
 - `tools/update_project_reference.py:200: TODO |FIXME|XXX|HACK|PENDENTE)\b[:\s-]*(.{0,140})")`
 - `tools/update_project_reference.py:2236: TODO / FIXME / PENDENTE markers", "", *([f"- `{t}`" for t in todos] or ["- None."])]`
-- `notebooks/02_eda/03_supervisionado_pilotos.ipynb:364: pendente até a coorte definitiva.`
-- `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb:837: pendente .`
-- `notebooks/C/C4_boosting.ipynb:88: pendente .`
-- `notebooks/C/C4_boosting.ipynb:238: pendente — busca limitada não executada. Comparação usará referências.")`
-- `notebooks/C/C4_boosting.ipynb:365: pendente ou busca vazia).")`
-- `notebooks/C/C5_calibracao_limiar.ipynb:59: pendente ")`
-- `notebooks/C/C5_calibracao_limiar.ipynb:60: pendente ")`
+- `notebooks/B/B_07_supervisionado_pilotos.ipynb:364: pendente até a coorte definitiva.`
+- `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb:837: pendente .`
+- `notebooks/C/C_13_boosting.ipynb:88: pendente .`
+- `notebooks/C/C_13_boosting.ipynb:238: pendente — busca limitada não executada. Comparação usará referências.")`
+- `notebooks/C/C_13_boosting.ipynb:365: pendente ou busca vazia).")`
+- `notebooks/C/C_15_calibracao_limiar.ipynb:59: pendente ")`
+- `notebooks/C/C_15_calibracao_limiar.ipynb:60: pendente ")`
 
 ## 16. Git history and uncommitted changes
 
@@ -11083,16 +10938,34 @@ Referenced files: `C5_calibracao_limiar_*_manifesto.json`, `C6_validacao_final_*
 ### Branches
 
 ```text
-* main                              b1bad98 [origin/main] Revisao dos EDA 03 e 04
+* main                              3590d68 [origin/main] Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
   mateus/eda-inicial                827ed00 [origin/mateus/eda-inicial: ahead 2] Merge branch 'mateus/eda-inicial' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador into mateus/eda-inicial
   remotes/origin/HEAD               -> origin/main
-  remotes/origin/main               b1bad98 Revisao dos EDA 03 e 04
+  remotes/origin/main               3590d68 Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
   remotes/origin/mateus/eda-inicial 5469e38 Atualiza Base de Dados para novo Parquet v2 em Releases
 ```
 
 ### Last 40 commits
 
 ```text
+3590d68 2026-10-17 11:31:29 -0300 Ivan-S-Oliveira
+    Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
+f6fe01b 2026-10-17 11:31:21 -0300 Ivan-S-Oliveira
+    correção de bug de outputs notebooks A
+7e76e3a 2026-10-17 11:03:45 -0300 mateus-so
+    Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
+5ac0880 2026-10-17 11:02:17 -0300 mateus-so
+    Limpando o Output de A_03
+582f1fd 2026-10-17 10:13:19 -0300 eduhudsonste-lgtm
+    teste
+01867c9 2026-10-17 07:48:54 -0300 eduhudsonste-lgtm
+    Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
+8bf6238 2026-10-17 07:27:00 -0300 eduhudsonste-lgtm
+    Atualizar
+8e52d8a 2026-10-16 23:16:36 -0300 mateus-so
+    Execução de 00 a 15 com sucesso, trava nos gates 7, 8 e 9
+17693b3 2026-10-16 20:21:29 -0300 mateus-so
+    Renomeando arquivos de acordo com a ordem de execução, e EDA 02 para B
 b1bad98 2026-10-16 00:51:25 -0300 mateus-so
     Revisao dos EDA 03 e 04
 4953a45 2026-10-15 21:58:22 -0300 Ivan-S-Oliveira
@@ -11101,6 +10974,10 @@ ad22293 2026-10-15 20:41:56 -0300 Ivan-S-Oliveira
     atualizando a limpeza tool
 ebe34b8 2026-10-15 20:34:49 -0300 Ivan-S-Oliveira
     correções de arquivos e criação de uma rquivo de limpeza
+de6e0b9 2026-10-15 19:36:09 -0300 eduhudsonste-lgtm
+    atualizações de A
+2afcf85 2026-10-15 19:14:25 -0300 eduhudsonste-lgtm
+    atualizado decisoes
 e80c218 2026-10-15 15:42:55 -0300 eduhudsonste-lgtm
     Merge branch 'main' of https://github.com/Ivan-S-Oliveira/Projeto_Integrador
 4ca9bbc 2026-10-15 10:01:35 -0300 eduhudsonste-lgtm
@@ -11151,28 +11028,6 @@ ed7ef3c 2026-10-13 20:01:35 -0300 Ivan-S-Oliveira
     correções,notebook, src e yaml
 d4103fd 2026-10-13 19:21:52 -0300 Ivan-S-Oliveira
     atualizando src evaluation e features
-7bed442 2026-10-13 18:59:33 -0300 Ivan-S-Oliveira
-    correções em src/models
-3561448 2026-10-13 12:27:34 -0300 Ivan-S-Oliveira
-    modificações de arquivos de C2/metrics/temporal
-e40e88e 2026-10-13 12:19:05 -0300 Ivan-S-Oliveira
-    terminando de adicionar os notebooks em C
-b4399f0 2026-10-13 12:11:05 -0300 Ivan-S-Oliveira
-    Adicionando C4_Boosting
-ea724c0 2026-10-13 12:07:26 -0300 Ivan-S-Oliveira
-    Adiconando o C3_baseline_logistica
-ae131fc 2026-10-12 10:22:47 -0300 mateus-so
-    EDA 04 - Piloto finalizado com coorte provisoria, e cohort_source.pys
-c8a9997 2026-10-11 23:53:33 -0300 mateus-so
-    EDA 03 - Piloto finalizado com dummy data
-b12e787 2026-10-11 22:35:07 -0300 mateus-so
-    EDA 02 - mais HCA e DBScan, markdown e supervised atualizados
-8f11d6b 2026-10-11 19:51:13 -0300 mateus-so
-    EDA 02 - Finalizado com coorte provisória, Revisão visual do EDA 01
-0678e77 2026-10-10 18:38:18 -0300 mateus-so
-    EDA 01 - Finalizado, Ajustes em URLs e manifest
-6bea8ab 2026-10-09 22:17:47 -0300 mateus-so
-    EDA 01 - Recorte inicial aprimorado
 ```
 
 ### Diff stat (working tree vs HEAD)
@@ -11391,12 +11246,12 @@ outputs/predictions/*
 ## `configs/decisoes.yaml`
 
 - Git: `tracked` · status `clean`
-- Size: `6.1 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `8a15f7be19ceaadce2afca9756a02bec266027eecf7cd9f2691e3e23b147b888`
+- Size: `6.1 KB` · modified `2026-10-17 12:26 UTC`
+- SHA-256: `b9ad365f7ff717dab3d352a571c0625afae517bd76b717662b1d905c7aecde0d`
 
 ```yaml
 # =============================================================================
-# Config de decisões da Pessoa A — v0.1 (fonte de verdade para A1–A4)
+# Config de decisões da Pessoa — v0.1 (fonte de verdade para A1–A4)
 # =============================================================================
 # Cada valor abaixo é uma DECISÃO. Enquanto `status_decisoes` estiver como
 # "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
@@ -11412,51 +11267,51 @@ versao: '0.4'
 status_decisoes:
   ponto_de_previsao:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   coorte_estrita:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa 
     data: null
   alvo:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   evolucao_desconhecida:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   periodos:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   acoes_inconsistencias_datas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa  
     data: null
   variaveis_proibidas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   variaveis_condicionais:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   maturidade_evolucao:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   features_derivadas:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   split_aleatorio_70_15_15:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
   cenario_sem_2020_2021:
     status: proposta
-    responsavel: Pessoa A
+    responsavel: Pessoa
     data: null
 cols:
   hospital: HOSPITAL
@@ -11471,6 +11326,9 @@ cols:
   dt_encerra: DT_ENCERRA
   nu_notific: NU_NOTIFIC
 dev_years:
+- 2019
+- 2020
+- 2021
 - 2022
 - 2023
 - 2024
@@ -11696,10 +11554,9 @@ experimentos_split:
       - 2024
       - 2025
       descricao: Base completa 2019-2025
-    sem_2020_2021:
+    sem_2020_2021_2022:
       anos:
       - 2019
-      - 2022
       - 2023
       - 2024
       - 2025
@@ -11738,130 +11595,130 @@ derivadas:
 ## `configs/dicionario_variaveis_v1.csv`
 
 - Git: `tracked` · status `clean`
-- Size: `45.4 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `5122f54bab9bab23a56d67158609368d8b165346de244b2d202e6ad122ced7e8`
+- Size: `45.7 KB` · modified `2026-10-17 14:03 UTC`
+- SHA-256: `7c87f4bd34e3075d8a93d5ae8285638693238709f3cfff4d64cd13fbc9e3a2a9`
 
 ```csv
 coluna,nome_amigavel,grupo,existe_no_dataframe,dtype_atual,tipo_analitico_inferido,uso_inicial_sugerido,aplicabilidade,transformacao_sugerida,risco_temporal,quantidade_total,quantidade_preenchida,quantidade_ausente,percentual_preenchido,percentual_ausente,valores_distintos_sem_ausente,valores_frequentes_amostra,n_populacao_aplicavel,n_preenchido_aplicavel,percentual_preenchido_aplicavel,preenchimento_min_ano,preenchimento_max_ano,amplitude_preenchimento_ano,anos_observados,ponto_de_decisao,decisao_final_usuario,justificativa_decisao_final
-nu_notific,Numero da notificacao,estrutura_coorte,True,str,codigo_identificador,estrutura_coorte,Populacao geral,Identificador tecnico; nao usar como preditor,baixo,4666910,4666910,0,100.0,0.0,4666881,31744638947734: 2 | 31739904591826: 2 | 31748044066509: 2 | 31746458224089: 2 | 31744827529781: 2 | 31738324913116: 2 | 31745324608735: 2 | 31741716994694: 2 | 31736177754051: 2 | 31744265580768: 2,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_notific,Data da notificacao,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,Auditoria temporal; nao usar data bruta,baixo,4666910,4666910,0,100.0,0.0,2829,2021-03-22: 13895 | 2021-03-15: 13842 | 2021-03-29: 13471 | 2021-04-05: 13000 | 2021-03-30: 12242 | 2021-03-24: 12083 | 2021-03-16: 11765 | 2021-03-08: 11606 | 2021-03-25: 11587 | 2021-03-18: 11465,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,Derivar intervalo entre sintomas e internacao,baixo,4666910,4666910,0,100.0,0.0,2828,2021-03-01: 16153 | 2021-03-10: 14229 | 2021-03-15: 13257 | 2021-03-20: 13175 | 2021-04-01: 12788 | 2021-03-08: 11973 | 2021-05-10: 11626 | 2021-03-12: 11291 | 2021-03-05: 11231 | 2021-06-01: 11188,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,derivar_atributo,"Fonte para o intervalo entre sintomas e internação e para atributos
+nu_notific,Numero da notificacao,estrutura_coorte,True,object,codigo_identificador,estrutura_coorte,Populacao geral,Identificador tecnico; nao usar como preditor,baixo,4666910,4666910,0,100.0,0.0,4666881,31736177754051: 2 | 31743770891762: 2 | 31747221217548: 2 | 31737727549117: 2 | 31748270369373: 2 | 31741286280540: 2 | 31744118738694: 2 | 31736344210476: 2 | 31736866916969: 2 | 31741716994694: 2,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_notific,Data da notificacao,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,Auditoria temporal; nao usar data bruta,baixo,4666910,4666910,0,100.0,0.0,2829,2021-03-22: 13895 | 2021-03-15: 13842 | 2021-03-29: 13471 | 2021-04-05: 13000 | 2021-03-30: 12242 | 2021-03-24: 12083 | 2021-03-16: 11765 | 2021-03-08: 11606 | 2021-03-25: 11587 | 2021-03-18: 11465,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,Derivar intervalo entre sintomas e internacao,baixo,4666910,4666910,0,100.0,0.0,2828,2021-03-01: 16153 | 2021-03-10: 14229 | 2021-03-15: 13257 | 2021-03-20: 13175 | 2021-04-01: 12788 | 2021-03-08: 11973 | 2021-05-10: 11626 | 2021-03-12: 11291 | 2021-03-05: 11231 | 2021-06-01: 11188,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,derivar_atributo,"Fonte para o intervalo entre sintomas e internação e para atributos
 sazonais. A data bruta não será fornecida diretamente aos modelos."
-sem_pri,Semana epidemiologica dos primeiros sintomas,estrutura_coorte,True,str,categorica_alta_cardinalidade,auditoria_temporal,Populacao geral,Auditar contra a semana derivada de dt_sin_pri; não utilizar diretamente como preditora,baixo,4666910,4666910,0,100.0,0.0,53,20: 147061 | 21: 142729 | 19: 140364 | 22: 138504 | 23: 135988 | 18: 131345 | 24: 124948 | 25: 123079 | 17: 122626 | 11: 115162,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-hospital,Houve internacao?,estrutura_coorte,True,str,categorica,estrutura_coorte,Populacao geral,Filtro de elegibilidade,baixo,4666910,4547680,119230,97.445205,2.554795,3,1: 4434657 | nan: 119230 | 2: 102957 | 9: 10066,4666910,4547680,97.445205,99.995793,100.0,0.004207,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_interna,Data da internacao por SRAG,estrutura_coorte,True,str,data,estrutura_coorte,Populacao geral,"Ancora temporal; derivar ano, mes, semana e intervalos",confirmar_momento_medicao,4666910,4362665,304245,93.480804,6.519196,2953,nan: 304245 | 2021-03-23: 11196 | 2021-03-22: 10912 | 2021-03-15: 10823 | 2021-03-16: 10717 | 2021-03-18: 10622 | 2021-03-17: 10554 | 2021-03-24: 10390 | 2021-03-29: 10231 | 2021-03-25: 10176,4666910,4362665,93.480804,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,estrutura_coorte,"Âncora temporal da coorte. Intervalos negativos não serão excluídos
+sem_pri,Semana epidemiologica dos primeiros sintomas,estrutura_coorte,True,object,categorica_alta_cardinalidade,auditoria_temporal,Populacao geral,Auditar contra a semana derivada de dt_sin_pri; não utilizar diretamente como preditora,baixo,4666910,4666910,0,100.0,0.0,53,20: 147061 | 21: 142729 | 19: 140364 | 22: 138504 | 23: 135988 | 18: 131345 | 24: 124948 | 25: 123079 | 17: 122626 | 11: 115162,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+hospital,Houve internacao?,estrutura_coorte,True,object,categorica,estrutura_coorte,Populacao geral,Filtro de elegibilidade,baixo,4666910,4547680,119230,97.445205,2.554795,3,1: 4434657 | None: 119230 | 2: 102957 | 9: 10066,4666910,4547680,97.445205,99.995793,100.0,0.004207,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_interna,Data da internacao por SRAG,estrutura_coorte,True,object,data,estrutura_coorte,Populacao geral,"Ancora temporal; derivar ano, mes, semana e intervalos",confirmar_momento_medicao,4666910,4362665,304245,93.480804,6.519196,2953,None: 304245 | 2021-03-23: 11196 | 2021-03-22: 10912 | 2021-03-15: 10823 | 2021-03-16: 10717 | 2021-03-18: 10622 | 2021-03-17: 10554 | 2021-03-24: 10390 | 2021-03-29: 10231 | 2021-03-25: 10176,4666910,4362665,93.480804,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,estrutura_coorte,"Âncora temporal da coorte. Intervalos negativos não serão excluídos
 automaticamente. A decisão dependerá da avaliação de nosocomial,
 magnitude, quantidade e distribuição dos casos."
-cs_sexo,Sexo,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,3,M: 2483220 | F: 2182883 | I: 807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-nu_idade_n,Idade informada,demografia_contexto_social,True,str,numerica_a_validar,modelo_a_nucleo,Populacao geral,Combinar com tp_idade para criar idade_anos,baixo,4666910,4666910,0,100.0,0.0,139,1: 228045 | 2: 155966 | 3: 114180 | 4: 93272 | 5: 79788 | 66: 70994 | 68: 70283 | 67: 70138 | 6: 70121 | 70: 69654,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,Combinar com nu_idade_n,baixo,4666910,4666910,0,100.0,0.0,3,3: 4230167 | 2: 404936 | 1: 31807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_gestant,Situacao gestacional,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,8,6: 3172671 | 5: 1277145 | 9: 171169 | 3: 24944 | 2: 11702 | 1: 5311 | 4: 2475 | 0: 1493,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_raca,Raca ou cor,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4621769,45141,99.032743,0.967257,6,1: 1916760 | 4: 1742909 | 9: 709787 | 2: 195476 | nan: 45141 | 3: 41240 | 5: 15597,4666910,4621769,99.032743,96.300347,100.0,3.699653,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cs_etinia,Etnia indigena,demografia_contexto_social,True,str,categorica_alta_cardinalidade,exploracao_subgrupo,Registros com raca ou cor indigena,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,11055,4655855,0.236881,99.763119,310,"nan: 4655855 | KAINGANG (CAINGANGUE): 911 | YANOMAMI: 903 | TERENA: 705 | MAKUXI (MACUXI, MACHUSI, PEMON): 575 | GUARANI KAIOWA (PAI TAVYTERA): 574 | XAVANTE (A'UWE, AKWE, AWEN, AKWEN): 351 | GUARANI: 274 | TICUNA (TIKUNA, TUKUNA, MAGUTA): 254 | GUAJAJARA (TENETEHARA): 248",15597,11055,70.879015,0.087245,0.903354,0.816109,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar o uso detalhado depois da EDA no denominador indígena. | Confirmar se cs_raca = 5 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-cs_escol_n,Escolaridade,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3078146,1588764,65.956832,34.043168,7,nan: 1588764 | 9: 1304194 | 1: 425935 | 3: 382584 | 5: 337951 | 2: 250435 | 0: 213463 | 4: 163584,4666910,3078146,65.956832,62.710219,92.335682,29.625463,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-cs_zona,Zona de residencia,demografia_contexto_social,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4202868,464042,90.056761,9.943239,4,1: 3886050 | nan: 464042 | 2: 240467 | 9: 48321 | 3: 28030,4666910,4202868,90.056761,89.642113,97.570722,7.92861,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3879320,787590,83.123951,16.876049,4,2: 3178090 | nan: 787590 | 9: 656220 | 1: 37968 | 3: 7042,4666910,3879320,83.123951,83.150597,96.64318,13.492583,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-out_anim,Especificacao do outro animal,exposicao_animal,True,str,texto_livre,exploracao_texto,Registros com contato com outro animal,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,5276,4661634,0.113051,99.886949,575,"nan: 4661634 | CACHORRO: 2282 | GATO: 651 | CAO: 221 | GATO E CACHORRO: 154 | CACHORRO E GATO: 135 | GATOS: 123 | CACHORROS: 106 | BOVINOS: 83 | GATO, CACHORRO: 78",7042,5276,74.921897,0.0,0.324085,0.324085,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar se ave_suino = 3 significa outro animal | Avaliar apenas no denominador aplicavel ou em sensibilidade,decidir_depois_da_eda,"Preservar para EDA e possível categorização simples. Não utilizar texto
+cs_sexo,Sexo,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,3,M: 2483220 | F: 2182883 | I: 807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+nu_idade_n,Idade informada,demografia_contexto_social,True,object,numerica_a_validar,modelo_a_nucleo,Populacao geral,Combinar com tp_idade para criar idade_anos,baixo,4666910,4666910,0,100.0,0.0,139,1: 228045 | 2: 155966 | 3: 114180 | 4: 93272 | 5: 79788 | 66: 70994 | 68: 70283 | 67: 70138 | 6: 70121 | 70: 69654,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,Combinar com nu_idade_n,baixo,4666910,4666910,0,100.0,0.0,3,3: 4230167 | 2: 404936 | 1: 31807,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_gestant,Situacao gestacional,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666910,0,100.0,0.0,8,6: 3172671 | 5: 1277145 | 9: 171169 | 3: 24944 | 2: 11702 | 1: 5311 | 4: 2475 | 0: 1493,4666910,4666910,100.0,100.0,100.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_raca,Raca ou cor,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4621769,45141,99.032743,0.967257,6,1: 1916760 | 4: 1742909 | 9: 709787 | 2: 195476 | None: 45141 | 3: 41240 | 5: 15597,4666910,4621769,99.032743,96.300347,100.0,3.699653,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cs_etinia,Etnia indigena,demografia_contexto_social,True,object,categorica_alta_cardinalidade,exploracao_subgrupo,Registros com raca ou cor indigena,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,11055,4655855,0.236881,99.763119,310,"None: 4655855 | KAINGANG (CAINGANGUE): 911 | YANOMAMI: 903 | TERENA: 705 | MAKUXI (MACUXI, MACHUSI, PEMON): 575 | GUARANI KAIOWA (PAI TAVYTERA): 574 | XAVANTE (A'UWE, AKWE, AWEN, AKWEN): 351 | GUARANI: 274 | TICUNA (TIKUNA, TUKUNA, MAGUTA): 254 | GUAJAJARA (TENETEHARA): 248",15597,11055,70.879015,0.087245,0.903354,0.816109,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar o uso detalhado depois da EDA no denominador indígena. | Confirmar se cs_raca = 5 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+cs_escol_n,Escolaridade,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3078146,1588764,65.956832,34.043168,7,None: 1588764 | 9: 1304194 | 1: 425935 | 3: 382584 | 5: 337951 | 2: 250435 | 0: 213463 | 4: 163584,4666910,3078146,65.956832,62.710219,92.335682,29.625463,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+cs_zona,Zona de residencia,demografia_contexto_social,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4202868,464042,90.056761,9.943239,4,1: 3886050 | None: 464042 | 2: 240467 | 9: 48321 | 3: 28030,4666910,4202868,90.056761,89.642113,97.570722,7.92861,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3879320,787590,83.123951,16.876049,4,2: 3178090 | None: 787590 | 9: 656220 | 1: 37968 | 3: 7042,4666910,3879320,83.123951,83.150597,96.64318,13.492583,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+out_anim,Especificacao do outro animal,exposicao_animal,True,object,texto_livre,exploracao_texto,Registros com contato com outro animal,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,5276,4661634,0.113051,99.886949,575,"None: 4661634 | CACHORRO: 2282 | GATO: 651 | CAO: 221 | GATO E CACHORRO: 154 | CACHORRO E GATO: 135 | GATOS: 123 | CACHORROS: 106 | BOVINOS: 83 | GATO, CACHORRO: 78",7042,5276,74.921897,0.0,0.324085,0.324085,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar se ave_suino = 3 significa outro animal | Avaliar apenas no denominador aplicavel ou em sensibilidade,decidir_depois_da_eda,"Preservar para EDA e possível categorização simples. Não utilizar texto
 bruto e não implementar NLP antes do Fine Tuning."
-febre,Febre,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3974141,692769,85.155724,14.844276,3,1: 2591242 | 2: 1332459 | nan: 692769 | 9: 50440,4666910,3974141,85.155724,81.615824,99.655064,18.039239,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-tosse,Tosse,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4151309,515601,88.951983,11.048017,3,1: 3269426 | 2: 841028 | nan: 515601 | 9: 40855,4666910,4151309,88.951983,87.375381,99.589862,12.214481,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-garganta,Dor de garganta,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3397787,1269123,72.805925,27.194075,3,2: 2601701 | nan: 1269123 | 1: 690020 | 9: 106066,4666910,3397787,72.805925,69.341677,97.64644,28.304763,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dispneia,Dispneia,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4095646,571264,87.759267,12.240733,3,1: 3129529 | 2: 927058 | nan: 571264 | 9: 39059,4666910,4095646,87.759267,84.186073,99.223893,15.037821,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-desc_resp,Desconforto respiratorio,sintomas,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3864965,801945,82.81636,17.18364,3,1: 2675879 | 2: 1141844 | nan: 801945 | 9: 47242,4666910,3864965,82.81636,78.784634,99.127143,20.342508,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,modelo_b_ampliado,"Indicador clínico relevante, mas mais dependente da avaliação e do
+febre,Febre,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3974141,692769,85.155724,14.844276,3,1: 2591242 | 2: 1332459 | None: 692769 | 9: 50440,4666910,3974141,85.155724,81.615824,99.655064,18.039239,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+tosse,Tosse,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4151309,515601,88.951983,11.048017,3,1: 3269426 | 2: 841028 | None: 515601 | 9: 40855,4666910,4151309,88.951983,87.375381,99.589862,12.214481,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+garganta,Dor de garganta,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3397787,1269123,72.805925,27.194075,3,2: 2601701 | None: 1269123 | 1: 690020 | 9: 106066,4666910,3397787,72.805925,69.341677,97.64644,28.304763,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dispneia,Dispneia,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4095646,571264,87.759267,12.240733,3,1: 3129529 | 2: 927058 | None: 571264 | 9: 39059,4666910,4095646,87.759267,84.186073,99.223893,15.037821,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+desc_resp,Desconforto respiratorio,sintomas,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3864965,801945,82.81636,17.18364,3,1: 2675879 | 2: 1141844 | None: 801945 | 9: 47242,4666910,3864965,82.81636,78.784634,99.127143,20.342508,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,modelo_b_ampliado,"Indicador clínico relevante, mas mais dependente da avaliação e do
 momento de registro. Entrará no modelo ampliado e será removido se a
 auditoria indicar informação posterior à admissão."
-saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3902459,764451,83.619761,16.380239,3,1: 2662991 | 2: 1182588 | nan: 764451 | 9: 56880,4666910,3902459,83.619761,79.99198,98.300557,18.308578,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_a_nucleo,"Medida clínica objetiva e plausivelmente disponível na avaliação inicial.
+saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",confirmar_momento_medicao,4666910,3902459,764451,83.619761,16.380239,3,1: 2662991 | 2: 1182588 | None: 764451 | 9: 56880,4666910,3902459,83.619761,79.99198,98.300557,18.308578,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_a_nucleo,"Medida clínica objetiva e plausivelmente disponível na avaliação inicial.
 Será executada análise adicional sem a variável para verificar robustez
 e possível incerteza temporal."
-diarreia,Diarreia,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3347243,1319667,71.722896,28.277104,3,2: 2776075 | nan: 1319667 | 1: 490113 | 9: 81055,4666910,3347243,71.722896,67.358781,97.166895,29.808114,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-vomito,Vomito,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3328265,1338645,71.316246,28.683754,3,2: 2799043 | nan: 1338645 | 1: 446387 | 9: 82835,4666910,3328265,71.316246,67.969448,97.244716,29.275268,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dor_abd,Dor abdominal,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2893923,1772987,62.009402,37.990598,3,2: 2557015 | nan: 1772987 | 1: 242023 | 9: 94885,4666910,2893923,62.009402,0.298664,81.816972,81.518308,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-fadiga,Fadiga,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3016522,1650388,64.636387,35.363613,3,2: 2082171 | nan: 1650388 | 1: 849058 | 9: 85293,4666910,3016522,64.636387,0.530024,83.397485,82.867461,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-perd_olft,Perda do olfato,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2901187,1765723,62.165051,37.834949,3,2: 2554232 | nan: 1765723 | 1: 222298 | 9: 124657,4666910,2901187,62.165051,0.294458,81.389768,81.09531,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-perd_pala,Perda do paladar,sintomas,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2897585,1769325,62.08787,37.91213,3,2: 2545564 | nan: 1769325 | 1: 225711 | 9: 126310,4666910,2897585,62.08787,0.294458,81.205866,80.911408,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1602819,3064091,34.344331,65.655669,3,nan: 3064091 | 2: 1555545 | 9: 31933 | 1: 15341,4666910,1602819,34.344331,29.465768,42.126211,12.660443,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2024307,2642603,43.375745,56.624255,3,nan: 2642603 | 1: 1179265 | 2: 824780 | 9: 20262,4666910,2024307,43.375745,32.579667,53.638927,21.05926,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1612274,3054636,34.546927,65.453073,3,nan: 3054636 | 2: 1539111 | 1: 37781 | 9: 35382,4666910,1612274,34.546927,29.915224,42.4288,12.513576,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-sind_down,Sindrome de Down,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606783,3060127,34.429269,65.570731,3,nan: 3060127 | 2: 1554601 | 9: 31616 | 1: 20566,4666910,1606783,34.429269,29.8226,42.247915,12.425315,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606063,3060847,34.413841,65.586159,3,nan: 3060847 | 2: 1535046 | 1: 35840 | 9: 35177,4666910,1606063,34.413841,29.754471,42.325491,12.57102,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-asma,Asma,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1657557,3009353,35.517227,64.482773,3,nan: 3009353 | 2: 1423942 | 1: 201102 | 9: 32513,4666910,1657557,35.517227,31.482907,43.194983,11.712076,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-diabetes,Diabetes mellitus,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1892139,2774771,40.543722,59.456278,3,nan: 2774771 | 2: 1072007 | 1: 796296 | 9: 23836,4666910,1892139,40.543722,31.433962,50.182418,18.748456,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1658809,3008101,35.544054,64.455946,3,nan: 3008101 | 2: 1424664 | 1: 201166 | 9: 32979,4666910,1658809,35.544054,30.579078,43.563907,12.984829,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1659172,3007738,35.551832,64.448168,3,nan: 3007738 | 2: 1417902 | 1: 207229 | 9: 34041,4666910,1659172,35.551832,30.759654,43.600232,12.840579,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1633101,3033809,34.993197,65.006803,3,nan: 3033809 | 2: 1473478 | 1: 124818 | 9: 34805,4666910,1633101,34.993197,30.245963,42.88013,12.634167,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-renal,Doenca renal cronica,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1638143,3028767,35.101234,64.898766,3,nan: 3028767 | 2: 1459573 | 1: 145686 | 9: 32884,4666910,1638143,35.101234,29.989831,43.23837,13.248539,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-obesidade,Obesidade,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1663572,3003338,35.646113,64.353887,3,nan: 3003338 | 2: 1380985 | 1: 238237 | 9: 44350,4666910,1663572,35.646113,29.647687,43.327465,13.679778,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-tabag,Tabagismo,comorbidades_fatores_risco,True,str,categorica,indisponivel_se_100pct_vazio,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,0,4666910,0.0,100.0,0,nan: 4666910,4666910,0,0.0,0.0,0.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Coluna 100% vazia na versao atual; manter documentada e fora dos modelos,,
-outro_sin,Apresentou outros sintomas?,sintomas,True,str,categorica,exploracao_texto,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3335209,1331701,71.465038,28.534962,3,2: 1836150 | 1: 1399463 | nan: 1331701 | 9: 99596,4666910,3335209,71.465038,69.011723,92.045431,23.033708,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-outro_des,Descricao dos outros sintomas,sintomas,True,str,texto_livre,exploracao_texto,Registros com outro sintoma informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1377047,3289863,29.506611,70.493389,251506,nan: 3289863 | CORIZA: 139084 | CEFALEIA: 99168 | MIALGIA: 92792 | ASTENIA: 28823 | DOR TORACICA: 27503 | INAPETENCIA: 25170 | CONGESTAO NASAL: 14750 | CANSACO: 12703 | FRAQUEZA: 12668,1399463,1377045,98.3981,21.827742,31.433562,9.60582,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
+diarreia,Diarreia,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3347243,1319667,71.722896,28.277104,3,2: 2776075 | None: 1319667 | 1: 490113 | 9: 81055,4666910,3347243,71.722896,67.358781,97.166895,29.808114,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+vomito,Vomito,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3328265,1338645,71.316246,28.683754,3,2: 2799043 | None: 1338645 | 1: 446387 | 9: 82835,4666910,3328265,71.316246,67.969448,97.244716,29.275268,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dor_abd,Dor abdominal,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2893923,1772987,62.009402,37.990598,3,2: 2557015 | None: 1772987 | 1: 242023 | 9: 94885,4666910,2893923,62.009402,0.298664,81.816972,81.518308,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+fadiga,Fadiga,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3016522,1650388,64.636387,35.363613,3,2: 2082171 | None: 1650388 | 1: 849058 | 9: 85293,4666910,3016522,64.636387,0.530024,83.397485,82.867461,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+perd_olft,Perda do olfato,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2901187,1765723,62.165051,37.834949,3,2: 2554232 | None: 1765723 | 1: 222298 | 9: 124657,4666910,2901187,62.165051,0.294458,81.389768,81.09531,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+perd_pala,Perda do paladar,sintomas,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2897585,1769325,62.08787,37.91213,3,2: 2545564 | None: 1769325 | 1: 225711 | 9: 126310,4666910,2897585,62.08787,0.294458,81.205866,80.911408,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1602819,3064091,34.344331,65.655669,3,None: 3064091 | 2: 1555545 | 9: 31933 | 1: 15341,4666910,1602819,34.344331,29.465768,42.126211,12.660443,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2024307,2642603,43.375745,56.624255,3,None: 2642603 | 1: 1179265 | 2: 824780 | 9: 20262,4666910,2024307,43.375745,32.579667,53.638927,21.05926,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1612274,3054636,34.546927,65.453073,3,None: 3054636 | 2: 1539111 | 1: 37781 | 9: 35382,4666910,1612274,34.546927,29.915224,42.4288,12.513576,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+sind_down,Sindrome de Down,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606783,3060127,34.429269,65.570731,3,None: 3060127 | 2: 1554601 | 9: 31616 | 1: 20566,4666910,1606783,34.429269,29.8226,42.247915,12.425315,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1606063,3060847,34.413841,65.586159,3,None: 3060847 | 2: 1535046 | 1: 35840 | 9: 35177,4666910,1606063,34.413841,29.754471,42.325491,12.57102,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+asma,Asma,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1657557,3009353,35.517227,64.482773,3,None: 3009353 | 2: 1423942 | 1: 201102 | 9: 32513,4666910,1657557,35.517227,31.482907,43.194983,11.712076,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+diabetes,Diabetes mellitus,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1892139,2774771,40.543722,59.456278,3,None: 2774771 | 2: 1072007 | 1: 796296 | 9: 23836,4666910,1892139,40.543722,31.433962,50.182418,18.748456,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1658809,3008101,35.544054,64.455946,3,None: 3008101 | 2: 1424664 | 1: 201166 | 9: 32979,4666910,1658809,35.544054,30.579078,43.563907,12.984829,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1659172,3007738,35.551832,64.448168,3,None: 3007738 | 2: 1417902 | 1: 207229 | 9: 34041,4666910,1659172,35.551832,30.759654,43.600232,12.840579,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1633101,3033809,34.993197,65.006803,3,None: 3033809 | 2: 1473478 | 1: 124818 | 9: 34805,4666910,1633101,34.993197,30.245963,42.88013,12.634167,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+renal,Doenca renal cronica,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1638143,3028767,35.101234,64.898766,3,None: 3028767 | 2: 1459573 | 1: 145686 | 9: 32884,4666910,1638143,35.101234,29.989831,43.23837,13.248539,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+obesidade,Obesidade,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1663572,3003338,35.646113,64.353887,3,None: 3003338 | 2: 1380985 | 1: 238237 | 9: 44350,4666910,1663572,35.646113,29.647687,43.327465,13.679778,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+tabag,Tabagismo,comorbidades_fatores_risco,True,object,categorica,indisponivel_se_100pct_vazio,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,0,4666910,0.0,100.0,0,None: 4666910,4666910,0,0.0,0.0,0.0,0.0,"2019,2020,2021,2022,2023,2024,2025,2026",Coluna 100% vazia na versao atual; manter documentada e fora dos modelos,,
+outro_sin,Apresentou outros sintomas?,sintomas,True,object,categorica,exploracao_texto,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3335209,1331701,71.465038,28.534962,3,2: 1836150 | 1: 1399463 | None: 1331701 | 9: 99596,4666910,3335209,71.465038,69.011723,92.045431,23.033708,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+outro_des,Descricao dos outros sintomas,sintomas,True,object,texto_livre,exploracao_texto,Registros com outro sintoma informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1377047,3289863,29.506611,70.493389,251506,None: 3289863 | CORIZA: 139084 | CEFALEIA: 99168 | MIALGIA: 92792 | ASTENIA: 28823 | DOR TORACICA: 27503 | INAPETENCIA: 25170 | CONGESTAO NASAL: 14750 | CANSACO: 12703 | FRAQUEZA: 12668,1399463,1377045,98.3981,21.827742,31.433562,9.60582,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
 Categorizar somente se os termos frequentes acrescentarem informação
 não representada pelas variáveis estruturadas."
-obes_imc,IMC registrado,comorbidades_fatores_risco,True,str,numerica_a_validar,reavaliar_apos_eda,Registros com obesidade informada,Converter para numero e validar faixa plausivel,baixo,4666910,54304,4612606,1.163596,98.836404,1011,nan: 4612606 | 30: 8049 | 0: 3976 | 40: 3703 | 35: 3132 | 0.10: 2054 | 32: 1640 | 31: 1238 | 38: 997 | 33: 896,238237,54304,22.794108,0.212414,2.38402,2.171606,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar somente depois da auditoria de valores e faixas plausíveis. | Decidir se IMC entra no Modelo C ou somente na EDA | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-out_morbi,Outro fator de risco?,comorbidades_fatores_risco,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1917320,2749590,41.083286,58.916714,3,nan: 2749590 | 1: 1075640 | 2: 815180 | 9: 26500,4666910,1917320,41.083286,32.055047,49.541284,17.486237,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-morb_desc,Descricao de outro fator de risco,comorbidades_fatores_risco,True,str,texto_livre,exploracao_texto,Registros com outro fator de risco informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1063125,3603785,22.780062,77.219938,232631,nan: 3603785 | HAS: 254251 | HIPERTENSAO: 22890 | HIPOTIREOIDISMO: 19748 | DPOC: 19636 | TABAGISTA: 15439 | OBESIDADE: 13661 | EX TABAGISTA: 12091 | ALZHEIMER: 10179 | HIPERTENSAO ARTERIAL: 7891,1075640,1063125,98.836507,14.787728,27.142864,12.355135,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
+obes_imc,IMC registrado,comorbidades_fatores_risco,True,object,numerica_a_validar,reavaliar_apos_eda,Registros com obesidade informada,Converter para numero e validar faixa plausivel,baixo,4666910,54304,4612606,1.163596,98.836404,1011,None: 4612606 | 30: 8049 | 0: 3976 | 40: 3703 | 35: 3132 | 0.10: 2054 | 32: 1640 | 31: 1238 | 38: 997 | 33: 896,238237,54304,22.794108,0.212414,2.38402,2.171606,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar somente depois da auditoria de valores e faixas plausíveis. | Decidir se IMC entra no Modelo C ou somente na EDA | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+out_morbi,Outro fator de risco?,comorbidades_fatores_risco,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,1917320,2749590,41.083286,58.916714,3,None: 2749590 | 1: 1075640 | 2: 815180 | 9: 26500,4666910,1917320,41.083286,32.055047,49.541284,17.486237,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+morb_desc,Descricao de outro fator de risco,comorbidades_fatores_risco,True,object,texto_livre,exploracao_texto,Registros com outro fator de risco informado,Categorizar respostas frequentes; nao usar texto bruto,baixo,4666910,1063125,3603785,22.780062,77.219938,232631,None: 3603785 | HAS: 254251 | HIPERTENSAO: 22890 | HIPOTIREOIDISMO: 19748 | DPOC: 19636 | TABAGISTA: 15439 | OBESIDADE: 13661 | EX TABAGISTA: 12091 | ALZHEIMER: 10179 | HIPERTENSAO ARTERIAL: 7891,1075640,1063125,98.836507,14.787728,27.142864,12.355135,"2019,2020,2021,2022,2023,2024,2025,2026",Decidir se os textos frequentes serao categorizados,decidir_depois_da_eda,"Preservar em EDA. Não utilizar texto bruto no primeiro modelo.
 Categorizar somente se houver ganho claro e suficiente antes do
 congelamento das features."
-out_antiv,Outro antiviral utilizado,tratamentos,True,str,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,17328,4649582,0.371295,99.628705,3273,nan: 4649582 | azitromicina: 2658 | AZITROMICINA: 1953 | tamiflu: 1286 | CEFTRIAXONA: 1015 | TAMIFLU: 648 | ceftriaxona + azitromicina: 261 | cloroquina: 255 | ivermectina: 211 | IVERMECTINA: 209,4666910,17328,0.371295,0.136382,0.700499,0.564117,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e
+out_antiv,Outro antiviral utilizado,tratamentos,True,object,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,17328,4649582,0.371295,99.628705,3273,None: 4649582 | azitromicina: 2658 | AZITROMICINA: 1953 | tamiflu: 1286 | CEFTRIAXONA: 1015 | TAMIFLU: 648 | ceftriaxona + azitromicina: 261 | cloroquina: 255 | ivermectina: 211 | IVERMECTINA: 209,4666910,17328,0.371295,0.136382,0.700499,0.564117,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e
 risco temporal. Preservado somente para auditoria ou exploração."
-out_trat,Outro tratamento para COVID-19,tratamentos,True,str,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,2794,4664116,0.059868,99.940132,555,nan: 4664116 | AZITROMICINA: 352 | REMDESIVIR: 306 | CEFTRIAXONA: 221 | RENDESIVIR: 220 | VEKLURY: 107 | RENDESEVIR: 91 | OSELTAMIVIR: 86 | AMPICILINA: 81 | ROCEFIN: 69,4666910,2794,0.059868,0.0,0.251019,0.251019,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e risco temporal. Preservado somente para auditoria ou exploração."
-sg_uf_not,UF da unidade notificadora,geografia_notificacao,True,str,categorica,exploracao_eda,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4656289,10621,99.772419,0.227581,27,SP: 1306611 | MG: 521998 | RJ: 385820 | PR: 380639 | RS: 256895 | CE: 197156 | SC: 187571 | PE: 176695 | BA: 176306 | GO: 137685,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Representa o local de notificação, não necessariamente o contexto de
+out_trat,Outro tratamento para COVID-19,tratamentos,True,object,texto_livre,excluir_modelagem,Populacao geral,Exploracao de texto,alto_tratamento,4666910,2794,4664116,0.059868,99.940132,555,None: 4664116 | AZITROMICINA: 352 | REMDESIVIR: 306 | CEFTRIAXONA: 221 | RENDESIVIR: 220 | VEKLURY: 107 | RENDESEVIR: 91 | OSELTAMIVIR: 86 | AMPICILINA: 81 | ROCEFIN: 69,4666910,2794,0.059868,0.0,0.251019,0.251019,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,excluir_modelagem,"Campo textual de tratamento com baixa cobertura, alta cardinalidade e risco temporal. Preservado somente para auditoria ou exploração."
+sg_uf_not,UF da unidade notificadora,geografia_notificacao,True,object,categorica,exploracao_eda,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4656289,10621,99.772419,0.227581,27,SP: 1306611 | MG: 521998 | RJ: 385820 | PR: 380639 | RS: 256895 | CE: 197156 | SC: 187571 | PE: 176695 | BA: 176306 | GO: 137685,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Representa o local de notificação, não necessariamente o contexto de
 residência. Será utilizada inicialmente em EDA e auditoria territorial."
-co_regiona,Regional de saude da notificacao,geografia_notificacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4091580,575330,87.672143,12.327857,312,nan: 575330 | 1331: 412862 | 1449: 210422 | 1342: 148214 | 1356: 141721 | 1497: 128910 | 1519: 112066 | 1380: 94014 | 1332: 84036 | 1354: 74126,4666910,4091580,87.672143,86.305237,89.986329,3.681091,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mun_not,Municipio da notificacao,geografia_notificacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4656289,10621,99.772419,0.227581,3661,355030: 412862 | 330455: 175160 | 310620: 149102 | 530010: 121098 | 230440: 111904 | 261160: 105038 | 410690: 102808 | 292740: 80258 | 350950: 72942 | 520870: 59831,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_pais,Pais de residencia,geografia_residencia,True,str,categorica_alta_cardinalidade,derivar_atributo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666906,4,99.999914,8.6e-05,57,1: 4666022 | 126: 448 | 68: 149 | 138: 55 | 32: 33 | 45: 26 | 7: 19 | 199: 17 | 107: 14 | 41: 12,4666910,4666906,99.999914,99.99369,100.0,0.00631,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar o código do Brasil antes de derivar residente_brasil.,,
-sg_uf,UF de residencia,geografia_residencia,True,str,categorica,modelo_b_ampliado,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4666026,884,99.981058,0.018942,27,SP: 1301367 | MG: 524022 | RJ: 386412 | PR: 379585 | RS: 257423 | CE: 196933 | SC: 187448 | BA: 177563 | PE: 175844 | GO: 151110,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_b_ampliado,"UF de residência será a representação geográfica inicial por equilibrar
+co_regiona,Regional de saude da notificacao,geografia_notificacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4091580,575330,87.672143,12.327857,312,None: 575330 | 1331: 412862 | 1449: 210422 | 1342: 148214 | 1356: 141721 | 1497: 128910 | 1519: 112066 | 1380: 94014 | 1332: 84036 | 1354: 74126,4666910,4091580,87.672143,86.305237,89.986329,3.681091,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mun_not,Municipio da notificacao,geografia_notificacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4656289,10621,99.772419,0.227581,3661,355030: 412862 | 330455: 175160 | 310620: 149102 | 530010: 121098 | 230440: 111904 | 261160: 105038 | 410690: 102808 | 292740: 80258 | 350950: 72942 | 520870: 59831,4666910,4656289,99.772419,99.835373,99.999605,0.164232,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_pais,Pais de residencia,geografia_residencia,True,object,categorica_alta_cardinalidade,derivar_atributo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,4666906,4,99.999914,8.6e-05,57,1: 4666022 | 126: 448 | 68: 149 | 138: 55 | 32: 33 | 45: 26 | 7: 19 | 199: 17 | 107: 14 | 41: 12,4666910,4666906,99.999914,99.99369,100.0,0.00631,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar o código do Brasil antes de derivar residente_brasil.,,
+sg_uf,UF de residencia,geografia_residencia,True,object,categorica,modelo_b_ampliado,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4666026,884,99.981058,0.018942,27,SP: 1301367 | MG: 524022 | RJ: 386412 | PR: 379585 | RS: 257423 | CE: 196933 | SC: 187448 | BA: 177563 | PE: 175844 | GO: 151110,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,modelo_b_ampliado,"UF de residência será a representação geográfica inicial por equilibrar
 contexto territorial, cardinalidade, eficiência e interpretabilidade."
-co_rg_resi,Regional de saude de residencia,geografia_residencia,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4121105,545805,88.304788,11.695212,320,nan: 545805 | 1331: 365944 | 1449: 200737 | 1342: 148381 | 1356: 132082 | 1497: 110282 | 1519: 86834 | 1333: 85283 | 1380: 82689 | 1332: 81679,4666910,4121105,88.304788,86.673696,91.202019,4.528323,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mun_res,Municipio de residencia,geografia_residencia,True,str,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4666026,884,99.981058,0.018942,5604,355030: 365944 | 330455: 157048 | 310620: 106643 | 230440: 84242 | 410690: 74571 | 292740: 60049 | 350950: 59262 | 261160: 54010 | 351880: 50275 | 130260: 48958,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,decidir_depois_do_modelo_principal,"Município de residência será preservado na coorte e na EDA. Depois do
+co_rg_resi,Regional de saude de residencia,geografia_residencia,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,4121105,545805,88.304788,11.695212,320,None: 545805 | 1331: 365944 | 1449: 200737 | 1342: 148381 | 1356: 132082 | 1497: 110282 | 1519: 86834 | 1333: 85283 | 1380: 82689 | 1332: 81679,4666910,4121105,88.304788,86.673696,91.202019,4.528323,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mun_res,Municipio de residencia,geografia_residencia,True,object,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4666026,884,99.981058,0.018942,5604,355030: 365944 | 330455: 157048 | 310620: 106643 | 230440: 84242 | 410690: 74571 | 292740: 60049 | 350950: 59262 | 261160: 54010 | 351880: 50275 | 130260: 48958,4666910,4666026,99.981058,99.928489,99.990988,0.062499,"2019,2020,2021,2022,2023,2024,2025,2026",,decidir_depois_do_modelo_principal,"Município de residência será preservado na coorte e na EDA. Depois do
 modelo principal, será avaliado se a granularidade municipal acrescenta
 valor suficiente para justificar sua alta cardinalidade."
-sg_uf_inte,UF de internacao,geografia_internacao,True,str,categorica,derivar_atributo,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4152803,514107,88.983996,11.016004,27,SP: 1155790 | nan: 514107 | MG: 483408 | PR: 364385 | RJ: 336527 | RS: 238915 | SC: 170997 | CE: 161673 | BA: 153517 | PE: 147272,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_rg_inte,Regional de saude de internacao,geografia_internacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,3656505,1010405,78.349593,21.650407,312,nan: 1010405 | 1331: 365038 | 1449: 197528 | 1342: 138169 | 1356: 135657 | 1497: 106905 | 1519: 89888 | 1380: 83825 | 1354: 72666 | 1332: 71402,4666910,3656505,78.349593,81.691325,86.213061,4.521736,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-co_mu_inte,Municipio de internacao,geografia_internacao,True,str,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4152803,514107,88.983996,11.016004,3028,nan: 514107 | 355030: 365038 | 330455: 153675 | 310620: 148836 | 530010: 110860 | 410690: 102368 | 230440: 89768 | 261160: 86657 | 292740: 72435 | 350950: 70855,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-vacina,Recebeu vacina contra influenza?,vacinacao_influenza,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3472523,1194387,74.407327,25.592673,3,2: 1613042 | 9: 1308435 | nan: 1194387 | 1: 551046,4666910,3472523,74.407327,55.814522,95.708475,39.893952,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dt_ut_dose,Data da ultima dose contra influenza,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Registros vacinados contra influenza,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,390041,4276869,8.357586,91.642414,3072,nan: 4276869 | 2020-04-01: 9854 | 2020-04-15: 6336 | 2020-04-20: 5450 | 2020-03-23: 5446 | 2020-04-10: 4873 | 2020-03-30: 4544 | 2020-04-30: 3865 | 2020-03-01: 3744 | 2020-05-20: 3474,551046,385069,69.879647,3.490166,26.965997,23.475831,"2019,2020,2021,2022,2023,2024,2025,2026",Usar somente doses anteriores ou iguais a internacao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-mae_vac,Mae vacinada contra influenza?,vacinacao_influenza,True,str,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,104358,4562552,2.236126,97.763874,3,nan: 4562552 | 9: 57960 | 2: 34825 | 1: 11573,4666910,104358,2.236126,0.757728,12.714271,11.956542,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-dt_vac_mae,Data da vacinacao materna,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,5645,4661265,0.120958,99.879042,1767,nan: 4661265 | 2019-04-15: 81 | 2019-04-16: 81 | 2019-04-10: 61 | 2019-05-15: 59 | 2018-05-15: 34 | 2019-05-10: 32 | 2020-05-20: 29 | 2019-04-30: 29 | 2019-05-20: 29,4666910,5645,0.120958,0.032823,2.288358,2.255536,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-m_amamenta,Mae amamenta a crianca?,vacinacao_influenza,True,str,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,93755,4573155,2.008931,97.991069,3,nan: 4573155 | 1: 40310 | 9: 33647 | 2: 19798,4666910,93755,2.008931,0.566717,11.397623,10.830906,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-dt_doseuni,Data da dose unica infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,17601,4649309,0.377145,99.622855,1561,nan: 4649309 | 2026-03-28: 617 | 2026-04-10: 213 | 2025-05-10: 186 | 2026-03-30: 181 | 2026-04-09: 181 | 2026-03-31: 179 | 2026-04-17: 175 | 2026-04-11: 171 | 2026-04-06: 170,4666910,17601,0.377145,0.005672,4.04157,4.035899,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dt_1_dose,Data da primeira dose infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,18626,4648284,0.399108,99.600892,1820,nan: 4648284 | 2026-03-28: 278 | 2026-04-10: 192 | 2026-04-06: 179 | 2026-04-14: 179 | 2026-04-13: 175 | 2026-03-30: 171 | 2026-04-08: 159 | 2026-04-09: 155 | 2026-04-07: 148,4666910,18626,0.399108,0.005068,4.445015,4.439946,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dt_2_dose,Data da segunda dose infantil,vacinacao_influenza,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,10895,4656015,0.233452,99.766548,1732,nan: 4656015 | 2026-05-18: 63 | 2026-05-13: 60 | 2026-05-11: 58 | 2026-05-06: 57 | 2026-05-07: 53 | 2026-05-15: 53 | 2026-05-22: 53 | 2026-05-28: 51 | 2026-05-04: 50,4666910,10895,0.233452,0.004042,2.218231,2.214188,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,True,str,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3135685,1531225,67.189747,32.810253,3,nan: 1531225 | 2: 1411179 | 1: 1353811 | 9: 370695,4666910,3135685,67.189747,1.314544,99.992396,98.677852,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-dose_1_cov,Data da primeira dose contra COVID-19,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1211162,3455748,25.952118,74.047882,2060,nan: 3455748 | 26/03/2021: 18515 | 25/03/2021: 17614 | 23/03/2021: 17313 | 24/03/2021: 17098 | 03/03/2021: 16796 | 22/09/2021: 16299 | 30/03/2021: 16057 | 19/03/2021: 15419 | 01/03/2021: 15047,4666910,1211162,25.952118,0.105164,56.994227,56.889064,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_2_cov,Data da segunda dose contra COVID-19,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1024809,3642101,21.959048,78.040952,1960,nan: 3642101 | 04/06/2021: 19758 | 20/04/2021: 14797 | 22/04/2021: 13998 | 16/04/2021: 13642 | 19/04/2021: 13610 | 23/04/2021: 11904 | 09/04/2021: 11442 | 26/04/2021: 11204 | 05/04/2021: 11102,4666910,1024809,21.959048,0.075718,53.258787,53.18307,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_ref,Data da dose de reforco,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,473540,4193370,10.146757,89.853243,1205,nan: 4193370 | 27/10/2021: 4506 | 14/10/2021: 4429 | 28/10/2021: 4349 | 18/11/2021: 4344 | 26/10/2021: 4274 | 15/10/2021: 4215 | 20/10/2021: 4170 | 19/10/2021: 4060 | 21/10/2021: 4038,4666910,473540,10.146757,0.025239,30.313433,30.288194,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_2ref,Data da segunda dose de reforco,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,195149,4471761,4.181546,95.818454,757,nan: 4471761 | 05/04/2022: 3471 | 06/04/2022: 3340 | 07/04/2022: 3127 | 12/04/2022: 2919 | 19/04/2022: 2861 | 08/04/2022: 2844 | 13/04/2022: 2837 | 11/04/2022: 2815 | 20/04/2022: 2611,4666910,195149,4.181546,0.010516,17.575121,17.564605,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dose_adic,Data da dose adicional,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,21152,4645758,0.453234,99.546766,773,nan: 4645758 | 29/09/2021: 197 | 30/09/2021: 175 | 05/04/2022: 172 | 08/10/2021: 168 | 07/10/2021: 165 | 06/04/2022: 163 | 08/04/2022: 160 | 11/04/2022: 156 | 07/04/2022: 155,4666910,21152,0.453234,0.004207,1.935927,1.93172,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-dos_re_bi,Data do reforco bivalente,vacinacao_covid,True,str,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,110916,4555994,2.376648,97.623352,773,nan: 4555994 | 07/03/2023: 2749 | 01/03/2023: 2626 | 28/02/2023: 2511 | 08/03/2023: 2425 | 02/03/2023: 2407 | 06/03/2023: 2384 | 09/03/2023: 2229 | 03/03/2023: 2163 | 10/03/2023: 2054,4666910,110916,2.376648,0.00631,10.833418,10.827108,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
-pac_cocbo,Codigo da ocupacao,demografia_contexto_social,True,str,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Agrupar ocupacoes; evitar codigo bruto no piloto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,nan: 4583721 | XXX: 11805 | 622020: 6046 | 621005: 3680 | 141410: 2529 | 715210: 2447 | 512105: 2125 | 231205: 1634 | 782305: 1477 | 322205: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar agrupamento por grandes grupos da CBO depois do modelo principal. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-pac_dscbo,Descricao da ocupacao,demografia_contexto_social,True,str,texto_livre,apoio_interpretacao,Populacao geral,Usar para apoiar agrupamento; nao usar texto bruto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,nan: 4583721 | NAO INFORMADO: 11805 | TRABALHADOR VOLANTE DA AGRICULTURA: 6046 | TRABALHADOR AGROPECUARIO EM GERAL: 3680 | COMERCIANTE VAREJISTA: 2529 | PEDREIRO: 2447 | EMPREGADO  DOMESTICO  NOS SERVICOS GERAIS: 2125 | PROFESSOR DA  EDUCACAO DE JOVENS E ADULTOS DO ENSINO FUNDAMENTAL (PRIMEIRA A QUARTA SERIE): 1634 | MOTORISTA DE CARRO DE PASSEIO: 1477 | TECNICO DE ENFERMAGEM: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Utilizar inicialmente somente para apoiar a interpretação da CBO. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-pov_ct,Pertence a povo ou comunidade tradicional?,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3600642,1066268,77.152591,22.847409,2,2: 3588126 | nan: 1066268 | 1: 12516,4666910,3600642,77.152591,1.716269,100.0,98.283731,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar inclusão no Modelo B depois da EDA descritiva do campo. | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-tp_pov_ct,Povo ou comunidade tradicional,demografia_contexto_social,True,str,categorica_alta_cardinalidade,exploracao_subgrupo,Registros pertencentes a povo ou comunidade tradicional,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,12557,4654353,0.269065,99.730935,46,nan: 4654353 | POVOS INDIGENAS: 6189 | OUTROS: 4254 | RIBEIRINHOS: 440 | POVOS QUILOMBOLAS: 317 | MIGRANTES: 278 | ACAMPADA: 205 | TRABALHADORES RURAIS ASSALARIADOS: 193 | ASSENTADA: 134 | APATRIDAS: 94,12516,12516,100.0,0.0,0.782653,0.782653,"2019,2020,2021,2022,2023,2024,2025,2026",Manter inicialmente em EDA e subgrupos. | Confirmar se pov_ct = 1 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
-estrang,Paciente estrangeiro?,demografia_contexto_social,True,str,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2913734,1753176,62.433902,37.566098,2,2: 2892463 | nan: 1753176 | 1: 21271,4666910,2913734,62.433902,0.471133,95.868617,95.397484,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
-antiviral,Usou antiviral contra influenza?,tratamentos,True,str,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,3890102,776808,83.354982,16.645018,3,2: 2931268 | nan: 776808 | 9: 565275 | 1: 393559,4666910,3890102,83.354982,82.613363,98.870544,16.25718,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+sg_uf_inte,UF de internacao,geografia_internacao,True,object,categorica,derivar_atributo,Populacao geral,Categorica; comparar modelo com e sem geografia,baixo,4666910,4152803,514107,88.983996,11.016004,27,SP: 1155790 | None: 514107 | MG: 483408 | PR: 364385 | RJ: 336527 | RS: 238915 | SC: 170997 | CE: 161673 | BA: 153517 | PE: 147272,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_rg_inte,Regional de saude de internacao,geografia_internacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Avaliar uso agregado por regional,baixo,4666910,3656505,1010405,78.349593,21.650407,312,None: 1010405 | 1331: 365038 | 1449: 197528 | 1342: 138169 | 1356: 135657 | 1497: 106905 | 1519: 89888 | 1380: 83825 | 1354: 72666 | 1332: 71402,4666910,3656505,78.349593,81.691325,86.213061,4.521736,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+co_mu_inte,Municipio de internacao,geografia_internacao,True,object,codigo_identificador,exploracao_eda,Populacao geral,Alta cardinalidade; usar na EDA ou agregar,baixo,4666910,4152803,514107,88.983996,11.016004,3028,None: 514107 | 355030: 365038 | 330455: 153675 | 310620: 148836 | 530010: 110860 | 410690: 102368 | 230440: 89768 | 261160: 86657 | 292740: 72435 | 350950: 70855,4666910,4152803,88.983996,91.893479,96.418503,4.525024,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+vacina,Recebeu vacina contra influenza?,vacinacao_influenza,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3472523,1194387,74.407327,25.592673,3,2: 1613042 | 9: 1308435 | None: 1194387 | 1: 551046,4666910,3472523,74.407327,55.814522,95.708475,39.893952,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dt_ut_dose,Data da ultima dose contra influenza,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Registros vacinados contra influenza,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,390041,4276869,8.357586,91.642414,3072,None: 4276869 | 2020-04-01: 9854 | 2020-04-15: 6336 | 2020-04-20: 5450 | 2020-03-23: 5446 | 2020-04-10: 4873 | 2020-03-30: 4544 | 2020-04-30: 3865 | 2020-03-01: 3744 | 2020-05-20: 3474,551046,385069,69.879647,3.490166,26.965997,23.475831,"2019,2020,2021,2022,2023,2024,2025,2026",Usar somente doses anteriores ou iguais a internacao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+mae_vac,Mae vacinada contra influenza?,vacinacao_influenza,True,object,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,104358,4562552,2.236126,97.763874,3,None: 4562552 | 9: 57960 | 2: 34825 | 1: 11573,4666910,104358,2.236126,0.757728,12.714271,11.956542,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+dt_vac_mae,Data da vacinacao materna,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,5645,4661265,0.120958,99.879042,1767,None: 4661265 | 2019-04-16: 81 | 2019-04-15: 81 | 2019-04-10: 61 | 2019-05-15: 59 | 2018-05-15: 34 | 2019-05-10: 32 | 2019-04-30: 29 | 2019-05-20: 29 | 2020-05-20: 29,4666910,5645,0.120958,0.032823,2.288358,2.255536,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+m_amamenta,Mae amamenta a crianca?,vacinacao_influenza,True,object,categorica,modelo_c_sensibilidade,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,93755,4573155,2.008931,97.991069,3,None: 4573155 | 1: 40310 | 9: 33647 | 2: 19798,4666910,93755,2.008931,0.566717,11.397623,10.830906,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+dt_doseuni,Data da dose unica infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,17601,4649309,0.377145,99.622855,1561,None: 4649309 | 2026-03-28: 617 | 2026-04-10: 213 | 2025-05-10: 186 | 2026-04-09: 181 | 2026-03-30: 181 | 2026-03-31: 179 | 2026-04-17: 175 | 2026-04-11: 171 | 2026-04-06: 170,4666910,17601,0.377145,0.005672,4.04157,4.035899,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dt_1_dose,Data da primeira dose infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,18626,4648284,0.399108,99.600892,1820,None: 4648284 | 2026-03-28: 278 | 2026-04-10: 192 | 2026-04-14: 179 | 2026-04-06: 179 | 2026-04-13: 175 | 2026-03-30: 171 | 2026-04-08: 159 | 2026-04-09: 155 | 2026-04-07: 148,4666910,18626,0.399108,0.005068,4.445015,4.439946,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dt_2_dose,Data da segunda dose infantil,vacinacao_influenza,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,10895,4656015,0.233452,99.766548,1732,None: 4656015 | 2026-05-18: 63 | 2026-05-13: 60 | 2026-05-11: 58 | 2026-05-06: 57 | 2026-05-15: 53 | 2026-05-07: 53 | 2026-05-22: 53 | 2026-05-28: 51 | 2026-05-04: 50,4666910,10895,0.233452,0.004042,2.218231,2.214188,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,True,object,categorica,modelo_a_nucleo,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3135685,1531225,67.189747,32.810253,3,None: 1531225 | 2: 1411179 | 1: 1353811 | 9: 370695,4666910,3135685,67.189747,1.314544,99.992396,98.677852,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dose_1_cov,Data da primeira dose contra COVID-19,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1211162,3455748,25.952118,74.047882,2060,None: 3455748 | 26/03/2021: 18515 | 25/03/2021: 17614 | 23/03/2021: 17313 | 24/03/2021: 17098 | 03/03/2021: 16796 | 22/09/2021: 16299 | 30/03/2021: 16057 | 19/03/2021: 15419 | 01/03/2021: 15047,4666910,1211162,25.952118,0.105164,56.994227,56.889064,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_2_cov,Data da segunda dose contra COVID-19,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,1024809,3642101,21.959048,78.040952,1960,None: 3642101 | 04/06/2021: 19758 | 20/04/2021: 14797 | 22/04/2021: 13998 | 16/04/2021: 13642 | 19/04/2021: 13610 | 23/04/2021: 11904 | 09/04/2021: 11442 | 26/04/2021: 11204 | 05/04/2021: 11102,4666910,1024809,21.959048,0.075718,53.258787,53.18307,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_ref,Data da dose de reforco,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,473540,4193370,10.146757,89.853243,1205,None: 4193370 | 27/10/2021: 4506 | 14/10/2021: 4429 | 28/10/2021: 4349 | 18/11/2021: 4344 | 26/10/2021: 4274 | 15/10/2021: 4215 | 20/10/2021: 4170 | 19/10/2021: 4060 | 21/10/2021: 4038,4666910,473540,10.146757,0.025239,30.313433,30.288194,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026 | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_2ref,Data da segunda dose de reforco,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,195149,4471761,4.181546,95.818454,757,None: 4471761 | 05/04/2022: 3471 | 06/04/2022: 3340 | 07/04/2022: 3127 | 12/04/2022: 2919 | 19/04/2022: 2861 | 08/04/2022: 2844 | 13/04/2022: 2837 | 11/04/2022: 2815 | 20/04/2022: 2611,4666910,195149,4.181546,0.010516,17.575121,17.564605,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dose_adic,Data da dose adicional,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,21152,4645758,0.453234,99.546766,773,None: 4645758 | 29/09/2021: 197 | 30/09/2021: 175 | 05/04/2022: 172 | 08/10/2021: 168 | 07/10/2021: 165 | 06/04/2022: 163 | 08/04/2022: 160 | 11/04/2022: 156 | 07/04/2022: 155,4666910,21152,0.453234,0.004207,1.935927,1.93172,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+dos_re_bi,Data do reforco bivalente,vacinacao_covid,True,object,data,modelo_c_sensibilidade,Populacao geral,Converter para data; usar apenas se anterior ou igual a dt_interna; derivar intervalo,validar_data_antes_admissao,4666910,110916,4555994,2.376648,97.623352,773,None: 4555994 | 07/03/2023: 2749 | 01/03/2023: 2626 | 28/02/2023: 2511 | 08/03/2023: 2425 | 02/03/2023: 2407 | 06/03/2023: 2384 | 09/03/2023: 2229 | 03/03/2023: 2163 | 10/03/2023: 2054,4666910,110916,2.376648,0.00631,10.833418,10.827108,"2019,2020,2021,2022,2023,2024,2025,2026",Avaliar apenas no denominador aplicavel ou em sensibilidade | Alta cardinalidade; evitar uso bruto no primeiro piloto,,
+pac_cocbo,Codigo da ocupacao,demografia_contexto_social,True,object,codigo_identificador,reavaliar_apos_modelo_principal,Populacao geral,Agrupar ocupacoes; evitar codigo bruto no piloto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,None: 4583721 | XXX: 11805 | 622020: 6046 | 621005: 3680 | 141410: 2529 | 715210: 2447 | 512105: 2125 | 231205: 1634 | 782305: 1477 | 322205: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Reavaliar agrupamento por grandes grupos da CBO depois do modelo principal. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+pac_dscbo,Descricao da ocupacao,demografia_contexto_social,True,object,texto_livre,apoio_interpretacao,Populacao geral,Usar para apoiar agrupamento; nao usar texto bruto,baixo,4666910,83189,4583721,1.782528,98.217472,1628,None: 4583721 | NAO INFORMADO: 11805 | TRABALHADOR VOLANTE DA AGRICULTURA: 6046 | TRABALHADOR AGROPECUARIO EM GERAL: 3680 | COMERCIANTE VAREJISTA: 2529 | PEDREIRO: 2447 | EMPREGADO  DOMESTICO  NOS SERVICOS GERAIS: 2125 | PROFESSOR DA  EDUCACAO DE JOVENS E ADULTOS DO ENSINO FUNDAMENTAL (PRIMEIRA A QUARTA SERIE): 1634 | MOTORISTA DE CARRO DE PASSEIO: 1477 | TECNICO DE ENFERMAGEM: 1390,4666910,83189,1.782528,0.016826,2.389715,2.372889,"2019,2020,2021,2022,2023,2024,2025,2026",Utilizar inicialmente somente para apoiar a interpretação da CBO. | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+pov_ct,Pertence a povo ou comunidade tradicional?,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,3600642,1066268,77.152591,22.847409,2,2: 3588126 | None: 1066268 | 1: 12516,4666910,3600642,77.152591,1.716269,100.0,98.283731,"2019,2020,2021,2022,2023,2024,2025,2026",Confirmar inclusão no Modelo B depois da EDA descritiva do campo. | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+tp_pov_ct,Povo ou comunidade tradicional,demografia_contexto_social,True,object,categorica_alta_cardinalidade,exploracao_subgrupo,Registros pertencentes a povo ou comunidade tradicional,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,12557,4654353,0.269065,99.730935,46,None: 4654353 | POVOS INDIGENAS: 6189 | OUTROS: 4254 | RIBEIRINHOS: 440 | POVOS QUILOMBOLAS: 317 | MIGRANTES: 278 | ACAMPADA: 205 | TRABALHADORES RURAIS ASSALARIADOS: 193 | ASSENTADA: 134 | APATRIDAS: 94,12516,12516,100.0,0.0,0.782653,0.782653,"2019,2020,2021,2022,2023,2024,2025,2026",Manter inicialmente em EDA e subgrupos. | Confirmar se pov_ct = 1 em todos os anos | Avaliar apenas no denominador aplicavel ou em sensibilidade,,
+estrang,Paciente estrangeiro?,demografia_contexto_social,True,object,categorica,modelo_b_ampliado,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",baixo,4666910,2913734,1753176,62.433902,37.566098,2,2: 2892463 | None: 1753176 | 1: 21271,4666910,2913734,62.433902,0.471133,95.868617,95.397484,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+antiviral,Usou antiviral contra influenza?,tratamentos,True,object,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,3890102,776808,83.354982,16.645018,3,2: 2931268 | None: 776808 | 9: 565275 | 1: 393559,4666910,3890102,83.354982,82.613363,98.870544,16.25718,"2019,2020,2021,2022,2023,2024,2025,2026",,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-tp_antivir,Tipo de antiviral utilizado,tratamentos,True,str,categorica,exploracao_eda,Registros com uso de antiviral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,366885,4300025,7.861412,92.138588,3,nan: 4300025 | 1: 343669 | 3: 20953 | 2: 2263,393559,366875,93.219822,2.359789,61.236723,58.876934,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+tp_antivir,Tipo de antiviral utilizado,tratamentos,True,object,categorica,exploracao_eda,Registros com uso de antiviral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,366885,4300025,7.861412,92.138588,3,None: 4300025 | 1: 343669 | 3: 20953 | 2: 2263,393559,366875,93.219822,2.359789,61.236723,58.876934,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-dt_antivir,Data de inicio do antiviral,tratamentos,True,str,data,exploracao_eda,Registros com uso de antiviral,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,347712,4319198,7.450583,92.549417,2856,nan: 4319198 | 2020-05-05: 1330 | 2020-05-12: 1327 | 2020-04-27: 1320 | 2020-05-04: 1311 | 2020-05-19: 1297 | 2020-05-11: 1291 | 2020-05-18: 1288 | 2020-05-14: 1281 | 2020-05-06: 1273,393559,347702,88.348126,2.031382,61.23462,59.203238,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+dt_antivir,Data de inicio do antiviral,tratamentos,True,object,data,exploracao_eda,Registros com uso de antiviral,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,347712,4319198,7.450583,92.549417,2856,None: 4319198 | 2020-05-05: 1330 | 2020-05-12: 1327 | 2020-04-27: 1320 | 2020-05-04: 1311 | 2020-05-19: 1297 | 2020-05-11: 1291 | 2020-05-18: 1288 | 2020-05-14: 1281 | 2020-05-06: 1273,393559,347702,88.348126,2.031382,61.23462,59.203238,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade | Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-trat_cov,Recebeu tratamento antiviral para COVID-19?,tratamentos,True,str,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,993122,3673788,21.280076,78.719924,3,nan: 3673788 | 2: 856677 | 9: 125321 | 1: 11124,4666910,993122,21.280076,0.201914,83.009723,82.807809,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+trat_cov,Recebeu tratamento antiviral para COVID-19?,tratamentos,True,object,categorica,exploracao_eda,Populacao geral,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,993122,3673788,21.280076,78.719924,3,None: 3673788 | 2: 856677 | 9: 125321 | 1: 11124,4666910,993122,21.280076,0.201914,83.009723,82.807809,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-tipo_trat,Tipo de tratamento para COVID-19,tratamentos,True,str,categorica,exploracao_eda,Registros com tratamento para COVID-19,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,4784,4662126,0.102509,99.897491,3,nan: 4662126 | 3: 3941 | 1: 671 | 2: 172,11124,4784,43.006113,0.0,0.392967,0.392967,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+tipo_trat,Tipo de tratamento para COVID-19,tratamentos,True,object,categorica,exploracao_eda,Registros com tratamento para COVID-19,"Categorica; preservar sim, nao, ignorado e vazio",alto_tratamento,4666910,4784,4662126,0.102509,99.897491,3,None: 4662126 | 3: 3941 | 1: 671 | 2: 172,11124,4784,43.006113,0.0,0.392967,0.392967,"2019,2020,2021,2022,2023,2024,2025,2026",Manter fora do modelo principal ate validar temporalidade | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-dt_trt_cov,Data de inicio do tratamento para COVID-19,tratamentos,True,str,data,exploracao_eda,Registros com tratamento para COVID-19,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,3833,4663077,0.082131,99.917869,1378,nan: 4663077 | 2022-11-23: 22 | 2022-11-25: 17 | 2022-11-15: 17 | 2022-11-29: 17 | 2022-11-21: 17 | 2022-11-14: 16 | 2022-12-01: 16 | 2022-11-22: 16 | 2022-12-13: 15,11124,3833,34.45703,0.0,0.327849,0.327849,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
+dt_trt_cov,Data de inicio do tratamento para COVID-19,tratamentos,True,object,data,exploracao_eda,Registros com tratamento para COVID-19,Converter para data; criar indicador de tratamento ate a admissao,alto_tratamento,4666910,3833,4663077,0.082131,99.917869,1378,None: 4663077 | 2022-11-23: 22 | 2022-11-25: 17 | 2022-11-29: 17 | 2022-11-15: 17 | 2022-11-21: 17 | 2022-11-22: 16 | 2022-12-01: 16 | 2022-11-14: 16 | 2022-11-18: 15,11124,3833,34.45703,0.0,0.327849,0.327849,"2019,2020,2021,2022,2023,2024,2025,2026",Testar somente tratamento iniciado ate a admissao | Avaliar apenas no denominador aplicavel ou em sensibilidade,exploracao_eda,"Fora dos Modelos A e B por risco temporal e por representar decisão
 assistencial. Poderá ser avaliado no Modelo C somente depois do modelo
 principal, se houver tempo, cobertura e temporalidade confiável."
-evolucao,Evolucao do caso,desfecho_auditoria,True,str,categorica,rotulo,Populacao geral,Mapear cura = 0 e obito por SRAG = 1,proibido_como_preditor,4666910,4326559,340351,92.707145,7.292855,4,1: 3200532 | 2: 936008 | nan: 340351 | 9: 103570 | 3: 86449,4666910,4326559,92.707145,87.909978,96.233081,8.323102,"2019,2020,2021,2022,2023,2024,2025,2026",,rotulo,"Alvo principal restrito a evolucao = 1, cura codificada como 0, versus
+evolucao,Evolucao do caso,desfecho_auditoria,True,object,categorica,rotulo,Populacao geral,Mapear cura = 0 e obito por SRAG = 1,proibido_como_preditor,4666910,4326559,340351,92.707145,7.292855,4,1: 3200532 | 2: 936008 | None: 340351 | 9: 103570 | 3: 86449,4666910,4326559,92.707145,87.909978,96.233081,8.323102,"2019,2020,2021,2022,2023,2024,2025,2026",,rotulo,"Alvo principal restrito a evolucao = 1, cura codificada como 0, versus
 evolucao = 2, óbito por SRAG codificado como 1. Evolucao = 3 e demais
 valores ficam fora do alvo principal."
-dt_evoluca,Data da alta ou do obito,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4014740,652170,86.025657,13.974343,2827,nan: 652170 | 2021-03-30: 10021 | 2021-03-29: 9696 | 2021-03-31: 9599 | 2021-03-26: 9552 | 2021-03-25: 9500 | 2021-03-23: 9366 | 2021-04-01: 9308 | 2021-03-24: 9242 | 2021-03-22: 9056,4666910,4014740,86.025657,79.482318,89.567548,10.08523,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_encerra,Data do encerramento do caso,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4338057,328853,92.953517,7.046483,2820,nan: 328853 | 2021-03-30: 11797 | 2021-04-05: 11714 | 2021-04-12: 11422 | 2021-04-19: 11416 | 2021-03-29: 11318 | 2021-03-25: 11008 | 2021-03-31: 10995 | 2021-06-14: 10958 | 2021-04-26: 10883,4666910,4338057,92.953517,87.85438,96.529604,8.675224,"2019,2020,2021,2022,2023,2024,2025,2026",,,
-dt_digita,Data de inclusao do registro no sistema,desfecho_auditoria,True,str,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4650091,16819,99.639612,0.360388,2764,nan: 16819 | 2021-03-29: 14198 | 2021-04-05: 13826 | 2021-04-12: 13479 | 2021-03-22: 13409 | 2021-03-25: 13223 | 2021-04-06: 12827 | 2021-06-14: 12774 | 2021-06-07: 12650 | 2021-04-19: 12637,4666910,4650091,99.639612,65.518982,100.0,34.481018,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
+dt_evoluca,Data da alta ou do obito,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4014740,652170,86.025657,13.974343,2827,None: 652170 | 2021-03-30: 10021 | 2021-03-29: 9696 | 2021-03-31: 9599 | 2021-03-26: 9552 | 2021-03-25: 9500 | 2021-03-23: 9366 | 2021-04-01: 9308 | 2021-03-24: 9242 | 2021-03-22: 9056,4666910,4014740,86.025657,79.482318,89.567548,10.08523,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_encerra,Data do encerramento do caso,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4338057,328853,92.953517,7.046483,2820,None: 328853 | 2021-03-30: 11797 | 2021-04-05: 11714 | 2021-04-12: 11422 | 2021-04-19: 11416 | 2021-03-29: 11318 | 2021-03-25: 11008 | 2021-03-31: 10995 | 2021-06-14: 10958 | 2021-04-26: 10883,4666910,4338057,92.953517,87.85438,96.529604,8.675224,"2019,2020,2021,2022,2023,2024,2025,2026",,,
+dt_digita,Data de inclusao do registro no sistema,desfecho_auditoria,True,object,data,auditoria,Populacao geral,Auditoria; excluir dos preditores,proibido_como_preditor,4666910,4650091,16819,99.639612,0.360388,2764,None: 16819 | 2021-03-29: 14198 | 2021-04-05: 13826 | 2021-04-12: 13479 | 2021-03-22: 13409 | 2021-03-25: 13223 | 2021-04-06: 12827 | 2021-06-14: 12774 | 2021-06-07: 12650 | 2021-04-19: 12637,4666910,4650091,99.639612,65.518982,100.0,34.481018,"2019,2020,2021,2022,2023,2024,2025,2026",Preenchimento varia pelo menos 20 pontos percentuais entre 2019 e 2026,,
 ```
 
 ## `configs/supervised.yaml`
@@ -13120,12 +12977,12 @@ entregáveis do caminho crítico.
 ## `notebooks/00_acesso_dados_parquet.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `18.4 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `8709801612d291d2371b2191fa692608e7fa0e02f0cc99e8122ebb55af99eb53`
+- Size: `17.7 KB` · modified `2026-10-16 23:50 UTC`
+- SHA-256: `d2248a25bb4c88b24a8eb947e6ed4f45565dd3f5e66c92130f8343b98a17eaf0`
 
 - Cells: `12` (`6` code, `6` markdown)
 - Code cells executed: `6` of `6`
-- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -13149,7 +13006,7 @@ Pré-requisitos:
 Deixe **todos os imports** aqui nesta primeira célula. Isso evita avisos do Pylance nas células seguintes (o analisador estático não acompanha a ordem de execução do kernel).
 ```
 
-### Cell 3 [code] · In [7]
+### Cell 3 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -13168,7 +13025,7 @@ print("ROOT_DIR:", ROOT_DIR)
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR: <HOME>\Documents\GitHub\Projeto_Integrador
+ROOT_DIR: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
 ```
 
 ### Cell 4 [markdown]
@@ -13177,7 +13034,7 @@ ROOT_DIR: <HOME>\Documents\GitHub\Projeto_Integrador
 # 1. Diagnóstico rápido (rode isto antes de qualquer coisa)
 ```
 
-### Cell 5 [code] · In [8]
+### Cell 5 [code] · In [2]
 
 ```python
 path = storage.get_parquet(force=False)
@@ -13193,13 +13050,13 @@ with open(path, "rb") as f:
 **Output 1 (stream:stdout)**
 
 ```text
-Arquivo: <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Arquivo: <REPO>\data\processed\dados-v2\srag.parquet
 Existe: True
 Tamanho: 303573013 bytes
 Primeiros 20 bytes: b'PAR1\x15\x04\x15\x80\x98\x80\x01\x15\x94\xad\x10L\x15\x80\x83\x10'
 ```
 
-### Cell 6 [code] · In [9]
+### Cell 6 [code] · In [3]
 
 ```python
 import pyarrow.parquet as pq
@@ -13417,7 +13274,7 @@ reinf: string
 Verifica se o Parquet é baixado/aberto corretamente.
 ```
 
-### Cell 8 [code] · In [10]
+### Cell 8 [code] · In [4]
 
 ```python
 df = storage.read_srag(columns=["sg_uf"])
@@ -13449,7 +13306,7 @@ shape: (4666910, 1)
 ## 3. Coluna categórica — municípios únicos
 ```
 
-### Cell 10 [code] · In [11]
+### Cell 10 [code] · In [5]
 
 ```python
 storage.read_srag(columns=["id_municip"]).drop_duplicates().head(20)
@@ -13490,7 +13347,7 @@ storage.read_srag(columns=["id_municip"]).drop_duplicates().head(20)
 Só as colunas necessárias e apenas linhas de SP.
 ```
 
-### Cell 12 [code] · In [12]
+### Cell 12 [code] · In [6]
 
 ```python
 df_sp = storage.read_srag(
@@ -13512,7 +13369,7 @@ shape: (1301367, 3)
 
 ```text
    dt_notific sg_uf evolucao
-0  2026-06-17    SP     None
+0  2026-06-17    SP      NaN
 1  2026-05-13    SP        1
 2  2026-08-25    SP        2
 3  2026-06-20    SP        1
@@ -13523,12 +13380,12 @@ shape: (1301367, 3)
 ## `notebooks/01_extracao.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `14.8 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `3858b9d342a7d04d37e80ca937f7ab8f61c48cd33bf06bea5057e50a1db2a975`
+- Size: `14.4 KB` · modified `2026-10-17 00:21 UTC`
+- SHA-256: `1495600651b65cf8aabb1ea26b3691b91321552beca4c077d6ad750c81294dd2`
 
 - Cells: `11` (`5` code, `6` markdown)
 - Code cells executed: `5` of `5`
-- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -13570,7 +13427,7 @@ Aproveita `src.utils.env` para:
 - garantir que `data/raw`, `data/processed`, `data/treino` e `reports/figures` existam.
 ```
 
-### Cell 3 [code] · In [1]
+### Cell 3 [code] · In [6]
 
 ```python
 from pathlib import Path
@@ -13608,11 +13465,11 @@ print(env.resumo())
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR: <HOME>\Documents\GitHub\Projeto_Integrador
-ROOT_DIR         = <HOME>\Documents\GitHub\Projeto_Integrador
-ENV              = local
-.env encontrado? = False
-GITHUB_TOKEN?    = False
+ROOT_DIR: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+ROOT_DIR          = <REPO>
+ENV               = local
+.env encontrado?  = False
+GITHUB_TOKEN?     = False
 ```
 
 ### Cell 4 [markdown]
@@ -13631,7 +13488,7 @@ override via variável de ambiente `SRAG_PARQUET_URL` — útil para apontar
 para uma release alternativa sem tocar no código.
 ```
 
-### Cell 5 [code] · In [2]
+### Cell 5 [code] · In [7]
 
 ```python
 print(f"Repositório:  {C.GITHUB_REPO}")
@@ -13661,7 +13518,7 @@ sidecar `.sha256`.
 Se o arquivo já existir localmente, ele é **reutilizado** — não baixa de novo.
 ```
 
-### Cell 7 [code] · In [3]
+### Cell 7 [code] · In [8]
 
 ```python
 parquet_path = get_parquet()
@@ -13674,7 +13531,7 @@ print(f"Tamanho:    {parquet_path.stat().st_size / 1024**2:.2f} MB")
 
 ```text
 
-Parquet em: <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Parquet em: <REPO>\data\processed\dados-v2\srag.parquet
 Tamanho:    289.51 MB
 ```
 
@@ -13688,7 +13545,7 @@ As checagens mais profundas de schema e conteúdo ficam nos notebooks
 de preparação da coorte.
 ```
 
-### Cell 9 [code] · In [4]
+### Cell 9 [code] · In [9]
 
 ```python
 df = pd.read_parquet(parquet_path)
@@ -13727,11 +13584,11 @@ Colunas:   198
 4  31773493207022  2026-03-14      11  2026-03-09      11        SE  ...   
 
   vg_oms vg_omsout vg_lin vg_met vg_metout vg_dtres vg_enc vg_reinf vg_codest  \
-0   None      None   None   None      None     None   None     None      None   
-1   None      None   None   None      None     None   None     None      None   
-2   None      None   None   None      None     None   None     None      None   
-3   None      None   None   None      None     None   None     None      None   
-4   None      None   None   None      None     None   None     None      None   
+0    NaN       NaN    NaN    NaN       NaN      NaN    NaN      NaN       NaN   
+1    NaN       NaN    NaN    NaN       NaN      NaN    NaN      NaN       NaN   
+2    NaN       NaN    NaN    NaN       NaN      NaN    NaN      NaN       NaN   
+3    NaN       NaN    NaN    NaN       NaN      NaN    NaN      NaN       NaN   
+4    NaN       NaN    NaN    NaN       NaN      NaN    NaN      NaN       NaN   
 
   reinf  
 0     2  
@@ -13750,7 +13607,7 @@ Colunas:   198
 ## 5. Resumo da ingestão
 ```
 
-### Cell 11 [code] · In [5]
+### Cell 11 [code] · In [10]
 
 ```python
 print(f"Parquet:   {parquet_path}")
@@ -13762,21 +13619,3806 @@ print(f"Tamanho:   {parquet_path.stat().st_size / 1024**2:.2f} MB")
 **Output 1 (stream:stdout)**
 
 ```text
-Parquet:   <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Parquet:   <REPO>\data\processed\dados-v2\srag.parquet
 Registros: 4,666,910
 Colunas:   198
 Tamanho:   289.51 MB
 ```
 
-## `notebooks/02_eda/01_eda_primeira_passagem.ipynb`
+## `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `206.2 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `37be27c82ba59850b6fb2131c9f542e1467289259071bcdb61054e61f2f35895`
+- Size: `12.1 KB` · modified `2026-10-17 12:26 UTC`
+- SHA-256: `15e1189398edfe66f53243f73e32b5860d43ef9be6bc8c158dbde7f01a936ea4`
+
+- Cells: `15` (`7` code, `8` markdown)
+- Code cells executed: `0` of `7`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.-1`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
+
+**Pessoa (apoio ao A3).** Experimento **comparativo**: o projeto usa validação temporal como padrão; aqui medimos o que muda com um **split aleatório estratificado 70/15/15** e quando **2020 e 2021** (anos de pandemia) saem da base.
+
+| Cenário | Anos (de `DT_INTERNA`) | Split |
+|---|---|---|
+| `todos_2019_2025` | 2019–2025 | aleatório 70/15/15, estratificado pelo alvo, seed 42 |
+| `sem_2020_2021` | 2019, 2022–2025 | idem |
+
+**Saídas** (em `data/analytical/`, `outputs/tables/pessoa/` e `outputs/figures/pessoa/`):
+- `dataset_supervisionado_<cenário>.parquet` com a coluna **`split`** (`treino` / `validacao` / `holdout`) e `.meta.json` (versão, SHA-256, contagens).
+- Tabelas de proporções, prevalência e anos por split; waterfall por cenário.
+- **Gráficos (PNG)**: proporções 70/15/15, prevalência de óbito por split e composição dos splits por ano (`split_<cenário>.png`); comparação dos cenários (`split_comparacao_cenarios.png`).
+- Benchmark rápido (regressão logística, treino → **validação**): split aleatório × temporal por ordem.
+
+> O **holdout não é aberto** aqui (regra do projeto). O benchmark usa só treino e validação.
+> Os dois datasets **não substituem** `dataset_supervisionado.parquet` (o do pipeline temporal do C2).
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
+COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+CENARIOS = None                     # None = usa configs/decisoes.yaml -> experimentos_split.cenarios
+                                    # ou informe, ex.: {"todos_2019_2025": [2019, 2020, 2021, 2022, 2023, 2024, 2025]}
+RODAR_BENCHMARK = True              # regressão logística treino -> validação (aleatório x temporal)
+FIG_DIR = "outputs/figures/pessoa"  # onde salvar os gráficos (PNG)
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A3b")
+df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
+print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Cenários
+Os anos vêm do `configs/decisoes.yaml` (`experimentos_split.cenarios`); a seed e as frações também.
+```
+
+### Cell 4 [code] · In [ ]
+
+```python
+e = cfg["experimentos_split"]
+CENARIOS = CENARIOS or {nome: spec["anos"] for nome, spec in e["cenarios"].items()}
+print("Seed:", e["seed"], "| frações:", e["fracoes"], "| estratificado pelo alvo:", e["estratificar_por_alvo"])
+for nome, anos in CENARIOS.items():
+    print(f"  {nome}: {anos}")
+anos_na_base = sorted(v.parse_date(df[cfg["cols"]["dt_interna"]]).dt.year.dropna().astype(int).unique())
+print("Anos de DT_INTERNA presentes na base carregada:", anos_na_base)
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## 2. Coorte, dataset e checagens por cenário
+Waterfall do cenário → dataset com `split` → proporções 70/15/15, estratificação do alvo, anos em cada split, `NU_NOTIFIC` repetido entre splits e contrato do C2.
+```
+
+### Cell 6 [code] · In [ ]
+
+```python
+metas = {}
+for nome, anos in CENARIOS.items():
+    print(f"\n===== {nome}: {anos} =====")
+    metas[nome] = v.a3_split_aleatorio_cenario(df, cfg, rep, nome, anos, SUPERVISED_CONFIG)
+    v.validar_contrato_c2(metas[nome]["arquivo"], SUPERVISED_CONFIG, rep)
+    display(pd.read_csv(Path(OUT) / f"a1_waterfall_{nome}.csv"))
+    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}.csv"))
+    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}_por_ano.csv"))
+    # (a) % de linhas x meta 70/15/15 | (b) prevalência de óbito por split | (c) composição dos splits em cada ano
+    print("Figura:", v.grafico_split_cenario(rep, cfg, nome, anos, FIG_DIR, mostrar=True))
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## 3. Benchmark: split aleatório × temporal (treino → validação)
+Regressão logística balanceada, mesmas features do `supervised.yaml`. Se o aleatório der PR-AUC maior que o temporal, ele está **otimista** (registros do mesmo período nos dois lados): a decisão deve seguir o temporal.
+```
+
+### Cell 8 [code] · In [ ]
+
+```python
+benchs = {}
+if RODAR_BENCHMARK:
+    for nome in CENARIOS:
+        benchs[nome] = v.a3_benchmark_split(metas[nome]["arquivo"], SUPERVISED_CONFIG, cfg, rep, nome,
+                                            max_rows=e["bench_max_linhas"], seed=e["seed"])
+        display(benchs[nome])
+else:
+    print("Benchmark desligado (RODAR_BENCHMARK = False).")
+```
+
+### Cell 9 [markdown]
+
+```markdown
+## 4. Comparação entre os cenários
+```
+
+### Cell 10 [code] · In [ ]
+
+```python
+comp = v.comparar_cenarios(metas, benchs, rep)
+display(comp)
+# N por ano (empilhado por split) nos dois cenários + prevalência de óbito por split
+print("Figura:", v.grafico_comparacao_cenarios(rep, cfg, list(CENARIOS), FIG_DIR, mostrar=True))
+```
+
+### Cell 11 [markdown]
+
+```markdown
+## 5. Decisões
+```
+
+### Cell 12 [code] · In [ ]
+
+```python
+E = "A3b"
+v.log_decision(OUT, "D-13", "Experimento split aleatório 70/15/15 (2019–2025)",
+               f"Split aleatório estratificado pelo alvo, seed {e['seed']}; dataset_supervisionado_todos_2019_2025", E,
+               impacto="Comparativo; o padrão do projeto segue a validação temporal (README)",
+               evidencia="a3_benchmark_split_*.csv")
+v.log_decision(OUT, "D-14", "Cenário sem 2020 e 2021",
+               "Mesma análise removendo 2020–2021 (pandemia); dataset_supervisionado_sem_2020_2021", E,
+               impacto="Compara N, prevalência e desempenho com a base completa (comparacao_cenarios.csv)")
+display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## 6. Fechamento
+```
+
+### Cell 14 [code] · In [ ]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+### Cell 15 [markdown]
+
+````markdown
+### Como o C pode usar a coluna `split`
+O C2 atual divide por frações no tempo (`TemporalSplit`). Para usar o split aleatório, basta ler o dataset do cenário e filtrar pela coluna:
+
+```python
+df = pd.read_parquet(C.ANALYTICAL_DIR / "dataset_supervisionado_todos_2019_2025.parquet")
+treino, validacao, holdout = (df[df["split"] == s] for s in ("treino", "validacao", "holdout"))
+```
+
+### Checklist
+- [ ] Proporções 70/15/15 e prevalência de óbito iguais entre os splits (estratificação)
+- [ ] Comparação aleatório × temporal interpretada (otimismo do aleatório)
+- [ ] Comparação com e sem 2020–2021 registrada (N, prevalência, desempenho)
+- [ ] Holdout **não** aberto
+````
+
+## `notebooks/A/A_03_coorte_protocolo.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `13.0 KB` · modified `2026-10-17 14:28 UTC`
+- SHA-256: `7e266def0d7bd68c354e347d66ba5c05d9d5ffc9573dc458288d2a9ac4c89b2a`
+
+- Cells: `20` (`9` code, `11` markdown)
+- Code cells executed: `0` of `9`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A1 | 07–08/10 — Fechar códigos, protocolo e coorte
+
+**Pessoa A.** Converter a pergunta de pesquisa em regras de inclusão, exclusão e desfecho.
+
+**Saída até 08/10:** config de decisões v0.1 (`configs/decisoes.yaml`), tabela de códigos, coorte provisória e waterfall.
+**Revisão:** B confere categorias e gráficos; C implementa e testa as regras.
+
+| Passo do plano | Onde está neste notebook |
+|---|---|
+| 1–3. Fichas/dicionários, pesquisar HOSPITAL, DT_INTERNA, EVOLUCAO, TP_IDADE e códigos; registrar tabela | Seção 1 (manual) + seção 2 |
+| 4. Ponto de previsão em DT_INTERNA e campos posteriores | Seção 3 |
+| 5–6. Coorte estrita, alvo e categorias separadas | Seções 4 e 6 |
+| 7–9. N antes/depois, amostras das exclusões, waterfall | Seções 4 e 5 |
+| 10. Atualizar tabela de decisões | Seção 7 |
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
+COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # features/alvo/coluna_tempo definidos pelo C
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A1")
+df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
+print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Fichas e dicionários (manual)
+Busque exatamente por: *"SIVEP-Gripe dicionário de dados HOSPITAL EVOLUCAO DT_INTERNA"*, *"SIVEP-Gripe ficha de investigação SRAG hospitalização evolução"*, *"STROBE cohort flow diagram observational study"*.
+Para cada campo (HOSPITAL, DT_INTERNA, EVOLUCAO, TP_IDADE, sim/não/ignorado) registre: definição, código, ano, regra de salto, tratamento e evidência — na tabela de decisões (seção 7).
+
+- [ ] Fichas/dicionários dos anos usados localizados
+- [ ] Códigos de HOSPITAL, EVOLUCAO, TP_IDADE confirmados por ano
+```
+
+### Cell 4 [markdown]
+
+```markdown
+## 2. Colunas essenciais e tabela de códigos
+```
+
+### Cell 5 [code] · In [ ]
+
+```python
+v.a1_columns(df, cfg, rep)
+v.a1_code_tables(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a1_tabela_codigos.csv").head(40))
+```
+
+### Cell 6 [markdown]
+
+```markdown
+## 3. Ponto de previsão e campos posteriores
+O ponto de previsão proposto é a **internação** (`DT_INTERNA`). Tudo o que só existe depois dela é candidato a vazamento.
+```
+
+### Cell 7 [code] · In [ ]
+
+```python
+print("Ponto de previsão:", cfg["cols"]["dt_interna"])
+posteriores = [c for c in cfg["forbidden_vars"] if v.canon(c) in df.columns]
+print("Campos potencialmente posteriores presentes na base:")
+print(posteriores)
+```
+
+### Cell 8 [markdown]
+
+```markdown
+## 4. Coorte estrita — waterfall
+Filtros em sequência: hospitalização confirmada → data válida → período → evolução encerrada → alvo binário.
+```
+
+### Cell 9 [code] · In [ ]
+
+```python
+wf = v.a1_waterfall(df, cfg, rep)
+display(wf)
+```
+
+### Cell 10 [markdown]
+
+```markdown
+## 5. Inspeção das exclusões
+Confirme que cada filtro se comporta como a regra escrita (as amostras vêm de `a1_amostra_exclusoes_NN.csv`).
+```
+
+### Cell 11 [code] · In [ ]
+
+```python
+for f in sorted(Path(OUT).glob("a1_amostra_exclusoes_*.csv")):
+    print("\n==", f.name)
+    display(pd.read_csv(f).head(5))
+```
+
+### Cell 12 [markdown]
+
+```markdown
+## 6. Alvo e categorias separadas
+`EVOLUCAO=2` → óbito (1); `EVOLUCAO=1` → cura (0). **Óbito por outras causas (3) fica separado e evolução desconhecida (9/ausente) nunca vira cura.**
+```
+
+### Cell 13 [code] · In [ ]
+
+```python
+v.a1_target(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a1_alvo_por_ano.csv").head(40))
+```
+
+### Cell 14 [markdown]
+
+```markdown
+## 7. Tabela de decisões
+Ajuste o texto, o `status` (`proposta` → `aprovada`) e o impacto após conferir no dicionário. A mesma tabela alimenta B e C.
+```
+
+### Cell 15 [code] · In [ ]
+
+```python
+E = "A1"
+v.log_decision(OUT, "D-01", "Ponto de previsão", "DT_INTERNA (admissão); campos posteriores bloqueados", E,
+               impacto="Define quais variáveis podem entrar", evidencia="Dicionário SIVEP-Gripe (completar)")
+v.log_decision(OUT, "D-02", "Coorte estrita", "HOSPITAL=1, DT_INTERNA válida, período analítico, evolução encerrada", E,
+               impacto="Ver waterfall (a1_waterfall.csv)")
+v.log_decision(OUT, "D-03", "Alvo principal", "Óbito SRAG (EVOLUCAO=2) vs cura (EVOLUCAO=1)", E,
+               impacto="Alinhar target.positivos do supervised.yaml (G1)")
+v.log_decision(OUT, "D-04", "Evolução desconhecida e óbito outras causas",
+               "EVOLUCAO=9/ausente e 3 saem do alvo binário; nunca viram cura", E,
+               impacto="Exigir filtro EVOLUCAO in {1,2} no loader do C")
+v.log_decision(OUT, "D-12", "Features derivadas (criadas no dataset analítico)",
+               f"idade_anos (TP_IDADE), faixa_etaria, intervalo sintomas->internação (inválido se ausente/negativo/>{cfg['derivadas']['intervalo_max_dias']} dias) "
+               "+ flag, sin/cos da semana ISO da internação", E,
+               impacto="Só informação da admissão; o C2 as encontra no dataset (supervised.yaml)")
+v.log_decision(OUT, "D-05", "Período analítico",
+               f"Desenvolvimento {cfg['dev_years']}; holdout {cfg['holdout_years']}", E,
+               impacto="Exclui anos fora do período; alinhar G2")
+display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
+```
+
+### Cell 16 [markdown]
+
+```markdown
+## 8. Exportar a população analítica (v0.1, provisória)
+O notebook **C2 exige** `data/analytical/dataset_supervisionado.parquet`. Esta célula o gera a partir da coorte, usando as features, o alvo e a coluna de tempo do `supervised.yaml`. Sai ordenado por tempo e **sem** colunas pós-admissão além das features pedidas. Avise o C quando atualizar.
+```
+
+### Cell 17 [code] · In [ ]
+
+```python
+info = v.a1_export_dataset(df, cfg, rep, SUPERVISED_CONFIG, versao="0.1", excluir_proibidas=False)
+print("Arquivo:", info["arquivo"], "|", f"{info['n_linhas']:,} linhas")
+print("Anos:", info["anos"])
+print("Features proibidas no dataset:", info["features_proibidas_no_dataset"] or "nenhuma")
+print("Features ausentes na base:", info["features_ausentes_na_base"] or "nenhuma")
+print("Linhas descartadas por data de tempo inválida:", info["descartadas_data_tempo_invalida"])
+
+# Confere o ARQUIVO gravado contra o que o C2 consome (colunas, datas, alvo, check_leakage)
+v.validar_contrato_c2(info["arquivo"], SUPERVISED_CONFIG, rep)
+```
+
+### Cell 18 [markdown]
+
+```markdown
+## 9. Fechamento
+```
+
+### Cell 19 [code] · In [ ]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+### Cell 20 [markdown]
+
+```markdown
+### Checklist de saída (08/10)
+- [ ] Config de decisões v0.1 atualizada (`configs/decisoes.yaml`)
+- [ ] Tabela de códigos e tabela de decisões revisadas
+- [ ] Waterfall com N excluído/restante/% de cada filtro
+- [ ] Amostras das exclusões inspecionadas
+- [ ] `data/analytical/dataset_supervisionado.parquet` (v0.1) gerado e C avisado
+- [ ] B e C avisados das regras (categorias, alvo, ponto de previsão)
+```
+
+## `notebooks/A/A_04_qualidade_elegibilidade.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `11.0 KB` · modified `2026-10-17 14:31 UTC`
+- SHA-256: `716e7321fac796450ae78bde81d7dc06c06b3c658854cd952ee3886c09ee0971`
+
+- Cells: `19` (`9` code, `10` markdown)
+- Code cells executed: `0` of `9`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A2 | 09 — Auditar qualidade, datas e elegibilidade
+
+**Pessoa.** Distinguir problema de qualidade, ausência legítima, variável inadequada e risco de vazamento.
+
+**Saída até 10/10:** relatório de qualidade revisado, flags aprovadas e matriz de elegibilidade v1.0.
+**Revisão:** B verifica padrões visuais; C transforma as decisões em validações automáticas. **Gate 1 (09/10):** regras de preparação.
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
+COLUNAS = "classificadas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+EXCLUIR_PROIBIDAS = True        # v1.0: nenhuma coluna proibida segue para o C
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A2")
+df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
+print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Vazios, ignorados e campos inexistentes por ano
+```
+
+### Cell 4 [code] · In [ ]
+
+```python
+v.a2_missing(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a2_campos_inexistentes_por_ano.csv").head(40))
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## 2. Coerência de datas e idade
+Classifique cada inconsistência: **excluir**, **transformar em ausente**, **manter com flag** ou **apenas documentar** (a coluna `acao_sugerida` é uma proposta).
+```
+
+### Cell 6 [code] · In [ ]
+
+```python
+v.a2_dates(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a2_coerencia_datas.csv").head(40))
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## 3. Duplicidades
+`NU_NOTIFIC` repetido **não** implica mesma pessoa.
+```
+
+### Cell 8 [code] · In [ ]
+
+```python
+v.a2_duplicates(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a2_duplicidades.csv").head(40))
+```
+
+### Cell 9 [markdown]
+
+```markdown
+## 4. Maturidade de EVOLUCAO por mês de internação
+Meses recentes do holdout podem ter evolução ainda aberta.
+```
+
+### Cell 10 [code] · In [ ]
+
+```python
+v.a2_maturity(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / 'a2_maturidade_evolucao_por_mes.csv').tail(24))
+```
+
+### Cell 11 [markdown]
+
+```markdown
+## 5. Matriz de elegibilidade
+Classes: **incluir**, **incluir com condição**, **auditoria**, **excluir**. Para cada variável responda: *quando foi observada, quando chegou à base e se poderia existir na admissão.* Preencha as colunas em branco do CSV gerado (`a2_matriz_elegibilidade.csv`).
+```
+
+### Cell 12 [code] · In [ ]
+
+```python
+v.a2_eligibility(df, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a2_matriz_elegibilidade.csv").head(40))
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## 6. Tabela de decisões
+```
+
+### Cell 14 [code] · In [ ]
+
+```python
+E = "A2"
+v.log_decision(OUT, "D-06", "Ação por tipo de inconsistência de datas",
+               "; ".join(f"{r[2]} -> {r[3]}" for r in cfg["date_rules"]), E,
+               impacto="Ver a2_coerencia_datas.csv")
+v.log_decision(OUT, "D-07", "Duplicidades", "Linhas exatas removidas; NU_NOTIFIC repetido apenas documentado", E,
+               impacto="Ver a2_duplicidades.csv")
+v.log_decision(OUT, "D-08", "Maturidade de EVOLUCAO",
+               f"Meses do holdout com < {cfg['maturity_min_closed_pct']}% de evolução fechada ficam fora ou sob sensibilidade", E,
+               impacto="Ver a2_maturidade_evolucao_por_mes.csv")
+v.log_decision(OUT, "D-09", "Variáveis proibidas/condicionais",
+               "Matriz de elegibilidade v1.0 (classes incluir/condição/auditoria/excluir)", E,
+               impacto="C bloqueia automaticamente (test_leakage); B usa na matriz de clustering")
+display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
+```
+
+### Cell 15 [markdown]
+
+```markdown
+## 7. Exportar a população analítica (v1.0)
+Com a matriz de elegibilidade fechada, regrave o dataset do C. Com `EXCLUIR_PROIBIDAS = True`, features classificadas como **excluir** não seguem para o C (o dataset lista o que ficou de fora).
+```
+
+### Cell 16 [code] · In [ ]
+
+```python
+# Derivar features que o contrato C2 exige (defensivo; só dispara se as bases estiverem carregadas)
+if "dias_sintomas_ate_internacao" not in df.columns and {"dt_sin_pri", "dt_interna"}.issubset(df.columns):
+    df["dias_sintomas_ate_internacao"] = (df["dt_interna"] - df["dt_sin_pri"]).dt.days
+if "sexo_categoria" not in df.columns and "cs_sexo" in df.columns:
+    df["sexo_categoria"] = df["cs_sexo"].map({1: "Masculino", 2: "Feminino"}).fillna("Ignorado")
+
+info = v.a1_export_dataset(df, cfg, rep, SUPERVISED_CONFIG, versao="1.0", excluir_proibidas=EXCLUIR_PROIBIDAS)
+print("Arquivo:", info["arquivo"], "|", f"{info['n_linhas']:,} linhas")
+print("Features ausentes na base:", info["features_ausentes_na_base"] or "nenhuma")
+print("Colunas:", info["colunas"])
+v.validar_contrato_c2(info["arquivo"], SUPERVISED_CONFIG, rep)   # contrato do C2 (colunas, datas, alvo, leakage)
+```
+
+### Cell 17 [markdown]
+
+```markdown
+## 8. Fechamento
+```
+
+### Cell 18 [code] · In [ ]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+### Cell 19 [markdown]
+
+```markdown
+### Checklist de saída
+- [ ] Relatório de qualidade revisado e flags aprovadas
+- [ ] Matriz de elegibilidade v1.0 preenchida (nenhuma variável em `auditoria`)
+- [ ] Lista de variáveis proibidas e condições de saturação, vacinação e geografia fechadas
+- [ ] Dataset analítico v1.0 regravado e C avisado
+- [ ] Regras entregues a B e C
+```
+
+## `notebooks/A/A_08_desenho_experimental.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `10.3 KB` · modified `2026-10-17 14:31 UTC`
+- SHA-256: `f128d3f47e8e7b08b7a7bc9bc383cecd8c9a24f01768490d149627076af75078`
+
+- Cells: `17` (`8` code, `9` markdown)
+- Code cells executed: `0` of `8`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A3 | 11– Revisar desenho experimental e pilotos
+
+**Pessoa.** Verificar se métodos, métricas, partições e outputs respondem à pergunta sem contaminar o holdout.
+
+**Saída:** checklist metodológico, atas dos **Gates 2** e **3** e registro de interpretação dos pilotos.
+**Revisão:** B explica clustering; C explica pipeline, validação e métricas.
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (G1–G8)
+COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+FEATURES_CLUSTERING = None                      # .txt/.json/.yaml com as features do clustering (B)
+LOGS_DIR = "logs"                               # logs de B e C
+RESULTS = None                                  # CSV: modelo, fold, pr_auc, roc_auc, brier (pilotos)
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A3")
+df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
+print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Auditoria do `supervised.yaml` contra as decisões da Pessoa
+Alvo, coluna temporal, tipo de split, variáveis proibidas, idade, gates pendentes.
+```
+
+### Cell 4 [code] · In [ ]
+
+```python
+if Path(SUPERVISED_CONFIG).exists():
+    y = v.load_supervised_yaml(SUPERVISED_CONFIG)
+    v.a3_config_audit(y, cfg, rep, df.attrs.get("schema_cols"))
+    v.a3_forbidden(v.supervised_features(y), "supervisionado", cfg, rep)
+else:
+    print("supervised.yaml não encontrado:", SUPERVISED_CONFIG)
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## 2. O desfecho não pode aparecer no clustering
+```
+
+### Cell 6 [code] · In [ ]
+
+```python
+if FEATURES_CLUSTERING and Path(FEATURES_CLUSTERING).exists():
+    v.a3_forbidden(v.load_feature_list(FEATURES_CLUSTERING), "clustering", cfg, rep)
+else:
+    print("Informe FEATURES_CLUSTERING (lista de features da matriz de clustering de B).")
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## 3. Divisão temporal e proteção do holdout
+Desenvolvimento 2022–2024 e holdout 2025 (conforme `configs/decisoes.yaml`).
+```
+
+### Cell 8 [code] · In [ ]
+
+```python
+cohort = v.a1_cohort(df, cfg)
+print(f"Coorte: {len(cohort):,} registros")
+v.a3_temporal_split(cohort, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a3_split_temporal.csv"))
+```
+
+### Cell 9 [markdown]
+
+```markdown
+## 4. Varredura de vazamento
+AUC univariada ≈ 1 contra o alvo é sinal de variável posterior ao desfecho (indicativo, não prova).
+```
+
+### Cell 10 [code] · In [ ]
+
+```python
+v.a3_leak_scan(cohort, cfg, rep)
+display(pd.read_csv(Path(OUT) / "a3_varredura_vazamento.csv").head(40))
+```
+
+### Cell 11 [markdown]
+
+```markdown
+## 5. Métricas excessivamente altas e auditoria dos logs de B e C
+```
+
+### Cell 12 [code] · In [ ]
+
+```python
+if RESULTS and Path(RESULTS).exists():
+    v.a3_suspicious_metrics(pd.read_csv(RESULTS), cfg, rep)
+else:
+    print("Sem tabela de resultados (RESULTS) ainda.")
+v.a3_audit_logs(LOGS_DIR, cfg, rep)
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## 6. Análises guiadas (manuais — registre a interpretação)
+- [ ] Revisar lista final de features (desfecho fora do clustering)
+- [ ] Confirmar divisão 2019–2024 / 2025 e métricas de clustering e de classificação (papel de cada uma)
+- [ ] Executar uma rodada K-Means preparada e interpretar a tabela de perfis
+- [ ] Executar a regressão logística preparada: coeficientes, probabilidades e métricas
+- [ ] Comparar ROC-AUC e PR-AUC e explicar por que não são equivalentes
+- [ ] Revisar uma curva de calibração (sub/superestimação)
+- [ ] Investigar métricas altas demais como possível vazamento
+
+Busque por: *silhouette score interpretation scikit-learn*, *precision recall curve imbalanced classification scikit-learn*, *probability calibration curve reliability diagram scikit-learn*, *TimeSeriesSplit scikit-learn chronological validation*.
+```
+
+### Cell 14 [markdown]
+
+```markdown
+## 7. Decisões e atas dos Gates 2 e 3
+```
+
+### Cell 15 [code] · In [ ]
+
+```python
+E = "A3"
+v.log_decision(OUT, "D-10", "Split temporal", f"Desenvolvimento {cfg['dev_years']} / holdout {cfg['holdout_years']} por DT_INTERNA", E,
+               impacto="supervised.yaml: modo 'datas' e coluna_tempo = dt_interna (G2)")
+
+DECISOES_G2 = ["(preencher) decisões do Gate 2 — desenho experimental"]
+PENDENCIAS_G2 = ["(preencher)"]
+v.write_ata(OUT, "Ata Gate 2 (11/10)", "2026-10-11", DECISOES_G2, PENDENCIAS_G2, riscos=[], rep=rep)
+
+DECISOES_G3 = ["(preencher) configurações inviáveis eliminadas"]
+PENDENCIAS_G3 = ["(preencher)"]
+v.write_ata(OUT, "Ata Gate 3 (14/10)", "2026-10-14", DECISOES_G3, PENDENCIAS_G3, riscos=[], rep=rep)
+print(sorted(p.name for p in Path(OUT).glob("ata_*.md")))
+```
+
+### Cell 16 [markdown]
+
+```markdown
+## 8. Fechamento
+```
+
+### Cell 17 [code] · In [ ]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+## `notebooks/A/A_09_split_aleatorio_cenarios.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `364.8 KB` · modified `2026-10-17 14:31 UTC`
+- SHA-256: `3934ac586b4dd9f32a68519e0dce07948a5b25bac0418f4965734dbb62d3dd31`
+
+- Cells: `15` (`7` code, `8` markdown)
+- Code cells executed: `7` of `7`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
+
+**Pessoa A (apoio ao A3).** Experimento **comparativo**: o projeto usa validação temporal como padrão; aqui medimos o que muda com um **split aleatório estratificado 70/15/15** e quando **2020 e 2021** (anos de pandemia) saem da base.
+
+| Cenário | Anos (de `DT_INTERNA`) | Split |
+|---|---|---|
+| `todos_2019_2025` | 2019–2025 | aleatório 70/15/15, estratificado pelo alvo, seed 42 |
+| `sem_2020_2021` | 2019, 2022–2025 | idem |
+
+**Saídas** (em `data/analytical/`, `outputs/tables/pessoa_a/` e `outputs/figures/pessoa_a/`):
+- `dataset_supervisionado_<cenário>.parquet` com a coluna **`split`** (`treino` / `validacao` / `holdout`) e `.meta.json` (versão, SHA-256, contagens).
+- Tabelas de proporções, prevalência e anos por split; waterfall por cenário.
+- **Gráficos (PNG)**: proporções 70/15/15, prevalência de óbito por split e composição dos splits por ano (`split_<cenário>.png`); comparação dos cenários (`split_comparacao_cenarios.png`).
+- Benchmark rápido (regressão logística, treino → **validação**): split aleatório × temporal por ordem.
+
+> O **holdout não é aberto** aqui (regra do projeto). O benchmark usa só treino e validação.
+> Os dois datasets **não substituem** `dataset_supervisionado.parquet` (o do pipeline temporal do C2).
+```
+
+### Cell 2 [code] · In [1]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
+COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+CENARIOS = None                     # None = usa configs/decisoes.yaml -> experimentos_split.cenarios
+                                    # ou informe, ex.: {"todos_2019_2025": [2019, 2020, 2021, 2022, 2023, 2024, 2025]}
+RODAR_BENCHMARK = True              # regressão logística treino -> validação (aleatório x temporal)
+FIG_DIR = "outputs/figures/pessoa_a"  # onde salvar os gráficos (PNG)
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A3b")
+df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
+print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Raiz do repositório: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+Pacote (src/protocolo): <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+Config de decisões: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs\decisoes.yaml
+[base] <REPO>\data\processed\dados-v2\srag.parquet -> 4,666,910 linhas x 54 colunas carregadas (de 198 no arquivo) | leitura compacto (texto em category)
+Memória do DataFrame: 0.58 GB
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Cenários
+Os anos vêm do `configs/decisoes.yaml` (`experimentos_split.cenarios`); a seed e as frações também.
+```
+
+### Cell 4 [code] · In [2]
+
+```python
+e = cfg["experimentos_split"]
+CENARIOS = CENARIOS or {nome: spec["anos"] for nome, spec in e["cenarios"].items()}
+print("Seed:", e["seed"], "| frações:", e["fracoes"], "| estratificado pelo alvo:", e["estratificar_por_alvo"])
+for nome, anos in CENARIOS.items():
+    print(f"  {nome}: {anos}")
+anos_na_base = sorted(v.parse_date(df[cfg["cols"]["dt_interna"]]).dt.year.dropna().astype(int).unique())
+print("Anos de DT_INTERNA presentes na base carregada:", anos_na_base)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Seed: 42 | frações: {'treino': 0.7, 'validacao': 0.15, 'holdout': 0.15} | estratificado pelo alvo: True
+  todos_2019_2025: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  sem_2020_2021: [2019, 2022, 2023, 2024, 2025]
+Anos de DT_INTERNA presentes na base carregada: [np.int64(1917), np.int64(1918), np.int64(1941), np.int64(2009), np.int64(2011), np.int64(2012), np.int64(2016), np.int64(2017), np.int64(2018), np.int64(2019), np.int64(2020), np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025), np.int64(2026), np.int64(2027), np.int64(2028), np.int64(2029), np.int64(2031), np.int64(2032), np.int64(2033), np.int64(2034), np.int64(2050), np.int64(2052), np.int64(2055), np.int64(2056), np.int64(2092), np.int64(2098), np.int64(2099)]
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## 2. Coorte, dataset e checagens por cenário
+Waterfall do cenário → dataset com `split` → proporções 70/15/15, estratificação do alvo, anos em cada split, `NU_NOTIFIC` repetido entre splits e contrato do C2.
+```
+
+### Cell 6 [code] · In [3]
+
+```python
+metas = {}
+for nome, anos in CENARIOS.items():
+    print(f"\n===== {nome}: {anos} =====")
+    metas[nome] = v.a3_split_aleatorio_cenario(df, cfg, rep, nome, anos, SUPERVISED_CONFIG)
+    v.validar_contrato_c2(metas[nome]["arquivo"], SUPERVISED_CONFIG, rep)
+    display(pd.read_csv(Path(OUT) / f"a1_waterfall_{nome}.csv"))
+    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}.csv"))
+    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}_por_ano.csv"))
+    # (a) % de linhas x meta 70/15/15 | (b) prevalência de óbito por split | (c) composição dos splits em cada ano
+    print("Figura:", v.grafico_split_cenario(rep, cfg, nome, anos, FIG_DIR, mostrar=True))
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+
+===== todos_2019_2025: [2019, 2020, 2021, 2022, 2023, 2024, 2025] =====
+[ok] A1 | Waterfall da coorte [todos_2019_2025]: 4,666,910 -> 3,739,615 registros (80.1%)
+[ok] A1 | Features derivadas [todos_2019_2025]: criadas no dataset: idade_anos, faixa_etaria
+[!!] A1 | Dataset analítico [todos_2019_2025]: 3,739,615 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA
+[ok] A3b | Proporções 70/15/15 [todos_2019_2025]: desvio máximo 0.00 p.p. | treino=2,617,730, validacao=560,942, holdout=560,943
+[ok] A3b | Estratificação do alvo [todos_2019_2025]: prevalência de óbito por split: treino=22.63%, validacao=22.63%, holdout=22.63% (amplitude 0.00 p.p.)
+[ok] A3b | Anos em cada split [todos_2019_2025]: todos os anos aparecem nos 3 splits (split aleatório mistura os períodos)
+[!!] A3b | NU_NOTIFIC entre splits [todos_2019_2025]: 10 NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação)
+[XX] A1-C2 | Colunas exigidas pelo C2: ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria
+[ok] A1-C2 | Coluna de tempo: datetime válido, ordenado: 2019-01-01 -> 2025-12-31
+[ok] A1-C2 | Alvo: apenas cura/óbito; positivos [2.0] presentes
+[ok] A1-C2 | check_leakage (C2): nenhuma feature está em `proibidas`
+[ok] A1-C2 | Tamanho: 3,739,615 linhas
+```
+
+**Output 2 (display_data)**
+
+```text
+   ordem                     filtro  \
+0      0              Base completa   
+1      1  Hospitalização confirmada   
+2      2  Data de internação válida   
+3      3          Período analítico   
+4      4         Evolução encerrada   
+5      5      Alvo binário definido   
+
+                                               regra  n_excluido  n_restante  \
+0                                                  —           0     4666910   
+1                                       HOSPITAL = 1      232253     4434657   
+2        DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje       72133     4362524   
+3  ano(DT_INTERNA) em [2019, 2020, 2021, 2022, 20...      210444     4152080   
+4       EVOLUCAO em ['1', '2', '3'] (9/ausente fora)      338815     3813265   
+5  EVOLUCAO em {cura, óbito}; óbito por outras ca...       73650     3739615   
+
+   pct_restante  
+0        100.00  
+1         95.02  
+2         93.48  
+3         88.97  
+4         81.71  
+5         80.13  
+[non-text output omitted: text/html]
+```
+
+**Output 3 (display_data)**
+
+```text
+       split        n  n_obitos  pct_linhas  prevalencia_obito_pct
+0     treino  2617730    592509        70.0                  22.63
+1  validacao   560942    126966        15.0                  22.63
+2    holdout   560943    126967        15.0                  22.63
+[non-text output omitted: text/html]
+```
+
+**Output 4 (display_data)**
+
+```text
+   ano_internacao   treino  validacao  holdout
+0            2019    30393       6694     6426
+1            2020   686366     146395   147051
+2            2021  1036718     221925   221572
+3            2022   332754      71549    71677
+4            2023   168742      36006    35956
+5            2024   160515      34358    34605
+6            2025   202242      44015    43656
+[non-text output omitted: text/html]
+```
+
+**Output 5 (display_data)**
+
+```text
+<Figure size 1700x480 with 3 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 6 (stream:stdout)**
+
+```text
+Figura: outputs\figures\pessoa_a\split_todos_2019_2025.png
+
+===== sem_2020_2021: [2019, 2022, 2023, 2024, 2025] =====
+[ok] A1 | Waterfall da coorte [sem_2020_2021]: 4,666,910 -> 1,279,588 registros (27.4%)
+[ok] A1 | Features derivadas [sem_2020_2021]: criadas no dataset: idade_anos, faixa_etaria
+[!!] A1 | Dataset analítico [sem_2020_2021]: 1,279,588 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA
+[ok] A3b | Proporções 70/15/15 [sem_2020_2021]: desvio máximo 0.00 p.p. | treino=895,712, validacao=191,938, holdout=191,938
+[ok] A3b | Estratificação do alvo [sem_2020_2021]: prevalência de óbito por split: treino=12.12%, validacao=12.12%, holdout=12.12% (amplitude 0.00 p.p.)
+[ok] A3b | Anos em cada split [sem_2020_2021]: todos os anos aparecem nos 3 splits (split aleatório mistura os períodos)
+[!!] A3b | NU_NOTIFIC entre splits [sem_2020_2021]: 9 NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação)
+[XX] A1-C2 | Colunas exigidas pelo C2: ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria
+[ok] A1-C2 | Coluna de tempo: datetime válido, ordenado: 2019-01-01 -> 2025-12-31
+[ok] A1-C2 | Alvo: apenas cura/óbito; positivos [2.0] presentes
+[ok] A1-C2 | check_leakage (C2): nenhuma feature está em `proibidas`
+[ok] A1-C2 | Tamanho: 1,279,588 linhas
+```
+
+**Output 7 (display_data)**
+
+```text
+   ordem                     filtro  \
+0      0              Base completa   
+1      1  Hospitalização confirmada   
+2      2  Data de internação válida   
+3      3          Período analítico   
+4      4         Evolução encerrada   
+5      5      Alvo binário definido   
+
+                                               regra  n_excluido  n_restante  \
+0                                                  —           0     4666910   
+1                                       HOSPITAL = 1      232253     4434657   
+2        DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje       72133     4362524   
+3  ano(DT_INTERNA) em [2019, 2022, 2023, 2024, 2025]     2944197     1418327   
+4       EVOLUCAO em ['1', '2', '3'] (9/ausente fora)      101808     1316519   
+5  EVOLUCAO em {cura, óbito}; óbito por outras ca...       36931     1279588   
+
+   pct_restante  
+0        100.00  
+1         95.02  
+2         93.48  
+3         30.39  
+4         28.21  
+5         27.42  
+[non-text output omitted: text/html]
+```
+
+**Output 8 (display_data)**
+
+```text
+       split       n  n_obitos  pct_linhas  prevalencia_obito_pct
+0     treino  895712    108527        70.0                  12.12
+1  validacao  191938     23256        15.0                  12.12
+2    holdout  191938     23255        15.0                  12.12
+[non-text output omitted: text/html]
+```
+
+**Output 9 (display_data)**
+
+```text
+   ano_internacao  treino  validacao  holdout
+0            2019   30412       6546     6555
+1            2022  333642      71094    71244
+2            2023  168213      36176    36315
+3            2024  160377      34741    34360
+4            2025  203068      43381    43464
+[non-text output omitted: text/html]
+```
+
+**Output 10 (display_data)**
+
+```text
+<Figure size 1700x480 with 3 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 11 (stream:stdout)**
+
+```text
+Figura: outputs\figures\pessoa_a\split_sem_2020_2021.png
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## 3. Benchmark: split aleatório × temporal (treino → validação)
+Regressão logística balanceada, mesmas features do `supervised.yaml`. Se o aleatório der PR-AUC maior que o temporal, ele está **otimista** (registros do mesmo período nos dois lados): a decisão deve seguir o temporal.
+```
+
+### Cell 8 [code] · In [4]
+
+```python
+benchs = {}
+if RODAR_BENCHMARK:
+    for nome in CENARIOS:
+        benchs[nome] = v.a3_benchmark_split(metas[nome]["arquivo"], SUPERVISED_CONFIG, cfg, rep, nome,
+                                            max_rows=e["bench_max_linhas"], seed=e["seed"])
+        display(benchs[nome])
+else:
+    print("Benchmark desligado (RODAR_BENCHMARK = False).")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+[!!] A3b | Split aleatório x temporal [todos_2019_2025]: PR-AUC (validação): aleatório 0.452 vs temporal 0.364 (Δ +0.087) — o aleatório está otimista; decidir pelo temporal
+```
+
+**Output 2 (display_data)**
+
+```text
+           cenario            particao  n_treino  n_validacao  \
+0  todos_2019_2025           aleatoria    139616        30329   
+1  todos_2019_2025           aleatoria    139616        30329   
+2  todos_2019_2025  temporal_por_ordem    139803        30142   
+3  todos_2019_2025  temporal_por_ordem    139803        30142   
+
+   prevalencia_validacao          modelo  roc_auc  pr_auc   brier  
+0                 0.2309  baseline_prior   0.5000  0.2309  0.1776  
+1                 0.2309       logistica   0.7740  0.4517  0.1984  
+2                 0.1377  baseline_prior   0.5000  0.1377  0.1383  
+3                 0.1377       logistica   0.8206  0.3642  0.1678  
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+[!!] A3b | Split aleatório x temporal [sem_2020_2021]: PR-AUC (validação): aleatório 0.367 vs temporal 0.276 (Δ +0.091) — o aleatório está otimista; decidir pelo temporal
+```
+
+**Output 4 (display_data)**
+
+```text
+         cenario            particao  n_treino  n_validacao  \
+0  sem_2020_2021           aleatoria    139939        30227   
+1  sem_2020_2021           aleatoria    139939        30227   
+2  sem_2020_2021  temporal_por_ordem    139890        29922   
+3  sem_2020_2021  temporal_por_ordem    139890        29922   
+
+   prevalencia_validacao          modelo  roc_auc  pr_auc   brier  
+0                 0.1194  baseline_prior   0.5000  0.1194  0.1051  
+1                 0.1194       logistica   0.8371  0.3670  0.1739  
+2                 0.0766  baseline_prior   0.5000  0.0766  0.0747  
+3                 0.0766       logistica   0.8418  0.2763  0.1390  
+[non-text output omitted: text/html]
+```
+
+### Cell 9 [markdown]
+
+```markdown
+## 4. Comparação entre os cenários
+```
+
+### Cell 10 [code] · In [5]
+
+```python
+comp = v.comparar_cenarios(metas, benchs, rep)
+display(comp)
+# N por ano (empilhado por split) nos dois cenários + prevalência de óbito por split
+print("Figura:", v.grafico_comparacao_cenarios(rep, cfg, list(CENARIOS), FIG_DIR, mostrar=True))
+```
+
+**Output 1 (display_data)**
+
+```text
+           cenario                                anos  n_linhas  n_obitos  \
+0  todos_2019_2025  2019,2020,2021,2022,2023,2024,2025   3739615    846442   
+1    sem_2020_2021            2019,2022,2023,2024,2025   1279588    155038   
+
+   prevalencia_obito_pct  pr_auc_aleatoria  roc_auc_aleatoria  \
+0                  22.63            0.4517             0.7740   
+1                  12.12            0.3670             0.8371   
+
+   pr_auc_temporal_por_ordem  roc_auc_temporal_por_ordem  
+0                     0.3642                      0.8206  
+1                     0.2763                      0.8418  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1750x480 with 3 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Figura: outputs\figures\pessoa_a\split_comparacao_cenarios.png
+```
+
+### Cell 11 [markdown]
+
+```markdown
+## 5. Decisões
+```
+
+### Cell 12 [code] · In [6]
+
+```python
+E = "A3b"
+v.log_decision(OUT, "D-13", "Experimento split aleatório 70/15/15 (2019–2025)",
+               f"Split aleatório estratificado pelo alvo, seed {e['seed']}; dataset_supervisionado_todos_2019_2025", E,
+               impacto="Comparativo; o padrão do projeto segue a validação temporal (README)",
+               evidencia="a3_benchmark_split_*.csv")
+v.log_decision(OUT, "D-14", "Cenário sem 2020 e 2021",
+               "Mesma análise removendo 2020–2021 (pandemia); dataset_supervisionado_sem_2020_2021", E,
+               impacto="Compara N, prevalência e desempenho com a base completa (comparacao_cenarios.csv)")
+display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
+```
+
+**Output 1 (display_data)**
+
+```text
+      id etapa                                               tema  \
+0   D-01    A1                                  Ponto de previsão   
+1   D-02    A1                                     Coorte estrita   
+2   D-03    A1                                     Alvo principal   
+3   D-04    A1        Evolução desconhecida e óbito outras causas   
+4   D-12    A1  Features derivadas (criadas no dataset analítico)   
+5   D-05    A1                                  Período analítico   
+6   D-06    A2           Ação por tipo de inconsistência de datas   
+7   D-07    A2                                       Duplicidades   
+8   D-08    A2                             Maturidade de EVOLUCAO   
+9   D-09    A2                   Variáveis proibidas/condicionais   
+10  D-10    A3                                     Split temporal   
+11  D-13   A3b   Experimento split aleatório 70/15/15 (2019–2025)   
+12  D-14   A3b                            Cenário sem 2020 e 2021   
+
+                                              decisao responsavel        data  \
+0   DT_INTERNA (admissão); campos posteriores bloq...    Pessoa A  2026-10-16   
+1   HOSPITAL=1, DT_INTERNA válida, período analíti...    Pessoa A  2026-10-16   
+2        Óbito SRAG (EVOLUCAO=2) vs cura (EVOLUCAO=1)    Pessoa A  2026-10-16   
+3   EVOLUCAO=9/ausente e 3 saem do alvo binário; n...    Pessoa A  2026-10-16   
+4   idade_anos (TP_IDADE), faixa_etaria, intervalo...    Pessoa A  2026-10-16   
+5   Desenvolvimento [2022, 2023, 2024]; holdout [2...    Pessoa A  2026-10-16   
+6   Nascimento posterior ao início dos sintomas ->...    Pessoa A  2026-10-16   
+7   Linhas exatas removidas; NU_NOTIFIC repetido a...    Pessoa A  2026-10-16   
+8   Meses do holdout com < 90.0% de evolução fecha...    Pessoa A  2026-10-16   
+9   Matriz de elegibilidade v1.0 (classes incluir/...    Pessoa A  2026-10-16   
+10  Desenvolvimento [2022, 2023, 2024] / holdout [...    Pessoa A  2026-10-16   
+11  Split aleatório estratificado pelo alvo, seed ...    Pessoa A  2026-10-16   
+12  Mesma análise removendo 2020–2021 (pandemia); ...    Pessoa A  2026-10-16   
+
+      status                                            impacto  \
+0   proposta                Define quais variáveis podem entrar   
+1   proposta                   Ver waterfall (a1_waterfall.csv)   
+2   proposta   Alinhar target.positivos do supervised.yaml (G1)   
+3   proposta     Exigir filtro EVOLUCAO in {1,2} no loader do C   
+4   proposta  Só informação da admissão; o C2 as encontra no...   
+5   proposta            Exclui anos fora do período; alinhar G2   
+6   proposta                         Ver a2_coerencia_datas.csv   
+7   proposta                            Ver a2_duplicidades.csv   
+8   proposta             Ver a2_maturidade_evolucao_por_mes.csv   
+9   proposta  C bloqueia automaticamente (test_leakage); B u...   
+10  proposta  supervised.yaml: modo 'datas' e coluna_tempo =...   
+11  proposta  Comparativo; o padrão do projeto segue a valid...   
+12  proposta  Compara N, prevalência e desempenho com a base...   
+
+                             evidencia  
+0   Dicionário SIVEP-Gripe (completar)  
+1                                  NaN  
+2                                  NaN  
+3                                  NaN  
+4                                  NaN  
+5                                  NaN  
+6                                  NaN  
+7                                  NaN  
+8                                  NaN  
+9                                  NaN  
+10                                 NaN  
+11            a3_benchmark_split_*.csv  
+12                                 NaN  
+[non-text output omitted: text/html]
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## 6. Fechamento
+```
+
+### Cell 14 [code] · In [7]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Relatório: outputs\tables\pessoa_a\relatorio_A3b.md
+```
+
+**Output 2 (display_data)**
+
+```text
+    etapa                                   verificação   status  \
+0      A1         Waterfall da coorte [todos_2019_2025]       OK   
+1      A1          Features derivadas [todos_2019_2025]       OK   
+2      A1           Dataset analítico [todos_2019_2025]  ATENÇÃO   
+3     A3b         Proporções 70/15/15 [todos_2019_2025]       OK   
+4     A3b      Estratificação do alvo [todos_2019_2025]       OK   
+5     A3b          Anos em cada split [todos_2019_2025]       OK   
+6     A3b     NU_NOTIFIC entre splits [todos_2019_2025]  ATENÇÃO   
+7   A1-C2                      Colunas exigidas pelo C2    FALHA   
+8   A1-C2                               Coluna de tempo       OK   
+9   A1-C2                                          Alvo       OK   
+10  A1-C2                            check_leakage (C2)       OK   
+11  A1-C2                                       Tamanho       OK   
+12     A1           Waterfall da coorte [sem_2020_2021]       OK   
+13     A1            Features derivadas [sem_2020_2021]       OK   
+14     A1             Dataset analítico [sem_2020_2021]  ATENÇÃO   
+15    A3b           Proporções 70/15/15 [sem_2020_2021]       OK   
+16    A3b        Estratificação do alvo [sem_2020_2021]       OK   
+17    A3b            Anos em cada split [sem_2020_2021]       OK   
+18    A3b       NU_NOTIFIC entre splits [sem_2020_2021]  ATENÇÃO   
+19  A1-C2                      Colunas exigidas pelo C2    FALHA   
+20  A1-C2                               Coluna de tempo       OK   
+21  A1-C2                                          Alvo       OK   
+22  A1-C2                            check_leakage (C2)       OK   
+23  A1-C2                                       Tamanho       OK   
+24    A3b  Split aleatório x temporal [todos_2019_2025]  ATENÇÃO   
+25    A3b    Split aleatório x temporal [sem_2020_2021]  ATENÇÃO   
+
+                                              detalhe  
+0            4,666,910 -> 3,739,615 registros (80.1%)  
+1        criadas no dataset: idade_anos, faixa_etaria  
+2   3,739,615 linhas v0.1; features ausentes na ba...  
+3   desvio máximo 0.00 p.p. | treino=2,617,730, va...  
+4   prevalência de óbito por split: treino=22.63%,...  
+5   todos os anos aparecem nos 3 splits (split ale...  
+6   10 NU_NOTIFIC aparecem em mais de um split (po...  
+7   ausentes no dataset: dias_sintomas_ate_interna...  
+8   datetime válido, ordenado: 2019-01-01 -> 2025-...  
+9        apenas cura/óbito; positivos [2.0] presentes  
+10                nenhuma feature está em `proibidas`  
+11                                   3,739,615 linhas  
+12           4,666,910 -> 1,279,588 registros (27.4%)  
+13       criadas no dataset: idade_anos, faixa_etaria  
+14  1,279,588 linhas v0.1; features ausentes na ba...  
+15  desvio máximo 0.00 p.p. | treino=895,712, vali...  
+16  prevalência de óbito por split: treino=12.12%,...  
+17  todos os anos aparecem nos 3 splits (split ale...  
+18  9 NU_NOTIFIC aparecem em mais de um split (pod...  
+19  ausentes no dataset: dias_sintomas_ate_interna...  
+20  datetime válido, ordenado: 2019-01-01 -> 2025-...  
+21       apenas cura/óbito; positivos [2.0] presentes  
+22                nenhuma feature está em `proibidas`  
+23                                   1,279,588 linhas  
+24  PR-AUC (validação): aleatório 0.452 vs tempora...  
+25  PR-AUC (validação): aleatório 0.367 vs tempora...  
+[non-text output omitted: text/html]
+```
+
+### Cell 15 [markdown]
+
+````markdown
+### Como o C pode usar a coluna `split`
+O C2 atual divide por frações no tempo (`TemporalSplit`). Para usar o split aleatório, basta ler o dataset do cenário e filtrar pela coluna:
+
+```python
+df = pd.read_parquet(C.ANALYTICAL_DIR / "dataset_supervisionado_todos_2019_2025.parquet")
+treino, validacao, holdout = (df[df["split"] == s] for s in ("treino", "validacao", "holdout"))
+```
+
+### Checklist
+- [ ] Proporções 70/15/15 e prevalência de óbito iguais entre os splits (estratificação)
+- [ ] Comparação aleatório × temporal interpretada (otimismo do aleatório)
+- [ ] Comparação com e sem 2020–2021 registrada (N, prevalência, desempenho)
+- [ ] Holdout **não** aberto
+````
+
+## `notebooks/A/A_14_decisao_candidatos.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `8.8 KB` · modified `2026-10-17 14:31 UTC`
+- SHA-256: `8ae404e413199d5f5194e7bd36806748b2be30e023384b8b7bdb0f041adca6c6`
+
+- Cells: `12` (`5` code, `7` markdown)
+- Code cells executed: `0` of `5`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# A4 | 15– Avaliar candidatos e registrar decisão
+
+**Pessoa.** Consolidar a seleção **sem privilegiar apenas a maior métrica**.
+
+**Saída:** ata, tabela de decisão e justificativa dos candidatos.
+**Revisão:** B apresenta estabilidade/perfis; C apresenta a comparação supervisionada.
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+# ----- Setup (não editar) -----
+import os, sys
+from pathlib import Path
+
+# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
+# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
+_parents = [Path.cwd(), *Path.cwd().parents]
+PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
+if PKG_ROOT is None:
+    raise FileNotFoundError(
+        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
+        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
+        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
+REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
+os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
+
+# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
+# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
+for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
+    del sys.modules[_m]
+_init = PKG_ROOT / "src" / "__init__.py"
+if not _init.exists():
+    _init.touch()
+    print("Criado", _init, "(torna o src do projeto um pacote regular)")
+
+import pandas as pd
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+from src.protocolo import verificacoes as v
+if getattr(v, "MODULE_VERSION", "0") < "0.8":
+    raise RuntimeError(
+        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
+        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
+
+# ----- Parâmetros -----
+USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
+DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
+SAMPLE = 0                              # ex.: 200_000 para execução rápida
+OUT = "outputs/tables/pessoa"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
+CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
+                 if p.exists()), "configs/decisoes.yaml")
+SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
+COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
+RESULTS = "outputs/tables/resultados_cv.csv"   # CSV de C: modelo, fold, pr_auc, roc_auc, brier
+print("Raiz do repositório:", REPO_ROOT)
+print("Pacote (src/protocolo):", PKG_ROOT)
+print("Config de decisões:", CFG_PATH)
+cfg = v.load_config(CFG_PATH)
+rep = v.Report(OUT, "relatorio_A4")
+# (esta etapa não precisa carregar a base)
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## 1. Tabela comparável de candidatos
+Média e variação entre folds, ganho sobre baseline e logística, Brier e alerta de complexidade sem ganho.
+```
+
+### Cell 4 [code] · In [ ]
+
+```python
+if Path(RESULTS).exists():
+    res = pd.read_csv(RESULTS)
+    v.a3_suspicious_metrics(res, cfg, rep)
+    v.a4_decision_table(res, cfg, rep)
+    display(pd.read_csv(Path(OUT) / "a4_tabela_decisao.csv"))
+else:
+    print("Resultados não encontrados:", RESULTS)
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## 2. Revisão por candidato (manual)
+**Clustering:** estabilidade, tamanho mínimo, perfil e influência das ausências.
+**Classificação:** média e variação entre folds, PR-AUC, ROC-AUC, Brier e calibração.
+
+- [ ] Comparar modelo complexo com baseline e logística
+- [ ] O ganho justifica a complexidade e a menor interpretabilidade?
+- [ ] Revisar erros e limitações já visíveis
+- [ ] Preencher `decisao` e `justificativa_descarte_ou_manutencao` em `a4_tabela_decisao.csv`
+
+Busque por: *bias variance tradeoff model complexity official tutorial*, *discrimination versus calibration prediction model*, *cluster stability bootstrap resampling*, *permutation importance scikit-learn user guide*.
+```
+
+### Cell 6 [markdown]
+
+```markdown
+## 3. Decisões e ata de 17/10
+```
+
+### Cell 7 [code] · In [ ]
+
+```python
+E = "A4"
+v.log_decision(OUT, "D-11", "Seleção de candidatos",
+               "Shortlist por validade, estabilidade, calibração e interpretação — não só maior métrica", E,
+               impacto="Candidatos para confirmação em 18/10")
+
+SHORTLIST = ["(preencher) clustering: solução principal + alternativa", "(preencher) supervisionado: 1–2 modelos"]
+DESCARTES = ["(preencher) candidato — justificativa padronizada"]
+RISCOS = ["(preencher)"]
+PENDENCIAS = ["Confirmação dos finalistas e congelamento em 18/10"]
+v.write_ata(OUT, "Ata 17/10 — Fine Tuning", "2026-10-17",
+            decisoes=["Busca encerrada ou finalizando; sem novas famílias de modelo"],
+            pendencias=PENDENCIAS, riscos=RISCOS, shortlist=SHORTLIST, descartes=DESCARTES, rep=rep)
+print(sorted(p.name for p in Path(OUT).glob("ata_*.md")))
+```
+
+### Cell 8 [markdown]
+
+```markdown
+## 4. População analítica congelada
+A população analítica deve ficar congelada para a modelagem: o SHA-256 do arquivo precisa bater com o gravado na exportação.
+```
+
+### Cell 9 [code] · In [ ]
+
+```python
+caminho = v._analytical_path(cfg)
+if caminho.exists():
+    v.verificar_dataset_congelado(caminho, rep)
+else:
+    print("Dataset analítico ainda não gerado:", caminho)
+```
+
+### Cell 10 [markdown]
+
+```markdown
+## 5. Fechamento
+```
+
+### Cell 11 [code] · In [ ]
+
+```python
+path = rep.write_md()
+print("Relatório:", path)
+display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
+```
+
+### Cell 12 [markdown]
+
+```markdown
+### Checklist de saída
+- [ ] Tabela de decisão preenchida (decisão + justificativa por candidato)
+- [ ] Ata fechada: busca encerrada ou finalizando, shortlist, descartes, riscos, pendências
+- [ ] Critérios para abrir a validação final definidos
+- [ ] Cada pessoa explica coorte, clustering, supervisionado e avaliação em nível conceitual
+```
+
+## `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `95.4 KB` · modified `2026-10-17 14:03 UTC`
+- SHA-256: `0298d6d9aaa532f55cc9c51f98dd5659d64ca8083f19ce06d21600cce7304bc4`
+
+- Cells: `15` (`14` code, `1` markdown)
+- Code cells executed: `14` of `14`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# Construção provisória da coorte para a EDA 02
+
+## Objetivo
+
+Construir uma coorte provisória com dados reais do dataset `dados-v2`
+para permitir o desenvolvimento paralelo da EDA temporal e do pipeline
+de clustering.
+
+Este notebook é um artefato temporário. Ele não substitui a coorte
+oficial do projeto e poderá ser removido ou absorvido quando a construção
+definitiva da coorte for entregue.
+
+## Critérios de elegibilidade aplicados
+
+- hospitalização confirmada, com `hospital = 1`;
+- `dt_interna` válida;
+- internação entre 01/01/2019 e 28/09/2026;
+- evolução elegível, com `evolucao` igual a 1 ou 2;
+- remoção de linhas integralmente duplicadas.
+
+## Tratamentos que não serão realizados arbitrariamente
+
+- registros diferentes com o mesmo `nu_notific` não serão eliminados;
+- intervalos negativos entre sintomas e internação serão sinalizados,
+  mas não excluídos automaticamente;
+- ausência em variáveis preditoras não causará exclusão;
+- `dt_notific` ou `dt_sin_pri` fora do período da coorte serão
+  sinalizadas, mas não excluirão o registro quando `dt_interna` for
+  elegível;
+- ausência não será convertida automaticamente em resposta negativa.
+
+## Saídas
+
+- `data/analytical/coorte_provisoria_b.parquet`;
+- `outputs/tables/coorte_provisoria_b_waterfall.csv`;
+- `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv`;
+- `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv`;
+- `outputs/tables/coorte_provisoria_b_resumo.csv`.
+```
+
+### Cell 2 [code] · In [1]
+
+```python
+from pathlib import Path
+import gc
+import sys
+
+import numpy as np
+import pandas as pd
+import pyarrow.parquet as pq
+
+from IPython.display import display
+
+
+def encontrar_raiz_projeto() -> Path:
+    """
+    Localiza a raiz do projeto procurando pelas pastas src e configs.
+    """
+
+    pasta_atual = Path.cwd().resolve()
+
+    pastas_candidatas = [
+        pasta_atual
+    ] + list(
+        pasta_atual.parents
+    )
+
+    for pasta in pastas_candidatas:
+        possui_src = (
+            pasta
+            / "src"
+        ).is_dir()
+
+        possui_configs = (
+            pasta
+            / "configs"
+        ).is_dir()
+
+        if possui_src and possui_configs:
+            return pasta
+
+    raise FileNotFoundError(
+        "Não foi possível localizar a raiz do projeto."
+    )
+
+
+ROOT_DIR = encontrar_raiz_projeto()
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(
+        0,
+        str(ROOT_DIR),
+    )
+
+from src.utils import config as C
+from src.utils import env
+from src.utils import storage
+
+env.carregar_dotenv()
+env.garantir_diretorios()
+
+DATA_INICIAL_COORTE = pd.Timestamp(
+    "2019-01-01"
+)
+
+DATA_FINAL_COORTE = pd.Timestamp(
+    "2026-09-28"
+)
+
+ANO_MINIMO_CONVERSAO = 1900
+ANO_MAXIMO_CONVERSAO = 2026
+
+CAMINHO_DICIONARIO = (
+    C.CONFIGS_DIR
+    / "dicionario_variaveis_v1.csv"
+)
+
+CAMINHO_COORTE_PROVISORIA = (
+    C.ANALYTICAL_DIR
+    / "coorte_provisoria_b.parquet"
+)
+
+CAMINHO_WATERFALL = (
+    C.TABLES_DIR
+    / "coorte_provisoria_b_waterfall.csv"
+)
+
+CAMINHO_AUDITORIA_DUPLICIDADES = (
+    C.TABLES_DIR
+    / "coorte_provisoria_b_auditoria_duplicidades.csv"
+)
+
+CAMINHO_AUDITORIA_TEMPORAL = (
+    C.TABLES_DIR
+    / "coorte_provisoria_b_auditoria_temporal.csv"
+)
+
+CAMINHO_RESUMO = (
+    C.TABLES_DIR
+    / "coorte_provisoria_b_resumo.csv"
+)
+
+print(
+    "Raiz do projeto:",
+    ROOT_DIR,
+)
+
+print(
+    "Versão dos dados:",
+    C.DATA_VERSION,
+)
+
+print(
+    "Arquivo oficial:",
+    C.PARQUET_NAME,
+)
+
+print(
+    "Período provisório:",
+    DATA_INICIAL_COORTE.date(),
+    "a",
+    DATA_FINAL_COORTE.date(),
+)
+
+print(
+    "Saída da coorte:",
+    CAMINHO_COORTE_PROVISORIA,
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Raiz do projeto: <HOME>\Documents\GitHub\Projeto_Integrador
+Versão dos dados: dados-v2
+Arquivo oficial: srag.parquet
+Período provisório: 2019-01-01 a 2026-09-28
+Saída da coorte: <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
+```
+
+### Cell 3 [code] · In [2]
+
+```python
+if not CAMINHO_DICIONARIO.exists():
+    raise FileNotFoundError(
+        "O dicionário operacional não foi encontrado em: "
+        f"{CAMINHO_DICIONARIO}"
+    )
+
+dicionario_variaveis = pd.read_csv(
+    CAMINHO_DICIONARIO,
+    encoding="utf-8-sig",
+    dtype="string",
+    keep_default_na=False,
+)
+
+if "coluna" not in dicionario_variaveis.columns:
+    raise KeyError(
+        "O dicionário operacional não contém a coluna 'coluna'."
+    )
+
+colunas_dicionario = (
+    dicionario_variaveis[
+        "coluna"
+    ]
+    .astype("string")
+    .str.strip()
+)
+
+colunas_dicionario = (
+    colunas_dicionario.loc[
+        colunas_dicionario.ne("")
+    ]
+    .drop_duplicates()
+    .tolist()
+)
+
+COLUNAS_ADICIONAIS = [
+    "id_registro",
+    "ano_arquivo",
+    "data_snapshot",
+    "arquivo_origem",
+    "nosocomial",
+]
+
+COLUNAS_SOLICITADAS = list(
+    dict.fromkeys(
+        COLUNAS_ADICIONAIS
+        + colunas_dicionario
+    )
+)
+
+caminho_parquet = storage.get_parquet(
+    force=False
+)
+
+if not caminho_parquet.exists():
+    raise FileNotFoundError(
+        "O Parquet oficial não foi encontrado em: "
+        f"{caminho_parquet}"
+    )
+
+arquivo_parquet = pq.ParquetFile(
+    caminho_parquet
+)
+
+colunas_disponiveis = set(
+    arquivo_parquet.schema_arrow.names
+)
+
+COLUNAS_EXISTENTES = [
+    coluna
+    for coluna in COLUNAS_SOLICITADAS
+    if coluna in colunas_disponiveis
+]
+
+COLUNAS_AUSENTES = [
+    coluna
+    for coluna in COLUNAS_SOLICITADAS
+    if coluna not in colunas_disponiveis
+]
+
+COLUNAS_MINIMAS = {
+    "nu_notific",
+    "hospital",
+    "dt_notific",
+    "dt_sin_pri",
+    "dt_interna",
+    "evolucao",
+}
+
+colunas_minimas_ausentes = (
+    COLUNAS_MINIMAS
+    - set(
+        COLUNAS_EXISTENTES
+    )
+)
+
+if colunas_minimas_ausentes:
+    raise KeyError(
+        "O Parquet não contém as colunas mínimas: "
+        f"{sorted(colunas_minimas_ausentes)}"
+    )
+
+print(
+    "Colunas solicitadas:",
+    len(
+        COLUNAS_SOLICITADAS
+    ),
+)
+
+print(
+    "Colunas encontradas:",
+    len(
+        COLUNAS_EXISTENTES
+    ),
+)
+
+print(
+    "Colunas opcionais ausentes:",
+    len(
+        COLUNAS_AUSENTES
+    ),
+)
+
+if COLUNAS_AUSENTES:
+    display(
+        pd.DataFrame(
+            {
+                "coluna_opcional_ausente": (
+                    COLUNAS_AUSENTES
+                ),
+            }
+        )
+    )
+
+print(
+    "nosocomial disponível:",
+    "nosocomial" in COLUNAS_EXISTENTES,
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Colunas solicitadas: 93
+Colunas encontradas: 93
+Colunas opcionais ausentes: 0
+nosocomial disponível: True
+```
+
+### Cell 4 [code] · In [3]
+
+```python
+def normalizar_codigo(
+    serie: pd.Series,
+) -> pd.Series:
+    """
+    Normaliza códigos textuais sem interpretar ausência como resposta.
+    """
+
+    resultado = (
+        serie.astype("string")
+        .str.strip()
+        .str.replace(
+            r"\.0$",
+            "",
+            regex=True,
+        )
+        .replace(
+            {
+                "": pd.NA,
+                "nan": pd.NA,
+                "NaN": pd.NA,
+                "None": pd.NA,
+                "<NA>": pd.NA,
+            }
+        )
+    )
+
+    return resultado
+
+
+def converter_data_mista_segura(
+    serie: pd.Series,
+    ano_minimo: int = ANO_MINIMO_CONVERSAO,
+    ano_maximo: int = ANO_MAXIMO_CONVERSAO,
+) -> pd.Series:
+    """
+    Converte datas nos formatos AAAA-MM-DD e DD/MM/AAAA.
+
+    Datas não reconhecidas, calendários inválidos e anos fora da
+    faixa configurada tornam-se NaT.
+    """
+
+    texto = (
+        serie.astype("string")
+        .str.strip()
+        .replace(
+            {
+                "": pd.NA,
+                "nan": pd.NA,
+                "NaN": pd.NA,
+                "None": pd.NA,
+                "<NA>": pd.NA,
+            }
+        )
+    )
+
+    resultado = pd.Series(
+        pd.NaT,
+        index=serie.index,
+        dtype="datetime64[ns]",
+    )
+
+    mascara_iso = texto.str.match(
+        r"^\d{4}-\d{2}-\d{2}$",
+        na=False,
+    )
+
+    mascara_br = texto.str.match(
+        r"^\d{2}/\d{2}/\d{4}$",
+        na=False,
+    )
+
+    ano_iso = pd.to_numeric(
+        texto.str.slice(
+            0,
+            4,
+        ),
+        errors="coerce",
+    )
+
+    ano_br = pd.to_numeric(
+        texto.str.slice(
+            6,
+            10,
+        ),
+        errors="coerce",
+    )
+
+    mascara_iso_valida = (
+        mascara_iso
+        & ano_iso.between(
+            ano_minimo,
+            ano_maximo,
+        )
+    )
+
+    mascara_br_valida = (
+        mascara_br
+        & ano_br.between(
+            ano_minimo,
+            ano_maximo,
+        )
+    )
+
+    resultado.loc[
+        mascara_iso_valida
+    ] = pd.to_datetime(
+        texto.loc[
+            mascara_iso_valida
+        ],
+        format="%Y-%m-%d",
+        errors="coerce",
+    )
+
+    resultado.loc[
+        mascara_br_valida
+    ] = pd.to_datetime(
+        texto.loc[
+            mascara_br_valida
+        ],
+        format="%d/%m/%Y",
+        errors="coerce",
+    )
+
+    return resultado
+
+
+def adicionar_etapa_waterfall(
+    etapas: list,
+    etapa: str,
+    registros_antes: int,
+    registros_depois: int,
+    motivo: str,
+) -> None:
+    """
+    Registra uma etapa do fluxo de seleção.
+    """
+
+    registros_excluidos = (
+        registros_antes
+        - registros_depois
+    )
+
+    if registros_antes == 0:
+        percentual_excluido = 0.0
+    else:
+        percentual_excluido = (
+            registros_excluidos
+            / registros_antes
+        )
+
+        percentual_excluido = (
+            percentual_excluido
+            * 100
+        )
+
+    etapas.append(
+        {
+            "etapa": etapa,
+            "registros_antes": int(
+                registros_antes
+            ),
+            "registros_excluidos": int(
+                registros_excluidos
+            ),
+            "registros_depois": int(
+                registros_depois
+            ),
+            "percentual_excluido": float(
+                percentual_excluido
+            ),
+            "motivo": motivo,
+        }
+    )
+```
+
+### Cell 5 [code] · In [4]
+
+```python
+base_original = storage.read_srag(
+    columns=COLUNAS_EXISTENTES
+)
+
+if base_original.empty:
+    raise ValueError(
+        "A base oficial foi carregada sem registros."
+    )
+
+quantidade_registros_originais = len(
+    base_original
+)
+
+quantidade_colunas_originais = (
+    base_original.shape[1]
+)
+
+memoria_base_original_bytes = (
+    base_original
+    .memory_usage(
+        deep=True
+    )
+    .sum()
+)
+
+memoria_base_original_mb = (
+    memoria_base_original_bytes
+    / 1_048_576
+)
+
+print(
+    "Dimensão carregada:",
+    base_original.shape,
+)
+
+print(
+    "Memória aproximada em MB:",
+    round(
+        memoria_base_original_mb,
+        2,
+    ),
+)
+
+display(
+    base_original.head()
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Dimensão carregada: (4666910, 93)
+Memória aproximada em MB: 15967.21
+```
+
+**Output 2 (display_data)**
+
+```text
+   id_registro  ano_arquivo data_snapshot               arquivo_origem  \
+0            0         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+1            1         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+2            2         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+3            3         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+4            4         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
+
+  nosocomial      nu_notific  dt_notific  dt_sin_pri sem_pri hospital  ...  \
+0          2  31781201987679  2026-06-11  2026-06-02      23        1  ...   
+1          2  31775652598724  2026-03-23  2026-03-22      13     None  ...   
+2          2  31781205405890  2026-03-29  2026-03-23      13        2  ...   
+3          2  31782407823707  2026-06-17  2026-06-15      25        1  ...   
+4          2  31773493207022  2026-03-14  2026-03-09      11        1  ...   
+
+  antiviral tp_antivir dt_antivir trat_cov tipo_trat dt_trt_cov evolucao  \
+0         2       None       None        2      None       None        1   
+1      None       None       None     None      None       None     None   
+2         2       None       None        2      None       None        1   
+3         2       None       None        2      None       None     None   
+4      None       None       None     None      None       None        1   
+
+   dt_evoluca  dt_encerra   dt_digita  
+0  2026-06-19  2026-06-19  2026-06-11  
+1        None        None  2026-04-08  
+2  2026-03-31  2026-06-11  2026-06-11  
+3        None        None  2026-06-25  
+4        None        None  2026-03-14  
+
+[5 rows x 93 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 6 [code] · In [5]
+
+```python
+waterfall = [
+    {
+        "etapa": "registros_originais",
+        "registros_antes": (
+            quantidade_registros_originais
+        ),
+        "registros_excluidos": 0,
+        "registros_depois": (
+            quantidade_registros_originais
+        ),
+        "percentual_excluido": 0.0,
+        "motivo": (
+            "Total de registros carregados do dataset oficial."
+        ),
+    }
+]
+
+n_antes_duplicidades = len(
+    base_original
+)
+
+mascara_duplicidade_exata = (
+    base_original.duplicated(
+        keep="first"
+    )
+)
+
+quantidade_duplicidades_exatas = int(
+    mascara_duplicidade_exata.sum()
+)
+
+base_trabalho = (
+    base_original.loc[
+        ~mascara_duplicidade_exata
+    ]
+    .copy()
+    .reset_index(drop=True)
+)
+
+adicionar_etapa_waterfall(
+    etapas=waterfall,
+    etapa="duplicidades_exatas",
+    registros_antes=n_antes_duplicidades,
+    registros_depois=len(
+        base_trabalho
+    ),
+    motivo=(
+        "Remoção somente de linhas integralmente idênticas "
+        "nos campos originais carregados."
+    ),
+)
+
+print(
+    "Duplicidades exatas removidas:",
+    quantidade_duplicidades_exatas,
+)
+
+print(
+    "Registros restantes:",
+    len(
+        base_trabalho
+    ),
+)
+
+del base_original
+del mascara_duplicidade_exata
+
+gc.collect()
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Duplicidades exatas removidas: 0
+Registros restantes: 4666910
+```
+
+**Output 2 (execute_result)**
+
+```text
+0
+```
+
+### Cell 7 [code] · In [6]
+
+```python
+base_trabalho[
+    "hospital_normalizado"
+] = normalizar_codigo(
+    base_trabalho[
+        "hospital"
+    ]
+)
+
+base_trabalho[
+    "evolucao_normalizada"
+] = normalizar_codigo(
+    base_trabalho[
+        "evolucao"
+    ]
+)
+
+base_trabalho[
+    "nu_notific_normalizado"
+] = normalizar_codigo(
+    base_trabalho[
+        "nu_notific"
+    ]
+)
+
+if "nosocomial" in base_trabalho.columns:
+    base_trabalho[
+        "nosocomial_normalizado"
+    ] = normalizar_codigo(
+        base_trabalho[
+            "nosocomial"
+        ]
+    )
+else:
+    base_trabalho[
+        "nosocomial_normalizado"
+    ] = pd.Series(
+        pd.NA,
+        index=base_trabalho.index,
+        dtype="string",
+    )
+
+COLUNAS_DATA_ESSENCIAIS = [
+    "dt_notific",
+    "dt_sin_pri",
+    "dt_interna",
+    "dt_evoluca",
+    "dt_encerra",
+    "dt_digita",
+]
+
+for coluna in COLUNAS_DATA_ESSENCIAIS:
+    if coluna in base_trabalho.columns:
+        nome_convertido = (
+            f"{coluna}_convertida"
+        )
+
+        base_trabalho[
+            nome_convertido
+        ] = converter_data_mista_segura(
+            base_trabalho[
+                coluna
+            ]
+        )
+
+COLUNAS_CONVERTIDAS_OBRIGATORIAS = [
+    "dt_notific_convertida",
+    "dt_sin_pri_convertida",
+    "dt_interna_convertida",
+]
+
+colunas_convertidas_ausentes = [
+    coluna
+    for coluna in COLUNAS_CONVERTIDAS_OBRIGATORIAS
+    if coluna not in base_trabalho.columns
+]
+
+if colunas_convertidas_ausentes:
+    raise KeyError(
+        "As datas obrigatórias não foram convertidas: "
+        f"{colunas_convertidas_ausentes}"
+    )
+
+print(
+    "Códigos e datas essenciais normalizados."
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Códigos e datas essenciais normalizados.
+```
+
+### Cell 8 [code] · In [7]
+
+```python
+n_antes_hospitalizacao = len(
+    base_trabalho
+)
+
+base_trabalho = (
+    base_trabalho.loc[
+        base_trabalho[
+            "hospital_normalizado"
+        ].eq("1")
+    ]
+    .copy()
+    .reset_index(drop=True)
+)
+
+adicionar_etapa_waterfall(
+    etapas=waterfall,
+    etapa="hospitalizacao_confirmada",
+    registros_antes=n_antes_hospitalizacao,
+    registros_depois=len(
+        base_trabalho
+    ),
+    motivo=(
+        "Manutenção somente de registros com hospital = 1."
+    ),
+)
+
+
+n_antes_data_internacao = len(
+    base_trabalho
+)
+
+base_trabalho = (
+    base_trabalho.loc[
+        base_trabalho[
+            "dt_interna_convertida"
+        ].notna()
+    ]
+    .copy()
+    .reset_index(drop=True)
+)
+
+adicionar_etapa_waterfall(
+    etapas=waterfall,
+    etapa="data_internacao_valida",
+    registros_antes=n_antes_data_internacao,
+    registros_depois=len(
+        base_trabalho
+    ),
+    motivo=(
+        "Manutenção somente de registros com dt_interna válida."
+    ),
+)
+
+
+n_antes_periodo = len(
+    base_trabalho
+)
+
+mascara_periodo = (
+    base_trabalho[
+        "dt_interna_convertida"
+    ]
+    .between(
+        DATA_INICIAL_COORTE,
+        DATA_FINAL_COORTE,
+    )
+)
+
+base_trabalho = (
+    base_trabalho.loc[
+        mascara_periodo
+    ]
+    .copy()
+    .reset_index(drop=True)
+)
+
+adicionar_etapa_waterfall(
+    etapas=waterfall,
+    etapa="periodo_da_coorte",
+    registros_antes=n_antes_periodo,
+    registros_depois=len(
+        base_trabalho
+    ),
+    motivo=(
+        "Internação entre 01/01/2019 e 28/09/2026."
+    ),
+)
+
+
+n_antes_desfecho = len(
+    base_trabalho
+)
+
+mascara_desfecho = (
+    base_trabalho[
+        "evolucao_normalizada"
+    ]
+    .isin(
+        [
+            "1",
+            "2",
+        ]
+    )
+)
+
+base_trabalho = (
+    base_trabalho.loc[
+        mascara_desfecho
+    ]
+    .copy()
+    .reset_index(drop=True)
+)
+
+adicionar_etapa_waterfall(
+    etapas=waterfall,
+    etapa="desfecho_elegivel",
+    registros_antes=n_antes_desfecho,
+    registros_depois=len(
+        base_trabalho
+    ),
+    motivo=(
+        "Manutenção somente de evolucao = 1 ou evolucao = 2."
+    ),
+)
+
+waterfall_df = pd.DataFrame(
+    waterfall
+)
+
+display(
+    waterfall_df
+)
+
+gc.collect()
+```
+
+**Output 1 (display_data)**
+
+```text
+                       etapa  registros_antes  registros_excluidos  \
+0        registros_originais          4666910                    0   
+1        duplicidades_exatas          4666910                    0   
+2  hospitalizacao_confirmada          4666910               232253   
+3     data_internacao_valida          4434657                72113   
+4          periodo_da_coorte          4362544                   44   
+5          desfecho_elegivel          4362500               447364   
+
+   registros_depois  percentual_excluido  \
+0           4666910             0.000000   
+1           4666910             0.000000   
+2           4434657             4.976591   
+3           4362544             1.626124   
+4           4362500             0.001009   
+5           3915136            10.254762   
+
+                                              motivo  
+0  Total de registros carregados do dataset oficial.  
+1  Remoção somente de linhas integralmente idênti...  
+2  Manutenção somente de registros com hospital = 1.  
+3  Manutenção somente de registros com dt_interna...  
+4          Internação entre 01/01/2019 e 28/09/2026.  
+5  Manutenção somente de evolucao = 1 ou evolucao...  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (execute_result)**
+
+```text
+0
+```
+
+### Cell 9 [code] · In [8]
+
+```python
+coorte_provisoria = base_trabalho
+
+coorte_provisoria[
+    "alvo_obito_srag"
+] = (
+    coorte_provisoria[
+        "evolucao_normalizada"
+    ]
+    .eq("2")
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "ano_internacao"
+] = (
+    coorte_provisoria[
+        "dt_interna_convertida"
+    ]
+    .dt.year
+    .astype("Int64")
+)
+
+coorte_provisoria[
+    "mes_internacao"
+] = (
+    coorte_provisoria[
+        "dt_interna_convertida"
+    ]
+    .dt.month
+    .astype("Int64")
+)
+
+coorte_provisoria[
+    "ano_notificacao"
+] = (
+    coorte_provisoria[
+        "dt_notific_convertida"
+    ]
+    .dt.year
+    .astype("Int64")
+)
+
+coorte_provisoria[
+    "ano_sintomas"
+] = (
+    coorte_provisoria[
+        "dt_sin_pri_convertida"
+    ]
+    .dt.year
+    .astype("Int64")
+)
+
+coorte_provisoria[
+    "dias_sintomas_ate_internacao"
+] = (
+    coorte_provisoria[
+        "dt_interna_convertida"
+    ]
+    - coorte_provisoria[
+        "dt_sin_pri_convertida"
+    ]
+).dt.days.astype("Int64")
+
+coorte_provisoria[
+    "dias_notificacao_ate_internacao"
+] = (
+    coorte_provisoria[
+        "dt_interna_convertida"
+    ]
+    - coorte_provisoria[
+        "dt_notific_convertida"
+    ]
+).dt.days.astype("Int64")
+
+coorte_provisoria[
+    "flag_internacao_antes_sintomas"
+] = (
+    coorte_provisoria[
+        "dias_sintomas_ate_internacao"
+    ]
+    .lt(0)
+    .fillna(False)
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_notificacao_apos_internacao"
+] = (
+    coorte_provisoria[
+        "dias_notificacao_ate_internacao"
+    ]
+    .lt(0)
+    .fillna(False)
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_notificacao_fora_periodo"
+] = (
+    coorte_provisoria[
+        "dt_notific_convertida"
+    ]
+    .notna()
+    & ~coorte_provisoria[
+        "dt_notific_convertida"
+    ]
+    .between(
+        DATA_INICIAL_COORTE,
+        DATA_FINAL_COORTE,
+    )
+).astype("int8")
+
+coorte_provisoria[
+    "flag_sintomas_fora_periodo"
+] = (
+    coorte_provisoria[
+        "dt_sin_pri_convertida"
+    ]
+    .notna()
+    & ~coorte_provisoria[
+        "dt_sin_pri_convertida"
+    ]
+    .between(
+        DATA_INICIAL_COORTE,
+        DATA_FINAL_COORTE,
+    )
+).astype("int8")
+
+coorte_provisoria[
+    "flag_dt_sin_pri_ausente"
+] = (
+    coorte_provisoria[
+        "dt_sin_pri_convertida"
+    ]
+    .isna()
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_dt_notific_ausente"
+] = (
+    coorte_provisoria[
+        "dt_notific_convertida"
+    ]
+    .isna()
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_nosocomial"
+] = (
+    coorte_provisoria[
+        "nosocomial_normalizado"
+    ]
+    .eq("1")
+    .fillna(False)
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_intervalo_negativo_sem_nosocomial"
+] = (
+    coorte_provisoria[
+        "flag_internacao_antes_sintomas"
+    ]
+    .eq(1)
+    & coorte_provisoria[
+        "flag_nosocomial"
+    ]
+    .ne(1)
+).astype("int8")
+
+coorte_provisoria[
+    "periodo_incompleto"
+] = (
+    coorte_provisoria[
+        "ano_internacao"
+    ]
+    .eq(2026)
+    .astype("int8")
+)
+
+print(
+    "Alvo, intervalos e flags temporais criados."
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Alvo, intervalos e flags temporais criados.
+```
+
+### Cell 10 [code] · In [9]
+
+```python
+intervalo = (
+    coorte_provisoria[
+        "dias_sintomas_ate_internacao"
+    ]
+)
+
+condicoes_intervalo = [
+    intervalo.isna(),
+    intervalo.lt(-30),
+    intervalo.between(
+        -30,
+        -8,
+        inclusive="both",
+    ),
+    intervalo.between(
+        -7,
+        -1,
+        inclusive="both",
+    ),
+    intervalo.eq(0),
+    intervalo.between(
+        1,
+        7,
+        inclusive="both",
+    ),
+    intervalo.between(
+        8,
+        14,
+        inclusive="both",
+    ),
+    intervalo.between(
+        15,
+        30,
+        inclusive="both",
+    ),
+    intervalo.gt(30),
+]
+
+rotulos_intervalo = [
+    "ausente",
+    "menor_que_menos_30",
+    "menos_30_a_menos_8",
+    "menos_7_a_menos_1",
+    "zero",
+    "1_a_7",
+    "8_a_14",
+    "15_a_30",
+    "maior_que_30",
+]
+
+classificacao_intervalo = np.select(
+    condicoes_intervalo,
+    rotulos_intervalo,
+    default="nao_classificado",
+)
+
+coorte_provisoria[
+    "faixa_dias_sintomas_ate_internacao"
+] = pd.Series(
+    classificacao_intervalo,
+    index=coorte_provisoria.index,
+    dtype="string",
+)
+
+tabela_intervalos = (
+    coorte_provisoria[
+        "faixa_dias_sintomas_ate_internacao"
+    ]
+    .value_counts(
+        dropna=False
+    )
+    .rename_axis(
+        "faixa"
+    )
+    .reset_index(
+        name="quantidade"
+    )
+)
+
+display(
+    tabela_intervalos
+)
+```
+
+**Output 1 (display_data)**
+
+```text
+                faixa  quantidade
+0               1_a_7     2307778
+1              8_a_14      880020
+2                zero      512125
+3             15_a_30      159565
+4        maior_que_30       34730
+5  menos_30_a_menos_8       10033
+6   menos_7_a_menos_1        7694
+7  menor_que_menos_30        3191
+[non-text output omitted: text/html]
+```
+
+### Cell 11 [code] · In [10]
+
+```python
+contagem_nu_notific = (
+    coorte_provisoria[
+        "nu_notific_normalizado"
+    ]
+    .dropna()
+    .value_counts()
+)
+
+coorte_provisoria[
+    "quantidade_ocorrencias_nu_notific"
+] = (
+    coorte_provisoria[
+        "nu_notific_normalizado"
+    ]
+    .map(
+        contagem_nu_notific
+    )
+    .astype("Int64")
+)
+
+coorte_provisoria[
+    "flag_nu_notific_repetido"
+] = (
+    coorte_provisoria[
+        "quantidade_ocorrencias_nu_notific"
+    ]
+    .gt(1)
+    .fillna(False)
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "flag_nu_notific_ausente"
+] = (
+    coorte_provisoria[
+        "nu_notific_normalizado"
+    ]
+    .isna()
+    .astype("int8")
+)
+
+coorte_provisoria[
+    "status_coorte"
+] = "provisoria_pessoa_b"
+
+coorte_provisoria[
+    "data_corte_coorte"
+] = DATA_FINAL_COORTE
+
+print(
+    "Linhas com nu_notific repetido:",
+    int(
+        coorte_provisoria[
+            "flag_nu_notific_repetido"
+        ].sum()
+    ),
+)
+
+print(
+    "Linhas com nu_notific ausente:",
+    int(
+        coorte_provisoria[
+            "flag_nu_notific_ausente"
+        ].sum()
+    ),
+)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Linhas com nu_notific repetido: 30
+Linhas com nu_notific ausente: 0
+```
+
+### Cell 12 [code] · In [11]
+
+```python
+auditoria_duplicidades = (
+    coorte_provisoria.loc[
+        coorte_provisoria[
+            "flag_nu_notific_repetido"
+        ].eq(1)
+    ]
+    .groupby(
+        "nu_notific_normalizado",
+        dropna=False,
+    )
+    .agg(
+        quantidade_ocorrencias=(
+            "nu_notific_normalizado",
+            "size",
+        ),
+        quantidade_anos_internacao=(
+            "ano_internacao",
+            "nunique",
+        ),
+        quantidade_datas_internacao=(
+            "dt_interna_convertida",
+            "nunique",
+        ),
+        quantidade_desfechos=(
+            "evolucao_normalizada",
+            "nunique",
+        ),
+        quantidade_datas_sintomas=(
+            "dt_sin_pri_convertida",
+            "nunique",
+        ),
+    )
+    .reset_index()
+)
+
+auditoria_duplicidades[
+    "flag_ano_internacao_divergente"
+] = (
+    auditoria_duplicidades[
+        "quantidade_anos_internacao"
+    ]
+    .gt(1)
+    .astype("int8")
+)
+
+auditoria_duplicidades[
+    "flag_dt_interna_divergente"
+] = (
+    auditoria_duplicidades[
+        "quantidade_datas_internacao"
+    ]
+    .gt(1)
+    .astype("int8")
+)
+
+auditoria_duplicidades[
+    "flag_evolucao_divergente"
+] = (
+    auditoria_duplicidades[
+        "quantidade_desfechos"
+    ]
+    .gt(1)
+    .astype("int8")
+)
+
+auditoria_duplicidades[
+    "flag_dt_sin_pri_divergente"
+] = (
+    auditoria_duplicidades[
+        "quantidade_datas_sintomas"
+    ]
+    .gt(1)
+    .astype("int8")
+)
+
+auditoria_duplicidades = (
+    auditoria_duplicidades
+    .sort_values(
+        [
+            "quantidade_ocorrencias",
+            "nu_notific_normalizado",
+        ],
+        ascending=[
+            False,
+            True,
+        ],
+    )
+    .reset_index(drop=True)
+)
+
+auditoria_temporal = pd.DataFrame(
+    {
+        "verificacao": [
+            "dt_sin_pri_ausente",
+            "dt_notific_ausente",
+            "internacao_antes_sintomas",
+            "intervalo_negativo_sem_nosocomial",
+            "notificacao_apos_internacao",
+            "notificacao_fora_periodo",
+            "sintomas_fora_periodo",
+            "nu_notific_repetido",
+            "nu_notific_ausente",
+            "periodo_incompleto_2026",
+        ],
+        "quantidade": [
+            int(
+                coorte_provisoria[
+                    "flag_dt_sin_pri_ausente"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_dt_notific_ausente"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_internacao_antes_sintomas"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_intervalo_negativo_sem_nosocomial"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_notificacao_apos_internacao"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_notificacao_fora_periodo"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_sintomas_fora_periodo"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_nu_notific_repetido"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_nu_notific_ausente"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "periodo_incompleto"
+                ].sum()
+            ),
+        ],
+    }
+)
+
+auditoria_temporal[
+    "percentual_coorte"
+] = (
+    auditoria_temporal[
+        "quantidade"
+    ]
+    .div(
+        len(
+            coorte_provisoria
+        )
+    )
+    .mul(100)
+)
+
+display(
+    auditoria_temporal
+)
+
+display(
+    auditoria_duplicidades.head(20)
+)
+```
+
+**Output 1 (display_data)**
+
+```text
+                         verificacao  quantidade  percentual_coorte
+0                 dt_sin_pri_ausente           0           0.000000
+1                 dt_notific_ausente           0           0.000000
+2          internacao_antes_sintomas       20918           0.534285
+3  intervalo_negativo_sem_nosocomial           0           0.000000
+4        notificacao_apos_internacao     1951377          49.841870
+5           notificacao_fora_periodo           0           0.000000
+6              sintomas_fora_periodo          61           0.001558
+7                nu_notific_repetido          30           0.000766
+8                 nu_notific_ausente           0           0.000000
+9            periodo_incompleto_2026      175521           4.483139
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+   nu_notific_normalizado  quantidade_ocorrencias  quantidade_anos_internacao  \
+0          31736177754051                       2                           1   
+1          31736866916969                       2                           2   
+2          31738324913116                       2                           1   
+3          31741716994694                       2                           1   
+4          31743975908104                       2                           1   
+5          31744118738694                       2                           1   
+6          31744265580768                       2                           1   
+7          31744397861067                       2                           1   
+8          31745324608735                       2                           2   
+9          31745519106567                       2                           1   
+10         31746458224089                       2                           1   
+11         31746459301774                       2                           1   
+12         31746816257499                       2                           1   
+13         31748044066509                       2                           1   
+14         31750088488779                       2                           1   
+
+    quantidade_datas_internacao  quantidade_desfechos  \
+0                             1                     1   
+1                             2                     1   
+2                             1                     1   
+3                             1                     1   
+4                             1                     1   
+5                             1                     1   
+6                             1                     1   
+7                             1                     1   
+8                             2                     1   
+9                             1                     1   
+10                            1                     1   
+11                            1                     1   
+12                            1                     1   
+13                            1                     1   
+14                            2                     1   
+
+    quantidade_datas_sintomas  flag_ano_internacao_divergente  \
+0                           2                               0   
+1                           2                               1   
+2                           2                               0   
+3                           2                               0   
+4                           2                               0   
+5                           2                               0   
+6                           2                               0   
+7                           2                               0   
+8                           2                               1   
+9                           2                               0   
+10                          2                               0   
+11                          2                               0   
+12                          2                               0   
+13                          2                               0   
+14                          2                               0   
+
+    flag_dt_interna_divergente  flag_evolucao_divergente  \
+0                            0                         0   
+1                            1                         0   
+2                            0                         0   
+3                            0                         0   
+4                            0                         0   
+5                            0                         0   
+6                            0                         0   
+7                            0                         0   
+8                            1                         0   
+9                            0                         0   
+10                           0                         0   
+11                           0                         0   
+12                           0                         0   
+13                           0                         0   
+14                           1                         0   
+
+    flag_dt_sin_pri_divergente  
+0                            1  
+1                            1  
+2                            1  
+3                            1  
+4                            1  
+5                            1  
+6                            1  
+7                            1  
+8                            1  
+9                            1  
+10                           1  
+11                           1  
+12                           1  
+13                           1  
+14                           1  
+[non-text output omitted: text/html]
+```
+
+### Cell 13 [code] · In [12]
+
+```python
+distribuicao_alvo = (
+    coorte_provisoria[
+        "alvo_obito_srag"
+    ]
+    .value_counts(
+        dropna=False
+    )
+    .sort_index()
+)
+
+resumo_coorte = pd.DataFrame(
+    {
+        "metrica": [
+            "versao_dados",
+            "status_coorte",
+            "data_inicial_coorte",
+            "data_final_coorte",
+            "registros_originais",
+            "colunas_originais_carregadas",
+            "duplicidades_exatas_removidas",
+            "registros_coorte_provisoria",
+            "colunas_coorte_provisoria",
+            "alvo_0_cura",
+            "alvo_1_obito_srag",
+            "linhas_nu_notific_repetido",
+            "identificadores_repetidos_distintos",
+            "internacao_antes_sintomas",
+            "intervalo_negativo_sem_nosocomial",
+            "registros_2026",
+        ],
+        "valor": [
+            C.DATA_VERSION,
+            "provisoria_pessoa_b",
+            str(
+                DATA_INICIAL_COORTE.date()
+            ),
+            str(
+                DATA_FINAL_COORTE.date()
+            ),
+            quantidade_registros_originais,
+            quantidade_colunas_originais,
+            quantidade_duplicidades_exatas,
+            len(
+                coorte_provisoria
+            ),
+            coorte_provisoria.shape[1],
+            int(
+                distribuicao_alvo.get(
+                    0,
+                    0,
+                )
+            ),
+            int(
+                distribuicao_alvo.get(
+                    1,
+                    0,
+                )
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_nu_notific_repetido"
+                ].sum()
+            ),
+            len(
+                auditoria_duplicidades
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_internacao_antes_sintomas"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "flag_intervalo_negativo_sem_nosocomial"
+                ].sum()
+            ),
+            int(
+                coorte_provisoria[
+                    "periodo_incompleto"
+                ].sum()
+            ),
+        ],
+    }
+)
+
+display(
+    resumo_coorte
+)
+```
+
+**Output 1 (display_data)**
+
+```text
+                                metrica                valor
+0                          versao_dados             dados-v2
+1                         status_coorte  provisoria_pessoa_b
+2                   data_inicial_coorte           2019-01-01
+3                     data_final_coorte           2026-09-28
+4                   registros_originais              4666910
+5          colunas_originais_carregadas                   93
+6         duplicidades_exatas_removidas                    0
+7           registros_coorte_provisoria              3915136
+8             colunas_coorte_provisoria                  125
+9                           alvo_0_cura              3058951
+10                    alvo_1_obito_srag               856185
+11           linhas_nu_notific_repetido                   30
+12  identificadores_repetidos_distintos                   15
+13            internacao_antes_sintomas                20918
+14    intervalo_negativo_sem_nosocomial                    0
+15                       registros_2026               175521
+[non-text output omitted: text/html]
+```
+
+### Cell 14 [code] · In [13]
+
+```python
+existem_duplicidades_exatas_restantes = (
+    coorte_provisoria[
+        COLUNAS_EXISTENTES
+    ]
+    .duplicated()
+    .any()
+)
+
+verificacoes_pre_salvamento = {
+    "coorte_nao_vazia": (
+        not coorte_provisoria.empty
+    ),
+    "hospitalizacao_confirmada": (
+        coorte_provisoria[
+            "hospital_normalizado"
+        ]
+        .eq("1")
+        .all()
+    ),
+    "dt_interna_valida": (
+        coorte_provisoria[
+            "dt_interna_convertida"
+        ]
+        .notna()
+        .all()
+    ),
+    "periodo_correto": (
+        coorte_provisoria[
+            "dt_interna_convertida"
+        ]
+        .between(
+            DATA_INICIAL_COORTE,
+            DATA_FINAL_COORTE,
+        )
+        .all()
+    ),
+    "desfecho_elegivel": (
+        coorte_provisoria[
+            "evolucao_normalizada"
+        ]
+        .isin(
+            [
+                "1",
+                "2",
+            ]
+        )
+        .all()
+    ),
+    "alvo_binario": (
+        set(
+            coorte_provisoria[
+                "alvo_obito_srag"
+            ]
+            .dropna()
+            .unique()
+        )
+        .issubset(
+            {
+                0,
+                1,
+            }
+        )
+    ),
+    "sem_duplicidades_exatas_restantes": (
+        not existem_duplicidades_exatas_restantes
+    ),
+    "flag_repeticao_identificador_criada": (
+        "flag_nu_notific_repetido"
+        in coorte_provisoria.columns
+    ),
+    "waterfall_criado": (
+        not waterfall_df.empty
+    ),
+    "auditoria_temporal_criada": (
+        not auditoria_temporal.empty
+    ),
+}
+
+verificacoes_pre_salvamento_df = pd.DataFrame(
+    {
+        "verificacao": list(
+            verificacoes_pre_salvamento.keys()
+        ),
+        "resultado": list(
+            verificacoes_pre_salvamento.values()
+        ),
+    }
+)
+
+display(
+    verificacoes_pre_salvamento_df
+)
+
+if not all(
+    verificacoes_pre_salvamento.values()
+):
+    falhas = [
+        verificacao
+        for verificacao, resultado
+        in verificacoes_pre_salvamento.items()
+        if not resultado
+    ]
+
+    raise RuntimeError(
+        "A coorte provisória não pode ser salva. "
+        f"Verificações com falha: {falhas}"
+    )
+
+print(
+    "Validações anteriores ao salvamento concluídas."
+)
+```
+
+**Output 1 (display_data)**
+
+```text
+                           verificacao  resultado
+0                     coorte_nao_vazia       True
+1            hospitalizacao_confirmada       True
+2                    dt_interna_valida       True
+3                      periodo_correto       True
+4                    desfecho_elegivel       True
+5                         alvo_binario       True
+6    sem_duplicidades_exatas_restantes       True
+7  flag_repeticao_identificador_criada       True
+8                     waterfall_criado       True
+9            auditoria_temporal_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Validações anteriores ao salvamento concluídas.
+```
+
+### Cell 15 [code] · In [14]
+
+```python
+C.ANALYTICAL_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+C.TABLES_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+coorte_provisoria.to_parquet(
+    CAMINHO_COORTE_PROVISORIA,
+    index=False,
+    compression="zstd",
+)
+
+waterfall_df.to_csv(
+    CAMINHO_WATERFALL,
+    index=False,
+    encoding="utf-8-sig",
+)
+
+auditoria_duplicidades.to_csv(
+    CAMINHO_AUDITORIA_DUPLICIDADES,
+    index=False,
+    encoding="utf-8-sig",
+)
+
+auditoria_temporal.to_csv(
+    CAMINHO_AUDITORIA_TEMPORAL,
+    index=False,
+    encoding="utf-8-sig",
+)
+
+resumo_coorte.to_csv(
+    CAMINHO_RESUMO,
+    index=False,
+    encoding="utf-8-sig",
+)
+
+coorte_reaberta = pd.read_parquet(
+    CAMINHO_COORTE_PROVISORIA
+)
+
+verificacoes_finais = {
+    "arquivo_parquet_criado": (
+        CAMINHO_COORTE_PROVISORIA.exists()
+    ),
+    "arquivo_waterfall_criado": (
+        CAMINHO_WATERFALL.exists()
+    ),
+    "arquivo_auditoria_duplicidades_criado": (
+        CAMINHO_AUDITORIA_DUPLICIDADES.exists()
+    ),
+    "arquivo_auditoria_temporal_criado": (
+        CAMINHO_AUDITORIA_TEMPORAL.exists()
+    ),
+    "arquivo_resumo_criado": (
+        CAMINHO_RESUMO.exists()
+    ),
+    "parquet_reaberto_nao_vazio": (
+        not coorte_reaberta.empty
+    ),
+    "mesmo_numero_de_linhas": (
+        len(
+            coorte_reaberta
+        )
+        == len(
+            coorte_provisoria
+        )
+    ),
+    "mesmo_numero_de_colunas": (
+        coorte_reaberta.shape[1]
+        == coorte_provisoria.shape[1]
+    ),
+    "status_provisorio_preservado": (
+        coorte_reaberta[
+            "status_coorte"
+        ]
+        .eq(
+            "provisoria_pessoa_b"
+        )
+        .all()
+    ),
+    "alvo_preservado": (
+        coorte_reaberta[
+            "alvo_obito_srag"
+        ]
+        .isin(
+            [
+                0,
+                1,
+            ]
+        )
+        .all()
+    ),
+}
+
+verificacoes_finais_df = pd.DataFrame(
+    {
+        "verificacao": list(
+            verificacoes_finais.keys()
+        ),
+        "resultado": list(
+            verificacoes_finais.values()
+        ),
+    }
+)
+
+display(
+    verificacoes_finais_df
+)
+
+if not all(
+    verificacoes_finais.values()
+):
+    falhas = [
+        verificacao
+        for verificacao, resultado
+        in verificacoes_finais.items()
+        if not resultado
+    ]
+
+    raise RuntimeError(
+        "A construção provisória terminou com falhas: "
+        f"{falhas}"
+    )
+
+tamanho_parquet_mb = (
+    CAMINHO_COORTE_PROVISORIA
+    .stat()
+    .st_size
+    / 1_048_576
+)
+
+print(
+    "Coorte provisória construída e validada com sucesso."
+)
+
+print(
+    "Arquivo:",
+    CAMINHO_COORTE_PROVISORIA,
+)
+
+print(
+    "Linhas:",
+    len(
+        coorte_reaberta
+    ),
+)
+
+print(
+    "Colunas:",
+    coorte_reaberta.shape[1],
+)
+
+print(
+    "Tamanho em MB:",
+    round(
+        tamanho_parquet_mb,
+        2,
+    ),
+)
+```
+
+**Output 1 (display_data)**
+
+```text
+                             verificacao  resultado
+0                 arquivo_parquet_criado       True
+1               arquivo_waterfall_criado       True
+2  arquivo_auditoria_duplicidades_criado       True
+3      arquivo_auditoria_temporal_criado       True
+4                  arquivo_resumo_criado       True
+5             parquet_reaberto_nao_vazio       True
+6                 mesmo_numero_de_linhas       True
+7                mesmo_numero_de_colunas       True
+8           status_provisorio_preservado       True
+9                        alvo_preservado       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Coorte provisória construída e validada com sucesso.
+Arquivo: <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
+Linhas: 3915136
+Colunas: 125
+Tamanho em MB: 196.63
+```
+
+## `notebooks/B/B_05_eda_primeira_passagem.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `1.8 MB` · modified `2026-10-17 14:03 UTC`
+- SHA-256: `5afed3126319a0d99299d608ad3ca45c9be1c147047d19c5b46e493c36a0b982`
 
 - Cells: `50` (`42` code, `8` markdown)
-- Code cells executed: `0` of `42`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `41` of `42`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -13819,7 +17461,7 @@ Este notebook não:
 As conclusões desta EDA são descritivas e não causais.
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -13870,7 +17512,16 @@ print(f"Sistema: {platform.system()} {platform.release()}")
 print(f"pandas: {pd.__version__}")
 ```
 
-### Cell 3 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Raiz do projeto: <HOME>\Documents\GitHub\Projeto_Integrador
+Python: 3.13.16
+Sistema: Windows 10
+pandas: 2.2.3
+```
+
+### Cell 3 [code] · In [2]
 
 ```python
 print(C.resumo())
@@ -13881,7 +17532,36 @@ print(f"Diretório de tabelas: {C.TABLES_DIR}")
 print(f"Diretório de figuras: {C.FIGURES_DIR}")
 ```
 
-### Cell 4 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <HOME>\Documents\GitHub\Projeto_Integrador
+DATA_DIR          = <HOME>\Documents\GitHub\Projeto_Integrador\data
+RAW_DIR           = <HOME>\Documents\GitHub\Projeto_Integrador\data\raw
+PROCESSED_DIR     = <HOME>\Documents\GitHub\Projeto_Integrador\data\processed
+ANALYTICAL_DIR    = <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical
+TREINO_DIR        = <HOME>\Documents\GitHub\Projeto_Integrador\data\treino
+OUTPUTS_DIR       = <HOME>\Documents\GitHub\Projeto_Integrador\outputs
+RUNS_DIR          = <HOME>\Documents\GitHub\Projeto_Integrador\outputs\runs
+LOGS_DIR          = <HOME>\Documents\GitHub\Projeto_Integrador\logs
+CONFIGS_DIR       = <HOME>\Documents\GitHub\Projeto_Integrador\configs
+SUPERVISED_YAML   = <HOME>\Documents\GitHub\Projeto_Integrador\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+Release configurada: dados-v2
+Nome do arquivo: srag.parquet
+Diretório de tabelas: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables
+Diretório de figuras: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures
+```
+
+### Cell 4 [code] · In [3]
 
 ```python
 import matplotlib.pyplot as plt
@@ -13934,7 +17614,13 @@ print(
 )
 ```
 
-### Cell 5 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Configuração visual do Notebook 01 carregada.
+```
+
+### Cell 5 [code] · In [4]
 
 ```python
 COLUNAS_ESTRUTURA = [
@@ -14089,7 +17775,23 @@ print(f"Colunas de Desfecho: {len(COLUNAS_DESFECHO_AUDITORIA)}")
 print(f"Total sem duplicidades: {len(COLUNAS_EDA)}")
 ```
 
-### Cell 6 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Período definido para a coorte: 2019-2026
+Total de colunas da EDA: 88
+Colunas de estrutura: 6
+Colunas candidatas: 35
+Colunas complementares de texto: 7
+Colunas geográficas: 10
+Colunas Condicionais de Vacinação: 15
+Colunas Contexto Social: 5
+Colunas de auditoria: 6
+Colunas de Desfecho: 4
+Total sem duplicidades: 88
+```
+
+### Cell 6 [code] · In [5]
 
 ```python
 quantidade_colunas_por_grupo = pd.DataFrame(
@@ -14255,7 +17957,29 @@ display(
 )
 ```
 
-### Cell 7 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+                    grupo  quantidade_colunas
+0   Candidatas principais                  35
+1   Vacinação condicional                  15
+2               Geografia                  10
+3   Textos complementares                   7
+4               Estrutura                   6
+5  Tratamento e auditoria                   6
+6         Contexto social                   5
+7    Desfecho e auditoria                   4
+[non-text output omitted: text/html]
+```
+
+### Cell 7 [code] · In [6]
 
 ```python
 caminho_parquet = storage.get_parquet(force=False)
@@ -14268,7 +17992,15 @@ print(
 )
 ```
 
-### Cell 8 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Arquivo: <HOME>\Documents\GitHub\Projeto_Integrador\data\processed\dados-v2\srag.parquet
+Existe: True
+Tamanho do arquivo: 289.51 MB, 303,573,013.00 bytes
+```
+
+### Cell 8 [code] · In [7]
 
 ```python
 arquivo_parquet = pq.ParquetFile(caminho_parquet)
@@ -14291,7 +18023,15 @@ display(
 )
 ```
 
-### Cell 9 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        arquivo versao_dados  numero_linhas  numero_colunas  numero_row_groups
+0  srag.parquet     dados-v2        4666910             198                 28
+[non-text output omitted: text/html]
+```
+
+### Cell 9 [code] · In [8]
 
 ```python
 schema_df = pd.DataFrame(
@@ -14308,7 +18048,40 @@ display(schema_df.head(20))
 print(f"Total de campos no schema: {len(schema_df)}")
 ```
 
-### Cell 10 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+            coluna   tipo_arrow
+0      id_registro        int64
+1      ano_arquivo        int16
+2    data_snapshot  date32[day]
+3   arquivo_origem       string
+4       nu_notific       string
+5       dt_notific       string
+6          sem_not       string
+7       dt_sin_pri       string
+8          sem_pri       string
+9        sg_uf_not       string
+10      id_regiona       string
+11      co_regiona       string
+12      id_municip       string
+13      co_mun_not       string
+14         cs_sexo       string
+15         dt_nasc       string
+16      nu_idade_n       string
+17        tp_idade       string
+18       cod_idade       string
+19      cs_gestant       string
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Total de campos no schema: 198
+```
+
+### Cell 10 [code] · In [9]
 
 ```python
 conjunto_colunas_disponiveis = set(colunas_disponiveis)
@@ -14349,7 +18122,33 @@ else:
     print("Todas as colunas solicitadas existem no Parquet.")
 ```
 
-### Cell 11 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna                 grupo  existe_no_parquet
+0   nu_notific             estrutura               True
+1   dt_notific             estrutura               True
+2   dt_sin_pri             estrutura               True
+3      sem_pri             estrutura               True
+4     hospital             estrutura               True
+..         ...                   ...                ...
+83  dt_trt_cov  tratamento_auditoria               True
+84    evolucao    desfecho_auditoria               True
+85  dt_evoluca    desfecho_auditoria               True
+86  dt_encerra    desfecho_auditoria               True
+87   dt_digita    desfecho_auditoria               True
+
+[88 rows x 3 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Todas as colunas solicitadas existem no Parquet.
+```
+
+### Cell 11 [code] · In [10]
 
 ```python
 if colunas_ausentes:
@@ -14362,7 +18161,13 @@ if colunas_ausentes:
 print("Validação concluída. A leitura pode continuar.")
 ```
 
-### Cell 12 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Validação concluída. A leitura pode continuar.
+```
+
+### Cell 12 [code] · In [11]
 
 ```python
 df = storage.read_srag(
@@ -14375,7 +18180,42 @@ print(f"Colunas carregadas: {df.shape[1]:,}")
 display(df.head())
 ```
 
-### Cell 13 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Linhas carregadas: 4,666,910
+Colunas carregadas: 88
+```
+
+**Output 2 (display_data)**
+
+```text
+       nu_notific  dt_notific  dt_sin_pri sem_pri hospital  dt_interna  \
+0  31781201987679  2026-06-11  2026-06-02      23        1  2026-06-11   
+1  31775652598724  2026-03-23  2026-03-22      13     None        None   
+2  31781205405890  2026-03-29  2026-03-23      13        2        None   
+3  31782407823707  2026-06-17  2026-06-15      25        1  2026-06-15   
+4  31773493207022  2026-03-14  2026-03-09      11        1  2026-03-10   
+
+  cs_sexo nu_idade_n tp_idade cs_gestant  ... antiviral tp_antivir dt_antivir  \
+0       F          1        2          6  ...         2       None       None   
+1       F         75        3          5  ...      None       None       None   
+2       F          4        3          6  ...         2       None       None   
+3       F         37        3          5  ...         2       None       None   
+4       F          4        3          6  ...      None       None       None   
+
+  trat_cov tipo_trat dt_trt_cov evolucao  dt_evoluca  dt_encerra   dt_digita  
+0        2      None       None        1  2026-06-19  2026-06-19  2026-06-11  
+1     None      None       None     None        None        None  2026-04-08  
+2        2      None       None        1  2026-03-31  2026-06-11  2026-06-11  
+3        2      None       None     None        None        None  2026-06-25  
+4     None      None       None        1        None        None  2026-03-14  
+
+[5 rows x 88 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 13 [code] · In [12]
 
 ```python
 if df.empty:
@@ -14395,7 +18235,16 @@ print(f"Quantidade de linhas: {len(df):,}")
 print(f"Quantidade de colunas: {df.shape[1]:,}")
 ```
 
-### Cell 14 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Dimensão: (4666910, 88)
+Índice único: True
+Quantidade de linhas: 4,666,910
+Quantidade de colunas: 88
+```
+
+### Cell 14 [code] · In [13]
 
 ```python
 tipos_memoria = pd.DataFrame(
@@ -14426,7 +18275,33 @@ print(f"Memória total: {memoria_total_mb:,.2f} MB")
 display(tipos_memoria)
 ```
 
-### Cell 15 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Memória total: 15,202.56 MB
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna tipo_pandas  memoria_mb
+0   nu_notific      object  274.755405
+1   dt_notific      object  262.592146
+2   dt_sin_pri      object  262.592146
+3    dt_digita      object  262.030751
+4   dt_interna      object  252.436873
+..         ...         ...         ...
+83    out_anim      object  106.986701
+84  dt_trt_cov      object  106.945159
+85   tipo_trat      object  106.935841
+86    out_trat      object  106.919263
+87       tabag      object  106.817219
+
+[88 rows x 3 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 15 [code] · In [14]
 
 ```python
 # ============================================================
@@ -15051,7 +18926,387 @@ display(
 )
 ```
 
-### Cell 16 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Datas do episódio: 3
+Datas de vacinação: 11
+Datas de tratamento: 2
+Datas de auditoria: 3
+Total de datas: 19
+Todas as colunas de data existem no DataFrame.
+Convertendo 1/19: dt_notific
+Convertendo 2/19: dt_sin_pri
+Convertendo 3/19: dt_interna
+Convertendo 4/19: dt_ut_dose
+Convertendo 5/19: dt_vac_mae
+Convertendo 6/19: dt_doseuni
+Convertendo 7/19: dt_1_dose
+Convertendo 8/19: dt_2_dose
+Convertendo 9/19: dose_1_cov
+Convertendo 10/19: dose_2_cov
+Convertendo 11/19: dose_ref
+Convertendo 12/19: dose_2ref
+Convertendo 13/19: dose_adic
+Convertendo 14/19: dos_re_bi
+Convertendo 15/19: dt_antivir
+Convertendo 16/19: dt_trt_cov
+Convertendo 17/19: dt_evoluca
+Convertendo 18/19: dt_encerra
+Convertendo 19/19: dt_digita
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna  datas_antes_1900  datas_depois_2026  datas_fora_faixa
+2   dt_interna                21                 76                97
+8   dose_1_cov                13                 52                65
+9   dose_2_cov                25                 43                68
+10    dose_ref                 0                  4                 4
+11   dose_2ref                 0                  1                 1
+14  dt_antivir                 6                 19                25
+[non-text output omitted: text/html]
+```
+
+**Output 3 (display_data)**
+
+```text
+        coluna  quantidade_total  quantidade_original_preenchida  \
+0   dt_notific           4666910                         4666910   
+1   dt_sin_pri           4666910                         4666910   
+2   dt_interna           4666910                         4362665   
+3   dt_ut_dose           4666910                          390041   
+4   dt_vac_mae           4666910                            5645   
+5   dt_doseuni           4666910                           17601   
+6    dt_1_dose           4666910                           18626   
+7    dt_2_dose           4666910                           10895   
+8   dose_1_cov           4666910                         1211162   
+9   dose_2_cov           4666910                         1024809   
+10    dose_ref           4666910                          473540   
+11   dose_2ref           4666910                          195149   
+12   dose_adic           4666910                           21152   
+13   dos_re_bi           4666910                          110916   
+14  dt_antivir           4666910                          347712   
+15  dt_trt_cov           4666910                            3833   
+16  dt_evoluca           4666910                         4014740   
+17  dt_encerra           4666910                         4338057   
+18   dt_digita           4666910                         4650091   
+
+    quantidade_formato_iso  quantidade_formato_br  \
+0                  4666910                      0   
+1                  4666910                      0   
+2                  4362665                      0   
+3                   390041                      0   
+4                     5645                      0   
+5                    17601                      0   
+6                    18626                      0   
+7                    10895                      0   
+8                        0                1211162   
+9                        0                1024809   
+10                       0                 473540   
+11                       0                 195149   
+12                       0                  21152   
+13                       0                 110916   
+14                  347712                      0   
+15                    3833                      0   
+16                 4014740                      0   
+17                 4338057                      0   
+18                 4650091                      0   
+
+    quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
+0                                    0                            0   
+1                                    0                            0   
+2                                    0                           21   
+3                                    0                            0   
+4                                    0                            0   
+5                                    0                            0   
+6                                    0                            0   
+7                                    0                            0   
+8                                    0                           13   
+9                                    0                           25   
+10                                   0                            0   
+11                                   0                            0   
+12                                   0                            0   
+13                                   0                            0   
+14                                   0                            6   
+15                                   0                            0   
+16                                   0                            0   
+17                                   0                            0   
+18                                   0                            0   
+
+    quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
+0                              0                          0   
+1                              0                          0   
+2                             76                         97   
+3                              0                          0   
+4                              0          
+... [1141 characters omitted] ...
+                4362568   
+3                                     0                 390041   
+4                                     0                   5645   
+5                                     0                  17601   
+6                                     0                  18626   
+7                                     0                  10895   
+8                                     0                1211097   
+9                                     0                1024741   
+10                                    0                 473536   
+11                                    0                 195148   
+12                                    0                  21152   
+13                                    0                 110916   
+14                                    0                 347687   
+15                                    0                   3833   
+16                                    0                4014740   
+17                                    0                4338057   
+18                                    0                4650091   
+
+    quantidade_ausente_original  
+0                             0  
+1                             0  
+2                        304245  
+3                       4276869  
+4                       4661265  
+5                       4649309  
+6                       4648284  
+7                       4656015  
+8                       3455748  
+9                       3642101  
+10                      4193370  
+11                      4471761  
+12                      4645758  
+13                      4555994  
+14                      4319198  
+15                      4663077  
+16                       652170  
+17                       328853  
+18                        16819  
+[non-text output omitted: text/html]
+```
+
+**Output 4 (stream:stdout)**
+
+```text
+Colunas com problemas de formato, faixa ou calendário:
+```
+
+**Output 5 (display_data)**
+
+```text
+       coluna  quantidade_total  quantidade_original_preenchida  \
+0  dt_interna           4666910                         4362665   
+1  dose_1_cov           4666910                         1211162   
+2  dose_2_cov           4666910                         1024809   
+3    dose_ref           4666910                          473540   
+4   dose_2ref           4666910                          195149   
+5  dt_antivir           4666910                          347712   
+
+   quantidade_formato_iso  quantidade_formato_br  \
+0                 4362665                      0   
+1                       0                1211162   
+2                       0                1024809   
+3                       0                 473540   
+4                       0                 195149   
+5                  347712                      0   
+
+   quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
+0                                   0                           21   
+1                                   0                           13   
+2                                   0                           25   
+3                                   0                            0   
+4                                   0                            0   
+5                                   0                            6   
+
+   quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
+0                            76                         97   
+1                            52                         65   
+2                            43                         68   
+3                             4                          4   
+4                             1                          1   
+5                            19                         25   
+
+   quantidade_data_calendario_invalida  quantidade_convertida  \
+0                                    0                4362568   
+1                                    0                1211097   
+2                                    0                1024741   
+3                                    0                 473536   
+4                                    0                 195148   
+5                                    0                 347687   
+
+   quantidade_ausente_original  
+0                       304245  
+1                      3455748  
+2                      3642101  
+3                      4193370  
+4                      4471761  
+5                      4319198  
+[non-text output omitted: text/html]
+```
+
+**Output 6 (stream:stdout)**
+
+```text
+Amostra dos valores problemáticos:
+```
+
+**Output 7 (display_data)**
+
+```text
+        coluna  indice_original valor_original  ano_extraido  mes_extraido  \
+0   dt_interna            14859     2029-09-12          2029             9   
+1   dt_interna            35781     1772-04-01          1772             4   
+2   dt_interna            41220     2202-05-12          2202             5   
+3   dt_interna            42292     1695-01-29          1695             1   
+4   dt_interna            52957     2027-07-14          2027             7   
+..         ...              ...            ...           ...           ...   
+95  dt_interna          4475345     1695-08-27          1695             8   
+96  dt_interna          4628164     2109-07-10          2109             7   
+0   dose_1_cov           987131     04/03/3202          3202             3   
+1   dose_1_cov          1360847     03/03/3021          3021             3   
+2   dose_1_cov          1387928     26/10/3121          3121            10   
+
+    dia_extraido  formato_nao_reconhecido  ano_antes_limite  \
+0             12                    False             False   
+1              1                    False              True   
+2             12                    False             False   
+3             29                    False              True   
+4             14                    False             False   
+..           ...                      ...               ...   
+95            27                    False              True   
+96            10                    False             False   
+0              4                    False             False   
+1              3                    False             False   
+2             26                    False             False   
+
+    ano_depois_limite  data_calendario_invalida  
+0                True                     False  
+1               False                     False  
+2                True                     False  
+3               False                     False  
+4                True                     False  
+..                ...                       ...  
+95              False                     False  
+96               True                     False  
+0                True                     False  
+1                True                     False  
+2                True                     False  
+
+[100 rows x 10 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 8 (display_data)**
+
+```text
+        coluna data_minima_convertida data_maxima_convertida  \
+0   dt_notific             2018-12-30             2026-09-28   
+1   dt_sin_pri             2018-12-30             2026-09-26   
+2   dt_interna             1917-09-01             2026-12-29   
+3   dt_ut_dose             2009-03-02             2026-09-23   
+4   dt_vac_mae             1955-11-16             2026-09-21   
+5   dt_doseuni             2013-04-25             2026-09-18   
+6    dt_1_dose             2012-08-06             2026-09-22   
+7    dt_2_dose             2012-09-14             2026-09-22   
+8   dose_1_cov             1900-01-01             2026-12-23   
+9   dose_2_cov             1900-04-20             2026-10-30   
+10    dose_ref             1982-02-09             2026-12-19   
+11   dose_2ref             2020-04-12             2025-11-28   
+12   dose_adic             2021-01-19             2026-05-24   
+13   dos_re_bi             2021-03-27             2026-02-04   
+14  dt_antivir             2018-12-30             2026-12-03   
+15  dt_trt_cov             2020-03-15             2026-09-27   
+16  dt_evoluca             2019-01-01             2026-09-27   
+17  dt_encerra             2019-01-05             2026-09-27   
+18   dt_digita             2019-01-18             2026-09-28   
+
+    quantidade_total  quantidade_original_preenchida  \
+0            4666910                         4666910   
+1            4666910                         4666910   
+2            4666910                         4362665   
+3            4666910                          390041   
+4            4666910                            5645   
+5            4666910                           17601   
+6            4666910                           18626   
+7            4666910                           10895   
+8            4666910                         1211162   
+9            4666910                         1024809   
+10           4666910                          473540   
+11           4666910                          195149   
+12           4666910                           21152   
+13           4666910                          110916   
+14           4666910                          347712   
+15           4666910                            3833   
+16           4666910                         4014740   
+17           4666910                         4338057   
+18           4666910                         4650091   
+
+    quantidade_ausente_original  quantidade_convertida  \
+0                             0                4666910   
+1                             0                4666910   
+2                        304245                4362568   
+3                       4276869                 390041   
+4                       4661265                   5645   
+5                       4649309                  17601   
+6                       4648284                  18626   
+7                       4656015                  10895   
+8                       3455748                1211097   
+9                       3642101                1024741   
+10                      4193370                 473536   
+11                      4471761                 195148   
+12                      4645758                  21152   
+13                      4555994                 110916   
+14                      4319198                 347687   
+15                      4663077                   3833   
+16                       652170                4014740   
+17                       328853                4338057   
+18                        16819                4650091   
+
+    quantidade_formato_iso  quantidade_formato_br  \
+0                  4666910                      0   
+1                  4666910                      0   
+2                  4362665                      0   
+3                   390041                      0   
+4                     5645                      0   
+5                    17601                      0   
+6                    18626                      0   
+7                    10895                      0   
+8                        0                1211162   
+9                        0                1024809   
+10                       0                 473540   
+1
+... [1441 characters omitted] ...
+     0   
+12                                   0                                    0   
+13                                   0                                    0   
+14                                   0                                    0   
+15                                   0                                    0   
+16                                   0                                    0   
+17                                   0                                    0   
+18                                   0                                    0   
+
+    datas_antes_1900  datas_depois_2026  datas_fora_faixa  
+0                  0                  0                 0  
+1                  0                  0                 0  
+2                 21                 76                97  
+3                  0                  0                 0  
+4                  0                  0                 0  
+5                  0                  0                 0  
+6                  0                  0                 0  
+7                  0                  0                 0  
+8                 13                 52                65  
+9                 25                 43                68  
+10                 0                  4                 4  
+11                 0                  1                 1  
+12                 0                  0                 0  
+13                 0                  0                 0  
+14                 6                 19                25  
+15                 0                  0                 0  
+16                 0                  0                 0  
+17                 0                  0                 0  
+18                 0                  0                 0  
+[non-text output omitted: text/html]
+```
+
+### Cell 16 [code] · In [15]
 
 ```python
 import gc
@@ -15098,6 +19353,15 @@ print(
 )
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Objetos temporários removidos: ['series_datas_convertidas', 'diagnosticos_conversao', 'problemas_conversao', 'colunas_com_problemas_df']
+Objetos coletados: 0
+datas_convertidas preservado: True
+resumo_datas preservado: True
+```
+
 ### Cell 17 [markdown]
 
 ```markdown
@@ -15117,7 +19381,7 @@ de cada campo. Uma quantidade absoluta maior não implica necessariamente
 uma proporção maior de erro.
 ```
 
-### Cell 18 [code] · In [ ]
+### Cell 18 [code] · In [16]
 
 ```python
 COLUNAS_DIAGNOSTICO_DATA = [
@@ -15417,7 +19681,51 @@ else:
     )
 ```
 
-### Cell 19 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x500 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+       coluna  quantidade_original_preenchida  \
+0  dt_interna                         4362665   
+1  dose_2_cov                         1024809   
+2  dose_1_cov                         1211162   
+3  dt_antivir                          347712   
+4    dose_ref                          473540   
+5   dose_2ref                          195149   
+
+   quantidade_formato_nao_reconhecido  quantidade_ano_fora_faixa  \
+0                                   0                         97   
+1                                   0                         68   
+2                                   0                         65   
+3                                   0                         25   
+4                                   0                          4   
+5                                   0                          1   
+
+   quantidade_data_calendario_invalida  quantidade_problemas  \
+0                                    0                    97   
+1                                    0                    68   
+2                                    0                    65   
+3                                    0                    25   
+4                                    0                     4   
+5                                    0                     1   
+
+   percentual_problemas_entre_preenchidos  
+0                                0.002223  
+1                                0.006635  
+2                                0.005367  
+3                                0.007190  
+4                                0.000845  
+5                                0.000512  
+[non-text output omitted: text/html]
+```
+
+### Cell 19 [code] · In [17]
 
 ```python
 # ============================================================
@@ -15507,7 +19815,38 @@ print(
 )
 ```
 
-### Cell 20 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Foram identificadas datas posteriores ao fechamento observado da base.
+```
+
+**Output 2 (display_data)**
+
+```text
+       coluna data_corte_observada  quantidade_posterior_corte  \
+0  dt_interna           2026-09-28                          17   
+1  dose_1_cov           2026-09-28                           3   
+2  dose_2_cov           2026-09-28                           1   
+3    dose_ref           2026-09-28                           1   
+4  dt_antivir           2026-09-28                           3   
+
+  menor_data_posterior_corte maior_data_posterior_corte  
+0                 2026-09-29                 2026-12-29  
+1                 2026-11-17                 2026-12-23  
+2                 2026-10-30                 2026-10-30  
+3                 2026-12-19                 2026-12-19  
+4                 2026-09-30                 2026-12-03  
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Internações posteriores ao corte observado: 17
+```
+
+### Cell 20 [code] · In [18]
 
 ```python
 
@@ -15571,7 +19910,13 @@ print(
 )
 ```
 
-### Cell 21 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Conversão e auditoria das datas concluídas sem OutOfBoundsDatetime.
+```
+
+### Cell 21 [code] · In [19]
 
 ```python
 if "dt_notific" not in datas_convertidas.columns:
@@ -15603,7 +19948,23 @@ volume_por_ano["percentual"] = (
 display(volume_por_ano)
 ```
 
-### Cell 22 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_notificacao  quantidade_registros  percentual
+0             2018                     3    0.000064
+1             2019                 48634    1.042103
+2             2020               1148787   24.615581
+3             2021               1773875   38.009625
+4             2022                582656   12.484835
+5             2023                284383    6.093604
+6             2024                268519    5.753679
+7             2025                334610    7.169840
+8             2026                225443    4.830670
+[non-text output omitted: text/html]
+```
+
+### Cell 22 [code] · In [20]
 
 ```python
 if "dt_interna" not in datas_convertidas.columns:
@@ -15635,7 +19996,32 @@ volume_por_ano_int["percentual"] = (
 display(volume_por_ano_int)
 ```
 
-### Cell 23 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao  quantidade_registros_int  percentual
+0           1917.0                         4    0.000086
+1           1918.0                         1    0.000021
+2           1941.0                         4    0.000086
+3           2009.0                         1    0.000021
+4           2011.0                         1    0.000021
+5           2012.0                         2    0.000043
+6           2016.0                         1    0.000021
+7           2017.0                         2    0.000043
+8           2018.0                        11    0.000236
+9           2019.0                     47545    1.018768
+10          2020.0                   1076375   23.063976
+11          2021.0                   1657394   35.513734
+12          2022.0                    536135   11.488008
+13          2023.0                    265671    5.692653
+14          2024.0                    253367    5.429010
+15          2025.0                    315616    6.762847
+16          2026.0                    210438    4.509151
+17             NaN                    304342    6.521274
+[non-text output omitted: text/html]
+```
+
+### Cell 23 [code] · In [21]
 
 ```python
 ANO_INCOMPLETO = 2026
@@ -15719,7 +20105,52 @@ status_periodos.loc[
 display(status_periodos)
 ```
 
-### Cell 24 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao  quantidade_registros_int  percentual   status_periodo  \
+0           1917.0                         4    0.000086     fora_periodo   
+1           1918.0                         1    0.000021     fora_periodo   
+2           1941.0                         4    0.000086     fora_periodo   
+3           2009.0                         1    0.000021     fora_periodo   
+4           2011.0                         1    0.000021     fora_periodo   
+5           2012.0                         2    0.000043     fora_periodo   
+6           2016.0                         1    0.000021     fora_periodo   
+7           2017.0                         2    0.000043     fora_periodo   
+8           2018.0                        11    0.000236     fora_periodo   
+9           2019.0                     47545    1.018768         completo   
+10          2020.0                   1076375   23.063976         completo   
+11          2021.0                   1657394   35.513734         completo   
+12          2022.0                    536135   11.488008         completo   
+13          2023.0                    265671    5.692653         completo   
+14          2024.0                    253367    5.429010         completo   
+15          2025.0                    315616    6.762847         completo   
+16          2026.0                    210438    4.509151       incompleto   
+17             NaN                    304342    6.521274  sem_data_valida   
+
+    dentro_periodo_coorte                                  observacao  
+0                   False  Ano fora do período definido para a coorte  
+1                   False  Ano fora do período definido para a coorte  
+2                   False  Ano fora do período definido para a coorte  
+3                   False  Ano fora do período definido para a coorte  
+4                   False  Ano fora do período definido para a coorte  
+5                   False  Ano fora do período definido para a coorte  
+6                   False  Ano fora do período definido para a coorte  
+7                   False  Ano fora do período definido para a coorte  
+8                   False  Ano fora do período definido para a coorte  
+9                    True                                              
+10                   True                                              
+11                   True                                              
+12                   True                                              
+13                   True                                              
+14                   True                                              
+15                   True                                              
+16                   True    Ano incompleto na versão atual dos dados  
+17                  False              Registro sem dt_interna válida  
+[non-text output omitted: text/html]
+```
+
+### Cell 24 [code] · In [22]
 
 ```python
 import matplotlib.pyplot as plt
@@ -15787,7 +20218,20 @@ print(
 )
 ```
 
-### Cell 25 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1000x500 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_01_volume_por_ano_internacao.png
+```
+
+### Cell 25 [code] · In [23]
 
 ```python
 memoria_mb = (
@@ -15798,7 +20242,13 @@ memoria_mb = (
 print(f"Memória total utilizada: {memoria_mb:,.2f} MB")
 ```
 
-### Cell 26 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Memória total utilizada: 15,202.56 MB
+```
+
+### Cell 26 [code] · In [24]
 
 ```python
 memoria_colunas = (
@@ -15813,7 +20263,27 @@ memoria_colunas = (
 display(memoria_colunas)
 ```
 
-### Cell 27 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna  memoria_mb
+0   nu_notific  274.755280
+1   dt_sin_pri  262.592020
+2   dt_notific  262.592020
+3    dt_digita  262.030625
+4   dt_interna  252.436748
+..         ...         ...
+84  dt_trt_cov  106.945033
+85   tipo_trat  106.935715
+86    out_trat  106.919137
+87       tabag  106.817093
+88       Index    0.000126
+
+[89 rows x 2 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 27 [code] · In [25]
 
 ```python
 ausencias = pd.DataFrame(
@@ -15850,6 +20320,39 @@ ausencias = ausencias.sort_values(
 display(ausencias)
 ```
 
+**Output 1 (display_data)**
+
+```text
+        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
+0        tabag             4666910                      0          100.000000   
+1     out_trat             4664116                   2794           99.940132   
+2   dt_trt_cov             4663077                   3833           99.917869   
+3    tipo_trat             4662126                   4784           99.897491   
+4     out_anim             4661634                   5276           99.886949   
+..         ...                 ...                    ...                 ...   
+83  dt_notific                   0                4666910            0.000000   
+84     sem_pri                   0                4666910            0.000000   
+85  dt_sin_pri                   0                4666910            0.000000   
+86     cs_sexo                   0                4666910            0.000000   
+87  nu_idade_n                   0                4666910            0.000000   
+
+    percentual_preenchido  
+0                0.000000  
+1                0.059868  
+2                0.082131  
+3                0.102509  
+4                0.113051  
+..                    ...  
+83             100.000000  
+84             100.000000  
+85             100.000000  
+86             100.000000  
+87             100.000000  
+
+[88 rows x 5 columns]
+[non-text output omitted: text/html]
+```
+
 ### Cell 28 [markdown]
 
 ```markdown
@@ -15867,7 +20370,7 @@ O ranking é uma ferramenta de triagem e não determina automaticamente
 a exclusão de variáveis.
 ```
 
-### Cell 29 [code] · In [ ]
+### Cell 29 [code] · In [26]
 
 ```python
 import matplotlib.pyplot as plt
@@ -16151,7 +20654,47 @@ display(
 )
 ```
 
-### Cell 30 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x4400 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
+0        tabag             4666910                      0          100.000000   
+1     out_trat             4664116                   2794           99.940132   
+2   dt_trt_cov             4663077                   3833           99.917869   
+3    tipo_trat             4662126                   4784           99.897491   
+4     out_anim             4661634                   5276           99.886949   
+..         ...                 ...                    ...                 ...   
+83  dt_sin_pri                   0                4666910            0.000000   
+84  nu_idade_n                   0                4666910            0.000000   
+85  nu_notific                   0                4666910            0.000000   
+86     sem_pri                   0                4666910            0.000000   
+87    tp_idade                   0                4666910            0.000000   
+
+    percentual_preenchido                  grupo  
+0                0.000000  candidatas_principais  
+1                0.059868   complementares_texto  
+2                0.082131   tratamento_auditoria  
+3                0.102509   tratamento_auditoria  
+4                0.113051  candidatas_principais  
+..                    ...                    ...  
+83             100.000000              estrutura  
+84             100.000000  candidatas_principais  
+85             100.000000              estrutura  
+86             100.000000              estrutura  
+87             100.000000  candidatas_principais  
+
+[88 rows x 6 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 30 [code] · In [27]
 
 ```python
 import gc
@@ -16362,7 +20905,158 @@ print(
 )
 ```
 
-### Cell 31 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Processando colunas 1 até 5 de 88
+Processando colunas 6 até 10 de 88
+Processando colunas 11 até 15 de 88
+Processando colunas 16 até 20 de 88
+Processando colunas 21 até 25 de 88
+Processando colunas 26 até 30 de 88
+Processando colunas 31 até 35 de 88
+Processando colunas 36 até 40 de 88
+Processando colunas 41 até 45 de 88
+Processando colunas 46 até 50 de 88
+Processando colunas 51 até 55 de 88
+Processando colunas 56 até 60 de 88
+Processando colunas 61 até 65 de 88
+Processando colunas 66 até 70 de 88
+Processando colunas 71 até 75 de 88
+Processando colunas 76 até 80 de 88
+Processando colunas 81 até 85 de 88
+Processando colunas 86 até 88 de 88
+```
+
+**Output 2 (display_data)**
+
+```text
+   ano_notificacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
+0             2018       100.0       100.0       100.0    100.0      100.0   
+1             2019       100.0       100.0       100.0    100.0   99.44072   
+2             2020       100.0       100.0       100.0    100.0  97.624625   
+3             2021       100.0       100.0       100.0    100.0  97.372476   
+4             2022       100.0       100.0       100.0    100.0  96.706461   
+5             2023       100.0       100.0       100.0    100.0  97.215023   
+6             2024       100.0       100.0       100.0    100.0  97.840749   
+7             2025       100.0       100.0       100.0    100.0   97.96091   
+8             2026       100.0       100.0       100.0    100.0  97.635766   
+
+   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
+0       100.0    100.0       100.0     100.0  ...      100.0   66.666667   
+1   97.318748    100.0       100.0     100.0  ...  98.603857   60.762018   
+2   92.570772    100.0       100.0     100.0  ...  86.346381   14.819022   
+3   93.659249    100.0       100.0     100.0  ...  81.779043    2.246043   
+4   92.862856    100.0       100.0     100.0  ...  79.995915    3.612766   
+5   94.232778    100.0       100.0     100.0  ...  81.149365    5.872714   
+6   94.319955    100.0       100.0     100.0  ...   81.12871    8.117861   
+7   94.575476    100.0       100.0     100.0  ...  86.048833   11.776098   
+8   93.910212    100.0       100.0     100.0  ...   87.33915   12.552175   
+
+   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
+0   66.666667        0.0        0.0         0.0      100.0       100.0   
+1   60.759962    0.19328        0.0         0.0   94.18925   84.081096   
+2   14.513047   1.013939   0.016278    0.000783  93.641206   87.272401   
+3    1.929223   1.078881   0.007329    0.002988  91.929025   85.798999   
+4    3.271742  16.454821   0.171456    0.140735  91.922335   85.642815   
+5    5.345256  74.884223   0.420208    0.318584  94.987745     88.1533   
+6    7.524235  75.597258   0.359379    0.320275    94.4179   87.878325   
+7   10.798542  79.988643   0.273453    0.249544   95.45172   86.436747   
+8   11.804758  81.069716   0.174323     0.15525  86.790453   77.364123   
+
+   dt_encerra  dt_digita  
+0       100.0  66.666667  
+1   96.418144  65.419254  
+2   94.055643      100.0  
+3   92.465534      100.0  
+4   91.871018      100.0  
+5   94.461694      100.0  
+6   93.960949      100.0  
+7   95.267326      100.0  
+8   86.690649      100.0  
+
+[9 rows x 89 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Processando colunas 1 até 5 de 88
+Processando colunas 6 até 10 de 88
+Processando colunas 11 até 15 de 88
+Processando colunas 16 até 20 de 88
+Processando colunas 21 até 25 de 88
+Processando colunas 26 até 30 de 88
+Processando colunas 31 até 35 de 88
+Processando colunas 36 até 40 de 88
+Processando colunas 41 até 45 de 88
+Processando colunas 46 até 50 de 88
+Processando colunas 51 até 55 de 88
+Processando colunas 56 até 60 de 88
+Processando colunas 61 até 65 de 88
+Processando colunas 66 até 70 de 88
+Processando colunas 71 até 75 de 88
+Processando colunas 76 até 80 de 88
+Processando colunas 81 até 85 de 88
+Processando colunas 86 até 88 de 88
+```
+
+**Output 4 (display_data)**
+
+```text
+   ano_internacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
+0            2019       100.0       100.0       100.0    100.0  99.995793   
+1            2020       100.0       100.0       100.0    100.0  99.998978   
+2            2021       100.0       100.0       100.0    100.0  99.999759   
+3            2022       100.0       100.0       100.0    100.0  99.999627   
+4            2023       100.0       100.0       100.0    100.0  99.999247   
+5            2024       100.0       100.0       100.0    100.0      100.0   
+6            2025       100.0       100.0       100.0    100.0  99.999683   
+7            2026       100.0       100.0       100.0    100.0  99.999525   
+
+   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
+0       100.0    100.0       100.0     100.0  ...  98.870544   61.236723   
+1       100.0    100.0       100.0     100.0  ...  88.417234   15.679015   
+2       100.0    100.0       100.0     100.0  ...  84.119165    2.359789   
+3       100.0    100.0       100.0     100.0  ...  82.695963     3.71455   
+4       100.0    100.0       100.0     100.0  ...  83.231892    5.961885   
+5       100.0    100.0       100.0     100.0  ...  82.613363    8.373624   
+6       100.0    100.0       100.0     100.0  ...  87.510456   12.115039   
+7       100.0    100.0       100.0     100.0  ...  89.203471   12.875526   
+
+   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
+0    61.23462   0.201914        0.0         0.0  94.359028   84.612472   
+1   15.354779   1.060039    0.02592    0.000836  94.355777   88.829544   
+2    2.031382   1.122847   0.007421    0.003137  92.924676   87.289504   
+3     3.38273  17.762877   0.188199    0.156117  93.681629   87.734246   
+4     5.49326  77.100624   0.392967    0.327849  95.591164   89.567548   
+5    7.773309  77.156852   0.362715     0.32522  95.083417   89.083819   
+6   11.144872  81.539909   0.276602    0.254423  96.233081   88.193247   
+7   12.130414  83.009723   0.170597    0.153965  87.909978   79.482318   
+
+   dt_encerra  dt_digita  
+0   96.529604  65.518982  
+1   94.676298      100.0  
+2   93.480971      100.0  
+3   93.562069      100.0  
+4   95.104471      100.0  
+5   94.635055      100.0  
+6   95.954895      100.0  
+7    87.85438      100.0  
+
+[8 rows x 89 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 5 (stream:stdout)**
+
+```text
+Cálculo temporal concluído.
+Objetos coletados: 0
+```
+
+### Cell 31 [code] · In [28]
 
 ```python
 OBJETOS_RESTAURADOS_ESPERADOS = [
@@ -16453,6 +21147,15 @@ print(
 )
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Restauração do Notebook 01 validada com sucesso.
+Datas convertidas: (4666910, 19)
+Preenchimento por notificação: (9, 89)
+Preenchimento por internação: (8, 89)
+```
+
 ### Cell 32 [markdown]
 
 ```markdown
@@ -16473,7 +21176,7 @@ O ano de 2026 possui cobertura parcial e deve ser interpretado
 separadamente.
 ```
 
-### Cell 33 [code] · In [ ]
+### Cell 33 [code] · In [29]
 
 ```python
 QUANTIDADE_VARIAVEIS_HEATMAP = 20
@@ -16711,7 +21414,41 @@ display(
 )
 ```
 
-### Cell 34 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x1000 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna  amplitude_pontos_percentuais  quantidade_anos_observados
+0   vacina_cov                     98.677852                           8
+1       pov_ct                     98.283731                           8
+2      estrang                     95.397484                           8
+3       fadiga                     82.867461                           8
+4     trat_cov                     82.807809                           8
+5      dor_abd                     81.518308                           8
+6    perd_olft                      81.09531                           8
+7    perd_pala                     80.911408                           8
+8   dt_antivir                     59.203238                           8
+9   tp_antivir                     58.876934                           8
+10  dose_1_cov                     56.889064                           8
+11  dose_2_cov                      53.18307                           8
+12      vacina                     39.893952                           8
+13   dt_digita                     34.481018                           8
+14    dose_ref                     30.288194                           8
+15    diarreia                     29.808114                           8
+16  cs_escol_n                     29.625463                           8
+17      vomito                     29.275268                           8
+18    garganta                     28.304763                           8
+19  dt_ut_dose                     23.475831                           8
+[non-text output omitted: text/html]
+```
+
+### Cell 34 [code] · In [30]
 
 ```python
 cardinalidade_variaveis = pd.DataFrame(
@@ -16750,6 +21487,26 @@ display(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+        coluna  valores_distintos_sem_na  valores_distintos_com_na
+0   nu_notific                   4666881                   4666881
+1    outro_des                    251506                    251507
+2    morb_desc                    232631                    232632
+3   co_mun_res                      5604                      5605
+4   co_mun_not                      3661                      3662
+..         ...                       ...                       ...
+83     cs_sexo                         3                         3
+84    tp_idade                         3                         3
+85     estrang                         2                         3
+86      pov_ct                         2                         3
+87       tabag                         0                         1
+
+[88 rows x 3 columns]
+[non-text output omitted: text/html]
+```
+
 ### Cell 35 [markdown]
 
 ```markdown
@@ -16773,7 +21530,7 @@ Alta cardinalidade não determina exclusão automática, mas indica a
 necessidade de transformação, agrupamento ou uso somente para auditoria.
 ```
 
-### Cell 36 [code] · In [ ]
+### Cell 36 [code] · In [31]
 
 ```python
 QUANTIDADE_VARIAVEIS_CARDINALIDADE_GRAFICO = 40
@@ -17055,7 +21812,61 @@ display(
 )
 ```
 
-### Cell 37 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x900 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna  valores_distintos_sem_na  valores_distintos_com_na
+0   nu_notific                   4666881                   4666881
+1    outro_des                    251506                    251507
+2    morb_desc                    232631                    232632
+3   co_mun_res                      5604                      5605
+4   co_mun_not                      3661                      3662
+5    out_antiv                      3273                      3274
+6   dt_ut_dose                      3072                      3073
+7   co_mu_inte                      3028                      3029
+8   dt_interna                      2953                      2954
+9   dt_antivir                      2856                      2857
+10  dt_notific                      2829                      2829
+11  dt_sin_pri                      2828                      2828
+12  dt_evoluca                      2827                      2828
+13  dt_encerra                      2820                      2821
+14   dt_digita                      2764                      2765
+15  dose_1_cov                      2060                      2061
+16  dose_2_cov                      1960                      1961
+17   dt_1_dose                      1820                      1821
+18  dt_vac_mae                      1767                      1768
+19   dt_2_dose                      1732                      1733
+20   pac_cocbo                      1628                      1629
+21   pac_dscbo                      1628                      1629
+22  dt_doseuni                      1561                      1562
+23  dt_trt_cov                      1378                      1379
+24    dose_ref                      1205                      1206
+25    obes_imc                      1011                      1012
+26   dos_re_bi                       773                       774
+27   dose_adic                       773                       774
+28   dose_2ref                       757                       758
+29    out_anim                       575                       576
+30    out_trat                       555                       556
+31  co_rg_resi                       320                       321
+32  co_regiona                       312                       313
+33  co_rg_inte                       312                       313
+34   cs_etinia                       310                       311
+35  nu_idade_n                       139                       139
+36     co_pais                        57                        58
+37     sem_pri                        53                        53
+38   tp_pov_ct                        46                        47
+39       sg_uf                        27                        28
+[non-text output omitted: text/html]
+```
+
+### Cell 37 [code] · In [32]
 
 ```python
 LIMITE_CARDINALIDADE = 30
@@ -17099,7 +21910,27 @@ frequencias_categoricas_df = pd.concat(
 display(frequencias_categoricas_df.head(100))
 ```
 
-### Cell 38 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna valor  quantidade  percentual
+0    sg_uf_not    SP     1306611   27.997347
+1    sg_uf_not    MG      521998   11.185088
+2    sg_uf_not    RJ      385820    8.267140
+3    sg_uf_not    PR      380639    8.156125
+4    sg_uf_not    RS      256895    5.504606
+..         ...   ...         ...         ...
+95  cs_escol_n     3      382584    8.197801
+96  cs_escol_n     5      337951    7.241430
+97  cs_escol_n     2      250435    5.366184
+98  cs_escol_n     0      213463    4.573969
+99  cs_escol_n     4      163584    3.505189
+
+[100 rows x 4 columns]
+[non-text output omitted: text/html]
+```
+
+### Cell 38 [code] · In [33]
 
 ```python
 if "nu_notific" in df.columns:
@@ -17137,7 +21968,17 @@ else:
     )
 ```
 
-### Cell 39 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+                              metrica    valor
+0                       linhas_totais  4666910
+1         identificadores_preenchidos  4666910
+2  linhas_com_identificador_duplicado       58
+[non-text output omitted: text/html]
+```
+
+### Cell 39 [code] · In [34]
 
 ```python
 REGRAS_AUDITORIA_TEMPORAL = [
@@ -17254,7 +22095,48 @@ auditoria_vazamento["existe_no_dataframe"] = (
 display(auditoria_vazamento)
 ```
 
-### Cell 40 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+       coluna       uso_nesta_eda  candidata_feature_principal  \
+0    evolucao              rotulo                        False   
+1  dt_evoluca           auditoria                        False   
+2  dt_encerra           auditoria                        False   
+3   dt_digita           auditoria                        False   
+4   antiviral   eda_sensibilidade                        False   
+5  tp_antivir   eda_sensibilidade                        False   
+6  dt_antivir  auditoria_temporal                        False   
+7    trat_cov   eda_sensibilidade                        False   
+8   tipo_trat   eda_sensibilidade                        False   
+9  dt_trt_cov  auditoria_temporal                        False   
+
+       risco_temporal                                      justificativa  \
+0            desfecho  Fonte utilizada para construir o alvo. Não pod...   
+1  posterior_admissao  Data de alta ou óbito, posterior ao ponto de p...   
+2  posterior_admissao  Data de encerramento do caso, posterior ao pon...   
+3      administrativo       Data administrativa de inclusão do registro.   
+4          tratamento  A disponibilidade até a admissão precisa ser c...   
+5          tratamento  Tipo de tratamento condicionado ao uso de anti...   
+6          tratamento  Somente tratamentos iniciados até a admissão p...   
+7          tratamento  Pode representar decisão assistencial posterio...   
+8          tratamento  Tipo de tratamento condicionado ao registro de...   
+9          tratamento  Somente tratamentos iniciados até a admissão p...   
+
+   existe_no_dataframe  
+0                 True  
+1                 True  
+2                 True  
+3                 True  
+4                 True  
+5                 True  
+6                 True  
+7                 True  
+8                 True  
+9                 True  
+[non-text output omitted: text/html]
+```
+
+### Cell 40 [code] · In [35]
 
 ```python
 resumo_primeira_passagem = pd.DataFrame(
@@ -17289,7 +22171,24 @@ resumo_primeira_passagem = pd.DataFrame(
 display(resumo_primeira_passagem)
 ```
 
-### Cell 41 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+                   metrica                valor
+0             versao_dados             dados-v2
+1                  arquivo         srag.parquet
+2           linhas_parquet              4666910
+3          colunas_parquet                  198
+4        linhas_carregadas              4666910
+5       colunas_carregadas                   88
+6               memoria_mb             15202.56
+7  data_minima_notificacao  2018-12-30 00:00:00
+8  data_maxima_notificacao  2026-09-28 00:00:00
+9         colunas_ausentes                    0
+[non-text output omitted: text/html]
+```
+
+### Cell 41 [code] · In [36]
 
 ```python
 C.TABLES_DIR.mkdir(
@@ -17300,7 +22199,13 @@ exist_ok=True,
 print(f"Tabelas serão salvas em: {C.TABLES_DIR}")
 ```
 
-### Cell 42 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Tabelas serão salvas em: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables
+```
+
+### Cell 42 [code] · In [37]
 
 ```python
 duplicidades_nu_notific = (
@@ -17324,7 +22229,7 @@ duplicidades_nu_notific = (
 )
 ```
 
-### Cell 43 [code] · In [ ]
+### Cell 43 [code] · In [38]
 
 ```python
 tabelas_exportacao = {
@@ -17410,7 +22315,27 @@ print(
 )
 ```
 
-### Cell 44 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_auditoria_faixa_datas.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_auditoria_datas_pos_corte.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_volume_por_ano_notificacao.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_volume_por_ano_internacao.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_status_periodos.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_tipos_memoria.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_resumo_datas.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_ausencias.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_preenchimento_por_ano_notificacao.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_preenchimento_por_ano_internacao.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_cardinalidade.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_frequencias_categoricas.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_auditoria_vazamento.csv
+Salvo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_01_duplicidades_nu_notific.csv
+Exportação das tabelas da EDA 01 concluída.
+```
+
+### Cell 44 [code] · In [39]
 
 ```python
 colunas_desfecho_fora_das_candidatas = all(
@@ -17611,6 +22536,42 @@ if not all(verificacoes_finais.values()):
     )
 
 print("Primeira passagem concluída com sucesso.")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Datas fora da faixa identificadas na fonte: 260
+Datas COVID fora da faixa identificadas: 138
+Colunas ainda contendo datas convertidas fora da faixa: []
+```
+
+**Output 2 (display_data)**
+
+```text
+                                   verificacao  resultado
+0                          dataframe_nao_vazio       True
+1                colunas_solicitadas_presentes       True
+2                        dt_notific_disponivel       True
+3                        dt_interna_disponivel       True
+4                 desfecho_fora_das_candidatas       True
+5   tratamentos_fora_das_candidatas_principais       True
+6           datas_covid_incluidas_na_auditoria       True
+7                 auditoria_faixa_datas_criada       True
+8                 todas_colunas_data_auditadas       True
+9               datas_problematicas_bloqueadas       True
+10       ano_2026_identificado_como_incompleto       True
+11    anos_fora_periodo_nao_marcados_completos       True
+12            volume_por_ano_internacao_criado       True
+13     preenchimento_por_ano_internacao_criado       True
+14                    diretorio_tabelas_existe       True
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Primeira passagem concluída com sucesso.
 ```
 
 ### Cell 45 [markdown]
@@ -18069,7 +23030,7 @@ vazamento, a cardinalidade, a estabilidade entre anos e a contribuição
 incremental nos experimentos.
 ```
 
-### Cell 47 [code] · In [ ]
+### Cell 47 [code] · In [40]
 
 ```python
 # ============================================================
@@ -19529,6 +24490,241 @@ print(
 )
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Classificacao de USO_INICIAL validada com sucesso.
+Referência temporal preparada uma única vez para o dicionário.
+[01/88] Processando nu_notific
+[02/88] Processando dt_notific
+[03/88] Processando dt_sin_pri
+[04/88] Processando sem_pri
+[05/88] Processando hospital
+[06/88] Processando dt_interna
+[07/88] Processando cs_sexo
+[08/88] Processando nu_idade_n
+[09/88] Processando tp_idade
+[10/88] Processando cs_gestant
+[11/88] Processando cs_raca
+[12/88] Processando cs_etinia
+[13/88] Processando cs_escol_n
+[14/88] Processando cs_zona
+[15/88] Processando ave_suino
+[16/88] Processando out_anim
+[17/88] Processando febre
+[18/88] Processando tosse
+[19/88] Processando garganta
+[20/88] Processando dispneia
+[21/88] Processando desc_resp
+[22/88] Processando saturacao
+[23/88] Processando diarreia
+[24/88] Processando vomito
+[25/88] Processando dor_abd
+[26/88] Processando fadiga
+[27/88] Processando perd_olft
+[28/88] Processando perd_pala
+[29/88] Processando puerpera
+[30/88] Processando cardiopati
+[31/88] Processando hematologi
+[32/88] Processando sind_down
+[33/88] Processando hepatica
+[34/88] Processando asma
+[35/88] Processando diabetes
+[36/88] Processando neurologic
+[37/88] Processando pneumopati
+[38/88] Processando imunodepre
+[39/88] Processando renal
+[40/88] Processando obesidade
+[41/88] Processando tabag
+[42/88] Processando outro_sin
+[43/88] Processando outro_des
+[44/88] Processando obes_imc
+[45/88] Processando out_morbi
+[46/88] Processando morb_desc
+[47/88] Processando out_antiv
+[48/88] Processando out_trat
+[49/88] Processando sg_uf_not
+[50/88] Processando co_regiona
+[51/88] Processando co_mun_not
+[52/88] Processando co_pais
+[53/88] Processando sg_uf
+[54/88] Processando co_rg_resi
+[55/88] Processando co_mun_res
+[56/88] Processando sg_uf_inte
+[57/88] Processando co_rg_inte
+[58/88] Processando co_mu_inte
+[59/88] Processando vacina
+[60/88] Processando dt_ut_dose
+[61/88] Processando mae_vac
+[62/88] Processando dt_vac_mae
+[63/88] Processando m_amamenta
+[64/88] Processando dt_doseuni
+[65/88] Processando dt_1_dose
+[66/88] Processando dt_2_dose
+[67/88] Processando vacina_cov
+[68/88] Processando dose_1_cov
+[69/88] Processando dose_2_cov
+[70/88] Processando dose_ref
+[71/88] Processando dose_2ref
+[72/88] Processando dose_adic
+[73/88] Processando dos_re_bi
+[74/88] Processando pac_cocbo
+[75/88] Processando pac_dscbo
+[76/88] Processando pov_ct
+[77/88] Processando tp_pov_ct
+[78/88] Processando estrang
+[79/88] Processando antiviral
+[80/88] Processando tp_antivir
+[81/88] Processando dt_antivir
+[82/88] Processando trat_cov
+[83/88] Processando tipo_trat
+[84/88] Processando dt_trt_cov
+[85/88] Processando evolucao
+[86/88] Processando dt_evoluca
+[87/88] Processando dt_encerra
+[88/88] Processando dt_digita
+Montagem do dicionário concluída: 88 variáveis.
+
+================================================================================
+RESUMO DA GERAÇÃO DO DICIONÁRIO
+================================================================================
+{
+  "total_colunas_solicitadas": 88,
+  "total_colunas_geradas": 88,
+  "colunas_nao_encontradas": [],
+  "colunas_sem_nome_amigavel": [],
+  "colunas_sem_grupo": [],
+  "arquivo_completo": "<HOME>\\Documents\\GitHub\\Projeto_Integrador\\configs\\dicionario_variaveis_v1.csv",
+  "arquivo_revisao": "<HOME>\\Documents\\GitHub\\Projeto_Integrador\\outputs\\tables\\dicionario_variaveis_revisao.csv"
+}
+
+Quantidade de pontos de revisão: 36
+Dicionário operacional salvo em: <HOME>\Documents\GitHub\Projeto_Integrador\configs\dicionario_variaveis_v1.csv
+Visão reduzida salva em: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\dicionario_variaveis_revisao.csv
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna                                     nome_amigavel  \
+0   nu_notific                             Numero da notificacao   
+1   dt_notific                               Data da notificacao   
+2   dt_sin_pri                       Data dos primeiros sintomas   
+3      sem_pri      Semana epidemiologica dos primeiros sintomas   
+4     hospital                                 Houve internacao?   
+5   dt_interna                       Data da internacao por SRAG   
+6      cs_sexo                                              Sexo   
+7   nu_idade_n                                   Idade informada   
+8     tp_idade             Unidade da idade: dias, meses ou anos   
+9   cs_gestant                              Situacao gestacional   
+10     cs_raca                                       Raca ou cor   
+11   cs_etinia                                    Etnia indigena   
+12  cs_escol_n                                      Escolaridade   
+13     cs_zona                                Zona de residencia   
+14   ave_suino  Contato direto com aves, suinos ou outro animal?   
+15    out_anim                     Especificacao do outro animal   
+16       febre                                             Febre   
+17       tosse                                             Tosse   
+18    garganta                                   Dor de garganta   
+19    dispneia                                          Dispneia   
+
+                         grupo uso_inicial_sugerido  \
+0             estrutura_coorte     estrutura_coorte   
+1             estrutura_coorte     estrutura_coorte   
+2             estrutura_coorte     estrutura_coorte   
+3             estrutura_coorte   auditoria_temporal   
+4             estrutura_coorte     estrutura_coorte   
+5             estrutura_coorte     estrutura_coorte   
+6   demografia_contexto_social      modelo_a_nucleo   
+7   demografia_contexto_social      modelo_a_nucleo   
+8   demografia_contexto_social      modelo_a_nucleo   
+9   demografia_contexto_social      modelo_a_nucleo   
+10  demografia_contexto_social      modelo_a_nucleo   
+11  demografia_contexto_social  exploracao_subgrupo   
+12  demografia_contexto_social    modelo_b_ampliado   
+13  demografia_contexto_social      modelo_a_nucleo   
+14            exposicao_animal      modelo_a_nucleo   
+15            exposicao_animal     exploracao_texto   
+16                    sintomas      modelo_a_nucleo   
+17                    sintomas      modelo_a_nucleo   
+18                    sintomas      modelo_a_nucleo   
+19                    sintomas      modelo_a_nucleo   
+
+                            aplicabilidade  \
+0                          Populacao geral   
+1                          Populacao geral   
+2                          Populacao geral   
+3                          Populacao geral   
+4                          Populacao geral   
+5                          Populacao geral   
+6                          Populacao geral   
+7                          Populacao geral   
+8                          Populacao geral   
+9                          Populacao geral   
+10                         Populacao geral   
+11      Registros com raca ou cor indigena   
+12                         Populacao geral   
+13                         Populacao geral   
+14                         Populacao geral   
+15  Registros com contato com outro animal   
+16                         Populacao geral   
+17                         Populacao geral   
+18                         Populacao geral   
+19                         Populacao geral   
+
+                               transformacao_sugerida  \
+0       Identificador tecnico; nao usar como preditor   
+1             Auditoria temporal; nao usar data bruta   
+2       Derivar intervalo entre sintomas e internacao   
+3   Auditar contra a semana derivada de dt_sin_pri...   
+4                             Filtro de elegibilidade   
+5   Ancora temporal; derivar ano, mes, semana e in...   
+6    Categorica; preservar sim, nao, ignorado e vazio   
+7         Combinar com tp_idade para criar idade_anos   
+8                             Combinar com nu_idade_n   
+9    Categorica; preservar sim, nao, ignorado e vazio   
+10   Categorica; pres
+... [4964 characters omitted] ...
+                          
+13                                                                             
+14                                                                             
+15  Confirmar se ave_suino = 3 significa outro ani...  decidir_depois_da_eda   
+16                                                                             
+17                                                                             
+18  Preenchimento varia pelo menos 20 pontos perce...                          
+19                                                                             
+
+                          justificativa_decisao_final  
+0                                                      
+1                                                      
+2   Fonte para o intervalo entre sintomas e intern...  
+3                                                      
+4                                                      
+5   Âncora temporal da coorte. Intervalos negativo...  
+6                                                      
+7                                                      
+8                                                      
+9                                                      
+10                                                     
+11                                                     
+12                                                     
+13                                                     
+14                                                     
+15  Preservar para EDA e possível categorização si...  
+16                                                     
+17                                                     
+18                                                     
+19                                                     
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+
+Arquivo completo salvo em: <HOME>\Documents\GitHub\Projeto_Integrador\configs\dicionario_variaveis_v1.csv
+```
+
 ### Cell 48 [markdown]
 
 ```markdown
@@ -19556,7 +24752,7 @@ dicionário e não representam decisões definitivas de modelagem.
 
 ```
 
-### Cell 50 [code] · In [ ]
+### Cell 50 [code] · In [41]
 
 ```python
 COLUNAS_PREENCHIMENTO_APLICAVEL = [
@@ -19902,5 +25098,71 @@ display(
     )
     .reset_index(drop=True)
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x5720 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+        coluna                                     aplicabilidade  \
+0    tp_pov_ct  Registros pertencentes a povo ou comunidade tr...   
+1   tp_antivir                     Registros com uso de antiviral   
+2   dt_antivir                     Registros com uso de antiviral   
+3    morb_desc       Registros com outro fator de risco informado   
+4     out_anim             Registros com contato com outro animal   
+..         ...                                                ...   
+83      vomito                                    Populacao geral   
+84    tp_idade                                    Populacao geral   
+85    trat_cov                                    Populacao geral   
+86      vacina                                    Populacao geral   
+87  vacina_cov                                    Populacao geral   
+
+    quantidade_total  quantidade_preenchida  n_populacao_aplicavel  \
+0            4666910                  12557                  12516   
+1            4666910                 366885                 393559   
+2            4666910                 347712                 393559   
+3            4666910                1063125                1075640   
+4            4666910                   5276                   7042   
+..               ...                    ...                    ...   
+83           4666910                3328265                4666910   
+84           4666910                4666910                4666910   
+85           4666910                 993122                4666910   
+86           4666910                3472523                4666910   
+87           4666910                3135685                4666910   
+
+    n_preenchido_aplicavel  percentual_preenchido  \
+0                    12516               0.269065   
+1                   366875               7.861412   
+2                   347702               7.450583   
+3                  1063125              22.780062   
+4                     5276               0.113051   
+..                     ...                    ...   
+83                 3328265              71.316246   
+84                 4666910             100.000000   
+85                  993122              21.280076   
+86                 3472523              74.407327   
+87                 3135685              67.189747   
+
+    percentual_preenchido_aplicavel  diferenca_pontos_percentuais  
+0                        100.000000                     99.730935  
+1                         93.219822                     85.358410  
+2                         88.348126                     80.897543  
+3                         98.836507                     76.056445  
+4                         74.921897                     74.808846  
+..                              ...                           ...  
+83                        71.316246                      0.000000  
+84                       100.000000                      0.000000  
+85                        21.280076                      0.000000  
+86                        74.407327                      0.000000  
+87                        67.189747                      0.000000  
+
+[88 rows x 9 columns]
+[non-text output omitted: text/html]
 ```
 

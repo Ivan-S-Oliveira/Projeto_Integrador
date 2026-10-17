@@ -1,14 +1,14 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 2/3 -->
-## `notebooks/02_eda/02_eda_temporal_clustering.ipynb`
+## `notebooks/B/B_06_eda_temporal_clustering.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `739.7 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `c32d39fdc93bbdf1567fc85eb290917d21f64820dd1f61f556400b71c720876f`
+- Size: `6.8 MB` · modified `2026-10-17 14:03 UTC`
+- SHA-256: `f6d236ee477f1dbad025f02cede5e1454dfb69bc82b5e1887c5332c3478fa6d3`
 
 - Cells: `147` (`119` code, `28` markdown)
-- Code cells executed: `0` of `119`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
+- Code cells executed: `62` of `119`
+- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
+- Outputs: `text outputs included`; **reduced view** (notebook above size limit)
 
 ### Cell 1 [markdown]
 
@@ -40,7 +40,7 @@ do notebook.
   da solução não supervisionada.
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -184,7 +184,15 @@ print(
 )
 ```
 
-### Cell 3 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Coorte utilizada: coorte_desenvolvimento
+Caminho: <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
+Dimensão: (3915136, 125)
+```
+
+### Cell 3 [code] · In [2]
 
 ```python
 COLUNAS_OBRIGATORIAS_COORTE = [
@@ -285,7 +293,25 @@ print(
 )
 ```
 
-### Cell 4 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+                        verificacao  resultado
+0                  coorte_nao_vazia       True
+1    colunas_obrigatorias_presentes       True
+2           dt_interna_sem_ausencia       True
+3                      alvo_binario       True
+4  ano_internacao_entre_2019_e_2026       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Contrato mínimo da coorte validado.
+```
+
+### Cell 4 [code] · In [3]
 
 ```python
 CAMINHO_VOLUME_ANO = (
@@ -350,6 +376,17 @@ display(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+              metrica                                              valor
+0         nome_coorte                             coorte_desenvolvimento
+1      caminho_coorte  <HOME>\Documents\GitHub\Projeto_Integra...
+2   quantidade_linhas                                            3915136
+3  quantidade_colunas                                                125
+[non-text output omitted: text/html]
+```
+
 ### Cell 5 [markdown]
 
 ```markdown
@@ -369,7 +406,7 @@ O ano de 2026 deve ser interpretado de acordo com a data de encerramento
 da base carregada.
 ```
 
-### Cell 6 [code] · In [ ]
+### Cell 6 [code] · In [4]
 
 ```python
 import matplotlib.pyplot as plt
@@ -395,7 +432,14 @@ print(
 )
 ```
 
-### Cell 7 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Figura de volume: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_volume_por_ano.png
+Figura do desfecho: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
+```
+
+### Cell 7 [code] · In [5]
 
 ```python
 volume_por_ano = (
@@ -466,7 +510,22 @@ display(
 )
 ```
 
-### Cell 8 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  percentual_coorte  periodo_completo
+0            2019                 43513           1.111405              True
+1            2020                979812          25.026257              True
+2            2021               1480215          37.807499              True
+3            2022                475980          12.157432              True
+4            2023                240704           6.148037              True
+5            2024                229478           5.861303              True
+6            2025                289913           7.404928              True
+7            2026                175521           4.483139             False
+[non-text output omitted: text/html]
+```
+
+### Cell 8 [code] · In [6]
 
 ```python
 contagem_alvo_por_ano = (
@@ -581,7 +640,32 @@ display(
 )
 ```
 
-### Cell 9 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+alvo_obito_srag  ano_internacao  quantidade_cura  quantidade_obito_srag  \
+0                          2019            38292                   5221   
+1                          2020           705699                 274113   
+2                          2021          1062924                 417291   
+3                          2022           389547                  86433   
+4                          2023           217667                  23037   
+5                          2024           210358                  19120   
+6                          2025           268686                  21227   
+7                          2026           165778                   9743   
+
+alvo_obito_srag  quantidade_total  percentual_cura  percentual_obito_srag  
+0                           43513        88.001287              11.998713  
+1                          979812        72.023919              27.976081  
+2                         1480215        71.808758              28.191242  
+3                          475980        81.841044              18.158956  
+4                          240704        90.429324               9.570676  
+5                          229478        91.668047               8.331953  
+6                          289913        92.678148               7.321852  
+7                          175521        94.449097               5.550903  
+[non-text output omitted: text/html]
+```
+
+### Cell 9 [code] · In [7]
 
 ```python
 resumo_temporal = (
@@ -637,7 +721,42 @@ display(
 )
 ```
 
-### Cell 10 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  percentual_coorte  quantidade_cura  \
+0            2019                 43513           1.111405            38292   
+1            2020                979812          25.026257           705699   
+2            2021               1480215          37.807499          1062924   
+3            2022                475980          12.157432           389547   
+4            2023                240704           6.148037           217667   
+5            2024                229478           5.861303           210358   
+6            2025                289913           7.404928           268686   
+7            2026                175521           4.483139           165778   
+
+   quantidade_obito_srag  percentual_cura  percentual_obito_srag  \
+0                   5221        88.001287              11.998713   
+1                 274113        72.023919              27.976081   
+2                 417291        71.808758              28.191242   
+3                  86433        81.841044              18.158956   
+4                  23037        90.429324               9.570676   
+5                  19120        91.668047               8.331953   
+6                  21227        92.678148               7.321852   
+7                   9743        94.449097               5.550903   
+
+   periodo_completo  
+0              True  
+1              True  
+2              True  
+3              True  
+4              True  
+5              True  
+6              True  
+7             False  
+[non-text output omitted: text/html]
+```
+
+### Cell 10 [code] · In [8]
 
 ```python
 anos_volume = (
@@ -755,7 +874,20 @@ print(
 )
 ```
 
-### Cell 11 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_volume_por_ano.png
+```
+
+### Cell 11 [code] · In [9]
 
 ```python
 anos_alvo = (
@@ -886,7 +1018,20 @@ print(
 )
 ```
 
-### Cell 12 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
+```
+
+### Cell 12 [code] · In [10]
 
 ```python
 volume_por_ano.to_csv(
@@ -928,7 +1073,15 @@ print(
 )
 ```
 
-### Cell 13 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Volume por ano salvo em: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_volume_por_ano.csv
+Distribuição do alvo salva em: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_alvo_por_ano.csv
+Resumo temporal salvo em: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_temporal.csv
+```
+
+### Cell 13 [code] · In [11]
 
 ```python
 ANOS_ESPERADOS = {
@@ -1041,6 +1194,31 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+                       verificacao  resultado
+0                 volume_nao_vazio       True
+1           alvo_por_ano_nao_vazio       True
+2        resumo_temporal_nao_vazio       True
+3         soma_volume_igual_coorte       True
+4           soma_alvo_igual_coorte       True
+5   todos_anos_esperados_presentes       True
+6          percentual_obito_valido       True
+7            arquivo_volume_criado       True
+8              arquivo_alvo_criado       True
+9   arquivo_resumo_temporal_criado       True
+10            figura_volume_criada       True
+11              figura_alvo_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Distribuição temporal validada com sucesso.
+```
+
 ### Cell 14 [markdown]
 
 ```markdown
@@ -1065,7 +1243,7 @@ A análise incluirá:
 Os campos originais serão preservados.
 ```
 
-### Cell 15 [code] · In [ ]
+### Cell 15 [code] · In [12]
 
 ```python
 CAMINHO_IDADE_ANO = (
@@ -1114,7 +1292,15 @@ print(
 )
 ```
 
-### Cell 16 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Tabela de idade: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_idade_por_ano.csv
+Tabela de faixa etária: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_faixa_etaria_por_ano.csv
+Tabela de sexo: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_sexo_por_ano.csv
+```
+
+### Cell 16 [code] · In [13]
 
 ```python
 COLUNAS_IDADE_OBRIGATORIAS = [
@@ -1302,7 +1488,16 @@ print(
 )
 ```
 
-### Cell 17 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Idades padronizadas válidas: 3915112
+Idades ausentes: 0
+Idades não convertidas ou implausíveis: 24
+Tipos de idade inválidos: 0
+```
+
+### Cell 17 [code] · In [14]
 
 ```python
 auditoria_idade = (
@@ -1376,7 +1571,27 @@ display(
 )
 ```
 
-### Cell 18 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+  tipo_idade  quantidade_registros  quantidade_valor_informado  \
+0          1                 26669                       26669   
+1          2                355242                      355242   
+2          3               3533225                     3533225   
+
+   quantidade_idade_convertida  quantidade_idade_ausente  \
+0                        26668                         0   
+1                       355227                         0   
+2                      3533217                         0   
+
+   quantidade_nao_convertida  quantidade_tipo_invalido  percentual_convertido  
+0                          1                         0              99.996250  
+1                         15                         0              99.995778  
+2                          8                         0              99.999774  
+[non-text output omitted: text/html]
+```
+
+### Cell 18 [code] · In [15]
 
 ```python
 idade_por_ano = (
@@ -1527,7 +1742,42 @@ display(
 )
 ```
 
-### Cell 19 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  quantidade_idade_valida  \
+0            2019                 43513                    43513   
+1            2020                979812                   979808   
+2            2021               1480215                  1480207   
+3            2022                475980                   475976   
+4            2023                240704                   240701   
+5            2024                229478                   229474   
+6            2025                289913                   289912   
+7            2026                175521                   175521   
+
+   quantidade_idade_ausente  percentual_idade_ausente  idade_media  \
+0                         0                       0.0    24.590190   
+1                         4                  0.000408    56.897619   
+2                         8                   0.00054    53.574396   
+3                         4                   0.00084    47.423172   
+4                         3                  0.001246    30.035235   
+5                         4                  0.001743    28.289975   
+6                         1                  0.000345    27.415219   
+7                         0                       0.0    23.672497   
+
+   idade_mediana   idade_q1  idade_q3  idade_iqr  idade_minima  idade_maxima  
+0            5.0   0.666667      50.0  49.333333           0.0         108.0  
+1           60.0  43.000000      74.0  31.000000           0.0         120.0  
+2           56.0  41.000000      70.0  29.000000           0.0         119.0  
+3           58.0   5.000000      77.0  72.000000           0.0         118.0  
+4            7.0   1.000000      66.0  65.000000           0.0         117.0  
+5            6.0   0.916667      63.0  62.083333           0.0         114.0  
+6            5.0   0.750000      62.0  61.250000           0.0         114.0  
+7            3.0   0.750000      53.0  52.250000           0.0         115.0  
+[non-text output omitted: text/html]
+```
+
+### Cell 19 [code] · In [16]
 
 ```python
 LIMITES_FAIXA_ETARIA = [
@@ -1629,7 +1879,44 @@ display(
 )
 ```
 
-### Cell 20 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao               faixa_etaria  quantidade  percentual_ano
+0             2019                 1 a 4 anos        8211       18.870223
+1             2019               10 a 19 anos        1736        3.989612
+2             2019               20 a 39 anos        4718       10.842737
+3             2019               40 a 59 anos        5323       12.233126
+4             2019                 5 a 9 anos        2299        5.283479
+5             2019               60 a 79 anos        5611       12.894997
+6             2019            80 anos ou mais        2486        5.713235
+7             2019             Menor de 1 ano       13129       30.172592
+8             2020                 1 a 4 anos       24466        2.497010
+9             2020               10 a 19 anos       17292        1.764828
+10            2020               20 a 39 anos      124732       12.730197
+11            2020               40 a 59 anos      273535       27.917090
+12            2020                 5 a 9 anos       14382        1.467833
+13            2020               60 a 79 anos      352938       36.020992
+14            2020            80 anos ou mais      153028       15.618098
+15            2020  Idade ausente ou inválida           4        0.000408
+16            2020             Menor de 1 ano       19435        1.983544
+17            2021                 1 a 4 anos       47421        3.203656
+18            2021               10 a 19 anos       19030        1.285624
+19            2021               20 a 39 anos      213066       14.394260
+20            2021               40 a 59 anos      501489       33.879470
+21            2021                 5 a 9 anos       17681        1.194489
+22            2021               60 a 79 anos      474259       32.039873
+23            2021            80 anos ou mais      164098       11.086092
+24            2021  Idade ausente ou inválida           8        0.000540
+25            2021             Menor de 1 ano       43163        2.915995
+26            2022                 1 a 4 anos       57955       12.175932
+27            2022               10 a 19 anos       13032        2.737930
+28            2022               20 a 39 anos       35546        7.467961
+29            2022               40 a 59 anos       61612       12.944241
+[non-text output omitted: text/html]
+```
+
+### Cell 20 [code] · In [17]
 
 ```python
 if "cs_sexo" not in coorte.columns:
@@ -1732,7 +2019,38 @@ display(
 )
 ```
 
-### Cell 21 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao sexo_categoria  quantidade  percentual_ano
+0             2019       Feminino       21171       48.654425
+1             2019       Ignorado          12        0.027578
+2             2019      Masculino       22330       51.317997
+3             2020       Feminino      446843       45.604973
+4             2020       Ignorado         221        0.022555
+5             2020      Masculino      532748       54.372471
+6             2021       Feminino      670315       45.284975
+7             2021       Ignorado         175        0.011823
+8             2021      Masculino      809725       54.703202
+9             2022       Feminino      235553       49.488004
+10            2022       Ignorado          52        0.010925
+11            2022      Masculino      240375       50.501071
+12            2023       Feminino      116318       48.324083
+13            2023       Ignorado          14        0.005816
+14            2023      Masculino      124372       51.670101
+15            2024       Feminino      111138       48.430786
+16            2024       Ignorado          35        0.015252
+17            2024      Masculino      118305       51.553962
+18            2025       Feminino      140063       48.312080
+19            2025       Ignorado          33        0.011383
+20            2025      Masculino      149817       51.676537
+21            2026       Feminino       83546       47.598863
+22            2026       Ignorado          11        0.006267
+23            2026      Masculino       91964       52.394870
+[non-text output omitted: text/html]
+```
+
+### Cell 21 [code] · In [18]
 
 ```python
 anos_idade = (
@@ -1862,7 +2180,20 @@ print(
 )
 ```
 
-### Cell 22 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_idade_por_ano.png
+```
+
+### Cell 22 [code] · In [19]
 
 ```python
 ORDEM_FAIXA_ETARIA = (
@@ -1961,7 +2292,20 @@ print(
 )
 ```
 
-### Cell 23 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_faixa_etaria_por_ano.png
+```
+
+### Cell 23 [code] · In [20]
 
 ```python
 idade_por_ano.to_csv(
@@ -2091,6 +2435,31 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+                        verificacao  resultado
+0           idade_por_ano_nao_vazia       True
+1            faixa_etaria_nao_vazia       True
+2            sexo_por_ano_nao_vazio       True
+3   total_faixa_etaria_igual_coorte       True
+4           total_sexo_igual_coorte       True
+5     idade_valida_entre_zero_e_120       True
+6              arquivo_idade_criado       True
+7       arquivo_faixa_etaria_criado       True
+8               arquivo_sexo_criado       True
+9    arquivo_auditoria_idade_criado       True
+10              figura_idade_criada       True
+11       figura_faixa_etaria_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Análise demográfica validada com sucesso.
+```
+
 ### Cell 24 [markdown]
 
 ```markdown
@@ -2111,7 +2480,7 @@ As tabelas serão produzidas em formato longo para facilitar filtros,
 gráficos e análises posteriores por grupo de variáveis.
 ```
 
-### Cell 25 [code] · In [ ]
+### Cell 25 [code] · In [21]
 
 ```python
 CAMINHO_DICIONARIO_OPERACIONAL = (
@@ -2223,7 +2592,14 @@ if colunas_dicionario_fora_coorte:
     )
 ```
 
-### Cell 26 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Variáveis do dicionário encontradas na coorte: 88
+Variáveis do dicionário ausentes na coorte: 0
+```
+
+### Cell 26 [code] · In [22]
 
 ```python
 CAMINHO_PREENCHIMENTO_ANO = (
@@ -2262,7 +2638,15 @@ print(
 )
 ```
 
-### Cell 27 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Tabela anual de preenchimento: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_preenchimento_por_variavel_ano.csv
+Resumo de preenchimento: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_preenchimento_variaveis.csv
+Figura de variação: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
+```
+
+### Cell 27 [code] · In [23]
 
 ```python
 quantidade_por_ano = (
@@ -2429,7 +2813,119 @@ display(
 )
 ```
 
-### Cell 28 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao      coluna                  nome_amigavel  \
+0             2019        asma                           Asma   
+1             2020        asma                           Asma   
+2             2021        asma                           Asma   
+3             2022        asma                           Asma   
+4             2023        asma                           Asma   
+5             2024        asma                           Asma   
+6             2025        asma                           Asma   
+7             2026        asma                           Asma   
+8             2019  cardiopati  Doenca cardiovascular cronica   
+9             2020  cardiopati  Doenca cardiovascular cronica   
+10            2021  cardiopati  Doenca cardiovascular cronica   
+11            2022  cardiopati  Doenca cardiovascular cronica   
+12            2023  cardiopati  Doenca cardiovascular cronica   
+13            2024  cardiopati  Doenca cardiovascular cronica   
+14            2025  cardiopati  Doenca cardiovascular cronica   
+15            2026  cardiopati  Doenca cardiovascular cronica   
+16            2019    diabetes              Diabetes mellitus   
+17            2020    diabetes              Diabetes mellitus   
+18            2021    diabetes              Diabetes mellitus   
+19            2022    diabetes              Diabetes mellitus   
+20            2023    diabetes              Diabetes mellitus   
+21            2024    diabetes              Diabetes mellitus   
+22            2025    diabetes              Diabetes mellitus   
+23            2026    diabetes              Diabetes mellitus   
+24            2019  hematologi    Doenca hematologica cronica   
+25            2020  hematologi    Doenca hematologica cronica   
+26            2021  hematologi    Doenca hematologica cronica   
+27            2022  hematologi    Doenca hematologica cronica   
+28            2023  hematologi    Doenca hematologica cronica   
+29            2024  hematologi    Doenca hematologica cronica   
+
+                         grupo uso_inicial_sugerido  quantidade_registros_ano  \
+0   comorbidades_fatores_risco      modelo_a_nucleo                     43513   
+1   comorbidades_fatores_risco      modelo_a_nucleo                    979812   
+2   comorbidades_fatores_risco      modelo_a_nucleo                   1480215   
+3   comorbidades_fatores_risco      modelo_a_nucleo                    475980   
+4   comorbidades_fatores_risco      modelo_a_nucleo                    240704   
+5   comorbidades_fatores_risco      modelo_a_nucleo                    229478   
+6   comorbidades_fatores_risco      modelo_a_nucleo                    289913   
+7   comorbidades_fatores_risco      modelo_a_nucleo                    175521   
+8   comorbidades_fatores_risco      modelo_a_nucleo                     43513   
+9   comorbidades_fatores_risco      modelo_a_nucleo                    979812   
+10  comorbidades_fatores_risco      modelo_a_nucleo                   1480215   
+11  comorbidades_fatores_risco      modelo_a_nucleo                    475980   
+12  comorbidades_fatores_risco      modelo_a_nucleo                    240704   
+13  comorbidades_fatores_risco      modelo_a_nucleo                    229478   
+14  comorbidades_fatores_risco      modelo_a_nucleo                    289913   
+15  comorbidades_fatores_risco      modelo_a_nucleo                    175521   
+16  comorbidades_fatores_risco      modelo_a_nucleo                     43513   
+17  comorbidades_fatores_risco      modelo_a_nucleo                    979812   
+18  comorbidades_fatores_risco      modelo_a_nucleo                   1480215   
+19  comorbidades_fatores_risco      modelo_a_nucleo                    475980   
+20  comorbidades_fatores_risco      modelo_a_nucleo                    240704   
+21  comorbidades_fatores_risco      modelo_a_nucleo                    229478   
+22  comorbidades_fatores_risco      modelo_a_nucleo                    289913   
+23  comorbidades_fatores_risco      modelo_a_nucleo                    175521   
+24  comorbidades_fatores_risco      modelo_a_nucleo                     43513   
+25  comorbidades_fatores_risco      modelo_a_nucleo                    979812 
+... [1572 characters omitted] ...
+16860               26653              38.747041   
+17                 498051              481761              50.831282   
+18                 634279              845936              42.850464   
+19                 198154              277826              41.630741   
+20                  78223              162481              32.497590   
+21                  74053              155425              32.270196   
+22                  95570              194343              32.965062   
+23                  54168              121353              30.861264   
+24                  16689               26824              38.354055   
+25                 423345              556467              43.206758   
+26                 526779              953436              35.588006   
+27                 171192              304788              35.966217   
+28                  71291              169413              29.617705   
+29                  68669              160809              29.924001   
+
+    percentual_ausente  
+0            61.225381  
+1            56.044119  
+2            63.683924  
+3            62.833943  
+4            68.624535  
+5            68.542954  
+6            67.315712  
+7            68.978071  
+8            60.876060  
+9            45.798684  
+10           54.004249  
+11           55.115971  
+12           65.487071  
+13           65.799772  
+14           65.844236  
+15           68.027188  
+16           61.252959  
+17           49.168718  
+18           57.149536  
+19           58.369259  
+20           67.502410  
+21           67.729804  
+22           67.034938  
+23           69.138736  
+24           61.645945  
+25           56.793242  
+26           64.411994  
+27           64.033783  
+28           70.382295  
+29           70.075999  
+[non-text output omitted: text/html]
+```
+
+### Cell 28 [code] · In [24]
 
 ```python
 quantidade_total_coorte = len(
@@ -2541,7 +3037,117 @@ display(
 )
 ```
 
-### Cell 29 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna                                nome_amigavel  \
+0        tabag                                    Tabagismo   
+1     out_trat               Outro tratamento para COVID-19   
+2   dt_trt_cov   Data de inicio do tratamento para COVID-19   
+3    tipo_trat             Tipo de tratamento para COVID-19   
+4     out_anim                Especificacao do outro animal   
+5   dt_vac_mae                    Data da vacinacao materna   
+6    dt_2_dose                Data da segunda dose infantil   
+7    cs_etinia                               Etnia indigena   
+8    tp_pov_ct               Povo ou comunidade tradicional   
+9   dt_doseuni                  Data da dose unica infantil   
+10   out_antiv                    Outro antiviral utilizado   
+11   dt_1_dose               Data da primeira dose infantil   
+12   dose_adic                       Data da dose adicional   
+13    obes_imc                               IMC registrado   
+14   pac_cocbo                           Codigo da ocupacao   
+15   pac_dscbo                        Descricao da ocupacao   
+16  m_amamenta                      Mae amamenta a crianca?   
+17   dos_re_bi                    Data do reforco bivalente   
+18     mae_vac               Mae vacinada contra influenza?   
+19   dose_2ref              Data da segunda dose de reforco   
+20  dt_antivir                  Data de inicio do antiviral   
+21  tp_antivir                  Tipo de antiviral utilizado   
+22  dt_ut_dose         Data da ultima dose contra influenza   
+23    dose_ref                      Data da dose de reforco   
+24  dose_2_cov         Data da segunda dose contra COVID-19   
+25    trat_cov  Recebeu tratamento antiviral para COVID-19?   
+26   morb_desc            Descricao de outro fator de risco   
+27  dose_1_cov        Data da primeira dose contra COVID-19   
+28   outro_des                Descricao dos outros sintomas   
+29    puerpera                      Puerpera ou parturiente   
+
+                         grupo             uso_inicial_sugerido  \
+0   comorbidades_fatores_risco     indisponivel_se_100pct_vazio   
+1                  tratamentos                excluir_modelagem   
+2                  tratamentos                   exploracao_eda   
+3                  tratamentos                   exploracao_eda   
+4             exposicao_animal                 exploracao_texto   
+5          vacinacao_influenza           modelo_c_sensibilidade   
+6          vacinacao_influenza           modelo_c_sensibilidade   
+7   demografia_contexto_social              exploracao_subgrupo   
+8   demografia_contexto_social              exploracao_subgrupo   
+9          vacinacao_influenza           modelo_c_sensibilidade   
+10                 tratamentos                excluir_modelagem   
+11         vacinacao_influenza           modelo_c_sensibilidade   
+12             vacinacao_covid           modelo_c_sensibilidade   
+13  comorbidades_fatores_risco               reavaliar_apos_eda   
+14  demografia_contexto_social  reavaliar_apos_modelo_principal   
+15  demografia_contexto_social              apoio_interpretacao   
+16         vacinacao_influenza           modelo_c_sensibilidade   
+17             vacinacao_covid           modelo_c_sensibilidade   
+18         vacinacao_influenza           modelo_c_sensibilidade   
+19             vacinacao_covid           modelo_c_sensibilidade   
+20                 tratamentos                   exploracao_eda   
+21                 tratamentos                   exploracao_eda   
+22         vacinacao_influenza           modelo_c_sensibilidade   
+23             vacinacao_covid           modelo_c_sensibilidade   
+24             vacinacao_covid           modelo_c_sensibilidade   
+25                 tratamentos                   exploracao_eda   
+26  comorbidades_fatores_risco                 exploracao_texto   
+27             vacinacao_covid           modelo_c_sensibilidade   
+28                    sintomas                 exploracao_texto   
+29  comorbidades_fatores_risco                  modelo_a_nucleo   
+
+    quantidade_registros  quantidade_preenchida  quantidade_ausente  \
+0                3915136                      0             3915136   
+1                3915136  
+... [1758 characters omitted] ...
+        3915136                 919883             2995253   
+27               3915136                1006619             2908517   
+28               3915136                1183041             2732095   
+29               3915136                1412584             2502552   
+
+    percentual_preenchido  percentual_ausente  
+0                0.000000          100.000000  
+1                0.063114           99.936886  
+2                0.085412           99.914588  
+3                0.104083           99.895917  
+4                0.117799           99.882201  
+5                0.132665           99.867335  
+6                0.219456           99.780544  
+7                0.229571           99.770429  
+8                0.242699           99.757301  
+9                0.359272           99.640728  
+10               0.371916           99.628084  
+11               0.378786           99.621214  
+12               0.449384           99.550616  
+13               1.290198           98.709802  
+14               1.646942           98.353058  
+15               1.646942           98.353058  
+16               2.147077           97.852923  
+17               2.333406           97.666594  
+18               2.378359           97.621641  
+19               4.118503           95.881497  
+20               8.057140           91.942860  
+21               8.454547           91.545453  
+22               8.605933           91.394067  
+23              10.041771           89.958229  
+24              21.649107           78.350893  
+25              22.106563           77.893437  
+26              23.495557           76.504443  
+27              25.710959           74.289041  
+28              30.217111           69.782889  
+29              36.080075           63.919925  
+[non-text output omitted: text/html]
+```
+
+### Cell 29 [code] · In [25]
 
 ```python
 variacao_preenchimento = (
@@ -2617,7 +3223,108 @@ display(
 )
 ```
 
-### Cell 30 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna                                nome_amigavel  \
+0   vacina_cov              Recebeu vacina contra COVID-19?   
+1       pov_ct   Pertence a povo ou comunidade tradicional?   
+2      estrang                        Paciente estrangeiro?   
+3     trat_cov  Recebeu tratamento antiviral para COVID-19?   
+4       fadiga                                       Fadiga   
+5      dor_abd                                Dor abdominal   
+6    perd_olft                              Perda do olfato   
+7    perd_pala                             Perda do paladar   
+8   dt_antivir                  Data de inicio do antiviral   
+9   tp_antivir                  Tipo de antiviral utilizado   
+10  dose_1_cov        Data da primeira dose contra COVID-19   
+11  dose_2_cov         Data da segunda dose contra COVID-19   
+12      vacina             Recebeu vacina contra influenza?   
+13   dt_digita      Data de inclusao do registro no sistema   
+14  cs_escol_n                                 Escolaridade   
+15    dose_ref                      Data da dose de reforco   
+16    diarreia                                     Diarreia   
+17      vomito                                       Vomito   
+18    garganta                              Dor de garganta   
+19  dt_ut_dose         Data da ultima dose contra influenza   
+20   outro_sin                  Apresentou outros sintomas?   
+21  cardiopati                Doenca cardiovascular cronica   
+22    diabetes                            Diabetes mellitus   
+23   desc_resp                     Desconforto respiratorio   
+24   out_morbi                        Outro fator de risco?   
+25   saturacao         Saturacao de oxigenio abaixo de 95%?   
+26       febre                                        Febre   
+27   dose_2ref              Data da segunda dose de reforco   
+28   antiviral             Usou antiviral contra influenza?   
+29   obesidade                                    Obesidade   
+
+                         grupo    uso_inicial_sugerido  preenchimento_minimo  \
+0              vacinacao_covid         modelo_a_nucleo              1.372004   
+1   demografia_contexto_social       modelo_b_ampliado              1.778779   
+2   demografia_contexto_social       modelo_b_ampliado              0.489509   
+3                  tratamentos          exploracao_eda              0.209133   
+4                     sintomas         modelo_a_nucleo              0.553857   
+5                     sintomas         modelo_a_nucleo              0.301059   
+6                     sintomas         modelo_a_nucleo              0.296463   
+7                     sintomas         modelo_a_nucleo              0.296463   
+8                  tratamentos          exploracao_eda              2.025246   
+9                  tratamentos          exploracao_eda              2.326689   
+10             vacinacao_covid  modelo_c_sensibilidade              0.114908   
+11             vacinacao_covid  modelo_c_sensibilidade              0.082734   
+12         vacinacao_influenza         modelo_a_nucleo             56.222165   
+13          desfecho_auditoria               auditoria             64.153242   
+14  demografia_contexto_social       modelo_b_ampliado             62.606873   
+15             vacinacao_covid  modelo_c_sensibilidade              0.027578   
+16                    sintomas         modelo_a_nucleo             68.488592   
+17                    sintomas         modelo_a_nucleo             69.086306   
+18                    sintomas         modelo_a_nucleo             70.384260   
+19         vacinacao_influenza  modelo_c_sensibilidade              3.615068   
+20                    sintomas        exploracao_texto             70.301063   
+21  comorbidades_fatores_risco         modelo_a_nucleo             31.972812   
+22  comorbidades_fatores_risco         modelo_a_nucleo             30.861264   
+23                    sintomas       modelo_b_ampliado             79.492416   
+24  comorbidades_fatores_risco         modelo_a_nucleo             31.596789   
+25                    sintomas         modelo_a_nucleo             80.706122   
+26                    sintomas         modelo_a_nucleo             82.369847   
+27    
+... [2595 characters omitted] ...
+                      8   
+
+    amplitude_pontos_percentuais  flag_variacao_20_pp  
+0                      98.621787                 True  
+1                      98.221221                 True  
+2                      95.652833                 True  
+3                      84.194443                 True  
+4                      83.434383                 True  
+5                      82.196761                 True  
+6                      81.825334                 True  
+7                      81.631625                 True  
+8                      60.126295                 True  
+9                      59.827150                 True  
+10                     56.668990                 True  
+11                     53.020338                 True  
+12                     39.791417                 True  
+13                     35.846758                 True  
+14                     29.983847                 True  
+15                     29.378248                 True  
+16                     29.114423                 True  
+17                     28.599443                 True  
+18                     27.653108                 True  
+19                     23.416490                 True  
+20                     22.310340                 True  
+21                     22.228504                 True  
+22                     19.970017                False  
+23                     19.788259                False  
+24                     18.674998                False  
+25                     17.813860                False  
+26                     17.354373                False  
+27                     17.056776                False  
+28                     16.008500                False  
+29                     14.917261                False  
+[non-text output omitted: text/html]
+```
+
+### Cell 30 [code] · In [26]
 
 ```python
 USOS_RELEVANTES_PARA_GRAFICO = {
@@ -2774,7 +3481,76 @@ print(
 )
 ```
 
-### Cell 31 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+        coluna                             rotulo_variavel  \
+0   vacina_cov             Recebeu vacina contra COVID-19?   
+1       pov_ct  Pertence a povo ou comunidade tradicional?   
+2      estrang                       Paciente estrangeiro?   
+4       fadiga                                      Fadiga   
+5      dor_abd                               Dor abdominal   
+6    perd_olft                             Perda do olfato   
+7    perd_pala                            Perda do paladar   
+10  dose_1_cov       Data da primeira dose contra COVID-19   
+11  dose_2_cov        Data da segunda dose contra COVID-19   
+12      vacina            Recebeu vacina contra influenza?   
+14  cs_escol_n                                Escolaridade   
+15    dose_ref                     Data da dose de reforco   
+16    diarreia                                    Diarreia   
+17      vomito                                      Vomito   
+18    garganta                             Dor de garganta   
+
+                         grupo    uso_inicial_sugerido  preenchimento_minimo  \
+0              vacinacao_covid         modelo_a_nucleo              1.372004   
+1   demografia_contexto_social       modelo_b_ampliado              1.778779   
+2   demografia_contexto_social       modelo_b_ampliado              0.489509   
+4                     sintomas         modelo_a_nucleo              0.553857   
+5                     sintomas         modelo_a_nucleo              0.301059   
+6                     sintomas         modelo_a_nucleo              0.296463   
+7                     sintomas         modelo_a_nucleo              0.296463   
+10             vacinacao_covid  modelo_c_sensibilidade              0.114908   
+11             vacinacao_covid  modelo_c_sensibilidade              0.082734   
+12         vacinacao_influenza         modelo_a_nucleo             56.222165   
+14  demografia_contexto_social       modelo_b_ampliado             62.606873   
+15             vacinacao_covid  modelo_c_sensibilidade              0.027578   
+16                    sintomas         modelo_a_nucleo             68.488592   
+17                    sintomas         modelo_a_nucleo             69.086306   
+18                    sintomas         modelo_a_nucleo             70.384260   
+
+    preenchimento_maximo  amplitude_pontos_percentuais  
+0              99.993791                     98.621787  
+1             100.000000                     98.221221  
+2              96.142342                     95.652833  
+4              83.988241                     83.434383  
+5              82.497821                     82.196761  
+6              82.121797                     81.825334  
+7              81.928088                     81.631625  
+10             56.783898                     56.668990  
+11             53.103072                     53.020338  
+12             96.013582                     39.791417  
+14             92.590720                     29.983847  
+15             29.405826                     29.378248  
+16             97.603015                     29.114423  
+17             97.685749                     28.599443  
+18             98.037368                     27.653108  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
+```
+
+### Cell 31 [code] · In [27]
 
 ```python
 preenchimento_por_variavel_ano.to_csv(
@@ -2932,6 +3708,31 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+                           verificacao  resultado
+0               tabela_anual_nao_vazia       True
+1              resumo_global_nao_vazio       True
+2                   variacao_nao_vazia       True
+3         uma_linha_por_variavel_e_ano       True
+4            todas_variaveis_no_resumo       True
+5    percentuais_preenchimento_validos       True
+6         percentuais_ausencia_validos       True
+7   preenchimento_e_ausencia_somam_100       True
+8                 arquivo_anual_criado       True
+9                arquivo_resumo_criado       True
+10             arquivo_variacao_criado       True
+11              figura_variacao_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Análise de preenchimento validada com sucesso.
+```
+
 ### Cell 32 [markdown]
 
 ```markdown
@@ -2961,7 +3762,7 @@ Também serão derivados, por registro:
 Ausência e resposta ignorada não serão convertidas em resposta negativa.
 ```
 
-### Cell 33 [code] · In [ ]
+### Cell 33 [code] · In [28]
 
 ```python
 COLUNAS_SINTOMAS_PLANEJADAS = [
@@ -3152,7 +3953,16 @@ if COMORBIDADES_AUSENTES_NA_COORTE:
     )
 ```
 
-### Cell 34 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Sintomas encontrados: 13
+Comorbidades encontradas: 13
+Sintomas encontrados: 13
+Comorbidades encontradas: 13
+```
+
+### Cell 34 [code] · In [29]
 
 ```python
 nomes_amigaveis_dicionario = (
@@ -3215,7 +4025,15 @@ print(
 )
 ```
 
-### Cell 35 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Tabela de sintomas: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_sintomas_por_ano.csv
+Tabela de comorbidades: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_comorbidades_por_ano.csv
+Tabela de contadores clínicos: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_contadores_clinicos_por_ano.csv
+```
+
+### Cell 35 [code] · In [30]
 
 ```python
 def normalizar_resposta_clinica(
@@ -3284,7 +4102,7 @@ def normalizar_resposta_clinica(
     )
 ```
 
-### Cell 36 [code] · In [ ]
+### Cell 36 [code] · In [31]
 
 ```python
 def criar_tabela_clinica_por_ano(
@@ -3487,22 +4305,10 @@ def criar_tabela_clinica_por_ano(
 
     resultado = pd.DataFrame(
         registros
-    )
-
-    resultado = (
-        resultado.sort_values(
-            [
-                "coluna",
-                "ano_internacao",
-            ]
-        )
-        .reset_index(drop=True)
-    )
-
-    return resultado
+# ... 13 lines omitted ...
 ```
 
-### Cell 37 [code] · In [ ]
+### Cell 37 [code] · In [32]
 
 ```python
 sintomas_por_ano = (
@@ -3536,7 +4342,217 @@ display(
 )
 ```
 
-### Cell 38 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao grupo_clinico     coluna             nome_amigavel  \
+0             2019      sintomas  desc_resp  Desconforto respiratorio   
+1             2020      sintomas  desc_resp  Desconforto respiratorio   
+2             2021      sintomas  desc_resp  Desconforto respiratorio   
+3             2022      sintomas  desc_resp  Desconforto respiratorio   
+4             2023      sintomas  desc_resp  Desconforto respiratorio   
+5             2024      sintomas  desc_resp  Desconforto respiratorio   
+6             2025      sintomas  desc_resp  Desconforto respiratorio   
+7             2026      sintomas  desc_resp  Desconforto respiratorio   
+8             2019      sintomas   diarreia                  Diarreia   
+9             2020      sintomas   diarreia                  Diarreia   
+10            2021      sintomas   diarreia                  Diarreia   
+11            2022      sintomas   diarreia                  Diarreia   
+12            2023      sintomas   diarreia                  Diarreia   
+13            2024      sintomas   diarreia                  Diarreia   
+14            2025      sintomas   diarreia                  Diarreia   
+15            2026      sintomas   diarreia                  Diarreia   
+16            2019      sintomas   dispneia                  Dispneia   
+17            2020      sintomas   dispneia                  Dispneia   
+18            2021      sintomas   dispneia                  Dispneia   
+19            2022      sintomas   dispneia                  Dispneia   
+
+    quantidade_total  quantidade_sim  quantidade_nao  quantidade_ignorado  \
+0              43513           36515            6414                  271   
+1             979812          560899          264215                13473   
+2            1480215          832352          367371                15770   
+3             475980          239003          134973                 4392   
+4             240704          149928           53657                 1115   
+5             229478          152371           49920                  666   
+6             289913          202424           63374                  697   
+7             175521          126748           35614                  607   
+8              43513            3888           37235                 1347   
+9             979812          121536          604896                23746   
+10           1480215          183587          830408                25609   
+11            475980           36619          283078                 6295   
+12            240704           18748          154161                 1979   
+13            229478           19455          154134                 1596   
+14            289913           23038          212264                 1824   
+15            175521           14230          130343                 1356   
+16             43513           35980            7030                  216   
+17            979812          680930          195967                10373   
+18           1480215         1052319          252173                11597   
+19            475980          289046          109217                 3812   
+
+    quantidade_ausente  quantidade_inesperado  quantidade_respostas_validas  \
+0                  313                      0                         42929   
+1               141225                      0                        825114   
+2               264722                      0                       1199723   
+3                97612                      0                        373976   
+4                36004                      0                        203585   
+5                26521                      0                        202291   
+6                23418                      0                        265798   
+7                12552                      0                        162362   
+8                 1043                      0                         41123   
+9               229634                      0                        726432   
+10              440611                      0                       1013995   
+11              149988                      0                        319697   
+12               6581
+... [760 characters omitted] ...
+ 32.021636   
+2                69.378682               30.621318   
+3                63.908647               36.091353   
+4                73.643933               26.356067   
+5                75.322679               24.677321   
+6                76.157082               23.842918   
+7                78.065064               21.934936   
+8                 9.454563               90.545437   
+9                16.730541               83.269459   
+10               18.105316               81.894684   
+11               11.454283               88.545717   
+12               10.842698               89.157302   
+13               11.207507               88.792493   
+14                9.790822               90.209178   
+15                9.842778               90.157222   
+16               83.654964               16.345036   
+17               77.652221               22.347779   
+18               80.668873               19.331127   
+19               72.576664               27.423336   
+
+    percentual_sem_resposta_valida  
+0                         1.342128  
+1                        15.788539  
+2                        18.949409  
+3                        21.430312  
+4                        15.421015  
+5                        11.847323  
+6                         8.318013  
+7                         7.497109  
+8                         5.492611  
+9                        25.860063  
+10                       31.496776  
+11                       32.833943  
+12                       28.165298  
+13                       24.354840  
+14                       18.837030  
+15                       17.632078  
+16                        1.155976  
+17                       10.503546  
+18                       11.871451  
+19                       16.327787  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+    ano_internacao grupo_clinico      coluna                  nome_amigavel  \
+0             2019  comorbidades        asma                           Asma   
+1             2020  comorbidades        asma                           Asma   
+2             2021  comorbidades        asma                           Asma   
+3             2022  comorbidades        asma                           Asma   
+4             2023  comorbidades        asma                           Asma   
+5             2024  comorbidades        asma                           Asma   
+6             2025  comorbidades        asma                           Asma   
+7             2026  comorbidades        asma                           Asma   
+8             2019  comorbidades  cardiopati  Doenca cardiovascular cronica   
+9             2020  comorbidades  cardiopati  Doenca cardiovascular cronica   
+10            2021  comorbidades  cardiopati  Doenca cardiovascular cronica   
+11            2022  comorbidades  cardiopati  Doenca cardiovascular cronica   
+12            2023  comorbidades  cardiopati  Doenca cardiovascular cronica   
+13            2024  comorbidades  cardiopati  Doenca cardiovascular cronica   
+14            2025  comorbidades  cardiopati  Doenca cardiovascular cronica   
+15            2026  comorbidades  cardiopati  Doenca cardiovascular cronica   
+16            2019  comorbidades    diabetes              Diabetes mellitus   
+17            2020  comorbidades    diabetes              Diabetes mellitus   
+18            2021  comorbidades    diabetes              Diabetes mellitus   
+19            2022  comorbidades    diabetes              Diabetes mellitus   
+
+    quantidade_total  quantidade_sim  quantidade_nao  quantidade_ignorado  \
+0              43513            2504           14109                  259   
+1             979812           38401          380622                11662   
+2            1480215           46306          480519                10731   
+3             475980           23147          151272                 2484   
+4             240704           16950           57824                  748   
+5             229478           15656           56016                  515   
+6             289913           21168           73108                  480   
+7             175521           13998           40239                  213   
+8              43513            4699           12134                  191   
+9             979812          324584          199994                 6493   
+10           1480215          421658          252532                 6646   
+11            475980          123882           88039                 1718   
+12            240704           39973           42468                  633   
+13            229478           36489           41603                  390   
+14            289913           42965           55616                  441   
+15            175521           22336           33575                  208   
+16             43513            3257           13412                  191   
+17            979812          227313          262733                 8005   
+18           1480215          289134          337285                 7860   
+19            475980           77827          118313                 2014   
+
+    quantidade_ausente  quantidade_inesperado  quantidade_respostas_validas  \
+0                26641                      0                         16613   
+1               549127                      0                        419023   
+2               942659                      0                        526825   
+3               299077                      0                        174419   
+4               165182                      0                         74774   
+5               157291                      0                         71672   
+6               195157                      0                         94276   
+7               121071                      0                         54237   
+8                26489                      0                         16833   
+9               448741                      0                        524578   
+10              799379                      0        
+... [886 characters omitted] ...
+ 90.835587   
+2                 8.789636               91.210364   
+3                13.270917               86.729083   
+4                22.668307               77.331693   
+5                21.843956               78.156044   
+6                22.453222               77.546778   
+7                25.808950               74.191050   
+8                27.915404               72.084596   
+9                61.875260               38.124740   
+10               62.542903               37.457097   
+11               58.456689               41.543311   
+12               48.486797               51.513203   
+13               46.725657               53.274343   
+14               43.583449               56.416551   
+15               39.949205               60.050795   
+16               19.539265               80.460735   
+17               46.386054               53.613946   
+18               46.156646               53.843354   
+19               39.679311               60.320689   
+
+    percentual_sem_resposta_valida  
+0                        61.820605  
+1                        57.234347  
+2                        64.408887  
+3                        63.355813  
+4                        68.935290  
+5                        68.767376  
+6                        67.481279  
+7                        69.099424  
+8                        61.315009  
+9                        46.461362  
+10                       54.453238  
+11                       55.476911  
+12                       65.750050  
+13                       65.969723  
+14                       65.996351  
+15                       68.145692  
+16                       61.691908  
+17                       49.985712  
+18                       57.680540  
+19                       58.792386  
+[non-text output omitted: text/html]
+```
+
+### Cell 38 [code] · In [33]
 
 ```python
 matriz_sintomas_normalizada = pd.DataFrame(
@@ -3645,7 +4661,48 @@ display(
 )
 ```
 
-### Cell 39 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Contadores clínicos criados.
+```
+
+**Output 2 (display_data)**
+
+```text
+       n_sintomas_confirmados  n_sintomas_avaliados  \
+count               3915136.0             3915136.0   
+mean                  4.13686              9.696094   
+std                  1.850753              4.269588   
+min                       0.0                   0.0   
+25%                       3.0                   5.0   
+50%                       4.0                  13.0   
+75%                       5.0                  13.0   
+max                      13.0                  13.0   
+
+       n_comorbidades_confirmadas  n_comorbidades_avaliadas  \
+count                   3915136.0                 3915136.0   
+mean                     0.944292                  4.883869   
+std                      1.075383                  5.947294   
+min                           0.0                       0.0   
+25%                           0.0                       0.0   
+50%                           1.0                       1.0   
+75%                           2.0                      13.0   
+max                          13.0                      13.0   
+
+       flag_multimorbidade  
+count         3.915136e+06  
+mean          2.697337e-01  
+std           4.438214e-01  
+min           0.000000e+00  
+25%           0.000000e+00  
+50%           0.000000e+00  
+75%           1.000000e+00  
+max           1.000000e+00  
+[non-text output omitted: text/html]
+```
+
+### Cell 39 [code] · In [34]
 
 ```python
 contadores_clinicos_por_ano = (
@@ -3713,7 +4770,62 @@ display(
 )
 ```
 
-### Cell 40 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  sintomas_confirmados_media  \
+0            2019                 43513                    4.794016   
+1            2020                979812                    4.030769   
+2            2021               1480215                    4.321986   
+3            2022                475980                    3.710597   
+4            2023                240704                    3.994836   
+5            2024                229478                    4.123951   
+6            2025                289913                    4.193044   
+7            2026                175521                    4.279756   
+
+   sintomas_confirmados_mediana  sintomas_avaliados_media  \
+0                           5.0                  8.634132   
+1                           4.0                  9.062354   
+2                           4.0                  9.667718   
+3                           4.0                  9.457418   
+4                           4.0                  9.974712   
+5                           4.0                 10.384847   
+6                           4.0                 10.934222   
+7                           4.0                 11.056016   
+
+   comorbidades_confirmadas_media  comorbidades_confirmadas_mediana  \
+0                        0.650656                               0.0   
+1                        1.137412                               1.0   
+2                        0.978182                               1.0   
+3                        0.992714                               1.0   
+4                        0.732742                               0.0   
+5                        0.694097                               0.0   
+6                        0.660757                               0.0   
+7                        0.607471                               0.0   
+
+   comorbidades_avaliadas_media  quantidade_multimorbidade  \
+0                      4.938754                       6820   
+1                      5.771504                     328202   
+2                      4.845769                     418132   
+3                      4.889523                     135639   
+4                      3.975347                      47028   
+5                       3.99172                      42437   
+6                      4.120195                      50429   
+7                       3.89489                      27357   
+
+   percentual_multimorbidade  
+0                  15.673477  
+1                  33.496426  
+2                  28.248059  
+3                  28.496786  
+4                  19.537689  
+5                   18.49284  
+6                  17.394529  
+7                  15.586169  
+[non-text output omitted: text/html]
+```
+
+### Cell 40 [code] · In [35]
 
 ```python
 def calcular_variacao_clinica(
@@ -3817,7 +4929,137 @@ display(
 )
 ```
 
-### Cell 41 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   grupo_clinico     coluna                         nome_amigavel  \
+0       sintomas     fadiga                                Fadiga   
+1       sintomas      febre                                 Febre   
+2       sintomas  desc_resp              Desconforto respiratorio   
+3       sintomas  outro_sin           Apresentou outros sintomas?   
+4       sintomas      tosse                                 Tosse   
+5       sintomas  saturacao  Saturacao de oxigenio abaixo de 95%?   
+6       sintomas  perd_olft                       Perda do olfato   
+7       sintomas  perd_pala                      Perda do paladar   
+8       sintomas   dispneia                              Dispneia   
+9       sintomas   garganta                       Dor de garganta   
+10      sintomas   diarreia                              Diarreia   
+11      sintomas    dor_abd                         Dor abdominal   
+12      sintomas     vomito                                Vomito   
+
+    percentual_sim_minimo  percentual_sim_maximo  percentual_sim_medio  \
+0               21.273081              50.000000             28.068220   
+1               61.384615              88.722292             69.612232   
+2               63.908647              85.059051             73.689188   
+3               25.141566              46.095984             38.571990   
+4               76.066211              93.379001             83.267850   
+5               61.012121              76.990783             66.696741   
+6                0.793651              12.797015              4.201351   
+7                1.574803              13.049299              4.377449   
+8               72.576664              83.654964             76.328486   
+9               13.373457              23.249006             17.525093   
+10               9.454563              18.105316             12.178564   
+11               2.290076               9.448364              7.213527   
+12              12.228738              16.038424             14.638188   
+
+    percentual_sem_resposta_valida_maximo  quantidade_anos_observados  \
+0                               99.448441                           8   
+1                               18.631245                           8   
+2                               21.430312                           8   
+3                               31.426741                           8   
+4                               12.946498                           8   
+5                               20.202950                           8   
+6                               99.710431                           8   
+7                               99.708133                           8   
+8                               16.327787                           8   
+9                               31.462456                           8   
+10                              32.833943                           8   
+11                              99.698941                           8   
+12                              32.642826                           8   
+
+    amplitude_percentual_sim  flag_variacao_10_pp  
+0                  28.726919                 True  
+1                  27.337677                 True  
+2                  21.150404                 True  
+3                  20.954418                 True  
+4                  17.312790                 True  
+5                  15.978662                 True  
+6                  12.003364                 True  
+7                  11.474496                 True  
+8                  11.078300                 True  
+9                   9.875549                False  
+10                  8.650753                False  
+11                  7.158287                False  
+12                  3.809686                False  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+   grupo_clinico      coluna                       nome_amigavel  \
+0   comorbidades  cardiopati       Doenca cardiovascular cronica   
+1   comorbidades    diabetes                   Diabetes mellitus   
+2   comorbidades   obesidade                           Obesidade   
+3   comorbidades        asma                                Asma   
+4   comorbidades   out_morbi               Outro fator de risco?   
+5   comorbidades  pneumopati           Outra pneumopatia cronica   
+6   comorbidades  neurologic          Doenca neurologica cronica   
+7   comorbidades       renal                Doenca renal cronica   
+8   comorbidades  imunodepre  Imunodeficiencia ou imunodepressao   
+9   comorbidades   sind_down                    Sindrome de Down   
+10  comorbidades  hematologi         Doenca hematologica cronica   
+11  comorbidades    hepatica             Doenca hepatica cronica   
+12  comorbidades    puerpera             Puerpera ou parturiente   
+
+    percentual_sim_minimo  percentual_sim_maximo  percentual_sim_medio  \
+0               27.915404              62.542903             48.691921   
+1               19.539265              46.386054             33.116863   
+2                4.106890              22.575467              9.581222   
+3                8.789636              25.808950             17.383992   
+4               46.379868              59.968220             52.955136   
+5                9.063951              18.113072             15.490136   
+6                9.278785              16.788172             13.813272   
+7                5.950635              10.730760              8.180654   
+8                5.949748              10.191854              8.448954   
+9                0.726204               3.727196              2.195612   
+10               1.750564               3.589736              2.776720   
+11               1.513196               2.479641              2.032925   
+12               0.706646               1.563260              0.962607   
+
+    percentual_sem_resposta_valida_maximo  quantidade_anos_observados  \
+0                               68.145692                           8   
+1                               69.251543                           8   
+2                               71.076509                           8   
+3                               69.099424                           8   
+4                               68.665858                           8   
+5                               69.947186                           8   
+6                               70.066260                           8   
+7                               70.628586                           8   
+8                               70.441714                           8   
+9                               70.810622                           8   
+10                              70.745397                           8   
+11                              70.944396                           8   
+12                              71.161676                           8   
+
+    amplitude_percentual_sim  flag_variacao_10_pp  
+0                  34.627499                 True  
+1                  26.846789                 True  
+2                  18.468577                 True  
+3                  17.019314                 True  
+4                  13.588351                 True  
+5                   9.049121                False  
+6                   7.509388                False  
+7                   4.780125                False  
+8                   4.242105                False  
+9                   3.000992                False  
+10                  1.839172                False  
+11                  0.966445                False  
+12                  0.856614                False  
+[non-text output omitted: text/html]
+```
+
+### Cell 41 [code] · In [36]
 
 ```python
 QUANTIDADE_INDICADORES_GRAFICO = 8
@@ -3865,7 +5107,37 @@ display(
 )
 ```
 
-### Cell 42 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+      coluna                         nome_amigavel
+0     fadiga                                Fadiga
+1      febre                                 Febre
+2  desc_resp              Desconforto respiratorio
+3  outro_sin           Apresentou outros sintomas?
+4      tosse                                 Tosse
+5  saturacao  Saturacao de oxigenio abaixo de 95%?
+6  perd_olft                       Perda do olfato
+7  perd_pala                      Perda do paladar
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+       coluna                  nome_amigavel
+0  cardiopati  Doenca cardiovascular cronica
+1    diabetes              Diabetes mellitus
+2   obesidade                      Obesidade
+3        asma                           Asma
+4   out_morbi          Outro fator de risco?
+5  pneumopati      Outra pneumopatia cronica
+6  neurologic     Doenca neurologica cronica
+7       renal           Doenca renal cronica
+[non-text output omitted: text/html]
+```
+
+### Cell 42 [code] · In [37]
 
 ```python
 def criar_grafico_clinico_temporal(
@@ -4031,7 +5303,7 @@ def criar_grafico_clinico_temporal(
     )
 ```
 
-### Cell 43 [code] · In [ ]
+### Cell 43 [code] · In [38]
 
 ```python
 criar_grafico_clinico_temporal(
@@ -4061,7 +5333,33 @@ criar_grafico_clinico_temporal(
 )
 ```
 
-### Cell 44 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_sintomas_por_ano.png
+```
+
+**Output 3 (display_data)**
+
+```text
+<Figure size 1300x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 4 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_comorbidades_por_ano.png
+```
+
+### Cell 44 [code] · In [39]
 
 ```python
 sintomas_por_ano.to_csv(
@@ -4264,44 +5562,38 @@ verificacoes_clinicas = {
         CAMINHO_FIGURA_SINTOMAS.exists()
     ),
     "figura_comorbidades_criada": (
-        CAMINHO_FIGURA_COMORBIDADES.exists()
-    ),
-}
+# ... 38 lines omitted ...
+```
 
-verificacoes_clinicas_df = pd.DataFrame(
-    {
-        "verificacao": list(
-            verificacoes_clinicas.keys()
-        ),
-        "resultado": list(
-            verificacoes_clinicas.values()
-        ),
-    }
-)
+**Output 1 (display_data)**
 
-display(
-    verificacoes_clinicas_df
-)
+```text
+                             verificacao  resultado
+0             sintomas_por_ano_nao_vazio       True
+1         comorbidades_por_ano_nao_vazio       True
+2           contadores_por_ano_nao_vazio       True
+3            uma_linha_por_sintoma_e_ano       True
+4        uma_linha_por_comorbidade_e_ano       True
+5        categorias_sintomas_somam_total       True
+6    categorias_comorbidades_somam_total       True
+7           percentuais_sintomas_validos       True
+8       percentuais_comorbidades_validos       True
+9        contagem_sintomas_dentro_limite       True
+10   contagem_comorbidades_dentro_limite       True
+11               arquivo_sintomas_criado       True
+12           arquivo_comorbidades_criado       True
+13             arquivo_contadores_criado       True
+14      arquivo_variacao_sintomas_criado       True
+15  arquivo_variacao_comorbidades_criado       True
+16                figura_sintomas_criada       True
+17            figura_comorbidades_criada       True
+[non-text output omitted: text/html]
+```
 
-if not all(
-    verificacoes_clinicas.values()
-):
-    falhas_clinicas = [
-        verificacao
-        for verificacao, resultado
-        in verificacoes_clinicas.items()
-        if not resultado
-    ]
+**Output 2 (stream:stdout)**
 
-    raise RuntimeError(
-        "A análise de sintomas e comorbidades "
-        "terminou com falhas: "
-        f"{falhas_clinicas}"
-    )
-
-print(
-    "Análise de sintomas e comorbidades validada com sucesso."
-)
+```text
+Análise de sintomas e comorbidades validada com sucesso.
 ```
 
 ### Cell 45 [markdown]
@@ -4328,7 +5620,7 @@ refletir alterações de preenchimento, cobertura ou composição da
 população registrada.
 ```
 
-### Cell 46 [code] · In [ ]
+### Cell 46 [code] · In [40]
 
 ```python
 COLUNAS_VACINACAO_PLANEJADAS = [
@@ -4417,7 +5709,16 @@ print(
 )
 ```
 
-### Cell 47 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Indicadores de vacinação encontrados: ['vacina', 'vacina_cov']
+Tabela de vacinação: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_vacinacao_por_ano.csv
+Tabela de escolaridade: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_escolaridade_por_ano.csv
+Tabela de UF de residência: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_uf_residencia_por_ano.csv
+```
+
+### Cell 47 [code] · In [41]
 
 ```python
 vacinacao_por_ano = (
@@ -4446,7 +5747,120 @@ display(
 )
 ```
 
-### Cell 48 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao grupo_clinico      coluna  \
+0             2019     vacinacao      vacina   
+1             2020     vacinacao      vacina   
+2             2021     vacinacao      vacina   
+3             2022     vacinacao      vacina   
+4             2023     vacinacao      vacina   
+5             2024     vacinacao      vacina   
+6             2025     vacinacao      vacina   
+7             2026     vacinacao      vacina   
+8             2019     vacinacao  vacina_cov   
+9             2020     vacinacao  vacina_cov   
+10            2021     vacinacao  vacina_cov   
+11            2022     vacinacao  vacina_cov   
+12            2023     vacinacao  vacina_cov   
+13            2024     vacinacao  vacina_cov   
+14            2025     vacinacao  vacina_cov   
+15            2026     vacinacao  vacina_cov   
+
+                       nome_amigavel  quantidade_total  quantidade_sim  \
+0   Recebeu vacina contra influenza?             43513            9073   
+1   Recebeu vacina contra influenza?            979812          133125   
+2   Recebeu vacina contra influenza?           1480215          124445   
+3   Recebeu vacina contra influenza?            475980           41385   
+4   Recebeu vacina contra influenza?            240704           16719   
+5   Recebeu vacina contra influenza?            229478           34502   
+6   Recebeu vacina contra influenza?            289913           77684   
+7   Recebeu vacina contra influenza?            175521           36806   
+8    Recebeu vacina contra COVID-19?             43513              55   
+9    Recebeu vacina contra COVID-19?            979812           24284   
+10   Recebeu vacina contra COVID-19?           1480215          343199   
+11   Recebeu vacina contra COVID-19?            475980          286756   
+12   Recebeu vacina contra COVID-19?            240704          121641   
+13   Recebeu vacina contra COVID-19?            229478          109937   
+14   Recebeu vacina contra COVID-19?            289913          175324   
+15   Recebeu vacina contra COVID-19?            175521           65900   
+
+    quantidade_nao  quantidade_ignorado  quantidade_ausente  \
+0            19227                 7241                7972   
+1           277126               386783              182778   
+2           499833               493503              362434   
+3           107033               149120              178442   
+4            54881                63729              105375   
+5           118213                24881               51882   
+6           189362                 6067               16800   
+7           130225                 1493                6997   
+8              283                  259               42916   
+9            65967                36376              853185   
+10          528311               243981              364724   
+11          177549                11427                 248   
+12          115227                 3802                  34   
+13          114985                 4536                  20   
+14          111918                 2653                  18   
+15          107505                 2094                  22   
+
+    quantidade_inesperado  quantidade_respostas_validas  \
+0                       0                         28300   
+1                       0                        410251   
+2                       0                        624278   
+3                       0                        148418   
+4                       0                         71600   
+5                       0                        152715   
+6                       0                        267046   
+7                       0                        167031   
+8                       0                           338   
+9                       0                         90251   
+10                      0                        871510   
+11                      0                        464305   
+12                      0                        236868   
+13                      0                        224922   
+14                      0                        287242   
+15                      0                        173405   
+
+    percentual_sim_validos  percentual_nao_validos  \
+0                32.060071               67.939929   
+1                32.449647               67.550353   
+2                19.934228               80.065772   
+3                27.884084               72.115916   
+4                23.350559               76.649441   
+5                22.592411               77.407589   
+6                29.090119               70.909881   
+7                22.035431               77.964569   
+8                16.272189               83.727811   
+9                26.907181               73.092819   
+10               39.379812               60.620188   
+11               61.760265               38.239735   
+12               51.353919               48.646081   
+13               48.877833               51.122167   
+14               61.037035               38.962965   
+15               38.003518               61.996482   
+
+    percentual_sem_resposta_valida  
+0                        34.961965  
+1                        58.129621  
+2                        57.825181  
+3                        68.818438  
+4                        70.253922  
+5                        33.451137  
+6                         7.887539  
+7                         4.837028  
+8                        99.223221  
+9                        90.788947  
+10                       41.122742  
+11                        2.452834  
+12                        1.593659  
+13                        1.985376  
+14                        0.921311  
+15                        1.205554  
+[non-text output omitted: text/html]
+```
+
+### Cell 48 [code] · In [42]
 
 ```python
 escolaridade_normalizada = (
@@ -4550,7 +5964,96 @@ display(
 )
 ```
 
-### Cell 49 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao categoria_escolaridade  quantidade  percentual_ano  \
+0             2019                      0        1804        4.145887   
+1             2019                      1        3999        9.190357   
+2             2019                      2        2207        5.072047   
+3             2019                      3        3334        7.662078   
+4             2019                      4        1489        3.421966   
+5             2019                      5       19192       44.106359   
+6             2019                      9        8264       18.992025   
+7             2019                ausente        3224        7.409280   
+8             2020                      0       30829        3.146420   
+9             2020                      1      101136       10.321980   
+10            2020                      2       63870        6.518597   
+11            2020                      3       99791       10.184709   
+12            2020                      4       47085        4.805514   
+13            2020                      5       29043        2.964140   
+14            2020                      9      334942       34.184313   
+15            2020                ausente      273116       27.874327   
+16            2021                      0       42055        2.841141   
+17            2021                      1      136505        9.221971   
+18            2021                      2       95064        6.422310   
+19            2021                      3      160007       10.809713   
+20            2021                      4       67527        4.561972   
+21            2021                      5       40755        2.753316   
+22            2021                      9      447177       30.210274   
+23            2021                ausente      491125       33.179302   
+24            2022                      0       26567        5.581537   
+25            2022                      1       42951        9.023698   
+26            2022                      2       22096        4.642212   
+27            2022                      3       25812        5.422917   
+28            2022                      4       11178        2.348418   
+29            2022                      5       42247        8.875793   
+30            2022                      9      134761       28.312324   
+31            2022                ausente      170368       35.793101   
+32            2023                      0       17407        7.231704   
+33            2023                      1       19815        8.232102   
+34            2023                      2        7949        3.302396   
+35            2023                      3        9170        3.809658   
+36            2023                      4        3984        1.655145   
+37            2023                      5       42260       17.556833   
+38            2023                      9       55948       23.243486   
+39            2023                ausente       84171       34.968675   
+
+    flag_ausente  
+0          False  
+1          False  
+2          False  
+3          False  
+4          False  
+5          False  
+6          False  
+7           True  
+8          False  
+9          False  
+10         False  
+11         False  
+12         False  
+13         False  
+14         False  
+15          True  
+16         False  
+17         False  
+18         False  
+19         False  
+20         False  
+21         False  
+22         False  
+23          True  
+24         False  
+25         False  
+26         False  
+27         False  
+28         False  
+29         False  
+30         False  
+31          True  
+32         False  
+33         False  
+34         False  
+35         False  
+36         False  
+37         False  
+38         False  
+39          True  
+[non-text output omitted: text/html]
+```
+
+### Cell 49 [code] · In [43]
 
 ```python
 escolaridade_preenchimento_ano = (
@@ -4628,7 +6131,32 @@ display(
 )
 ```
 
-### Cell 50 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  quantidade_preenchida  \
+0            2019                 43513                  40289   
+1            2020                979812                 706696   
+2            2021               1480215                 989090   
+3            2022                475980                 305612   
+4            2023                240704                 156533   
+5            2024                229478                 143669   
+6            2025                289913                 188997   
+7            2026                175521                 116712   
+
+   quantidade_ausente  percentual_preenchido  percentual_ausente  
+0                3224              92.590720            7.409280  
+1              273116              72.125673           27.874327  
+2              491125              66.820698           33.179302  
+3              170368              64.206899           35.793101  
+4               84171              65.031325           34.968675  
+5               85809              62.606873           37.393127  
+6              100916              65.190937           34.809063  
+7               58809              66.494607           33.505393  
+[non-text output omitted: text/html]
+```
+
+### Cell 50 [code] · In [44]
 
 ```python
 uf_residencia_normalizada = (
@@ -4746,7 +6274,54 @@ display(
 )
 ```
 
-### Cell 51 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    ano_internacao uf_residencia_categoria  quantidade  percentual_ano
+0             2019                      SP       10795       24.808678
+1             2019                      PR        6555       15.064463
+2             2019                      MG        3674        8.443454
+3             2019                      RS        3427        7.875807
+4             2019                      RJ        2209        5.076644
+5             2019                      SC        2176        5.000804
+6             2019                      AM        1921        4.414773
+7             2019                      MS        1656        3.805759
+8             2019                      PE        1608        3.695447
+9             2019                      DF        1500        3.447246
+10            2019                      BA        1345        3.091030
+11            2019                      GO        1294        2.973824
+12            2019                      PA         996        2.288971
+13            2019                      CE         963        2.213132
+14            2019                      ES         657        1.509894
+15            2019                      PI         414        0.951440
+16            2019                      AC         314        0.721623
+17            2019                      MT         307        0.705536
+18            2019                      RN         293        0.673362
+19            2019                      PB         278        0.638890
+20            2019                      SE         252        0.579137
+21            2019                      TO         233        0.535472
+22            2019                      MA         227        0.521683
+23            2019                      RO         156        0.358514
+24            2019                      AL         155        0.356215
+25            2019                      AP          47        0.108014
+26            2019   Ausente ou inesperada          33        0.075839
+27            2019                      RR          28        0.064349
+28            2020                      SP      314025       32.049516
+29            2020                      MG       98025       10.004470
+30            2020                      RJ       91146        9.302397
+31            2020                      PR       64042        6.536152
+32            2020                      RS       52287        5.336432
+33            2020                      PE       40759        4.159880
+34            2020                      CE       35257        3.598343
+35            2020                      BA       34485        3.519553
+36            2020                      GO       31476        3.212453
+37            2020                      SC       29282        2.988532
+38            2020                      PA       27557        2.812478
+39            2020                      DF       23281        2.376068
+[non-text output omitted: text/html]
+```
+
+### Cell 51 [code] · In [45]
 
 ```python
 resumo_uf_residencia = (
@@ -4792,7 +6367,42 @@ display(
 )
 ```
 
-### Cell 52 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   uf_residencia_categoria  quantidade  percentual_coorte  ordem_frequencia
+0                       SP     1158797          29.597873                 1
+1                       MG      472256          12.062314                 2
+2                       PR      336568           8.596585                 3
+3                       RJ      300618           7.678354                 4
+4                       RS      235248           6.008680                 5
+5                       SC      166751           4.259137                 6
+6                       BA      142962           3.651521                 7
+7                       GO      142693           3.644650                 8
+8                       CE      129855           3.316743                 9
+9                       PE      101230           2.585606                10
+10                      DF      100575           2.568876                11
+11                      MS       89937           2.297162                12
+12                      PA       84009           2.145749                13
+13                      AM       63253           1.615602                14
+14                      PB       59052           1.508300                15
+15                      MT       50033           1.277938                16
+16                      MA       39880           1.018611                17
+17                      RN       34468           0.880378                18
+18                      ES       33443           0.854198                19
+19                      AL       33202           0.848042                20
+20                      PI       32473           0.829422                21
+21                      SE       28293           0.722657                22
+22                      RO       20888           0.533519                23
+23                      AC       17061           0.435770                24
+24                      TO       16084           0.410816                25
+25                      AP       15117           0.386117                26
+26                      RR        9633           0.246045                27
+27   Ausente ou inesperada         757           0.019335                28
+[non-text output omitted: text/html]
+```
+
+### Cell 52 [code] · In [46]
 
 ```python
 figura_vacinacao, eixo_vacinacao = plt.subplots(
@@ -4911,7 +6521,20 @@ print(
 )
 ```
 
-### Cell 53 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_vacinacao_por_ano.png
+```
+
+### Cell 53 [code] · In [47]
 
 ```python
 figura_escolaridade, eixo_escolaridade = plt.subplots(
@@ -5023,7 +6646,20 @@ print(
 )
 ```
 
-### Cell 54 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_escolaridade_preenchimento_por_ano.png
+```
+
+### Cell 54 [code] · In [48]
 
 ```python
 QUANTIDADE_UF_GRAFICO = 10
@@ -5154,7 +6790,20 @@ print(
 )
 ```
 
-### Cell 55 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_principais_uf_residencia.png
+```
+
+### Cell 55 [code] · In [49]
 
 ```python
 vacinacao_por_ano.to_csv(
@@ -5357,16 +7006,37 @@ if not all(
         if not resultado
     ]
 
-    raise RuntimeError(
-        "A análise de vacinação, escolaridade e geografia "
-        "terminou com falhas: "
-        f"{falhas_contexto}"
-    )
+# ... 10 lines omitted ...
+```
 
-print(
-    "Análise de vacinação, escolaridade e geografia "
-    "validada com sucesso."
-)
+**Output 1 (display_data)**
+
+```text
+                         verificacao  resultado
+0        vacinacao_por_ano_nao_vazia       True
+1     escolaridade_por_ano_nao_vazia       True
+2               uf_por_ano_nao_vazia       True
+3         uma_linha_por_vacina_e_ano       True
+4   categorias_vacinacao_somam_total       True
+5    total_escolaridade_igual_coorte       True
+6              total_uf_igual_coorte       True
+7      percentuais_vacinacao_validos       True
+8   percentuais_escolaridade_validos       True
+9             percentuais_uf_validos       True
+10          arquivo_vacinacao_criado       True
+11       arquivo_escolaridade_criado       True
+12                 arquivo_uf_criado       True
+13          arquivo_resumo_uf_criado       True
+14           figura_vacinacao_criada       True
+15        figura_escolaridade_criada       True
+16                  figura_uf_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Análise de vacinação, escolaridade e geografia validada com sucesso.
 ```
 
 ### Cell 56 [markdown]
@@ -5400,7 +7070,7 @@ Serão destacados:
 - mudanças na composição das principais UFs de residência.
 ```
 
-### Cell 57 [code] · In [ ]
+### Cell 57 [code] · In [50]
 
 ```python
 ANO_INICIAL_TRIAGEM_TEMPORAL = 2019
@@ -5446,7 +7116,15 @@ print(
 )
 ```
 
-### Cell 58 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Período utilizado na triagem temporal: 2019 a 2025
+Tabela de rupturas: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_rupturas_temporais.csv
+Resumo de rupturas: <HOME>\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_rupturas_temporais.csv
+```
+
+### Cell 58 [code] · In [51]
 
 ```python
 def resumir_amplitude_temporal(
@@ -5649,16 +7327,10 @@ def resumir_amplitude_temporal(
             ascending=[
                 False,
                 False,
-                True,
-            ],
-        )
-        .reset_index(drop=True)
-    )
-
-    return resultado
+# ... 7 lines omitted ...
 ```
 
-### Cell 59 [code] · In [ ]
+### Cell 59 [code] · In [52]
 
 ```python
 volume_triagem = (
@@ -5761,7 +7433,58 @@ display(
 )
 ```
 
-### Cell 60 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   ano_internacao  quantidade_registros  percentual_periodo  \
+0            2019                 43513            1.163569   
+1            2020                979812           26.200879   
+2            2021               1480215           39.582016   
+3            2022                475980           12.728048   
+4            2023                240704            6.436598   
+5            2024                229478            6.136407   
+6            2025                289913            7.752483   
+
+                           indicador  
+0  Participação no volume do período  
+1  Participação no volume do período  
+2  Participação no volume do período  
+3  Participação no volume do período  
+4  Participação no volume do período  
+5  Participação no volume do período  
+6  Participação no volume do período  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+alvo_obito_srag  ano_internacao  percentual_obito_srag       indicador
+0                          2019              11.998713  Óbito por SRAG
+1                          2020              27.976081  Óbito por SRAG
+2                          2021              28.191242  Óbito por SRAG
+3                          2022              18.158956  Óbito por SRAG
+4                          2023               9.570676  Óbito por SRAG
+5                          2024               8.331953  Óbito por SRAG
+6                          2025               7.321852  Óbito por SRAG
+[non-text output omitted: text/html]
+```
+
+**Output 3 (display_data)**
+
+```text
+   ano_internacao  idade_mediana      indicador
+0            2019            5.0  Idade mediana
+1            2020           60.0  Idade mediana
+2            2021           56.0  Idade mediana
+3            2022           58.0  Idade mediana
+4            2023            7.0  Idade mediana
+5            2024            6.0  Idade mediana
+6            2025            5.0  Idade mediana
+[non-text output omitted: text/html]
+```
+
+### Cell 60 [code] · In [53]
 
 ```python
 ruptura_volume = (
@@ -5815,7 +7538,49 @@ display(
 )
 ```
 
-### Cell 61 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+  tipo_indicador grupo_indicador                          indicador  \
+0     composicao          volume  Participação no volume do período   
+
+              unidade  ano_minimo  valor_minimo  ano_maximo  valor_maximo  \
+0  pontos_percentuais        2019      1.163569        2021     39.582016   
+
+   amplitude  limite_destaque  flag_destaque  quantidade_anos  
+0  38.418447              5.0           True                7  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+  tipo_indicador grupo_indicador       indicador             unidade  \
+0       desfecho        desfecho  Óbito por SRAG  pontos_percentuais   
+
+   ano_minimo  valor_minimo  ano_maximo  valor_maximo  amplitude  \
+0        2025      7.321852        2021     28.191242  20.869391   
+
+   limite_destaque  flag_destaque  quantidade_anos  
+0              5.0           True                7  
+[non-text output omitted: text/html]
+```
+
+**Output 3 (display_data)**
+
+```text
+  tipo_indicador grupo_indicador      indicador unidade  ano_minimo  \
+0     demografia           idade  Idade mediana    anos        2019   
+
+   valor_minimo  ano_maximo  valor_maximo  amplitude  limite_destaque  \
+0           5.0        2020          60.0       55.0              5.0   
+
+   flag_destaque  quantidade_anos  
+0           True                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 61 [code] · In [54]
 
 ```python
 preenchimento_triagem = (
@@ -5874,7 +7639,124 @@ display(
 )
 ```
 
-### Cell 62 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+     tipo_indicador grupo_indicador  \
+0   qualidade_dados   preenchimento   
+1   qualidade_dados   preenchimento   
+2   qualidade_dados   preenchimento   
+3   qualidade_dados   preenchimento   
+4   qualidade_dados   preenchimento   
+5   qualidade_dados   preenchimento   
+6   qualidade_dados   preenchimento   
+7   qualidade_dados   preenchimento   
+8   qualidade_dados   preenchimento   
+9   qualidade_dados   preenchimento   
+10  qualidade_dados   preenchimento   
+11  qualidade_dados   preenchimento   
+12  qualidade_dados   preenchimento   
+13  qualidade_dados   preenchimento   
+14  qualidade_dados   preenchimento   
+15  qualidade_dados   preenchimento   
+16  qualidade_dados   preenchimento   
+17  qualidade_dados   preenchimento   
+18  qualidade_dados   preenchimento   
+19  qualidade_dados   preenchimento   
+20  qualidade_dados   preenchimento   
+21  qualidade_dados   preenchimento   
+22  qualidade_dados   preenchimento   
+23  qualidade_dados   preenchimento   
+24  qualidade_dados   preenchimento   
+25  qualidade_dados   preenchimento   
+26  qualidade_dados   preenchimento   
+27  qualidade_dados   preenchimento   
+28  qualidade_dados   preenchimento   
+29  qualidade_dados   preenchimento   
+
+                                      indicador             unidade  \
+0               Recebeu vacina contra COVID-19?  pontos_percentuais   
+1    Pertence a povo ou comunidade tradicional?  pontos_percentuais   
+2                         Paciente estrangeiro?  pontos_percentuais   
+3                                        Fadiga  pontos_percentuais   
+4   Recebeu tratamento antiviral para COVID-19?  pontos_percentuais   
+5                                 Dor abdominal  pontos_percentuais   
+6                               Perda do olfato  pontos_percentuais   
+7                              Perda do paladar  pontos_percentuais   
+8                   Data de inicio do antiviral  pontos_percentuais   
+9                   Tipo de antiviral utilizado  pontos_percentuais   
+10        Data da primeira dose contra COVID-19  pontos_percentuais   
+11         Data da segunda dose contra COVID-19  pontos_percentuais   
+12             Recebeu vacina contra influenza?  pontos_percentuais   
+13      Data de inclusao do registro no sistema  pontos_percentuais   
+14                                 Escolaridade  pontos_percentuais   
+15                      Data da dose de reforco  pontos_percentuais   
+16                                     Diarreia  pontos_percentuais   
+17                                       Vomito  pontos_percentuais   
+18                              Dor de garganta  pontos_percentuais   
+19         Data da ultima dose contra influenza  pontos_percentuais   
+20                  Apresentou outros sintomas?  pontos_percentuais   
+21                Doenca cardiovascular cronica  pontos_percentuais   
+22                     Desconforto respiratorio  pontos_percentuais   
+23                            Diabetes mellitus  pontos_percentuais   
+24         Saturacao de oxigenio abaixo de 95%?  pontos_percentuais   
+25                                        Febre  pontos_percentuais   
+26              Data da segunda dose de reforco  pontos_percentuais   
+27                        Outro fator de risco?  pontos_percentuais   
+28             Usou antiviral contra influenza?  pontos_percentuais   
+29                                     Dispneia  pontos_percentuais   
+
+    ano_minimo  valor_minimo  ano_maximo  valor_maximo  amplitude  \
+0         2019      1.372004        2025     99.993791  98.621787   
+1         2019      1.778779        2023    100.000000  98.221221   
+2         2019      0.489509        2025     95.362402  94.872893   
+3         2019      0.553857        2025     82.602022  82.048165   
+4         2019      0.209133        2025     82.231911  82.022778   
+5         2019      0.301059        2025     81.077082  80.776022   
+6         2019      0.296463        2025     80.480696  80.184233   
+7         2019      0.296463        2025     80.359970  80.063507   
+8         2021      2.025246        2019     62.151541  60.126295   
+9         2021      2.326689        2019     62.153839  59.827150   
+10        2019      0.114908 
+... [1262 characters omitted] ...
+77257  16.008500   
+29        2022     84.473087        2019     99.340427  14.867340   
+
+    limite_destaque  flag_destaque  quantidade_anos  
+0              20.0           True                7  
+1              20.0           True                7  
+2              20.0           True                7  
+3              20.0           True                7  
+4              20.0           True                7  
+5              20.0           True                7  
+6              20.0           True                7  
+7              20.0           True                7  
+8              20.0           True                7  
+9              20.0           True                7  
+10             20.0           True                7  
+11             20.0           True                7  
+12             20.0           True                7  
+13             20.0           True                7  
+14             20.0           True                7  
+15             20.0           True                7  
+16             20.0           True                7  
+17             20.0           True                7  
+18             20.0           True                7  
+19             20.0           True                7  
+20             20.0           True                7  
+21             20.0           True                7  
+22             20.0          False                7  
+23             20.0          False                7  
+24             20.0          False                7  
+25             20.0          False                7  
+26             20.0          False                7  
+27             20.0          False                7  
+28             20.0          False                7  
+29             20.0          False                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 62 [code] · In [55]
 
 ```python
 sintomas_triagem = (
@@ -5986,7 +7868,107 @@ display(
 )
 ```
 
-### Cell 63 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+   tipo_indicador grupo_indicador                             indicador  \
+0         clinico        sintomas                                Fadiga   
+1         clinico        sintomas                                 Febre   
+2         clinico        sintomas              Desconforto respiratorio   
+3         clinico        sintomas           Apresentou outros sintomas?   
+4         clinico        sintomas                                 Tosse   
+5         clinico        sintomas  Saturacao de oxigenio abaixo de 95%?   
+6         clinico        sintomas                       Perda do olfato   
+7         clinico        sintomas                      Perda do paladar   
+8         clinico        sintomas                              Dispneia   
+9         clinico        sintomas                       Dor de garganta   
+10        clinico        sintomas                              Diarreia   
+11        clinico        sintomas                         Dor abdominal   
+12        clinico        sintomas                                Vomito   
+
+               unidade  ano_minimo  valor_minimo  ano_maximo  valor_maximo  \
+0   pontos_percentuais        2024     21.273081        2019     50.000000   
+1   pontos_percentuais        2022     61.384615        2019     88.722292   
+2   pontos_percentuais        2022     63.908647        2019     85.059051   
+3   pontos_percentuais        2019     25.141566        2021     46.095984   
+4   pontos_percentuais        2020     76.066211        2019     93.379001   
+5   pontos_percentuais        2025     62.097121        2021     76.990783   
+6   pontos_percentuais        2019      0.793651        2021     12.797015   
+7   pontos_percentuais        2019      1.574803        2021     13.049299   
+8   pontos_percentuais        2022     72.576664        2019     83.654964   
+9   pontos_percentuais        2025     13.373457        2021     23.249006   
+10  pontos_percentuais        2019      9.454563        2021     18.105316   
+11  pontos_percentuais        2019      2.290076        2021      9.448364   
+12  pontos_percentuais        2020     12.228738        2019     16.038424   
+
+    amplitude  limite_destaque  flag_destaque  quantidade_anos  
+0   28.726919             10.0           True                7  
+1   27.337677             10.0           True                7  
+2   21.150404             10.0           True                7  
+3   20.954418             10.0           True                7  
+4   17.312790             10.0           True                7  
+5   14.893662             10.0           True                7  
+6   12.003364             10.0           True                7  
+7   11.474496             10.0           True                7  
+8   11.078300             10.0           True                7  
+9    9.875549             10.0          False                7  
+10   8.650753             10.0          False                7  
+11   7.158287             10.0          False                7  
+12   3.809686             10.0          False                7  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+   tipo_indicador grupo_indicador                           indicador  \
+0         clinico    comorbidades       Doenca cardiovascular cronica   
+1         clinico    comorbidades                   Diabetes mellitus   
+2         clinico    comorbidades                           Obesidade   
+3         clinico    comorbidades                                Asma   
+4         clinico    comorbidades               Outro fator de risco?   
+5         clinico    comorbidades           Outra pneumopatia cronica   
+6         clinico    comorbidades          Doenca neurologica cronica   
+7         clinico    comorbidades                Doenca renal cronica   
+8         clinico    comorbidades  Imunodeficiencia ou imunodepressao   
+9         clinico    comorbidades                    Sindrome de Down   
+10        clinico    comorbidades         Doenca hematologica cronica   
+11        clinico    comorbidades             Doenca hepatica cronica   
+12        clinico    comorbidades             Puerpera ou parturiente   
+
+               unidade  ano_minimo  valor_minimo  ano_maximo  valor_maximo  \
+0   pontos_percentuais        2019     27.915404        2021     62.542903   
+1   pontos_percentuais        2019     19.539265        2020     46.386054   
+2   pontos_percentuais        2019      4.106890        2021     22.575467   
+3   pontos_percentuais        2021      8.789636        2023     22.668307   
+4   pontos_percentuais        2019     47.286822        2022     59.968220   
+5   pontos_percentuais        2021      9.063951        2019     18.113072   
+6   pontos_percentuais        2021      9.278785        2022     16.788172   
+7   pontos_percentuais        2019      5.950635        2022     10.730760   
+8   pontos_percentuais        2021      5.949748        2019     10.191854   
+9   pontos_percentuais        2020      0.726204        2019      3.727196   
+10  pontos_percentuais        2021      1.750564        2024      3.589736   
+11  pontos_percentuais        2025      1.602557        2020      2.479641   
+12  pontos_percentuais        2025      0.706646        2019      1.563260   
+
+    amplitude  limite_destaque  flag_destaque  quantidade_anos  
+0   34.627499             10.0           True                7  
+1   26.846789             10.0           True                7  
+2   18.468577             10.0           True                7  
+3   13.878671             10.0           True                7  
+4   12.681398             10.0           True                7  
+5    9.049121             10.0          False                7  
+6    7.509388             10.0          False                7  
+7    4.780125             10.0          False                7  
+8    4.242105             10.0          False                7  
+9    3.000992             10.0          False                7  
+10   1.839172             10.0          False                7  
+11   0.877084             10.0          False                7  
+12   0.856614             10.0          False                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 63 [code] · In [56]
 
 ```python
 vacinacao_triagem = (
@@ -6083,7 +8065,38 @@ display(
 )
 ```
 
-### Cell 64 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+  tipo_indicador grupo_indicador                         indicador  \
+0       contexto       vacinacao   Recebeu vacina contra COVID-19?   
+1       contexto       vacinacao  Recebeu vacina contra influenza?   
+
+              unidade  ano_minimo  valor_minimo  ano_maximo  valor_maximo  \
+0  pontos_percentuais        2019     16.272189        2022     61.760265   
+1  pontos_percentuais        2021     19.934228        2020     32.449647   
+
+   amplitude  limite_destaque  flag_destaque  quantidade_anos  
+0  45.488076             10.0           True                7  
+1  12.515419             10.0           True                7  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+    tipo_indicador grupo_indicador                      indicador  \
+0  qualidade_dados    escolaridade  Preenchimento da escolaridade   
+
+              unidade  ano_minimo  valor_minimo  ano_maximo  valor_maximo  \
+0  pontos_percentuais        2024     62.606873        2019      92.59072   
+
+   amplitude  limite_destaque  flag_destaque  quantidade_anos  
+0  29.983847             20.0           True                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 64 [code] · In [57]
 
 ```python
 ufs_triagem = (
@@ -6182,7 +8195,48 @@ display(
 )
 ```
 
-### Cell 65 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+  tipo_indicador grupo_indicador indicador             unidade  ano_minimo  \
+0     territorio   uf_residencia     UF PR  pontos_percentuais        2020   
+1     territorio   uf_residencia     UF SP  pontos_percentuais        2025   
+2     territorio   uf_residencia     UF MG  pontos_percentuais        2019   
+3     territorio   uf_residencia     UF RJ  pontos_percentuais        2019   
+4     territorio   uf_residencia     UF SC  pontos_percentuais        2020   
+5     territorio   uf_residencia     UF PE  pontos_percentuais        2025   
+6     territorio   uf_residencia     UF RS  pontos_percentuais        2020   
+7     territorio   uf_residencia     UF CE  pontos_percentuais        2019   
+8     territorio   uf_residencia     UF GO  pontos_percentuais        2019   
+9     territorio   uf_residencia     UF BA  pontos_percentuais        2019   
+
+   valor_minimo  ano_maximo  valor_maximo  amplitude  limite_destaque  \
+0      6.536152        2019     15.064463   8.528312              5.0   
+1     24.390076        2020     32.049516   7.659440              5.0   
+2      8.443454        2022     13.733980   5.290527              5.0   
+3      5.076644        2020      9.302397   4.225753              5.0   
+4      2.988532        2024      5.933031   2.944498              5.0   
+5      1.514592        2020      4.159880   2.645287              5.0   
+6      5.336432        2019      7.875807   2.539375              5.0   
+7      2.213132        2023      3.993286   1.780155              5.0   
+8      2.973824        2021      4.172434   1.198610              5.0   
+9      3.091030        2024      4.221320   1.130289              5.0   
+
+   flag_destaque  quantidade_anos  
+0           True                7  
+1           True                7  
+2           True                7  
+3          False                7  
+4          False                7  
+5          False                7  
+6          False                7  
+7          False                7  
+8          False                7  
+9          False                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 65 [code] · In [58]
 
 ```python
 TABELAS_RUPTURAS = [
@@ -6267,7 +8321,115 @@ display(
 )
 ```
 
-### Cell 66 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+     tipo_indicador grupo_indicador  \
+0        demografia           idade   
+1        composicao          volume   
+2   qualidade_dados   preenchimento   
+3   qualidade_dados   preenchimento   
+4   qualidade_dados   preenchimento   
+5          contexto       vacinacao   
+6          desfecho        desfecho   
+7   qualidade_dados   preenchimento   
+8   qualidade_dados   preenchimento   
+9   qualidade_dados   preenchimento   
+10  qualidade_dados   preenchimento   
+11  qualidade_dados   preenchimento   
+12          clinico    comorbidades   
+13  qualidade_dados   preenchimento   
+14  qualidade_dados   preenchimento   
+15          clinico        sintomas   
+16  qualidade_dados   preenchimento   
+17          clinico        sintomas   
+18          clinico    comorbidades   
+19  qualidade_dados   preenchimento   
+20          clinico        sintomas   
+21          clinico        sintomas   
+22  qualidade_dados   preenchimento   
+23          clinico    comorbidades   
+24  qualidade_dados   preenchimento   
+25          clinico        sintomas   
+26       territorio   uf_residencia   
+27       territorio   uf_residencia   
+28  qualidade_dados    escolaridade   
+29  qualidade_dados   preenchimento   
+30          clinico        sintomas   
+31  qualidade_dados   preenchimento   
+32  qualidade_dados   preenchimento   
+33  qualidade_dados   preenchimento   
+34          clinico    comorbidades   
+35  qualidade_dados   preenchimento   
+36          clinico    comorbidades   
+37         contexto       vacinacao   
+38          clinico        sintomas   
+39  qualidade_dados   preenchimento   
+
+                                      indicador             unidade  \
+0                                 Idade mediana                anos   
+1             Participação no volume do período  pontos_percentuais   
+2               Recebeu vacina contra COVID-19?  pontos_percentuais   
+3    Pertence a povo ou comunidade tradicional?  pontos_percentuais   
+4                         Paciente estrangeiro?  pontos_percentuais   
+5               Recebeu vacina contra COVID-19?  pontos_percentuais   
+6                                Óbito por SRAG  pontos_percentuais   
+7                                        Fadiga  pontos_percentuais   
+8   Recebeu tratamento antiviral para COVID-19?  pontos_percentuais   
+9                                 Dor abdominal  pontos_percentuais   
+10                              Perda do olfato  pontos_percentuais   
+11                             Perda do paladar  pontos_percentuais   
+12                Doenca cardiovascular cronica  pontos_percentuais   
+13                  Data de inicio do antiviral  pontos_percentuais   
+14                  Tipo de antiviral utilizado  pontos_percentuais   
+15                                       Fadiga  pontos_percentuais   
+16        Data da primeira dose contra COVID-19  pontos_percentuais   
+17                                        Febre  pontos_percentuais   
+18                            Diabetes mellitus  pontos_percentuais   
+19         Data da segunda dose contra COVID-19  pontos_percentuais   
+20                     Desconforto respiratorio  pontos_percentuais   
+21                  Apresentou outros sintomas?  pontos_percentuais   
+22             Recebeu vacina contra influenza?  pontos_percentuais   
+23                                    Obesidade  pontos_percentuais   
+24      Data de inclusao do registro no sistema  pontos_percentuais   
+25                                        Tosse  pontos_percentuais   
+26                                        UF PR  pontos_percentuais   
+27                                        UF SP  pontos_percentuais   
+28                Preenchimento da escolaridade  pontos_percentuais   
+29                                 Escolaridade  pontos_percentuais   
+30         Saturacao de oxigenio abaixo de 95%?  pontos_percentuais   
+31                      Data da dose de reforco  pontos_percentuais   
+32                                     Diarreia  pontos_percentuais   
+33                                       Vomito  pontos_percentuais   
+34                                         Asma  pontos_percentuais   
+35                              Dor de garga
+... [4945 characters omitted] ...
+        10.0           True        2.684679                7  
+19  53.020338             20.0           True        2.651017                7  
+20  21.150404             10.0           True        2.115040                7  
+21  20.954418             10.0           True        2.095442                7  
+22  37.982993             20.0           True        1.899150                7  
+23  18.468577             10.0           True        1.846858                7  
+24  35.846758             20.0           True        1.792338                7  
+25  17.312790             10.0           True        1.731279                7  
+26   8.528312              5.0           True        1.705662                7  
+27   7.659440              5.0           True        1.531888                7  
+28  29.983847             20.0           True        1.499192                7  
+29  29.983847             20.0           True        1.499192                7  
+30  14.893662             10.0           True        1.489366                7  
+31  29.378248             20.0           True        1.468912                7  
+32  29.114423             20.0           True        1.455721                7  
+33  28.599443             20.0           True        1.429972                7  
+34  13.878671             10.0           True        1.387867                7  
+35  27.653108             20.0           True        1.382655                7  
+36  12.681398             10.0           True        1.268140                7  
+37  12.515419             10.0           True        1.251542                7  
+38  12.003364             10.0           True        1.200336                7  
+39  23.416490             20.0           True        1.170824                7  
+[non-text output omitted: text/html]
+```
+
+### Cell 66 [code] · In [59]
 
 ```python
 resumo_rupturas_temporais = (
@@ -6333,7 +8495,45 @@ display(
 )
 ```
 
-### Cell 67 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+    tipo_indicador grupo_indicador  quantidade_indicadores  \
+0  qualidade_dados   preenchimento                      88   
+1          clinico        sintomas                      13   
+2          clinico    comorbidades                      13   
+3       territorio   uf_residencia                      10   
+4         contexto       vacinacao                       2   
+5       demografia           idade                       1   
+6       composicao          volume                       1   
+7  qualidade_dados    escolaridade                       1   
+8         desfecho        desfecho                       1   
+
+   quantidade_destaques  maior_amplitude  amplitude_mediana  \
+0                    22        98.621787          11.185376   
+1                     9        28.726919          12.003364   
+2                     5        34.627499           7.509388   
+3                     3         8.528312           2.794893   
+4                     2        45.488076          29.001747   
+5                     1        55.000000          55.000000   
+6                     1        38.418447          38.418447   
+7                     1        29.983847          29.983847   
+8                     1        20.869391          20.869391   
+
+   percentual_indicadores_destacados  
+0                          25.000000  
+1                          69.230769  
+2                          38.461538  
+3                          30.000000  
+4                         100.000000  
+5                         100.000000  
+6                         100.000000  
+7                         100.000000  
+8                         100.000000  
+[non-text output omitted: text/html]
+```
+
+### Cell 67 [code] · In [60]
 
 ```python
 QUANTIDADE_DESTAQUES_GRAFICO = 20
@@ -6469,7 +8669,20 @@ else:
     )
 ```
 
-### Cell 68 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+<Figure size 1300x900 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <HOME>\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_rupturas_temporais.png
+```
+
+### Cell 68 [code] · In [61]
 
 ```python
 rupturas_temporais.to_csv(
@@ -6622,6 +8835,28 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+                        verificacao  resultado
+0         tabela_rupturas_nao_vazia       True
+1         resumo_rupturas_nao_vazio       True
+2  todos_grupos_esperados_presentes       True
+3          amplitudes_nao_negativas       True
+4       anos_minimos_dentro_periodo       True
+5       anos_maximos_dentro_periodo       True
+6           arquivo_rupturas_criado       True
+7             arquivo_resumo_criado       True
+8            figura_rupturas_valida       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Consolidação das mudanças temporais validada com sucesso.
+```
+
 ### Cell 69 [markdown]
 
 ```markdown
@@ -6649,7 +8884,7 @@ As associações apresentadas são descritivas e não devem ser interpretadas
 como relações causais ou como importância preditiva ajustada.
 ```
 
-### Cell 70 [code] · In [ ]
+### Cell 70 [code] · In [62]
 
 ```python
 if "particao" in coorte.columns:
@@ -6736,6 +8971,68 @@ print(
 )
 ```
 
+**Output 1 (error)**
+
+```text
+MemoryError: Unable to allocate 2.71 GiB for an array with shape (93, 3915136) and data type object
+---------------------------------------------------------------------------
+MemoryError                               Traceback (most recent call last)
+Cell In[62], line 35
+     31         "particao_treino"
+     32     )
+     33 else:
+     34     base_analise_desfecho = (
+---> 35         coorte.copy()
+     36         .reset_index(drop=True)
+     37     )
+     38 
+
+File ~\Documents\GitHub\Projeto_Integrador\.venv\Lib\site-packages\pandas\core\generic.py:6811, in NDFrame.copy(self, deep)
+   6807         a    1
+   6808         b    2
+   6809         dtype: int64
+   6810         """
+-> 6811         data = self._mgr.copy(deep=deep)
+   6812         self._clear_item_cache()
+   6813         return self._constructor_from_mgr(data, axes=data.axes).__finalize__(
+   6814             self, method="copy"
+
+File ~\Documents\GitHub\Projeto_Integrador\.venv\Lib\site-packages\pandas\core\internals\managers.py:604, in BaseBlockManager.copy(self, deep)
+    601         res._blklocs = self._blklocs.copy()
+    603 if deep:
+--> 604     res._consolidate_inplace()
+    605 return res
+
+File ~\Documents\GitHub\Projeto_Integrador\.venv\Lib\site-packages\pandas\core\internals\managers.py:1788, in BlockManager._consolidate_inplace(self)
+   1782 def _consolidate_inplace(self) -> None:
+   1783     # In general, _consolidate_inplace should only be called via
+   1784     #  DataFrame._consolidate_inplace, otherwise we will fail to invalidate
+   1785     #  the DataFrame's _item_cache. The exception is for newly-created
+   1786     #  BlockManager objects not yet attached to a DataFrame.
+   1787     if not self.is_consolidated():
+-> 1788         self.blocks = _consolidate(self.blocks)
+   1789         self._is_consolidated = True
+   1790         self._known_consolidated = True
+
+File ~\Documents\GitHub\Projeto_Integrador\.venv\Lib\site-packages\pandas\core\internals\managers.py:2269, in _consolidate(blocks)
+   2267 new_blocks: list[Block] = []
+   2268 for (_can_consolidate, dtype), group_blocks in grouper:
+-> 2269     merged_blocks, _ = _merge_blocks(
+   2270         list(group_blocks), dtype=dtype, can_consolidate=_can_consolidate
+   2271     )
+   2272     new_blocks = extend_blocks(merged_blocks, new_blocks)
+   2273 return tuple(new_blocks)
+
+File ~\Documents\GitHub\Projeto_Integrador\.venv\Lib\site-packages\pandas\core\internals\managers.py:2301, in _merge_blocks(blocks, dtype, can_consolidate)
+   2298     new_values = bvals2[0]._concat_same_type(bvals2, axis=0)
+   2300 argsort = np.argsort(new_mgr_locs)
+-> 2301 new_values = new_values[argsort]
+   2302 new_mgr_locs = new_mgr_locs[argsort]
+   2304 bp = BlockPlacement(new_mgr_locs)
+
+MemoryError: Unable to allocate 2.71 GiB for an array with shape (93, 3915136) and data type object
+```
+
 ### Cell 71 [code] · In [ ]
 
 ```python
@@ -6808,6 +9105,14 @@ print(
     "Tabela de óbito por sintomas:",
     CAMINHO_OBITO_SINTOMAS,
 )
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Tabela de óbito por faixa etária: <REPO>\outputs\tables\eda_02_obito_faixa_etaria.csv
+Tabela de óbito por comorbidades: <REPO>\outputs\tables\eda_02_obito_numero_comorbidades.csv
+Tabela de óbito por sintomas: <REPO>\outputs\tables\eda_02_obito_sintomas.csv
 ```
 
 ### Cell 72 [code] · In [ ]
@@ -7013,115 +9318,7 @@ def calcular_odds_ratio_bruta(
             limite_superior
         ),
     )
-
-
-def criar_tabela_obito_categorica(
-    dataframe: pd.DataFrame,
-    coluna_categoria: str,
-    nome_categoria_saida: str,
-) -> pd.DataFrame:
-    """
-    Calcula quantidade, proporção de óbito e intervalo de Wilson
-    para cada categoria de uma variável.
-    """
-
-    if coluna_categoria not in dataframe.columns:
-        raise KeyError(
-            "A coluna não está disponível na base: "
-            f"{coluna_categoria}"
-        )
-
-    tabela = (
-        dataframe.groupby(
-            coluna_categoria,
-            dropna=False,
-        )
-        .agg(
-            quantidade_total=(
-                "alvo_obito_srag",
-                "size",
-            ),
-            quantidade_obito_srag=(
-                "alvo_obito_srag",
-                "sum",
-            ),
-        )
-        .reset_index()
-        .rename(
-            columns={
-                coluna_categoria: (
-                    nome_categoria_saida
-                ),
-            }
-        )
-    )
-
-    tabela[
-        "quantidade_cura"
-    ] = (
-        tabela[
-            "quantidade_total"
-        ]
-        .sub(
-            tabela[
-                "quantidade_obito_srag"
-            ]
-        )
-    )
-
-    tabela[
-        "percentual_obito_srag"
-    ] = (
-        tabela[
-            "quantidade_obito_srag"
-        ]
-        .div(
-            tabela[
-                "quantidade_total"
-        ]
-        )
-        .mul(100)
-    )
-
-    intervalos = [
-        calcular_ic_wilson(
-            quantidade_eventos=int(
-                linha[
-                    "quantidade_obito_srag"
-                ]
-            ),
-            quantidade_total=int(
-                linha[
-                    "quantidade_total"
-                ]
-            ),
-        )
-        for _, linha in tabela.iterrows()
-    ]
-
-    tabela[
-        "ic95_inferior"
-    ] = [
-        intervalo[0]
-        for intervalo in intervalos
-    ]
-
-    tabela[
-        "ic95_superior"
-    ] = [
-        intervalo[1]
-        for intervalo in intervalos
-    ]
-
-    tabela = (
-        tabela.sort_values(
-            "percentual_obito_srag",
-            ascending=False,
-        )
-        .reset_index(drop=True)
-    )
-
-    return tabela
+# ... 109 lines omitted ...
 ```
 
 ### Cell 73 [code] · In [ ]
@@ -7188,6 +9385,33 @@ obito_faixa_etaria = (
 display(
     obito_faixa_etaria
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                faixa_etaria  quantidade_total  quantidade_obito_srag  \
+0             Menor de 1 ano            381952                   6722   
+1                 1 a 4 anos            330768                   3621   
+2                 5 a 9 anos            140432                   1608   
+3               10 a 19 anos             89775                   3890   
+4               20 a 39 anos            423572                  48252   
+5               40 a 59 anos            914523                 193140   
+6               60 a 79 anos           1114229                 383573   
+7            80 anos ou mais            519861                 215377   
+8  Idade ausente ou inválida                24                      2   
+
+   quantidade_cura  percentual_obito_srag  ic95_inferior  ic95_superior  
+0           375230               1.759907       1.718690       1.802094  
+1           327147               1.094725       1.059828       1.130758  
+2           138824               1.145038       1.090714       1.202035  
+3            85885               4.333055       4.201814       4.468203  
+4           375320              11.391688      11.296359      11.487717  
+5           721383              21.119206      21.035676      21.202979  
+6           730656              34.424970      34.336804      34.513244  
+7           304484              41.429728      41.295886      41.563697  
+8               22               8.333333       2.315882      25.848802  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 74 [code] · In [ ]
@@ -7304,6 +9528,29 @@ obito_numero_comorbidades = (
 display(
     obito_numero_comorbidades
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+               grupo_numero_comorbidades  quantidade_total  \
+0         Nenhuma comorbidade confirmada           1751582   
+1             Uma comorbidade confirmada           1107510   
+2          Duas comorbidades confirmadas            691829   
+3  Três ou mais comorbidades confirmadas            364215   
+
+   quantidade_obito_srag  quantidade_cura  percentual_obito_srag  \
+0                 219109          1532473              12.509206   
+1                 265687           841823              23.989580   
+2                 228494           463335              33.027526   
+3                 142895           221320              39.233694   
+
+   ic95_inferior  ic95_superior  
+0      12.460296      12.558281  
+1      23.910142      24.069199  
+2      32.916796      33.138444  
+3      39.075235      39.392380  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 75 [code] · In [ ]
@@ -7509,44 +9756,7 @@ def criar_tabela_obito_indicadores(
                 "odds_ratio_bruta": (
                     resultado_or[0]
                 ),
-                "ic95_or_inferior": (
-                    resultado_or[1]
-                ),
-                "ic95_or_superior": (
-                    resultado_or[2]
-                ),
-                "quantidade_ignorado": (
-                    quantidade_ignorado
-                ),
-                "quantidade_ausente": (
-                    quantidade_ausente
-                ),
-                "quantidade_inesperado": (
-                    quantidade_inesperado
-                ),
-            }
-        )
-
-    resultado = pd.DataFrame(
-        registros
-    )
-
-    resultado = (
-        resultado.sort_values(
-            [
-                "odds_ratio_bruta",
-                "coluna",
-            ],
-            ascending=[
-                False,
-                True,
-            ],
-            na_position="last",
-        )
-        .reset_index(drop=True)
-    )
-
-    return resultado
+# ... 38 lines omitted ...
 ```
 
 ### Cell 76 [code] · In [ ]
@@ -7591,6 +9801,229 @@ display(
 display(
     obito_comorbidades
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+   grupo_indicador     coluna                         nome_amigavel  \
+0         sintomas  saturacao  Saturacao de oxigenio abaixo de 95%?   
+1         sintomas   dispneia                              Dispneia   
+2         sintomas  desc_resp              Desconforto respiratorio   
+3         sintomas     fadiga                                Fadiga   
+4         sintomas  perd_olft                       Perda do olfato   
+5         sintomas  perd_pala                      Perda do paladar   
+6         sintomas   diarreia                              Diarreia   
+7         sintomas    dor_abd                         Dor abdominal   
+8         sintomas   garganta                       Dor de garganta   
+9         sintomas  outro_sin           Apresentou outros sintomas?   
+10        sintomas      febre                                 Febre   
+11        sintomas     vomito                                Vomito   
+12        sintomas      tosse                                 Tosse   
+
+    quantidade_sim  obito_sim  cura_sim  percentual_obito_sim  \
+0          2311260     618091   1693169             26.742599   
+1          2682695     663856   2018839             24.745862   
+2          2300240     558432   1741808             24.277119   
+3           733292     172047    561245             23.462277   
+4           191692      40851    150841             21.310748   
+5           194924      41196    153728             21.134391   
+6           421101      87025    334076             20.666063   
+7           205578      39830    165748             19.374641   
+8           569484     112121    457363             19.688174   
+9          1201597     237211    964386             19.741311   
+10         2209872     424633   1785239             19.215276   
+11          383652      61999    321653             16.160218   
+12         2790984     527269   2263715             18.891868   
+
+    ic95_obito_sim_inferior  ic95_obito_sim_superior  quantidade_nao  ...  \
+0                 26.685575                26.799700          997117  ...   
+1                 24.694259                24.797537          783396  ...   
+2                 24.221754                24.332570          975538  ...   
+3                 23.365425                23.559407         1805281  ...   
+4                 21.128007                21.494640         2216502  ...   
+5                 20.953721                21.316199         2209221  ...   
+6                 20.544035                20.788627         2406519  ...   
+7                 19.204365                19.546062         2221677  ...   
+8                 19.585102                19.791654         2265572  ...   
+9                 19.670237                19.812579         1604620  ...   
+10                19.163383                19.267275         1141670  ...   
+11                16.044083                16.277031         2426912  ...   
+12                18.845986                18.937834          711130  ...   
+
+    cura_nao  percentual_obito_nao  ic95_obito_nao_inferior  \
+0     875017             12.245303                12.181107   
+1     679800             13.223963                13.149130   
+2     818387             16.109162                16.036347   
+3    1464697             18.865983                18.808978   
+4    1776245             19.862694                19.810223   
+5    1770131             19.875332                19.822762   
+6    1909564             20.650367                20.599270   
+7    1777861             19.976621                19.924098   
+8    1789873             20.996861                20.943876   
+9    1260189             21.464957                21.401499   
+10    869951             23.800135                23.722106   
+11   1912762             21.185358                21.133994   
+12    514361             27.669906                27.566050   
+
+    ic95_obito_nao_superior  odds_ratio_bruta  ic95_or_inferior  \
+0                 12.309791          2.616092          2.598730   
+1                 13.299157          2.157796          2.142528   
+2                 16.182245          1.669597          1.659306   
+3                 18.923120          1.318312          1.309688 
+... [170 characters omitted] ...
+    1.000958          0.992897   
+7                 20.029248          0.962624          0.951693   
+8                 21.049944          0.922393          0.915709   
+9                 21.528553          0.899948          0.894687   
+10                23.878340          0.761539          0.757397   
+11                21.236813          0.717081          0.710563   
+12                27.774003          0.608866          0.605225   
+
+    ic95_or_superior  quantidade_ignorado  quantidade_ausente  \
+0           2.633569                40751              566008   
+1           2.173173                29898              419147   
+2           1.679951                36991              602367   
+3           1.326993                68029             1308534   
+4           1.105195               101005             1405937   
+5           1.092671               102337             1408654   
+6           1.009085                63752             1023764   
+7           0.973682                76313             1411568   
+8           0.929125                86054              994026   
+9           0.905240                80959             1027960   
+10          0.765704                39528              524066   
+11          0.723659                65427             1039145   
+12          0.612529                31467              381555   
+
+    quantidade_inesperado  
+0                       0  
+1                       0  
+2                       0  
+3                       0  
+4                       0  
+5                       0  
+6                       0  
+7                       0  
+8                       0  
+9                       0  
+10                      0  
+11                      0  
+12                      0  
+
+[13 rows x 21 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 2 (display_data)**
+
+```text
+   grupo_indicador      coluna                       nome_amigavel  \
+0     comorbidades       renal                Doenca renal cronica   
+1     comorbidades    hepatica             Doenca hepatica cronica   
+2     comorbidades  cardiopati       Doenca cardiovascular cronica   
+3     comorbidades    diabetes                   Diabetes mellitus   
+4     comorbidades  imunodepre  Imunodeficiencia ou imunodepressao   
+5     comorbidades  neurologic          Doenca neurologica cronica   
+6     comorbidades   obesidade                           Obesidade   
+7     comorbidades   out_morbi               Outro fator de risco?   
+8     comorbidades  pneumopati           Outra pneumopatia cronica   
+9     comorbidades  hematologi         Doenca hematologica cronica   
+10    comorbidades   sind_down                    Sindrome de Down   
+11    comorbidades    puerpera             Puerpera ou parturiente   
+12    comorbidades        asma                                Asma   
+
+    quantidade_sim  obito_sim  cura_sim  percentual_obito_sim  \
+0           125182      51917     73265             41.473215   
+1            29998      12365     17633             41.219415   
+2          1016586     345365    671221             33.973023   
+3           683122     240882    442240             35.261930   
+4           105976      36125     69851             34.087907   
+5           173245      58699    114546             33.882075   
+6           210819      70572    140247             33.475161   
+7           930468     291415    639053             31.319186   
+8           180160      57360    122800             31.838366   
+9            32443       9228     23215             28.443732   
+10           17905       3354     14551             18.732198   
+11           12999       1549     11450             11.916301   
+12          178130      20249    157881             11.367541   
+
+    ic95_obito_sim_inferior  ic95_obito_sim_superior  quantidade_nao  ...  \
+0                 41.200559                41.746394         1289010  ...   
+1                 40.663555                41.777523         1355129  ...   
+2                 33.881017                34.065151          725961  ...   
+3                 35.148712                35.375313          946468  ...   
+4                 33.803106                34.373861         1302135  ...   
+5                 33.659559                34.105305         1257959  ...   
+6                 33.274024                33.676901         1216471  ...   
+7                 31.225026                31.413499          724021  ...   
+8                 31.623643                32.053863         1251179  ...   
+9                 27.955393                28.937175         1357960  ...   
+10                18.167429                19.310381         1371001  ...   
+11                11.370577                12.484528         1372975  ...   
+12                11.220969                11.515778         1253709  ...   
+
+    cura_nao  percentual_obito_nao  ic95_obito_nao_inferior  \
+0     935109             27.455256                27.378280   
+1     975235             28.033789                27.958226   
+2     551781             23.993024                23.894928   
+3     704884             25.524793                25.437055   
+4     939148             27.876295                27.799346   
+5     908624             27.769983                27.691787   
+6     879949             27.663791                27.584369   
+7     530962             26.664834                26.563100   
+8     901131             27.977452                27.898864   
+9     974679             28.224764                28.149123   
+10    982296             28.351912                28.276529   
+11    981669             28.500592                28.425144   
+12    879287             29.865144                29.785094   
+
+    ic95_obito_nao_superior  odds_ratio_bruta  ic95_or_inferior  \
+0                 27.532367          1.872378          1.850246   
+1                 28.109475          1.800175          1.758728   
+2                 24.091396          1.629976          1.618975   
+3                 25.612730          1.589263          1.578522   
+4          
+... [156 characters omitted] ...
+    1.315779          1.302844   
+7                 26.766817          1.254147          1.245640   
+8                 28.056174          1.202461          1.189719   
+9                 28.300527          1.010842          0.986469   
+10                28.427416          0.582495          0.560930   
+11                28.576160          0.339386          0.321806   
+12                29.945318          0.301192          0.296671   
+
+    ic95_or_superior  quantidade_ignorado  quantidade_ausente  \
+0           1.894774                27483             2473461   
+1           1.842599                29381             2500628   
+2           1.641052                16720             2155869   
+3           1.600077                19768             2265778   
+4           1.355938                29092             2477933   
+5           1.347206                27545             2456387   
+6           1.328842                37078             2450768   
+7           1.262712                22195             2238452   
+8           1.215340                28257             2455540   
+9           1.035817                29503             2495230   
+10          0.604889                26612             2499618   
+11          0.357927                26610             2502552   
+12          0.305781                27092             2456205   
+
+    quantidade_inesperado  
+0                       0  
+1                       0  
+2                       0  
+3                       0  
+4                       0  
+5                       0  
+6                       0  
+7                       0  
+8                       0  
+9                       0  
+10                      0  
+11                      0  
+12                      0  
+
+[13 rows x 21 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 77 [code] · In [ ]
@@ -7737,6 +10170,117 @@ ausencia_por_desfecho = (
 display(
     ausencia_por_desfecho.head(30)
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+        coluna                         nome_amigavel  quantidade_cura  \
+0   cardiopati         Doenca cardiovascular cronica          3058951   
+1     diabetes                     Diabetes mellitus          3058951   
+2    out_morbi                 Outro fator de risco?          3058951   
+3        renal                  Doenca renal cronica          3058951   
+4    obesidade                             Obesidade          3058951   
+5   neurologic            Doenca neurologica cronica          3058951   
+6   pneumopati             Outra pneumopatia cronica          3058951   
+7   imunodepre    Imunodeficiencia ou imunodepressao          3058951   
+8     hepatica               Doenca hepatica cronica          3058951   
+9   hematologi           Doenca hematologica cronica          3058951   
+10    puerpera               Puerpera ou parturiente          3058951   
+11   sind_down                      Sindrome de Down          3058951   
+12        asma                                  Asma          3058951   
+13  vacina_cov       Recebeu vacina contra COVID-19?          3058951   
+14     dor_abd                         Dor abdominal          3058951   
+15   perd_olft                       Perda do olfato          3058951   
+16   perd_pala                      Perda do paladar          3058951   
+17      fadiga                                Fadiga          3058951   
+18       tosse                                 Tosse          3058951   
+19       febre                                 Febre          3058951   
+20      vomito                                Vomito          3058951   
+21    garganta                       Dor de garganta          3058951   
+22    diarreia                              Diarreia          3058951   
+23   outro_sin           Apresentou outros sintomas?          3058951   
+24   saturacao  Saturacao de oxigenio abaixo de 95%?          3058951   
+25    dispneia                              Dispneia          3058951   
+26  cs_escol_n                          Escolaridade          3058951   
+27      vacina      Recebeu vacina contra influenza?          3058951   
+28   desc_resp              Desconforto respiratorio          3058951   
+29       sg_uf                      UF de residencia          3058951   
+
+    ausente_cura  percentual_ausente_cura  quantidade_obito  ausente_obito  \
+0        1824837                59.655647            856185         331032   
+1        1898839                62.074842            856185         366939   
+2        1874080                61.265447            856185         364372   
+3        2032866                66.456311            856185         440595   
+4        2015083                65.874968            856185         435685   
+5        2018213                65.977291            856185         438174   
+6        2016957                65.936231            856185         438583   
+7        2031395                66.408223            856185         446538   
+8        2047407                66.931670            856185         453221   
+9        2042358                66.766614            856185         452872   
+10       2047771                66.943570            856185         454781   
+11       2045025                66.853801            856185         454593   
+12       2004879                65.541390            856185         451326   
+13        904011                29.552974            856185         357156   
+14       1061739                34.709252            856185         349829   
+15       1057820                34.581136            856185         348117   
+16       1060020                34.653056            856185         348634   
+17        985594                32.220000            856185         322940   
+18        263141                 8.602328            856185         118414   
+19        379907                12.419519            856185         144159   
+20        782772                25.589557            856185         256373   
+21        750713                24.541518            856185         243313   
+22        774678                25.324956            856185         249086   
+23        778040                25.434863            856185     
+... [1541 characters omitted] ...
+ 6.077951   
+16                 40.719471                       6.066415   
+17                 37.718484                       5.498484   
+18                 13.830422                       5.228094   
+19                 16.837366                       4.417847   
+20                 29.943645                       4.354089   
+21                 28.418274                       3.876756   
+22                 29.092544                       3.767588   
+23                 29.189953                       3.755090   
+24                 12.160690                      -2.938931   
+25                  9.289348                      -1.812923   
+26                 31.099470                      -1.632960   
+27                 22.449354                      -1.103557   
+28                 15.085875                      -0.383611   
+29                  0.022775                       0.004403   
+
+    diferenca_absoluta_pp  
+0               20.992040  
+1               19.217399  
+2               18.707822  
+3               14.996054  
+4               14.988186  
+5               14.799800  
+6               14.710970  
+7               14.253840  
+8               13.996732  
+9               13.872438  
+10              13.826428  
+11              13.758617  
+12              12.827782  
+13              12.161842  
+14               6.149792  
+15               6.077951  
+16               6.066415  
+17               5.498484  
+18               5.228094  
+19               4.417847  
+20               4.354089  
+21               3.876756  
+22               3.767588  
+23               3.755090  
+24               2.938931  
+25               1.812923  
+26               1.632960  
+27               1.103557  
+28               0.383611  
+29               0.004403  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 78 [code] · In [ ]
@@ -7887,6 +10431,19 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <REPO>\reports\figures\eda_02_obito_faixa_etaria.png
+```
+
 ### Cell 79 [code] · In [ ]
 
 ```python
@@ -8033,6 +10590,19 @@ print(
     "Figura salva em:",
     CAMINHO_FIGURA_OBITO_COMORBIDADES,
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1100x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <REPO>\reports\figures\eda_02_obito_numero_comorbidades.png
 ```
 
 ### Cell 80 [code] · In [ ]
@@ -8241,6 +10811,32 @@ criar_grafico_odds_ratio(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <REPO>\reports\figures\eda_02_odds_ratio_sintomas.png
+```
+
+**Output 3 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 4 (stream:stdout)**
+
+```text
+Figura salva em: <REPO>\reports\figures\eda_02_odds_ratio_comorbidades.png
+```
+
 ### Cell 82 [code] · In [ ]
 
 ```python
@@ -8358,6 +10954,19 @@ print(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Figura salva em: <REPO>\reports\figures\eda_02_ausencia_por_desfecho.png
+```
+
 ### Cell 83 [code] · In [ ]
 
 ```python
@@ -8430,6 +11039,23 @@ resumo_analise_desfecho = pd.DataFrame(
 display(
     resumo_analise_desfecho
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                              metrica                valor
+0                      origem_analise  coorte_sem_particao
+1                quantidade_registros              3915136
+2                    quantidade_curas              3058951
+3              quantidade_obitos_srag               856185
+4               percentual_obito_srag            21.868589
+5                 ic95_obito_inferior            21.827672
+6                 ic95_obito_superior            21.909561
+7      quantidade_sintomas_analisados                   13
+8  quantidade_comorbidades_analisadas                   13
+9       quantidade_variaveis_ausencia                   32
+[non-text output omitted: text/html]
 ```
 
 ### Cell 84 [code] · In [ ]
@@ -8618,6 +11244,42 @@ if not all(
 print(
     "Análise de óbito validada com sucesso."
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                             verificacao  resultado
+0                base_desfecho_nao_vazia       True
+1                          cura_presente       True
+2                         obito_presente       True
+3          tabela_faixa_etaria_nao_vazia       True
+4   tabela_numero_comorbidades_nao_vazia       True
+5              tabela_sintomas_nao_vazia       True
+6          tabela_comorbidades_nao_vazia       True
+7              tabela_ausencia_nao_vazia       True
+8              percentuais_faixa_validos       True
+9       percentuais_comorbidades_validos       True
+10        odds_ratios_sintomas_positivas       True
+11    odds_ratios_comorbidades_positivas       True
+12           arquivo_faixa_etaria_criado       True
+13    arquivo_numero_comorbidades_criado       True
+14               arquivo_sintomas_criado       True
+15           arquivo_comorbidades_criado       True
+16               arquivo_ausencia_criado       True
+17                 arquivo_resumo_criado       True
+18            figura_faixa_etaria_criada       True
+19     figura_numero_comorbidades_criada       True
+20             figura_or_sintomas_criada       True
+21         figura_or_comorbidades_criada       True
+22                figura_ausencia_criada       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Análise de óbito validada com sucesso.
 ```
 
 ### Cell 85 [markdown]
@@ -8845,32 +11507,7 @@ def exibir_heatmap_percentual(
     eixo.set_title(
         titulo
     )
-
-    eixo.set_xlabel(
-        "Ano da internação"
-    )
-
-    eixo.set_ylabel(
-        "Indicador"
-    )
-
-    eixo.set_xticklabels(
-        eixo.get_xticklabels(),
-        rotation=0,
-    )
-
-    eixo.set_yticklabels(
-        eixo.get_yticklabels(),
-        rotation=0,
-    )
-
-    figura.tight_layout()
-
-    plt.show()
-
-    plt.close(
-        figura
-    )
+# ... 26 lines omitted ...
 ```
 
 ### Cell 87 [code] · In [ ]
@@ -8895,6 +11532,13 @@ exibir_heatmap_percentual(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x624 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
 ### Cell 88 [code] · In [ ]
 
 ```python
@@ -8915,6 +11559,13 @@ exibir_heatmap_percentual(
     ),
     mapa_cores="YlGnBu",
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x624 with 2 Axes>
+[non-text output omitted: image/png]
 ```
 
 ### Cell 89 [code] · In [ ]
@@ -8959,6 +11610,20 @@ exibir_heatmap_percentual(
     ),
     mapa_cores="Purples",
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x624 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1200x624 with 2 Axes>
+[non-text output omitted: image/png]
 ```
 
 ### Cell 90 [code] · In [ ]
@@ -9164,19 +11829,14 @@ figura_contadores.text(
 )
 
 figura_contadores.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        0.97,
-    ]
-)
+# ... 13 lines omitted ...
+```
 
-plt.show()
+**Output 1 (display_data)**
 
-plt.close(
-    figura_contadores
-)
+```text
+<Figure size 1200x1100 with 3 Axes>
+[non-text output omitted: image/png]
 ```
 
 ### Cell 91 [code] · In [ ]
@@ -9263,6 +11923,28 @@ if not all(
 print(
     "Painéis clínicos exibidos e validados com sucesso."
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                                  verificacao  resultado
+0          matriz_sintomas_presenca_nao_vazia       True
+1      matriz_comorbidades_presenca_nao_vazia       True
+2      matriz_sintomas_sem_resposta_nao_vazia       True
+3  matriz_comorbidades_sem_resposta_nao_vazia       True
+4                todos_sintomas_representados       True
+5            todas_comorbidades_representadas       True
+6           todos_anos_sintomas_representados       True
+7       todos_anos_comorbidades_representados       True
+8              contadores_clinicos_nao_vazios       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Painéis clínicos exibidos e validados com sucesso.
 ```
 
 ### Cell 92 [markdown]
@@ -9493,14 +12175,7 @@ def criar_tabela_obito_categoria_ano(
     tabela = (
         tabela.sort_values(
             [
-                "ano_internacao",
-                nome_categoria_saida,
-            ]
-        )
-        .reset_index(drop=True)
-    )
-
-    return tabela
+# ... 8 lines omitted ...
 ```
 
 ### Cell 94 [code] · In [ ]
@@ -9706,38 +12381,115 @@ eixo_obito_faixa_ano.set_xticklabels(
 )
 
 eixo_obito_faixa_ano.set_yticklabels(
-    eixo_obito_faixa_ano.get_yticklabels(),
-    rotation=0,
-)
+# ... 32 lines omitted ...
+```
 
-figura_obito_faixa_ano.text(
-    0.01,
-    0.01,
-    (
-        "Cada célula apresenta o percentual de óbito e o "
-        "denominador da respectiva faixa etária e ano."
-    ),
-    fontsize=8,
-)
+**Output 1 (display_data)**
 
-figura_obito_faixa_ano.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        1,
-    ]
-)
+```text
+<Figure size 1400x800 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-plt.show()
+**Output 2 (display_data)**
 
-plt.close(
-    figura_obito_faixa_ano
-)
+```text
+    ano_internacao               faixa_etaria  quantidade_total  \
+0             2019                 1 a 4 anos              8211   
+1             2019               10 a 19 anos              1736   
+2             2019               20 a 39 anos              4718   
+3             2019               40 a 59 anos              5323   
+4             2019                 5 a 9 anos              2299   
+5             2019               60 a 79 anos              5611   
+6             2019            80 anos ou mais              2486   
+7             2019             Menor de 1 ano             13129   
+8             2020                 1 a 4 anos             24466   
+9             2020               10 a 19 anos             17292   
+10            2020               20 a 39 anos            124732   
+11            2020               40 a 59 anos            273535   
+12            2020                 5 a 9 anos             14382   
+13            2020               60 a 79 anos            352938   
+14            2020            80 anos ou mais            153028   
+15            2020  Idade ausente ou inválida                 4   
+16            2020             Menor de 1 ano             19435   
+17            2021                 1 a 4 anos             47421   
+18            2021               10 a 19 anos             19030   
+19            2021               20 a 39 anos            213066   
+20            2021               40 a 59 anos            501489   
+21            2021                 5 a 9 anos             17681   
+22            2021               60 a 79 anos            474259   
+23            2021            80 anos ou mais            164098   
+24            2021  Idade ausente ou inválida                 8   
+25            2021             Menor de 1 ano             43163   
+26            2022                 1 a 4 anos             57955   
+27            2022               10 a 19 anos             13032   
+28            2022               20 a 39 anos             35546   
+29            2022               40 a 59 anos             61612   
 
-display(
-    obito_faixa_etaria_ano.head(30)
-)
+    quantidade_obito_srag  quantidade_cura  percentual_obito_srag  \
+0                     283             7928               3.446596   
+1                     155             1581               8.928571   
+2                     655             4063              13.883001   
+3                    1322             4001              24.835619   
+4                      92             2207               4.001740   
+5                    1551             4060              27.642132   
+6                     742             1744              29.847144   
+7                     421            12708               3.206642   
+8                     534            23932               2.182621   
+9                    1076            16216               6.222531   
+10                  12378           112354               9.923676   
+11                  51927           221608              18.983677   
+12                    278            14104               1.932972   
+13                 130437           222501              36.957483   
+14                  76366            76662              49.903286   
+15                      0                4               0.000000   
+16                   1117            18318               5.747363   
+17                    500            46921               1.054385   
+18                   1125            17905               5.911718   
+19                  28317           184749              13.290248   
+20                 118056           383433              23.541095   
+21                    262            17419               1.481817   
+22                 187227           287032              39.477796   
+23                  80702            83396              49.179149   
+24                      1                7              12.500000   
+25                   1101            42062               2.550796   
+26                    681            57274               1.175050   
+27                    504            12528               3.867403   
+28                   3283            32263               9.235920   
+29                  11334            50278              18.395767   
+
+    ic95_inferior  ic95_superior  
+0        3.073283       3.863448  
+1        7.676280      10.362229  
+2       12.925716      14.899053  
+3       23.693361      26.014172  
+4        3.274282       4.882660  
+5       26.487538      28.827318  
+6       28.080603      31.675871  
+7        2.918706       3.521952  
+8        2.006898       2.373357  
+9        5.872116       6.592391  
+10       9.758988      10.090833  
+11      18.837146      19.131078  
+12       1.720456       2.171159  
+13      36.798380      37.116869  
+14      49.652777      50.153799  
+15       0.000000      48.989084  
+16       5.428806       6.083410  
+17       0.966337       1.150362  
+18       5.585448       6.255784  
+19      13.146767      13.435052  
+20      23.423877      23.658718  
+21       1.313969       1.670742  
+22      39.338767      39.616996  
+23      48.937287      49.421050  
+24       2.241749      47.088818  
+25       2.406228       2.703809  
+26       1.090496       1.266076  
+27       3.549722       4.212274  
+28       8.939320       9.541329  
+29      18.091805      18.703670  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 95 [code] · In [ ]
@@ -9892,6 +12644,84 @@ plt.close(
 display(
     obito_numero_comorbidades_ano.head(20)
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+    ano_internacao              grupo_numero_comorbidades  quantidade_total  \
+0             2019          Duas comorbidades confirmadas              4629   
+1             2019         Nenhuma comorbidade confirmada             24956   
+2             2019  Três ou mais comorbidades confirmadas              2191   
+3             2019             Uma comorbidade confirmada             11737   
+4             2020          Duas comorbidades confirmadas            214449   
+5             2020         Nenhuma comorbidade confirmada            342643   
+6             2020  Três ou mais comorbidades confirmadas            113753   
+7             2020             Uma comorbidade confirmada            308967   
+8             2021          Duas comorbidades confirmadas            279953   
+9             2021         Nenhuma comorbidade confirmada            628852   
+10            2021  Três ou mais comorbidades confirmadas            138179   
+11            2021             Uma comorbidade confirmada            433231   
+12            2022          Duas comorbidades confirmadas             85711   
+13            2022         Nenhuma comorbidade confirmada            205568   
+14            2022  Três ou mais comorbidades confirmadas             49928   
+15            2022             Uma comorbidade confirmada            134773   
+16            2023          Duas comorbidades confirmadas             29811   
+17            2023         Nenhuma comorbidade confirmada            134304   
+18            2023  Três ou mais comorbidades confirmadas             17217   
+19            2023             Uma comorbidade confirmada             59372   
+
+    quantidade_obito_srag  quantidade_cura  percentual_obito_srag  \
+0                    1065             3564              23.007129   
+1                    1756            23200               7.036384   
+2                     621             1570              28.343222   
+3                    1779             9958              15.157195   
+4                   77277           137172              36.035141   
+5                   62013           280630              18.098429   
+6                   48803            64950              42.902605   
+7                   86020           222947              27.841161   
+8                  106992           172961              38.217844   
+9                  118733           510119              18.880913   
+10                  63286            74893              45.800013   
+11                 128280           304951              29.610069   
+12                  23987            61724              27.985906   
+13                  18628           186940               9.061722   
+14                  16481            33447              33.009534   
+15                  27337           107436              20.283736   
+16                   6152            23659              20.636678   
+17                   5163           129141               3.844264   
+18                   4445            12772              25.817506   
+19                   7277            52095              12.256619   
+
+    ic95_inferior  ic95_superior  
+0       21.817365      24.241657  
+1        6.725636       7.360357  
+2       26.495362      30.266891  
+3       14.519838      15.817353  
+4       35.832195      36.238588  
+5       17.969875      18.227699  
+6       42.615231      43.190458  
+7       27.683392      27.999481  
+8       38.038008      38.398003  
+9       18.784377      18.977830  
+10      45.537434      46.062826  
+11      29.474306      29.746195  
+12      27.686354      28.287432  
+13       8.938392       9.186581  
+14      32.598375      33.423306  
+15      20.069903      20.499263  
+16      20.181076      21.099846  
+17       3.742752       3.948416  
+18      25.169253      26.476548  
+19      11.995274      12.522849  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 96 [code] · In [ ]
@@ -10097,37 +12927,7 @@ def exibir_letalidade_sim_nao(
                 + barra.get_height()
                 / 2,
                 f"{valor:.1f}%",
-                va="center",
-                ha="left",
-                fontsize=8,
-            )
-
-    figura.text(
-        0.01,
-        0.01,
-        (
-            "Denominadores específicos de cada resposta estão "
-            "disponíveis na tabela exibida abaixo do gráfico."
-        ),
-        fontsize=8,
-    )
-
-    figura.tight_layout(
-        rect=[
-            0,
-            0.04,
-            1,
-            1,
-        ]
-    )
-
-    plt.show()
-
-    plt.close(
-        figura
-    )
-
-    return dados_grafico
+# ... 31 lines omitted ...
 ```
 
 ### Cell 97 [code] · In [ ]
@@ -10159,6 +12959,54 @@ display(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+      coluna                                rotulo  quantidade_sim  \
+0   garganta                       Dor de garganta          569484   
+1  perd_olft                       Perda do olfato          191692   
+2  outro_sin           Apresentou outros sintomas?         1201597   
+3      febre                                 Febre         2209872   
+4     fadiga                                Fadiga          733292   
+5     vomito                                Vomito          383652   
+6  desc_resp              Desconforto respiratorio         2300240   
+7      tosse                                 Tosse         2790984   
+8   dispneia                              Dispneia         2682695   
+9  saturacao  Saturacao de oxigenio abaixo de 95%?         2311260   
+
+   percentual_obito_sim  quantidade_nao  percentual_obito_nao  \
+0             19.688174         2265572             20.996861   
+1             21.310748         2216502             19.862694   
+2             19.741311         1604620             21.464957   
+3             19.215276         1141670             23.800135   
+4             23.462277         1805281             18.865983   
+5             16.160218         2426912             21.185358   
+6             24.277119          975538             16.109162   
+7             18.891868          711130             27.669906   
+8             24.745862          783396             13.223963   
+9             26.742599          997117             12.245303   
+
+   diferenca_absoluta_pp  
+0               1.308687  
+1               1.448055  
+2               1.723646  
+3               4.584859  
+4               4.596294  
+5               5.025140  
+6               8.167957  
+7               8.778038  
+8              11.521899  
+9              14.497296  
+[non-text output omitted: text/html]
+```
+
 ### Cell 98 [code] · In [ ]
 
 ```python
@@ -10186,6 +13034,54 @@ display(
         ]
     ]
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x800 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+       coluna                              rotulo  quantidade_sim  \
+0   obesidade                           Obesidade          210819   
+1  neurologic          Doenca neurologica cronica          173245   
+2  imunodepre  Imunodeficiencia ou imunodepressao          105976   
+3   sind_down                    Sindrome de Down           17905   
+4    diabetes                   Diabetes mellitus          683122   
+5  cardiopati       Doenca cardiovascular cronica         1016586   
+6    hepatica             Doenca hepatica cronica           29998   
+7       renal                Doenca renal cronica          125182   
+8    puerpera             Puerpera ou parturiente           12999   
+9        asma                                Asma          178130   
+
+   percentual_obito_sim  quantidade_nao  percentual_obito_nao  \
+0             33.475161         1216471             27.663791   
+1             33.882075         1257959             27.769983   
+2             34.087907         1302135             27.876295   
+3             18.732198         1371001             28.351912   
+4             35.261930          946468             25.524793   
+5             33.973023          725961             23.993024   
+6             41.219415         1355129             28.033789   
+7             41.473215         1289010             27.455256   
+8             11.916301         1372975             28.500592   
+9             11.367541         1253709             29.865144   
+
+   diferenca_absoluta_pp  
+0               5.811370  
+1               6.112092  
+2               6.211611  
+3               9.619715  
+4               9.737137  
+5               9.979999  
+6              13.185626  
+7              14.017959  
+8              16.584291  
+9              18.497604  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 99 [code] · In [ ]
@@ -10314,6 +13210,13 @@ print(
 )
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Categorias presentes na coorte: ['Masculino', 'Feminino', 'Ignorado']
+Categorias presentes na análise do desfecho: ['Masculino', 'Feminino', 'Ignorado']
+```
+
 ### Cell 100 [code] · In [ ]
 
 ```python
@@ -10356,6 +13259,16 @@ resumo_sexo_observado = (
 display(
     resumo_sexo_observado
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+  sexo_categoria  quantidade_registros  percentual_coorte
+0      Masculino               2089636          53.373267
+1       Feminino               1824947          46.612608
+2       Ignorado                   553           0.014125
+[non-text output omitted: text/html]
 ```
 
 ### Cell 101 [code] · In [ ]
@@ -10485,6 +13398,44 @@ display(
     )
     .reset_index(drop=True)
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+    ano_internacao sexo_categoria  quantidade  percentual_ano
+0             2019       Feminino       21171       48.654425
+1             2019       Ignorado          12        0.027578
+2             2019      Masculino       22330       51.317997
+3             2020       Feminino      446843       45.604973
+4             2020       Ignorado         221        0.022555
+5             2020      Masculino      532748       54.372471
+6             2021       Feminino      670315       45.284975
+7             2021       Ignorado         175        0.011823
+8             2021      Masculino      809725       54.703202
+9             2022       Feminino      235553       49.488004
+10            2022       Ignorado          52        0.010925
+11            2022      Masculino      240375       50.501071
+12            2023       Feminino      116318       48.324083
+13            2023       Ignorado          14        0.005816
+14            2023      Masculino      124372       51.670101
+15            2024       Feminino      111138       48.430786
+16            2024       Ignorado          35        0.015252
+17            2024      Masculino      118305       51.553962
+18            2025       Feminino      140063       48.312080
+19            2025       Ignorado          33        0.011383
+20            2025      Masculino      149817       51.676537
+21            2026       Feminino       83546       47.598863
+22            2026       Ignorado          11        0.006267
+23            2026      Masculino       91964       52.394870
+[non-text output omitted: text/html]
 ```
 
 ### Cell 102 [code] · In [ ]
@@ -10690,46 +13641,29 @@ for barra, percentual, quantidade in zip(
     eixo_obito_sexo.text(
         barra.get_x()
         + barra.get_width()
-        / 2,
-        barra.get_height(),
-        (
-            f"{percentual:.1f}%\n"
-            f"n={quantidade_formatada}"
-        ),
-        ha="center",
-        va="bottom",
-        fontsize=9,
-    )
+# ... 40 lines omitted ...
+```
 
-figura_obito_sexo.text(
-    0.01,
-    0.01,
-    (
-        "Barras de erro: intervalo de confiança de Wilson de 95%. "
-        "As categorias mantêm as mesmas cores utilizadas "
-        "nos demais gráficos."
-    ),
-    fontsize=8,
-)
+**Output 1 (display_data)**
 
-figura_obito_sexo.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        1,
-    ]
-)
+```text
+<Figure size 1100x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
 
-plt.show()
+**Output 2 (display_data)**
 
-plt.close(
-    figura_obito_sexo
-)
+```text
+  sexo_categoria  quantidade_total  quantidade_obito_srag  quantidade_cura  \
+0      Masculino           2089636                 470160          1619476   
+1       Feminino           1824947                 385938          1439009   
+2       Ignorado               553                     87              466   
 
-display(
-    obito_por_sexo
-)
+   percentual_obito_srag  ic95_inferior  ic95_superior  
+0              22.499612      22.443045      22.556281  
+1              21.147902      21.088716      21.207209  
+2              15.732369      12.935349      19.002190  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 103 [code] · In [ ]
@@ -10935,66 +13869,71 @@ eixo_obito_sexo_ano.set_xlabel(
 eixo_obito_sexo_ano.set_ylabel(
     "Óbito por SRAG"
 )
+# ... 60 lines omitted ...
+```
 
-eixo_obito_sexo_ano.set_xticks(
-    anos_obito_sexo
-)
+**Output 1 (display_data)**
 
-eixo_obito_sexo_ano.set_ylim(
-    bottom=0
-)
+```text
+<Figure size 1200x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
 
-eixo_obito_sexo_ano.yaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
+**Output 2 (display_data)**
 
-eixo_obito_sexo_ano.legend(
-    title="Sexo registrado",
-    bbox_to_anchor=(
-        1.02,
-        1,
-    ),
-    loc="upper left",
-)
+```text
+    ano_internacao sexo_categoria  quantidade_total  quantidade_obito_srag  \
+0             2019      Masculino             22330                   2757   
+1             2019       Feminino             21171                   2462   
+2             2019       Ignorado                12                      2   
+3             2020      Masculino            532748                 154804   
+4             2020       Feminino            446843                 119271   
+5             2020       Ignorado               221                     38   
+6             2021      Masculino            809725                 230068   
+7             2021       Feminino            670315                 187187   
+8             2021       Ignorado               175                     36   
+9             2022      Masculino            240375                  45382   
+10            2022       Feminino            235553                  41042   
+11            2022       Ignorado                52                      9   
+12            2023      Masculino            124372                  11807   
+13            2023       Feminino            116318                  11230   
+14            2023       Ignorado                14                      0   
+15            2024      Masculino            118305                   9762   
+16            2024       Feminino            111138                   9358   
+17            2024       Ignorado                35                      0   
+18            2025      Masculino            149817                  10636   
+19            2025       Feminino            140063                  10589   
+20            2025       Ignorado                33                      2   
+21            2026      Masculino             91964                   4944   
+22            2026       Feminino             83546                   4799   
+23            2026       Ignorado                11                      0   
 
-eixo_obito_sexo_ano.grid(
-    axis="y",
-    alpha=0.20,
-)
-
-figura_obito_sexo_ano.text(
-    0.01,
-    0.01,
-    (
-        "Cada linha apresenta a proporção observada de óbito "
-        "dentro da respectiva categoria e ano. "
-        "A comparação é bruta e descritiva."
-    ),
-    fontsize=8,
-)
-
-figura_obito_sexo_ano.tight_layout(
-    rect=[
-        0,
-        0.04,
-        0.84,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_obito_sexo_ano
-)
-
-display(
-    obito_sexo_ano
-)
+    quantidade_cura  percentual_obito_srag  ic95_inferior  ic95_superior  
+0             19573              12.346619   1.192160e+01      12.784588  
+1             18709              11.629115   1.120424e+01      12.067916  
+2                10              16.666667   4.696514e+00      44.803086  
+3            377944              29.057641   2.893587e+01      29.179710  
+4            327572              26.691925   2.656243e+01      26.821824  
+5               183              17.194570   1.279118e+01      22.718937  
+6            579657              28.413103   2.831497e+01      28.511438  
+7            483128              27.925229   2.781796e+01      28.032754  
+8               139              20.571429   1.524565e+01      27.161440  
+9            194993              18.879667   1.872372e+01      19.036610  
+10           194511              17.423680   1.727103e+01      17.577390  
+11               43              17.307692   9.382474e+00      29.730864  
+12           112565               9.493294   9.331638e+00       9.657453  
+13           105088               9.654568   9.486173e+00       9.825627  
+14               14               0.000000   2.177950e-15      21.531080  
+15           108543               8.251553   8.096117e+00       8.409700  
+16           101780               8.420162   8.258337e+00       8.584862  
+17               35               0.000000   6.252630e-16       9.890099  
+18           139181               7.099328   6.970382e+00       7.230473  
+19           129474               7.560169   7.422884e+00       7.699783  
+20               31               6.060606   1.678088e+00      19.606245  
+21            87020               5.376017   5.232101e+00       5.523660  
+22            78747               5.744141   5.588386e+00       5.903965  
+23               11               0.000000   0.000000e+00      25.883297  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 104 [code] · In [ ]
@@ -11108,6 +14047,31 @@ print(
     "Painéis visuais do desfecho exibidos "
     "e validados com sucesso."
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                                verificacao  resultado
+0   tabela_obito_faixa_etaria_ano_nao_vazia       True
+1   matriz_obito_faixa_etaria_ano_nao_vazia       True
+2   tabela_obito_comorbidades_ano_nao_vazia       True
+3             letalidade_sintomas_nao_vazia       True
+4         letalidade_comorbidades_nao_vazia       True
+5                 composicao_sexo_nao_vazia       True
+6                  obito_por_sexo_nao_vazio       True
+7                  obito_sexo_ano_nao_vazio       True
+8             percentuais_faixa_ano_validos       True
+9      percentuais_comorbidades_ano_validos       True
+10         percentuais_sexo_globais_validos       True
+11          percentuais_sexo_anuais_validos       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Painéis visuais do desfecho exibidos e validados com sucesso.
 ```
 
 ### Cell 105 [markdown]
@@ -11334,256 +14298,64 @@ contagem_alvo_mensal = (
             "alvo_obito_srag",
         ],
         dropna=False,
-    )
-    .size()
-    .unstack(
-        fill_value=0
-    )
-)
+# ... 250 lines omitted ...
+```
 
-contagem_alvo_mensal = (
-    contagem_alvo_mensal.reindex(
-        columns=[
-            0,
-            1,
-        ],
-        fill_value=0,
-    )
-    .rename(
-        columns={
-            0: "quantidade_cura",
-            1: "quantidade_obito_srag",
-        }
-    )
-    .reset_index()
-)
+**Output 1 (stream:stdout)**
 
-serie_mensal = (
-    calendario_mensal.merge(
-        contagem_alvo_mensal,
-        on="ano_mes_internacao",
-        how="left",
-        validate="one_to_one",
-    )
-)
+```text
+Primeiro mês observado: 2019-01
+Último mês observado: 2026-09
+Data máxima de internação: 2026-09-25
+Último mês está completo: False
+Quantidade de meses no calendário: 93
+Meses sem registros: 0
+```
 
-COLUNAS_CONTAGEM_MENSAL = [
-    "quantidade_cura",
-    "quantidade_obito_srag",
-]
+**Output 2 (display_data)**
 
-for coluna in COLUNAS_CONTAGEM_MENSAL:
-    serie_mensal[
-        coluna
-    ] = (
-        pd.to_numeric(
-            serie_mensal[
-                coluna
-            ],
-            errors="coerce",
-        )
-        .fillna(0)
-        .astype("int64")
-    )
+```text
+   ano_mes_internacao rotulo_ano_mes  ano_internacao  mes_internacao  \
+0          2019-01-01        2019-01            2019               1   
+1          2019-02-01        2019-02            2019               2   
+2          2019-03-01        2019-03            2019               3   
+3          2019-04-01        2019-04            2019               4   
+4          2019-05-01        2019-05            2019               5   
+..                ...            ...             ...             ...   
+88         2026-05-01        2026-05            2026               5   
+89         2026-06-01        2026-06            2026               6   
+90         2026-07-01        2026-07            2026               7   
+91         2026-08-01        2026-08            2026               8   
+92         2026-09-01        2026-09            2026               9   
 
-serie_mensal[
-    "quantidade_registros"
-] = (
-    serie_mensal[
-        "quantidade_cura"
-    ]
-    .add(
-        serie_mensal[
-            "quantidade_obito_srag"
-        ]
-    )
-    .astype("int64")
-)
+    mes_observado  mes_completo  quantidade_registros  quantidade_cura  \
+0            True          True                  1074              908   
+1            True          True                  1699             1495   
+2            True          True                  3788             3459   
+3            True          True                  5559             4994   
+4            True          True                  7520             6641   
+..            ...           ...                   ...              ...   
+88           True          True                 31306            29776   
+89           True          True                 30707            29191   
+90           True          True                 23289            22069   
+91           True          True                 14385            13620   
+92           True         False                  4971             4730   
 
-serie_mensal[
-    "percentual_cura"
-] = (
-    serie_mensal[
-        "quantidade_cura"
-    ]
-    .div(
-        serie_mensal[
-            "quantidade_registros"
-        ]
-        .replace(
-            0,
-            np.nan,
-        )
-    )
-    .mul(100)
-)
+    quantidade_obito_srag  percentual_cura  percentual_obito_srag  
+0                     166        84.543762              15.456238  
+1                     204        87.992937              12.007063  
+2                     329        91.314678               8.685322  
+3                     565        89.836301              10.163699  
+4                     879        88.311170              11.688830  
+..                    ...              ...                    ...  
+88                   1530        95.112758               4.887242  
+89                   1516        95.063015               4.936985  
+90                   1220        94.761475               5.238525  
+91                    765        94.681960               5.318040  
+92                    241        95.151881               4.848119  
 
-serie_mensal[
-    "percentual_obito_srag"
-] = (
-    serie_mensal[
-        "quantidade_obito_srag"
-    ]
-    .div(
-        serie_mensal[
-            "quantidade_registros"
-        ]
-        .replace(
-            0,
-            np.nan,
-        )
-    )
-    .mul(100)
-)
-
-serie_mensal[
-    "rotulo_ano_mes"
-] = (
-    serie_mensal[
-        "ano_mes_internacao"
-    ]
-    .dt.strftime(
-        "%Y-%m"
-    )
-)
-
-serie_mensal = (
-    serie_mensal[
-        [
-            "ano_mes_internacao",
-            "rotulo_ano_mes",
-            "ano_internacao",
-            "mes_internacao",
-            "mes_observado",
-            "mes_completo",
-            "quantidade_registros",
-            "quantidade_cura",
-            "quantidade_obito_srag",
-            "percentual_cura",
-            "percentual_obito_srag",
-        ]
-    ]
-    .sort_values(
-        "ano_mes_internacao"
-    )
-    .reset_index(drop=True)
-)
-
-total_registros_serie_mensal = int(
-    serie_mensal[
-        "quantidade_registros"
-    ]
-    .sum()
-)
-
-if total_registros_serie_mensal != len(
-    coorte
-):
-    raise RuntimeError(
-        "A soma mensal dos registros não corresponde "
-        "ao total da coorte."
-    )
-
-total_obitos_serie_mensal = int(
-    serie_mensal[
-        "quantidade_obito_srag"
-    ]
-    .sum()
-)
-
-total_obitos_coorte = int(
-    coorte[
-        "alvo_obito_srag"
-    ]
-    .sum()
-)
-
-if total_obitos_serie_mensal != total_obitos_coorte:
-    raise RuntimeError(
-        "A soma mensal dos óbitos não corresponde "
-        "ao total de óbitos da coorte."
-    )
-
-percentuais_mensais_validos = (
-    serie_mensal[
-        "percentual_obito_srag"
-    ]
-    .dropna()
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
-
-if not percentuais_mensais_validos:
-    raise RuntimeError(
-        "A série mensal contém percentuais de óbito "
-        "fora do intervalo de 0% a 100%."
-    )
-
-meses_sem_registros = (
-    serie_mensal.loc[
-        serie_mensal[
-            "quantidade_registros"
-        ].eq(0),
-        "rotulo_ano_mes",
-    ]
-    .tolist()
-)
-
-print(
-    "Primeiro mês observado:",
-    primeiro_mes_observado.strftime(
-        "%Y-%m"
-    ),
-)
-
-print(
-    "Último mês observado:",
-    ultimo_mes_observado.strftime(
-        "%Y-%m"
-    ),
-)
-
-print(
-    "Data máxima de internação:",
-    data_maxima_internacao.strftime(
-        "%Y-%m-%d"
-    ),
-)
-
-print(
-    "Último mês está completo:",
-    bool(
-        ultimo_mes_completo
-    ),
-)
-
-print(
-    "Quantidade de meses no calendário:",
-    len(
-        serie_mensal
-    ),
-)
-
-print(
-    "Meses sem registros:",
-    len(
-        meses_sem_registros
-    ),
-)
-
-if meses_sem_registros:
-    print(
-        "Lista de meses sem registros:",
-        meses_sem_registros,
-    )
-
-display(
-    serie_mensal
-)
+[93 rows x 11 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 107 [code] · In [ ]
@@ -11789,157 +14561,60 @@ eixo_volume_mensal.plot(
     label="Média móvel de 3 meses",
 )
 
-eixo_volume_mensal.set_title(
-    "Volume mensal de internações elegíveis"
-)
+# ... 151 lines omitted ...
+```
 
-eixo_volume_mensal.set_ylabel(
-    "Quantidade de registros"
-)
+**Output 1 (display_data)**
 
-eixo_volume_mensal.ticklabel_format(
-    style="plain",
-    axis="y",
-)
+```text
+<Figure size 1500x1100 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-eixo_volume_mensal.grid(
-    axis="y",
-    alpha=0.20,
-)
+**Output 2 (display_data)**
 
-eixo_volume_mensal.legend(
-    loc="upper right"
-)
+```text
+   ano_mes_internacao  mes_completo  quantidade_registros  \
+0          2019-01-01          True                  1074   
+1          2019-02-01          True                  1699   
+2          2019-03-01          True                  3788   
+3          2019-04-01          True                  5559   
+4          2019-05-01          True                  7520   
+..                ...           ...                   ...   
+88         2026-05-01          True                 31306   
+89         2026-06-01          True                 30707   
+90         2026-07-01          True                 23289   
+91         2026-08-01          True                 14385   
+92         2026-09-01         False                  4971   
 
-eixo_obito_mensal = eixos_serie_mensal[1]
+    volume_media_movel_3_meses  percentual_obito_srag  \
+0                  1074.000000              15.456238   
+1                  1386.500000              12.007063   
+2                  2187.000000               8.685322   
+3                  3682.000000              10.163699   
+4                  5622.333333              11.688830   
+..                         ...                    ...   
+88                26242.000000               4.887242   
+89                29137.000000               4.936985   
+90                28434.000000               5.238525   
+91                22793.666667               5.318040   
+92                14215.000000               4.848119   
 
-eixo_obito_mensal.plot(
-    serie_mensal_grafico[
-        "ano_mes_internacao"
-    ],
-    serie_mensal_grafico[
-        "percentual_obito_srag"
-    ],
-    color="tab:red",
-    linewidth=1,
-    marker="o",
-    markersize=2.5,
-    alpha=0.35,
-    label="Óbito mensal",
-)
+    obito_media_movel_3_meses  
+0                   15.456238  
+1                   13.342950  
+2                   10.653864  
+3                    9.940250  
+4                   10.511650  
+..                        ...  
+88                   5.235881  
+89                   5.014243  
+90                   5.001055  
+91                   5.119843  
+92                   5.219838  
 
-eixo_obito_mensal.plot(
-    serie_mensal_grafico[
-        "ano_mes_internacao"
-    ],
-    serie_mensal_grafico[
-        "obito_media_movel_3_meses"
-    ],
-    color="tab:red",
-    linewidth=2.5,
-    label="Média móvel de 3 meses",
-)
-
-eixo_obito_mensal.set_title(
-    "Proporção mensal observada de óbito por SRAG"
-)
-
-eixo_obito_mensal.set_xlabel(
-    "Mês da internação"
-)
-
-eixo_obito_mensal.set_ylabel(
-    "Óbito por SRAG"
-)
-
-eixo_obito_mensal.set_ylim(
-    bottom=0
-)
-
-eixo_obito_mensal.yaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
-
-eixo_obito_mensal.grid(
-    axis="y",
-    alpha=0.20,
-)
-
-eixo_obito_mensal.legend(
-    loc="upper right"
-)
-
-for mes_incompleto in meses_incompletos:
-    inicio_mes_incompleto = pd.Timestamp(
-        mes_incompleto
-    )
-
-    fim_mes_incompleto = (
-        inicio_mes_incompleto
-        + pd.offsets.MonthEnd(1)
-    )
-
-    eixo_volume_mensal.axvspan(
-        inicio_mes_incompleto,
-        fim_mes_incompleto,
-        color="tab:orange",
-        alpha=0.15,
-    )
-
-    eixo_obito_mensal.axvspan(
-        inicio_mes_incompleto,
-        fim_mes_incompleto,
-        color="tab:orange",
-        alpha=0.15,
-    )
-
-figura_serie_mensal.suptitle(
-    "Evolução mensal do volume e do desfecho",
-    fontsize=15,
-)
-
-figura_serie_mensal.text(
-    0.01,
-    0.01,
-    (
-        "As linhas finas representam os valores mensais. "
-        "As linhas espessas representam médias móveis de três meses. "
-        "Meses incompletos são destacados em laranja."
-    ),
-    fontsize=8,
-)
-
-figura_serie_mensal.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        0.97,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_serie_mensal
-)
-
-display(
-    serie_mensal_grafico[
-        [
-            "ano_mes_internacao",
-            "mes_completo",
-            "quantidade_registros",
-            "volume_media_movel_3_meses",
-            "percentual_obito_srag",
-            "obito_media_movel_3_meses",
-        ]
-    ]
-)
+[93 rows x 6 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 108 [code] · In [ ]
@@ -12145,17 +14820,79 @@ print(
 )
 
 print(
-    "Dimensão da matriz de óbito:",
-    matriz_obito_ano_mes.shape,
-)
+# ... 11 lines omitted ...
+```
 
-display(
-    matriz_volume_ano_mes
-)
+**Output 1 (stream:stdout)**
 
-display(
-    matriz_obito_ano_mes
-)
+```text
+Dimensão da matriz de volume: (8, 12)
+Dimensão da matriz de óbito: (8, 12)
+```
+
+**Output 2 (display_data)**
+
+```text
+                     Jan       Fev       Mar       Abr       Mai       Jun  \
+ano_internacao                                                               
+2019              1074.0    1699.0    3788.0    5559.0    7520.0    6997.0   
+2020              1637.0    2346.0   26934.0   78965.0  125649.0  123917.0   
+2021            129008.0  133288.0  266797.0  200782.0  203140.0  178322.0   
+2022            113318.0   61600.0   31520.0   26319.0   37036.0   51278.0   
+2023             17916.0   18362.0   26236.0   26448.0   29590.0   24150.0   
+2024             10893.0   14993.0   21058.0   27013.0   26578.0   24071.0   
+2025             12655.0   13458.0   18647.0   27767.0   47689.0   43080.0   
+2026             10830.0   12613.0   22022.0   25398.0   31306.0   30707.0   
+
+                     Jul       Ago      Set      Out      Nov       Dez  
+ano_internacao                                                           
+2019              4952.0    3554.0   2688.0   2319.0   1723.0    1640.0  
+2020            136230.0  115280.0  89805.0  75702.0  88946.0  114401.0  
+2021            113363.0   79342.0  55265.0  42164.0  34600.0   44144.0  
+2022             40774.0   23521.0  17021.0  16268.0  27039.0   30286.0  
+2023             19408.0   17047.0  16175.0  18226.0  15319.0   11827.0  
+2024             19472.0   19964.0  19335.0  16856.0  15049.0   14196.0  
+2025             29270.0   22343.0  21332.0  21042.0  18166.0   14464.0  
+2026             23289.0   14385.0   4971.0      NaN      NaN       NaN  
+[non-text output omitted: text/html]
+```
+
+**Output 3 (display_data)**
+
+```text
+                      Jan        Fev        Mar        Abr        Mai  \
+ano_internacao                                                          
+2019            15.456238  12.007063   8.685322  10.163699  11.688830   
+2020            15.271839  12.105712  21.337343  32.744887  34.457099   
+2021            29.069515  30.459606  36.115848  32.531303  27.418529   
+2022            24.562735  26.186688  14.032360  10.209354  11.631926   
+2023            14.874972   8.626511   9.071505   8.998790   8.428523   
+2024            13.586707  12.419129   9.179409   6.504276   6.904206   
+2025            11.702884   9.563085   6.537245   5.668599   7.917969   
+2026             9.085873   7.095853   5.698847   5.264194   4.887242   
+
+                      Jun        Jul        Ago        Set        Out  \
+ano_internacao                                                          
+2019            12.491068  15.266559  12.915025  10.974702  11.341095   
+2020            30.135494  27.927035  26.179736  24.489728  23.157909   
+2021            24.798398  22.390021  22.926067  23.019995  20.202068   
+2022            16.151176  17.807917  13.893967  11.186182   9.245144   
+2023             8.049689   8.259481   7.931014   9.292117  10.583781   
+2024             6.929500   7.944741   8.094570   8.285493   8.020883   
+2025             7.894615   7.546976   7.008907   6.422276   6.173368   
+2026             4.936985   5.238525   5.318040   4.848119        NaN   
+
+                      Nov        Dez  
+ano_internacao                        
+2019            11.839814  13.841463  
+2020            24.621681  27.699059  
+2021            17.167630  15.508336  
+2022            14.116646  16.555504  
+2023            11.906782  11.659762  
+2024             7.887567   9.023669  
+2025             5.857096   6.782356  
+2026                  NaN        NaN  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 109 [code] · In [ ]
@@ -12273,6 +15010,13 @@ plt.show()
 plt.close(
     figura_heatmap_volume
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1500x700 with 2 Axes>
+[non-text output omitted: image/png]
 ```
 
 ### Cell 110 [code] · In [ ]
@@ -12441,6 +15185,13 @@ plt.close(
 )
 ```
 
+**Output 1 (display_data)**
+
+```text
+<Figure size 1600x800 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
 ### Cell 111 [code] · In [ ]
 
 ```python
@@ -12565,6 +15316,29 @@ if not all(
 print(
     "Análise mensal e sazonal validada com sucesso."
 )
+```
+
+**Output 1 (display_data)**
+
+```text
+                  verificacao  resultado
+0      serie_mensal_nao_vazia       True
+1     matriz_volume_nao_vazia       True
+2      matriz_obito_nao_vazia       True
+3  matriz_volume_tem_12_meses       True
+4   matriz_obito_tem_12_meses       True
+5   volume_matriz_igual_serie       True
+6    anos_volume_iguais_serie       True
+7     anos_obito_iguais_serie       True
+8   percentuais_obito_validos       True
+9        ordem_mensal_correta       True
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Análise mensal e sazonal validada com sucesso.
 ```
 
 ### Cell 112 [markdown]
@@ -12809,318 +15583,118 @@ for classificacao, colunas_classificacao in (
                     int(
                         coorte[
                             coluna
-                        ]
-                        .nunique(
-                            dropna=True
-                        )
-                    )
-                    if coluna in coorte.columns
-                    else 0
-                ),
-            }
-        )
+# ... 312 lines omitted ...
+```
 
-inventario_clustering = pd.DataFrame(
-    registros_inventario_clustering
-)
+**Output 1 (stream:stdout)**
 
-inventario_clustering = (
-    inventario_clustering
-    .drop_duplicates(
-        subset=[
-            "coluna",
-            "classificacao",
-        ],
-        keep="first",
-    )
-    .reset_index(drop=True)
-)
+```text
+Variáveis disponíveis na matriz núcleo: 33
+Variáveis disponíveis na matriz ampliada: 37
+Colunas excluídas ou reservadas para auditoria: 45
+```
 
-inventario_clustering[
-    "percentual_preenchido"
-] = (
-    inventario_clustering[
-        "quantidade_preenchida"
-    ]
-    .div(
-        len(
-            coorte
-        )
-    )
-    .mul(100)
-)
+**Output 2 (display_data)**
 
-inventario_clustering[
-    "incluir_matriz_nucleo"
-] = (
-    inventario_clustering[
-        "classificacao"
-    ]
-    .isin(
-        [
-            "candidata_numerica_nucleo",
-            "candidata_categorica_nucleo",
-            "candidata_binaria_nucleo",
-        ]
-    )
-    & inventario_clustering[
-        "existe_na_coorte"
-    ]
-)
+```text
+                    classificacao  quantidade_variaveis  \
+0             auditoria_qualidade                    12   
+1      candidata_binaria_ampliada                     2   
+2        candidata_binaria_nucleo                    26   
+3   candidata_categorica_ampliada                     2   
+4     candidata_categorica_nucleo                     1   
+5       candidata_numerica_nucleo                     6   
+6               contexto_temporal                     6   
+7                      data_bruta                     6   
+8                        desfecho                     5   
+9                   identificador                     3   
+10             posterior_admissao                    13   
 
-inventario_clustering[
-    "incluir_matriz_ampliada"
-] = (
-    inventario_clustering[
-        "classificacao"
-    ]
-    .str.startswith(
-        "candidata_"
-    )
-    & inventario_clustering[
-        "existe_na_coorte"
-    ]
-)
+    quantidade_disponiveis  preenchimento_mediano  
+0                       12             100.000000  
+1                        2              72.237912  
+2                       26              54.440446  
+3                        2              83.812338  
+4                        1             100.000000  
+5                        6             100.000000  
+6                        6             100.000000  
+7                        6             100.000000  
+8                        5             100.000000  
+9                        3             100.000000  
+10                       8               8.057140  
+[non-text output omitted: text/html]
+```
 
-inventario_clustering[
-    "motivo_nao_inclusao"
-] = pd.NA
+**Output 3 (display_data)**
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "existe_na_coorte"
-    ]
-    .eq(False),
-    "motivo_nao_inclusao",
-] = "coluna_ausente_na_coorte"
+```text
+                                    coluna        classificacao  \
+0                        data_corte_coorte  auditoria_qualidade   
+1                  flag_dt_notific_ausente  auditoria_qualidade   
+2                  flag_dt_sin_pri_ausente  auditoria_qualidade   
+3           flag_internacao_antes_sintomas  auditoria_qualidade   
+4   flag_intervalo_negativo_sem_nosocomial  auditoria_qualidade   
+..                                     ...                  ...   
+77                              dt_saiduti   posterior_admissao   
+78                               out_antiv   posterior_admissao   
+79                              suport_ven   posterior_admissao   
+80                              tp_antivir   posterior_admissao   
+81                                     uti   posterior_admissao   
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("identificador"),
-    "motivo_nao_inclusao",
-] = "identificador_sem_significado_clinico"
+    existe_na_coorte     tipo_pandas  quantidade_preenchida  \
+0               True  datetime64[us]                3915136   
+1               True            int8                3915136   
+2               True            int8                3915136   
+3               True            int8                3915136   
+4               True            int8                3915136   
+..               ...             ...                    ...   
+77             False             NaN                      0   
+78              True             str                  14561   
+79             False             NaN                      0   
+80              True             str                 331007   
+81             False             NaN                      0   
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("desfecho"),
-    "motivo_nao_inclusao",
-] = "desfecho_excluido_da_formacao_dos_clusters"
+    quantidade_ausente  quantidade_valores_distintos  percentual_preenchido  \
+0                    0                             1             100.000000   
+1                    0                             1             100.000000   
+2                    0                             1             100.000000   
+3                    0                             2             100.000000   
+4                    0                             1             100.000000   
+..                 ...                           ...                    ...   
+77                   0                             0               0.000000   
+78             3900575                          2855               0.371916   
+79                   0                             0               0.000000   
+80             3584129                             3               8.454547   
+81                   0                             0               0.000000   
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("posterior_admissao"),
-    "motivo_nao_inclusao",
-] = "informacao_posterior_a_admissao"
+    incluir_matriz_nucleo  incluir_matriz_ampliada  \
+0                   False                    False   
+1                   False                    False   
+2                   False                    False   
+3                   False                    False   
+4                   False                    False   
+..                    ...                      ...   
+77                  False                    False   
+78                  False                    False   
+79                  False                    False   
+80                  False                    False   
+81                  False                    False   
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("data_bruta"),
-    "motivo_nao_inclusao",
-] = "data_bruta_substituida_por_atributo_derivado"
+                  motivo_nao_inclusao  
+0   variavel_reservada_para_auditoria  
+1   variavel_reservada_para_auditoria  
+2   variavel_reservada_para_auditoria  
+3   variavel_reservada_para_auditoria  
+4   variavel_reservada_para_auditoria  
+..                                ...  
+77    informacao_posterior_a_admissao  
+78    informacao_posterior_a_admissao  
+79    informacao_posterior_a_admissao  
+80    informacao_posterior_a_admissao  
+81    informacao_posterior_a_admissao  
 
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("contexto_temporal"),
-    "motivo_nao_inclusao",
-] = "contexto_temporal_reservado_para_caracterizacao"
-
-inventario_clustering.loc[
-    inventario_clustering[
-        "classificacao"
-    ]
-    .eq("auditoria_qualidade"),
-    "motivo_nao_inclusao",
-] = "variavel_reservada_para_auditoria"
-
-duplicidades_inventario = (
-    inventario_clustering.groupby(
-        "coluna",
-        dropna=False,
-    )[
-        "classificacao"
-    ]
-    .nunique()
-)
-
-colunas_com_classificacoes_multiplas = (
-    duplicidades_inventario.loc[
-        duplicidades_inventario.gt(1)
-    ]
-    .index
-    .tolist()
-)
-
-if colunas_com_classificacoes_multiplas:
-    display(
-        inventario_clustering.loc[
-            inventario_clustering[
-                "coluna"
-            ].isin(
-                colunas_com_classificacoes_multiplas
-            )
-        ]
-        .sort_values(
-            [
-                "coluna",
-                "classificacao",
-            ]
-        )
-        .reset_index(drop=True)
-    )
-
-    raise RuntimeError(
-        "Existem colunas classificadas em mais de um grupo: "
-        f"{colunas_com_classificacoes_multiplas}"
-    )
-
-colunas_nucleo_disponiveis = (
-    inventario_clustering.loc[
-        inventario_clustering[
-            "incluir_matriz_nucleo"
-        ],
-        "coluna",
-    ]
-    .tolist()
-)
-
-colunas_ampliadas_disponiveis = (
-    inventario_clustering.loc[
-        inventario_clustering[
-            "incluir_matriz_ampliada"
-        ],
-        "coluna",
-    ]
-    .tolist()
-)
-
-colunas_excluidas_clustering = (
-    inventario_clustering.loc[
-        inventario_clustering[
-            "incluir_matriz_ampliada"
-        ]
-        .eq(False),
-        "coluna",
-    ]
-    .drop_duplicates()
-    .tolist()
-)
-
-COLUNAS_PROIBIDAS_CLUSTERING = set(
-    COLUNAS_IDENTIFICADORAS
-    + COLUNAS_DESFECHO
-    + COLUNAS_POSTERIORES_ADMISSAO
-)
-
-colunas_proibidas_no_nucleo = sorted(
-    set(
-        colunas_nucleo_disponiveis
-    )
-    .intersection(
-        COLUNAS_PROIBIDAS_CLUSTERING
-    )
-)
-
-colunas_proibidas_na_ampliada = sorted(
-    set(
-        colunas_ampliadas_disponiveis
-    )
-    .intersection(
-        COLUNAS_PROIBIDAS_CLUSTERING
-    )
-)
-
-if colunas_proibidas_no_nucleo:
-    raise RuntimeError(
-        "A matriz núcleo contém colunas proibidas: "
-        f"{colunas_proibidas_no_nucleo}"
-    )
-
-if colunas_proibidas_na_ampliada:
-    raise RuntimeError(
-        "A matriz ampliada contém colunas proibidas: "
-        f"{colunas_proibidas_na_ampliada}"
-    )
-
-if not colunas_nucleo_disponiveis:
-    raise ValueError(
-        "Nenhuma variável foi selecionada para a matriz núcleo."
-    )
-
-if not colunas_ampliadas_disponiveis:
-    raise ValueError(
-        "Nenhuma variável foi selecionada para a matriz ampliada."
-    )
-
-resumo_inventario_clustering = (
-    inventario_clustering.groupby(
-        "classificacao",
-        dropna=False,
-    )
-    .agg(
-        quantidade_variaveis=(
-            "coluna",
-            "nunique",
-        ),
-        quantidade_disponiveis=(
-            "existe_na_coorte",
-            "sum",
-        ),
-        preenchimento_mediano=(
-            "percentual_preenchido",
-            "median",
-        ),
-    )
-    .reset_index()
-    .sort_values(
-        "classificacao"
-    )
-    .reset_index(drop=True)
-)
-
-print(
-    "Variáveis disponíveis na matriz núcleo:",
-    len(
-        colunas_nucleo_disponiveis
-    ),
-)
-
-print(
-    "Variáveis disponíveis na matriz ampliada:",
-    len(
-        colunas_ampliadas_disponiveis
-    ),
-)
-
-print(
-    "Colunas excluídas ou reservadas para auditoria:",
-    len(
-        colunas_excluidas_clustering
-    ),
-)
-
-display(
-    resumo_inventario_clustering
-)
-
-display(
-    inventario_clustering.sort_values(
-        [
-            "classificacao",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
+[82 rows x 11 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 114 [markdown]
@@ -13355,248 +15929,87 @@ contrato_transformacao[
         [
             "binaria_clinica",
             "binaria_contexto",
-            "categorica_nominal",
-        ]
-    )
-)
+# ... 242 lines omitted ...
+```
 
-contrato_transformacao[
-    "matriz_prevista"
-] = "nenhuma"
+**Output 1 (stream:stdout)**
 
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "incluir_matriz_nucleo"
-    ],
-    "matriz_prevista",
-] = "nucleo_e_ampliada"
+```text
+Variáveis aprovadas para preparação: 24
+Variáveis marcadas para revisão: 13
+```
 
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "incluir_matriz_ampliada"
-    ]
-    & contrato_transformacao[
-        "incluir_matriz_nucleo"
-    ]
-    .eq(False),
-    "matriz_prevista",
-] = "somente_ampliada"
+**Output 2 (display_data)**
 
-contrato_transformacao[
-    "flag_baixa_cobertura_50"
-] = (
-    contrato_transformacao[
-        "percentual_preenchido"
-    ]
-    .lt(50)
-    & contrato_transformacao[
-        "incluir_matriz_ampliada"
-    ]
-)
+```text
+     matriz_prevista     papel_na_matriz            status_revisao  \
+0            nenhuma            excluida            fora_da_matriz   
+1  nucleo_e_ampliada     binaria_clinica  aprovada_para_preparacao   
+2  nucleo_e_ampliada     binaria_clinica         revisar_cobertura   
+3  nucleo_e_ampliada  categorica_nominal  aprovada_para_preparacao   
+4  nucleo_e_ampliada            numerica  aprovada_para_preparacao   
+5   somente_ampliada    binaria_contexto  aprovada_para_preparacao   
+6   somente_ampliada  categorica_nominal  aprovada_para_preparacao   
 
-contrato_transformacao[
-    "flag_cardinalidade_alta"
-] = (
-    contrato_transformacao[
-        "quantidade_valores_distintos"
-    ]
-    .gt(30)
-    & contrato_transformacao[
-        "papel_na_matriz"
-    ]
-    .eq(
-        "categorica_nominal"
-    )
-)
+   quantidade_variaveis  cobertura_mediana  cardinalidade_maxima  
+0                    45         100.000000               3915136  
+1                    13          73.851125                     3  
+2                    13          37.259217                     3  
+3                     1         100.000000                     3  
+4                     6         100.000000                   771  
+5                     2          72.237912                     3  
+6                     2          83.812338                    28  
+[non-text output omitted: text/html]
+```
 
-contrato_transformacao[
-    "status_revisao"
-] = "aprovada_para_preparacao"
+**Output 3 (display_data)**
 
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "incluir_matriz_ampliada"
-    ]
-    .eq(False),
-    "status_revisao",
-] = "fora_da_matriz"
+```text
+        coluna             classificacao  papel_na_matriz    matriz_prevista  \
+0     puerpera  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+1     hepatica  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+2    sind_down  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+3   hematologi  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+4   imunodepre  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+5        renal  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+6   neurologic  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+7         asma  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+8   pneumopati  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+9    obesidade  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+10    diabetes  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+11   out_morbi  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
+12  cardiopati  candidata_binaria_nucleo  binaria_clinica  nucleo_e_ampliada   
 
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "incluir_matriz_ampliada"
-    ]
-    & contrato_transformacao[
-        "existe_na_coorte"
-    ]
-    .eq(False),
-    "status_revisao",
-] = "coluna_ausente"
+    percentual_preenchido  quantidade_valores_distintos     status_revisao  \
+0               36.080075                             3  revisar_cobertura   
+1               36.129217                             3  revisar_cobertura   
+2               36.155015                             3  revisar_cobertura   
+3               36.267093                             3  revisar_cobertura   
+4               36.708891                             3  revisar_cobertura   
+5               36.823114                             3  revisar_cobertura   
+6               37.259217                             3  revisar_cobertura   
+7               37.263865                             3  revisar_cobertura   
+8               37.280851                             3  revisar_cobertura   
+9               37.402736                             3  revisar_cobertura   
+10              42.127732                             3  revisar_cobertura   
+11              42.825690                             3  revisar_cobertura   
+12              44.935016                             3  revisar_cobertura   
 
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "flag_cardinalidade_alta"
-    ],
-    "status_revisao",
-] = "revisar_cardinalidade"
-
-contrato_transformacao.loc[
-    contrato_transformacao[
-        "flag_baixa_cobertura_50"
-    ],
-    "status_revisao",
-] = "revisar_cobertura"
-
-COLUNAS_PROIBIDAS_CONTRATO = set(
-    COLUNAS_IDENTIFICADORAS
-    + COLUNAS_DESFECHO
-    + COLUNAS_POSTERIORES_ADMISSAO
-)
-
-colunas_proibidas_aprovadas = sorted(
-    set(
-        contrato_transformacao.loc[
-            contrato_transformacao[
-                "status_revisao"
-            ]
-            .isin(
-                [
-                    "aprovada_para_preparacao",
-                    "revisar_cardinalidade",
-                    "revisar_cobertura",
-                ]
-            ),
-            "coluna",
-        ]
-        .tolist()
-    )
-    .intersection(
-        COLUNAS_PROIBIDAS_CONTRATO
-    )
-)
-
-if colunas_proibidas_aprovadas:
-    raise RuntimeError(
-        "O contrato aprovou colunas proibidas: "
-        f"{colunas_proibidas_aprovadas}"
-    )
-
-candidatas_sem_transformacao = (
-    contrato_transformacao.loc[
-        contrato_transformacao[
-            "incluir_matriz_ampliada"
-        ]
-        & contrato_transformacao[
-            "transformacao_planejada"
-        ]
-        .eq(
-            "nao_aplicavel"
-        ),
-        "coluna",
-    ]
-    .tolist()
-)
-
-if candidatas_sem_transformacao:
-    raise RuntimeError(
-        "Existem variáveis candidatas sem transformação definida: "
-        f"{candidatas_sem_transformacao}"
-    )
-
-resumo_contrato_transformacao = (
-    contrato_transformacao.groupby(
-        [
-            "matriz_prevista",
-            "papel_na_matriz",
-            "status_revisao",
-        ],
-        dropna=False,
-    )
-    .agg(
-        quantidade_variaveis=(
-            "coluna",
-            "nunique",
-        ),
-        cobertura_mediana=(
-            "percentual_preenchido",
-            "median",
-        ),
-        cardinalidade_maxima=(
-            "quantidade_valores_distintos",
-            "max",
-        ),
-    )
-    .reset_index()
-    .sort_values(
-        [
-            "matriz_prevista",
-            "papel_na_matriz",
-            "status_revisao",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-variaveis_para_revisao = (
-    contrato_transformacao.loc[
-        contrato_transformacao[
-            "status_revisao"
-        ]
-        .isin(
-            [
-                "revisar_cardinalidade",
-                "revisar_cobertura",
-            ]
-        )
-    ]
-    .sort_values(
-        [
-            "status_revisao",
-            "percentual_preenchido",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-print(
-    "Variáveis aprovadas para preparação:",
-    int(
-        contrato_transformacao[
-            "status_revisao"
-        ]
-        .eq(
-            "aprovada_para_preparacao"
-        )
-        .sum()
-    ),
-)
-
-print(
-    "Variáveis marcadas para revisão:",
-    len(
-        variaveis_para_revisao
-    ),
-)
-
-display(
-    resumo_contrato_transformacao
-)
-
-display(
-    variaveis_para_revisao[
-        [
-            "coluna",
-            "classificacao",
-            "papel_na_matriz",
-            "matriz_prevista",
-            "percentual_preenchido",
-            "quantidade_valores_distintos",
-            "status_revisao",
-            "transformacao_planejada",
-            "tratamento_ausencia_planejado",
-        ]
-    ]
-)
+       transformacao_planejada tratamento_ausencia_planejado  
+0   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+1   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+2   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+3   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+4   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+5   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+6   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+7   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+8   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+9   sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+10  sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+11  sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+12  sim_1_nao_0_demais_ausente    avaliar_indicador_ausencia  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 116 [markdown]
@@ -13820,167 +16233,41 @@ resumo_amostragem[
         len(
             amostra_desenvolvimento
         )
-    )
-    .mul(100)
-)
+# ... 161 lines omitted ...
+```
 
-resumo_amostragem = (
-    resumo_amostragem
-    .sort_values(
-        "ano_internacao"
-    )
-    .reset_index(drop=True)
-)
+**Output 1 (display_data)**
 
-quantidade_esperada_amostra = int(
-    resumo_amostragem[
-        "quantidade_selecionada"
-    ]
-    .sum()
-)
+```text
+   ano_internacao  quantidade_disponivel  quantidade_selecionada  \
+0            2019                  43513                   10000   
+1            2020                 979812                   10000   
+2            2021                1480215                   10000   
+3            2022                 475980                   10000   
+4            2023                 240704                   10000   
+5            2024                 229478                   10000   
+6            2025                 289913                   10000   
+7            2026                 175521                   10000   
 
-if quantidade_esperada_amostra != len(
-    amostra_desenvolvimento
-):
-    raise RuntimeError(
-        "A quantidade registrada no resumo da amostragem "
-        "não corresponde ao tamanho da amostra."
-    )
+   percentual_amostrado_no_ano  percentual_da_amostra  
+0                    22.981638                   12.5  
+1                     1.020604                   12.5  
+2                     0.675578                   12.5  
+3                     2.100929                   12.5  
+4                     4.154480                   12.5  
+5                     4.357716                   12.5  
+6                     3.449311                   12.5  
+7                     5.697324                   12.5  
+[non-text output omitted: text/html]
+```
 
-anos_presentes_amostra = set(
-    amostra_desenvolvimento[
-        "ano_internacao"
-    ]
-    .dropna()
-    .astype(int)
-    .tolist()
-)
+**Output 2 (stream:stdout)**
 
-if anos_presentes_amostra != set(
-    anos_disponiveis_amostra
-):
-    raise RuntimeError(
-        "A amostra não preservou todos os anos disponíveis."
-    )
-
-if not amostra_desenvolvimento[
-    "indice_coorte"
-].is_unique:
-    raise RuntimeError(
-        "O identificador de rastreabilidade da amostra "
-        "não é único."
-    )
-
-colunas_proibidas_na_amostra = sorted(
-    set(
-        COLUNAS_AMOSTRA_DESENVOLVIMENTO
-    )
-    .intersection(
-        set(
-            COLUNAS_IDENTIFICADORAS
-            + COLUNAS_POSTERIORES_ADMISSAO
-        )
-    )
-)
-
-if colunas_proibidas_na_amostra:
-    raise RuntimeError(
-        "A amostra contém colunas proibidas: "
-        f"{colunas_proibidas_na_amostra}"
-    )
-
-if "alvo_obito_srag" not in (
-    amostra_desenvolvimento.columns
-):
-    raise KeyError(
-        "O alvo auxiliar não foi preservado "
-        "para caracterização posterior."
-    )
-
-COLUNAS_FEATURES_AMOSTRA = [
-    coluna
-    for coluna in colunas_ampliadas_disponiveis
-    if coluna in amostra_desenvolvimento.columns
-]
-
-if "alvo_obito_srag" in COLUNAS_FEATURES_AMOSTRA:
-    raise RuntimeError(
-        "O alvo foi incluído indevidamente "
-        "na lista de features."
-    )
-
-if "ano_internacao" in COLUNAS_FEATURES_AMOSTRA:
-    raise RuntimeError(
-        "O ano da internação foi incluído indevidamente "
-        "na lista de features."
-    )
-
-if not COLUNAS_FEATURES_AMOSTRA:
-    raise ValueError(
-        "Nenhuma feature foi preservada "
-        "na amostra de desenvolvimento."
-    )
-
-metadados_amostra_desenvolvimento = pd.DataFrame(
-    {
-        "indice_coorte": (
-            amostra_desenvolvimento[
-                "indice_coorte"
-            ]
-        ),
-        "ano_internacao": (
-            amostra_desenvolvimento[
-                "ano_internacao"
-            ]
-        ),
-        "alvo_obito_srag": (
-            amostra_desenvolvimento[
-                "alvo_obito_srag"
-            ]
-        ),
-    }
-)
-
-if "mes_internacao" in (
-    amostra_desenvolvimento.columns
-):
-    metadados_amostra_desenvolvimento[
-        "mes_internacao"
-    ] = (
-        amostra_desenvolvimento[
-            "mes_internacao"
-        ]
-    )
-
-display(
-    resumo_amostragem
-)
-
-print(
-    "Quantidade total da amostra:",
-    len(
-        amostra_desenvolvimento
-    ),
-)
-
-print(
-    "Quantidade de features brutas:",
-    len(
-        COLUNAS_FEATURES_AMOSTRA
-    ),
-)
-
-print(
-    "Quantidade de anos preservados:",
-    len(
-        anos_presentes_amostra
-    ),
-)
-
-print(
-    "Semente utilizada:",
-    SEMENTE_CLUSTERING,
-)
+```text
+Quantidade total da amostra: 80000
+Quantidade de features brutas: 37
+Quantidade de anos preservados: 8
+Semente utilizada: 42
 ```
 
 ### Cell 118 [markdown]
@@ -14209,394 +16496,117 @@ for coluna in colunas_categoricas_ampliadas_amostra:
             regex=True,
         )
         .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "NONE": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-        .fillna(
-            "Ausente"
-        )
-    )
+# ... 388 lines omitted ...
+```
 
-    matriz_categorica_ampliada_bruta[
-        coluna
-    ] = categoria_normalizada
+**Output 1 (display_data)**
 
-matriz_nucleo_bruta = pd.concat(
-    [
-        matriz_numerica_nucleo_bruta,
-        matriz_binaria_nucleo_bruta,
-        matriz_categorica_nucleo_bruta,
-    ],
-    axis=1,
-)
+```text
+     matriz  quantidade_registros  quantidade_colunas  \
+0    nucleo                 80000                  33   
+1  ampliada                 80000                  37   
 
-matriz_ampliada_bruta = pd.concat(
-    [
-        matriz_nucleo_bruta,
-        matriz_numerica_ampliada_bruta,
-        matriz_binaria_ampliada_bruta,
-        matriz_categorica_ampliada_bruta,
-    ],
-    axis=1,
-)
+   quantidade_colunas_numericas  quantidade_colunas_binarias  \
+0                             6                           26   
+1                             6                           28   
 
-if len(
-    matriz_nucleo_bruta
-) != len(
-    amostra_desenvolvimento
-):
-    raise RuntimeError(
-        "A matriz núcleo não preservou a quantidade "
-        "de registros da amostra."
-    )
+   quantidade_colunas_categoricas  
+0                               1  
+1                               3  
+[non-text output omitted: text/html]
+```
 
-if len(
-    matriz_ampliada_bruta
-) != len(
-    amostra_desenvolvimento
-):
-    raise RuntimeError(
-        "A matriz ampliada não preservou a quantidade "
-        "de registros da amostra."
-    )
+**Output 2 (display_data)**
 
-if not matriz_nucleo_bruta.index.equals(
-    amostra_desenvolvimento.index
-):
-    raise RuntimeError(
-        "O índice da matriz núcleo não corresponde "
-        "ao índice da amostra."
-    )
+```text
+      matriz                        coluna     papel_na_matriz  \
+0   ampliada                        vacina    binaria_contexto   
+1   ampliada                    vacina_cov    binaria_contexto   
+2   ampliada                    cs_escol_n  categorica_nominal   
+3   ampliada       uf_residencia_categoria  categorica_nominal   
+4     nucleo                      puerpera     binaria_clinica   
+5     nucleo                      hepatica     binaria_clinica   
+6     nucleo                    hematologi     binaria_clinica   
+7     nucleo                     sind_down     binaria_clinica   
+8     nucleo                     obesidade     binaria_clinica   
+9     nucleo                         renal     binaria_clinica   
+10    nucleo                    imunodepre     binaria_clinica   
+11    nucleo                    neurologic     binaria_clinica   
+12    nucleo                    pneumopati     binaria_clinica   
+13    nucleo                          asma     binaria_clinica   
+14    nucleo                      diabetes     binaria_clinica   
+15    nucleo                     out_morbi     binaria_clinica   
+16    nucleo                    cardiopati     binaria_clinica   
+17    nucleo                     perd_pala     binaria_clinica   
+18    nucleo                     perd_olft     binaria_clinica   
+19    nucleo                       dor_abd     binaria_clinica   
+20    nucleo                        fadiga     binaria_clinica   
+21    nucleo                     outro_sin     binaria_clinica   
+22    nucleo                      garganta     binaria_clinica   
+23    nucleo                      diarreia     binaria_clinica   
+24    nucleo                        vomito     binaria_clinica   
+25    nucleo                     saturacao     binaria_clinica   
+26    nucleo                     desc_resp     binaria_clinica   
+27    nucleo                         febre     binaria_clinica   
+28    nucleo                      dispneia     binaria_clinica   
+29    nucleo                         tosse     binaria_clinica   
+30    nucleo  dias_sintomas_ate_internacao            numerica   
+31    nucleo                    idade_anos            numerica   
+32    nucleo      n_comorbidades_avaliadas            numerica   
+33    nucleo    n_comorbidades_confirmadas            numerica   
+34    nucleo          n_sintomas_avaliados            numerica   
+35    nucleo        n_sintomas_confirmados            numerica   
+36    nucleo                sexo_categoria  categorica_nominal   
 
-if not matriz_ampliada_bruta.index.equals(
-    amostra_desenvolvimento.index
-):
-    raise RuntimeError(
-        "O índice da matriz ampliada não corresponde "
-        "ao índice da amostra."
-    )
-
-colunas_duplicadas_nucleo = (
-    matriz_nucleo_bruta.columns[
-        matriz_nucleo_bruta.columns.duplicated()
-    ]
-    .tolist()
-)
-
-colunas_duplicadas_ampliada = (
-    matriz_ampliada_bruta.columns[
-        matriz_ampliada_bruta.columns.duplicated()
-    ]
-    .tolist()
-)
-
-if colunas_duplicadas_nucleo:
-    raise RuntimeError(
-        "A matriz núcleo contém colunas duplicadas: "
-        f"{colunas_duplicadas_nucleo}"
-    )
-
-if colunas_duplicadas_ampliada:
-    raise RuntimeError(
-        "A matriz ampliada contém colunas duplicadas: "
-        f"{colunas_duplicadas_ampliada}"
-    )
-
-COLUNAS_PROIBIDAS_MATRIZ = set(
-    COLUNAS_IDENTIFICADORAS
-    + COLUNAS_DESFECHO
-    + COLUNAS_POSTERIORES_ADMISSAO
-    + COLUNAS_CONTEXTO_TEMPORAL
-)
-
-colunas_proibidas_nucleo_bruto = sorted(
-    set(
-        matriz_nucleo_bruta.columns
-    )
-    .intersection(
-        COLUNAS_PROIBIDAS_MATRIZ
-    )
-)
-
-colunas_proibidas_ampliada_bruta = sorted(
-    set(
-        matriz_ampliada_bruta.columns
-    )
-    .intersection(
-        COLUNAS_PROIBIDAS_MATRIZ
-    )
-)
-
-if colunas_proibidas_nucleo_bruto:
-    raise RuntimeError(
-        "A matriz núcleo contém colunas proibidas: "
-        f"{colunas_proibidas_nucleo_bruto}"
-    )
-
-if colunas_proibidas_ampliada_bruta:
-    raise RuntimeError(
-        "A matriz ampliada contém colunas proibidas: "
-        f"{colunas_proibidas_ampliada_bruta}"
-    )
-
-colunas_binarias_transformadas = (
-    colunas_binarias_nucleo_amostra
-    + colunas_binarias_ampliadas_amostra
-)
-
-valores_binarios_invalidos = {}
-
-for coluna in colunas_binarias_transformadas:
-    matriz_origem = (
-        matriz_binaria_nucleo_bruta
-        if coluna in matriz_binaria_nucleo_bruta.columns
-        else matriz_binaria_ampliada_bruta
-    )
-
-    valores_observados = set(
-        matriz_origem[
-            coluna
-        ]
-        .dropna()
-        .unique()
-        .tolist()
-    )
-
-    valores_invalidos = sorted(
-        valor
-        for valor in valores_observados
-        if valor not in {
-            0.0,
-            1.0,
-        }
-    )
-
-    if valores_invalidos:
-        valores_binarios_invalidos[
-            coluna
-        ] = valores_invalidos
-
-if valores_binarios_invalidos:
-    raise RuntimeError(
-        "Foram encontrados valores inválidos "
-        "nas variáveis binárias: "
-        f"{valores_binarios_invalidos}"
-    )
-
-registros_auditoria_transformacao = []
-
-for coluna in matriz_nucleo_bruta.columns:
-    papel = (
-        contrato_transformacao.loc[
-            contrato_transformacao[
-                "coluna"
-            ]
-            .eq(
-                coluna
-            ),
-            "papel_na_matriz",
-        ]
-        .iloc[0]
-    )
-
-    registros_auditoria_transformacao.append(
-        {
-            "matriz": "nucleo",
-            "coluna": coluna,
-            "papel_na_matriz": papel,
-            "quantidade_registros": len(
-                matriz_nucleo_bruta
-            ),
-            "quantidade_preenchida": int(
-                matriz_nucleo_bruta[
-                    coluna
-                ]
-                .notna()
-                .sum()
-            ),
-            "quantidade_ausente": int(
-                matriz_nucleo_bruta[
-                    coluna
-                ]
-                .isna()
-                .sum()
-            ),
-            "quantidade_valores_distintos": int(
-                matriz_nucleo_bruta[
-                    coluna
-                ]
-                .nunique(
-                    dropna=True
-                )
-            ),
-        }
-    )
-
-colunas_exclusivas_ampliada = [
-    coluna
-    for coluna in matriz_ampliada_bruta.columns
-    if coluna not in matriz_nucleo_bruta.columns
-]
-
-for coluna in colunas_exclusivas_ampliada:
-    papel = (
-        contrato_transformacao.loc[
-            contrato_transformacao[
-                "coluna"
-            ]
-            .eq(
-                coluna
-            ),
-            "papel_na_matriz",
-        ]
-        .iloc[0]
-    )
-
-    registros_auditoria_transformacao.append(
-        {
-            "matriz": "ampliada",
-            "coluna": coluna,
-            "papel_na_matriz": papel,
-            "quantidade_registros": len(
-                matriz_ampliada_bruta
-            ),
-            "quantidade_preenchida": int(
-                matriz_ampliada_bruta[
-                    coluna
-                ]
-                .notna()
-                .sum()
-            ),
-            "quantidade_ausente": int(
-                matriz_ampliada_bruta[
-                    coluna
-                ]
-                .isna()
-                .sum()
-            ),
-            "quantidade_valores_distintos": int(
-                matriz_ampliada_bruta[
-                    coluna
-                ]
-                .nunique(
-                    dropna=True
-                )
-            ),
-        }
-    )
-
-auditoria_transformacao_amostra = pd.DataFrame(
-    registros_auditoria_transformacao
-)
-
-auditoria_transformacao_amostra[
-    "percentual_preenchido"
-] = (
-    auditoria_transformacao_amostra[
-        "quantidade_preenchida"
-    ]
-    .div(
-        auditoria_transformacao_amostra[
-            "quantidade_registros"
-        ]
-    )
-    .mul(100)
-)
-
-auditoria_transformacao_amostra[
-    "percentual_ausente"
-] = (
-    100
-    - auditoria_transformacao_amostra[
-        "percentual_preenchido"
-    ]
-)
-
-auditoria_transformacao_amostra = (
-    auditoria_transformacao_amostra
-    .sort_values(
-        [
-            "matriz",
-            "percentual_preenchido",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-resumo_matrizes_brutas = pd.DataFrame(
-    {
-        "matriz": [
-            "nucleo",
-            "ampliada",
-        ],
-        "quantidade_registros": [
-            len(
-                matriz_nucleo_bruta
-            ),
-            len(
-                matriz_ampliada_bruta
-            ),
-        ],
-        "quantidade_colunas": [
-            matriz_nucleo_bruta.shape[1],
-            matriz_ampliada_bruta.shape[1],
-        ],
-        "quantidade_colunas_numericas": [
-            len(
-                colunas_numericas_nucleo_amostra
-            ),
-            (
-                len(
-                    colunas_numericas_nucleo_amostra
-                )
-                + len(
-                    colunas_numericas_ampliadas_amostra
-                )
-            ),
-        ],
-        "quantidade_colunas_binarias": [
-            len(
-                colunas_binarias_nucleo_amostra
-            ),
-            (
-                len(
-                    colunas_binarias_nucleo_amostra
-                )
-                + len(
-                    colunas_binarias_ampliadas_amostra
-                )
-            ),
-        ],
-        "quantidade_colunas_categoricas": [
-            len(
-                colunas_categoricas_nucleo_amostra
-            ),
-            (
-                len(
-                    colunas_categoricas_nucleo_amostra
-                )
-                + len(
-                    colunas_categoricas_ampliadas_amostra
-                )
-            ),
-        ],
-    }
-)
-
-display(
-    resumo_matrizes_brutas
-)
-
-display(
-    auditoria_transformacao_amostra
-)
+    quantidade_registros  quantidade_preenchida  quantidade_ausente  \
+0                  80000                  46483               33517   
+1                  80000                  56151               23849   
+2                  80000                  80000                   0   
+3                  80000                  80000                   0   
+4                  80000                  26542               53458   
+5                  80000                  26598               53402   
+6                  80000                  26682               53318   
+7                  80000                  26705               53295   
+8                  80000                  26830               53170   
+9                  80000                  27025               52975   
+10                 80000                  27049               52951   
+11                 80000                  27485               52515   
+12                 80000                  27511               52489   
+13                 80000                  27691               52309   
+14                 80000                  29830               50170   
+15                 80000                  30324               49676   
+16                 80000                  31416               48584   
+17                 80000                  46970               33030   
+18                 80000                  47067               32933   
+19                 80000                  47975               32025   
+20                 80000                  49692               30308   
+21                 80000                  59803               20197   
+22                 80000                  60822           
+... [2208 characters omitted] ...
+ 2               37.28750            62.71250  
+15                             2               37.90500            62.09500  
+16                             2               39.27000            60.73000  
+17                             2               58.71250            41.28750  
+18                             2               58.83375            41.16625  
+19                             2               59.96875            40.03125  
+20                             2               62.11500            37.88500  
+21                             2               74.75375            25.24625  
+22                             2               76.02750            23.97250  
+23                             2               76.97125            23.02875  
+24                             2               77.11250            22.88750  
+25                             2               86.27250            13.72750  
+26                             2               87.41750            12.58250  
+27                             2               88.97125            11.02875  
+28                             2               90.04625             9.95375  
+29                             2               92.59250             7.40750  
+30                           215              100.00000             0.00000  
+31                           151              100.00000             0.00000  
+32                            14              100.00000             0.00000  
+33                            13              100.00000             0.00000  
+34                            14              100.00000             0.00000  
+35                            14              100.00000             0.00000  
+36                             3              100.00000             0.00000  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 120 [markdown]
@@ -14824,206 +16834,131 @@ for nome_matriz, matriz_diagnostico in (
                 "flag_totalmente_ausente": (
                     flag_totalmente_ausente
                 ),
-                "flag_constante": (
-                    flag_constante
-                ),
-                "flag_quase_constante": (
-                    flag_quase_constante
-                ),
-                "flag_baixa_cobertura": (
-                    flag_baixa_cobertura
-                ),
-                "flag_contador_agregado": (
-                    flag_contador_agregado
-                ),
-                "status_diagnostico": (
-                    status_diagnostico
-                ),
-            }
-        )
+# ... 200 lines omitted ...
+```
 
-diagnostico_features_brutas = pd.DataFrame(
-    registros_diagnostico_features
-)
+**Output 1 (stream:stdout)**
 
-diagnostico_features_brutas = (
-    diagnostico_features_brutas
-    .sort_values(
-        [
-            "matriz",
-            "status_diagnostico",
-            "percentual_preenchido",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
+```text
+Features totalmente ausentes: 0
+Features constantes: 0
+Features que exigem revisão: 34
+```
 
-if diagnostico_features_brutas.empty:
-    raise ValueError(
-        "O diagnóstico das features brutas está vazio."
-    )
+**Output 2 (display_data)**
 
-percentuais_preenchimento_validos = (
-    diagnostico_features_brutas[
-        "percentual_preenchido"
-    ]
-    .dropna()
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
+```text
+     matriz            status_diagnostico  quantidade_features  \
+0  ampliada        manter_para_preparacao                   20   
+1  ampliada       revisar_baixa_cobertura                   13   
+2  ampliada  revisar_redundancia_contador                    4   
+3    nucleo        manter_para_preparacao                   16   
+4    nucleo       revisar_baixa_cobertura                   13   
+5    nucleo  revisar_redundancia_contador                    4   
 
-if not percentuais_preenchimento_validos:
-    raise RuntimeError(
-        "O diagnóstico contém percentuais de preenchimento "
-        "fora do intervalo de 0% a 100%."
-    )
+   preenchimento_mediano  preenchimento_minimo  cardinalidade_maxima  
+0               81.69250              58.10375                   215  
+1               33.81125              33.17750                     2  
+2              100.00000             100.00000                    14  
+3               81.69250              58.71250                   215  
+4               33.81125              33.17750                     2  
+5              100.00000             100.00000                    14  
+[non-text output omitted: text/html]
+```
 
-percentuais_frequencia_validos = (
-    diagnostico_features_brutas[
-        "percentual_valor_mais_frequente"
-    ]
-    .dropna()
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
+**Output 3 (display_data)**
 
-if not percentuais_frequencia_validos:
-    raise RuntimeError(
-        "O diagnóstico contém percentuais de frequência "
-        "fora do intervalo de 0% a 100%."
-    )
+```text
+      matriz                      coluna tipo_pandas  percentual_preenchido  \
+0   ampliada                    puerpera     float32               33.17750   
+1   ampliada                    hepatica     float32               33.24750   
+2   ampliada                  hematologi     float32               33.35250   
+3   ampliada                   sind_down     float32               33.38125   
+4   ampliada                   obesidade     float32               33.53750   
+5   ampliada                       renal     float32               33.78125   
+6   ampliada                  imunodepre     float32               33.81125   
+7   ampliada                  neurologic     float32               34.35625   
+8   ampliada                  pneumopati     float32               34.38875   
+9   ampliada                        asma     float32               34.61375   
+10  ampliada                    diabetes     float32               37.28750   
+11  ampliada                   out_morbi     float32               37.90500   
+12  ampliada                  cardiopati     float32               39.27000   
+13  ampliada    n_comorbidades_avaliadas     float32              100.00000   
+14  ampliada  n_comorbidades_confirmadas     float32              100.00000   
+15  ampliada        n_sintomas_avaliados     float32              100.00000   
+16  ampliada      n_sintomas_confirmados     float32              100.00000   
+17    nucleo                    puerpera     float32               33.17750   
+18    nucleo                    hepatica     float32               33.24750   
+19    nucleo                  hematologi     float32               33.35250   
+20    nucleo                   sind_down     float32               33.38125   
+21    nucleo                   obesidade     float32               33.53750   
+22    nucleo                       renal     float32               33.78125   
+23    nucleo                  imunodepre     float32               33.81125   
+24    nucleo                  neurologic     float32               34.35625   
+25    nucleo                  pneumopati     float32               34.38875   
+26    nucleo                        asma     float32               34.61375   
+27    nucleo                    diabetes     float32               37.28750   
+28    nucleo                   out_morbi     float32               37.90500   
+29    nucleo                  cardiopati     float32               39.27000   
+30    nucleo    n_comorbidades_avaliadas     float32              100.00000   
+31    nucleo  n_comorbidades_confirmadas     float32              100.00000   
+32    nucleo        n_sintomas_avaliados     float32              100.00000   
+33    nucleo      n_sintomas_confirmados     float32              100.00000   
 
-resumo_diagnostico_features = (
-    diagnostico_features_brutas.groupby(
-        [
-            "matriz",
-            "status_diagnostico",
-        ],
-        dropna=False,
-    )
-    .agg(
-        quantidade_features=(
-            "coluna",
-            "nunique",
-        ),
-        preenchimento_mediano=(
-            "percentual_preenchido",
-            "median",
-        ),
-        preenchimento_minimo=(
-            "percentual_preenchido",
-            "min",
-        ),
-        cardinalidade_maxima=(
-            "quantidade_valores_distintos",
-            "max",
-        ),
-    )
-    .reset_index()
-    .sort_values(
-        [
-            "matriz",
-            "status_diagnostico",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-features_que_exigem_revisao = (
-    diagnostico_features_brutas.loc[
-        diagnostico_features_brutas[
-            "status_diagnostico"
-        ]
-        .ne(
-            "manter_para_preparacao"
-        )
-    ]
-    .copy()
-    .sort_values(
-        [
-            "matriz",
-            "status_diagnostico",
-            "percentual_preenchido",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-features_totalmente_ausentes = (
-    diagnostico_features_brutas.loc[
-        diagnostico_features_brutas[
-            "flag_totalmente_ausente"
-        ],
-        [
-            "matriz",
-            "coluna",
-        ],
-    ]
-    .copy()
-)
-
-features_constantes = (
-    diagnostico_features_brutas.loc[
-        diagnostico_features_brutas[
-            "flag_constante"
-        ],
-        [
-            "matriz",
-            "coluna",
-        ],
-    ]
-    .copy()
-)
-
-print(
-    "Features totalmente ausentes:",
-    len(
-        features_totalmente_ausentes
-    ),
-)
-
-print(
-    "Features constantes:",
-    len(
-        features_constantes
-    ),
-)
-
-print(
-    "Features que exigem revisão:",
-    len(
-        features_que_exigem_revisao
-    ),
-)
-
-display(
-    resumo_diagnostico_features
-)
-
-display(
-    features_que_exigem_revisao[
-        [
-            "matriz",
-            "coluna",
-            "tipo_pandas",
-            "percentual_preenchido",
-            "quantidade_valores_distintos",
-            "valor_mais_frequente",
-            "percentual_valor_mais_frequente",
-            "status_diagnostico",
-        ]
-    ]
-)
+    quantidade_valores_distintos valor_mais_frequente  \
+0                              2                  0.0   
+1                              2                  0.0   
+2                              2                  0.0   
+3                              2                  0.0   
+4                              2                  0.0   
+5                              2                  0.0   
+6                              2                  0.0   
+7                              2                  0.0   
+8                              2                  0.0   
+9                              2                  0.0   
+10                             2                  0.0   
+11                             2                  1.0   
+12                             2                  1.0   
+13                            14                  0.0   
+14                            13                  0.0   
+15                            14                 13.0   
+16                            14                  4.0   
+17                             2                  0.0   
+18                             2                  0.0   
+19                             2                  0.0   
+20                             2                  0.0   
+21                             2                  0.0   
+22                             2                  0.0   
+23                             2                  0.0   
+24       
+... [1178 characters omitted] ...
+                      84.878776       revisar_baixa_cobertura  
+9                         83.019754       revisar_baixa_cobertura  
+10                        65.460945       revisar_baixa_cobertura  
+11                        53.324100       revisar_baixa_cobertura  
+12                        50.372422       revisar_baixa_cobertura  
+13                        51.527500  revisar_redundancia_contador  
+14                        51.821250  revisar_redundancia_contador  
+15                        50.066250  revisar_redundancia_contador  
+16                        23.177500  revisar_redundancia_contador  
+17                        98.899857       revisar_baixa_cobertura  
+18                        97.913377       revisar_baixa_cobertura  
+19                        97.290308       revisar_baixa_cobertura  
+20                        97.903014       revisar_baixa_cobertura  
+21                        90.108088       revisar_baixa_cobertura  
+22                        91.763182       revisar_baixa_cobertura  
+23                        91.485822       revisar_baixa_cobertura  
+24                        86.247044       revisar_baixa_cobertura  
+25                        84.878776       revisar_baixa_cobertura  
+26                        83.019754       revisar_baixa_cobertura  
+27                        65.460945       revisar_baixa_cobertura  
+28                        53.324100       revisar_baixa_cobertura  
+29                        50.372422       revisar_baixa_cobertura  
+30                        51.527500  revisar_redundancia_contador  
+31                        51.821250  revisar_redundancia_contador  
+32                        50.066250  revisar_redundancia_contador  
+33                        23.177500  revisar_redundancia_contador  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 122 [markdown]
@@ -15252,186 +17187,46 @@ for coluna_original, coluna_recalculada in (
         else:
             correlacao = np.nan
 
-        reconstrucao_exata = (
-            quantidade_divergencias == 0
-            and quantidade_comparavel
-            == len(
-                matriz_nucleo_bruta
-            )
-        )
+# ... 180 lines omitted ...
+```
 
-    registros_redundancia_contadores.append(
-        {
-            "contador_original": coluna_original,
-            "contador_recalculado": coluna_recalculada,
-            "quantidade_registros": len(
-                matriz_nucleo_bruta
-            ),
-            "quantidade_comparavel": quantidade_comparavel,
-            "quantidade_divergencias": (
-                quantidade_divergencias
-            ),
-            "diferenca_maxima_absoluta": (
-                diferenca_maxima_absoluta
-            ),
-            "correlacao": correlacao,
-            "reconstrucao_exata": reconstrucao_exata,
-        }
-    )
+**Output 1 (stream:stdout)**
 
-auditoria_redundancia_contadores = pd.DataFrame(
-    registros_redundancia_contadores
-)
+```text
+Contadores reconstruídos exatamente: 4
+Features do núcleo antes da revisão: 33
+Features do núcleo após a revisão: 29
+Features ampliadas antes da revisão: 37
+Features ampliadas após a revisão: 33
+```
 
-auditoria_redundancia_contadores[
-    "decisao_clustering"
-] = np.where(
-    auditoria_redundancia_contadores[
-        "reconstrucao_exata"
-    ],
-    "excluir_da_formacao_dos_clusters",
-    "manter_para_revisao",
-)
+**Output 2 (display_data)**
 
-contadores_redundantes = (
-    auditoria_redundancia_contadores.loc[
-        auditoria_redundancia_contadores[
-            "reconstrucao_exata"
-        ],
-        "contador_original",
-    ]
-    .tolist()
-)
+```text
+            contador_original                    contador_recalculado  \
+0      n_sintomas_confirmados      n_sintomas_confirmados_recalculado   
+1        n_sintomas_avaliados        n_sintomas_avaliados_recalculado   
+2  n_comorbidades_confirmadas  n_comorbidades_confirmadas_recalculado   
+3    n_comorbidades_avaliadas    n_comorbidades_avaliadas_recalculado   
 
-contadores_para_revisao = (
-    auditoria_redundancia_contadores.loc[
-        auditoria_redundancia_contadores[
-            "reconstrucao_exata"
-        ]
-        .eq(False),
-        "contador_original",
-    ]
-    .tolist()
-)
+   quantidade_registros  quantidade_comparavel  quantidade_divergencias  \
+0                 80000                  80000                        0   
+1                 80000                  80000                        0   
+2                 80000                  80000                        0   
+3                 80000                  80000                        0   
 
-if contadores_para_revisao:
-    print(
-        "Contadores que apresentaram divergência:",
-        contadores_para_revisao,
-    )
+   diferenca_maxima_absoluta  correlacao  reconstrucao_exata  \
+0                        0.0         1.0                True   
+1                        0.0         1.0                True   
+2                        0.0         1.0                True   
+3                        0.0         1.0                True   
 
-COLUNAS_EXCLUIDAS_REDUNDANCIA = list(
-    dict.fromkeys(
-        contadores_redundantes
-    )
-)
-
-COLUNAS_NUCLEO_POS_REDUNDANCIA = [
-    coluna
-    for coluna in matriz_nucleo_bruta.columns
-    if coluna not in COLUNAS_EXCLUIDAS_REDUNDANCIA
-]
-
-COLUNAS_AMPLIADA_POS_REDUNDANCIA = [
-    coluna
-    for coluna in matriz_ampliada_bruta.columns
-    if coluna not in COLUNAS_EXCLUIDAS_REDUNDANCIA
-]
-
-if not COLUNAS_NUCLEO_POS_REDUNDANCIA:
-    raise ValueError(
-        "A lista de features do núcleo ficou vazia "
-        "após a análise de redundância."
-    )
-
-if not COLUNAS_AMPLIADA_POS_REDUNDANCIA:
-    raise ValueError(
-        "A lista de features ampliada ficou vazia "
-        "após a análise de redundância."
-    )
-
-if any(
-    coluna in COLUNAS_NUCLEO_POS_REDUNDANCIA
-    for coluna in contadores_redundantes
-):
-    raise RuntimeError(
-        "Um contador redundante permaneceu "
-        "na lista de features do núcleo."
-    )
-
-if any(
-    coluna in COLUNAS_AMPLIADA_POS_REDUNDANCIA
-    for coluna in contadores_redundantes
-):
-    raise RuntimeError(
-        "Um contador redundante permaneceu "
-        "na lista de features ampliada."
-    )
-
-contadores_para_caracterizacao = (
-    amostra_desenvolvimento[
-        [
-            coluna
-            for coluna in COLUNAS_CONTADORES_REDUNDANCIA
-            if coluna in amostra_desenvolvimento.columns
-        ]
-    ]
-    .copy()
-)
-
-contadores_para_caracterizacao.insert(
-    0,
-    "indice_coorte",
-    amostra_desenvolvimento[
-        "indice_coorte"
-    ]
-    .to_numpy(),
-)
-
-if len(
-    contadores_para_caracterizacao
-) != len(
-    amostra_desenvolvimento
-):
-    raise RuntimeError(
-        "A tabela de contadores para caracterização "
-        "não preservou o tamanho da amostra."
-    )
-
-print(
-    "Contadores reconstruídos exatamente:",
-    len(
-        contadores_redundantes
-    ),
-)
-
-print(
-    "Features do núcleo antes da revisão:",
-    matriz_nucleo_bruta.shape[1],
-)
-
-print(
-    "Features do núcleo após a revisão:",
-    len(
-        COLUNAS_NUCLEO_POS_REDUNDANCIA
-    ),
-)
-
-print(
-    "Features ampliadas antes da revisão:",
-    matriz_ampliada_bruta.shape[1],
-)
-
-print(
-    "Features ampliadas após a revisão:",
-    len(
-        COLUNAS_AMPLIADA_POS_REDUNDANCIA
-    ),
-)
-
-display(
-    auditoria_redundancia_contadores
-)
+                 decisao_clustering  
+0  excluir_da_formacao_dos_clusters  
+1  excluir_da_formacao_dos_clusters  
+2  excluir_da_formacao_dos_clusters  
+3  excluir_da_formacao_dos_clusters  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 124 [markdown]
@@ -15661,186 +17456,95 @@ if len(matriz_nucleo_pre_imputacao) != len(amostra_desenvolvimento):
         "a quantidade de registros da amostra."
     )
 
-if len(matriz_ampliada_pre_imputacao) != len(amostra_desenvolvimento):
-    raise RuntimeError(
-        "A matriz ampliada pré-imputação não preservou "
-        "a quantidade de registros da amostra."
-    )
+# ... 180 lines omitted ...
+```
 
-registros_decisao_features = []
+**Output 1 (stream:stdout)**
 
-configuracoes_matrizes = [
-    {
-        "nome": "nucleo",
-        "matriz_original": matriz_nucleo_bruta,
-        "colunas_finais": COLUNAS_FINAIS_NUCLEO,
-    },
-    {
-        "nome": "ampliada",
-        "matriz_original": matriz_ampliada_bruta,
-        "colunas_finais": COLUNAS_FINAIS_AMPLIADA,
-    },
-]
+```text
+Features finais do núcleo: 29
+Features finais ampliadas: 33
+Features exclusivas da matriz ampliada: 4
+```
 
-for configuracao in configuracoes_matrizes:
-    nome_matriz = configuracao["nome"]
-    matriz_original = configuracao["matriz_original"]
-    colunas_finais = configuracao["colunas_finais"]
+**Output 2 (display_data)**
 
-    diagnostico_matriz = (
-        diagnostico_features_brutas.loc[
-            diagnostico_features_brutas["matriz"].eq(nome_matriz)
-        ]
-        .drop_duplicates(subset=["coluna"], keep="first")
-        .set_index("coluna")
-    )
+```text
+     matriz  features_antes_da_revisao  features_excluidas  features_finais  \
+0    nucleo                         33                   4               29   
+1  ampliada                         37                   4               33   
 
-    for coluna in matriz_original.columns:
-        if coluna in diagnostico_matriz.index:
-            status_diagnostico = diagnostico_matriz.at[
-                coluna,
-                "status_diagnostico",
-            ]
-            percentual_preenchido = diagnostico_matriz.at[
-                coluna,
-                "percentual_preenchido",
-            ]
-            quantidade_valores_distintos = diagnostico_matriz.at[
-                coluna,
-                "quantidade_valores_distintos",
-            ]
-        else:
-            status_diagnostico = pd.NA
-            percentual_preenchido = np.nan
-            quantidade_valores_distintos = np.nan
+   quantidade_registros  
+0                 80000  
+1                 80000  
+[non-text output omitted: text/html]
+```
 
-        if coluna in COLUNAS_EXCLUIDAS_REDUNDANCIA:
-            decisao = "excluir"
-            motivo = "contador_clinico_redundante"
-        elif status_diagnostico == "excluir_totalmente_ausente":
-            decisao = "excluir"
-            motivo = "feature_totalmente_ausente"
-        elif status_diagnostico == "excluir_constante":
-            decisao = "excluir"
-            motivo = "feature_constante"
-        elif status_diagnostico == "revisar_quase_constante":
-            decisao = "manter_provisoriamente"
-            motivo = "quase_constante_para_sensibilidade"
-        elif status_diagnostico == "revisar_baixa_cobertura":
-            decisao = "manter_provisoriamente"
-            motivo = "baixa_cobertura_com_indicador_ausencia"
-        elif coluna in colunas_finais:
-            decisao = "manter"
-            motivo = "feature_elegivel"
-        else:
-            decisao = "excluir"
-            motivo = "fora_da_lista_final"
+**Output 3 (display_data)**
 
-        registros_decisao_features.append(
-            {
-                "matriz": nome_matriz,
-                "coluna": coluna,
-                "decisao": decisao,
-                "motivo": motivo,
-                "status_diagnostico": status_diagnostico,
-                "percentual_preenchido": percentual_preenchido,
-                "quantidade_valores_distintos": (
-                    quantidade_valores_distintos
-                ),
-            }
-        )
+```text
+     matriz                 decisao                                  motivo  \
+0  ampliada                 excluir             contador_clinico_redundante   
+1  ampliada                  manter                        feature_elegivel   
+2  ampliada  manter_provisoriamente  baixa_cobertura_com_indicador_ausencia   
+3    nucleo                 excluir             contador_clinico_redundante   
+4    nucleo                  manter                        feature_elegivel   
+5    nucleo  manter_provisoriamente  baixa_cobertura_com_indicador_ausencia   
 
-decisoes_features_pre_imputacao = pd.DataFrame(
-    registros_decisao_features
-)
+   quantidade_features  
+0                    4  
+1                   20  
+2                   13  
+3                    4  
+4                   16  
+5                   13  
+[non-text output omitted: text/html]
+```
 
-decisoes_features_pre_imputacao = (
-    decisoes_features_pre_imputacao.sort_values(
-        [
-            "matriz",
-            "decisao",
-            "motivo",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
+**Output 4 (display_data)**
 
-resumo_decisoes_pre_imputacao = (
-    decisoes_features_pre_imputacao.groupby(
-        [
-            "matriz",
-            "decisao",
-            "motivo",
-        ],
-        dropna=False,
-    )
-    .agg(
-        quantidade_features=(
-            "coluna",
-            "nunique",
-        )
-    )
-    .reset_index()
-    .sort_values(
-        [
-            "matriz",
-            "decisao",
-            "motivo",
-        ]
-    )
-    .reset_index(drop=True)
-)
+```text
+      matriz                      coluna                 decisao  \
+0   ampliada    n_comorbidades_avaliadas                 excluir   
+1   ampliada  n_comorbidades_confirmadas                 excluir   
+2   ampliada        n_sintomas_avaliados                 excluir   
+3   ampliada      n_sintomas_confirmados                 excluir   
+4   ampliada                  cs_escol_n                  manter   
+..       ...                         ...                     ...   
+65    nucleo                   out_morbi  manter_provisoriamente   
+66    nucleo                  pneumopati  manter_provisoriamente   
+67    nucleo                    puerpera  manter_provisoriamente   
+68    nucleo                       renal  manter_provisoriamente   
+69    nucleo                   sind_down  manter_provisoriamente   
 
-resumo_listas_finais = pd.DataFrame(
-    {
-        "matriz": [
-            "nucleo",
-            "ampliada",
-        ],
-        "features_antes_da_revisao": [
-            matriz_nucleo_bruta.shape[1],
-            matriz_ampliada_bruta.shape[1],
-        ],
-        "features_excluidas": [
-            matriz_nucleo_bruta.shape[1]
-            - len(COLUNAS_FINAIS_NUCLEO),
-            matriz_ampliada_bruta.shape[1]
-            - len(COLUNAS_FINAIS_AMPLIADA),
-        ],
-        "features_finais": [
-            len(COLUNAS_FINAIS_NUCLEO),
-            len(COLUNAS_FINAIS_AMPLIADA),
-        ],
-        "quantidade_registros": [
-            len(matriz_nucleo_pre_imputacao),
-            len(matriz_ampliada_pre_imputacao),
-        ],
-    }
-)
+                                    motivo            status_diagnostico  \
+0              contador_clinico_redundante  revisar_redundancia_contador   
+1              contador_clinico_redundante  revisar_redundancia_contador   
+2              contador_clinico_redundante  revisar_redundancia_contador   
+3              contador_clinico_redundante  revisar_redundancia_contador   
+4                         feature_elegivel        manter_para_preparacao   
+..                                     ...                           ...   
+65  baixa_cobertura_com_indicador_ausencia       revisar_baixa_cobertura   
+66  baixa_cobertura_com_indicador_ausencia       revisar_baixa_cobertura   
+67  baixa_cobertura_com_indicador_ausencia       revisar_baixa_cobertura   
+68  baixa_cobertura_com_indicador_ausencia       revisar_baixa_cobertura   
+69  baixa_cobertura_com_indicador_ausencia       revisar_baixa_cobertura   
 
-print(
-    "Features finais do núcleo:",
-    len(COLUNAS_FINAIS_NUCLEO),
-)
+    percentual_preenchido  quantidade_valores_distintos  
+0               100.00000                            14  
+1               100.00000                            13  
+2               100.00000                            14  
+3               100.00000                            14  
+4               100.00000                             8  
+..                    ...                           ...  
+65               37.90500                             2  
+66               34.38875                             2  
+67               33.17750                             2  
+68               33.78125                             2  
+69               33.38125                             2  
 
-print(
-    "Features finais ampliadas:",
-    len(COLUNAS_FINAIS_AMPLIADA),
-)
-
-print(
-    "Features exclusivas da matriz ampliada:",
-    len(
-        set(COLUNAS_FINAIS_AMPLIADA).difference(
-            COLUNAS_FINAIS_NUCLEO
-        )
-    ),
-)
-
-display(resumo_listas_finais)
-display(resumo_decisoes_pre_imputacao)
-display(decisoes_features_pre_imputacao)
+[70 rows x 7 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 126 [markdown]
@@ -16070,219 +17774,116 @@ def preparar_matriz_clustering(
     nomes_features_transformadas = (
         preprocessador.get_feature_names_out().tolist()
     )
+# ... 213 lines omitted ...
+```
 
-    matriz_transformada = pd.DataFrame(
-        valores_transformados,
-        index=matriz_pre_imputacao.index,
-        columns=nomes_features_transformadas,
-        dtype="float32",
-    )
+**Output 1 (stream:stdout)**
 
-    if len(matriz_transformada) != len(matriz_pre_imputacao):
-        raise RuntimeError(
-            f"A matriz transformada {nome_matriz} não preservou "
-            "a quantidade de registros."
-        )
+```text
+Matriz núcleo processada: (80000, 57)
+Matriz ampliada processada: (80000, 97)
+Dtype das matrizes processadas: [dtype('float32')]
+```
 
-    if matriz_transformada.columns.duplicated().any():
-        colunas_duplicadas = (
-            matriz_transformada.columns[
-                matriz_transformada.columns.duplicated()
-            ]
-            .tolist()
-        )
+**Output 2 (display_data)**
 
-        raise RuntimeError(
-            f"A matriz transformada {nome_matriz} contém "
-            f"colunas duplicadas: {colunas_duplicadas}"
-        )
+```text
+     matriz  quantidade_registros  features_brutas  features_numericas_brutas  \
+0    nucleo                 80000               29                          2   
+1  ampliada                 80000               33                          2   
 
-    quantidade_ausencias = int(
-        matriz_transformada.isna().sum().sum()
-    )
+   features_binarias_brutas  features_categoricas_brutas  \
+0                        26                            1   
+1                        28                            3   
 
-    if quantidade_ausencias > 0:
-        raise RuntimeError(
-            f"A matriz transformada {nome_matriz} contém "
-            f"{quantidade_ausencias} valores ausentes."
-        )
+   features_apos_processamento  ausencias_antes  ausencias_depois  memoria_mb  
+0                           57           926476                 0   17.395145  
+1                           97           983842                 0   29.602177  
+[non-text output omitted: text/html]
+```
 
-    valores_finitos = np.isfinite(
-        matriz_transformada.to_numpy(
-            dtype=np.float32,
-            copy=False,
-        )
-    ).all()
+**Output 3 (display_data)**
 
-    if not valores_finitos:
-        raise RuntimeError(
-            f"A matriz transformada {nome_matriz} contém "
-            "valores infinitos ou não numéricos."
-        )
+```text
+                  feature_processada_nucleo
+0                     numericas__idade_anos
+1   numericas__dias_sintomas_ate_internacao
+2                           binarias__febre
+3                           binarias__tosse
+4                        binarias__garganta
+5                        binarias__dispneia
+6                       binarias__desc_resp
+7                       binarias__saturacao
+8                        binarias__diarreia
+9                          binarias__vomito
+10                        binarias__dor_abd
+11                         binarias__fadiga
+12                      binarias__perd_olft
+13                      binarias__perd_pala
+14                      binarias__outro_sin
+15                       binarias__puerpera
+16                     binarias__cardiopati
+17                     binarias__hematologi
+18                      binarias__sind_down
+19                       binarias__hepatica
+20                           binarias__asma
+21                       binarias__diabetes
+22                     binarias__neurologic
+23                     binarias__pneumopati
+24                     binarias__imunodepre
+25                          binarias__renal
+26                      binarias__obesidade
+27                      binarias__out_morbi
+28         binarias__missingindicator_febre
+29         binarias__missingindicator_tosse
+30      binarias__missingindicator_garganta
+31      binarias__missingindicator_dispneia
+32     binarias__missingindicator_desc_resp
+33     binarias__missingindicator_saturacao
+34      binarias__missingindicator_diarreia
+35        binarias__missingindicator_vomito
+36       binarias__missingindicator_dor_abd
+37        binarias__missingindicator_fadiga
+38     binarias__missingindicator_perd_olft
+39     binarias__missingindicator_perd_pala
+40     binarias__missingindicator_outro_sin
+41      binarias__missingindicator_puerpera
+42    binarias__missingindicator_cardiopati
+43    binarias__missingindicator_hematologi
+44     binarias__missingindicator_sind_down
+45      binarias__missingindicator_hepatica
+46          binarias__missingindicator_asma
+47      binarias__missingindicator_diabetes
+48    binarias__missingindicator_neurologic
+49    binarias__missingindicator_pneumopati
+50    binarias__missingindicator_imunodepre
+51         binarias__missingindicator_renal
+52     binarias__missingindicator_obesidade
+53     binarias__missingindicator_out_morbi
+54     categoricas__sexo_categoria_Feminino
+55     categoricas__sexo_categoria_Ignorado
+56    categoricas__sexo_categoria_Masculino
+[non-text output omitted: text/html]
+```
 
-    return (
-        preprocessador,
-        matriz_transformada,
-        nomes_features_transformadas,
-    )
+**Output 4 (display_data)**
 
+```text
+                feature_processada_ampliada
+0                     numericas__idade_anos
+1   numericas__dias_sintomas_ate_internacao
+2                           binarias__febre
+3                           binarias__tosse
+4                        binarias__garganta
+..                                      ...
+92  categoricas__uf_residencia_categoria_RS
+93  categoricas__uf_residencia_categoria_SC
+94  categoricas__uf_residencia_categoria_SE
+95  categoricas__uf_residencia_categoria_SP
+96  categoricas__uf_residencia_categoria_TO
 
-GRUPOS_COLUNAS_NUCLEO = selecionar_colunas_por_tipo(
-    colunas_finais=COLUNAS_FINAIS_NUCLEO,
-    colunas_numericas=COLUNAS_NUMERICAS_NUCLEO,
-    colunas_binarias=COLUNAS_BINARIAS_NUCLEO,
-    colunas_categoricas=COLUNAS_CATEGORICAS_NUCLEO,
-)
-
-GRUPOS_COLUNAS_AMPLIADA = selecionar_colunas_por_tipo(
-    colunas_finais=COLUNAS_FINAIS_AMPLIADA,
-    colunas_numericas=(
-        COLUNAS_NUMERICAS_NUCLEO
-        + COLUNAS_NUMERICAS_AMPLIADAS
-    ),
-    colunas_binarias=(
-        COLUNAS_BINARIAS_NUCLEO
-        + COLUNAS_BINARIAS_AMPLIADAS
-    ),
-    colunas_categoricas=(
-        COLUNAS_CATEGORICAS_NUCLEO
-        + COLUNAS_CATEGORICAS_AMPLIADAS
-    ),
-)
-
-(
-    preprocessador_nucleo,
-    matriz_nucleo_processada,
-    NOMES_FEATURES_NUCLEO_PROCESSADAS,
-) = preparar_matriz_clustering(
-    nome_matriz="nucleo",
-    matriz_pre_imputacao=matriz_nucleo_pre_imputacao,
-    colunas_finais=COLUNAS_FINAIS_NUCLEO,
-    grupos_colunas=GRUPOS_COLUNAS_NUCLEO,
-)
-
-(
-    preprocessador_ampliada,
-    matriz_ampliada_processada,
-    NOMES_FEATURES_AMPLIADA_PROCESSADAS,
-) = preparar_matriz_clustering(
-    nome_matriz="ampliada",
-    matriz_pre_imputacao=matriz_ampliada_pre_imputacao,
-    colunas_finais=COLUNAS_FINAIS_AMPLIADA,
-    grupos_colunas=GRUPOS_COLUNAS_AMPLIADA,
-)
-
-if not matriz_nucleo_processada.index.equals(
-    matriz_ampliada_processada.index
-):
-    raise RuntimeError(
-        "As matrizes processadas não possuem índices equivalentes."
-    )
-
-if not matriz_nucleo_processada.index.equals(
-    amostra_desenvolvimento.index
-):
-    raise RuntimeError(
-        "O índice das matrizes processadas não corresponde "
-        "ao índice da amostra de desenvolvimento."
-    )
-
-registros_resumo_preprocessamento = []
-
-for nome_matriz, matriz_antes, matriz_depois, grupos in [
-    (
-        "nucleo",
-        matriz_nucleo_pre_imputacao,
-        matriz_nucleo_processada,
-        GRUPOS_COLUNAS_NUCLEO,
-    ),
-    (
-        "ampliada",
-        matriz_ampliada_pre_imputacao,
-        matriz_ampliada_processada,
-        GRUPOS_COLUNAS_AMPLIADA,
-    ),
-]:
-    registros_resumo_preprocessamento.append(
-        {
-            "matriz": nome_matriz,
-            "quantidade_registros": len(matriz_depois),
-            "features_brutas": matriz_antes.shape[1],
-            "features_numericas_brutas": len(
-                grupos["numericas"]
-            ),
-            "features_binarias_brutas": len(
-                grupos["binarias"]
-            ),
-            "features_categoricas_brutas": len(
-                grupos["categoricas"]
-            ),
-            "features_apos_processamento": matriz_depois.shape[1],
-            "ausencias_antes": int(
-                matriz_antes.isna().sum().sum()
-            ),
-            "ausencias_depois": int(
-                matriz_depois.isna().sum().sum()
-            ),
-            "memoria_mb": float(
-                matriz_depois.memory_usage(
-                    index=True,
-                    deep=True,
-                ).sum()
-                / (1024 ** 2)
-            ),
-        }
-    )
-
-resumo_preprocessamento = pd.DataFrame(
-    registros_resumo_preprocessamento
-)
-
-if not resumo_preprocessamento[
-    "ausencias_depois"
-].eq(0).all():
-    raise RuntimeError(
-        "Uma das matrizes processadas ainda contém ausências."
-    )
-
-print(
-    "Matriz núcleo processada:",
-    matriz_nucleo_processada.shape,
-)
-
-print(
-    "Matriz ampliada processada:",
-    matriz_ampliada_processada.shape,
-)
-
-print(
-    "Dtype das matrizes processadas:",
-    matriz_nucleo_processada.dtypes.unique().tolist(),
-)
-
-display(
-    resumo_preprocessamento
-)
-
-display(
-    pd.DataFrame(
-        {
-            "feature_processada_nucleo": (
-                NOMES_FEATURES_NUCLEO_PROCESSADAS
-            )
-        }
-    )
-)
-
-display(
-    pd.DataFrame(
-        {
-            "feature_processada_ampliada": (
-                NOMES_FEATURES_AMPLIADA_PROCESSADAS
-            )
-        }
-    )
-)
+[97 rows x 1 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 128 [markdown]
@@ -16511,296 +18112,68 @@ FEATURES_MODELAGEM_NUCLEO = [
 
 FEATURES_MODELAGEM_AMPLIADA = [
     coluna
-    for coluna in matriz_ampliada_processada.columns
-    if coluna not in features_variancia_zero_ampliada
-]
+# ... 290 lines omitted ...
+```
 
-if not FEATURES_MODELAGEM_NUCLEO:
-    raise ValueError(
-        "Nenhuma feature permaneceu na matriz núcleo."
-    )
+**Output 1 (display_data)**
 
-if not FEATURES_MODELAGEM_AMPLIADA:
-    raise ValueError(
-        "Nenhuma feature permaneceu na matriz ampliada."
-    )
+```text
+<Figure size 1200x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
 
-matriz_nucleo_modelagem = (
-    matriz_nucleo_processada[
-        FEATURES_MODELAGEM_NUCLEO
-    ]
-    .copy()
-)
+**Output 2 (stream:stdout)**
 
-matriz_ampliada_modelagem = (
-    matriz_ampliada_processada[
-        FEATURES_MODELAGEM_AMPLIADA
-    ]
-    .copy()
-)
+```text
+Features de variância zero no núcleo: 0
+Features de variância zero na ampliada: 0
+```
 
-if matriz_nucleo_modelagem.isna().any().any():
-    raise RuntimeError(
-        "A matriz núcleo de modelagem contém ausências."
-    )
+**Output 3 (display_data)**
 
-if matriz_ampliada_modelagem.isna().any().any():
-    raise RuntimeError(
-        "A matriz ampliada de modelagem contém ausências."
-    )
+```text
+     matriz  quantidade_registros  features_processadas  \
+0    nucleo                 80000                    57   
+1  ampliada                 80000                    97   
 
-if not np.isfinite(
-    matriz_nucleo_modelagem.to_numpy(
-        dtype=np.float32,
-        copy=False,
-    )
-).all():
-    raise RuntimeError(
-        "A matriz núcleo de modelagem contém valores não finitos."
-    )
+   features_variancia_zero_excluidas  features_modelagem  memoria_mb  
+0                                  0                  57   17.395145  
+1                                  0                  97   29.602177  
+[non-text output omitted: text/html]
+```
 
-if not np.isfinite(
-    matriz_ampliada_modelagem.to_numpy(
-        dtype=np.float32,
-        copy=False,
-    )
-).all():
-    raise RuntimeError(
-        "A matriz ampliada de modelagem contém valores não finitos."
-    )
+**Output 4 (display_data)**
 
-resumo_variancia_processada = (
-    diagnostico_matrizes_processadas.groupby(
-        [
-            "matriz",
-            "bloco_transformacao",
-            "status_variancia",
-        ],
-        dropna=False,
-    )
-    .agg(
-        quantidade_features=(
-            "feature_processada",
-            "nunique",
-        ),
-        variancia_mediana=(
-            "variancia",
-            "median",
-        ),
-        variancia_minima=(
-            "variancia",
-            "min",
-        ),
-        variancia_maxima=(
-            "variancia",
-            "max",
-        ),
-    )
-    .reset_index()
-    .sort_values(
-        [
-            "matriz",
-            "bloco_transformacao",
-            "status_variancia",
-        ]
-    )
-    .reset_index(drop=True)
-)
+```text
+     matriz         bloco_transformacao status_variancia  quantidade_features  \
+0  ampliada            binaria_imputada         adequada                   28   
+1  ampliada          categorica_one_hot         adequada                   39   
+2  ampliada  indicador_ausencia_binaria         adequada                   28   
+3  ampliada        numerica_padronizada         adequada                    2   
+4    nucleo            binaria_imputada         adequada                   26   
+5    nucleo          categorica_one_hot         adequada                    3   
+6    nucleo  indicador_ausencia_binaria         adequada                   26   
+7    nucleo        numerica_padronizada         adequada                    2   
 
-resumo_matrizes_modelagem = pd.DataFrame(
-    {
-        "matriz": [
-            "nucleo",
-            "ampliada",
-        ],
-        "quantidade_registros": [
-            len(matriz_nucleo_modelagem),
-            len(matriz_ampliada_modelagem),
-        ],
-        "features_processadas": [
-            matriz_nucleo_processada.shape[1],
-            matriz_ampliada_processada.shape[1],
-        ],
-        "features_variancia_zero_excluidas": [
-            len(features_variancia_zero_nucleo),
-            len(features_variancia_zero_ampliada),
-        ],
-        "features_modelagem": [
-            matriz_nucleo_modelagem.shape[1],
-            matriz_ampliada_modelagem.shape[1],
-        ],
-        "memoria_mb": [
-            float(
-                matriz_nucleo_modelagem.memory_usage(
-                    index=True,
-                    deep=True,
-                ).sum()
-                / (1024 ** 2)
-            ),
-            float(
-                matriz_ampliada_modelagem.memory_usage(
-                    index=True,
-                    deep=True,
-                ).sum()
-                / (1024 ** 2)
-            ),
-        ],
-    }
-)
+   variancia_mediana  variancia_minima  variancia_maxima  
+0           0.093423          0.003637          0.226557  
+1           0.028783          0.000175          0.249563  
+2           0.222640          0.068588          0.243433  
+3           1.000000          1.000000          1.000000  
+4           0.070273          0.003637          0.205008  
+5           0.249555          0.000175          0.249563  
+6           0.222640          0.068588          0.242409  
+7           1.000000          1.000000          1.000000  
+[non-text output omitted: text/html]
+```
 
-composicao_features_processadas = (
-    diagnostico_matrizes_processadas.loc[
-        diagnostico_matrizes_processadas[
-            "flag_variancia_zero"
-        ].eq(False)
-    ]
-    .groupby(
-        [
-            "matriz",
-            "bloco_transformacao",
-        ],
-        dropna=False,
-    )
-    .agg(
-        quantidade_features=(
-            "feature_processada",
-            "nunique",
-        )
-    )
-    .reset_index()
-)
+**Output 5 (display_data)**
 
-matriz_composicao_features = (
-    composicao_features_processadas.pivot(
-        index="bloco_transformacao",
-        columns="matriz",
-        values="quantidade_features",
-    )
-    .fillna(0)
-    .astype(int)
-)
-
-matriz_composicao_features = (
-    matriz_composicao_features.reindex(
-        columns=[
-            "nucleo",
-            "ampliada",
-        ],
-        fill_value=0,
-    )
-)
-
-figura_composicao_features, eixo_composicao_features = plt.subplots(
-    figsize=(
-        12,
-        7,
-    )
-)
-
-matriz_composicao_features.plot(
-    kind="bar",
-    ax=eixo_composicao_features,
-    color=[
-        "tab:blue",
-        "tab:orange",
-    ],
-    width=0.75,
-)
-
-eixo_composicao_features.set_title(
-    "Composição das matrizes após o pré-processamento"
-)
-
-eixo_composicao_features.set_xlabel(
-    "Bloco de transformação"
-)
-
-eixo_composicao_features.set_ylabel(
-    "Quantidade de features"
-)
-
-eixo_composicao_features.set_xticklabels(
-    eixo_composicao_features.get_xticklabels(),
-    rotation=25,
-    ha="right",
-)
-
-eixo_composicao_features.legend(
-    title="Matriz"
-)
-
-eixo_composicao_features.grid(
-    axis="y",
-    alpha=0.20,
-)
-
-for contenedor in eixo_composicao_features.containers:
-    eixo_composicao_features.bar_label(
-        contenedor,
-        padding=3,
-        fontsize=8,
-    )
-
-figura_composicao_features.text(
-    0.01,
-    0.01,
-    (
-        "Features com variância zero foram retiradas antes da modelagem. "
-        "O gráfico mostra a expansão causada por indicadores de ausência "
-        "e pela codificação one-hot."
-    ),
-    fontsize=8,
-)
-
-figura_composicao_features.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_composicao_features
-)
-
-print(
-    "Features de variância zero no núcleo:",
-    len(features_variancia_zero_nucleo),
-)
-
-print(
-    "Features de variância zero na ampliada:",
-    len(features_variancia_zero_ampliada),
-)
-
-display(
-    resumo_matrizes_modelagem
-)
-
-display(
-    resumo_variancia_processada
-)
-
-display(
-    diagnostico_matrizes_processadas.loc[
-        diagnostico_matrizes_processadas[
-            "status_variancia"
-        ].ne("adequada")
-    ]
-    .sort_values(
-        [
-            "matriz",
-            "status_variancia",
-            "variancia",
-            "feature_processada",
-        ]
-    )
-    .reset_index(drop=True)
-)
+```text
+Empty DataFrame
+Columns: [matriz, feature_processada, media, desvio_padrao, variancia, valor_minimo, valor_maximo, quantidade_valores_distintos, bloco_transformacao, flag_variancia_zero, flag_variancia_muito_baixa, status_variancia]
+Index: []
+[non-text output omitted: text/html]
 ```
 
 ### Cell 130 [markdown]
@@ -17029,179 +18402,77 @@ if not coordenadas_pca_ampliada_2d.index.equals(
     raise RuntimeError(
         "As coordenadas PCA da matriz ampliada perderam "
         "o alinhamento com a matriz."
-    )
+# ... 173 lines omitted ...
+```
 
-figura_pca, eixos_pca = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(
-        15,
-        6,
-    ),
-    sharey=True,
-)
+**Output 1 (display_data)**
 
-configuracoes_pca = [
-    {
-        "nome": "Núcleo",
-        "tabela": variancia_pca_nucleo,
-        "cor": "tab:blue",
-        "eixo": eixos_pca[0],
-    },
-    {
-        "nome": "Ampliada",
-        "tabela": variancia_pca_ampliada,
-        "cor": "tab:orange",
-        "eixo": eixos_pca[1],
-    },
-]
+```text
+<Figure size 1500x600 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-for configuracao in configuracoes_pca:
-    eixo = configuracao["eixo"]
-    tabela = configuracao["tabela"]
-    cor = configuracao["cor"]
+**Output 2 (stream:stdout)**
 
-    eixo.plot(
-        tabela["componente"],
-        tabela["variancia_acumulada_percentual"],
-        marker="o",
-        markersize=3,
-        linewidth=2,
-        color=cor,
-    )
+```text
+Componentes disponíveis no núcleo: 57
+Componentes disponíveis na ampliada: 97
+```
 
-    for limite in LIMITES_VARIANCIA_ACUMULADA:
-        eixo.axhline(
-            y=limite * 100,
-            color="tab:gray",
-            linestyle=":",
-            linewidth=1,
-        )
+**Output 3 (display_data)**
 
-    tabela_limites = resumo_limites_pca.loc[
-        resumo_limites_pca["matriz"].eq(
-            configuracao["nome"].lower()
-            .replace("ú", "u")
-        )
-    ]
+```text
+matriz  limite_variancia_percentual  ampliada  nucleo
+0                              80.0        20      10
+1                              90.0        35      19
+2                              95.0        48      28
+[non-text output omitted: text/html]
+```
 
-    for _, linha_limite in tabela_limites.iterrows():
-        eixo.scatter(
-            linha_limite["quantidade_componentes"],
-            linha_limite["limite_variancia_percentual"],
-            color=cor,
-            s=35,
-            zorder=3,
-        )
+**Output 4 (display_data)**
 
-        eixo.annotate(
-            str(
-                int(
-                    linha_limite["quantidade_componentes"]
-                )
-            ),
-            (
-                linha_limite["quantidade_componentes"],
-                linha_limite["limite_variancia_percentual"],
-            ),
-            textcoords="offset points",
-            xytext=(
-                5,
-                5,
-            ),
-            fontsize=8,
-        )
+```text
+       matriz  componente  variancia_explicada  \
+0      nucleo           1         3.313321e-01   
+1      nucleo           2         1.388429e-01   
+2      nucleo           3         1.015008e-01   
+3      nucleo           4         7.845081e-02   
+4      nucleo           5         5.008263e-02   
+..        ...         ...                  ...   
+149  ampliada          93         2.117052e-05   
+150  ampliada          94         1.985715e-05   
+151  ampliada          95         1.522591e-14   
+152  ampliada          96         5.133298e-16   
+153  ampliada          97         2.778988e-16   
 
-    eixo.set_title(
-        f"Matriz {configuracao['nome']}"
-    )
+     variancia_explicada_percentual  variancia_acumulada  \
+0                      3.313321e+01             0.331332   
+1                      1.388429e+01             0.470175   
+2                      1.015008e+01             0.571676   
+3                      7.845081e+00             0.650127   
+4                      5.008263e+00             0.700209   
+..                              ...                  ...   
+149                    2.117052e-03             0.999980   
+150                    1.985715e-03             1.000000   
+151                    1.522591e-12             1.000000   
+152                    5.133297e-14             1.000000   
+153                    2.778988e-14             1.000000   
 
-    eixo.set_xlabel(
-        "Quantidade de componentes"
-    )
+     variancia_acumulada_percentual  
+0                         33.133205  
+1                         47.017494  
+2                         57.167580  
+3                         65.012657  
+4                         70.020920  
+..                              ...  
+149                       99.998024  
+150                      100.000015  
+151                      100.000015  
+152                      100.000015  
+153                      100.000015  
 
-    eixo.set_ylim(
-        0,
-        102,
-    )
-
-    eixo.grid(
-        alpha=0.20,
-    )
-
-    eixo.yaxis.set_major_formatter(
-        plt.FuncFormatter(
-            lambda valor, posicao: (
-                f"{valor:.0f}%"
-            )
-        )
-    )
-
-
-eixos_pca[0].set_ylabel(
-    "Variância explicada acumulada"
-)
-
-figura_pca.suptitle(
-    "Variância explicada acumulada pelo PCA",
-    fontsize=14,
-)
-
-figura_pca.text(
-    0.01,
-    0.01,
-    (
-        "Os números anotados indicam a quantidade mínima de componentes "
-        "para atingir 80%, 90% e 95% da variância acumulada."
-    ),
-    fontsize=8,
-)
-
-figura_pca.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_pca
-)
-
-resumo_pca = (
-    resumo_limites_pca.pivot(
-        index="limite_variancia_percentual",
-        columns="matriz",
-        values="quantidade_componentes",
-    )
-    .reset_index()
-    .sort_values(
-        "limite_variancia_percentual"
-    )
-    .reset_index(drop=True)
-)
-
-print(
-    "Componentes disponíveis no núcleo:",
-    len(variancia_pca_nucleo),
-)
-
-print(
-    "Componentes disponíveis na ampliada:",
-    len(variancia_pca_ampliada),
-)
-
-display(
-    resumo_pca
-)
-
-display(
-    variancia_pca
-)
+[154 rows x 6 columns]
+[non-text output omitted: text/html]
 ```
 
 ### Cell 132 [markdown]
@@ -17431,362 +18702,144 @@ def avaliar_valores_k(
             * 100
         )
 
-        maior_cluster_percentual = (
-            maior_cluster_quantidade
-            / quantidade_registros
-            * 100
-        )
+# ... 356 lines omitted ...
+```
 
-        tamanho_silhouette = min(
-            TAMANHO_AMOSTRA_SILHOUETTE,
-            quantidade_registros,
-        )
+**Output 1 (display_data)**
 
-        silhouette_medio = float(
-            silhouette_score(
-                valores,
-                rotulos_modelo,
-                metric="euclidean",
-                sample_size=tamanho_silhouette,
-                random_state=(
-                    SEMENTE_CLUSTERING
-                    + 1_000
-                    + quantidade_clusters
-                ),
-            )
-        )
+```text
+<Figure size 1800x600 with 3 Axes>
+[non-text output omitted: image/png]
+```
 
-        inercia_total = float(
-            modelo.inertia_
-        )
+**Output 2 (stream:stdout)**
 
-        inercia_por_registro = (
-            inercia_total
-            / quantidade_registros
-        )
+```text
+Diagnóstico de k concluído para: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+Silhouette calculado com amostra máxima de: 10000
+```
 
-        registros_resultados.append(
-            {
-                "matriz": nome_matriz,
-                "quantidade_clusters": quantidade_clusters,
-                "quantidade_registros": quantidade_registros,
-                "quantidade_componentes_pca": (
-                    representacao_pca.shape[1]
-                ),
-                "inercia_total": inercia_total,
-                "inercia_por_registro": inercia_por_registro,
-                "silhouette_medio": silhouette_medio,
-                "tamanho_amostra_silhouette": tamanho_silhouette,
-                "menor_cluster_quantidade": (
-                    menor_cluster_quantidade
-                ),
-                "menor_cluster_percentual": (
-                    menor_cluster_percentual
-                ),
-                "maior_cluster_quantidade": (
-                    maior_cluster_quantidade
-                ),
-                "maior_cluster_percentual": (
-                    maior_cluster_percentual
-                ),
-                "flag_cluster_muito_pequeno": (
-                    menor_cluster_percentual
-                    < TAMANHO_MINIMO_CLUSTER_PERCENTUAL
-                ),
-                "numero_iteracoes": int(
-                    modelo.n_iter_
-                ),
-            }
-        )
+**Output 3 (display_data)**
 
-        modelos[
-            quantidade_clusters
-        ] = modelo
+```text
+     matriz  quantidade_clusters  quantidade_registros  \
+0  ampliada                    2                 80000   
+1    nucleo                    2                 80000   
 
-        rotulos[
-            quantidade_clusters
-        ] = rotulos_modelo
+   quantidade_componentes_pca  inercia_total  inercia_por_registro  \
+0                          35    641789.8125              8.022373   
+1                          19    465500.5000              5.818756   
 
-    resultados = pd.DataFrame(
-        registros_resultados
-    )
+   silhouette_medio  tamanho_amostra_silhouette  menor_cluster_quantidade  \
+0          0.293504                       10000                     26633   
+1          0.364422                       10000                     26631   
 
-    return resultados, modelos, rotulos
+   menor_cluster_percentual  maior_cluster_quantidade  \
+0                  33.29125                     53367   
+1                  33.28875                     53369   
 
+   maior_cluster_percentual  flag_cluster_muito_pequeno  numero_iteracoes  
+0                  66.70875                       False                 1  
+1                  66.71125                       False                 1  
+[non-text output omitted: text/html]
+```
 
-representacao_pca_nucleo_90 = criar_representacao_pca(
-    nome_matriz="nucleo",
-    matriz_modelagem=matriz_nucleo_modelagem,
-    pca_ajustado=pca_nucleo,
-    resumo_limites=resumo_limites_pca_nucleo,
-)
+**Output 4 (display_data)**
 
-representacao_pca_ampliada_90 = criar_representacao_pca(
-    nome_matriz="ampliada",
-    matriz_modelagem=matriz_ampliada_modelagem,
-    pca_ajustado=pca_ampliada,
-    resumo_limites=resumo_limites_pca_ampliada,
-)
+```text
+      matriz  quantidade_clusters  quantidade_registros  \
+0     nucleo                    2                 80000   
+1     nucleo                    3                 80000   
+2     nucleo                    4                 80000   
+3     nucleo                    5                 80000   
+4     nucleo                    6                 80000   
+5     nucleo                    7                 80000   
+6     nucleo                    8                 80000   
+7     nucleo                    9                 80000   
+8     nucleo                   10                 80000   
+9   ampliada                    2                 80000   
+10  ampliada                    3                 80000   
+11  ampliada                    4                 80000   
+12  ampliada                    5                 80000   
+13  ampliada                    6                 80000   
+14  ampliada                    7                 80000   
+15  ampliada                    8                 80000   
+16  ampliada                    9                 80000   
+17  ampliada                   10                 80000   
 
-(
-    diagnostico_k_nucleo,
-    modelos_k_nucleo,
-    rotulos_k_nucleo,
-) = avaliar_valores_k(
-    nome_matriz="nucleo",
-    representacao_pca=representacao_pca_nucleo_90,
-)
+    quantidade_componentes_pca  inercia_total  inercia_por_registro  \
+0                           19   465500.50000              5.818756   
+1                           19   383264.21875              4.790803   
+2                           19   364235.62500              4.552945   
+3                           19   341395.84375              4.267448   
+4                           19   322468.50000              4.030856   
+5                           19   316423.00000              3.955287   
+6                           19   295015.15625              3.687689   
+7                           19   296495.15625              3.706189   
+8                           19   284785.53125              3.559819   
+9                           35   641789.81250              8.022373   
+10                          35   557285.00000              6.966062   
+11                          35   527909.12500              6.598864   
+12                          35   510804.40625              6.385055   
+13                          35   496466.68750              6.205834   
+14                          35   468912.75000              5.861409   
+15                          35   464014.62500              5.800183   
+16                          35   456681.31250              5.708516   
+17                          35   440091.75000              5.501147   
 
-(
-    diagnostico_k_ampliada,
-    modelos_k_ampliada,
-    rotulos_k_ampliada,
-) = avaliar_valores_k(
-    nome_matriz="ampliada",
-    representacao_pca=representacao_pca_ampliada_90,
-)
+    silhouette_medio  tamanho_amostra_silhouette  menor_cluster_quantidade  \
+0           0.364422                       10000                     26631   
+1           0.305339                       10000                     20748   
+2           0.260279                       10000                      8812   
+3           0.201959                       10000                      9430   
+4           0.196266                       10000                      8564   
+5           0.176651                       10000                      4205   
+6           0.186006                       10000                      7695   
+7           0.160602                       10000                      2657   
+8           0.168795                       10000                      2778   
+9           0.293504                       10000                     26633   
+10          0.232596                       10000                     20629   
+11          0.203956                       10000                     12193   
+12          0.144336                       10000                      9422   
+13          0.136662                       10000                      7616   
+14          0.153495                       10000                      5589   
+15          0.137110                       10000                      1340   
+16          0.135559                       10000                      4431   
+17          0.141569                       10000                      2556   
 
-diagnostico_k = pd.concat(
-    [
-        diagnostico_k_nucleo,
-        diagnostico_k_ampliada,
-    ],
-    ignore_index=True,
-)
+    menor_cluster_percentual  maior_cluster_quantidade  \
+0                   33.28875                     53369   
+1                   25.93500                     32633   
+2                   11.01500                     26589   
+3            
+... [557 characters omitted] ...
+ 22778   
+13                   9.52000                     25884   
+14                   6.98625                     18032   
+15                   1.67500                     17986   
+16                   5.53875                     17977   
+17                   3.19500                     17669   
 
-if diagnostico_k[
-    "silhouette_medio"
-].isna().any():
-    raise RuntimeError(
-        "O diagnóstico de k contém silhouette ausente."
-    )
-
-if not diagnostico_k[
-    "silhouette_medio"
-].between(
-    -1,
-    1,
-    inclusive="both",
-).all():
-    raise RuntimeError(
-        "O diagnóstico de k contém silhouette fora "
-        "do intervalo de -1 a 1."
-    )
-
-figura_diagnostico_k, eixos_diagnostico_k = plt.subplots(
-    nrows=1,
-    ncols=3,
-    figsize=(
-        18,
-        6,
-    ),
-)
-
-CORES_MATRIZES_CLUSTERING = {
-    "nucleo": "tab:blue",
-    "ampliada": "tab:orange",
-}
-
-ROTULOS_MATRIZES_CLUSTERING = {
-    "nucleo": "Núcleo",
-    "ampliada": "Ampliada",
-}
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    dados_matriz = (
-        diagnostico_k.loc[
-            diagnostico_k[
-                "matriz"
-            ].eq(
-                nome_matriz
-            )
-        ]
-        .sort_values(
-            "quantidade_clusters"
-        )
-    )
-
-    cor = CORES_MATRIZES_CLUSTERING[
-        nome_matriz
-    ]
-
-    rotulo = ROTULOS_MATRIZES_CLUSTERING[
-        nome_matriz
-    ]
-
-    eixos_diagnostico_k[0].plot(
-        dados_matriz[
-            "quantidade_clusters"
-        ],
-        dados_matriz[
-            "inercia_por_registro"
-        ],
-        marker="o",
-        linewidth=2,
-        color=cor,
-        label=rotulo,
-    )
-
-    eixos_diagnostico_k[1].plot(
-        dados_matriz[
-            "quantidade_clusters"
-        ],
-        dados_matriz[
-            "silhouette_medio"
-        ],
-        marker="o",
-        linewidth=2,
-        color=cor,
-        label=rotulo,
-    )
-
-    eixos_diagnostico_k[2].plot(
-        dados_matriz[
-            "quantidade_clusters"
-        ],
-        dados_matriz[
-            "menor_cluster_percentual"
-        ],
-        marker="o",
-        linewidth=2,
-        color=cor,
-        label=rotulo,
-    )
-
-
-eixos_diagnostico_k[0].set_title(
-    "Inércia por registro"
-)
-
-eixos_diagnostico_k[0].set_xlabel(
-    "Quantidade de clusters"
-)
-
-eixos_diagnostico_k[0].set_ylabel(
-    "Inércia média"
-)
-
-eixos_diagnostico_k[1].set_title(
-    "Silhouette médio"
-)
-
-eixos_diagnostico_k[1].set_xlabel(
-    "Quantidade de clusters"
-)
-
-eixos_diagnostico_k[1].set_ylabel(
-    "Silhouette"
-)
-
-eixos_diagnostico_k[1].set_ylim(
-    -0.05,
-    1.0,
-)
-
-eixos_diagnostico_k[2].set_title(
-    "Participação do menor cluster"
-)
-
-eixos_diagnostico_k[2].set_xlabel(
-    "Quantidade de clusters"
-)
-
-eixos_diagnostico_k[2].set_ylabel(
-    "Menor cluster"
-)
-
-eixos_diagnostico_k[2].yaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
-
-eixos_diagnostico_k[2].axhline(
-    y=TAMANHO_MINIMO_CLUSTER_PERCENTUAL,
-    color="tab:red",
-    linestyle=":",
-    linewidth=1.5,
-    label="Limite de 1%",
-)
-
-for eixo in eixos_diagnostico_k:
-    eixo.set_xticks(
-        VALORES_K_DIAGNOSTICO
-    )
-
-    eixo.grid(
-        alpha=0.20,
-    )
-
-    eixo.legend()
-
-figura_diagnostico_k.suptitle(
-    "Diagnóstico do número de clusters no espaço PCA de 90%",
-    fontsize=14,
-)
-
-figura_diagnostico_k.text(
-    0.01,
-    0.01,
-    (
-        "A escolha de k não deve usar uma única métrica. "
-        "Devem ser considerados conjuntamente inércia, silhouette, "
-        "tamanho dos grupos, estabilidade e interpretação clínica."
-    ),
-    fontsize=8,
-)
-
-figura_diagnostico_k.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_diagnostico_k
-)
-
-melhores_silhouettes = (
-    diagnostico_k.loc[
-        diagnostico_k.groupby(
-            "matriz"
-        )[
-            "silhouette_medio"
-        ].idxmax()
-    ]
-    .sort_values(
-        "matriz"
-    )
-    .reset_index(drop=True)
-)
-
-print(
-    "Diagnóstico de k concluído para:",
-    VALORES_K_DIAGNOSTICO,
-)
-
-print(
-    "Silhouette calculado com amostra máxima de:",
-    TAMANHO_AMOSTRA_SILHOUETTE,
-)
-
-display(
-    melhores_silhouettes
-)
-
-display(
-    diagnostico_k
-)
+    maior_cluster_percentual  flag_cluster_muito_pequeno  numero_iteracoes  
+0                   66.71125                       False                 1  
+1                   40.79125                       False                 1  
+2                   33.23625                       False                 1  
+3                   29.18375                       False                 1  
+4                   22.76125                       False                 1  
+5                   20.90500                       False                 2  
+6                   22.09125                       False                 3  
+7                   22.68875                       False                 1  
+8                   17.62750                       False                 2  
+9                   66.70875                       False                 1  
+10                  40.93875                       False                 1  
+11                  33.26000                       False                 1  
+12                  28.47250                       False                 1  
+13                  32.35500                       False                 1  
+14                  22.54000                       False                 2  
+15                  22.48250                       False                 3  
+16                  22.47125                       False                 1  
+17                  22.08625                       False                 2  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 134 [markdown]
@@ -18019,529 +19072,220 @@ def calcular_estabilidade_candidato(
 
         menor_cluster_percentual = float(
             contagens.min()
-            / len(rotulos)
-            * 100
-        )
-
-        maior_cluster_percentual = float(
-            contagens.max()
-            / len(rotulos)
-            * 100
-        )
-
-        rotulos_repeticoes.append(
-            rotulos
-        )
-
-        registros_repeticoes.append(
-            {
-                "matriz": nome_matriz,
-                "quantidade_clusters": quantidade_clusters,
-                "repeticao": repeticao,
-                "semente": semente_repeticao,
-                "inercia_por_registro": float(
-                    modelo.inertia_
-                    / len(rotulos)
-                ),
-                "menor_cluster_percentual": (
-                    menor_cluster_percentual
-                ),
-                "maior_cluster_percentual": (
-                    maior_cluster_percentual
-                ),
-                "flag_cluster_muito_pequeno": (
-                    menor_cluster_percentual
-                    < LIMITE_CLUSTER_MUITO_PEQUENO
-                ),
-            }
-        )
-
-    valores_ari = []
-
-    for indice_a in range(
-        len(rotulos_repeticoes)
-    ):
-        for indice_b in range(
-            indice_a + 1,
-            len(rotulos_repeticoes),
-        ):
-            valores_ari.append(
-                adjusted_rand_score(
-                    rotulos_repeticoes[indice_a],
-                    rotulos_repeticoes[indice_b],
-                )
-            )
-
-    if not valores_ari:
-        raise RuntimeError(
-            "Não foi possível calcular a estabilidade entre repetições."
-        )
-
-    tabela_repeticoes = pd.DataFrame(
-        registros_repeticoes
-    )
-
-    resumo = {
-        "matriz": nome_matriz,
-        "quantidade_clusters": quantidade_clusters,
-        "quantidade_repeticoes": (
-            QUANTIDADE_REPETICOES_ESTABILIDADE
-        ),
-        "ari_medio": float(
-            np.mean(valores_ari)
-        ),
-        "ari_minimo": float(
-            np.min(valores_ari)
-        ),
-        "ari_maximo": float(
-            np.max(valores_ari)
-        ),
-        "inercia_media_por_registro": float(
-            tabela_repeticoes[
-                "inercia_por_registro"
-            ].mean()
-        ),
-        "inercia_desvio_padrao": float(
-            tabela_repeticoes[
-                "inercia_por_registro"
-            ].std(ddof=0)
-        ),
-        "menor_cluster_percentual_minimo": float(
-            tabela_repeticoes[
-                "menor_cluster_percentual"
-            ].min()
-        ),
-        "maior_cluster_percentual_maximo": float(
-            tabela_repeticoes[
-                "maior_cluster_percentual"
-            ].max()
-        ),
-        "alguma_repeticao_cluster_muito_pequeno": bool(
-            tabela_repeticoes[
-                "flag_cluster_muito_pequeno"
-            ].any()
-        ),
-    }
-
-    return resumo, tabela_repeticoes
-
-
-candidatos_k_por_matriz = {}
-
-diagnosticos_com_reducao_inercia = []
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    diagnostico_matriz = (
-        diagnostico_k.loc[
-            diagnostico_k[
-                "matriz"
-            ].eq(
-                nome_matriz
-            )
-        ]
-        .copy()
-    )
-
-    if diagnostico_matriz.empty:
-        raise ValueError(
-            "Não foram encontrados resultados no diagnóstico "
-            f"de k para a matriz {nome_matriz}."
-        )
-
-    candidatos, diagnostico_ordenado = (
-        selecionar_candidatos_k(
-            diagnostico_matriz=diagnostico_matriz,
-        )
-    )
-
-    candidatos_k_por_matriz[
-        nome_matriz
-    ] = candidatos
-
-    if "matriz" not in diagnostico_ordenado.columns:
-        diagnostico_ordenado.insert(
-            0,
-            "matriz",
-            nome_matriz,
-        )
-    else:
-        diagnostico_ordenado[
-            "matriz"
-        ] = nome_matriz
-
-    diagnostico_ordenado = (
-        diagnostico_ordenado[
-            [
-                "matriz",
-                *[
-                    coluna
-                    for coluna in diagnostico_ordenado.columns
-                    if coluna != "matriz"
-                ],
-            ]
-        ]
-        .reset_index(drop=True)
-    )
-
-    diagnosticos_com_reducao_inercia.append(
-        diagnostico_ordenado
-    )
-
-if not diagnosticos_com_reducao_inercia:
-    raise ValueError(
-        "Nenhum diagnóstico com redução de inércia "
-        "foi criado."
-    )
-
-diagnostico_k_com_reducao = pd.concat(
-    diagnosticos_com_reducao_inercia,
-    ignore_index=True,
-)
-
-if diagnostico_k_com_reducao.empty:
-    raise ValueError(
-        "A tabela consolidada do diagnóstico de k "
-        "está vazia."
-    )
-
-representacoes_por_matriz = {
-    "nucleo": representacao_pca_nucleo_90,
-    "ampliada": representacao_pca_ampliada_90,
-}
-
-registros_estabilidade = []
-tabelas_repeticoes_estabilidade = []
-
-for nome_matriz, candidatos in candidatos_k_por_matriz.items():
-    representacao = representacoes_por_matriz[
-        nome_matriz
-    ]
-
-    for quantidade_clusters in candidatos:
-        resumo_estabilidade, tabela_repeticoes = (
-            calcular_estabilidade_candidato(
-                nome_matriz=nome_matriz,
-                representacao=representacao,
-                quantidade_clusters=quantidade_clusters,
-            )
-        )
-
-        registros_estabilidade.append(
-            resumo_estabilidade
-        )
-
-        tabelas_repeticoes_estabilidade.append(
-            tabela_repeticoes
-        )
-
-
-estabilidade_candidatos = pd.DataFrame(
-    registros_estabilidade
-)
-
-repeticoes_estabilidade = pd.concat(
-    tabelas_repeticoes_estabilidade,
-    ignore_index=True,
-)
-
-metricas_diagnostico_candidatos = (
-    diagnostico_k[
-        [
-            "matriz",
-            "quantidade_clusters",
-            "silhouette_medio",
-            "inercia_por_registro",
-            "menor_cluster_percentual",
-            "maior_cluster_percentual",
-            "flag_cluster_muito_pequeno",
-        ]
-    ]
-    .copy()
-)
-
-estabilidade_candidatos = (
-    estabilidade_candidatos.merge(
-        metricas_diagnostico_candidatos,
-        on=[
-            "matriz",
-            "quantidade_clusters",
-        ],
-        how="left",
-        validate="one_to_one",
-    )
-)
-
-if estabilidade_candidatos[
-    "silhouette_medio"
-].isna().any():
-    raise RuntimeError(
-        "A tabela de estabilidade não recebeu todas "
-        "as métricas do diagnóstico de k."
-    )
-
-estabilidade_candidatos[
-    "elegivel_sem_cluster_pequeno"
-] = (
-    estabilidade_candidatos[
-        "flag_cluster_muito_pequeno"
-    ].eq(False)
-    & estabilidade_candidatos[
-        "alguma_repeticao_cluster_muito_pequeno"
-    ].eq(False)
-)
-
-estabilidade_candidatos[
-    "rank_silhouette"
-] = (
-    estabilidade_candidatos.groupby(
-        "matriz"
-    )[
-        "silhouette_medio"
-    ]
-    .rank(
-        method="min",
-        ascending=False,
-    )
-)
-
-estabilidade_candidatos[
-    "rank_estabilidade"
-] = (
-    estabilidade_candidatos.groupby(
-        "matriz"
-    )[
-        "ari_medio"
-    ]
-    .rank(
-        method="min",
-        ascending=False,
-    )
-)
-
-estabilidade_candidatos[
-    "rank_tamanho_minimo"
-] = (
-    estabilidade_candidatos.groupby(
-        "matriz"
-    )[
-        "menor_cluster_percentual"
-    ]
-    .rank(
-        method="min",
-        ascending=False,
-    )
-)
-
-estabilidade_candidatos[
-    "pontuacao_diagnostica"
-] = (
-    estabilidade_candidatos[
-        "rank_silhouette"
-    ]
-    + estabilidade_candidatos[
-        "rank_estabilidade"
-    ]
-    + estabilidade_candidatos[
-        "rank_tamanho_minimo"
-    ]
-)
-
-estabilidade_candidatos = (
-    estabilidade_candidatos.sort_values(
-        [
-            "matriz",
-            "elegivel_sem_cluster_pequeno",
-            "pontuacao_diagnostica",
-            "quantidade_clusters",
-        ],
-        ascending=[
-            True,
-            False,
-            True,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-melhores_candidatos_estabilidade = (
-    estabilidade_candidatos.groupby(
-        "matriz",
-        as_index=False,
-        sort=True,
-    )
-    .head(1)
-    .reset_index(drop=True)
-)
-
-figura_estabilidade, eixos_estabilidade = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(
-        14,
-        6,
-    ),
-)
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    dados_matriz = (
-        estabilidade_candidatos.loc[
-            estabilidade_candidatos[
-                "matriz"
-            ].eq(
-                nome_matriz
-            )
-        ]
-        .sort_values(
-            "quantidade_clusters"
-        )
-    )
-
-    cor = CORES_MATRIZES_CLUSTERING[
-        nome_matriz
-    ]
-
-    rotulo = ROTULOS_MATRIZES_CLUSTERING[
-        nome_matriz
-    ]
-
-    eixos_estabilidade[0].plot(
-        dados_matriz[
-            "quantidade_clusters"
-        ],
-        dados_matriz[
-            "ari_medio"
-        ],
-        marker="o",
-        linewidth=2,
-        color=cor,
-        label=rotulo,
-    )
-
-    eixos_estabilidade[1].plot(
-        dados_matriz[
-            "quantidade_clusters"
-        ],
-        dados_matriz[
-            "menor_cluster_percentual_minimo"
-        ],
-        marker="o",
-        linewidth=2,
-        color=cor,
-        label=rotulo,
-    )
-
-
-eixos_estabilidade[0].set_title(
-    "Estabilidade entre inicializações"
-)
-
-eixos_estabilidade[0].set_xlabel(
-    "Quantidade de clusters"
-)
-
-eixos_estabilidade[0].set_ylabel(
-    "ARI médio"
-)
-
-eixos_estabilidade[0].set_ylim(
-    -0.05,
-    1.05,
-)
-
-eixos_estabilidade[1].set_title(
-    "Menor cluster nas repetições"
-)
-
-eixos_estabilidade[1].set_xlabel(
-    "Quantidade de clusters"
-)
-
-eixos_estabilidade[1].set_ylabel(
-    "Participação mínima observada"
-)
-
-eixos_estabilidade[1].yaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
-
-eixos_estabilidade[1].axhline(
-    y=LIMITE_CLUSTER_MUITO_PEQUENO,
-    color="tab:red",
-    linestyle=":",
-    linewidth=1.5,
-    label="Limite de 1%",
-)
-
-for eixo in eixos_estabilidade:
-    eixo.grid(
-        alpha=0.20,
-    )
-
-    eixo.legend()
-
-figura_estabilidade.suptitle(
-    "Estabilidade das soluções candidatas",
-    fontsize=14,
-)
-
-figura_estabilidade.text(
-    0.01,
-    0.01,
-    (
-        "ARI próximo de 1 indica maior concordância entre soluções "
-        "obtidas com sementes diferentes. A escolha final ainda "
-        "dependerá da interpretação dos perfis."
-    ),
-    fontsize=8,
-)
-
-figura_estabilidade.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_estabilidade
-)
-
-print(
-    "Candidatos avaliados por matriz:",
-    candidatos_k_por_matriz,
-)
-
-print(
-    "Repetições por candidato:",
-    QUANTIDADE_REPETICOES_ESTABILIDADE,
-)
-
-display(
-    melhores_candidatos_estabilidade
-)
-
-display(
-    estabilidade_candidatos
-)
-
-display(
-    repeticoes_estabilidade
-)
+# ... 523 lines omitted ...
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1400x600 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Candidatos avaliados por matriz: {'nucleo': [2, 3, 4], 'ampliada': [2, 3, 4]}
+Repetições por candidato: 5
+```
+
+**Output 3 (display_data)**
+
+```text
+     matriz  quantidade_clusters  quantidade_repeticoes  ari_medio  \
+0  ampliada                    2                      5   0.999980   
+1    nucleo                    2                      5   0.999949   
+
+   ari_minimo  ari_maximo  inercia_media_por_registro  inercia_desvio_padrao  \
+0    0.999949         1.0                    8.022578               0.000137   
+1    0.999899         1.0                    5.818952               0.000132   
+
+   menor_cluster_percentual_minimo  maior_cluster_percentual_maximo  ...  \
+0                          33.2900                          66.7100  ...   
+1                          33.2875                          66.7125  ...   
+
+   silhouette_medio  inercia_por_registro  menor_cluster_percentual  \
+0          0.293504              8.022373                  33.29125   
+1          0.364422              5.818756                  33.28875   
+
+   maior_cluster_percentual  flag_cluster_muito_pequeno  \
+0                  66.70875                       False   
+1                  66.71125                       False   
+
+   elegivel_sem_cluster_pequeno  rank_silhouette  rank_estabilidade  \
+0                          True              1.0                1.0   
+1                          True              1.0                1.0   
+
+   rank_tamanho_minimo  pontuacao_diagnostica  
+0                  1.0                    3.0  
+1                  1.0                    3.0  
+
+[2 rows x 21 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 4 (display_data)**
+
+```text
+     matriz  quantidade_clusters  quantidade_repeticoes  ari_medio  \
+0  ampliada                    2                      5   0.999980   
+1  ampliada                    3                      5   0.913286   
+2  ampliada                    4                      5   0.726634   
+3    nucleo                    2                      5   0.999949   
+4    nucleo                    3                      5   0.985794   
+5    nucleo                    4                      5   0.801386   
+
+   ari_minimo  ari_maximo  inercia_media_por_registro  inercia_desvio_padrao  \
+0    0.999949    1.000000                    8.022578               0.000137   
+1    0.803415    0.993588                    6.965236               0.003327   
+2    0.627867    0.936384                    6.658629               0.043302   
+3    0.999899    1.000000                    5.818952               0.000132   
+4    0.970360    0.994505                    4.791454               0.000809   
+5    0.652457    0.996811                    4.529917               0.062748   
+
+   menor_cluster_percentual_minimo  maior_cluster_percentual_maximo  ...  \
+0                         33.29000                         66.71000  ...   
+1                         26.00375                         40.72125  ...   
+2                         10.22625                         40.84375  ...   
+3                         33.28750                         66.71250  ...   
+4                         25.93375                         40.79000  ...   
+5                          9.94875                         38.63250  ...   
+
+   silhouette_medio  inercia_por_registro  menor_cluster_percentual  \
+0          0.293504              8.022373                  33.29125   
+1          0.232596              6.966062                  25.78625   
+2          0.203956              6.598864                  15.24125   
+3          0.364422              5.818756                  33.28875   
+4          0.305339              4.790803                  25.93500   
+5          0.260279              4.552945                  11.01500   
+
+   maior_cluster_percentual  flag_cluster_muito_pequeno  \
+0                  66.70875                       False   
+1                  40.93875                       False   
+2                  33.26000                       False   
+3                  66.71125                       False   
+4                  40.79125                       False   
+5                  33.23625                       False   
+
+   elegivel_sem_cluster_pequeno  rank_silhouette  rank_estabilidade  \
+0                          True              1.0                1.0   
+1                          True              2.0                2.0   
+2                          True              3.0                3.0   
+3                          True              1.0                1.0   
+4                          True              2.0                2.0   
+5                          True              3.0                3.0   
+
+   rank_tamanho_minimo  pontuacao_diagnostica  
+0                  1.0                    3.0  
+1                  2.0                    6.0  
+2                  3.0                    9.0  
+3                  1.0                    3.0  
+4                  2.0                    6.0  
+5                  3.0                    9.0  
+
+[6 rows x 21 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 5 (display_data)**
+
+```text
+      matriz  quantidade_clusters  repeticao  semente  inercia_por_registro  \
+0     nucleo                    2          0      242              5.818950   
+1     nucleo                    2          1      243              5.818790   
+2     nucleo                    2          2      244              5.819084   
+3     nucleo                    2          3      245              5.819115   
+4     nucleo                    2          4      246              5.818821   
+5     nucleo                    3          0      342              4.791593   
+6     nucleo                    3          1      343              4.790949   
+7     nucleo                    3          2      344              4.790913   
+8     nucleo                    3          3      345              4.792980   
+9     nucleo                    3          4      346              4.790836   
+10    nucleo                    4          0      442              4.463120   
+11    nucleo                    4          1      443              4.497479   
+12    nucleo                    4          2      444              4.644289   
+13    nucleo                    4          3      445              4.500248   
+14    nucleo                    4          4      446              4.544450   
+15  ampliada                    2          0      242              8.022609   
+16  ampliada                    2          1      243              8.022445   
+17  ampliada                    2          2      244              8.022709   
+18  ampliada                    2          3      245              8.022735   
+19  ampliada                    2          4      246              8.022394   
+20  ampliada                    3          0      342              6.967453   
+21  ampliada                    3          1      343              6.968110   
+22  ampliada                    3          2      344              6.965731   
+23  ampliada                    3          3      345              6.958816   
+24  ampliada                    3          4      346              6.966071   
+25  ampliada                    4          0      442              6.671606   
+26  ampliada                    4          1      443              6.601997   
+27  ampliada                    4          2      444              6.706724   
+28  ampliada                    4          3      445              6.699286   
+29  ampliada                    4          4      446              6.613534   
+
+    menor_cluster_percentual  maior_cluster_percentual  \
+0                   33.29000                  66.71000   
+1                   33.29000                  66.71000   
+2                   33.29000                  66.71000   
+3                   33.28750                  66.71250   
+4                   33.28875                  66.71125   
+5                   26.13250                  40.59375   
+6                   25.93375                  40.79000   
+7                   26.47875                  40.24750   
+8                   26.94000                  39.78750   
+9                   26.26875                  40.45750   
+10                  15.10375                  33.26125   
+11                  11.58500                  33.27125   
+12                   9.94875                  35.77750   
+13                  11.66500                  33.27125   
+14                  10.63625                  38.63250   
+15                  33.29125                  66.70875   
+16                  33.29125                  66.70875   
+17                  33.29125                  66.70875   
+18                  33.29000                  66.71000   
+19                  33.29125                  66.70875   
+20                  26.48500                  40.24000   
+21                  27.35500                  39.37000   
+22                  26.00375                  40.72125   
+23                  33.27125                  33.40375   
+24                  26.21125                  40.51375   
+25                  15.89875                  33.26000   
+26                  10.29375                  33.27250   
+27                  12.67500                  40.46625   
+28                  10.22625                  40.84375   
+29                  16.14000                  33.26750   
+
+    flag_cluster_muito_pequeno  
+0                        False  
+1                        False  
+2                        False  
+3                        False  
+4                        False  
+5                        False  
+6                        False  
+7                        False  
+8                        False  
+9                        False  
+10                       False  
+11                       False  
+12                       False  
+13                       False  
+14                       False  
+15                       False  
+16                       False  
+17                       False  
+18                       False  
+19                       False  
+20                       False  
+21                       False  
+22                       False  
+23                       False  
+24                       False  
+25                       False  
+26                       False  
+27                       False  
+28                       False  
+29                       False  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 136 [markdown]
@@ -18769,350 +19513,61 @@ for nome_matriz in MATRIZES_ESPERADAS_SOLUCAO:
 
     tamanho_clusters = (
         tamanho_clusters.sort_values(
-            "cluster"
-        )
-        .reset_index(drop=True)
-    )
+# ... 344 lines omitted ...
+```
 
-    if int(
-        tamanho_clusters[
-            "quantidade_registros"
-        ].sum()
-    ) != len(atribuicoes):
-        raise RuntimeError(
-            f"A soma dos clusters da matriz {nome_matriz} "
-            "não corresponde ao tamanho da amostra."
-        )
+**Output 1 (display_data)**
 
-    if not np.isclose(
-        tamanho_clusters[
-            "percentual_amostra"
-        ].sum(),
-        100.0,
-        atol=1e-6,
-    ):
-        raise RuntimeError(
-            f"Os percentuais dos clusters da matriz {nome_matriz} "
-            "não somam aproximadamente 100%."
-        )
+```text
+<Figure size 1500x600 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-    modelos_solucoes_candidatas[
-        nome_matriz
-    ] = modelo
+**Output 2 (display_data)**
 
-    rotulos_solucoes_candidatas[
-        nome_matriz
-    ] = rotulos
+```text
+<Figure size 1600x700 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-    atribuicoes_solucoes_candidatas[
-        nome_matriz
-    ] = atribuicoes
+**Output 3 (stream:stdout)**
 
-    tabelas_tamanho_clusters.append(
-        tamanho_clusters
-    )
+```text
+Soluções candidatas materializadas para: ['nucleo', 'ampliada']
+```
 
-    registros_resumo_solucoes.append(
-        {
-            "matriz": nome_matriz,
-            "quantidade_clusters": quantidade_clusters,
-            "quantidade_componentes_pca": representacao.shape[1],
-            "quantidade_registros": len(atribuicoes),
-            "inercia_total": float(modelo.inertia_),
-            "inercia_por_registro": float(
-                modelo.inertia_
-                / len(atribuicoes)
-            ),
-            "menor_cluster_percentual": float(
-                tamanho_clusters[
-                    "percentual_amostra"
-                ].min()
-            ),
-            "maior_cluster_percentual": float(
-                tamanho_clusters[
-                    "percentual_amostra"
-                ].max()
-            ),
-        }
-    )
+**Output 4 (display_data)**
 
+```text
+     matriz  quantidade_clusters  quantidade_componentes_pca  \
+0    nucleo                    2                          19   
+1  ampliada                    2                          35   
 
-tamanho_clusters_candidatos = pd.concat(
-    tabelas_tamanho_clusters,
-    ignore_index=True,
-)
+   quantidade_registros  inercia_total  inercia_por_registro  \
+0                 80000   465560.46875              5.819506   
+1                 80000   641788.37500              8.022355   
 
-resumo_solucoes_candidatas = pd.DataFrame(
-    registros_resumo_solucoes
-)
+   menor_cluster_percentual  maior_cluster_percentual  
+0                  33.28750                  66.71250  
+1                  33.29125                  66.70875  
+[non-text output omitted: text/html]
+```
 
-figura_tamanho_clusters, eixos_tamanho_clusters = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(
-        15,
-        6,
-    ),
-    sharey=True,
-)
+**Output 5 (display_data)**
 
-for indice_eixo, nome_matriz in enumerate(
-    MATRIZES_ESPERADAS_SOLUCAO
-):
-    eixo = eixos_tamanho_clusters[
-        indice_eixo
-    ]
+```text
+  matriz_clustering  cluster cluster_rotulo  quantidade_registros  \
+0            nucleo        0      Cluster 1                 26630   
+1            nucleo        1      Cluster 2                 53370   
+2          ampliada        0      Cluster 1                 53367   
+3          ampliada        1      Cluster 2                 26633   
 
-    dados_matriz = (
-        tamanho_clusters_candidatos.loc[
-            tamanho_clusters_candidatos[
-                "matriz_clustering"
-            ].eq(nome_matriz)
-        ]
-        .sort_values("cluster")
-    )
-
-    cor = CORES_MATRIZES_CLUSTERING[
-        nome_matriz
-    ]
-
-    barras = eixo.bar(
-        dados_matriz[
-            "cluster_rotulo"
-        ],
-        dados_matriz[
-            "percentual_amostra"
-        ],
-        color=cor,
-        width=0.70,
-    )
-
-    eixo.set_title(
-        f"Matriz {ROTULOS_MATRIZES_CLUSTERING[nome_matriz]}"
-    )
-
-    eixo.set_xlabel(
-        "Cluster"
-    )
-
-    eixo.set_ylim(
-        bottom=0
-    )
-
-    eixo.yaxis.set_major_formatter(
-        plt.FuncFormatter(
-            lambda valor, posicao: (
-                f"{valor:.0f}%"
-            )
-        )
-    )
-
-    eixo.grid(
-        axis="y",
-        alpha=0.20,
-    )
-
-    for barra, percentual, quantidade in zip(
-        barras,
-        dados_matriz[
-            "percentual_amostra"
-        ],
-        dados_matriz[
-            "quantidade_registros"
-        ],
-    ):
-        eixo.text(
-            barra.get_x()
-            + barra.get_width()
-            / 2,
-            barra.get_height(),
-            (
-                f"{percentual:.1f}%\n"
-                f"n={int(quantidade):,}"
-                .replace(",", ".")
-            ),
-            ha="center",
-            va="bottom",
-            fontsize=8,
-        )
-
-
-eixos_tamanho_clusters[0].set_ylabel(
-    "Participação na amostra"
-)
-
-figura_tamanho_clusters.suptitle(
-    "Tamanho das soluções candidatas",
-    fontsize=14,
-)
-
-figura_tamanho_clusters.text(
-    0.01,
-    0.01,
-    (
-        "As soluções são candidatas e ainda não representam a escolha "
-        "final. A interpretação clínica e temporal será realizada antes "
-        "da decisão definitiva."
-    ),
-    fontsize=8,
-)
-
-figura_tamanho_clusters.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_tamanho_clusters
-)
-
-figura_projecao_clusters, eixos_projecao_clusters = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(
-        16,
-        7,
-    ),
-)
-
-for indice_eixo, nome_matriz in enumerate(
-    MATRIZES_ESPERADAS_SOLUCAO
-):
-    eixo = eixos_projecao_clusters[
-        indice_eixo
-    ]
-
-    coordenadas = coordenadas_2d_solucao[
-        nome_matriz
-    ].copy()
-
-    atribuicoes = atribuicoes_solucoes_candidatas[
-        nome_matriz
-    ][
-        [
-            "cluster",
-            "cluster_rotulo",
-        ]
-    ]
-
-    dados_projecao = coordenadas.join(
-        atribuicoes,
-        how="inner",
-        validate="one_to_one",
-    )
-
-    if len(dados_projecao) > TAMANHO_MAXIMO_PROJECAO:
-        dados_projecao = dados_projecao.sample(
-            n=TAMANHO_MAXIMO_PROJECAO,
-            replace=False,
-            random_state=(
-                SEMENTE_CLUSTERING
-                + (
-                    20_000
-                    if nome_matriz == "nucleo"
-                    else 30_000
-                )
-            ),
-        )
-
-    dispersao = eixo.scatter(
-        dados_projecao[
-            "componente_1"
-        ],
-        dados_projecao[
-            "componente_2"
-        ],
-        c=dados_projecao[
-            "cluster"
-        ],
-        cmap="tab10",
-        s=8,
-        alpha=0.35,
-        linewidths=0,
-    )
-
-    eixo.set_title(
-        f"Matriz {ROTULOS_MATRIZES_CLUSTERING[nome_matriz]}"
-    )
-
-    eixo.set_xlabel(
-        "Componente principal 1"
-    )
-
-    eixo.set_ylabel(
-        "Componente principal 2"
-    )
-
-    eixo.grid(
-        alpha=0.15,
-    )
-
-    legenda = eixo.legend(
-        handles=dispersao.legend_elements()[0],
-        labels=(
-            dados_projecao[
-                "cluster_rotulo"
-            ]
-            .drop_duplicates()
-            .sort_values()
-            .tolist()
-        ),
-        title="Cluster",
-        loc="best",
-    )
-
-    eixo.add_artist(
-        legenda
-    )
-
-figura_projecao_clusters.suptitle(
-    "Projeção bidimensional das soluções candidatas",
-    fontsize=14,
-)
-
-figura_projecao_clusters.text(
-    0.01,
-    0.01,
-    (
-        "A projeção utiliza apenas os dois primeiros componentes e pode "
-        "ocultar separações presentes em dimensões adicionais."
-    ),
-    fontsize=8,
-)
-
-figura_projecao_clusters.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_projecao_clusters
-)
-
-print(
-    "Soluções candidatas materializadas para:",
-    MATRIZES_ESPERADAS_SOLUCAO,
-)
-
-display(
-    resumo_solucoes_candidatas
-)
-
-display(
-    tamanho_clusters_candidatos
-)
+   percentual_amostra  
+0            33.28750  
+1            66.71250  
+2            66.70875  
+3            33.29125  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 138 [markdown]
@@ -19345,482 +19800,328 @@ figura_loadings.tight_layout(
     rect=[
         0,
         0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_loadings
-)
-
-COLUNAS_NUMERICAS_PERFIL = [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "n_sintomas_confirmados",
-    "n_sintomas_avaliados",
-    "n_comorbidades_confirmadas",
-    "n_comorbidades_avaliadas",
-]
-
-colunas_numericas_perfil_disponiveis = [
-    coluna
-    for coluna in COLUNAS_NUMERICAS_PERFIL
-    if coluna in amostra_desenvolvimento.columns
-]
-
-registros_perfis_numericos = []
-registros_perfis_categoricos = []
-registros_perfis_binarios = []
-registros_perfis_temporais = []
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    atribuicoes = atribuicoes_solucoes_candidatas[
-        nome_matriz
-    ][
-        [
-            "cluster",
-            "cluster_rotulo",
-        ]
-    ]
-
-    if not atribuicoes.index.equals(
-        amostra_desenvolvimento.index
-    ):
-        raise RuntimeError(
-            f"As atribuições da matriz {nome_matriz} "
-            "não estão alinhadas à amostra."
-        )
-
-    base_perfil = amostra_desenvolvimento.join(
-        atribuicoes,
-        how="inner",
-        validate="one_to_one",
-    )
-
-    for cluster_rotulo, dados_cluster in base_perfil.groupby(
-        "cluster_rotulo",
-        dropna=False,
-    ):
-        quantidade_cluster = len(
-            dados_cluster
-        )
-
-        for coluna in colunas_numericas_perfil_disponiveis:
-            serie_numerica = pd.to_numeric(
-                dados_cluster[
-                    coluna
-                ],
-                errors="coerce",
-            )
-
-            registros_perfis_numericos.append(
-                {
-                    "matriz": nome_matriz,
-                    "cluster_rotulo": cluster_rotulo,
-                    "variavel": coluna,
-                    "quantidade_cluster": quantidade_cluster,
-                    "quantidade_preenchida": int(
-                        serie_numerica.notna().sum()
-                    ),
-                    "media": float(
-                        serie_numerica.mean()
-                    ),
-                    "mediana": float(
-                        serie_numerica.median()
-                    ),
-                    "desvio_padrao": float(
-                        serie_numerica.std(ddof=0)
-                    ),
-                    "percentil_25": float(
-                        serie_numerica.quantile(0.25)
-                    ),
-                    "percentil_75": float(
-                        serie_numerica.quantile(0.75)
-                    ),
-                }
-            )
-
-        for coluna_categorica in [
-            "sexo_categoria",
-            "alvo_obito_srag",
-        ]:
-            if coluna_categorica not in dados_cluster.columns:
-                continue
-
-            distribuicao = (
-                dados_cluster[
-                    coluna_categorica
-                ]
-                .astype("string")
-                .fillna("Ausente")
-                .value_counts(
-                    dropna=False
-                )
-                .rename_axis("categoria")
-                .rename("quantidade")
-                .reset_index()
-            )
-
-            distribuicao[
-                "percentual_cluster"
-            ] = (
-                distribuicao[
-                    "quantidade"
-                ]
-                .div(quantidade_cluster)
-                .mul(100)
-            )
-
-            for _, linha in distribuicao.iterrows():
-                registros_perfis_categoricos.append(
-                    {
-                        "matriz": nome_matriz,
-                        "cluster_rotulo": cluster_rotulo,
-                        "variavel": coluna_categorica,
-                        "categoria": linha[
-                            "categoria"
-                        ],
-                        "quantidade": int(
-                            linha[
-                                "quantidade"
-                            ]
-                        ),
-                        "percentual_cluster": float(
-                            linha[
-                                "percentual_cluster"
-                            ]
-                        ),
-                    }
-                )
-
-        if "ano_internacao" in dados_cluster.columns:
-            distribuicao_ano = (
-                dados_cluster[
-                    "ano_internacao"
-                ]
-                .value_counts(
-                    dropna=False
-                )
-                .rename_axis("ano_internacao")
-                .rename("quantidade")
-                .reset_index()
-            )
-
-            distribuicao_ano[
-                "percentual_cluster"
-            ] = (
-                distribuicao_ano[
-                    "quantidade"
-                ]
-                .div(quantidade_cluster)
-                .mul(100)
-            )
-
-            for _, linha in distribuicao_ano.iterrows():
-                registros_perfis_temporais.append(
-                    {
-                        "matriz": nome_matriz,
-                        "cluster_rotulo": cluster_rotulo,
-                        "ano_internacao": linha[
-                            "ano_internacao"
-                        ],
-                        "quantidade": int(
-                            linha[
-                                "quantidade"
-                            ]
-                        ),
-                        "percentual_cluster": float(
-                            linha[
-                                "percentual_cluster"
-                            ]
-                        ),
-                    }
-                )
-
-    matriz_binaria_com_cluster = matriz_binaria_nucleo_bruta.join(
-        atribuicoes,
-        how="inner",
-        validate="one_to_one",
-    )
-
-    colunas_binarias_perfil = [
-        coluna
-        for coluna in (
-            COLUNAS_SINTOMAS
-            + COLUNAS_COMORBIDADES
-        )
-        if coluna in matriz_binaria_com_cluster.columns
-    ]
-
-    for cluster_rotulo, dados_cluster in (
-        matriz_binaria_com_cluster.groupby(
-            "cluster_rotulo",
-            dropna=False,
-        )
-    ):
-        quantidade_cluster = len(
-            dados_cluster
-        )
-
-        for coluna in colunas_binarias_perfil:
-            serie = dados_cluster[
-                coluna
-            ]
-
-            quantidade_valida = int(
-                serie.notna().sum()
-            )
-
-            quantidade_sim = int(
-                serie.eq(1.0).sum()
-            )
-
-            percentual_sim_validos = (
-                quantidade_sim
-                / quantidade_valida
-                * 100
-                if quantidade_valida > 0
-                else np.nan
-            )
-
-            percentual_sem_resposta = (
-                serie.isna().sum()
-                / quantidade_cluster
-                * 100
-                if quantidade_cluster > 0
-                else np.nan
-            )
-
-            registros_perfis_binarios.append(
-                {
-                    "matriz": nome_matriz,
-                    "cluster_rotulo": cluster_rotulo,
-                    "variavel": coluna,
-                    "quantidade_cluster": quantidade_cluster,
-                    "quantidade_resposta_valida": quantidade_valida,
-                    "quantidade_sim": quantidade_sim,
-                    "percentual_sim_validos": percentual_sim_validos,
-                    "percentual_sem_resposta": percentual_sem_resposta,
-                }
-            )
-
-
-perfis_numericos_clusters = pd.DataFrame(
-    registros_perfis_numericos
-)
-
-perfis_categoricos_clusters = pd.DataFrame(
-    registros_perfis_categoricos
-)
-
-perfis_binarios_clusters = pd.DataFrame(
-    registros_perfis_binarios
-)
-
-perfis_temporais_clusters = pd.DataFrame(
-    registros_perfis_temporais
-)
-
-if perfis_numericos_clusters.empty:
-    raise ValueError(
-        "A tabela de perfis numéricos está vazia."
-    )
-
-if perfis_binarios_clusters.empty:
-    raise ValueError(
-        "A tabela de perfis binários está vazia."
-    )
-
-if perfis_temporais_clusters.empty:
-    raise ValueError(
-        "A tabela de perfis temporais está vazia."
-    )
-
-matriz_perfil_clinico = (
-    perfis_binarios_clusters.pivot_table(
-        index=[
-            "matriz",
-            "cluster_rotulo",
-            "variavel",
-        ],
-        values="percentual_sim_validos",
-        aggfunc="first",
-    )
-    .reset_index()
-)
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    dados_matriz = matriz_perfil_clinico.loc[
-        matriz_perfil_clinico[
-            "matriz"
-        ].eq(nome_matriz)
-    ]
-
-    matriz_heatmap = dados_matriz.pivot(
-        index="variavel",
-        columns="cluster_rotulo",
-        values="percentual_sim_validos",
-    )
-
-    amplitude_por_variavel = (
-        matriz_heatmap.max(axis=1)
-        - matriz_heatmap.min(axis=1)
-    )
-
-    variaveis_destaque = (
-        amplitude_por_variavel.sort_values(
-            ascending=False
-        )
-        .head(15)
-        .index
-        .tolist()
-    )
-
-    matriz_heatmap = matriz_heatmap.loc[
-        variaveis_destaque
-    ]
-
-    figura_perfil, eixo_perfil = plt.subplots(
-        figsize=(
-            10,
-            8,
-        )
-    )
-
-    sns.heatmap(
-        matriz_heatmap,
-        annot=True,
-        fmt=".1f",
-        cmap="YlGnBu",
-        vmin=0,
-        vmax=100,
-        linewidths=0.5,
-        linecolor="white",
-        cbar_kws={
-            "label": "Resposta sim entre válidos (%)",
-        },
-        ax=eixo_perfil,
-    )
-
-    eixo_perfil.set_title(
-        "Maiores diferenças clínicas entre clusters - "
-        + ROTULOS_MATRIZES_CLUSTERING[
-            nome_matriz
-        ]
-    )
-
-    eixo_perfil.set_xlabel(
-        "Cluster"
-    )
-
-    eixo_perfil.set_ylabel(
-        "Sintoma ou comorbidade"
-    )
-
-    figura_perfil.tight_layout()
-
-    plt.show()
-
-    plt.close(
-        figura_perfil
-    )
-
-
-matriz_temporal_nucleo = (
-    perfis_temporais_clusters.loc[
-        perfis_temporais_clusters[
-            "matriz"
-        ].eq("nucleo")
-    ]
-    .pivot(
-        index="cluster_rotulo",
-        columns="ano_internacao",
-        values="percentual_cluster",
-    )
-    .fillna(0)
-)
-
-figura_temporal, eixo_temporal = plt.subplots(
-    figsize=(
-        13,
-        5,
-    )
-)
-
-sns.heatmap(
-    matriz_temporal_nucleo,
-    annot=True,
-    fmt=".1f",
-    cmap="Purples",
-    linewidths=0.5,
-    linecolor="white",
-    cbar_kws={
-        "label": "Participação dentro do cluster (%)",
-    },
-    ax=eixo_temporal,
-)
-
-eixo_temporal.set_title(
-    "Composição temporal dos clusters candidatos do núcleo"
-)
-
-eixo_temporal.set_xlabel(
-    "Ano da internação"
-)
-
-eixo_temporal.set_ylabel(
-    "Cluster"
-)
-
-figura_temporal.tight_layout()
-
-plt.show()
-
-plt.close(
-    figura_temporal
-)
-
-print(
-    "Loadings destacados por matriz:",
-    QUANTIDADE_LOADINGS_EXIBIDOS,
-)
-
-print(
-    "Perfis clínicos e temporais calculados para:",
-    [
-        "nucleo",
-        "ampliada",
-    ],
-)
-
-display(
-    loadings_pc1_destaque
-)
-
-display(
-    perfis_numericos_clusters
-)
-
-display(
-    perfis_categoricos_clusters
-)
-
-display(
-    perfis_binarios_clusters
-)
-
-display(
-    perfis_temporais_clusters
-)
+# ... 476 lines omitted ...
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1700x800 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1000x800 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (display_data)**
+
+```text
+<Figure size 1000x800 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 4 (display_data)**
+
+```text
+<Figure size 1300x500 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 5 (stream:stdout)**
+
+```text
+Loadings destacados por matriz: 15
+Perfis clínicos e temporais calculados para: ['nucleo', 'ampliada']
+```
+
+**Output 6 (display_data)**
+
+```text
+      matriz                     feature_processada  loading_pc1  loading_pc2  \
+0   ampliada                  numericas__idade_anos     0.251416     0.460593   
+1   ampliada   binarias__missingindicator_sind_down    -0.249472    -0.023849   
+2   ampliada  binarias__missingindicator_hematologi    -0.248998    -0.024389   
+3   ampliada    binarias__missingindicator_hepatica    -0.248880    -0.024401   
+4   ampliada       binarias__missingindicator_renal    -0.247111    -0.030767   
+5   ampliada  binarias__missingindicator_pneumopati    -0.246997    -0.035073   
+6   ampliada  binarias__missingindicator_imunodepre    -0.246831    -0.028986   
+7   ampliada    binarias__missingindicator_puerpera    -0.246804    -0.025262   
+8   ampliada  binarias__missingindicator_neurologic    -0.246280    -0.033568   
+9   ampliada   binarias__missingindicator_obesidade    -0.244268    -0.029996   
+10  ampliada        binarias__missingindicator_asma    -0.243354    -0.029105   
+11  ampliada    binarias__missingindicator_diabetes    -0.241039    -0.070952   
+12  ampliada  binarias__missingindicator_cardiopati    -0.234971    -0.090870   
+13  ampliada   binarias__missingindicator_out_morbi    -0.217023    -0.078958   
+14  ampliada                   binarias__cardiopati    -0.143544     0.004223   
+15    nucleo   binarias__missingindicator_sind_down     0.251447    -0.033963   
+16    nucleo  binarias__missingindicator_hematologi     0.250965    -0.034505   
+17    nucleo    binarias__missingindicator_hepatica     0.250840    -0.034469   
+18    nucleo       binarias__missingindicator_renal     0.249004    -0.040967   
+19    nucleo  binarias__missingindicator_pneumopati     0.248852    -0.045478   
+20    nucleo  binarias__missingindicator_imunodepre     0.248758    -0.039246   
+21    nucleo    binarias__missingindicator_puerpera     0.248717    -0.035212   
+22    nucleo  binarias__missingindicator_neurologic     0.248172    -0.043973   
+23    nucleo   binarias__missingindicator_obesidade     0.246132    -0.040035   
+24    nucleo        binarias__missingindicator_asma     0.245246    -0.039658   
+25    nucleo                  numericas__idade_anos    -0.244895     0.448142   
+26    nucleo    binarias__missingindicator_diabetes     0.242537    -0.081493   
+27    nucleo  binarias__missingindicator_cardiopati     0.236283    -0.101629   
+28    nucleo   binarias__missingindicator_out_morbi     0.218274    -0.089721   
+29    nucleo                   binarias__cardiopati     0.145156    -0.003576   
+
+    loading_absoluto_pc1  loading_absoluto_pc2  
+0               0.251416              0.460593  
+1               0.249472              0.023849  
+2               0.248998              0.024389  
+3               0.248880              0.024401  
+4               0.247111              0.030767  
+5               0.246997              0.035073  
+6               0.246831              0.028986  
+7               0.246804              0.025262  
+8               0.246280              0.033568  
+9               0.244268              0.029996  
+10              0.243354              0.029105  
+11              0.241039              0.070952  
+12              0.234971              0.090870  
+13              0.217023              0.078958  
+14              0.143544              0.004223  
+15              0.251447              0.033963  
+16              0.250965              0.034505  
+17              0.250840              0.034469  
+18              0.249004              0.040967  
+19              0.248852              0.045478  
+20              0.248758              0.039246  
+21              0.248717              0.035212  
+22              0.248172              0.043973  
+23              0.246132              0.040035  
+24              0.245246              0.039658  
+25              0.244895              0.448142  
+26              0.242537              0.081493  
+27              0.236283              0.101629  
+28              0.218274              0.089721  
+29              0.145156              0.003576  
+[non-text output omitted: text/html]
+```
+
+**Output 7 (display_data)**
+
+```text
+      matriz cluster_rotulo                      variavel  quantidade_cluster  \
+0     nucleo      Cluster 1                    idade_anos               26630   
+1     nucleo      Cluster 1  dias_sintomas_ate_internacao               26630   
+2     nucleo      Cluster 1        n_sintomas_confirmados               26630   
+3     nucleo      Cluster 1          n_sintomas_avaliados               26630   
+4     nucleo      Cluster 1    n_comorbidades_confirmadas               26630   
+5     nucleo      Cluster 1      n_comorbidades_avaliadas               26630   
+6     nucleo      Cluster 2                    idade_anos               53370   
+7     nucleo      Cluster 2  dias_sintomas_ate_internacao               53370   
+8     nucleo      Cluster 2        n_sintomas_confirmados               53370   
+9     nucleo      Cluster 2          n_sintomas_avaliados               53370   
+10    nucleo      Cluster 2    n_comorbidades_confirmadas               53370   
+11    nucleo      Cluster 2      n_comorbidades_avaliadas               53370   
+12  ampliada      Cluster 1                    idade_anos               53367   
+13  ampliada      Cluster 1  dias_sintomas_ate_internacao               53367   
+14  ampliada      Cluster 1        n_sintomas_confirmados               53367   
+15  ampliada      Cluster 1          n_sintomas_avaliados               53367   
+16  ampliada      Cluster 1    n_comorbidades_confirmadas               53367   
+17  ampliada      Cluster 1      n_comorbidades_avaliadas               53367   
+18  ampliada      Cluster 2                    idade_anos               26633   
+19  ampliada      Cluster 2  dias_sintomas_ate_internacao               26633   
+20  ampliada      Cluster 2        n_sintomas_confirmados               26633   
+21  ampliada      Cluster 2          n_sintomas_avaliados               26633   
+22  ampliada      Cluster 2    n_comorbidades_confirmadas               26633   
+23  ampliada      Cluster 2      n_comorbidades_avaliadas               26633   
+
+    quantidade_preenchida      media  mediana  desvio_padrao  percentil_25  \
+0                   26630  52.335790     61.0      30.049601     29.000000   
+1                   26630   4.474052      3.0      13.164849      1.000000   
+2                   26630   4.370560      4.0       1.673425      3.000000   
+3                   26630  11.935299     13.0       1.909219     12.000000   
+4                   26630   1.694705      1.0       0.935228      1.000000   
+5                   26630  12.841006     13.0       0.518991     13.000000   
+6                   53370  28.702557      8.0      31.633328      0.916667   
+7                   53370   4.560558      3.0      12.687442      1.000000   
+8                   53370   4.086097      4.0       1.692876      3.000000   
+9                   53370   8.881375      9.0       4.328046      4.000000   
+10                  53370   0.358310      0.0       0.762836      0.000000   
+11                  53370   0.369721      0.0       0.796007      0.000000   
+12                  53367  28.699823      8.0      31.632065      0.916667   
+13                  53367   4.560777      3.0      12.687799      1.000000   
+14                  53367   4.086139      4.0       1.692889      3.000000   
+15                  53367   8.881294      9.0       4.328062      4.000000   
+16                  53367   0.358143      0.0       0.762499      0.000000   
+17                  53367   0.369423      0.0       0.795006      0.000000   
+18                  26633  52.338605     61.0      30.049187     29.000000   
+19                  26633   4.473623      3.0      13.164105      1.000000   
+20                  26633   4.370443      4.0       1.673419      3.000000   
+21                  26633  11.935118     13.0       1.909607     12.000000   
+22                  26633   1.694890      1.0       0.935390      1.000000   
+23                  26633  12.840198     13.0       0.524612     13.000000   
+
+    percentil_75  
+0           76.0  
+1            6.0  
+2            5.0  
+3           13.0  
+4            2.0  
+5           13.0  
+6           58.0  
+7            6.0  
+8            5.0  
+9           13.0  
+10           0.0  
+11           0.0  
+12          58.0  
+13           6.0  
+14           5.0  
+15          13.0  
+16           0.0  
+17           0.0  
+18          76.0  
+19           6.0  
+20           5.0  
+21          13.0  
+22           2.0  
+23          13.0  
+[non-text output omitted: text/html]
+```
+
+**Output 8 (display_data)**
+
+```text
+      matriz cluster_rotulo         variavel  categoria  quantidade  \
+0     nucleo      Cluster 1   sexo_categoria   Feminino       13432   
+1     nucleo      Cluster 1   sexo_categoria  Masculino       13196   
+2     nucleo      Cluster 1   sexo_categoria   Ignorado           2   
+3     nucleo      Cluster 1  alvo_obito_srag          0       20884   
+4     nucleo      Cluster 1  alvo_obito_srag          1        5746   
+5     nucleo      Cluster 2   sexo_categoria  Masculino       28477   
+6     nucleo      Cluster 2   sexo_categoria   Feminino       24881   
+7     nucleo      Cluster 2   sexo_categoria   Ignorado          12   
+8     nucleo      Cluster 2  alvo_obito_srag          0       47315   
+9     nucleo      Cluster 2  alvo_obito_srag          1        6055   
+10  ampliada      Cluster 1   sexo_categoria  Masculino       28474   
+11  ampliada      Cluster 1   sexo_categoria   Feminino       24881   
+12  ampliada      Cluster 1   sexo_categoria   Ignorado          12   
+13  ampliada      Cluster 1  alvo_obito_srag          0       47314   
+14  ampliada      Cluster 1  alvo_obito_srag          1        6053   
+15  ampliada      Cluster 2   sexo_categoria   Feminino       13432   
+16  ampliada      Cluster 2   sexo_categoria  Masculino       13199   
+17  ampliada      Cluster 2   sexo_categoria   Ignorado           2   
+18  ampliada      Cluster 2  alvo_obito_srag          0       20885   
+19  ampliada      Cluster 2  alvo_obito_srag          1        5748   
+
+    percentual_cluster  
+0            50.439354  
+1            49.553136  
+2             0.007510  
+3            78.422831  
+4            21.577169  
+5            53.357692  
+6            46.619824  
+7             0.022485  
+8            88.654675  
+9            11.345325  
+10           53.355070  
+11           46.622445  
+12            0.022486  
+13           88.657785  
+14           11.342215  
+15           50.433673  
+16           49.558818  
+17            0.007509  
+18           78.417752  
+19           21.582248  
+[non-text output omitted: text/html]
+```
+
+**Output 9 (display_data)**
+
+```text
+       matriz cluster_rotulo    variavel  quantidade_cluster  \
+0      nucleo      Cluster 1       febre               26630   
+1      nucleo      Cluster 1       tosse               26630   
+2      nucleo      Cluster 1    garganta               26630   
+3      nucleo      Cluster 1    dispneia               26630   
+4      nucleo      Cluster 1   desc_resp               26630   
+..        ...            ...         ...                 ...   
+99   ampliada      Cluster 2  pneumopati               26633   
+100  ampliada      Cluster 2  imunodepre               26633   
+101  ampliada      Cluster 2       renal               26633   
+102  ampliada      Cluster 2   obesidade               26633   
+103  ampliada      Cluster 2   out_morbi               26633   
+
+     quantidade_resposta_valida  quantidade_sim  percentual_sim_validos  \
+0                         26363           14889               56.476880   
+1                         26442           19818               74.948945   
+2                         25770            3594               13.946449   
+3                         26448           20112               76.043557   
+4                         26401           18251               69.129957   
+..                          ...             ...                     ...   
+99                        26504            3163               11.934048   
+100                       26417            1682                6.367112   
+101                       26376            1615                6.122991   
+102                       26074            1930                7.402010   
+103                       24932           10861               43.562490   
+
+     percentual_sem_resposta  
+0                   1.002629  
+1                   0.705971  
+2                   3.229440  
+3                   0.683440  
+4                   0.859932  
+..                       ...  
+99                  0.484362  
+100                 0.811024  
+101                 0.964968  
+102                 2.098900  
+103                 6.386813  
+
+[104 rows x 8 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 10 (display_data)**
+
+```text
+      matriz cluster_rotulo  ano_internacao  quantidade  percentual_cluster
+0     nucleo      Cluster 1            2020        4204           15.786707
+1     nucleo      Cluster 1            2019        3740           14.044311
+2     nucleo      Cluster 1            2022        3515           13.199399
+3     nucleo      Cluster 1            2021        3479           13.064213
+4     nucleo      Cluster 1            2025        2987           11.216673
+5     nucleo      Cluster 1            2024        2937           11.028915
+6     nucleo      Cluster 1            2023        2886           10.837401
+7     nucleo      Cluster 1            2026        2882           10.822381
+8     nucleo      Cluster 2            2026        7118           13.337081
+9     nucleo      Cluster 2            2023        7114           13.329586
+10    nucleo      Cluster 2            2024        7063           13.234027
+11    nucleo      Cluster 2            2025        7013           13.140341
+12    nucleo      Cluster 2            2021        6521           12.218475
+13    nucleo      Cluster 2            2022        6485           12.151021
+14    nucleo      Cluster 2            2019        6260           11.729436
+15    nucleo      Cluster 2            2020        5796           10.860034
+16  ampliada      Cluster 1            2026        7119           13.339704
+17  ampliada      Cluster 1            2023        7114           13.330335
+18  ampliada      Cluster 1            2024        7061           13.231023
+19  ampliada      Cluster 1            2025        7012           13.139206
+20  ampliada      Cluster 1            2021        6520           12.217288
+21  ampliada      Cluster 1            2022        6485           12.151704
+22  ampliada      Cluster 1            2019        6260           11.730095
+23  ampliada      Cluster 1            2020        5796           10.860644
+24  ampliada      Cluster 2            2020        4204           15.784928
+25  ampliada      Cluster 2            2019        3740           14.042729
+26  ampliada      Cluster 2            2022        3515           13.197912
+27  ampliada      Cluster 2            2021        3480           13.066496
+28  ampliada      Cluster 2            2025        2988           11.219164
+29  ampliada      Cluster 2            2024        2939           11.035182
+30  ampliada      Cluster 2            2023        2886           10.836181
+31  ampliada      Cluster 2            2026        2881           10.817407
+[non-text output omitted: text/html]
 ```
 
 ### Cell 140 [markdown]
@@ -20052,305 +20353,85 @@ def preparar_sensibilidade_sem_ausencia(
             / len(representacao_pca)
         ),
         "menor_cluster_percentual": float(
-            contagens.min()
-            / len(representacao_pca)
-            * 100
-        ),
-        "maior_cluster_percentual": float(
-            contagens.max()
-            / len(representacao_pca)
-            * 100
-        ),
-    }
+# ... 299 lines omitted ...
+```
 
-    return {
-        "matriz_modelagem": matriz_modelagem,
-        "pca": pca,
-        "representacao_pca": representacao_pca,
-        "modelo": modelo,
-        "rotulos": rotulos,
-        "resumo": resumo,
-        "colunas_indicadores_ausencia": (
-            colunas_indicadores_ausencia
-        ),
-    }
+**Output 1 (display_data)**
 
+```text
+<Figure size 1500x600 with 2 Axes>
+[non-text output omitted: image/png]
+```
 
-resultados_sensibilidade = {}
-registros_resumo_sensibilidade = []
+**Output 2 (stream:stdout)**
 
-for nome_matriz, matriz_processada in {
-    "nucleo": matriz_nucleo_processada,
-    "ampliada": matriz_ampliada_processada,
-}.items():
-    resultado = preparar_sensibilidade_sem_ausencia(
-        nome_matriz=nome_matriz,
-        matriz_processada=matriz_processada,
-    )
+```text
+Sensibilidade concluída para k = 2
+Interpretação do ARI: próximo de 1 indica solução semelhante; próximo de 0 indica mudança substancial na partição.
+```
 
-    resultados_sensibilidade[
-        nome_matriz
-    ] = resultado
+**Output 3 (display_data)**
 
-    registros_resumo_sensibilidade.append(
-        resultado[
-            "resumo"
-        ]
-    )
+```text
+     matriz  k  features_processadas_originais  \
+0    nucleo  2                              57   
+1  ampliada  2                              97   
 
+   indicadores_ausencia_excluidos  features_variancia_zero_excluidas  \
+0                              26                                  0   
+1                              28                                  0   
 
-resumo_sensibilidade_sem_ausencia = pd.DataFrame(
-    registros_resumo_sensibilidade
-)
+   features_sensibilidade  componentes_pca_90  variancia_pca_preservada  \
+0                      31                  15                  0.916064   
+1                      69                  30                  0.904936   
 
-comparacao_rotulos_sensibilidade = []
+   silhouette_medio  inercia_por_registro  menor_cluster_percentual  \
+0          0.233227              3.487042                  49.71000   
+1          0.169328              5.189904                  48.50375   
 
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    rotulos_originais = (
-        atribuicoes_solucoes_candidatas[
-            nome_matriz
-        ][
-            "cluster"
-        ]
-        .to_numpy()
-    )
+   maior_cluster_percentual  ari_original_vs_sem_ausencia  
+0                  50.29000                      0.094174  
+1                  51.49625                      0.087989  
+[non-text output omitted: text/html]
+```
 
-    rotulos_sensibilidade = resultados_sensibilidade[
-        nome_matriz
-    ][
-        "rotulos"
-    ]
+**Output 4 (display_data)**
 
-    ari_original_sensibilidade = float(
-        adjusted_rand_score(
-            rotulos_originais,
-            rotulos_sensibilidade,
-        )
-    )
-
-    comparacao_rotulos_sensibilidade.append(
-        {
-            "matriz": nome_matriz,
-            "ari_original_vs_sem_ausencia": (
-                ari_original_sensibilidade
-            ),
-        }
-    )
-
-
-comparacao_rotulos_sensibilidade = pd.DataFrame(
-    comparacao_rotulos_sensibilidade
-)
-
-resumo_sensibilidade_sem_ausencia = (
-    resumo_sensibilidade_sem_ausencia.merge(
-        comparacao_rotulos_sensibilidade,
-        on="matriz",
-        how="left",
-        validate="one_to_one",
-    )
-)
-
-atribuicoes_sensibilidade_sem_ausencia = {}
-perfis_temporais_sensibilidade = []
-
-for nome_matriz in [
-    "nucleo",
-    "ampliada",
-]:
-    atribuicoes = (
-        metadados_amostra_desenvolvimento.copy()
-    )
-
-    atribuicoes[
-        "cluster"
-    ] = resultados_sensibilidade[
-        nome_matriz
-    ][
-        "rotulos"
-    ].astype("int16")
-
-    atribuicoes[
-        "cluster_rotulo"
-    ] = (
-        "Cluster "
-        + atribuicoes[
-            "cluster"
-        ]
-        .add(1)
-        .astype("string")
-    )
-
-    atribuicoes_sensibilidade_sem_ausencia[
-        nome_matriz
-    ] = atribuicoes
-
-    if "ano_internacao" in atribuicoes.columns:
-        temporal = (
-            atribuicoes.groupby(
-                [
-                    "cluster_rotulo",
-                    "ano_internacao",
-                ],
-                dropna=False,
-            )
-            .size()
-            .rename(
-                "quantidade"
-            )
-            .reset_index()
-        )
-
-        temporal[
-            "percentual_cluster"
-        ] = (
-            temporal[
-                "quantidade"
-            ]
-            .div(
-                temporal.groupby(
-                    "cluster_rotulo"
-                )[
-                    "quantidade"
-                ]
-                .transform("sum")
-            )
-            .mul(100)
-        )
-
-        temporal.insert(
-            0,
-            "matriz",
-            nome_matriz,
-        )
-
-        perfis_temporais_sensibilidade.append(
-            temporal
-        )
-
-
-perfis_temporais_sensibilidade = pd.concat(
-    perfis_temporais_sensibilidade,
-    ignore_index=True,
-)
-
-figura_sensibilidade, eixos_sensibilidade = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(
-        15,
-        6,
-    ),
-)
-
-for indice_eixo, nome_matriz in enumerate(
-    [
-        "nucleo",
-        "ampliada",
-    ]
-):
-    eixo = eixos_sensibilidade[
-        indice_eixo
-    ]
-
-    representacao = resultados_sensibilidade[
-        nome_matriz
-    ][
-        "representacao_pca"
-    ]
-
-    rotulos = resultados_sensibilidade[
-        nome_matriz
-    ][
-        "rotulos"
-    ]
-
-    eixo.scatter(
-        representacao.iloc[
-            :,
-            0,
-        ],
-        representacao.iloc[
-            :,
-            1,
-        ],
-        c=rotulos,
-        cmap="tab10",
-        s=8,
-        alpha=0.30,
-        linewidths=0,
-    )
-
-    eixo.set_title(
-        "Matriz "
-        + ROTULOS_MATRIZES_CLUSTERING[
-            nome_matriz
-        ]
-    )
-
-    eixo.set_xlabel(
-        "Componente principal 1"
-    )
-
-    eixo.set_ylabel(
-        "Componente principal 2"
-    )
-
-    eixo.grid(
-        alpha=0.15,
-    )
-
-figura_sensibilidade.suptitle(
-    "Sensibilidade sem indicadores de ausência",
-    fontsize=14,
-)
-
-figura_sensibilidade.text(
-    0.01,
-    0.01,
-    (
-        "Os indicadores binários de ausência foram retirados, mas os "
-        "valores imputados permanecem. A comparação com a solução "
-        "original é quantificada pelo ARI."
-    ),
-    fontsize=8,
-)
-
-figura_sensibilidade.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        0.95,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_sensibilidade
-)
-
-print(
-    "Sensibilidade concluída para k =",
-    K_SENSIBILIDADE,
-)
-
-print(
-    "Interpretação do ARI: próximo de 1 indica solução semelhante; "
-    "próximo de 0 indica mudança substancial na partição."
-)
-
-display(
-    resumo_sensibilidade_sem_ausencia
-)
-
-display(
-    perfis_temporais_sensibilidade
-)
+```text
+      matriz cluster_rotulo  ano_internacao  quantidade  percentual_cluster
+0     nucleo      Cluster 1            2019        6704           16.857775
+1     nucleo      Cluster 1            2020        1685            4.237075
+2     nucleo      Cluster 1            2021        1761            4.428183
+3     nucleo      Cluster 1            2022        3722            9.359284
+4     nucleo      Cluster 1            2023        6079           15.286160
+5     nucleo      Cluster 1            2024        6349           15.965098
+6     nucleo      Cluster 1            2025        6422           16.148662
+7     nucleo      Cluster 1            2026        7046           17.717763
+8     nucleo      Cluster 2            2019        3296            8.192484
+9     nucleo      Cluster 2            2020        8315           20.667628
+10    nucleo      Cluster 2            2021        8239           20.478723
+11    nucleo      Cluster 2            2022        6278           15.604494
+12    nucleo      Cluster 2            2023        3921            9.745973
+13    nucleo      Cluster 2            2024        3651            9.074866
+14    nucleo      Cluster 2            2025        3578            8.893418
+15    nucleo      Cluster 2            2026        2954            7.342414
+16  ampliada      Cluster 1            2019        6452           16.627580
+17  ampliada      Cluster 1            2020        1368            3.525501
+18  ampliada      Cluster 1            2021        1782            4.592428
+19  ampliada      Cluster 1            2022        3623            9.336907
+20  ampliada      Cluster 1            2023        5994           15.447259
+21  ampliada      Cluster 1            2024        6263           16.140505
+22  ampliada      Cluster 1            2025        6329           16.310595
+23  ampliada      Cluster 1            2026        6992           18.019225
+24  ampliada      Cluster 2            2019        3548            8.612278
+25  ampliada      Cluster 2            2020        8632           20.952982
+26  ampliada      Cluster 2            2021        8218           19.948054
+27  ampliada      Cluster 2            2022        6377           15.479282
+28  ampliada      Cluster 2            2023        4006            9.724009
+29  ampliada      Cluster 2            2024        3737            9.071049
+30  ampliada      Cluster 2            2025        3671            8.910843
+31  ampliada      Cluster 2            2026        3008            7.301503
+[non-text output omitted: text/html]
 ```
 
 ### Cell 142 [markdown]
@@ -20590,198 +20671,73 @@ for nome_matriz in MATRIZES_AVALIADAS_CLUSTERING:
 
         tabelas_cluster_desfecho.append(
             tabela_cluster_desfecho
-        )
+# ... 192 lines omitted ...
+```
 
-    registros_diagnostico_final.append(
-        {
-            "matriz": nome_matriz,
-            "silhouette_sem_indicadores_ausencia": (
-                silhouette_sensibilidade
-            ),
-            "ari_original_vs_sem_indicadores_ausencia": (
-                ari_original_sensibilidade
-            ),
-            "menor_cluster_percentual": (
-                menor_cluster_percentual
-            ),
-            "nmi_cluster_ano": nmi_cluster_ano,
-            "interpretacao": (
-                "A partição mudou substancialmente após retirar os "
-                "indicadores de ausência e permaneceu associada ao período."
-            ),
-        }
-    )
+**Output 1 (stream:stdout)**
 
+```text
+Decisão do clustering: encerrar_como_exploratorio
+ARI núcleo versus ampliada sem indicadores de ausência: 0.918673
+Cluster será usado como preditor supervisionado: False
+Cluster será aplicado à coorte completa: False
+```
 
-diagnostico_final_clustering = pd.DataFrame(
-    registros_diagnostico_final
-)
+**Output 2 (display_data)**
 
-cluster_ano_sensibilidade = pd.concat(
-    tabelas_cluster_ano,
-    ignore_index=True,
-) if tabelas_cluster_ano else pd.DataFrame()
+```text
+     matriz  silhouette_sem_indicadores_ausencia  \
+0    nucleo                             0.233227   
+1  ampliada                             0.169328   
 
-cluster_desfecho_sensibilidade = pd.concat(
-    tabelas_cluster_desfecho,
-    ignore_index=True,
-) if tabelas_cluster_desfecho else pd.DataFrame()
+   ari_original_vs_sem_indicadores_ausencia  menor_cluster_percentual  \
+0                                  0.094174                  49.71000   
+1                                  0.087989                  48.50375   
 
-ari_nucleo_vs_ampliada_sem_ausencia = float(
-    adjusted_rand_score(
-        atribuicoes_sensibilidade_sem_ausencia[
-            "nucleo"
-        ][
-            "cluster"
-        ],
-        atribuicoes_sensibilidade_sem_ausencia[
-            "ampliada"
-        ][
-            "cluster"
-        ],
-    )
-)
+   nmi_cluster_ano                                      interpretacao  
+0         0.067363  A partição mudou substancialmente após retirar...  
+1         0.069048  A partição mudou substancialmente após retirar...  
+[non-text output omitted: text/html]
+```
 
-DECISAO_CLUSTERING = {
-    "status": "encerrar_como_exploratorio",
-    "matriz_principal_documentada": "nucleo",
-    "quantidade_clusters_documentada": 2,
-    "usar_cluster_como_preditor_supervisionado": False,
-    "aplicar_clusters_na_coorte_completa": False,
-    "justificativa": (
-        "A solução original foi dominada por indicadores de ausência. "
-        "Sem esses indicadores, a concordância com a solução original "
-        "foi baixa, o silhouette diminuiu e a composição dos grupos "
-        "passou a acompanhar fortemente o período de internação."
-    ),
-    "encaminhamento": (
-        "Preservar o clustering como achado exploratório de qualidade "
-        "e drift temporal. Prosseguir para a modelagem supervisionada "
-        "com divisão temporal e avaliação por período."
-    ),
-}
+**Output 3 (display_data)**
 
-resumo_decisao_clustering = pd.DataFrame(
-    [
-        {
-            **DECISAO_CLUSTERING,
-            "ari_nucleo_vs_ampliada_sem_ausencia": (
-                ari_nucleo_vs_ampliada_sem_ausencia
-            ),
-        }
-    ]
-)
+```text
+                       status matriz_principal_documentada  \
+0  encerrar_como_exploratorio                       nucleo   
 
-C.TABLES_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
+   quantidade_clusters_documentada  usar_cluster_como_preditor_supervisionado  \
+0                                2                                      False   
 
-caminho_diagnostico = (
-    C.TABLES_DIR
-    / "eda_02_diagnostico_final_clustering.csv"
-)
+   aplicar_clusters_na_coorte_completa  \
+0                                False   
 
-caminho_cluster_ano = (
-    C.TABLES_DIR
-    / "eda_02_cluster_ano_sensibilidade.csv"
-)
+                                       justificativa  \
+0  A solução original foi dominada por indicadore...   
 
-caminho_cluster_desfecho = (
-    C.TABLES_DIR
-    / "eda_02_cluster_desfecho_sensibilidade.csv"
-)
+                                      encaminhamento  \
+0  Preservar o clustering como achado exploratóri...   
 
-caminho_decisao_csv = (
-    C.TABLES_DIR
-    / "eda_02_decisao_clustering.csv"
-)
+   ari_nucleo_vs_ampliada_sem_ausencia  
+0                             0.918673  
+[non-text output omitted: text/html]
+```
 
-caminho_decisao_json = (
-    C.TABLES_DIR
-    / "eda_02_decisao_clustering.json"
-)
+**Output 4 (display_data)**
 
-diagnostico_final_clustering.to_csv(
-    caminho_diagnostico,
-    index=False,
-    encoding="utf-8-sig",
-)
+```text
+     matriz cluster_rotulo  quantidade_registros  quantidade_obitos  \
+0    nucleo      Cluster 1                 39768               1039   
+1    nucleo      Cluster 2                 40232              10762   
+2  ampliada      Cluster 1                 38803                964   
+3  ampliada      Cluster 2                 41197              10837   
 
-cluster_ano_sensibilidade.to_csv(
-    caminho_cluster_ano,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-cluster_desfecho_sensibilidade.to_csv(
-    caminho_cluster_desfecho,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-resumo_decisao_clustering.to_csv(
-    caminho_decisao_csv,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-with caminho_decisao_json.open(
-    "w",
-    encoding="utf-8",
-) as arquivo_json:
-    json.dump(
-        {
-            **DECISAO_CLUSTERING,
-            "ari_nucleo_vs_ampliada_sem_ausencia": (
-                ari_nucleo_vs_ampliada_sem_ausencia
-            ),
-        },
-        arquivo_json,
-        ensure_ascii=False,
-        indent=2,
-    )
-
-print(
-    "Decisão do clustering:",
-    DECISAO_CLUSTERING[
-        "status"
-    ],
-)
-
-print(
-    "ARI núcleo versus ampliada sem indicadores de ausência:",
-    round(
-        ari_nucleo_vs_ampliada_sem_ausencia,
-        6,
-    ),
-)
-
-print(
-    "Cluster será usado como preditor supervisionado:",
-    DECISAO_CLUSTERING[
-        "usar_cluster_como_preditor_supervisionado"
-    ],
-)
-
-print(
-    "Cluster será aplicado à coorte completa:",
-    DECISAO_CLUSTERING[
-        "aplicar_clusters_na_coorte_completa"
-    ],
-)
-
-display(
-    diagnostico_final_clustering
-)
-
-display(
-    resumo_decisao_clustering
-)
-
-display(
-    cluster_desfecho_sensibilidade
-)
+   proporcao_obito  percentual_obito  
+0         0.026127          2.612653  
+1         0.267499         26.749851  
+2         0.024843          2.484344  
+3         0.263053         26.305313  
+[non-text output omitted: text/html]
 ```
 
 ### Cell 144 [code] · In [ ]
@@ -20987,955 +20943,92 @@ comparacao_original_sensibilidade[
 )
 
 comparacao_original_sensibilidade[
-    "queda_silhouette_percentual"
-] = (
-    comparacao_original_sensibilidade[
-        "queda_silhouette"
-    ]
-    .div(
-        comparacao_original_sensibilidade[
-            "silhouette_original"
-        ]
-    )
-    .mul(100)
-)
-
-comparacao_original_sensibilidade[
-    "rotulo_matriz"
-] = (
-    comparacao_original_sensibilidade[
-        "matriz"
-    ]
-    .map(ROTULOS_MATRIZES_FINAIS)
-)
-
-if set(
-    comparacao_original_sensibilidade["matriz"]
-) != set(MATRIZES_ESPERADAS):
-    raise RuntimeError(
-        "A comparação não contém exatamente as matrizes núcleo e ampliada."
-    )
-
-comparacao_original_sensibilidade.to_csv(
-    CAMINHO_COMPARACAO_SENSIBILIDADE,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-comparacao_longa = (
-    comparacao_original_sensibilidade[
-        [
-            "rotulo_matriz",
-            "silhouette_original",
-            "silhouette_sem_indicadores_ausencia",
-        ]
-    ]
-    .melt(
-        id_vars="rotulo_matriz",
-        var_name="cenario",
-        value_name="silhouette",
-    )
-)
-
-comparacao_longa["cenario"] = (
-    comparacao_longa["cenario"]
-    .map(
-        {
-            "silhouette_original": "Original",
-            "silhouette_sem_indicadores_ausencia": (
-                "Sem indicadores de ausência"
-            ),
-        }
-    )
-)
-
-figura_comparacao, eixos_comparacao = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(14, 6),
-)
-
-sns.barplot(
-    data=comparacao_longa,
-    x="rotulo_matriz",
-    y="silhouette",
-    hue="cenario",
-    ax=eixos_comparacao[0],
-)
-
-for contenedor in eixos_comparacao[0].containers:
-    eixos_comparacao[0].bar_label(
-        contenedor,
-        fmt="%.3f",
-        padding=3,
-        fontsize=8,
-    )
-
-comparacao_ari = (
-    comparacao_original_sensibilidade[
-        [
-            "rotulo_matriz",
-            "ari_estabilidade_original",
-            "ari_original_vs_sem_ausencia",
-        ]
-    ]
-    .melt(
-        id_vars="rotulo_matriz",
-        var_name="metrica",
-        value_name="ari",
-    )
-)
-
-comparacao_ari["metrica"] = (
-    comparacao_ari["metrica"]
-    .map(
-        {
-            "ari_estabilidade_original": (
-                "Estabilidade entre inicializações"
-            ),
-            "ari_original_vs_sem_ausencia": (
-                "Original versus sem ausência"
-            ),
-        }
-    )
-)
-
-sns.barplot(
-    data=comparacao_ari,
-    x="rotulo_matriz",
-    y="ari",
-    hue="metrica",
-    ax=eixos_comparacao[1],
-)
-
-for contenedor in eixos_comparacao[1].containers:
-    eixos_comparacao[1].bar_label(
-        contenedor,
-        fmt="%.3f",
-        padding=3,
-        fontsize=8,
-    )
-
-for eixo in eixos_comparacao:
-    eixo.set_xlabel("Matriz")
-    eixo.grid(
-        axis="y",
-        alpha=0.20,
-    )
-    eixo.legend(
-        title="Cenário",
-        fontsize=8,
-    )
-
-    eixo.set_ylim(
-        0,
-        1.05,
-    )
-
-
-eixos_comparacao[0].set_title(
-    "Separação dos clusters"
-)
-
-eixos_comparacao[0].set_ylabel(
-    "Silhouette médio"
-)
-
-eixos_comparacao[1].set_title(
-    "Estabilidade e mudança da partição"
-)
-
-eixos_comparacao[1].set_ylabel(
-    "Adjusted Rand Index"
-)
-
-figura_comparacao.suptitle(
-    "Impacto dos indicadores de ausência sobre o clustering",
-    fontsize=14,
-)
-
-figura_comparacao.text(
-    0.01,
-    0.01,
-    (
-        "ARI próximo de 1 indica partições semelhantes; valor próximo de "
-        "0 indica baixa concordância além do acaso. O silhouette avalia "
-        "coesão e separação no espaço utilizado pelo clustering."
-    ),
-    fontsize=8,
-)
-
-figura_comparacao.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        0.95,
-    ]
-)
-
-figura_comparacao.savefig(
-    CAMINHO_FIGURA_COMPARACAO,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_comparacao)
-
-
-# ============================================================
-# 2. COMPOSICAO TEMPORAL DOS CLUSTERS DE SENSIBILIDADE
-# ============================================================
-
-COLUNAS_TEMPORAIS_NECESSARIAS = [
-    "matriz",
-    "cluster_rotulo",
-    "ano_internacao",
-    "quantidade",
-]
-
-colunas_temporais_ausentes = [
-    coluna
-    for coluna in COLUNAS_TEMPORAIS_NECESSARIAS
-    if coluna not in cluster_ano_sensibilidade.columns
-]
-
-if colunas_temporais_ausentes:
-    raise KeyError(
-        "A tabela cluster_ano_sensibilidade não contém: "
-        f"{colunas_temporais_ausentes}"
-    )
-
-CANDIDATAS_PERCENTUAL_TEMPORAL = [
-    "percentual_dentro_cluster",
-    "percentual_cluster",
-]
-
-COLUNA_PERCENTUAL_TEMPORAL = next(
-    (
-        coluna
-        for coluna in CANDIDATAS_PERCENTUAL_TEMPORAL
-        if coluna in cluster_ano_sensibilidade.columns
-    ),
-    None,
-)
-
-if COLUNA_PERCENTUAL_TEMPORAL is None:
-    raise KeyError(
-        "A tabela cluster_ano_sensibilidade não contém uma coluna "
-        "de percentual reconhecida. Colunas esperadas: "
-        f"{CANDIDATAS_PERCENTUAL_TEMPORAL}"
-    )
-
-figura_temporal, eixos_temporais = plt.subplots(
-    nrows=1,
-    ncols=2,
-    figsize=(16, 6),
-    sharey=True,
-)
-
-for indice_eixo, nome_matriz in enumerate(
-    MATRIZES_ESPERADAS
-):
-    dados_matriz = (
-        cluster_ano_sensibilidade.loc[
-            cluster_ano_sensibilidade[
-                "matriz"
-            ].eq(nome_matriz)
-        ]
-        .copy()
-    )
-
-    matriz_temporal = (
-        dados_matriz.pivot(
-            index="cluster_rotulo",
-            columns="ano_internacao",
-            values=COLUNA_PERCENTUAL_TEMPORAL,
-        )
-        .sort_index()
-        .astype("float64")
-    )
-
-    sns.heatmap(
-        matriz_temporal,
-        annot=True,
-        fmt=".1f",
-        cmap="YlOrBr",
-        vmin=0,
-        vmax=100,
-        linewidths=0.5,
-        linecolor="white",
-        cbar=(indice_eixo == 1),
-        cbar_kws={
-            "label": "% dentro do cluster",
-        },
-        ax=eixos_temporais[indice_eixo],
-    )
-
-    eixos_temporais[indice_eixo].set_title(
-        "Matriz "
-        + ROTULOS_MATRIZES_FINAIS[nome_matriz]
-    )
-
-    eixos_temporais[indice_eixo].set_xlabel(
-        "Ano da internação"
-    )
-
-    eixos_temporais[indice_eixo].set_ylabel(
-        "Cluster"
-    )
-
-figura_temporal.suptitle(
-    "Composição temporal dos clusters sem indicadores de ausência",
-    fontsize=14,
-)
-
-figura_temporal.text(
-    0.01,
-    0.01,
-    (
-        "Cada linha soma aproximadamente 100%. Diferenças entre anos "
-        "indicam associação entre a partição e o período de internação. "
-        "O ano de 2026 possui cobertura parcial."
-    ),
-    fontsize=8,
-)
-
-figura_temporal.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        0.94,
-    ]
-)
-
-figura_temporal.savefig(
-    CAMINHO_FIGURA_TEMPORAL,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_temporal)
-
-
-# ============================================================
-# 3. DESFECHO POSTERIOR POR CLUSTER DE SENSIBILIDADE
-# ============================================================
-
-COLUNAS_DESFECHO_NECESSARIAS = [
-    "matriz",
-    "cluster_rotulo",
-    "quantidade_registros",
-    "quantidade_obitos",
-    "percentual_obito",
-]
-
-colunas_desfecho_ausentes = [
-    coluna
-    for coluna in COLUNAS_DESFECHO_NECESSARIAS
-    if coluna not in cluster_desfecho_sensibilidade.columns
-]
-
-if colunas_desfecho_ausentes:
-    raise KeyError(
-        "A tabela cluster_desfecho_sensibilidade não contém: "
-        f"{colunas_desfecho_ausentes}"
-    )
-
-cluster_desfecho_grafico = (
-    cluster_desfecho_sensibilidade[
-        COLUNAS_DESFECHO_NECESSARIAS
-    ]
-    .copy()
-)
-
-cluster_desfecho_grafico["rotulo_matriz"] = (
-    cluster_desfecho_grafico["matriz"]
-    .map(ROTULOS_MATRIZES_FINAIS)
-)
-
-cluster_desfecho_grafico["grupo"] = (
-    cluster_desfecho_grafico["rotulo_matriz"]
-    + " | "
-    + cluster_desfecho_grafico["cluster_rotulo"]
-)
-
-figura_desfecho, eixo_desfecho = plt.subplots(
-    figsize=(12, 6)
-)
-
-sns.barplot(
-    data=cluster_desfecho_grafico,
-    x="grupo",
-    y="percentual_obito",
-    hue="rotulo_matriz",
-    dodge=False,
-    ax=eixo_desfecho,
-)
-
-for contenedor in eixo_desfecho.containers:
-    rotulos_barras = []
-
-    for barra in contenedor:
-        altura = barra.get_height()
-
-        if np.isnan(altura):
-            rotulos_barras.append("")
-        else:
-            rotulos_barras.append(
-                f"{altura:.1f}%"
-            )
-
-    eixo_desfecho.bar_label(
-        contenedor,
-        labels=rotulos_barras,
-        padding=3,
-        fontsize=8,
-    )
-
-for indice, linha in cluster_desfecho_grafico.reset_index(
-    drop=True
-).iterrows():
-    eixo_desfecho.text(
-        indice,
-        max(
-            0.2,
-            linha["percentual_obito"] * 0.04,
-        ),
-        (
-            f"n={int(linha['quantidade_registros']):,}"
-            .replace(",", ".")
-        ),
-        ha="center",
-        va="bottom",
-        rotation=90,
-        fontsize=7,
-        color="white",
-    )
-
-
-eixo_desfecho.set_title(
-    "Óbito por SRAG nos clusters sem indicadores de ausência"
-)
-
-eixo_desfecho.set_xlabel(
-    "Matriz e cluster"
-)
-
-eixo_desfecho.set_ylabel(
-    "Óbito por SRAG (%)"
-)
-
-eixo_desfecho.tick_params(
-    axis="x",
-    rotation=15,
-)
-
-eixo_desfecho.grid(
-    axis="y",
-    alpha=0.20,
-)
-
-eixo_desfecho.legend(
-    title="Matriz"
-)
-
-figura_desfecho.text(
-    0.01,
-    0.01,
-    (
-        "O desfecho foi relacionado aos clusters somente após a formação "
-        "dos grupos. As diferenças são associações descritivas, não "
-        "causais, e não validam os clusters como fenótipos clínicos."
-    ),
-    fontsize=8,
-)
-
-figura_desfecho.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        1,
-    ]
-)
-
-figura_desfecho.savefig(
-    CAMINHO_FIGURA_DESFECHO,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_desfecho)
-
-
-# ============================================================
-# 4. COBERTURA VERSUS RELEVANCIA NA SOLUCAO ORIGINAL
-# ============================================================
-
-# A análise abaixo usa a importância absoluta do PC1 apenas como medida
-# exploratória de contribuição à estrutura dominante. Não representa
-# importância preditiva nem causalidade.
-
-objetos_cobertura_disponiveis = all(
-    nome in globals()
-    for nome in [
-        "diagnostico_matrizes_pre_imputacao",
-        "loadings_componentes_principais",
-    ]
-)
-
-cobertura_relevancia_features = pd.DataFrame()
-
-if objetos_cobertura_disponiveis:
-    diagnostico_cobertura = (
-        diagnostico_matrizes_pre_imputacao.copy()
-    )
-
-    loadings_cobertura = (
-        loadings_componentes_principais.copy()
-    )
-
-    candidatos_coluna_variavel = [
-        "variavel",
-        "feature",
-        "feature_original",
-        "coluna",
-    ]
-
-    coluna_variavel_diagnostico = next(
-        (
-            coluna
-            for coluna in candidatos_coluna_variavel
-            if coluna in diagnostico_cobertura.columns
-        ),
-        None,
-    )
-
-    coluna_variavel_loadings = next(
-        (
-            coluna
-            for coluna in candidatos_coluna_variavel
-            + ["feature_processada"]
-            if coluna in loadings_cobertura.columns
-        ),
-        None,
-    )
-
-    candidatos_coluna_cobertura = [
-        "percentual_preenchido",
-        "percentual_nao_ausente",
-        "percentual_cobertura",
-    ]
-
-    coluna_cobertura = next(
-        (
-            coluna
-            for coluna in candidatos_coluna_cobertura
-            if coluna in diagnostico_cobertura.columns
-        ),
-        None,
-    )
-
-    candidatos_coluna_loading = [
-        "loading_absoluto",
-        "loading_pc1_absoluto",
-        "pc1_absoluto",
-    ]
-
-    coluna_loading_absoluto = next(
-        (
-            coluna
-            for coluna in candidatos_coluna_loading
-            if coluna in loadings_cobertura.columns
-        ),
-        None,
-    )
-
-    if (
-        coluna_variavel_diagnostico is not None
-        and coluna_variavel_loadings is not None
-        and coluna_cobertura is not None
-    ):
-        if coluna_loading_absoluto is None:
-            candidatos_loading_assinado = [
-                "loading",
-                "loading_pc1",
-                "pc1",
-            ]
-
-            coluna_loading_assinado = next(
-                (
-                    coluna
-                    for coluna in candidatos_loading_assinado
-                    if coluna in loadings_cobertura.columns
-                ),
-                None,
-            )
-
-            if coluna_loading_assinado is not None:
-                loadings_cobertura[
-                    "loading_pc1_absoluto_calculado"
-                ] = (
-                    pd.to_numeric(
-                        loadings_cobertura[
-                            coluna_loading_assinado
-                        ],
-                        errors="coerce",
-                    )
-                    .abs()
-                )
-
-                coluna_loading_absoluto = (
-                    "loading_pc1_absoluto_calculado"
-                )
-
-        if coluna_loading_absoluto is not None:
-            diagnostico_cobertura["chave_variavel"] = (
-                diagnostico_cobertura[
-                    coluna_variavel_diagnostico
-                ]
-                .astype("string")
-            )
-
-            loadings_cobertura["chave_variavel"] = (
-                loadings_cobertura[
-                    coluna_variavel_loadings
-                ]
-                .astype("string")
-                .str.replace(
-                    r"^(numericas|binarias|categoricas)__",
-                    "",
-                    regex=True,
-                )
-                .str.replace(
-                    r"^missingindicator_",
-                    "",
-                    regex=True,
-                )
-                .str.replace(
-                    r"_categoria_.*$",
-                    "",
-                    regex=True,
-                )
-            )
-
-            relevancia_por_variavel = (
-                loadings_cobertura.groupby(
-                    "chave_variavel",
-                    dropna=False,
-                )[
-                    coluna_loading_absoluto
-                ]
-                .max()
-                .rename(
-                    "contribuicao_absoluta_maxima_pc1"
-                )
-                .reset_index()
-            )
-
-            cobertura_relevancia_features = (
-                diagnostico_cobertura[
-                    [
-                        "chave_variavel",
-                        coluna_cobertura,
-                    ]
-                ]
-                .drop_duplicates(
-                    subset=["chave_variavel"]
-                )
-                .merge(
-                    relevancia_por_variavel,
-                    on="chave_variavel",
-                    how="inner",
-                )
-                .rename(
-                    columns={
-                        coluna_cobertura: (
-                            "percentual_preenchido"
-                        ),
-                    }
-                )
-            )
-
-            cobertura_relevancia_features[
-                "percentual_preenchido"
-            ] = pd.to_numeric(
-                cobertura_relevancia_features[
-                    "percentual_preenchido"
-                ],
-                errors="coerce",
-            )
-
-            cobertura_relevancia_features = (
-                cobertura_relevancia_features.dropna(
-                    subset=[
-                        "percentual_preenchido",
-                        "contribuicao_absoluta_maxima_pc1",
-                    ]
-                )
-            )
-
-if not cobertura_relevancia_features.empty:
-    cobertura_relevancia_features[
-        "faixa_cobertura"
-    ] = pd.cut(
-        cobertura_relevancia_features[
-            "percentual_preenchido"
-        ],
-        bins=[
-            -np.inf,
-            50,
-            80,
-            95,
-            np.inf,
-        ],
-        labels=[
-            "Abaixo de 50%",
-            "50% a <80%",
-            "80% a <95%",
-            "95% ou mais",
-        ],
-        right=False,
-    )
-
-    cobertura_relevancia_features = (
-        cobertura_relevancia_features.sort_values(
-            "contribuicao_absoluta_maxima_pc1",
-            ascending=False,
-        )
-        .reset_index(drop=True)
-    )
-
-    cobertura_relevancia_features.to_csv(
-        CAMINHO_COBERTURA_RELEVANCIA,
-        index=False,
-        encoding="utf-8-sig",
-    )
-
-    limite_rotulos = min(
-        15,
-        len(cobertura_relevancia_features),
-    )
-
-    indices_rotulos = set(
-        cobertura_relevancia_features.head(
-            limite_rotulos
-        ).index
-    )
-
-    figura_cobertura, eixo_cobertura = plt.subplots(
-        figsize=(12, 8)
-    )
-
-    sns.scatterplot(
-        data=cobertura_relevancia_features,
-        x="percentual_preenchido",
-        y="contribuicao_absoluta_maxima_pc1",
-        hue="faixa_cobertura",
-        s=80,
-        alpha=0.80,
-        ax=eixo_cobertura,
-    )
-
-    for indice, linha in (
-        cobertura_relevancia_features.iterrows()
-    ):
-        if indice in indices_rotulos:
-            eixo_cobertura.annotate(
-                str(linha["chave_variavel"]),
-                (
-                    linha["percentual_preenchido"],
-                    linha[
-                        "contribuicao_absoluta_maxima_pc1"
-                    ],
-                ),
-                xytext=(4, 4),
-                textcoords="offset points",
-                fontsize=7,
-            )
-
-    eixo_cobertura.axvline(
-        50,
-        color="tab:red",
-        linestyle="--",
-        linewidth=1,
-        alpha=0.70,
-    )
-
-    eixo_cobertura.axvline(
-        80,
-        color="tab:orange",
-        linestyle="--",
-        linewidth=1,
-        alpha=0.70,
-    )
-
-    eixo_cobertura.set_title(
-        "Cobertura versus contribuição à estrutura dominante"
-    )
-
-    eixo_cobertura.set_xlabel(
-        "Preenchimento na amostra de desenvolvimento (%)"
-    )
-
-    eixo_cobertura.set_ylabel(
-        "Maior contribuição absoluta ao PC1"
-    )
-
-    eixo_cobertura.grid(
-        alpha=0.20,
-    )
-
-    eixo_cobertura.legend(
-        title="Faixa de cobertura",
-    )
-
-    figura_cobertura.text(
-        0.01,
-        0.01,
-        (
-            "Contribuição ao PC1 é usada apenas como diagnóstico da "
-            "estrutura do clustering. Baixa cobertura com contribuição "
-            "alta pode indicar influência do padrão de documentação, e "
-            "não relevância clínica ou preditiva."
-        ),
-        fontsize=8,
-    )
-
-    figura_cobertura.tight_layout(
-        rect=[
-            0,
-            0.06,
-            1,
-            1,
-        ]
-    )
-
-    figura_cobertura.savefig(
-        CAMINHO_FIGURA_COBERTURA_RELEVANCIA,
-        dpi=160,
-        bbox_inches="tight",
-    )
-
-    plt.show()
-    plt.close(figura_cobertura)
-
-else:
-    print(
-        "Gráfico de cobertura versus relevância não gerado: "
-        "os objetos ou nomes de colunas necessários não estavam "
-        "disponíveis. As demais análises finais foram preservadas."
-    )
-
-
-# ============================================================
-# 5. VALIDACAO E RESUMO
-# ============================================================
-
-verificacoes_eda_sensibilidade = pd.DataFrame(
-    {
-        "verificacao": [
-            "comparacao_duas_matrizes",
-            "silhouette_original_valido",
-            "silhouette_sensibilidade_valido",
-            "ari_comparacao_valido",
-            "composicao_temporal_nao_vazia",
-            "desfecho_cluster_nao_vazio",
-            "ari_nucleo_ampliada_valido",
-            "arquivo_comparacao_criado",
-            "figura_comparacao_criada",
-            "figura_temporal_criada",
-            "figura_desfecho_criada",
-        ],
-        "resultado": [
-            len(comparacao_original_sensibilidade) == 2,
-            comparacao_original_sensibilidade[
-                "silhouette_original"
-            ].between(-1, 1).all(),
-            comparacao_original_sensibilidade[
-                "silhouette_sem_indicadores_ausencia"
-            ].between(-1, 1).all(),
-            comparacao_original_sensibilidade[
-                "ari_original_vs_sem_ausencia"
-            ].between(-0.5, 1).all(),
-            not cluster_ano_sensibilidade.empty,
-            not cluster_desfecho_sensibilidade.empty,
-            -0.5 <= ari_nucleo_vs_ampliada_sem_ausencia <= 1,
-            CAMINHO_COMPARACAO_SENSIBILIDADE.exists(),
-            CAMINHO_FIGURA_COMPARACAO.exists(),
-            CAMINHO_FIGURA_TEMPORAL.exists(),
-            CAMINHO_FIGURA_DESFECHO.exists(),
-        ],
-    }
-)
-
-if not verificacoes_eda_sensibilidade[
-    "resultado"
-].all():
-    falhas = (
-        verificacoes_eda_sensibilidade.loc[
-            ~verificacoes_eda_sensibilidade[
-                "resultado"
-            ],
-            "verificacao",
-        ]
-        .tolist()
-    )
-
-    raise RuntimeError(
-        "A EDA final de sensibilidade falhou em: "
-        f"{falhas}"
-    )
-
-print(
-    "EDA final de sensibilidade validada com sucesso."
-)
-
-print(
-    "ARI núcleo versus ampliada sem indicadores de ausência:",
-    round(
-        ari_nucleo_vs_ampliada_sem_ausencia,
-        6,
-    ),
-)
-
-display(
-    comparacao_original_sensibilidade[
-        [
-            "matriz",
-            "silhouette_original",
-            "silhouette_sem_indicadores_ausencia",
-            "queda_silhouette",
-            "queda_silhouette_percentual",
-            "ari_estabilidade_original",
-            "ari_original_vs_sem_ausencia",
-            "indicadores_ausencia_excluidos",
-            "features_sensibilidade",
-            "componentes_pca_90",
-        ]
-    ]
-)
-
-display(
-    cluster_desfecho_grafico[
-        [
-            "matriz",
-            "cluster_rotulo",
-            "quantidade_registros",
-            "quantidade_obitos",
-            "percentual_obito",
-        ]
-    ]
-)
-
-display(
-    verificacoes_eda_sensibilidade
-)
+# ... 949 lines omitted ...
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1400x600 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1600x600 with 3 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (display_data)**
+
+```text
+<Figure size 1200x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 4 (stream:stdout)**
+
+```text
+Gráfico de cobertura versus relevância não gerado: os objetos ou nomes de colunas necessários não estavam disponíveis. As demais análises finais foram preservadas.
+EDA final de sensibilidade validada com sucesso.
+ARI núcleo versus ampliada sem indicadores de ausência: 0.918673
+```
+
+**Output 5 (display_data)**
+
+```text
+     matriz  silhouette_original  silhouette_sem_indicadores_ausencia  \
+0  ampliada             0.293504                             0.169328   
+1    nucleo             0.364422                             0.233227   
+
+   queda_silhouette  queda_silhouette_percentual  ari_estabilidade_original  \
+0          0.124176                    42.308148                   0.999980   
+1          0.131194                    36.000688                   0.999949   
+
+   ari_original_vs_sem_ausencia  indicadores_ausencia_excluidos  \
+0                      0.087989                              28   
+1                      0.094174                              26   
+
+   features_sensibilidade  componentes_pca_90  
+0                      69                  30  
+1                      31                  15  
+[non-text output omitted: text/html]
+```
+
+**Output 6 (display_data)**
+
+```text
+     matriz cluster_rotulo  quantidade_registros  quantidade_obitos  \
+0    nucleo      Cluster 1                 39768               1039   
+1    nucleo      Cluster 2                 40232              10762   
+2  ampliada      Cluster 1                 38803                964   
+3  ampliada      Cluster 2                 41197              10837   
+
+   percentual_obito  
+0          2.612653  
+1         26.749851  
+2          2.484344  
+3         26.305313  
+[non-text output omitted: text/html]
+```
+
+**Output 7 (display_data)**
+
+```text
+                        verificacao  resultado
+0          comparacao_duas_matrizes       True
+1        silhouette_original_valido       True
+2   silhouette_sensibilidade_valido       True
+3             ari_comparacao_valido       True
+4     composicao_temporal_nao_vazia       True
+5        desfecho_cluster_nao_vazio       True
+6        ari_nucleo_ampliada_valido       True
+7         arquivo_comparacao_criado       True
+8          figura_comparacao_criada       True
+9            figura_temporal_criada       True
+10           figura_desfecho_criada       True
+[non-text output omitted: text/html]
 ```
 
 ### Cell 145 [code] · In [ ]
@@ -22141,855 +21234,216 @@ def normalizar_binaria_para_perfil(serie):
 
         return numerica.where(
             numerica.isin([0, 1])
-        )
-
-    texto = (
-        serie.astype("string")
-        .str.strip()
-        .str.lower()
-        .str.replace(
-            r"\.0$",
-            "",
-            regex=True,
-        )
-    )
-
-    mapa = {
-        "1": 1.0,
-        "sim": 1.0,
-        "yes": 1.0,
-        "true": 1.0,
-        "0": 0.0,
-        "2": 0.0,
-        "não": 0.0,
-        "nao": 0.0,
-        "no": 0.0,
-        "false": 0.0,
-    }
-
-    return texto.map(mapa).astype("float32")
-
-
-def calcular_perfis_matriz(
-    nome_matriz,
-    atribuicoes,
-):
-    if not atribuicoes.index.equals(
-        amostra_desenvolvimento.index
-    ):
-        raise RuntimeError(
-            "As atribuições da matriz "
-            f"{nome_matriz} não estão alinhadas à amostra."
-        )
-
-    colunas_base = list(
-        dict.fromkeys(
-            COLUNAS_NUMERICAS_PERFIS
-            + COLUNAS_BINARIAS_PERFIS
-            + (
-                [COLUNA_SEXO_PERFIL]
-                if COLUNA_SEXO_PERFIL is not None
-                else []
-            )
-        )
-    )
-
-    base = (
-        amostra_desenvolvimento[
-            colunas_base
-        ]
-        .copy()
-    )
-
-    base["cluster"] = (
-        atribuicoes["cluster"]
-        .astype("int16")
-    )
-
-    base["cluster_rotulo"] = (
-        atribuicoes["cluster_rotulo"]
-        .astype("string")
-    )
-
-    registros_numericos = []
-
-    for coluna in COLUNAS_NUMERICAS_PERFIS:
-        valores = pd.to_numeric(
-            base[coluna],
-            errors="coerce",
-        )
-
-        tabela = (
-            pd.DataFrame(
-                {
-                    "cluster_rotulo": base[
-                        "cluster_rotulo"
-                    ],
-                    "valor": valores,
-                },
-                index=base.index,
-            )
-            .groupby(
-                "cluster_rotulo",
-                dropna=False,
-            )["valor"]
-            .agg(
-                quantidade_registros="size",
-                quantidade_preenchida="count",
-                media="mean",
-                desvio_padrao="std",
-                mediana="median",
-                p25=lambda serie: serie.quantile(0.25),
-                p75=lambda serie: serie.quantile(0.75),
-            )
-            .reset_index()
-        )
-
-        tabela["variavel"] = coluna
-        tabela["matriz"] = nome_matriz
-        tabela["percentual_preenchido"] = (
-            tabela["quantidade_preenchida"]
-            .div(tabela["quantidade_registros"])
-            .mul(100)
-        )
-
-        registros_numericos.append(tabela)
-
-    perfis_numericos = pd.concat(
-        registros_numericos,
-        ignore_index=True,
-    )
-
-    registros_binarios = []
-
-    for coluna in COLUNAS_BINARIAS_PERFIS:
-        valores = normalizar_binaria_para_perfil(
-            base[coluna]
-        )
-
-        tabela_base = pd.DataFrame(
-            {
-                "cluster_rotulo": base[
-                    "cluster_rotulo"
-                ],
-                "valor": valores,
-            },
-            index=base.index,
-        )
-
-        tabela = (
-            tabela_base.groupby(
-                "cluster_rotulo",
-                dropna=False,
-            )["valor"]
-            .agg(
-                quantidade_registros="size",
-                quantidade_respostas_validas="count",
-                quantidade_sim="sum",
-            )
-            .reset_index()
-        )
-
-        tabela["quantidade_sim"] = (
-            tabela["quantidade_sim"]
-            .fillna(0)
-            .astype("int64")
-        )
-
-        tabela["quantidade_sem_resposta_valida"] = (
-            tabela["quantidade_registros"]
-            - tabela["quantidade_respostas_validas"]
-        )
-
-        tabela["percentual_preenchido_valido"] = (
-            tabela["quantidade_respostas_validas"]
-            .div(tabela["quantidade_registros"])
-            .mul(100)
-        )
-
-        tabela["percentual_sem_resposta_valida"] = (
-            tabela["quantidade_sem_resposta_valida"]
-            .div(tabela["quantidade_registros"])
-            .mul(100)
-        )
-
-        tabela["percentual_sim_entre_validos"] = np.where(
-            tabela["quantidade_respostas_validas"].gt(0),
-            tabela["quantidade_sim"]
-            .div(tabela["quantidade_respostas_validas"])
-            .mul(100),
-            np.nan,
-        )
-
-        tabela["variavel"] = coluna
-        tabela["grupo_clinico"] = np.where(
-            tabela["variavel"].isin(
-                COLUNAS_SINTOMAS_PERFIS
-            ),
-            "sintoma",
-            "comorbidade",
-        )
-        tabela["matriz"] = nome_matriz
-
-        registros_binarios.append(tabela)
-
-    perfis_binarios = pd.concat(
-        registros_binarios,
-        ignore_index=True,
-    )
-
-    if COLUNA_SEXO_PERFIL is not None:
-        perfis_sexo = (
-            base.groupby(
-                [
-                    "cluster_rotulo",
-                    COLUNA_SEXO_PERFIL,
-                ],
-                dropna=False,
-            )
-            .size()
-            .rename("quantidade")
-            .reset_index()
-        )
-
-        perfis_sexo["percentual_cluster"] = (
-            perfis_sexo["quantidade"]
-            .div(
-                perfis_sexo.groupby(
-                    "cluster_rotulo"
-                )["quantidade"]
-                .transform("sum")
-            )
-            .mul(100)
-        )
-
-        perfis_sexo.insert(
-            0,
-            "matriz",
-            nome_matriz,
-        )
-    else:
-        perfis_sexo = pd.DataFrame()
-
-    return (
-        perfis_numericos,
-        perfis_binarios,
-        perfis_sexo,
-    )
-
-
-# ============================================================
-# 3. PERFIS PARA NUCLEO E AMPLIADA
-# ============================================================
-
-lista_perfis_numericos = []
-lista_perfis_binarios = []
-lista_perfis_sexo = []
-
-for nome_matriz in MATRIZES_PERFIS_SENSIBILIDADE:
-    if nome_matriz not in (
-        atribuicoes_sensibilidade_sem_ausencia
-    ):
-        raise KeyError(
-            "Não foram encontradas atribuições de sensibilidade "
-            f"para a matriz {nome_matriz}."
-        )
-
-    (
-        perfil_numerico,
-        perfil_binario,
-        perfil_sexo,
-    ) = calcular_perfis_matriz(
-        nome_matriz=nome_matriz,
-        atribuicoes=(
-            atribuicoes_sensibilidade_sem_ausencia[
-                nome_matriz
-            ]
-        ),
-    )
-
-    lista_perfis_numericos.append(
-        perfil_numerico
-    )
-    lista_perfis_binarios.append(
-        perfil_binario
-    )
-
-    if not perfil_sexo.empty:
-        lista_perfis_sexo.append(
-            perfil_sexo
-        )
-
-perfis_numericos_clusters_sensibilidade = pd.concat(
-    lista_perfis_numericos,
-    ignore_index=True,
-)
-
-perfis_binarios_clusters_sensibilidade = pd.concat(
-    lista_perfis_binarios,
-    ignore_index=True,
-)
-
-if lista_perfis_sexo:
-    perfis_sexo_clusters_sensibilidade = pd.concat(
-        lista_perfis_sexo,
-        ignore_index=True,
-    )
-else:
-    perfis_sexo_clusters_sensibilidade = pd.DataFrame()
-
-perfis_numericos_clusters_sensibilidade.to_csv(
-    CAMINHO_PERFIS_NUMERICOS,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-perfis_binarios_clusters_sensibilidade.to_csv(
-    CAMINHO_PERFIS_BINARIOS,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-if not perfis_sexo_clusters_sensibilidade.empty:
-    perfis_sexo_clusters_sensibilidade.to_csv(
-        CAMINHO_PERFIS_SEXO,
-        index=False,
-        encoding="utf-8-sig",
-    )
-
-
-# ============================================================
-# 4. HEATMAP DOS PERFIS NUMERICOS
-# ============================================================
-
-metricas_numericas_heatmap = (
-    perfis_numericos_clusters_sensibilidade[
-        [
-            "matriz",
-            "cluster_rotulo",
-            "variavel",
-            "mediana",
-        ]
-    ]
-    .copy()
-)
-
-metricas_numericas_heatmap["grupo"] = (
-    metricas_numericas_heatmap["matriz"]
-    .map(ROTULOS_MATRIZES_PERFIS)
-    + " | "
-    + metricas_numericas_heatmap[
-        "cluster_rotulo"
-    ]
-)
-
-matriz_numericos = (
-    metricas_numericas_heatmap.pivot(
-        index="variavel",
-        columns="grupo",
-        values="mediana",
-    )
-    .astype("float64")
-)
-
-media_linha = matriz_numericos.mean(
-    axis=1
-)
-
-desvio_linha = matriz_numericos.std(
-    axis=1,
-    ddof=0,
-)
-
-matriz_numericos_padronizada = (
-    matriz_numericos.sub(
-        media_linha,
-        axis=0,
-    )
-    .div(
-        desvio_linha.replace(0, np.nan),
-        axis=0,
-    )
-    .fillna(0)
-)
-
-anotacoes_numericos = matriz_numericos.apply(
-    lambda coluna: coluna.map(
-        lambda valor: (
-            ""
-            if pd.isna(valor)
-            else f"{valor:.1f}"
-        )
-    )
-)
-
-figura_numericos, eixo_numericos = plt.subplots(
-    figsize=(12, 7)
-)
-
-sns.heatmap(
-    matriz_numericos_padronizada,
-    annot=anotacoes_numericos,
-    fmt="",
-    cmap="RdBu_r",
-    center=0,
-    linewidths=0.5,
-    linecolor="white",
-    cbar_kws={
-        "label": "Mediana padronizada por variável",
-    },
-    ax=eixo_numericos,
-)
-
-
-eixo_numericos.set_title(
-    "Perfil numérico dos clusters sem indicadores de ausência"
-)
-
-eixo_numericos.set_xlabel(
-    "Matriz e cluster"
-)
-
-eixo_numericos.set_ylabel(
-    "Variável"
-)
-
-figura_numericos.text(
-    0.01,
-    0.01,
-    (
-        "As anotações mostram as medianas nas unidades originais. "
-        "As cores padronizam cada variável apenas para facilitar a "
-        "comparação visual entre os clusters."
-    ),
-    fontsize=8,
-)
-
-figura_numericos.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        1,
-    ]
-)
-
-figura_numericos.savefig(
-    CAMINHO_FIGURA_NUMERICOS,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_numericos)
-
-
-# ============================================================
-# 5. HEATMAP DE COBERTURA CLINICA
-# ============================================================
-
-resumo_diferencas_cobertura = (
-    perfis_binarios_clusters_sensibilidade.groupby(
-        [
-            "matriz",
-            "variavel",
-        ],
-        dropna=False,
-    )["percentual_preenchido_valido"]
-    .agg(
-        cobertura_minima="min",
-        cobertura_maxima="max",
-    )
-    .reset_index()
-)
-
-resumo_diferencas_cobertura[
-    "diferenca_absoluta_cobertura"
-] = (
-    resumo_diferencas_cobertura[
-        "cobertura_maxima"
-    ]
-    .sub(
-        resumo_diferencas_cobertura[
-            "cobertura_minima"
-        ]
-    )
-    .abs()
-)
-
-variaveis_maior_diferenca_cobertura = (
-    resumo_diferencas_cobertura.groupby(
-        "variavel"
-    )["diferenca_absoluta_cobertura"]
-    .max()
-    .sort_values(
-        ascending=False
-    )
-    .head(15)
-    .index
-    .tolist()
-)
-
-cobertura_heatmap = (
-    perfis_binarios_clusters_sensibilidade.loc[
-        perfis_binarios_clusters_sensibilidade[
-            "variavel"
-        ].isin(
-            variaveis_maior_diferenca_cobertura
-        )
-    ]
-    .copy()
-)
-
-cobertura_heatmap["grupo"] = (
-    cobertura_heatmap["matriz"]
-    .map(ROTULOS_MATRIZES_PERFIS)
-    + " | "
-    + cobertura_heatmap[
-        "cluster_rotulo"
-    ]
-)
-
-matriz_cobertura = (
-    cobertura_heatmap.pivot(
-        index="variavel",
-        columns="grupo",
-        values="percentual_preenchido_valido",
-    )
-    .reindex(
-        index=variaveis_maior_diferenca_cobertura
-    )
-    .astype("float64")
-)
-
-figura_cobertura, eixo_cobertura = plt.subplots(
-    figsize=(12, 9)
-)
-
-sns.heatmap(
-    matriz_cobertura,
-    annot=True,
-    fmt=".1f",
-    cmap="Blues",
-    vmin=0,
-    vmax=100,
-    linewidths=0.5,
-    linecolor="white",
-    cbar_kws={
-        "label": "Respostas válidas (%)",
-    },
-    ax=eixo_cobertura,
-)
-
-
-eixo_cobertura.set_title(
-    "Cobertura clínica nos clusters sem indicadores de ausência"
-)
-
-eixo_cobertura.set_xlabel(
-    "Matriz e cluster"
-)
-
-eixo_cobertura.set_ylabel(
-    "Sintoma ou comorbidade"
-)
-
-figura_cobertura.text(
-    0.01,
-    0.01,
-    (
-        "Foram exibidas as 15 variáveis com maior diferença de cobertura "
-        "entre clusters. Cobertura representa resposta válida, não "
-        "presença da condição."
-    ),
-    fontsize=8,
-)
-
-figura_cobertura.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        1,
-    ]
-)
-
-figura_cobertura.savefig(
-    CAMINHO_FIGURA_COBERTURA,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_cobertura)
-
-
-# ============================================================
-# 6. HEATMAP DE PRESENCA ENTRE RESPOSTAS VALIDAS
-# ============================================================
-
-resumo_diferencas_prevalencia = (
-    perfis_binarios_clusters_sensibilidade.groupby(
-        [
-            "matriz",
-            "variavel",
-        ],
-        dropna=False,
-    )["percentual_sim_entre_validos"]
-    .agg(
-        prevalencia_minima="min",
-        prevalencia_maxima="max",
-    )
-    .reset_index()
-)
-
-resumo_diferencas_prevalencia[
-    "diferenca_absoluta_prevalencia"
-] = (
-    resumo_diferencas_prevalencia[
-        "prevalencia_maxima"
-    ]
-    .sub(
-        resumo_diferencas_prevalencia[
-            "prevalencia_minima"
-        ]
-    )
-    .abs()
-)
-
-variaveis_maior_diferenca_prevalencia = (
-    resumo_diferencas_prevalencia.groupby(
-        "variavel"
-    )["diferenca_absoluta_prevalencia"]
-    .max()
-    .sort_values(
-        ascending=False
-    )
-    .head(15)
-    .index
-    .tolist()
-)
-
-prevalencia_heatmap = (
-    perfis_binarios_clusters_sensibilidade.loc[
-        perfis_binarios_clusters_sensibilidade[
-            "variavel"
-        ].isin(
-            variaveis_maior_diferenca_prevalencia
-        )
-    ]
-    .copy()
-)
-
-prevalencia_heatmap["grupo"] = (
-    prevalencia_heatmap["matriz"]
-    .map(ROTULOS_MATRIZES_PERFIS)
-    + " | "
-    + prevalencia_heatmap[
-        "cluster_rotulo"
-    ]
-)
-
-matriz_prevalencia = (
-    prevalencia_heatmap.pivot(
-        index="variavel",
-        columns="grupo",
-        values="percentual_sim_entre_validos",
-    )
-    .reindex(
-        index=variaveis_maior_diferenca_prevalencia
-    )
-    .astype("float64")
-)
-
-figura_prevalencia, eixo_prevalencia = plt.subplots(
-    figsize=(12, 9)
-)
-
-sns.heatmap(
-    matriz_prevalencia,
-    annot=True,
-    fmt=".1f",
-    cmap="YlGnBu",
-    vmin=0,
-    vmax=100,
-    linewidths=0.5,
-    linecolor="white",
-    cbar_kws={
-        "label": "Resposta sim entre válidos (%)",
-    },
-    ax=eixo_prevalencia,
-)
-
-
-eixo_prevalencia.set_title(
-    "Perfil clínico dos clusters sem indicadores de ausência"
-)
-
-eixo_prevalencia.set_xlabel(
-    "Matriz e cluster"
-)
-
-eixo_prevalencia.set_ylabel(
-    "Sintoma ou comorbidade"
-)
-
-figura_prevalencia.text(
-    0.01,
-    0.01,
-    (
-        "Foram exibidas as 15 maiores diferenças na resposta sim entre "
-        "registros válidos. A interpretação deve ser feita junto com o "
-        "heatmap de cobertura."
-    ),
-    fontsize=8,
-)
-
-figura_prevalencia.tight_layout(
-    rect=[
-        0,
-        0.06,
-        1,
-        1,
-    ]
-)
-
-figura_prevalencia.savefig(
-    CAMINHO_FIGURA_PREVALENCIA,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_prevalencia)
-
-
-# ============================================================
-# 7. VALIDACOES E SAIDAS
-# ============================================================
-
-verificacoes_perfis_sensibilidade = pd.DataFrame(
-    {
-        "verificacao": [
-            "perfis_numericos_nao_vazios",
-            "perfis_binarios_nao_vazios",
-            "duas_matrizes_numericas",
-            "duas_matrizes_binarias",
-            "percentuais_cobertura_validos",
-            "percentuais_prevalencia_validos",
-            "arquivo_numerico_criado",
-            "arquivo_binario_criado",
-            "figura_numerica_criada",
-            "figura_cobertura_criada",
-            "figura_prevalencia_criada",
-        ],
-        "resultado": [
-            not perfis_numericos_clusters_sensibilidade.empty,
-            not perfis_binarios_clusters_sensibilidade.empty,
-            set(
-                perfis_numericos_clusters_sensibilidade[
-                    "matriz"
-                ]
-            ) == set(MATRIZES_PERFIS_SENSIBILIDADE),
-            set(
-                perfis_binarios_clusters_sensibilidade[
-                    "matriz"
-                ]
-            ) == set(MATRIZES_PERFIS_SENSIBILIDADE),
-            perfis_binarios_clusters_sensibilidade[
-                "percentual_preenchido_valido"
-            ].between(0, 100).all(),
-            perfis_binarios_clusters_sensibilidade[
-                "percentual_sim_entre_validos"
-            ].dropna().between(0, 100).all(),
-            CAMINHO_PERFIS_NUMERICOS.exists(),
-            CAMINHO_PERFIS_BINARIOS.exists(),
-            CAMINHO_FIGURA_NUMERICOS.exists(),
-            CAMINHO_FIGURA_COBERTURA.exists(),
-            CAMINHO_FIGURA_PREVALENCIA.exists(),
-        ],
-    }
-)
-
-if not verificacoes_perfis_sensibilidade[
-    "resultado"
-].all():
-    falhas = (
-        verificacoes_perfis_sensibilidade.loc[
-            ~verificacoes_perfis_sensibilidade[
-                "resultado"
-            ],
-            "verificacao",
-        ]
-        .tolist()
-    )
-
-    raise RuntimeError(
-        "A caracterização dos clusters de sensibilidade falhou em: "
-        f"{falhas}"
-    )
-
-print(
-    "Perfis dos clusters de sensibilidade validados com sucesso."
-)
-
-print(
-    "Variáveis numéricas:",
-    COLUNAS_NUMERICAS_PERFIS,
-)
-
-print(
-    "Sintomas:",
-    len(COLUNAS_SINTOMAS_PERFIS),
-)
-
-print(
-    "Comorbidades:",
-    len(COLUNAS_COMORBIDADES_PERFIS),
-)
-
-
-display(
-    perfis_numericos_clusters_sensibilidade.sort_values(
-        [
-            "matriz",
-            "variavel",
-            "cluster_rotulo",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-
-display(
-    perfis_binarios_clusters_sensibilidade.sort_values(
-        [
-            "matriz",
-            "grupo_clinico",
-            "variavel",
-            "cluster_rotulo",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-
-if not perfis_sexo_clusters_sensibilidade.empty:
-    display(
-        perfis_sexo_clusters_sensibilidade.sort_values(
-            [
-                "matriz",
-                "cluster_rotulo",
-                COLUNA_SEXO_PERFIL,
-            ]
-        )
-        .reset_index(drop=True)
-    )
-
-
-display(
-    verificacoes_perfis_sensibilidade
-)
+# ... 849 lines omitted ...
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1200x700 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1200x900 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (display_data)**
+
+```text
+<Figure size 1200x900 with 2 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 4 (stream:stdout)**
+
+```text
+Perfis dos clusters de sensibilidade validados com sucesso.
+Variáveis numéricas: ['idade_anos', 'dias_sintomas_ate_internacao', 'n_sintomas_confirmados', 'n_sintomas_avaliados', 'n_comorbidades_confirmadas', 'n_comorbidades_avaliadas']
+Sintomas: 13
+Comorbidades: 13
+```
+
+**Output 5 (display_data)**
+
+```text
+   cluster_rotulo  quantidade_registros  quantidade_preenchida      media  \
+0       Cluster 1                 38803                  38803   3.605546   
+1       Cluster 2                 41197                  41197   5.404156   
+2       Cluster 1                 38803                  38803   5.356192   
+3       Cluster 2                 41197                  41197  65.968912   
+4       Cluster 1                 38803                  38803   2.343118   
+5       Cluster 2                 41197                  41197   6.572517   
+6       Cluster 1                 38803                  38803   0.309022   
+7       Cluster 2                 41197                  41197   1.268588   
+8       Cluster 1                 38803                  38803  10.094065   
+9       Cluster 2                 41197                  41197   9.713232   
+10      Cluster 1                 38803                  38803   4.278612   
+11      Cluster 2                 41197                  41197   4.088647   
+12      Cluster 1                 39768                  39768   3.617104   
+13      Cluster 2                 40232                  40232   5.435872   
+14      Cluster 1                 39768                  39768   6.022081   
+15      Cluster 2                 40232                  40232  66.764551   
+16      Cluster 1                 39768                  39768   2.380683   
+17      Cluster 2                 40232                  40232   6.636831   
+18      Cluster 1                 39768                  39768   0.315052   
+19      Cluster 2                 40232                  40232   1.285643   
+20      Cluster 1                 39768                  39768  10.079913   
+21      Cluster 2                 40232                  40232   9.718085   
+22      Cluster 1                 39768                  39768   4.272933   
+23      Cluster 2                 40232                  40232   4.089705   
+
+    desvio_padrao  mediana       p25   p75                      variavel  \
+0        6.710222      3.0       1.0   5.0  dias_sintomas_ate_internacao   
+1       16.631224      3.0       1.0   7.0  dias_sintomas_ate_internacao   
+2        8.661932      1.0  0.416667   6.0                    idade_anos   
+3       16.378473     67.0      54.0  79.0                    idade_anos   
+4        4.862778      0.0       0.0   1.0      n_comorbidades_avaliadas   
+5        6.092517      3.0       0.0  13.0      n_comorbidades_avaliadas   
+6        0.603144      0.0       0.0   0.0    n_comorbidades_confirmadas   
+7        1.140264      1.0       0.0   2.0    n_comorbidades_confirmadas   
+8          3.7736     13.0       8.0  13.0          n_sintomas_avaliados   
+9        4.142817     12.0       6.0  13.0          n_sintomas_avaliados   
+10       1.564721      4.0       3.0   5.0        n_sintomas_confirmados   
+11       1.798403      4.0       3.0   5.0        n_sintomas_confirmados   
+12       6.647297      3.0       1.0   5.0  dias_sintomas_ate_internacao   
+13       16.82098      3.0       1.0   7.0  dias_sintomas_ate_internacao   
+14       9.549173      1.0       0.5   7.0                    idade_anos   
+15      15.732652     68.0      55.0  79.0                    idade_anos   
+16       4.892132      0.0       0.0   1.0      n_comorbidades_avaliadas   
+17       6.085916      3.0       0.0  13.0      n_comorbidades_avaliadas   
+18       0.609885      0.0       0.0   1.0    n_comorbidades_confirmadas   
+19       1.141756      1.0       0.0   2.0    n_comorbidades_confirmadas   
+20       3.771093     13.0       8.0  13.0          n_sintomas_avaliados   
+21       4.154358     12.0       6.0  13.0          n_sintomas_avaliados   
+22       1.568733      4.0       3.0   5.0        n_sintomas_confirmados   
+23        1.80053      4.0       3.0   5.0        n_sintomas_confirmados   
+
+      matriz  percentual_preenchido  
+0   ampliada                  100.0  
+1   ampliada                  100.0  
+2   ampliada                  100.0  
+3   ampliada                  100.0  
+4   ampliada                  100.0  
+5   ampliada                  100.0  
+6   ampliada                  100.0  
+7   ampliada                  100.0  
+8   ampliada                  100.0  
+9   ampliada                  100.0  
+10  ampliada                  100.0  
+11  ampliada                  100.0  
+12    nucleo                  100.0  
+13    nucleo                  100.0  
+14    nucleo                  100.0  
+15    nucleo                  100.0  
+16    nucleo                  100.0  
+17    nucleo                  100.0  
+18    nucleo                  100.0  
+19    nucleo                  100.0  
+20    nucleo                  100.0  
+21    nucleo                  100.0  
+22    nucleo                  100.0  
+23    nucleo                  100.0  
+[non-text output omitted: text/html]
+```
+
+**Output 6 (display_data)**
+
+```text
+    cluster_rotulo  quantidade_registros  quantidade_respostas_validas  \
+0        Cluster 1                 38803                          7607   
+1        Cluster 2                 41197                         20084   
+2        Cluster 1                 38803                          7027   
+3        Cluster 2                 41197                         24389   
+4        Cluster 1                 38803                          6816   
+..             ...                   ...                           ...   
+99       Cluster 2                 40232                         34696   
+100      Cluster 1                 39768                         37951   
+101      Cluster 2                 40232                         36123   
+102      Cluster 1                 39768                         32032   
+103      Cluster 2                 40232                         29658   
+
+     quantidade_sim  quantidade_sem_resposta_valida  \
+0              3003                           31196   
+1              1699                           21113   
+2               890                           31776   
+3             14935                           16808   
+4               199                           31987   
+..              ...                             ...   
+99            25284                            5536   
+100           33681                            1817   
+101           28111                            4109   
+102            6029                            7736   
+103            3155                           10574   
+
+     percentual_preenchido_valido  percentual_sem_resposta_valida  \
+0                       19.604154                       80.395846   
+1                       48.751123                       51.248877   
+2                       18.109425                       81.890575   
+3                       59.200913                       40.799087   
+4                       17.565652                       82.434348   
+..                            ...                             ...   
+99                      86.239809                       13.760191   
+100                     95.431000                        4.569000   
+101                     89.786737                       10.213263   
+102                     80.547174                       19.452826   
+103                     73.717439                       26.282561   
+
+     percentual_sim_entre_validos    variavel grupo_clinico    matriz  
+0                       39.476798        asma   comorbidade  ampliada  
+1                        8.459470        asma   comorbidade  ampliada  
+2                       12.665433  cardiopati   comorbidade  ampliada  
+3                       61.236623  cardiopati   comorbidade  ampliada  
+4                        2.919601    diabetes   comorbidade  ampliada  
+..                            ...         ...           ...       ...  
+99                      72.872954   saturacao       sintoma    nucleo  
+100                     88.748650       tosse       sintoma    nucleo  
+101                     77.820225       tosse       sintoma    nucleo  
+102                     18.821803      vomito       sintoma    nucleo  
+103                     10.637939      vomito       sintoma    nucleo  
+
+[104 rows x 11 columns]
+[non-text output omitted: text/html]
+```
+
+**Output 7 (display_data)**
+
+```text
+      matriz cluster_rotulo sexo_categoria  quantidade  percentual_cluster
+0   ampliada      Cluster 1       Feminino       17634           45.444940
+1   ampliada      Cluster 1       Ignorado           8            0.020617
+2   ampliada      Cluster 1      Masculino       21161           54.534443
+3   ampliada      Cluster 2       Feminino       20679           50.195403
+4   ampliada      Cluster 2       Ignorado           6            0.014564
+5   ampliada      Cluster 2      Masculino       20512           49.790033
+6     nucleo      Cluster 1       Feminino       18070           45.438544
+7     nucleo      Cluster 1       Ignorado           8            0.020117
+8     nucleo      Cluster 1      Masculino       21690           54.541340
+9     nucleo      Cluster 2       Feminino       20243           50.315669
+10    nucleo      Cluster 2       Ignorado           6            0.014914
+11    nucleo      Cluster 2      Masculino       19983           49.669417
+[non-text output omitted: text/html]
+```
+
+**Output 8 (display_data)**
+
+```text
+                        verificacao  resultado
+0       perfis_numericos_nao_vazios       True
+1        perfis_binarios_nao_vazios       True
+2           duas_matrizes_numericas       True
+3            duas_matrizes_binarias       True
+4     percentuais_cobertura_validos       True
+5   percentuais_prevalencia_validos       True
+6           arquivo_numerico_criado       True
+7            arquivo_binario_criado       True
+8            figura_numerica_criada       True
+9           figura_cobertura_criada       True
+10        figura_prevalencia_criada       True
+[non-text output omitted: text/html]
 ```
 
 ### Cell 146 [code] · In [ ]
@@ -23195,645 +21649,92 @@ rotulos_kmeans_hca = (
     rotulos_kmeans_sensibilidade.loc[
         indices_hca
     ]
-    .to_numpy()
-)
-
-rotulos_kmeans_dbscan = (
-    rotulos_kmeans_sensibilidade.loc[
-        indices_dbscan
-    ]
-    .to_numpy()
-)
-
-
-# ------------------------------------------------------------
-# 3. HCA MINIMO: WARD, K = 2
-# ------------------------------------------------------------
-
-inicio_hca = perf_counter()
-
-modelo_hca_minimo = AgglomerativeClustering(
-    n_clusters=2,
-    linkage="ward",
-)
-
-rotulos_hca_minimo = modelo_hca_minimo.fit_predict(
-    X_hca
-)
-
-tempo_hca_segundos = (
-    perf_counter()
-    - inicio_hca
-)
-
-silhouette_hca = float(
-    silhouette_score(
-        X_hca,
-        rotulos_hca_minimo,
-        sample_size=min(
-            TAMANHO_SILHOUETTE,
-            len(X_hca),
-        ),
-        random_state=(
-            SEMENTE_HCA_DBSCAN
-            + 73_000
-        ),
-    )
-)
-
-calinski_hca = float(
-    calinski_harabasz_score(
-        X_hca,
-        rotulos_hca_minimo,
-    )
-)
-
-davies_hca = float(
-    davies_bouldin_score(
-        X_hca,
-        rotulos_hca_minimo,
-    )
-)
-
-ari_hca_kmeans = float(
-    adjusted_rand_score(
-        rotulos_kmeans_hca,
-        rotulos_hca_minimo,
-    )
-)
-
-contagens_hca = pd.Series(
-    rotulos_hca_minimo
-).value_counts()
-
-menor_cluster_hca_percentual = float(
-    contagens_hca.min()
-    / len(rotulos_hca_minimo)
-    * 100
-)
-
-
-# ------------------------------------------------------------
-# 4. DENDROGRAMA TRUNCADO
-# ------------------------------------------------------------
-
-indices_dendrograma_posicoes = np.linspace(
-    0,
-    len(X_hca) - 1,
-    num=TAMANHO_DENDROGRAMA,
-    dtype=int,
-)
-
-X_dendrograma = X_hca[
-    indices_dendrograma_posicoes
-]
-
-matriz_ligacao_hca = linkage(
-    X_dendrograma,
-    method="ward",
-    metric="euclidean",
-)
-
-figura_hca, eixo_hca = plt.subplots(
-    figsize=(14, 7)
-)
-
-dendrogram(
-    matriz_ligacao_hca,
-    truncate_mode="lastp",
-    p=35,
-    leaf_rotation=90,
-    leaf_font_size=7,
-    show_contracted=True,
-    color_threshold=None,
-    ax=eixo_hca,
-)
-
-eixo_hca.set_title(
-    "HCA Ward em amostra controlada da matriz nucleo"
-)
-
-eixo_hca.set_xlabel(
-    "Grupos terminais do dendrograma truncado"
-)
-
-eixo_hca.set_ylabel(
-    "Distancia de Ward"
-)
-
-eixo_hca.grid(
-    axis="y",
-    alpha=0.20,
-)
-
-figura_hca.text(
-    0.01,
-    0.01,
-    (
-        f"HCA ajustado em n={TAMANHO_AMOSTRA_HCA:,}; "
-        f"dendrograma em n={TAMANHO_DENDROGRAMA:,}. "
-        "A comparacao e exploratoria e usa a representacao PCA "
-        "do nucleo sem indicadores explicitos de ausencia."
-    ),
-    fontsize=8,
-)
-
-figura_hca.tight_layout(
-    rect=[0, 0.05, 1, 1]
-)
-
-caminho_figura_hca = (
-    DIRETORIO_FIGURAS_HCA_DBSCAN
-    / "eda_02_hca_dendrograma_minimo.png"
-)
-
-figura_hca.savefig(
-    caminho_figura_hca,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_hca)
-
-
-# ------------------------------------------------------------
-# 5. DBSCAN MINIMO: EPS GUIADO POR K-DISTANCE
-# ------------------------------------------------------------
-
-inicio_vizinhos = perf_counter()
-
-modelo_vizinhos = NearestNeighbors(
-    n_neighbors=NUMERO_VIZINHOS_DBSCAN,
-    metric="euclidean",
-    n_jobs=-1,
-)
-
-modelo_vizinhos.fit(X_dbscan)
-
-distancias_vizinhos, _ = (
-    modelo_vizinhos.kneighbors(
-        X_dbscan,
-        return_distance=True,
-    )
-)
-
-distancia_k = np.sort(
-    distancias_vizinhos[:, -1]
-)
-
-tempo_vizinhos_segundos = (
-    perf_counter()
-    - inicio_vizinhos
-)
-
-eps_candidatos = sorted(
-    {
-        round(
-            float(
-                np.quantile(
-                    distancia_k,
-                    quantil,
-                )
-            ),
-            6,
-        )
-        for quantil in QUANTIS_EPS_DBSCAN
-    }
-)
-
-figura_k_distance, eixo_k_distance = plt.subplots(
-    figsize=(12, 6)
-)
-
-eixo_k_distance.plot(
-    np.arange(len(distancia_k)),
-    distancia_k,
-    color="tab:blue",
-    linewidth=1.2,
-)
-
-for eps_candidato in eps_candidatos:
-    eixo_k_distance.axhline(
-        eps_candidato,
-        linestyle="--",
-        linewidth=1,
-        alpha=0.75,
-        label=f"eps={eps_candidato:.3f}",
-    )
-
-eixo_titulo_dbscan = "Curva k-distance para a varredura minima de DBSCAN"
-eixo_x_dbscan = "Registros ordenados"
-eixo_y_dbscan = (
-    f"Distancia ao {NUMERO_VIZINHOS_DBSCAN}º vizinho"
-)
-
-eixo_k_distance.set_title(eixo_titulo_dbscan)
-eixo_k_distance.set_xlabel(eixo_x_dbscan)
-eixo_k_distance.set_ylabel(eixo_y_dbscan)
-eixo_k_distance.grid(alpha=0.20)
-eixo_k_distance.legend()
-
-figura_k_distance.tight_layout()
-
-caminho_figura_k_distance = (
-    DIRETORIO_FIGURAS_HCA_DBSCAN
-    / "eda_02_dbscan_k_distance_minimo.png"
-)
-
-figura_k_distance.savefig(
-    caminho_figura_k_distance,
-    dpi=160,
-    bbox_inches="tight",
-)
-
-plt.show()
-plt.close(figura_k_distance)
-
-registros_dbscan = []
-rotulos_dbscan_por_eps = {}
-
-for eps_candidato in eps_candidatos:
-    inicio_dbscan = perf_counter()
-
-    modelo_dbscan = DBSCAN(
-        eps=eps_candidato,
-        min_samples=MIN_SAMPLES_DBSCAN,
-        metric="euclidean",
-        algorithm="auto",
-        n_jobs=-1,
-    )
-
-    rotulos_dbscan = modelo_dbscan.fit_predict(
-        X_dbscan
-    )
-
-    tempo_dbscan_segundos = (
-        perf_counter()
-        - inicio_dbscan
-    )
-
-    mascara_nao_ruido = (
-        rotulos_dbscan != -1
-    )
-
-    clusters_observados = sorted(
-        set(
-            rotulos_dbscan[
-                mascara_nao_ruido
-            ].tolist()
-        )
-    )
-
-    quantidade_clusters = len(
-        clusters_observados
-    )
-
-    quantidade_ruido = int(
-        (~mascara_nao_ruido).sum()
-    )
-
-    percentual_ruido = float(
-        quantidade_ruido
-        / len(rotulos_dbscan)
-        * 100
-    )
-
-    silhouette_dbscan = np.nan
-    calinski_dbscan = np.nan
-    davies_dbscan = np.nan
-    menor_cluster_dbscan_percentual = np.nan
-
-    if (
-        quantidade_clusters >= 2
-        and int(mascara_nao_ruido.sum())
-        > quantidade_clusters
-    ):
-        X_dbscan_valido = X_dbscan[
-            mascara_nao_ruido
-        ]
-
-        rotulos_dbscan_validos = (
-            rotulos_dbscan[
-                mascara_nao_ruido
-            ]
-        )
-
-        silhouette_dbscan = float(
-            silhouette_score(
-                X_dbscan_valido,
-                rotulos_dbscan_validos,
-                sample_size=min(
-                    TAMANHO_SILHOUETTE,
-                    len(X_dbscan_valido),
-                ),
-                random_state=(
-                    SEMENTE_HCA_DBSCAN
-                    + 74_000
-                ),
-            )
-        )
-
-        calinski_dbscan = float(
-            calinski_harabasz_score(
-                X_dbscan_valido,
-                rotulos_dbscan_validos,
-            )
-        )
-
-        davies_dbscan = float(
-            davies_bouldin_score(
-                X_dbscan_valido,
-                rotulos_dbscan_validos,
-            )
-        )
-
-        contagens_dbscan = pd.Series(
-            rotulos_dbscan_validos
-        ).value_counts()
-
-        menor_cluster_dbscan_percentual = float(
-            contagens_dbscan.min()
-            / len(rotulos_dbscan_validos)
-            * 100
-        )
-
-    ari_dbscan_kmeans = float(
-        adjusted_rand_score(
-            rotulos_kmeans_dbscan,
-            rotulos_dbscan,
-        )
-    )
-
-    registros_dbscan.append(
-        {
-            "metodo": "DBSCAN",
-            "eps": eps_candidato,
-            "min_samples": MIN_SAMPLES_DBSCAN,
-            "quantidade_registros": len(X_dbscan),
-            "quantidade_clusters_sem_ruido": quantidade_clusters,
-            "quantidade_ruido": quantidade_ruido,
-            "percentual_ruido": percentual_ruido,
-            "silhouette_sem_ruido": silhouette_dbscan,
-            "calinski_harabasz_sem_ruido": calinski_dbscan,
-            "davies_bouldin_sem_ruido": davies_dbscan,
-            "menor_cluster_percentual_sem_ruido": (
-                menor_cluster_dbscan_percentual
-            ),
-            "ari_dbscan_vs_kmeans": ari_dbscan_kmeans,
-            "tempo_segundos": tempo_dbscan_segundos,
-        }
-    )
-
-    rotulos_dbscan_por_eps[
-        eps_candidato
-    ] = rotulos_dbscan
-
-resultados_dbscan_minimo = pd.DataFrame(
-    registros_dbscan
-)
-
-candidatos_dbscan_validos = (
-    resultados_dbscan_minimo.loc[
-        resultados_dbscan_minimo[
-            "quantidade_clusters_sem_ruido"
-        ].ge(2)
-        & resultados_dbscan_minimo[
-            "silhouette_sem_ruido"
-        ].notna()
-    ]
-    .copy()
-)
-
-if candidatos_dbscan_validos.empty:
-    melhor_eps_dbscan = np.nan
-    decisao_dbscan = (
-        "descartar: a varredura curta nao produziu "
-        "ao menos dois clusters avaliaveis sem ruido"
-    )
-else:
-    candidatos_dbscan_validos[
-        "penalidade_ruido"
-    ] = (
-        candidatos_dbscan_validos[
-            "percentual_ruido"
-        ]
-        / 100
-    )
-
-    candidatos_dbscan_validos[
-        "criterio_selecao"
-    ] = (
-        candidatos_dbscan_validos[
-            "silhouette_sem_ruido"
-        ]
-        - candidatos_dbscan_validos[
-            "penalidade_ruido"
-        ]
-    )
-
-    melhor_linha_dbscan = (
-        candidatos_dbscan_validos
-        .sort_values(
-            [
-                "criterio_selecao",
-                "silhouette_sem_ruido",
-            ],
-            ascending=[
-                False,
-                False,
-            ],
-        )
-        .iloc[0]
-    )
-
-    melhor_eps_dbscan = float(
-        melhor_linha_dbscan["eps"]
-    )
-
-    decisao_dbscan = (
-        "nao aprofundar: comparacao minima registrada; "
-        "K-Means permanece como referencia"
-    )
-
-
-# ------------------------------------------------------------
-# 6. RESUMO COMPARATIVO E EXPORTACAO
-# ------------------------------------------------------------
-
-resumo_hca_dbscan_minimo = pd.DataFrame(
-    [
-        {
-            "metodo": "HCA_Ward",
-            "matriz": "nucleo_sem_indicadores_ausencia",
-            "quantidade_registros": len(X_hca),
-            "quantidade_clusters": 2,
-            "percentual_ruido": 0.0,
-            "silhouette": silhouette_hca,
-            "calinski_harabasz": calinski_hca,
-            "davies_bouldin": davies_hca,
-            "menor_cluster_percentual": (
-                menor_cluster_hca_percentual
-            ),
-            "ari_vs_kmeans": ari_hca_kmeans,
-            "tempo_segundos": tempo_hca_segundos,
-            "parametros": "linkage=ward; k=2",
-            "decisao": (
-                "nao aprofundar: comparacao minima registrada; "
-                "K-Means permanece como referencia"
-            ),
-        },
-        {
-            "metodo": "DBSCAN",
-            "matriz": "nucleo_sem_indicadores_ausencia",
-            "quantidade_registros": len(X_dbscan),
-            "quantidade_clusters": (
-                int(
-                    melhor_linha_dbscan[
-                        "quantidade_clusters_sem_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else 0
-            ),
-            "percentual_ruido": (
-                float(
-                    melhor_linha_dbscan[
-                        "percentual_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else 100.0
-            ),
-            "silhouette": (
-                float(
-                    melhor_linha_dbscan[
-                        "silhouette_sem_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "calinski_harabasz": (
-                float(
-                    melhor_linha_dbscan[
-                        "calinski_harabasz_sem_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "davies_bouldin": (
-                float(
-                    melhor_linha_dbscan[
-                        "davies_bouldin_sem_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "menor_cluster_percentual": (
-                float(
-                    melhor_linha_dbscan[
-                        "menor_cluster_percentual_sem_ruido"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "ari_vs_kmeans": (
-                float(
-                    melhor_linha_dbscan[
-                        "ari_dbscan_vs_kmeans"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "tempo_segundos": (
-                float(
-                    melhor_linha_dbscan[
-                        "tempo_segundos"
-                    ]
-                )
-                if not candidatos_dbscan_validos.empty
-                else np.nan
-            ),
-            "parametros": (
-                f"eps={melhor_eps_dbscan}; "
-                f"min_samples={MIN_SAMPLES_DBSCAN}"
-            ),
-            "decisao": decisao_dbscan,
-        },
-    ]
-)
-
-caminho_resultados_dbscan = (
-    DIRETORIO_TABELAS_HCA_DBSCAN
-    / "eda_02_dbscan_varredura_minima.csv"
-)
-
-caminho_resumo_hca_dbscan = (
-    DIRETORIO_TABELAS_HCA_DBSCAN
-    / "eda_02_hca_dbscan_resumo_minimo.csv"
-)
-
-resultados_dbscan_minimo.to_csv(
-    caminho_resultados_dbscan,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-resumo_hca_dbscan_minimo.to_csv(
-    caminho_resumo_hca_dbscan,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-print(
-    "Comparacao minima de HCA e DBSCAN concluida."
-)
-
-print(
-    "Tempo para calcular k-distance do DBSCAN:",
-    round(tempo_vizinhos_segundos, 3),
-    "segundos",
-)
-
-print(
-    "Arquivos gerados:",
-)
-
-for caminho_gerado in [
-    caminho_resultados_dbscan,
-    caminho_resumo_hca_dbscan,
-    caminho_figura_hca,
-    caminho_figura_k_distance,
-]:
-    print("-", caminho_gerado)
-
-print()
-print(
-    "Decisao metodologica: HCA e DBSCAN foram executados "
-    "como comparacoes curtas em amostras controladas. "
-    "Nenhum deles sera aprofundado nesta etapa; K-Means "
-    "permanece como referencia exploratoria."
-)
-
-display(
-    resumo_hca_dbscan_minimo
-)
-
-display(
-    resultados_dbscan_minimo
-)
-
-# Limpeza dos maiores objetos temporarios.
-del X_dendrograma
-del matriz_ligacao_hca
-del distancias_vizinhos
-
-gc.collect()
+# ... 639 lines omitted ...
+```
+
+**Output 1 (display_data)**
+
+```text
+<Figure size 1400x700 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 2 (display_data)**
+
+```text
+<Figure size 1200x600 with 1 Axes>
+[non-text output omitted: image/png]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Comparacao minima de HCA e DBSCAN concluida.
+Tempo para calcular k-distance do DBSCAN: 0.621 segundos
+Arquivos gerados:
+- <REPO>\outputs\tables\eda_02_dbscan_varredura_minima.csv
+- <REPO>\outputs\tables\eda_02_hca_dbscan_resumo_minimo.csv
+- <REPO>\reports\figures\eda_02_hca_dendrograma_minimo.png
+- <REPO>\reports\figures\eda_02_dbscan_k_distance_minimo.png
+
+Decisao metodologica: HCA e DBSCAN foram executados como comparacoes curtas em amostras controladas. Nenhum deles sera aprofundado nesta etapa; K-Means permanece como referencia exploratoria.
+```
+
+**Output 4 (display_data)**
+
+```text
+     metodo                           matriz  quantidade_registros  \
+0  HCA_Ward  nucleo_sem_indicadores_ausencia                  5000   
+1    DBSCAN  nucleo_sem_indicadores_ausencia                  8000   
+
+   quantidade_clusters  percentual_ruido  silhouette  calinski_harabasz  \
+0                    2               0.0    0.210356        1400.871662   
+1                    0             100.0         NaN                NaN   
+
+   davies_bouldin  menor_cluster_percentual  ari_vs_kmeans  tempo_segundos  \
+0        1.760106                     46.16       0.784244        0.593828   
+1             NaN                       NaN            NaN             NaN   
+
+                parametros                                            decisao  
+0        linkage=ward; k=2  nao aprofundar: comparacao minima registrada; ...  
+1  eps=nan; min_samples=10  descartar: a varredura curta nao produziu ao m...  
+[non-text output omitted: text/html]
+```
+
+**Output 5 (display_data)**
+
+```text
+   metodo       eps  min_samples  quantidade_registros  \
+0  DBSCAN  1.401609           10                  8000   
+1  DBSCAN  1.479287           10                  8000   
+2  DBSCAN  1.656968           10                  8000   
+
+   quantidade_clusters_sem_ruido  quantidade_ruido  percentual_ruido  \
+0                              1               220             2.750   
+1                              1               100             1.250   
+2                              1                54             0.675   
+
+   silhouette_sem_ruido  calinski_harabasz_sem_ruido  \
+0                   NaN                          NaN   
+1                   NaN                          NaN   
+2                   NaN                          NaN   
+
+   davies_bouldin_sem_ruido  menor_cluster_percentual_sem_ruido  \
+0                       NaN                                 NaN   
+1                       NaN                                 NaN   
+2                       NaN                                 NaN   
+
+   ari_dbscan_vs_kmeans  tempo_segundos  
+0              0.000693        1.934092  
+1              0.000029        1.854016  
+2             -0.000009        2.197482  
+[non-text output omitted: text/html]
+```
+
+**Output 6 (execute_result)**
+
+```text
+44028
 ```
 
 ### Cell 147 [markdown]
@@ -24105,15 +22006,15 @@ O Notebook 02 cumpriu seus objetivos:
 A expansão do clustering é encerrada neste ponto. O ganho substantivo seguinte está na construção e validação da coorte supervisionada, no congelamento das features e na comparação de modelos com avaliação temporal, calibração e análise de erros.
 ```
 
-## `notebooks/02_eda/03_supervisionado_pilotos.ipynb`
+## `notebooks/B/B_07_supervisionado_pilotos.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `553.6 KB` · modified `2026-10-16 03:43 UTC`
-- SHA-256: `2ee2000e8f956542be919f891601494b2e81dcafc2a868695dbb9ad9f2021c1a`
+- Size: `553.6 KB` · modified `2026-10-17 00:46 UTC`
+- SHA-256: `3e16b1313fb35508638cbc5459d3fbdf04ebe55185afa53d3c290cf3b698ea83`
 
 - Cells: `50` (`28` code, `22` markdown)
 - Code cells executed: `28` of `28`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -25560,7 +23461,7 @@ del codigo_grupo_chk, grupos_unicos_chk, alvo_chk, alvo_min, alvo_max, particao_
 
 ```text
 Partição: hash_grupo_estratificado_v1 | sal: srag_particao_v1_seed42
-Tempo da partição: 10.9s
+Tempo da partição: 8.7s
 
 Distribuicao final das linhas:
 ```
@@ -26231,7 +24132,7 @@ display(pd.DataFrame([metricas_dummy]))
 0                        0.5       587272  dummy_prior    provisoria   
 
   versao_execucao  n_treino_usado  duracao_fit_s  duracao_pred_s  
-0       piloto_v1         2740584       1.211114        0.013503  
+0       piloto_v1         2740584       0.279579        0.011728  
 [non-text output omitted: text/html]
 ```
 
@@ -26279,7 +24180,7 @@ display(pd.DataFrame([metricas_logistica]))
 0                        0.5       587272  logistica_piloto_C1    provisoria   
 
   versao_execucao  n_treino_usado  duracao_fit_s  duracao_pred_s  
-0       piloto_v1         1000000      20.387693        4.755245  
+0       piloto_v1         1000000      18.607921        4.496748  
 [non-text output omitted: text/html]
 ```
 
@@ -26346,8 +24247,8 @@ print("Status da coorte validado:", STATUS_COORTE)
 1          dummy_prior  0.218687  0.500000  0.170863  0.000000   0.000000   
 
          f1  accuracy  duracao_fit_s  duracao_pred_s status_coorte  
-0  0.505697  0.669436      20.387693        4.755245    provisoria  
-1  0.000000  0.781313       1.211114        0.013503    provisoria  
+0  0.505697  0.669436      18.607921        4.496748    provisoria  
+1  0.000000  0.781313       0.279579        0.011728    provisoria  
 [non-text output omitted: text/html]
 ```
 
@@ -26492,11 +24393,11 @@ for caminho in [caminho_contrato, caminho_particoes, caminho_metricas, caminho_p
 
 ```text
 Artefatos provisórios gravados:
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261016T034100Z_contrato.csv
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261016T034100Z_particoes.csv
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv
-- <REPO>\outputs\predictions\03_pilotos_provisoria_20261016T034100Z_predicoes_validacao.parquet
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261016T034100Z_manifesto.json
+- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_contrato.csv
+- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_particoes.csv
+- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv
+- <REPO>\outputs\predictions\03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet
+- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_manifesto.json
 ```
 
 ### Cell 40 [markdown]
@@ -26643,8 +24544,8 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_004101_436301_03_supervisionado_pilotos
-Run registrado em: <REPO>\outputs\runs\2026-10-16_004101_436301_03_supervisionado_pilotos
+[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
+Run registrado em: <REPO>\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
 ```
 
 ### Cell 44 [markdown]
@@ -27344,15 +25245,15 @@ print("As cinco famílias foram executadas na mesma amostra comparável.")
 
 ```text
 Executando: dummy_prior_v2
-PR-AUC: 0.218683 | ROC-AUC: 0.5 | Brier: 0.170861 | fit (s): 3.53
+PR-AUC: 0.218683 | ROC-AUC: 0.5 | Brier: 0.170861 | fit (s): 3.77
 Executando: logistica_C1_v2
-PR-AUC: 0.439195 | ROC-AUC: 0.773334 | Brier: 0.198195 | fit (s): 5.92
+PR-AUC: 0.439195 | ROC-AUC: 0.773334 | Brier: 0.198195 | fit (s): 6.39
 Executando: arvore_rasa_v2
-PR-AUC: 0.39922 | ROC-AUC: 0.756532 | Brier: 0.20657 | fit (s): 6.88
+PR-AUC: 0.39922 | ROC-AUC: 0.756532 | Brier: 0.20657 | fit (s): 8.29
 Executando: random_forest_contida_v2
-PR-AUC: 0.429916 | ROC-AUC: 0.765178 | Brier: 0.201149 | fit (s): 53.28
+PR-AUC: 0.429916 | ROC-AUC: 0.765178 | Brier: 0.201149 | fit (s): 43.92
 Executando: hist_gradient_boosting_v2
-PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 9.51
+PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 11.14
 ```
 
 **Output 2 (display_data)**
@@ -27366,18 +25267,18 @@ PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 9.51
 4             dummy_prior_v2  0.218683  0.500000  0.170861  0.000000   
 
    precision        f1  accuracy  n_treino  n_validacao  duracao_fit_s  \
-0   0.370070  0.508980  0.656192    300000       120000       9.506548   
-1   0.374747  0.503914  0.668908    300000       120000       5.923189   
-2   0.353651  0.492687  0.634375    300000       120000      53.283732   
-3   0.347346  0.489302  0.622258    300000       120000       6.883359   
-4   0.000000  0.000000  0.781317    300000       120000       3.532367   
+0   0.370070  0.508980  0.656192    300000       120000      11.144345   
+1   0.374747  0.503914  0.668908    300000       120000       6.388927   
+2   0.353651  0.492687  0.634375    300000       120000      43.916742   
+3   0.347346  0.489302  0.622258    300000       120000       8.286849   
+4   0.000000  0.000000  0.781317    300000       120000       3.770865   
 
    duracao_pred_s status_coorte           versao_execucao  
-0        1.666932    provisoria  piloto_v2_cinco_familias  
-1        0.967285    provisoria  piloto_v2_cinco_familias  
-2        1.579482    provisoria  piloto_v2_cinco_familias  
-3        0.953777    provisoria  piloto_v2_cinco_familias  
-4        0.890647    provisoria  piloto_v2_cinco_familias  
+0        1.424538    provisoria  piloto_v2_cinco_familias  
+1        1.553659    provisoria  piloto_v2_cinco_familias  
+2        1.571947    provisoria  piloto_v2_cinco_familias  
+3        0.977522    provisoria  piloto_v2_cinco_familias  
+4        0.972777    provisoria  piloto_v2_cinco_familias  
 [non-text output omitted: text/html]
 ```
 
@@ -28058,11 +25959,11 @@ A próxima etapa somente deverá começar após:
 9. calibração e escolha de limiar sem acesso ao teste.
 ```
 
-## `notebooks/02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`
+## `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `63.4 KB` · modified `2026-10-16 03:46 UTC`
-- SHA-256: `431f8b90f76dfe7c1e8d84fb9c3221cb071129a53bbbfc00d6079814c692e61f`
+- Size: `63.4 KB` · modified `2026-10-17 00:56 UTC`
+- SHA-256: `47d694c4b8eff63e83353da00ea8360b4ab433e2dd3daab2c96bc7b02834e17a`
 
 - Cells: `20` (`9` code, `11` markdown)
 - Code cells executed: `9` of `9`
@@ -28097,7 +25998,7 @@ Este notebook:
 ## 1. Bootstrap e contrato de execução
 ```
 
-### Cell 3 [code] · In [10]
+### Cell 3 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -28209,7 +26110,7 @@ Status da execucao: provisoria
 A validação abaixo impede continuar quando gates essenciais aparecem fora do bloco `gates` ou quando o YAML contém chaves duplicadas. Isso protege o handoff entre a coorte provisória e a definitiva.
 ```
 
-### Cell 5 [code] · In [11]
+### Cell 5 [code] · In [2]
 
 ```python
 import yaml
@@ -28310,7 +26211,7 @@ Gates soltos na raiz: []
 A célula que diferencia provisória e definitiva está fora do notebook, em `src/data/cohort_source.py`. O restante do fluxo recebe apenas `df_coorte` e `fonte_coorte`.
 ```
 
-### Cell 7 [code] · In [12]
+### Cell 7 [code] · In [3]
 
 ```python
 # SUBSTITUIR integralmente a celula de codigo logo abaixo de:
@@ -28351,7 +26252,7 @@ SHA-256 da fonte: da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7
 ## 4. Contrato da fonte e prontidão de substituição
 ```
 
-### Cell 9 [code] · In [13]
+### Cell 9 [code] · In [4]
 
 ```python
 # SUBSTITUIR integralmente a celula de codigo da secao:
@@ -28480,7 +26381,7 @@ Teste nao consultado no YAML: True
 Os resultados são descobertos por prefixo e data de modificação. Nenhum número é copiado manualmente para este notebook.
 ```
 
-### Cell 11 [code] · In [14]
+### Cell 11 [code] · In [5]
 
 ```python
 def manifesto_mais_recente(
@@ -28668,7 +26569,7 @@ display(
 ## 6. Consolidação da shortlist provisória
 ```
 
-### Cell 13 [code] · In [15]
+### Cell 13 [code] · In [6]
 
 ```python
 selecao_cfg = (
@@ -28795,8 +26696,8 @@ if (
 1            logistica_C1_v2  0.439195  0.773334  0.198195  0.768958   
 
    precision        f1  duracao_fit_s  n_treino  n_validacao  
-0   0.370070  0.508980       9.506548    300000       120000  
-1   0.374747  0.503914       5.923189    300000       120000  
+0   0.370070  0.508980      11.144345    300000       120000  
+1   0.374747  0.503914       6.388927    300000       120000  
 [non-text output omitted: text/html]
 ```
 
@@ -28815,7 +26716,7 @@ Teste consultado: False
 A análise permanece descritiva. Não escolhe calibrador nem limiar.
 ```
 
-### Cell 15 [code] · In [16]
+### Cell 15 [code] · In [7]
 
 ```python
 temporal_shortlist = (
@@ -28949,7 +26850,7 @@ Métricas por ano:
 A matriz separa o que já pode permanecer igual do que precisa ser validado na chegada da coorte definitiva.
 ```
 
-### Cell 17 [code] · In [17]
+### Cell 17 [code] · In [8]
 
 ```python
 # SUBSTITUIR integralmente a celula de codigo da secao:
@@ -29110,7 +27011,7 @@ Itens definitivamente prontos: 0 / 6
 ## 9. Persistência do handoff da Pessoa B
 ```
 
-### Cell 19 [code] · In [18]
+### Cell 19 [code] · In [9]
 
 ```python
 # SUBSTITUIR integralmente a celula de codigo da secao:
@@ -29206,7 +27107,7 @@ print("Nenhum tuning, calibrador ou limiar foi escolhido.")
 **Output 1 (stream:stdout)**
 
 ```text
-Handoff gravado: <REPO>\outputs\tables\04_handoff_provisional_20261016T034632Z_manifesto.json
+Handoff gravado: <REPO>\outputs\tables\04_handoff_provisional_20261017T005359Z_manifesto.json
 Teste permaneceu fechado.
 Nenhum tuning, calibrador ou limiar foi escolhido.
 ```
@@ -29240,2861 +27141,15 @@ Quando a coorte definitiva chegar:
 6. somente então iniciar tuning limitado dos dois finalistas.
 ```
 
-## `notebooks/02_eda/_provisorio_construcao_coorte_b.ipynb`
+## `notebooks/C/C_02_smoke_test.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `50.8 KB` · modified `2026-10-14 22:03 UTC`
-- SHA-256: `04a92df6a1b05de6753ac68b3e228a766c8a137c6c29d67706f1b70fdd27d121`
-
-- Cells: `15` (`14` code, `1` markdown)
-- Code cells executed: `0` of `14`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# Construção provisória da coorte para a EDA 02
-
-## Objetivo
-
-Construir uma coorte provisória com dados reais do dataset `dados-v2`
-para permitir o desenvolvimento paralelo da EDA temporal e do pipeline
-de clustering.
-
-Este notebook é um artefato temporário. Ele não substitui a coorte
-oficial do projeto e poderá ser removido ou absorvido quando a construção
-definitiva da coorte for entregue.
-
-## Critérios de elegibilidade aplicados
-
-- hospitalização confirmada, com `hospital = 1`;
-- `dt_interna` válida;
-- internação entre 01/01/2019 e 28/09/2026;
-- evolução elegível, com `evolucao` igual a 1 ou 2;
-- remoção de linhas integralmente duplicadas.
-
-## Tratamentos que não serão realizados arbitrariamente
-
-- registros diferentes com o mesmo `nu_notific` não serão eliminados;
-- intervalos negativos entre sintomas e internação serão sinalizados,
-  mas não excluídos automaticamente;
-- ausência em variáveis preditoras não causará exclusão;
-- `dt_notific` ou `dt_sin_pri` fora do período da coorte serão
-  sinalizadas, mas não excluirão o registro quando `dt_interna` for
-  elegível;
-- ausência não será convertida automaticamente em resposta negativa.
-
-## Saídas
-
-- `data/analytical/coorte_provisoria_b.parquet`;
-- `outputs/tables/coorte_provisoria_b_waterfall.csv`;
-- `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv`;
-- `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv`;
-- `outputs/tables/coorte_provisoria_b_resumo.csv`.
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-from pathlib import Path
-import gc
-import sys
-
-import numpy as np
-import pandas as pd
-import pyarrow.parquet as pq
-
-from IPython.display import display
-
-
-def encontrar_raiz_projeto() -> Path:
-    """
-    Localiza a raiz do projeto procurando pelas pastas src e configs.
-    """
-
-    pasta_atual = Path.cwd().resolve()
-
-    pastas_candidatas = [
-        pasta_atual
-    ] + list(
-        pasta_atual.parents
-    )
-
-    for pasta in pastas_candidatas:
-        possui_src = (
-            pasta
-            / "src"
-        ).is_dir()
-
-        possui_configs = (
-            pasta
-            / "configs"
-        ).is_dir()
-
-        if possui_src and possui_configs:
-            return pasta
-
-    raise FileNotFoundError(
-        "Não foi possível localizar a raiz do projeto."
-    )
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(
-        0,
-        str(ROOT_DIR),
-    )
-
-from src.utils import config as C
-from src.utils import env
-from src.utils import storage
-
-env.carregar_dotenv()
-env.garantir_diretorios()
-
-DATA_INICIAL_COORTE = pd.Timestamp(
-    "2019-01-01"
-)
-
-DATA_FINAL_COORTE = pd.Timestamp(
-    "2026-09-28"
-)
-
-ANO_MINIMO_CONVERSAO = 1900
-ANO_MAXIMO_CONVERSAO = 2026
-
-CAMINHO_DICIONARIO = (
-    C.CONFIGS_DIR
-    / "dicionario_variaveis_v1.csv"
-)
-
-CAMINHO_COORTE_PROVISORIA = (
-    C.ANALYTICAL_DIR
-    / "coorte_provisoria_b.parquet"
-)
-
-CAMINHO_WATERFALL = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_waterfall.csv"
-)
-
-CAMINHO_AUDITORIA_DUPLICIDADES = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_auditoria_duplicidades.csv"
-)
-
-CAMINHO_AUDITORIA_TEMPORAL = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_auditoria_temporal.csv"
-)
-
-CAMINHO_RESUMO = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_resumo.csv"
-)
-
-print(
-    "Raiz do projeto:",
-    ROOT_DIR,
-)
-
-print(
-    "Versão dos dados:",
-    C.DATA_VERSION,
-)
-
-print(
-    "Arquivo oficial:",
-    C.PARQUET_NAME,
-)
-
-print(
-    "Período provisório:",
-    DATA_INICIAL_COORTE.date(),
-    "a",
-    DATA_FINAL_COORTE.date(),
-)
-
-print(
-    "Saída da coorte:",
-    CAMINHO_COORTE_PROVISORIA,
-)
-```
-
-### Cell 3 [code] · In [ ]
-
-```python
-if not CAMINHO_DICIONARIO.exists():
-    raise FileNotFoundError(
-        "O dicionário operacional não foi encontrado em: "
-        f"{CAMINHO_DICIONARIO}"
-    )
-
-dicionario_variaveis = pd.read_csv(
-    CAMINHO_DICIONARIO,
-    encoding="utf-8-sig",
-    dtype="string",
-    keep_default_na=False,
-)
-
-if "coluna" not in dicionario_variaveis.columns:
-    raise KeyError(
-        "O dicionário operacional não contém a coluna 'coluna'."
-    )
-
-colunas_dicionario = (
-    dicionario_variaveis[
-        "coluna"
-    ]
-    .astype("string")
-    .str.strip()
-)
-
-colunas_dicionario = (
-    colunas_dicionario.loc[
-        colunas_dicionario.ne("")
-    ]
-    .drop_duplicates()
-    .tolist()
-)
-
-COLUNAS_ADICIONAIS = [
-    "id_registro",
-    "ano_arquivo",
-    "data_snapshot",
-    "arquivo_origem",
-    "nosocomial",
-]
-
-COLUNAS_SOLICITADAS = list(
-    dict.fromkeys(
-        COLUNAS_ADICIONAIS
-        + colunas_dicionario
-    )
-)
-
-caminho_parquet = storage.get_parquet(
-    force=False
-)
-
-if not caminho_parquet.exists():
-    raise FileNotFoundError(
-        "O Parquet oficial não foi encontrado em: "
-        f"{caminho_parquet}"
-    )
-
-arquivo_parquet = pq.ParquetFile(
-    caminho_parquet
-)
-
-colunas_disponiveis = set(
-    arquivo_parquet.schema_arrow.names
-)
-
-COLUNAS_EXISTENTES = [
-    coluna
-    for coluna in COLUNAS_SOLICITADAS
-    if coluna in colunas_disponiveis
-]
-
-COLUNAS_AUSENTES = [
-    coluna
-    for coluna in COLUNAS_SOLICITADAS
-    if coluna not in colunas_disponiveis
-]
-
-COLUNAS_MINIMAS = {
-    "nu_notific",
-    "hospital",
-    "dt_notific",
-    "dt_sin_pri",
-    "dt_interna",
-    "evolucao",
-}
-
-colunas_minimas_ausentes = (
-    COLUNAS_MINIMAS
-    - set(
-        COLUNAS_EXISTENTES
-    )
-)
-
-if colunas_minimas_ausentes:
-    raise KeyError(
-        "O Parquet não contém as colunas mínimas: "
-        f"{sorted(colunas_minimas_ausentes)}"
-    )
-
-print(
-    "Colunas solicitadas:",
-    len(
-        COLUNAS_SOLICITADAS
-    ),
-)
-
-print(
-    "Colunas encontradas:",
-    len(
-        COLUNAS_EXISTENTES
-    ),
-)
-
-print(
-    "Colunas opcionais ausentes:",
-    len(
-        COLUNAS_AUSENTES
-    ),
-)
-
-if COLUNAS_AUSENTES:
-    display(
-        pd.DataFrame(
-            {
-                "coluna_opcional_ausente": (
-                    COLUNAS_AUSENTES
-                ),
-            }
-        )
-    )
-
-print(
-    "nosocomial disponível:",
-    "nosocomial" in COLUNAS_EXISTENTES,
-)
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-def normalizar_codigo(
-    serie: pd.Series,
-) -> pd.Series:
-    """
-    Normaliza códigos textuais sem interpretar ausência como resposta.
-    """
-
-    resultado = (
-        serie.astype("string")
-        .str.strip()
-        .str.replace(
-            r"\.0$",
-            "",
-            regex=True,
-        )
-        .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-    )
-
-    return resultado
-
-
-def converter_data_mista_segura(
-    serie: pd.Series,
-    ano_minimo: int = ANO_MINIMO_CONVERSAO,
-    ano_maximo: int = ANO_MAXIMO_CONVERSAO,
-) -> pd.Series:
-    """
-    Converte datas nos formatos AAAA-MM-DD e DD/MM/AAAA.
-
-    Datas não reconhecidas, calendários inválidos e anos fora da
-    faixa configurada tornam-se NaT.
-    """
-
-    texto = (
-        serie.astype("string")
-        .str.strip()
-        .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-    )
-
-    resultado = pd.Series(
-        pd.NaT,
-        index=serie.index,
-        dtype="datetime64[ns]",
-    )
-
-    mascara_iso = texto.str.match(
-        r"^\d{4}-\d{2}-\d{2}$",
-        na=False,
-    )
-
-    mascara_br = texto.str.match(
-        r"^\d{2}/\d{2}/\d{4}$",
-        na=False,
-    )
-
-    ano_iso = pd.to_numeric(
-        texto.str.slice(
-            0,
-            4,
-        ),
-        errors="coerce",
-    )
-
-    ano_br = pd.to_numeric(
-        texto.str.slice(
-            6,
-            10,
-        ),
-        errors="coerce",
-    )
-
-    mascara_iso_valida = (
-        mascara_iso
-        & ano_iso.between(
-            ano_minimo,
-            ano_maximo,
-        )
-    )
-
-    mascara_br_valida = (
-        mascara_br
-        & ano_br.between(
-            ano_minimo,
-            ano_maximo,
-        )
-    )
-
-    resultado.loc[
-        mascara_iso_valida
-    ] = pd.to_datetime(
-        texto.loc[
-            mascara_iso_valida
-        ],
-        format="%Y-%m-%d",
-        errors="coerce",
-    )
-
-    resultado.loc[
-        mascara_br_valida
-    ] = pd.to_datetime(
-        texto.loc[
-            mascara_br_valida
-        ],
-        format="%d/%m/%Y",
-        errors="coerce",
-    )
-
-    return resultado
-
-
-def adicionar_etapa_waterfall(
-    etapas: list,
-    etapa: str,
-    registros_antes: int,
-    registros_depois: int,
-    motivo: str,
-) -> None:
-    """
-    Registra uma etapa do fluxo de seleção.
-    """
-
-    registros_excluidos = (
-        registros_antes
-        - registros_depois
-    )
-
-    if registros_antes == 0:
-        percentual_excluido = 0.0
-    else:
-        percentual_excluido = (
-            registros_excluidos
-            / registros_antes
-        )
-
-        percentual_excluido = (
-            percentual_excluido
-            * 100
-        )
-
-    etapas.append(
-        {
-            "etapa": etapa,
-            "registros_antes": int(
-                registros_antes
-            ),
-            "registros_excluidos": int(
-                registros_excluidos
-            ),
-            "registros_depois": int(
-                registros_depois
-            ),
-            "percentual_excluido": float(
-                percentual_excluido
-            ),
-            "motivo": motivo,
-        }
-    )
-```
-
-### Cell 5 [code] · In [ ]
-
-```python
-base_original = storage.read_srag(
-    columns=COLUNAS_EXISTENTES
-)
-
-if base_original.empty:
-    raise ValueError(
-        "A base oficial foi carregada sem registros."
-    )
-
-quantidade_registros_originais = len(
-    base_original
-)
-
-quantidade_colunas_originais = (
-    base_original.shape[1]
-)
-
-memoria_base_original_bytes = (
-    base_original
-    .memory_usage(
-        deep=True
-    )
-    .sum()
-)
-
-memoria_base_original_mb = (
-    memoria_base_original_bytes
-    / 1_048_576
-)
-
-print(
-    "Dimensão carregada:",
-    base_original.shape,
-)
-
-print(
-    "Memória aproximada em MB:",
-    round(
-        memoria_base_original_mb,
-        2,
-    ),
-)
-
-display(
-    base_original.head()
-)
-```
-
-### Cell 6 [code] · In [ ]
-
-```python
-waterfall = [
-    {
-        "etapa": "registros_originais",
-        "registros_antes": (
-            quantidade_registros_originais
-        ),
-        "registros_excluidos": 0,
-        "registros_depois": (
-            quantidade_registros_originais
-        ),
-        "percentual_excluido": 0.0,
-        "motivo": (
-            "Total de registros carregados do dataset oficial."
-        ),
-    }
-]
-
-n_antes_duplicidades = len(
-    base_original
-)
-
-mascara_duplicidade_exata = (
-    base_original.duplicated(
-        keep="first"
-    )
-)
-
-quantidade_duplicidades_exatas = int(
-    mascara_duplicidade_exata.sum()
-)
-
-base_trabalho = (
-    base_original.loc[
-        ~mascara_duplicidade_exata
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="duplicidades_exatas",
-    registros_antes=n_antes_duplicidades,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Remoção somente de linhas integralmente idênticas "
-        "nos campos originais carregados."
-    ),
-)
-
-print(
-    "Duplicidades exatas removidas:",
-    quantidade_duplicidades_exatas,
-)
-
-print(
-    "Registros restantes:",
-    len(
-        base_trabalho
-    ),
-)
-
-del base_original
-del mascara_duplicidade_exata
-
-gc.collect()
-```
-
-### Cell 7 [code] · In [ ]
-
-```python
-base_trabalho[
-    "hospital_normalizado"
-] = normalizar_codigo(
-    base_trabalho[
-        "hospital"
-    ]
-)
-
-base_trabalho[
-    "evolucao_normalizada"
-] = normalizar_codigo(
-    base_trabalho[
-        "evolucao"
-    ]
-)
-
-base_trabalho[
-    "nu_notific_normalizado"
-] = normalizar_codigo(
-    base_trabalho[
-        "nu_notific"
-    ]
-)
-
-if "nosocomial" in base_trabalho.columns:
-    base_trabalho[
-        "nosocomial_normalizado"
-    ] = normalizar_codigo(
-        base_trabalho[
-            "nosocomial"
-        ]
-    )
-else:
-    base_trabalho[
-        "nosocomial_normalizado"
-    ] = pd.Series(
-        pd.NA,
-        index=base_trabalho.index,
-        dtype="string",
-    )
-
-COLUNAS_DATA_ESSENCIAIS = [
-    "dt_notific",
-    "dt_sin_pri",
-    "dt_interna",
-    "dt_evoluca",
-    "dt_encerra",
-    "dt_digita",
-]
-
-for coluna in COLUNAS_DATA_ESSENCIAIS:
-    if coluna in base_trabalho.columns:
-        nome_convertido = (
-            f"{coluna}_convertida"
-        )
-
-        base_trabalho[
-            nome_convertido
-        ] = converter_data_mista_segura(
-            base_trabalho[
-                coluna
-            ]
-        )
-
-COLUNAS_CONVERTIDAS_OBRIGATORIAS = [
-    "dt_notific_convertida",
-    "dt_sin_pri_convertida",
-    "dt_interna_convertida",
-]
-
-colunas_convertidas_ausentes = [
-    coluna
-    for coluna in COLUNAS_CONVERTIDAS_OBRIGATORIAS
-    if coluna not in base_trabalho.columns
-]
-
-if colunas_convertidas_ausentes:
-    raise KeyError(
-        "As datas obrigatórias não foram convertidas: "
-        f"{colunas_convertidas_ausentes}"
-    )
-
-print(
-    "Códigos e datas essenciais normalizados."
-)
-```
-
-### Cell 8 [code] · In [ ]
-
-```python
-n_antes_hospitalizacao = len(
-    base_trabalho
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        base_trabalho[
-            "hospital_normalizado"
-        ].eq("1")
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="hospitalizacao_confirmada",
-    registros_antes=n_antes_hospitalizacao,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de registros com hospital = 1."
-    ),
-)
-
-
-n_antes_data_internacao = len(
-    base_trabalho
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        base_trabalho[
-            "dt_interna_convertida"
-        ].notna()
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="data_internacao_valida",
-    registros_antes=n_antes_data_internacao,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de registros com dt_interna válida."
-    ),
-)
-
-
-n_antes_periodo = len(
-    base_trabalho
-)
-
-mascara_periodo = (
-    base_trabalho[
-        "dt_interna_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        mascara_periodo
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="periodo_da_coorte",
-    registros_antes=n_antes_periodo,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Internação entre 01/01/2019 e 28/09/2026."
-    ),
-)
-
-
-n_antes_desfecho = len(
-    base_trabalho
-)
-
-mascara_desfecho = (
-    base_trabalho[
-        "evolucao_normalizada"
-    ]
-    .isin(
-        [
-            "1",
-            "2",
-        ]
-    )
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        mascara_desfecho
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="desfecho_elegivel",
-    registros_antes=n_antes_desfecho,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de evolucao = 1 ou evolucao = 2."
-    ),
-)
-
-waterfall_df = pd.DataFrame(
-    waterfall
-)
-
-display(
-    waterfall_df
-)
-
-gc.collect()
-```
-
-### Cell 9 [code] · In [ ]
-
-```python
-coorte_provisoria = base_trabalho
-
-coorte_provisoria[
-    "alvo_obito_srag"
-] = (
-    coorte_provisoria[
-        "evolucao_normalizada"
-    ]
-    .eq("2")
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "ano_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "mes_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    .dt.month
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "ano_notificacao"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "ano_sintomas"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "dias_sintomas_ate_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    - coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-).dt.days.astype("Int64")
-
-coorte_provisoria[
-    "dias_notificacao_ate_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    - coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-).dt.days.astype("Int64")
-
-coorte_provisoria[
-    "flag_internacao_antes_sintomas"
-] = (
-    coorte_provisoria[
-        "dias_sintomas_ate_internacao"
-    ]
-    .lt(0)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_notificacao_apos_internacao"
-] = (
-    coorte_provisoria[
-        "dias_notificacao_ate_internacao"
-    ]
-    .lt(0)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_notificacao_fora_periodo"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .notna()
-    & ~coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-).astype("int8")
-
-coorte_provisoria[
-    "flag_sintomas_fora_periodo"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .notna()
-    & ~coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-).astype("int8")
-
-coorte_provisoria[
-    "flag_dt_sin_pri_ausente"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_dt_notific_ausente"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_nosocomial"
-] = (
-    coorte_provisoria[
-        "nosocomial_normalizado"
-    ]
-    .eq("1")
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_intervalo_negativo_sem_nosocomial"
-] = (
-    coorte_provisoria[
-        "flag_internacao_antes_sintomas"
-    ]
-    .eq(1)
-    & coorte_provisoria[
-        "flag_nosocomial"
-    ]
-    .ne(1)
-).astype("int8")
-
-coorte_provisoria[
-    "periodo_incompleto"
-] = (
-    coorte_provisoria[
-        "ano_internacao"
-    ]
-    .eq(2026)
-    .astype("int8")
-)
-
-print(
-    "Alvo, intervalos e flags temporais criados."
-)
-```
-
-### Cell 10 [code] · In [ ]
-
-```python
-intervalo = (
-    coorte_provisoria[
-        "dias_sintomas_ate_internacao"
-    ]
-)
-
-condicoes_intervalo = [
-    intervalo.isna(),
-    intervalo.lt(-30),
-    intervalo.between(
-        -30,
-        -8,
-        inclusive="both",
-    ),
-    intervalo.between(
-        -7,
-        -1,
-        inclusive="both",
-    ),
-    intervalo.eq(0),
-    intervalo.between(
-        1,
-        7,
-        inclusive="both",
-    ),
-    intervalo.between(
-        8,
-        14,
-        inclusive="both",
-    ),
-    intervalo.between(
-        15,
-        30,
-        inclusive="both",
-    ),
-    intervalo.gt(30),
-]
-
-rotulos_intervalo = [
-    "ausente",
-    "menor_que_menos_30",
-    "menos_30_a_menos_8",
-    "menos_7_a_menos_1",
-    "zero",
-    "1_a_7",
-    "8_a_14",
-    "15_a_30",
-    "maior_que_30",
-]
-
-classificacao_intervalo = np.select(
-    condicoes_intervalo,
-    rotulos_intervalo,
-    default="nao_classificado",
-)
-
-coorte_provisoria[
-    "faixa_dias_sintomas_ate_internacao"
-] = pd.Series(
-    classificacao_intervalo,
-    index=coorte_provisoria.index,
-    dtype="string",
-)
-
-tabela_intervalos = (
-    coorte_provisoria[
-        "faixa_dias_sintomas_ate_internacao"
-    ]
-    .value_counts(
-        dropna=False
-    )
-    .rename_axis(
-        "faixa"
-    )
-    .reset_index(
-        name="quantidade"
-    )
-)
-
-display(
-    tabela_intervalos
-)
-```
-
-### Cell 11 [code] · In [ ]
-
-```python
-contagem_nu_notific = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .dropna()
-    .value_counts()
-)
-
-coorte_provisoria[
-    "quantidade_ocorrencias_nu_notific"
-] = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .map(
-        contagem_nu_notific
-    )
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "flag_nu_notific_repetido"
-] = (
-    coorte_provisoria[
-        "quantidade_ocorrencias_nu_notific"
-    ]
-    .gt(1)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_nu_notific_ausente"
-] = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "status_coorte"
-] = "provisoria_pessoa_b"
-
-coorte_provisoria[
-    "data_corte_coorte"
-] = DATA_FINAL_COORTE
-
-print(
-    "Linhas com nu_notific repetido:",
-    int(
-        coorte_provisoria[
-            "flag_nu_notific_repetido"
-        ].sum()
-    ),
-)
-
-print(
-    "Linhas com nu_notific ausente:",
-    int(
-        coorte_provisoria[
-            "flag_nu_notific_ausente"
-        ].sum()
-    ),
-)
-```
-
-### Cell 12 [code] · In [ ]
-
-```python
-auditoria_duplicidades = (
-    coorte_provisoria.loc[
-        coorte_provisoria[
-            "flag_nu_notific_repetido"
-        ].eq(1)
-    ]
-    .groupby(
-        "nu_notific_normalizado",
-        dropna=False,
-    )
-    .agg(
-        quantidade_ocorrencias=(
-            "nu_notific_normalizado",
-            "size",
-        ),
-        quantidade_anos_internacao=(
-            "ano_internacao",
-            "nunique",
-        ),
-        quantidade_datas_internacao=(
-            "dt_interna_convertida",
-            "nunique",
-        ),
-        quantidade_desfechos=(
-            "evolucao_normalizada",
-            "nunique",
-        ),
-        quantidade_datas_sintomas=(
-            "dt_sin_pri_convertida",
-            "nunique",
-        ),
-    )
-    .reset_index()
-)
-
-auditoria_duplicidades[
-    "flag_ano_internacao_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_anos_internacao"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_dt_interna_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_datas_internacao"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_evolucao_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_desfechos"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_dt_sin_pri_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_datas_sintomas"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades = (
-    auditoria_duplicidades
-    .sort_values(
-        [
-            "quantidade_ocorrencias",
-            "nu_notific_normalizado",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-auditoria_temporal = pd.DataFrame(
-    {
-        "verificacao": [
-            "dt_sin_pri_ausente",
-            "dt_notific_ausente",
-            "internacao_antes_sintomas",
-            "intervalo_negativo_sem_nosocomial",
-            "notificacao_apos_internacao",
-            "notificacao_fora_periodo",
-            "sintomas_fora_periodo",
-            "nu_notific_repetido",
-            "nu_notific_ausente",
-            "periodo_incompleto_2026",
-        ],
-        "quantidade": [
-            int(
-                coorte_provisoria[
-                    "flag_dt_sin_pri_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_dt_notific_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_internacao_antes_sintomas"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_intervalo_negativo_sem_nosocomial"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_notificacao_apos_internacao"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_notificacao_fora_periodo"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_sintomas_fora_periodo"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_repetido"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "periodo_incompleto"
-                ].sum()
-            ),
-        ],
-    }
-)
-
-auditoria_temporal[
-    "percentual_coorte"
-] = (
-    auditoria_temporal[
-        "quantidade"
-    ]
-    .div(
-        len(
-            coorte_provisoria
-        )
-    )
-    .mul(100)
-)
-
-display(
-    auditoria_temporal
-)
-
-display(
-    auditoria_duplicidades.head(20)
-)
-```
-
-### Cell 13 [code] · In [ ]
-
-```python
-distribuicao_alvo = (
-    coorte_provisoria[
-        "alvo_obito_srag"
-    ]
-    .value_counts(
-        dropna=False
-    )
-    .sort_index()
-)
-
-resumo_coorte = pd.DataFrame(
-    {
-        "metrica": [
-            "versao_dados",
-            "status_coorte",
-            "data_inicial_coorte",
-            "data_final_coorte",
-            "registros_originais",
-            "colunas_originais_carregadas",
-            "duplicidades_exatas_removidas",
-            "registros_coorte_provisoria",
-            "colunas_coorte_provisoria",
-            "alvo_0_cura",
-            "alvo_1_obito_srag",
-            "linhas_nu_notific_repetido",
-            "identificadores_repetidos_distintos",
-            "internacao_antes_sintomas",
-            "intervalo_negativo_sem_nosocomial",
-            "registros_2026",
-        ],
-        "valor": [
-            C.DATA_VERSION,
-            "provisoria_pessoa_b",
-            str(
-                DATA_INICIAL_COORTE.date()
-            ),
-            str(
-                DATA_FINAL_COORTE.date()
-            ),
-            quantidade_registros_originais,
-            quantidade_colunas_originais,
-            quantidade_duplicidades_exatas,
-            len(
-                coorte_provisoria
-            ),
-            coorte_provisoria.shape[1],
-            int(
-                distribuicao_alvo.get(
-                    0,
-                    0,
-                )
-            ),
-            int(
-                distribuicao_alvo.get(
-                    1,
-                    0,
-                )
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_repetido"
-                ].sum()
-            ),
-            len(
-                auditoria_duplicidades
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_internacao_antes_sintomas"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_intervalo_negativo_sem_nosocomial"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "periodo_incompleto"
-                ].sum()
-            ),
-        ],
-    }
-)
-
-display(
-    resumo_coorte
-)
-```
-
-### Cell 14 [code] · In [ ]
-
-```python
-existem_duplicidades_exatas_restantes = (
-    coorte_provisoria[
-        COLUNAS_EXISTENTES
-    ]
-    .duplicated()
-    .any()
-)
-
-verificacoes_pre_salvamento = {
-    "coorte_nao_vazia": (
-        not coorte_provisoria.empty
-    ),
-    "hospitalizacao_confirmada": (
-        coorte_provisoria[
-            "hospital_normalizado"
-        ]
-        .eq("1")
-        .all()
-    ),
-    "dt_interna_valida": (
-        coorte_provisoria[
-            "dt_interna_convertida"
-        ]
-        .notna()
-        .all()
-    ),
-    "periodo_correto": (
-        coorte_provisoria[
-            "dt_interna_convertida"
-        ]
-        .between(
-            DATA_INICIAL_COORTE,
-            DATA_FINAL_COORTE,
-        )
-        .all()
-    ),
-    "desfecho_elegivel": (
-        coorte_provisoria[
-            "evolucao_normalizada"
-        ]
-        .isin(
-            [
-                "1",
-                "2",
-            ]
-        )
-        .all()
-    ),
-    "alvo_binario": (
-        set(
-            coorte_provisoria[
-                "alvo_obito_srag"
-            ]
-            .dropna()
-            .unique()
-        )
-        .issubset(
-            {
-                0,
-                1,
-            }
-        )
-    ),
-    "sem_duplicidades_exatas_restantes": (
-        not existem_duplicidades_exatas_restantes
-    ),
-    "flag_repeticao_identificador_criada": (
-        "flag_nu_notific_repetido"
-        in coorte_provisoria.columns
-    ),
-    "waterfall_criado": (
-        not waterfall_df.empty
-    ),
-    "auditoria_temporal_criada": (
-        not auditoria_temporal.empty
-    ),
-}
-
-verificacoes_pre_salvamento_df = pd.DataFrame(
-    {
-        "verificacao": list(
-            verificacoes_pre_salvamento.keys()
-        ),
-        "resultado": list(
-            verificacoes_pre_salvamento.values()
-        ),
-    }
-)
-
-display(
-    verificacoes_pre_salvamento_df
-)
-
-if not all(
-    verificacoes_pre_salvamento.values()
-):
-    falhas = [
-        verificacao
-        for verificacao, resultado
-        in verificacoes_pre_salvamento.items()
-        if not resultado
-    ]
-
-    raise RuntimeError(
-        "A coorte provisória não pode ser salva. "
-        f"Verificações com falha: {falhas}"
-    )
-
-print(
-    "Validações anteriores ao salvamento concluídas."
-)
-```
-
-### Cell 15 [code] · In [ ]
-
-```python
-C.ANALYTICAL_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-C.TABLES_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-coorte_provisoria.to_parquet(
-    CAMINHO_COORTE_PROVISORIA,
-    index=False,
-    compression="zstd",
-)
-
-waterfall_df.to_csv(
-    CAMINHO_WATERFALL,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-auditoria_duplicidades.to_csv(
-    CAMINHO_AUDITORIA_DUPLICIDADES,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-auditoria_temporal.to_csv(
-    CAMINHO_AUDITORIA_TEMPORAL,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-resumo_coorte.to_csv(
-    CAMINHO_RESUMO,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-coorte_reaberta = pd.read_parquet(
-    CAMINHO_COORTE_PROVISORIA
-)
-
-verificacoes_finais = {
-    "arquivo_parquet_criado": (
-        CAMINHO_COORTE_PROVISORIA.exists()
-    ),
-    "arquivo_waterfall_criado": (
-        CAMINHO_WATERFALL.exists()
-    ),
-    "arquivo_auditoria_duplicidades_criado": (
-        CAMINHO_AUDITORIA_DUPLICIDADES.exists()
-    ),
-    "arquivo_auditoria_temporal_criado": (
-        CAMINHO_AUDITORIA_TEMPORAL.exists()
-    ),
-    "arquivo_resumo_criado": (
-        CAMINHO_RESUMO.exists()
-    ),
-    "parquet_reaberto_nao_vazio": (
-        not coorte_reaberta.empty
-    ),
-    "mesmo_numero_de_linhas": (
-        len(
-            coorte_reaberta
-        )
-        == len(
-            coorte_provisoria
-        )
-    ),
-    "mesmo_numero_de_colunas": (
-        coorte_reaberta.shape[1]
-        == coorte_provisoria.shape[1]
-    ),
-    "status_provisorio_preservado": (
-        coorte_reaberta[
-            "status_coorte"
-        ]
-        .eq(
-            "provisoria_pessoa_b"
-        )
-        .all()
-    ),
-    "alvo_preservado": (
-        coorte_reaberta[
-            "alvo_obito_srag"
-        ]
-        .isin(
-            [
-                0,
-                1,
-            ]
-        )
-        .all()
-    ),
-}
-
-verificacoes_finais_df = pd.DataFrame(
-    {
-        "verificacao": list(
-            verificacoes_finais.keys()
-        ),
-        "resultado": list(
-            verificacoes_finais.values()
-        ),
-    }
-)
-
-display(
-    verificacoes_finais_df
-)
-
-if not all(
-    verificacoes_finais.values()
-):
-    falhas = [
-        verificacao
-        for verificacao, resultado
-        in verificacoes_finais.items()
-        if not resultado
-    ]
-
-    raise RuntimeError(
-        "A construção provisória terminou com falhas: "
-        f"{falhas}"
-    )
-
-tamanho_parquet_mb = (
-    CAMINHO_COORTE_PROVISORIA
-    .stat()
-    .st_size
-    / 1_048_576
-)
-
-print(
-    "Coorte provisória construída e validada com sucesso."
-)
-
-print(
-    "Arquivo:",
-    CAMINHO_COORTE_PROVISORIA,
-)
-
-print(
-    "Linhas:",
-    len(
-        coorte_reaberta
-    ),
-)
-
-print(
-    "Colunas:",
-    coorte_reaberta.shape[1],
-)
-
-print(
-    "Tamanho em MB:",
-    round(
-        tamanho_parquet_mb,
-        2,
-    ),
-)
-```
-
-## `notebooks/A/A1_coorte_protocolo.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `13.0 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `ff72865a9b7e656a1e088024cb1572271a836c2845783b7d0f08ab044434c53f`
-
-- Cells: `20` (`9` code, `11` markdown)
-- Code cells executed: `0` of `9`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# A1 | 07–08/10 — Fechar códigos, protocolo e coorte
-
-**Pessoa A.** Converter a pergunta de pesquisa em regras de inclusão, exclusão e desfecho.
-
-**Saída até 08/10:** config de decisões v0.1 (`configs/decisoes.yaml`), tabela de códigos, coorte provisória e waterfall.
-**Revisão:** B confere categorias e gráficos; C implementa e testa as regras.
-
-| Passo do plano | Onde está neste notebook |
-|---|---|
-| 1–3. Fichas/dicionários, pesquisar HOSPITAL, DT_INTERNA, EVOLUCAO, TP_IDADE e códigos; registrar tabela | Seção 1 (manual) + seção 2 |
-| 4. Ponto de previsão em DT_INTERNA e campos posteriores | Seção 3 |
-| 5–6. Coorte estrita, alvo e categorias separadas | Seções 4 e 6 |
-| 7–9. N antes/depois, amostras das exclusões, waterfall | Seções 4 e 5 |
-| 10. Atualizar tabela de decisões | Seção 7 |
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-# ----- Setup (não editar) -----
-import os, sys
-from pathlib import Path
-
-# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
-# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
-_parents = [Path.cwd(), *Path.cwd().parents]
-PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
-if PKG_ROOT is None:
-    raise FileNotFoundError(
-        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
-        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
-        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
-REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
-os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
-
-# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
-# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
-for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
-    del sys.modules[_m]
-_init = PKG_ROOT / "src" / "__init__.py"
-if not _init.exists():
-    _init.touch()
-    print("Criado", _init, "(torna o src do projeto um pacote regular)")
-
-import pandas as pd
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-from src.protocolo import verificacoes as v
-if getattr(v, "MODULE_VERSION", "0") < "0.8":
-    raise RuntimeError(
-        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
-        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
-
-# ----- Parâmetros -----
-USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
-DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
-SAMPLE = 0                              # ex.: 200_000 para execução rápida
-OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
-CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
-                 if p.exists()), "configs/decisoes.yaml")
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
-COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # features/alvo/coluna_tempo definidos pelo C
-print("Raiz do repositório:", REPO_ROOT)
-print("Pacote (src/protocolo):", PKG_ROOT)
-print("Config de decisões:", CFG_PATH)
-cfg = v.load_config(CFG_PATH)
-rep = v.Report(OUT, "relatorio_A1")
-df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
-print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## 1. Fichas e dicionários (manual)
-Busque exatamente por: *"SIVEP-Gripe dicionário de dados HOSPITAL EVOLUCAO DT_INTERNA"*, *"SIVEP-Gripe ficha de investigação SRAG hospitalização evolução"*, *"STROBE cohort flow diagram observational study"*.
-Para cada campo (HOSPITAL, DT_INTERNA, EVOLUCAO, TP_IDADE, sim/não/ignorado) registre: definição, código, ano, regra de salto, tratamento e evidência — na tabela de decisões (seção 7).
-
-- [ ] Fichas/dicionários dos anos usados localizados
-- [ ] Códigos de HOSPITAL, EVOLUCAO, TP_IDADE confirmados por ano
-```
-
-### Cell 4 [markdown]
-
-```markdown
-## 2. Colunas essenciais e tabela de códigos
-```
-
-### Cell 5 [code] · In [ ]
-
-```python
-v.a1_columns(df, cfg, rep)
-v.a1_code_tables(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a1_tabela_codigos.csv").head(40))
-```
-
-### Cell 6 [markdown]
-
-```markdown
-## 3. Ponto de previsão e campos posteriores
-O ponto de previsão proposto é a **internação** (`DT_INTERNA`). Tudo o que só existe depois dela é candidato a vazamento.
-```
-
-### Cell 7 [code] · In [ ]
-
-```python
-print("Ponto de previsão:", cfg["cols"]["dt_interna"])
-posteriores = [c for c in cfg["forbidden_vars"] if v.canon(c) in df.columns]
-print("Campos potencialmente posteriores presentes na base:")
-print(posteriores)
-```
-
-### Cell 8 [markdown]
-
-```markdown
-## 4. Coorte estrita — waterfall
-Filtros em sequência: hospitalização confirmada → data válida → período → evolução encerrada → alvo binário.
-```
-
-### Cell 9 [code] · In [ ]
-
-```python
-wf = v.a1_waterfall(df, cfg, rep)
-display(wf)
-```
-
-### Cell 10 [markdown]
-
-```markdown
-## 5. Inspeção das exclusões
-Confirme que cada filtro se comporta como a regra escrita (as amostras vêm de `a1_amostra_exclusoes_NN.csv`).
-```
-
-### Cell 11 [code] · In [ ]
-
-```python
-for f in sorted(Path(OUT).glob("a1_amostra_exclusoes_*.csv")):
-    print("\n==", f.name)
-    display(pd.read_csv(f).head(5))
-```
-
-### Cell 12 [markdown]
-
-```markdown
-## 6. Alvo e categorias separadas
-`EVOLUCAO=2` → óbito (1); `EVOLUCAO=1` → cura (0). **Óbito por outras causas (3) fica separado e evolução desconhecida (9/ausente) nunca vira cura.**
-```
-
-### Cell 13 [code] · In [ ]
-
-```python
-v.a1_target(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a1_alvo_por_ano.csv").head(40))
-```
-
-### Cell 14 [markdown]
-
-```markdown
-## 7. Tabela de decisões
-Ajuste o texto, o `status` (`proposta` → `aprovada`) e o impacto após conferir no dicionário. A mesma tabela alimenta B e C.
-```
-
-### Cell 15 [code] · In [ ]
-
-```python
-E = "A1"
-v.log_decision(OUT, "D-01", "Ponto de previsão", "DT_INTERNA (admissão); campos posteriores bloqueados", E,
-               impacto="Define quais variáveis podem entrar", evidencia="Dicionário SIVEP-Gripe (completar)")
-v.log_decision(OUT, "D-02", "Coorte estrita", "HOSPITAL=1, DT_INTERNA válida, período analítico, evolução encerrada", E,
-               impacto="Ver waterfall (a1_waterfall.csv)")
-v.log_decision(OUT, "D-03", "Alvo principal", "Óbito SRAG (EVOLUCAO=2) vs cura (EVOLUCAO=1)", E,
-               impacto="Alinhar target.positivos do supervised.yaml (G1)")
-v.log_decision(OUT, "D-04", "Evolução desconhecida e óbito outras causas",
-               "EVOLUCAO=9/ausente e 3 saem do alvo binário; nunca viram cura", E,
-               impacto="Exigir filtro EVOLUCAO in {1,2} no loader do C")
-v.log_decision(OUT, "D-12", "Features derivadas (criadas no dataset analítico)",
-               f"idade_anos (TP_IDADE), faixa_etaria, intervalo sintomas->internação (inválido se ausente/negativo/>{cfg['derivadas']['intervalo_max_dias']} dias) "
-               "+ flag, sin/cos da semana ISO da internação", E,
-               impacto="Só informação da admissão; o C2 as encontra no dataset (supervised.yaml)")
-v.log_decision(OUT, "D-05", "Período analítico",
-               f"Desenvolvimento {cfg['dev_years']}; holdout {cfg['holdout_years']}", E,
-               impacto="Exclui anos fora do período; alinhar G2")
-display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
-```
-
-### Cell 16 [markdown]
-
-```markdown
-## 8. Exportar a população analítica (v0.1, provisória)
-O notebook **C2 exige** `data/analytical/dataset_supervisionado.parquet`. Esta célula o gera a partir da coorte, usando as features, o alvo e a coluna de tempo do `supervised.yaml`. Sai ordenado por tempo e **sem** colunas pós-admissão além das features pedidas. Avise o C quando atualizar.
-```
-
-### Cell 17 [code] · In [ ]
-
-```python
-info = v.a1_export_dataset(df, cfg, rep, SUPERVISED_CONFIG, versao="0.1", excluir_proibidas=False)
-print("Arquivo:", info["arquivo"], "|", f"{info['n_linhas']:,} linhas")
-print("Anos:", info["anos"])
-print("Features proibidas no dataset:", info["features_proibidas_no_dataset"] or "nenhuma")
-print("Features ausentes na base:", info["features_ausentes_na_base"] or "nenhuma")
-print("Linhas descartadas por data de tempo inválida:", info["descartadas_data_tempo_invalida"])
-
-# Confere o ARQUIVO gravado contra o que o C2 consome (colunas, datas, alvo, check_leakage)
-v.validar_contrato_c2(info["arquivo"], SUPERVISED_CONFIG, rep)
-```
-
-### Cell 18 [markdown]
-
-```markdown
-## 9. Fechamento
-```
-
-### Cell 19 [code] · In [ ]
-
-```python
-path = rep.write_md()
-print("Relatório:", path)
-display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
-```
-
-### Cell 20 [markdown]
-
-```markdown
-### Checklist de saída (08/10)
-- [ ] Config de decisões v0.1 atualizada (`configs/decisoes.yaml`)
-- [ ] Tabela de códigos e tabela de decisões revisadas
-- [ ] Waterfall com N excluído/restante/% de cada filtro
-- [ ] Amostras das exclusões inspecionadas
-- [ ] `data/analytical/dataset_supervisionado.parquet` (v0.1) gerado e C avisado
-- [ ] B e C avisados das regras (categorias, alvo, ponto de previsão)
-```
-
-## `notebooks/A/A2_qualidade_elegibilidade.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `10.5 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `f6df915f2d2011d19ba9f1d11985271954cf784be1bd8c8061e03c1b1dbfd928`
-
-- Cells: `19` (`9` code, `10` markdown)
-- Code cells executed: `0` of `9`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# A2 | 09–10/10 — Auditar qualidade, datas e elegibilidade
-
-**Pessoa A.** Distinguir problema de qualidade, ausência legítima, variável inadequada e risco de vazamento.
-
-**Saída até 10/10:** relatório de qualidade revisado, flags aprovadas e matriz de elegibilidade v1.0.
-**Revisão:** B verifica padrões visuais; C transforma as decisões em validações automáticas. **Gate 1 (09/10):** regras de preparação.
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-# ----- Setup (não editar) -----
-import os, sys
-from pathlib import Path
-
-# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
-# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
-_parents = [Path.cwd(), *Path.cwd().parents]
-PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
-if PKG_ROOT is None:
-    raise FileNotFoundError(
-        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
-        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
-        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
-REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
-os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
-
-# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
-# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
-for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
-    del sys.modules[_m]
-_init = PKG_ROOT / "src" / "__init__.py"
-if not _init.exists():
-    _init.touch()
-    print("Criado", _init, "(torna o src do projeto um pacote regular)")
-
-import pandas as pd
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-from src.protocolo import verificacoes as v
-if getattr(v, "MODULE_VERSION", "0") < "0.8":
-    raise RuntimeError(
-        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
-        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
-
-# ----- Parâmetros -----
-USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
-DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
-SAMPLE = 0                              # ex.: 200_000 para execução rápida
-OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
-CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
-                 if p.exists()), "configs/decisoes.yaml")
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
-COLUNAS = "classificadas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
-SUPERVISED_CONFIG = "configs/supervised.yaml"
-EXCLUIR_PROIBIDAS = True        # v1.0: nenhuma coluna proibida segue para o C
-print("Raiz do repositório:", REPO_ROOT)
-print("Pacote (src/protocolo):", PKG_ROOT)
-print("Config de decisões:", CFG_PATH)
-cfg = v.load_config(CFG_PATH)
-rep = v.Report(OUT, "relatorio_A2")
-df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
-print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## 1. Vazios, ignorados e campos inexistentes por ano
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-v.a2_missing(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a2_campos_inexistentes_por_ano.csv").head(40))
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## 2. Coerência de datas e idade
-Classifique cada inconsistência: **excluir**, **transformar em ausente**, **manter com flag** ou **apenas documentar** (a coluna `acao_sugerida` é uma proposta).
-```
-
-### Cell 6 [code] · In [ ]
-
-```python
-v.a2_dates(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a2_coerencia_datas.csv").head(40))
-```
-
-### Cell 7 [markdown]
-
-```markdown
-## 3. Duplicidades
-`NU_NOTIFIC` repetido **não** implica mesma pessoa.
-```
-
-### Cell 8 [code] · In [ ]
-
-```python
-v.a2_duplicates(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a2_duplicidades.csv").head(40))
-```
-
-### Cell 9 [markdown]
-
-```markdown
-## 4. Maturidade de EVOLUCAO por mês de internação
-Meses recentes do holdout podem ter evolução ainda aberta.
-```
-
-### Cell 10 [code] · In [ ]
-
-```python
-v.a2_maturity(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / 'a2_maturidade_evolucao_por_mes.csv').tail(24))
-```
-
-### Cell 11 [markdown]
-
-```markdown
-## 5. Matriz de elegibilidade
-Classes: **incluir**, **incluir com condição**, **auditoria**, **excluir**. Para cada variável responda: *quando foi observada, quando chegou à base e se poderia existir na admissão.* Preencha as colunas em branco do CSV gerado (`a2_matriz_elegibilidade.csv`).
-```
-
-### Cell 12 [code] · In [ ]
-
-```python
-v.a2_eligibility(df, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a2_matriz_elegibilidade.csv").head(40))
-```
-
-### Cell 13 [markdown]
-
-```markdown
-## 6. Tabela de decisões
-```
-
-### Cell 14 [code] · In [ ]
-
-```python
-E = "A2"
-v.log_decision(OUT, "D-06", "Ação por tipo de inconsistência de datas",
-               "; ".join(f"{r[2]} -> {r[3]}" for r in cfg["date_rules"]), E,
-               impacto="Ver a2_coerencia_datas.csv")
-v.log_decision(OUT, "D-07", "Duplicidades", "Linhas exatas removidas; NU_NOTIFIC repetido apenas documentado", E,
-               impacto="Ver a2_duplicidades.csv")
-v.log_decision(OUT, "D-08", "Maturidade de EVOLUCAO",
-               f"Meses do holdout com < {cfg['maturity_min_closed_pct']}% de evolução fechada ficam fora ou sob sensibilidade", E,
-               impacto="Ver a2_maturidade_evolucao_por_mes.csv")
-v.log_decision(OUT, "D-09", "Variáveis proibidas/condicionais",
-               "Matriz de elegibilidade v1.0 (classes incluir/condição/auditoria/excluir)", E,
-               impacto="C bloqueia automaticamente (test_leakage); B usa na matriz de clustering")
-display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
-```
-
-### Cell 15 [markdown]
-
-```markdown
-## 7. Exportar a população analítica (v1.0)
-Com a matriz de elegibilidade fechada, regrave o dataset do C. Com `EXCLUIR_PROIBIDAS = True`, features classificadas como **excluir** não seguem para o C (o dataset lista o que ficou de fora).
-```
-
-### Cell 16 [code] · In [ ]
-
-```python
-info = v.a1_export_dataset(df, cfg, rep, SUPERVISED_CONFIG, versao="1.0", excluir_proibidas=EXCLUIR_PROIBIDAS)
-print("Arquivo:", info["arquivo"], "|", f"{info['n_linhas']:,} linhas")
-print("Features ausentes na base:", info["features_ausentes_na_base"] or "nenhuma")
-print("Colunas:", info["colunas"])
-v.validar_contrato_c2(info["arquivo"], SUPERVISED_CONFIG, rep)   # contrato do C2 (colunas, datas, alvo, leakage)
-```
-
-### Cell 17 [markdown]
-
-```markdown
-## 8. Fechamento
-```
-
-### Cell 18 [code] · In [ ]
-
-```python
-path = rep.write_md()
-print("Relatório:", path)
-display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
-```
-
-### Cell 19 [markdown]
-
-```markdown
-### Checklist de saída (10/10)
-- [ ] Relatório de qualidade revisado e flags aprovadas
-- [ ] Matriz de elegibilidade v1.0 preenchida (nenhuma variável em `auditoria`)
-- [ ] Lista de variáveis proibidas e condições de saturação, vacinação e geografia fechadas
-- [ ] Dataset analítico v1.0 regravado e C avisado
-- [ ] Regras entregues a B e C
-```
-
-## `notebooks/A/A3_desenho_experimental.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `10.4 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `c042022c2d7d5379f1208c2c73c230a008c54e310d0da609d1bca1bd831d538f`
-
-- Cells: `17` (`8` code, `9` markdown)
-- Code cells executed: `0` of `8`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# A3 | 11–14/10 — Revisar desenho experimental e pilotos
-
-**Pessoa A.** Verificar se métodos, métricas, partições e outputs respondem à pergunta sem contaminar o holdout.
-
-**Saída até 14/10:** checklist metodológico, atas dos **Gates 2 (11/10)** e **3 (14/10)** e registro de interpretação dos pilotos.
-**Revisão:** B explica clustering; C explica pipeline, validação e métricas.
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-# ----- Setup (não editar) -----
-import os, sys
-from pathlib import Path
-
-# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
-# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
-_parents = [Path.cwd(), *Path.cwd().parents]
-PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
-if PKG_ROOT is None:
-    raise FileNotFoundError(
-        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
-        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
-        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
-REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
-os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
-
-# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
-# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
-for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
-    del sys.modules[_m]
-_init = PKG_ROOT / "src" / "__init__.py"
-if not _init.exists():
-    _init.touch()
-    print("Criado", _init, "(torna o src do projeto um pacote regular)")
-
-import pandas as pd
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-from src.protocolo import verificacoes as v
-if getattr(v, "MODULE_VERSION", "0") < "0.8":
-    raise RuntimeError(
-        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
-        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
-
-# ----- Parâmetros -----
-USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
-DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
-SAMPLE = 0                              # ex.: 200_000 para execução rápida
-OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
-CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
-                 if p.exists()), "configs/decisoes.yaml")
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
-COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (G1–G8)
-FEATURES_CLUSTERING = None                      # .txt/.json/.yaml com as features do clustering (B)
-LOGS_DIR = "logs"                               # logs de B e C
-RESULTS = None                                  # CSV: modelo, fold, pr_auc, roc_auc, brier (pilotos)
-print("Raiz do repositório:", REPO_ROOT)
-print("Pacote (src/protocolo):", PKG_ROOT)
-print("Config de decisões:", CFG_PATH)
-cfg = v.load_config(CFG_PATH)
-rep = v.Report(OUT, "relatorio_A3")
-df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
-print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## 1. Auditoria do `supervised.yaml` contra as decisões da Pessoa A
-Alvo, coluna temporal, tipo de split, variáveis proibidas, idade, gates pendentes.
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-if Path(SUPERVISED_CONFIG).exists():
-    y = v.load_supervised_yaml(SUPERVISED_CONFIG)
-    v.a3_config_audit(y, cfg, rep, df.attrs.get("schema_cols"))
-    v.a3_forbidden(v.supervised_features(y), "supervisionado", cfg, rep)
-else:
-    print("supervised.yaml não encontrado:", SUPERVISED_CONFIG)
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## 2. O desfecho não pode aparecer no clustering
-```
-
-### Cell 6 [code] · In [ ]
-
-```python
-if FEATURES_CLUSTERING and Path(FEATURES_CLUSTERING).exists():
-    v.a3_forbidden(v.load_feature_list(FEATURES_CLUSTERING), "clustering", cfg, rep)
-else:
-    print("Informe FEATURES_CLUSTERING (lista de features da matriz de clustering de B).")
-```
-
-### Cell 7 [markdown]
-
-```markdown
-## 3. Divisão temporal e proteção do holdout
-Desenvolvimento 2022–2024 e holdout 2025 (conforme `configs/decisoes.yaml`).
-```
-
-### Cell 8 [code] · In [ ]
-
-```python
-cohort = v.a1_cohort(df, cfg)
-print(f"Coorte: {len(cohort):,} registros")
-v.a3_temporal_split(cohort, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a3_split_temporal.csv"))
-```
-
-### Cell 9 [markdown]
-
-```markdown
-## 4. Varredura de vazamento
-AUC univariada ≈ 1 contra o alvo é sinal de variável posterior ao desfecho (indicativo, não prova).
-```
-
-### Cell 10 [code] · In [ ]
-
-```python
-v.a3_leak_scan(cohort, cfg, rep)
-display(pd.read_csv(Path(OUT) / "a3_varredura_vazamento.csv").head(40))
-```
-
-### Cell 11 [markdown]
-
-```markdown
-## 5. Métricas excessivamente altas e auditoria dos logs de B e C
-```
-
-### Cell 12 [code] · In [ ]
-
-```python
-if RESULTS and Path(RESULTS).exists():
-    v.a3_suspicious_metrics(pd.read_csv(RESULTS), cfg, rep)
-else:
-    print("Sem tabela de resultados (RESULTS) ainda.")
-v.a3_audit_logs(LOGS_DIR, cfg, rep)
-```
-
-### Cell 13 [markdown]
-
-```markdown
-## 6. Análises guiadas (manuais — registre a interpretação)
-- [ ] Revisar lista final de features (desfecho fora do clustering)
-- [ ] Confirmar divisão 2022–2024 / 2025 e métricas de clustering e de classificação (papel de cada uma)
-- [ ] Executar uma rodada K-Means preparada e interpretar a tabela de perfis
-- [ ] Executar a regressão logística preparada: coeficientes, probabilidades e métricas
-- [ ] Comparar ROC-AUC e PR-AUC e explicar por que não são equivalentes
-- [ ] Revisar uma curva de calibração (sub/superestimação)
-- [ ] Investigar métricas altas demais como possível vazamento
-
-Busque por: *silhouette score interpretation scikit-learn*, *precision recall curve imbalanced classification scikit-learn*, *probability calibration curve reliability diagram scikit-learn*, *TimeSeriesSplit scikit-learn chronological validation*.
-```
-
-### Cell 14 [markdown]
-
-```markdown
-## 7. Decisões e atas dos Gates 2 e 3
-```
-
-### Cell 15 [code] · In [ ]
-
-```python
-E = "A3"
-v.log_decision(OUT, "D-10", "Split temporal", f"Desenvolvimento {cfg['dev_years']} / holdout {cfg['holdout_years']} por DT_INTERNA", E,
-               impacto="supervised.yaml: modo 'datas' e coluna_tempo = dt_interna (G2)")
-
-DECISOES_G2 = ["(preencher) decisões do Gate 2 — desenho experimental"]
-PENDENCIAS_G2 = ["(preencher)"]
-v.write_ata(OUT, "Ata Gate 2 (11/10)", "2026-10-11", DECISOES_G2, PENDENCIAS_G2, riscos=[], rep=rep)
-
-DECISOES_G3 = ["(preencher) configurações inviáveis eliminadas"]
-PENDENCIAS_G3 = ["(preencher)"]
-v.write_ata(OUT, "Ata Gate 3 (14/10)", "2026-10-14", DECISOES_G3, PENDENCIAS_G3, riscos=[], rep=rep)
-print(sorted(p.name for p in Path(OUT).glob("ata_*.md")))
-```
-
-### Cell 16 [markdown]
-
-```markdown
-## 8. Fechamento
-```
-
-### Cell 17 [code] · In [ ]
-
-```python
-path = rep.write_md()
-print("Relatório:", path)
-display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
-```
-
-## `notebooks/A/A3b_split_aleatorio_cenarios.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `12.1 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `da4dbe8c74296d5a5ad82f4beada0c57b73e0de94d0ebab45964e259dd67029c`
-
-- Cells: `15` (`7` code, `8` markdown)
-- Code cells executed: `0` of `7`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# A3b — Split aleatório 70-15-15 (2019–2025) e cenário sem 2020–2021
-
-**Pessoa A (apoio ao A3).** Experimento **comparativo**: o projeto usa validação temporal como padrão; aqui medimos o que muda com um **split aleatório estratificado 70/15/15** e quando **2020 e 2021** (anos de pandemia) saem da base.
-
-| Cenário | Anos (de `DT_INTERNA`) | Split |
-|---|---|---|
-| `todos_2019_2025` | 2019–2025 | aleatório 70/15/15, estratificado pelo alvo, seed 42 |
-| `sem_2020_2021` | 2019, 2022–2025 | idem |
-
-**Saídas** (em `data/analytical/`, `outputs/tables/pessoa_a/` e `outputs/figures/pessoa_a/`):
-- `dataset_supervisionado_<cenário>.parquet` com a coluna **`split`** (`treino` / `validacao` / `holdout`) e `.meta.json` (versão, SHA-256, contagens).
-- Tabelas de proporções, prevalência e anos por split; waterfall por cenário.
-- **Gráficos (PNG)**: proporções 70/15/15, prevalência de óbito por split e composição dos splits por ano (`split_<cenário>.png`); comparação dos cenários (`split_comparacao_cenarios.png`).
-- Benchmark rápido (regressão logística, treino → **validação**): split aleatório × temporal por ordem.
-
-> O **holdout não é aberto** aqui (regra do projeto). O benchmark usa só treino e validação.
-> Os dois datasets **não substituem** `dataset_supervisionado.parquet` (o do pipeline temporal do C2).
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-# ----- Setup (não editar) -----
-import os, sys
-from pathlib import Path
-
-# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
-# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
-_parents = [Path.cwd(), *Path.cwd().parents]
-PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
-if PKG_ROOT is None:
-    raise FileNotFoundError(
-        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
-        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
-        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
-REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
-os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
-
-# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
-# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
-for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
-    del sys.modules[_m]
-_init = PKG_ROOT / "src" / "__init__.py"
-if not _init.exists():
-    _init.touch()
-    print("Criado", _init, "(torna o src do projeto um pacote regular)")
-
-import pandas as pd
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-from src.protocolo import verificacoes as v
-if getattr(v, "MODULE_VERSION", "0") < "0.8":
-    raise RuntimeError(
-        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
-        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
-
-# ----- Parâmetros -----
-USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
-DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
-SAMPLE = 0                              # ex.: 200_000 para execução rápida
-OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
-CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
-                 if p.exists()), "configs/decisoes.yaml")
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
-COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
-CENARIOS = None                     # None = usa configs/decisoes.yaml -> experimentos_split.cenarios
-                                    # ou informe, ex.: {"todos_2019_2025": [2019, 2020, 2021, 2022, 2023, 2024, 2025]}
-RODAR_BENCHMARK = True              # regressão logística treino -> validação (aleatório x temporal)
-FIG_DIR = "outputs/figures/pessoa_a"  # onde salvar os gráficos (PNG)
-print("Raiz do repositório:", REPO_ROOT)
-print("Pacote (src/protocolo):", PKG_ROOT)
-print("Config de decisões:", CFG_PATH)
-cfg = v.load_config(CFG_PATH)
-rep = v.Report(OUT, "relatorio_A3b")
-df = v.prepare(v.carregar_base(DATA_PATH, USAR_DEMO, SAMPLE, COLUNAS, cfg, SUPERVISED_CONFIG))
-print(f"Memória do DataFrame: {v.uso_memoria_gb(df):.2f} GB")
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## 1. Cenários
-Os anos vêm do `configs/decisoes.yaml` (`experimentos_split.cenarios`); a seed e as frações também.
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-e = cfg["experimentos_split"]
-CENARIOS = CENARIOS or {nome: spec["anos"] for nome, spec in e["cenarios"].items()}
-print("Seed:", e["seed"], "| frações:", e["fracoes"], "| estratificado pelo alvo:", e["estratificar_por_alvo"])
-for nome, anos in CENARIOS.items():
-    print(f"  {nome}: {anos}")
-anos_na_base = sorted(v.parse_date(df[cfg["cols"]["dt_interna"]]).dt.year.dropna().astype(int).unique())
-print("Anos de DT_INTERNA presentes na base carregada:", anos_na_base)
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## 2. Coorte, dataset e checagens por cenário
-Waterfall do cenário → dataset com `split` → proporções 70/15/15, estratificação do alvo, anos em cada split, `NU_NOTIFIC` repetido entre splits e contrato do C2.
-```
-
-### Cell 6 [code] · In [ ]
-
-```python
-metas = {}
-for nome, anos in CENARIOS.items():
-    print(f"\n===== {nome}: {anos} =====")
-    metas[nome] = v.a3_split_aleatorio_cenario(df, cfg, rep, nome, anos, SUPERVISED_CONFIG)
-    v.validar_contrato_c2(metas[nome]["arquivo"], SUPERVISED_CONFIG, rep)
-    display(pd.read_csv(Path(OUT) / f"a1_waterfall_{nome}.csv"))
-    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}.csv"))
-    display(pd.read_csv(Path(OUT) / f"a3_split_aleatorio_{nome}_por_ano.csv"))
-    # (a) % de linhas x meta 70/15/15 | (b) prevalência de óbito por split | (c) composição dos splits em cada ano
-    print("Figura:", v.grafico_split_cenario(rep, cfg, nome, anos, FIG_DIR, mostrar=True))
-```
-
-### Cell 7 [markdown]
-
-```markdown
-## 3. Benchmark: split aleatório × temporal (treino → validação)
-Regressão logística balanceada, mesmas features do `supervised.yaml`. Se o aleatório der PR-AUC maior que o temporal, ele está **otimista** (registros do mesmo período nos dois lados): a decisão deve seguir o temporal.
-```
-
-### Cell 8 [code] · In [ ]
-
-```python
-benchs = {}
-if RODAR_BENCHMARK:
-    for nome in CENARIOS:
-        benchs[nome] = v.a3_benchmark_split(metas[nome]["arquivo"], SUPERVISED_CONFIG, cfg, rep, nome,
-                                            max_rows=e["bench_max_linhas"], seed=e["seed"])
-        display(benchs[nome])
-else:
-    print("Benchmark desligado (RODAR_BENCHMARK = False).")
-```
-
-### Cell 9 [markdown]
-
-```markdown
-## 4. Comparação entre os cenários
-```
-
-### Cell 10 [code] · In [ ]
-
-```python
-comp = v.comparar_cenarios(metas, benchs, rep)
-display(comp)
-# N por ano (empilhado por split) nos dois cenários + prevalência de óbito por split
-print("Figura:", v.grafico_comparacao_cenarios(rep, cfg, list(CENARIOS), FIG_DIR, mostrar=True))
-```
-
-### Cell 11 [markdown]
-
-```markdown
-## 5. Decisões
-```
-
-### Cell 12 [code] · In [ ]
-
-```python
-E = "A3b"
-v.log_decision(OUT, "D-13", "Experimento split aleatório 70/15/15 (2019–2025)",
-               f"Split aleatório estratificado pelo alvo, seed {e['seed']}; dataset_supervisionado_todos_2019_2025", E,
-               impacto="Comparativo; o padrão do projeto segue a validação temporal (README)",
-               evidencia="a3_benchmark_split_*.csv")
-v.log_decision(OUT, "D-14", "Cenário sem 2020 e 2021",
-               "Mesma análise removendo 2020–2021 (pandemia); dataset_supervisionado_sem_2020_2021", E,
-               impacto="Compara N, prevalência e desempenho com a base completa (comparacao_cenarios.csv)")
-display(pd.read_csv(Path(OUT) / "tabela_decisoes.csv"))
-```
-
-### Cell 13 [markdown]
-
-```markdown
-## 6. Fechamento
-```
-
-### Cell 14 [code] · In [ ]
-
-```python
-path = rep.write_md()
-print("Relatório:", path)
-display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
-```
-
-### Cell 15 [markdown]
-
-````markdown
-### Como o C pode usar a coluna `split`
-O C2 atual divide por frações no tempo (`TemporalSplit`). Para usar o split aleatório, basta ler o dataset do cenário e filtrar pela coluna:
-
-```python
-df = pd.read_parquet(C.ANALYTICAL_DIR / "dataset_supervisionado_todos_2019_2025.parquet")
-treino, validacao, holdout = (df[df["split"] == s] for s in ("treino", "validacao", "holdout"))
-```
-
-### Checklist
-- [ ] Proporções 70/15/15 e prevalência de óbito iguais entre os splits (estratificação)
-- [ ] Comparação aleatório × temporal interpretada (otimismo do aleatório)
-- [ ] Comparação com e sem 2020–2021 registrada (N, prevalência, desempenho)
-- [ ] Holdout **não** aberto
-````
-
-## `notebooks/A/A4_decisao_candidatos.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `8.9 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `7e03a47f6cfa20145fdf366fc1c2e6d3d51432c88c3ec139425395557cfab0bb`
-
-- Cells: `12` (`5` code, `7` markdown)
-- Code cells executed: `0` of `5`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# A4 | 15–17/10 — Avaliar candidatos e registrar decisão
-
-**Pessoa A.** Consolidar a seleção **sem privilegiar apenas a maior métrica**.
-
-**Saída até 17/10:** ata de 17/10, tabela de decisão e justificativa dos candidatos.
-**Revisão:** B apresenta estabilidade/perfis; C apresenta a comparação supervisionada.
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-# ----- Setup (não editar) -----
-import os, sys
-from pathlib import Path
-
-# PKG_ROOT: pasta que contém src/protocolo (onde o pacote foi copiado)
-# REPO_ROOT: raiz do repositório (tem .git ou data/); é de onde lemos dados e gravamos saídas
-_parents = [Path.cwd(), *Path.cwd().parents]
-PKG_ROOT = next((p for p in _parents if (p / "src" / "protocolo").exists()), None)
-if PKG_ROOT is None:
-    raise FileNotFoundError(
-        "Pasta src/protocolo não encontrada acima de " + str(Path.cwd()) + ". "
-        "Copie 'src/protocolo/' do pacote para o 'src/' do repositório "
-        "(deve existir src/protocolo/verificacoes.py) e rode a célula de novo.")
-REPO_ROOT = next((p for p in _parents if (p / ".git").exists() or (p / "data").exists()), PKG_ROOT)
-os.chdir(REPO_ROOT); sys.path.insert(0, str(PKG_ROOT))
-
-# Proteção contra outro pacote chamado 'src' (ex.: instalado por pip) ou 'src' antigo em cache no kernel:
-# um pacote regular em qualquer ponto do sys.path vence um 'src' sem __init__.py.
-for _m in [m for m in sys.modules if m == "src" or m.startswith("src.")]:
-    del sys.modules[_m]
-_init = PKG_ROOT / "src" / "__init__.py"
-if not _init.exists():
-    _init.touch()
-    print("Criado", _init, "(torna o src do projeto um pacote regular)")
-
-import pandas as pd
-try:
-    from IPython.display import display
-except ImportError:
-    display = print
-from src.protocolo import verificacoes as v
-if getattr(v, "MODULE_VERSION", "0") < "0.8":
-    raise RuntimeError(
-        "src/protocolo/verificacoes.py está desatualizado (versão " + str(getattr(v, "MODULE_VERSION", "antiga")) + "). "
-        "Substitua pelo arquivo do pacote novo e REINICIE o kernel (o Python mantém o módulo antigo em cache).")
-
-# ----- Parâmetros -----
-USAR_DEMO = False                       # True = dados sintéticos só para testar o notebook
-DATA_PATH = None                        # None = procura Parquet/CSV em data/ ; ou informe o caminho do arquivo
-SAMPLE = 0                              # ex.: 200_000 para execução rápida
-OUT = "outputs/tables/pessoa_a"         # saídas (tabelas, atas, decisões), relativas à raiz do repositório
-CFG_PATH = next((str(p) for p in [REPO_ROOT / "configs" / "decisoes.yaml", PKG_ROOT / "configs" / "decisoes.yaml"]
-                 if p.exists()), "configs/decisoes.yaml")
-SUPERVISED_CONFIG = "configs/supervised.yaml"   # config do C (alvo, features, coluna_tempo)
-COLUNAS = "minimas"                   # "minimas" (menos memória) | "classificadas" | "todas" (pesado!) | lista de nomes
-RESULTS = "outputs/tables/resultados_cv.csv"   # CSV de C: modelo, fold, pr_auc, roc_auc, brier
-print("Raiz do repositório:", REPO_ROOT)
-print("Pacote (src/protocolo):", PKG_ROOT)
-print("Config de decisões:", CFG_PATH)
-cfg = v.load_config(CFG_PATH)
-rep = v.Report(OUT, "relatorio_A4")
-# (esta etapa não precisa carregar a base)
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## 1. Tabela comparável de candidatos
-Média e variação entre folds, ganho sobre baseline e logística, Brier e alerta de complexidade sem ganho.
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-if Path(RESULTS).exists():
-    res = pd.read_csv(RESULTS)
-    v.a3_suspicious_metrics(res, cfg, rep)
-    v.a4_decision_table(res, cfg, rep)
-    display(pd.read_csv(Path(OUT) / "a4_tabela_decisao.csv"))
-else:
-    print("Resultados não encontrados:", RESULTS)
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## 2. Revisão por candidato (manual)
-**Clustering:** estabilidade, tamanho mínimo, perfil e influência das ausências.
-**Classificação:** média e variação entre folds, PR-AUC, ROC-AUC, Brier e calibração.
-
-- [ ] Comparar modelo complexo com baseline e logística
-- [ ] O ganho justifica a complexidade e a menor interpretabilidade?
-- [ ] Revisar erros e limitações já visíveis
-- [ ] Preencher `decisao` e `justificativa_descarte_ou_manutencao` em `a4_tabela_decisao.csv`
-
-Busque por: *bias variance tradeoff model complexity official tutorial*, *discrimination versus calibration prediction model*, *cluster stability bootstrap resampling*, *permutation importance scikit-learn user guide*.
-```
-
-### Cell 6 [markdown]
-
-```markdown
-## 3. Decisões e ata de 17/10
-```
-
-### Cell 7 [code] · In [ ]
-
-```python
-E = "A4"
-v.log_decision(OUT, "D-11", "Seleção de candidatos",
-               "Shortlist por validade, estabilidade, calibração e interpretação — não só maior métrica", E,
-               impacto="Candidatos para confirmação em 18/10")
-
-SHORTLIST = ["(preencher) clustering: solução principal + alternativa", "(preencher) supervisionado: 1–2 modelos"]
-DESCARTES = ["(preencher) candidato — justificativa padronizada"]
-RISCOS = ["(preencher)"]
-PENDENCIAS = ["Confirmação dos finalistas e congelamento em 18/10"]
-v.write_ata(OUT, "Ata 17/10 — Fine Tuning", "2026-10-17",
-            decisoes=["Busca encerrada ou finalizando; sem novas famílias de modelo"],
-            pendencias=PENDENCIAS, riscos=RISCOS, shortlist=SHORTLIST, descartes=DESCARTES, rep=rep)
-print(sorted(p.name for p in Path(OUT).glob("ata_*.md")))
-```
-
-### Cell 8 [markdown]
-
-```markdown
-## 4. População analítica congelada
-A população analítica deve ficar congelada para a modelagem: o SHA-256 do arquivo precisa bater com o gravado na exportação.
-```
-
-### Cell 9 [code] · In [ ]
-
-```python
-caminho = v._analytical_path(cfg)
-if caminho.exists():
-    v.verificar_dataset_congelado(caminho, rep)
-else:
-    print("Dataset analítico ainda não gerado:", caminho)
-```
-
-### Cell 10 [markdown]
-
-```markdown
-## 5. Fechamento
-```
-
-### Cell 11 [code] · In [ ]
-
-```python
-path = rep.write_md()
-print("Relatório:", path)
-display(pd.DataFrame(rep.findings, columns=["etapa", "verificação", "status", "detalhe"]))
-```
-
-### Cell 12 [markdown]
-
-```markdown
-### Checklist de saída (17/10)
-- [ ] Tabela de decisão preenchida (decisão + justificativa por candidato)
-- [ ] Ata de 17/10 fechada: busca encerrada ou finalizando, shortlist, descartes, riscos, pendências
-- [ ] Critérios para abrir a validação final (18/10) definidos
-- [ ] Cada pessoa explica coorte, clustering, supervisionado e avaliação em nível conceitual
-```
-
-## `notebooks/C/C1_smoke_test.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `2.6 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `72c9d4e7ee4e9b9370195a049c8197b7c09a71ade398453054394720b28e2d77`
+- Size: `4.9 KB` · modified `2026-10-17 00:56 UTC`
+- SHA-256: `8201eba8a6de392a79b56de407588eb6dfb1404864e8a07a891c508724b0168f`
 
 - Cells: `4` (`3` code, `1` markdown)
-- Code cells executed: `0` of `3`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `3` of `3`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -32108,7 +27163,7 @@ treino. Não realiza modelagem.
 **Pré-requisito:** `pip install -e .` na raiz do projeto.
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 import platform
@@ -32134,7 +27189,15 @@ print(f"Sistema: {platform.system()} {platform.release()}")
 print(f"Raiz:    {PROJECT_ROOT}")
 ```
 
-### Cell 3 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Python:  3.14.7
+Sistema: Windows 11
+Raiz:    <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+```
+
+### Cell 3 [code] · In [2]
 
 ```python
 from src.utils import config as C
@@ -32147,7 +27210,32 @@ env.garantir_diretorios()
 print(C.resumo())
 ```
 
-### Cell 4 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <REPO>
+DATA_DIR          = <REPO>\data
+RAW_DIR           = <REPO>\data\raw
+PROCESSED_DIR     = <REPO>\data\processed
+ANALYTICAL_DIR    = <REPO>\data\analytical
+TREINO_DIR        = <REPO>\data\treino
+OUTPUTS_DIR       = <REPO>\outputs
+RUNS_DIR          = <REPO>\outputs\runs
+LOGS_DIR          = <REPO>\logs
+CONFIGS_DIR       = <REPO>\configs
+SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
+### Cell 4 [code] · In [3]
 
 ```python
 import pyarrow.parquet as pq
@@ -32162,15 +27250,23 @@ print(f"Colunas: {len(schema.names)}")
 print("SMOKE TEST: OK")
 ```
 
-## `notebooks/C/C2_pipeline_supervisionado.ipynb`
+**Output 1 (stream:stdout)**
+
+```text
+Parquet: <REPO>\data\processed\dados-v2\srag.parquet
+Colunas: 198
+SMOKE TEST: OK
+```
+
+## `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `10.2 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `85e3b1678e387d1e0048c001178501b4c0b4cc19b908ca97125c46a96ea5449f`
+- Size: `190.7 KB` · modified `2026-10-17 00:58 UTC`
+- SHA-256: `306b2bf8135b414d8ddf0ab23d8af48e7234c309c8022bf03d12bcbf801733b2`
 
 - Cells: `14` (`7` code, `7` markdown)
-- Code cells executed: `0` of `7`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `7` of `7`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -32185,7 +27281,7 @@ persistida) sem treinar modelo. Consome o artefato do Notebook 03;
 **Pré-requisito:** `pip install -e .`
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -32223,6 +27319,31 @@ env.garantir_diretorios()
 print(C.resumo())
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <REPO>
+DATA_DIR          = <REPO>\data
+RAW_DIR           = <REPO>\data\raw
+PROCESSED_DIR     = <REPO>\data\processed
+ANALYTICAL_DIR    = <REPO>\data\analytical
+TREINO_DIR        = <REPO>\data\treino
+OUTPUTS_DIR       = <REPO>\outputs
+RUNS_DIR          = <REPO>\outputs\runs
+LOGS_DIR          = <REPO>\logs
+CONFIGS_DIR       = <REPO>\configs
+SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
 ### Cell 3 [markdown]
 
 ```markdown
@@ -32232,7 +27353,7 @@ O artefato já traz features, alvo e coluna `particao`. `expected_kind`
 precisa casar com o `cohort_kind` gravado no manifesto pelo Notebook 03.
 ```
 
-### Cell 4 [code] · In [ ]
+### Cell 4 [code] · In [2]
 
 ```python
 EXPECTED_KIND = "provisional"
@@ -32259,6 +27380,51 @@ print(f"PROIBIDAS = {len(PROIBIDAS)} colunas")
 df.head()
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+shape     : (3915132, 43)
+PARTICAO  = 'particao'
+TARGET    = 'alvo_obito_srag'
+FEATURES  = 31 colunas
+PROIBIDAS = 22 colunas
+```
+
+**Output 2 (execute_result)**
+
+```text
+       nu_notific     grupo_split  ano_internacao  alvo_obito_srag   particao  \
+0  31781201987679  31781201987679            2026                0     treino   
+1  31773493207022  31773493207022            2026                0      teste   
+2  31774542694487  31774542694487            2026                0  validacao   
+3  31773441569320  31773441569320            2026                0     treino   
+4  31783622594901  31783622594901            2026                0     treino   
+
+   idade_anos  dias_sintomas_ate_internacao sexo_categoria cs_gestant cs_raca  \
+0    0.083333                           9.0       feminino          6       4   
+1    4.000000                           1.0       feminino          6       2   
+2    0.030116                           0.0       feminino          6       4   
+3   78.000000                           0.0       feminino          6       4   
+4    4.000000                           4.0       feminino          6       1   
+
+   ... renal obesidade out_morbi sg_uf faixa_etaria cs_escol_n vacina  \
+0  ...     2         2         1    BA           <1          5    NaN   
+1  ...   NaN       NaN       NaN    SE          1-4          9      9   
+2  ...   NaN       NaN       NaN    CE           <1          5    NaN   
+3  ...   NaN       NaN       NaN    CE        60-79        NaN      9   
+4  ...   NaN       NaN       NaN    PR          1-4        NaN      2   
+
+  vacina_cov saturacao desc_resp  
+0          1         1         9  
+1          2         1         1  
+2          1         1       NaN  
+3          2       NaN       NaN  
+4          2         1         1  
+
+[5 rows x 43 columns]
+[non-text output omitted: text/html]
+```
+
 ### Cell 5 [markdown]
 
 ```markdown
@@ -32267,7 +27433,7 @@ df.head()
 A partição já vem pronta no artefato. O teste é contado mas não aberto.
 ```
 
-### Cell 6 [code] · In [ ]
+### Cell 6 [code] · In [3]
 
 ```python
 esperados  = {"treino", "validacao", "teste"}
@@ -32288,6 +27454,14 @@ print(f"validacao : {len(validacao):,}")
 print(f"teste     : {n_teste:,} (bloqueado)")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+treino    : 2,740,584
+validacao : 587,272
+teste     : 587,276 (bloqueado)
+```
+
 ### Cell 7 [markdown]
 
 ```markdown
@@ -32298,7 +27472,7 @@ rederivamos com `criar_alvo_binario` — isso quebraria quando o alvo é
 `alvo_obito_srag`. `X` usa só as features do manifesto.
 ```
 
-### Cell 8 [code] · In [ ]
+### Cell 8 [code] · In [4]
 
 ```python
 def _alvo_do_split(particao_df):
@@ -32315,6 +27489,13 @@ print(f"treino    : {len(X_train):,}  positivos={int(y_train.sum()):,}")
 print(f"validacao : {len(X_val):,}  positivos={int(y_val.sum()):,}")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+treino    : 2,740,584  positivos=599,323
+validacao : 587,272  positivos=128,429
+```
+
 ### Cell 9 [markdown]
 
 ```markdown
@@ -32324,7 +27505,7 @@ Só o pré-processamento (imputação + escala + one-hot). O classificador
 entra em C3+. Guardamos um `clone()` antes do fit como arquitetura pura.
 ```
 
-### Cell 10 [code] · In [ ]
+### Cell 10 [code] · In [5]
 
 ```python
 pipeline = build_pipeline(X=X_train, y=y_train)
@@ -32338,6 +27519,50 @@ print(f"X_val  : {X_val.shape} -> {X_val_proc.shape}")
 pipeline
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+X_train: (2740584, 31) -> (2740584, 126)
+X_val  : (587272, 31) -> (587272, 126)
+```
+
+**Output 2 (execute_result)**
+
+```text
+Pipeline(steps=[('pre',
+                 ColumnTransformer(transformers=[('num',
+                                                  Pipeline(steps=[('imputer',
+                                                                   SimpleImputer(strategy='median')),
+                                                                  ('scaler',
+                                                                   StandardScaler())]),
+                                                  ['idade_anos',
+                                                   'dias_sintomas_ate_internacao']),
+                                                 ('cat',
+                                                  Pipeline(steps=[('imputer',
+                                                                   SimpleImputer(fill_value='AUSENTE',
+                                                                                 strategy='constant')),
+                                                                  ('onehot',
+                                                                   OneHotEncoder(handle_unknown='ignore',
+                                                                                 sparse_outp...
+                                                  ['sexo_categoria',
+                                                   'cs_gestant', 'cs_raca',
+                                                   'cs_zona', 'ave_suino',
+                                                   'febre', 'tosse', 'garganta',
+                                                   'dispneia', 'diarreia',
+                                                   'vomito', 'dor_abd',
+                                                   'fadiga', 'perd_olft',
+                                                   'perd_pala', 'outro_sin',
+                                                   'puerpera', 'cardiopati',
+                                                   'hematologi', 'sind_down',
+                                                   'hepatica', 'asma',
+                                                   'diabetes', 'neurologic',
+                                                   'pneumopati', 'imunodepre',
+                                                   'renal', 'obesidade',
+                                                   'out_morbi'])],
+                                   verbose_feature_names_out=False))])
+[non-text output omitted: text/html]
+```
+
 ### Cell 11 [markdown]
 
 ```markdown
@@ -32348,7 +27573,7 @@ pipeline
 descritivo (não recria a partição).
 ```
 
-### Cell 12 [code] · In [ ]
+### Cell 12 [code] · In [6]
 
 ```python
 OUT_DIR = C.OUTPUTS_DIR / "C2"
@@ -32382,6 +27607,14 @@ print(f"Ajustado    : {pipeline_fit_path}")
 print(f"Split info  : {split_info_path}")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Arquitetura : <REPO>\outputs\C2\preprocessor.joblib
+Ajustado    : <REPO>\outputs\C2\preprocessor_ajustado.joblib
+Split info  : <REPO>\outputs\C2\split_info.json
+```
+
 ### Cell 13 [markdown]
 
 ```markdown
@@ -32391,7 +27624,7 @@ Gravamos `metadata.json` + `summary.txt` em `outputs/runs/<RUN_ID>/`
 com as features efetivamente usadas pelo `ColumnTransformer`.
 ```
 
-### Cell 14 [code] · In [ ]
+### Cell 14 [code] · In [7]
 
 ```python
 pre          = pipeline.named_steps["pre"]
@@ -32421,15 +27654,22 @@ with Run(modelo="C2_pipeline", notas="Arquitetura do pipeline supervisionado") a
 print("Run registrado em:", r.pasta)
 ```
 
-## `notebooks/C/C3_baseline_logistica.ipynb`
+**Output 1 (stream:stdout)**
+
+```text
+[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_215802_867822_C2_pipeline
+Run registrado em: <REPO>\outputs\runs\2026-10-16_215802_867822_C2_pipeline
+```
+
+## `notebooks/C/C_12_baseline_logistica.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `10.7 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `5dd1d5188c499c8786679fa7cc296a6386e6457e234c1a7631644067b20db3a4`
+- Size: `20.6 KB` · modified `2026-10-17 01:00 UTC`
+- SHA-256: `6ee4000bdd5e73405abb45b82967f0123b876b1e0eeea42ca8d48078a6264c94`
 
 - Cells: `10` (`6` code, `4` markdown)
-- Code cells executed: `0` of `6`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `6` of `6`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -32446,7 +27686,7 @@ fechado. Limiar 0.5 é apenas diagnóstico.
 **Pré-requisito:** `pip install -e .`
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -32490,6 +27730,31 @@ PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 print(C.resumo())
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <REPO>
+DATA_DIR          = <REPO>\data
+RAW_DIR           = <REPO>\data\raw
+PROCESSED_DIR     = <REPO>\data\processed
+ANALYTICAL_DIR    = <REPO>\data\analytical
+TREINO_DIR        = <REPO>\data\treino
+OUTPUTS_DIR       = <REPO>\outputs
+RUNS_DIR          = <REPO>\outputs\runs
+LOGS_DIR          = <REPO>\logs
+CONFIGS_DIR       = <REPO>\configs
+SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
 ### Cell 3 [markdown]
 
 ```markdown
@@ -32500,7 +27765,7 @@ três partições. `split_partitions` devolve apenas `(treino, validacao)`
 — o teste fica inacessível por construção.
 ```
 
-### Cell 4 [code] · In [ ]
+### Cell 4 [code] · In [2]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
@@ -32534,6 +27799,23 @@ print(f"features    : {len(FEATURES)}")
 print(f"teste       : {n_teste:,} (fechado)")
 ```
 
+**Output 1 (display_data)**
+
+```text
+    particao        n  positivos  prevalencia
+0     treino  2740584     599323     0.218684
+1  validacao   587272     128429     0.218687
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+cohort_kind : provisional
+features    : 31
+teste       : 587,276 (fechado)
+```
+
 ### Cell 5 [markdown]
 
 ```markdown
@@ -32543,7 +27825,7 @@ print(f"teste       : {n_teste:,} (fechado)")
 o piso. A logística usa `C=1.0` como ponto de partida — sem tuning.
 ```
 
-### Cell 6 [code] · In [ ]
+### Cell 6 [code] · In [3]
 
 ```python
 log_cfg = C.cfg("models", "logistic") or {}
@@ -32567,6 +27849,23 @@ metricas_log = {**metricas_completas(y_val, prob_val, limiar=0.5), "modelo": "lo
 display(pd.DataFrame([metricas_dummy, metricas_log]))
 ```
 
+**Output 1 (display_data)**
+
+```text
+  strategy       auc        ap    pr_auc     brier  log_loss        f1  \
+0    prior  0.500000  0.218687  0.218687  0.170863  0.525242  0.000000   
+1      NaN  0.775236  0.440616  0.440616  0.198063  0.567540  0.505889   
+
+   precision    recall  sensibilidade  especificidade  accuracy  limiar  \
+0   0.000000  0.000000       0.000000        1.000000  0.781313     0.5   
+1   0.375804  0.773712       0.773712        0.640302  0.669477     0.5   
+
+          n        modelo  
+0  587272.0           NaN  
+1  587272.0  logistica_C1  
+[non-text output omitted: text/html]
+```
+
 ### Cell 7 [markdown]
 
 ```markdown
@@ -32576,7 +27875,7 @@ Gravamos comparação, predições de validação e manifesto em `outputs/`.
 Nada é finalista — a decisão pertence a C4/C5.
 ```
 
-### Cell 8 [code] · In [ ]
+### Cell 8 [code] · In [4]
 
 ```python
 CAMPOS = ("auc", "ap", "brier", "f1", "precision", "recall", "accuracy")
@@ -32603,7 +27902,26 @@ pred_val = pd.DataFrame({
 pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
 ```
 
-### Cell 9 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+         modelo       auc        ap     brier        f1  precision    recall  \
+0  logistica_C1  0.775236  0.440616  0.198063  0.505889   0.375804  0.773712   
+1   dummy_prior  0.500000  0.218687  0.170863  0.000000   0.000000  0.000000   
+
+   accuracy  
+0  0.669477  
+1  0.781313  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Δ AP (logística − dummy): +0.2219
+```
+
+### Cell 9 [code] · In [5]
 
 ```python
 timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
@@ -32647,7 +27965,15 @@ print(f"Predições  : {caminho_predicoes}")
 print(f"Manifesto  : {caminho_manifesto}")
 ```
 
-### Cell 10 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Comparação : <REPO>\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv
+Predições  : <REPO>\outputs\predictions\C3_baseline_logistica_provisional_20261017T010044Z_predicoes_validacao.parquet
+Manifesto  : <REPO>\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_manifesto.json
+```
+
+### Cell 10 [code] · In [6]
 
 ```python
 with Run(
@@ -32682,15 +28008,22 @@ with Run(
 print("Run registrado em:", r.pasta)
 ```
 
-## `notebooks/C/C4_boosting.ipynb`
+**Output 1 (stream:stdout)**
+
+```text
+[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
+Run registrado em: <REPO>\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
+```
+
+## `notebooks/C/C_13_boosting.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `22.4 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `8ad2fc10acbd68bcdb8e3f28b03f45e47414b736e2f2ae86af13da62949593fe`
+- Size: `32.4 KB` · modified `2026-10-17 02:01 UTC`
+- SHA-256: `3a04436381ba03af81732231b0b8b63c793c57a16333327c61f41df912373044`
 
 - Cells: `15` (`9` code, `6` markdown)
-- Code cells executed: `0` of `9`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `9` of `9`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -32706,7 +28039,7 @@ e não escolhe limiar — isso pertence ao C5.
 **Pré-requisito:** `pip install -e .`
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -32754,6 +28087,31 @@ SEED = int(C.SEED)
 print(C.resumo())
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <REPO>
+DATA_DIR          = <REPO>\data
+RAW_DIR           = <REPO>\data\raw
+PROCESSED_DIR     = <REPO>\data\processed
+ANALYTICAL_DIR    = <REPO>\data\analytical
+TREINO_DIR        = <REPO>\data\treino
+OUTPUTS_DIR       = <REPO>\outputs
+RUNS_DIR          = <REPO>\outputs\runs
+LOGS_DIR          = <REPO>\logs
+CONFIGS_DIR       = <REPO>\configs
+SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
 ### Cell 3 [markdown]
 
 ```markdown
@@ -32763,7 +28121,7 @@ Mesma fonte que C2/C3. `split_partitions` devolve apenas
 `(treino, validacao)` — o teste fica inacessível.
 ```
 
-### Cell 4 [code] · In [ ]
+### Cell 4 [code] · In [2]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
@@ -32797,6 +28155,23 @@ print(f"features    : {len(FEATURES)}")
 print(f"teste       : {n_teste:,} (fechado)")
 ```
 
+**Output 1 (display_data)**
+
+```text
+    particao        n  positivos  prevalencia
+0     treino  2740584     599323     0.218684
+1  validacao   587272     128429     0.218687
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+cohort_kind : provisional
+features    : 31
+teste       : 587,276 (fechado)
+```
+
 ### Cell 5 [markdown]
 
 ```markdown
@@ -32806,7 +28181,7 @@ Logística e boosting com configurações do YAML (sem tuning). Servem
 de base para a comparação caso o gate G6 esteja pendente.
 ```
 
-### Cell 6 [code] · In [ ]
+### Cell 6 [code] · In [3]
 
 ```python
 log_cfg   = C.cfg("models", "logistic") or {}
@@ -32842,6 +28217,23 @@ display(pd.DataFrame([
 ]))
 ```
 
+**Output 1 (display_data)**
+
+```text
+          modelo       auc        ap    pr_auc     brier  log_loss        f1  \
+0   logistica_C1  0.775236  0.440616  0.440616  0.198063  0.567540  0.505889   
+1  boosting_base  0.787433  0.467521  0.467521  0.195973  0.552883  0.511183   
+
+   precision    recall  sensibilidade  especificidade  accuracy  limiar  \
+0   0.375804  0.773712       0.773712        0.640302  0.669477     0.5   
+1   0.371800  0.817744       0.817744        0.613273  0.657988     0.5   
+
+          n  
+0  587272.0  
+1  587272.0  
+[non-text output omitted: text/html]
+```
+
 ### Cell 7 [markdown]
 
 ```markdown
@@ -32852,7 +28244,7 @@ Amostra apenas se `MAX_TREINO_BUSCA` for definido — caso contrário usa
 o treino completo.
 ```
 
-### Cell 8 [code] · In [ ]
+### Cell 8 [code] · In [4]
 
 ```python
 MAX_TREINO_BUSCA = None
@@ -32911,7 +28303,7 @@ def _candidatos_logistica():
     return [{"C": float(c)} for c in (C.cfg("models", "logistic", "busca_C") or [1.0])]
 ```
 
-### Cell 9 [code] · In [ ]
+### Cell 9 [code] · In [5]
 
 ```python
 G6_STATUS  = (C.cfg("gates", "G6_finalistas_tuning") or {}).get("status")
@@ -32976,13 +28368,23 @@ else:
     print("\nG6 pendente — busca limitada não executada. Comparação usará referências.")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+G6_finalistas_tuning: pendente (aprovado=False)
+metrica_principal   : pr_auc
+max_configs         : 30
+
+G6 pendente — busca limitada não executada. Comparação usará referências.
+```
+
 ### Cell 10 [markdown]
 
 ```markdown
 ## Comparação, predições e persistência
 ```
 
-### Cell 11 [code] · In [ ]
+### Cell 11 [code] · In [6]
 
 ```python
 comparacao = pd.DataFrame([
@@ -33010,7 +28412,26 @@ pred_val = pd.concat([
 pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
 ```
 
-### Cell 12 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+          modelo        ap    pr_auc       auc     brier        f1  precision  \
+0  boosting_base  0.467521  0.467521  0.787433  0.195973  0.511183   0.371800   
+1   logistica_C1  0.440616  0.440616  0.775236  0.198063  0.505889   0.375804   
+
+     recall  accuracy  
+0  0.817744  0.657988  
+1  0.773712  0.669477  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Δ AP (boosting − logística): +0.0269
+```
+
+### Cell 12 [code] · In [7]
 
 ```python
 timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
@@ -33076,6 +28497,14 @@ print(f"Predições  : {caminho_predicoes}")
 print(f"Manifesto  : {caminho_manifesto}")
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+Comparação : <REPO>\outputs\tables\C4_boosting_provisional_20261017T010744Z_comparacao.csv
+Predições  : <REPO>\outputs\predictions\C4_boosting_provisional_20261017T010744Z_predicoes_validacao.parquet
+Manifesto  : <REPO>\outputs\tables\C4_boosting_provisional_20261017T010744Z_manifesto.json
+```
+
 ### Cell 13 [markdown]
 
 ```markdown
@@ -33086,7 +28515,7 @@ Consolida os hiperparâmetros vencedores num bloco pronto para colar em
 que existir em disco.
 ```
 
-### Cell 14 [code] · In [ ]
+### Cell 14 [code] · In [8]
 
 ```python
 def _fmt(v):
@@ -33128,7 +28557,13 @@ else:
     print("Sem proposta de atualização do YAML (G6 pendente ou busca vazia).")
 ```
 
-### Cell 15 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Sem proposta de atualização do YAML (G6 pendente ou busca vazia).
+```
+
+### Cell 15 [code] · In [9]
 
 ```python
 with Run(
@@ -33165,15 +28600,22 @@ with Run(
 print("Run registrado em:", r.pasta)
 ```
 
-## `notebooks/C/C5_calibracao_limiar.ipynb`
+**Output 1 (stream:stdout)**
+
+```text
+[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_220744_784223_C4_boosting
+Run registrado em: <REPO>\outputs\runs\2026-10-16_220744_784223_C4_boosting
+```
+
+## `notebooks/C/C_15_calibracao_limiar.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `19.3 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `5d15713659b971040baf0ea3ba34a2970811416804dbbace3260ef802bc61c23`
+- Size: `28.6 KB` · modified `2026-10-17 02:11 UTC`
+- SHA-256: `64a3db8ddd4e861d7c385b1548b6858cc8b414eee711f2eb13e731c3ee52aea8`
 
 - Cells: `10` (`6` code, `4` markdown)
-- Code cells executed: `0` of `6`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Code cells executed: `6` of `6`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -33189,7 +28631,7 @@ escolhe limiar). Não abre o teste e não escreve no YAML.
 **Pré-requisito:** `pip install -e .` com scikit-learn ≥ 1.6.
 ```
 
-### Cell 2 [code] · In [ ]
+### Cell 2 [code] · In [1]
 
 ```python
 from pathlib import Path
@@ -33248,6 +28690,31 @@ G8_STATUS = str(C.cfg("gates", "G8_limiar", "status") or "pendente")
 print(C.resumo())
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <REPO>
+DATA_DIR          = <REPO>\data
+RAW_DIR           = <REPO>\data\raw
+PROCESSED_DIR     = <REPO>\data\processed
+ANALYTICAL_DIR    = <REPO>\data\analytical
+TREINO_DIR        = <REPO>\data\treino
+OUTPUTS_DIR       = <REPO>\outputs
+RUNS_DIR          = <REPO>\outputs\runs
+LOGS_DIR          = <REPO>\logs
+CONFIGS_DIR       = <REPO>\configs
+SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
 ### Cell 3 [markdown]
 
 ```markdown
@@ -33258,7 +28725,7 @@ Se `HONEST_CALIB_SPLIT = True`, `val_cal` ajusta o calibrador e
 conjunto. Caso contrário, ambos são a validação inteira.
 ```
 
-### Cell 4 [code] · In [ ]
+### Cell 4 [code] · In [2]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
@@ -33316,6 +28783,25 @@ if CALIB_SPLIT_HASH:
     print(f"split_hash  : {CALIB_SPLIT_HASH}")
 ```
 
+**Output 1 (display_data)**
+
+```text
+      bloco        n  positivos
+0    treino  2740584     599323
+1   val_cal   293636      64215
+2  val_meas   293636      64214
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+cohort_kind : provisional
+features    : 31
+teste       : 587,276 (fechado)
+split_hash  : c1a8f0dfddbf2b40
+```
+
 ### Cell 5 [markdown]
 
 ```markdown
@@ -33330,7 +28816,7 @@ O YAML usa `hist_gradient_boosting`; a fábrica usa `boosting` —
 mapeamento abaixo, sem duplicar lógica de construção.
 ```
 
-### Cell 6 [code] · In [ ]
+### Cell 6 [code] · In [3]
 
 ```python
 ALIASES_FINALISTA = {
@@ -33418,6 +28904,27 @@ tabela = pd.DataFrame([
 display(tabela)
 ```
 
+**Output 1 (stream:stdout)**
+
+```text
+finalistas          : ['hist_gradient_boosting', 'logistic']
+calibracao ativa    : True (['sigmoid', 'isotonic'])
+limiar metrica      : f1 (min_precision=None)
+```
+
+**Output 2 (display_data)**
+
+```text
+                finalista metodo_calibracao  brier_base  brier_calibrado  \
+0  hist_gradient_boosting           sigmoid    0.195889         0.140943   
+1                logistic          isotonic    0.198105         0.143855   
+
+   ganho_brier  limiar metrica  valor_metrica  
+0     0.054945   0.255      f1       0.515904  
+1     0.054250   0.255      f1       0.505913  
+[non-text output omitted: text/html]
+```
+
 ### Cell 7 [markdown]
 
 ```markdown
@@ -33427,7 +28934,7 @@ Curva de confiabilidade, decomposição de Brier, ECE e MCE em
 `val_meas` com o método escolhido. Persistimos tudo em `outputs/`.
 ```
 
-### Cell 8 [code] · In [ ]
+### Cell 8 [code] · In [4]
 
 ```python
 diagnosticos = {}
@@ -33455,7 +28962,20 @@ for nome, r in resultados.items():
 display(pd.DataFrame(linhas_diag))
 ```
 
-### Cell 9 [code] · In [ ]
+**Output 1 (display_data)**
+
+```text
+                finalista    metodo       ece       mce     brier  \
+0  hist_gradient_boosting   sigmoid  0.001753  0.182603  0.140943   
+1                logistic  isotonic  0.001096  0.179992  0.143855   
+
+   reliability  resolution  
+0     0.000014    0.029117  
+1     0.000004    0.026160  
+[non-text output omitted: text/html]
+```
+
+### Cell 9 [code] · In [5]
 
 ```python
 timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
@@ -33543,7 +29063,15 @@ print(f"Predições  : {caminho_predicoes}")
 print(f"Manifesto  : {caminho_manifesto}")
 ```
 
-### Cell 10 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Tabela     : <REPO>\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv
+Predições  : <REPO>\outputs\predictions\C5_calibracao_limiar_provisional_20261017T021055Z_predicoes_val_meas.parquet
+Manifesto  : <REPO>\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_manifesto.json
+```
+
+### Cell 10 [code] · In [6]
 
 ```python
 melhor_nome      = max(resultados, key=lambda n: resultados[n]["limiar"]["auc"])
@@ -33601,7 +29129,23 @@ with Run(
 print("Run registrado em:", r.pasta)
 ```
 
-## `notebooks/C/C6_validacao_final.ipynb`
+**Output 1 (stream:stdout)**
+
+```text
+# Proposta de atualização do YAML — C5 (não aplicada automaticamente).
+# cohort_kind: provisional
+# G7/G8 no momento: pendente/pendente
+# finalista sugerido (maior AUC em val_meas): hist_gradient_boosting
+calibracao:
+  metodo: sigmoid
+limiar:
+  otimo: 0.255
+  metrica: f1
+[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
+Run registrado em: <REPO>\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
+```
+
+## `notebooks/C/C_16_validacao_final.ipynb`
 
 - Git: `tracked` · status `clean`
 - Size: `31.5 KB` · modified `2026-10-16 01:28 UTC`
@@ -37762,3104 +33306,5 @@ def build_pipeline(
 
 ```python
 """Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões)."""
-```
-
-## `src/protocolo/verificacoes.py`
-
-- Git: `tracked` · status `clean`
-- Size: `89.8 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `2bf4f22f18037a036d9db390362ee569764e67732feb4adf65d5e3fc51f957fd`
-
-```python
-"""
-Verificações da Pessoa A (A1–A4) — Projeto Integrador SRAG
-==========================================================
-
-Lógica reutilizável usada pelos notebooks `notebooks/A/A1..A4`. Os notebooks só
-executam, exibem e documentam; as regras ficam aqui e em `configs/decisoes.yaml`.
-
-  A1  códigos, protocolo e coorte      a1_columns, a1_code_tables, a1_waterfall, a1_target
-  A2  qualidade, datas, elegibilidade  a2_missing, a2_dates, a2_duplicates, a2_maturity, a2_eligibility
-  A3  desenho experimental e pilotos   a3_config_audit, a3_forbidden, a3_temporal_split,
-                                       a3_leak_scan, a3_suspicious_metrics, a3_audit_logs
-  A4  candidatos e decisão             a4_decision_table
-  Registro                             log_decision (tabela de decisões), write_ata (atas de gate)
-
-As listas de variáveis e ações sugeridas são PROPOSTA INICIAL: confirmar no dicionário
-oficial do SIVEP-Gripe e registrar a decisão com `log_decision`.
-"""
-from __future__ import annotations
-
-MODULE_VERSION = "0.8"  # incrementar quando a assinatura das funções mudar (os notebooks conferem)
-
-import json
-import re
-from pathlib import Path
-
-import numpy as np
-import pandas as pd
-
-# =============================================================================
-# CONFIGURAÇÃO PADRÃO (a fonte de verdade é configs/decisoes.yaml; ver load_config)
-# =============================================================================
-DEFAULT_CONFIG: dict = {
-    "cols": {
-        "hospital": "HOSPITAL",
-        "dt_interna": "DT_INTERNA",
-        "evolucao": "EVOLUCAO",
-        "tp_idade": "TP_IDADE",
-        "nu_idade": "NU_IDADE_N",
-        "dt_nasc": "DT_NASC",
-        "dt_sin_pri": "DT_SIN_PRI",
-        "dt_notific": "DT_NOTIFIC",
-        "dt_evoluca": "DT_EVOLUCA",
-        "dt_encerra": "DT_ENCERRA",
-        "nu_notific": "NU_NOTIFIC",
-    },
-    # Períodos (ano de DT_INTERNA)
-    "dev_years": [2022, 2023, 2024],
-    "holdout_years": [2025],
-    "min_date": "2009-01-01",  # início do SIVEP-Gripe
-    # Códigos esperados por campo (strings). Estenda conforme o dicionário.
-    "expected_codes": {
-        "HOSPITAL": ["1", "2", "9"],
-        "EVOLUCAO": ["1", "2", "3", "9"],
-        "TP_IDADE": ["1", "2", "3"],
-        "UTI": ["1", "2", "9"],
-        "FEBRE": ["1", "2", "9"],
-        "TOSSE": ["1", "2", "9"],
-        "DISPNEIA": ["1", "2", "9"],
-        "SATURACAO": ["1", "2", "9"],
-    },
-    # Alvo: 1 = óbito (EVOLUCAO=2); 0 = cura (EVOLUCAO=1).
-    # EVOLUCAO=3 (óbito por outras causas) fica como categoria separada;
-    # 9/ausente NUNCA vira cura -> NA e sai da coorte.
-    "target_positive": "2",
-    "target_negative": "1",
-    "target_separate": ["3"],
-    "closed_codes": ["1", "2", "3"],
-    # Se True, o waterfall exclui registros com inconsistência de datas "excluir"
-    "drop_date_inconsistencies": False,
-    # Maturidade de EVOLUCAO: mínimo de % encerrados por mês de internação
-    "maturity_min_closed_pct": 90.0,
-    # Datas: regra, descrição, ação sugerida
-    # (excluir | transformar em ausente | manter com flag | apenas documentar)
-    "date_rules": [
-        ["dt_nasc", "dt_sin_pri", "Nascimento posterior ao início dos sintomas", "excluir"],
-        ["dt_sin_pri", "dt_notific", "Início dos sintomas posterior à notificação", "manter com flag"],
-        ["dt_sin_pri", "dt_interna", "Início dos sintomas posterior à internação", "manter com flag"],
-        ["dt_interna", "dt_evoluca", "Evolução anterior à internação", "excluir"],
-        ["dt_evoluca", "dt_encerra", "Encerramento anterior à evolução", "manter com flag"],
-    ],
-    "max_symptom_to_admission_days": 30,
-    "max_age_years": 120,
-    # Classificação de variáveis (proposta inicial -> confirmar no dicionário)
-    "forbidden_vars": [
-        "EVOLUCAO", "DT_EVOLUCA", "DT_ENCERRA", "CLASSI_FIN", "CLASSI_OUT", "CRITERIO",
-        "UTI", "DT_ENTUTI", "DT_SAIDUTI", "SUPORT_VEN", "ANTIVIRAL", "DT_ANTIVIR",
-        "DT_COLETA", "TP_AMOSTRA", "PCR_RESUL", "DT_PCR", "RES_AN", "DT_RES_AN",
-        "RES_IGG", "RES_IGM", "RES_IGA", "DT_RES", "POS_PCRFLU", "POS_PCROUT",
-        "HOSPITAL",  # critério de inclusão (constante na coorte), não feature
-        "EVOLUCAO_COVID19", "SOROLOGIA", "PCR",
-        "UTILIZOUVNI",  # suporte ventilatório: tratamento durante a internação (confirmar)
-    ],
-    "conditional_vars": [
-        "SATURACAO", "VACINA", "VACINA_COV", "DOSE_1_COV", "DOSE_2_COV", "DOSE_REF",
-        "SG_UF", "SG_UF_NOT", "CO_MUN_RES", "ID_MN_RESI", "CS_ZONA", "SURTO_SG",
-    ],
-    "allowed_vars": [
-        "CS_SEXO", "NU_IDADE_N", "TP_IDADE", "CS_RACA", "CS_GESTANT", "FEBRE", "TOSSE",
-        "GARGANTA", "DISPNEIA", "DESC_RESP", "DIARREIA", "VOMITO", "DOR_ABD", "FADIGA",
-        "PERD_OLFT", "PERD_PALA", "CARDIOPATI", "HEMATOLOGI", "SIND_DOWN", "HEPATICA",
-        "ASMA", "DIABETES", "NEUROLOGIC", "PNEUMOPATI", "IMUNODEPRE", "RENAL", "OBESIDADE",
-        "DT_SIN_PRI", "DT_INTERNA", "DT_NOTIFIC", "SEM_PRI",
-    ],
-    # Varredura de vazamento univariado
-    "leak_auc_threshold": 0.90,
-    "leak_max_categories": 50,
-    "leak_sample": 200_000,
-    "suspicious_metric_threshold": 0.95,
-    # Logs: chaves mínimas esperadas (regex, case-insensitive)
-    "log_required_keys": {
-        "timestamp": r"timestamp|data_hora|datetime",
-        "versão": r"vers[aã]o|version",
-        "seed": r"seed|semente",
-        "config": r"config",
-        "variáveis": r"features|vari[aá]veis|columns",
-        "folds": r"fold",
-        "parâmetros": r"params|par[aâ]metros|hiperpar",
-        "artefatos": r"artefato|artifact|output",
-    },
-    # A4
-    "decision_min_pr_auc_gain": 0.01,
-    "decision_max_cv_ratio": 0.10,
-    "exclusion_sample_rows": 50,
-    # População analítica entregue ao C (C2 espera exatamente este arquivo)
-    "dataset_analitico": {"path": "data/analytical/dataset_supervisionado.parquet"},
-    # Experimentos de split (A3b): aleatório 70-15-15 em cenários de período (anos de DT_INTERNA)
-    "experimentos_split": {
-        "seed": 42,
-        "fracoes": {"treino": 0.70, "validacao": 0.15, "holdout": 0.15},
-        "estratificar_por_alvo": True,
-        "bench_max_linhas": 200000,
-        "cenarios": {
-            "todos_2019_2025": {"anos": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
-                                "descricao": "Base completa 2019-2025"},
-            "sem_2020_2021": {"anos": [2019, 2022, 2023, 2024, 2025],
-                              "descricao": "Remove 2020 e 2021 (anos de pandemia)"},
-        },
-    },
-    # Features derivadas criadas na exportação (só com informação disponível na admissão)
-    "derivadas": {
-        "intervalo_max_dias": 30,          # sintomas -> internação acima disso (ou < 0, ou ausente) = inválido
-        "periodo_semanas": 52.1775,        # sazonalidade: sin/cos(2*pi*semana_ISO_da_internação/período)
-        "faixas_etarias": {
-            "bins": [0, 1, 5, 12, 18, 30, 40, 50, 60, 70, 80, 200],
-            "labels": ["<1", "1-4", "5-11", "12-17", "18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"],
-        },
-    },
-}
-
-OK, WARN, FAIL = "OK", "ATENÇÃO", "FALHA"
-
-# Nomes físicos observados na EDA 01 (Parquet dados-v1, 194 colunas) usados para classificar variáveis.
-_EDA_TRATAMENTO = ["ANTIVIRAL", "TP_ANTIVIR", "DT_ANTIVIR", "TRAT_COV", "TIPO_TRAT", "DT_TRT_COV", "OUT_ANTIV", "OUT_TRAT"]
-_EDA_DESFECHO = ["EVOLUCAO", "DT_EVOLUCA", "DT_ENCERRA", "DT_DIGITA"]
-_EDA_GEOGRAFIA = ["SG_UF_NOT", "CO_REGIONA", "CO_MUN_NOT", "CO_PAIS", "SG_UF", "CO_RG_RESI", "CO_MUN_RES",
-                  "SG_UF_INTE", "CO_RG_INTE", "CO_MU_INTE"]
-_EDA_VACINACAO = ["VACINA", "DT_UT_DOSE", "MAE_VAC", "DT_VAC_MAE", "M_AMAMENTA", "DT_DOSEUNI", "DT_1_DOSE",
-                  "DT_2_DOSE", "VACINA_COV", "DOSE_1_COV", "DOSE_2_COV", "DOSE_REF", "DOSE_2REF", "DOSE_ADIC", "DOS_RE_BI"]
-_EDA_SOCIAL_TEXTO = ["PAC_COCBO", "PAC_DSCBO", "POV_CT", "TP_POV_CT", "ESTRANG",
-                     "OUTRO_SIN", "OUTRO_DES", "OBES_IMC", "OUT_MORBI", "MORB_DESC"]
-_EDA_CANDIDATAS_EXTRA = ["CS_ETINIA", "CS_ESCOL_N", "AVE_SUINO", "OUT_ANIM", "PUERPERA", "TABAG"]
-
-# Nomes alternativos (base da API / supervised.yaml) -> nome canônico SIVEP usado aqui.
-# CONFIRMAR no dicionário da base: p.ex. 'internado' é assumido equivalente a HOSPITAL.
-ALIASES = {
-    "HOSPITAL": ["INTERNADO"],
-    "DT_INTERNA": ["DT_INTERNACAO"],
-    "DT_EVOLUCA": ["DT_EVOLUCAO"],
-    "DT_ENCERRA": ["DT_ENCERRAMENTO"],
-    "CLASSI_FIN": ["CLASSIFICACAO_FINAL"],
-    "CRITERIO": ["CRITERIO_CONFIRMACAO"],
-}
-_ALT2CANON = {alt: can for can, alts in ALIASES.items() for alt in alts}
-
-
-def _merge_lists() -> None:
-    """Acrescenta a DEFAULT_CONFIG os grupos da EDA (sem duplicar nem conflitar entre classes)."""
-    f, c, a = (DEFAULT_CONFIG[k] for k in ("forbidden_vars", "conditional_vars", "allowed_vars"))
-    f += [x for x in _EDA_TRATAMENTO + _EDA_DESFECHO if x not in f]
-    c += [x for x in _EDA_GEOGRAFIA + _EDA_VACINACAO + _EDA_SOCIAL_TEXTO if x not in c and x not in f]
-    a += [x for x in _EDA_CANDIDATAS_EXTRA if x not in a and x not in f and x not in c]
-
-
-_merge_lists()
-
-
-def canon(name) -> str:
-    n = str(name).strip().upper()
-    return _ALT2CANON.get(n, n)
-
-
-# =============================================================================
-# Utilitários
-# =============================================================================
-class Report:
-    """Acumula achados e grava tabelas/relatório."""
-
-    def __init__(self, out: str | Path, nome: str = "relatorio_pessoa_a"):
-        self.nome = nome
-        self.out = Path(out)
-        self.out.mkdir(parents=True, exist_ok=True)
-        self.findings: list[tuple[str, str, str, str]] = []
-
-    def add(self, stage: str, check: str, status: str, detail: str) -> None:
-        self.findings.append((stage, check, status, detail))
-        icon = {OK: "[ok]", WARN: "[!!]", FAIL: "[XX]"}[status]
-        print(f"{icon} {stage} | {check}: {detail}")
-
-    def save(self, name: str, df: pd.DataFrame) -> None:
-        df.to_csv(self.out / f"{name}.csv", index=False, encoding="utf-8-sig")
-
-    def write_md(self) -> Path:
-        path = self.out / f"{self.nome}.md"
-        lines = [f"# Relatório de verificações — {self.nome}", ""]
-        lines += ["| Etapa | Verificação | Status | Detalhe |", "| --- | --- | --- | --- |"]
-        for stage, check, status, detail in self.findings:
-            lines.append(f"| {stage} | {check} | {status} | {detail.replace('|', '/')} |")
-        n = {s: sum(1 for f in self.findings if f[2] == s) for s in (OK, WARN, FAIL)}
-        lines += ["", f"**Resumo:** {n[OK]} OK · {n[WARN]} atenção · {n[FAIL]} falha(s)."]
-        path.write_text("\n".join(lines), encoding="utf-8")
-        return path
-
-    @property
-    def has_failure(self) -> bool:
-        return any(f[2] == FAIL for f in self.findings)
-
-
-PLAUSIBLE_YEARS = (1900, 2100)  # datas fora disso (0001, 9999, 20224...) viram NaT
-
-
-def parse_date(s: pd.Series) -> pd.Series:
-    """Converte para datetime64[ns] aceitando ISO (aaaa-mm-dd) e dd/mm/aaaa.
-
-    Datas fora de 1900–2100 viram NaT ANTES de qualquer conta (evita OverflowError em
-    subtrações/comparações com anos absurdos) e a resolução é padronizada (Parquet pode
-    trazer s/ms/us). Quem precisa contar datas inválidas usa `raw.notna() & parsed.isna()`.
-    """
-    if isinstance(s.dtype, pd.CategoricalDtype):  # converte só as categorias únicas (poucos milhares de datas)
-        cats = parse_date(pd.Series(s.cat.categories.astype("string")))
-        codes = s.cat.codes.to_numpy()
-        arr = cats.to_numpy(dtype="datetime64[ns]") if len(cats) else np.array([], dtype="datetime64[ns]")
-        vals = np.full(len(s), np.datetime64("NaT"), dtype="datetime64[ns]")
-        ok = codes >= 0
-        if ok.any():
-            vals[ok] = arr[codes[ok]]
-        return pd.Series(vals, index=s.index)
-    if pd.api.types.is_datetime64_any_dtype(s):
-        out = s
-        if getattr(out.dt, "tz", None) is not None:
-            out = out.dt.tz_localize(None)
-    else:
-        t = s.astype("string").str.strip()
-        out = pd.to_datetime(t, errors="coerce", format="ISO8601")
-        miss = out.isna() & t.notna() & (t != "")
-        if miss.any():
-            out[miss] = pd.to_datetime(t[miss], errors="coerce", format="%d/%m/%Y")
-        miss = out.isna() & t.notna() & (t != "")
-        if miss.any():  # formatos mistos (ex.: '05/03/2022 00:00', '2022/03/05')
-            try:
-                out[miss] = pd.to_datetime(t[miss], errors="coerce", format="mixed", dayfirst=True)
-            except (TypeError, ValueError):
-                pass
-    yr = out.dt.year
-    out = out.mask((yr < PLAUSIBLE_YEARS[0]) | (yr > PLAUSIBLE_YEARS[1]))
-    return out.astype("datetime64[ns]")
-
-
-def code_str(s: pd.Series) -> pd.Series:
-    """Normaliza códigos (1, 1.0, '1', ' 1 ') para string; vazio -> <NA>."""
-    n = pd.to_numeric(s, errors="coerce")
-    txt = s.astype("string").str.strip()
-    res = txt.where(n.isna(), n.round().astype("Int64").astype("string"))
-    return res.mask(res == "")
-
-
-def make_target(evolucao: pd.Series, cfg: dict = DEFAULT_CONFIG) -> pd.Series:
-    """1 = óbito, 0 = cura; qualquer outro valor (inclusive 9/ausente) -> NA."""
-    e = code_str(evolucao)
-    out = pd.Series(pd.NA, index=e.index, dtype="Int64")
-    out[(e == cfg["target_positive"]).fillna(False).to_numpy(bool)] = 1
-    out[(e == cfg["target_negative"]).fillna(False).to_numpy(bool)] = 0
-    return out
-
-
-def age_years(df: pd.DataFrame, cfg: dict) -> pd.Series:
-    c = cfg["cols"]
-    n = pd.to_numeric(df[c["nu_idade"]], errors="coerce").to_numpy(float)
-    t = code_str(df[c["tp_idade"]])
-    is_ = lambda v: (t == v).fillna(False).to_numpy(bool)  # noqa: E731
-    vals = np.select([is_("3"), is_("2"), is_("1")], [n, n / 12, n / 365], default=np.nan)
-    return pd.Series(vals, index=df.index)
-
-
-def prepare(df: pd.DataFrame) -> pd.DataFrame:
-    """Padroniza nomes (maiúsculas + aliases -> nome canônico SIVEP). Renomeia IN-PLACE (sem copiar)."""
-    up = [str(c).strip().upper() for c in df.columns]
-    present = set(up)
-    new, renamed = [], []
-    for u in up:
-        c = canon(u)
-        if c != u and c not in present:
-            renamed.append(f"{u}->{c}")
-            new.append(c)
-        else:
-            new.append(u)
-    df.attrs["orig_names"] = {n: str(o).strip() for o, n in zip(df.columns, new)}  # canônico -> nome original
-    df.columns = new
-    if renamed:
-        print(f"[aliases] colunas renomeadas: {', '.join(renamed)}")
-    return df
-
-
-def year_labels(df: pd.DataFrame, cfg: dict) -> pd.Series:
-    dt = parse_date(df[cfg["cols"]["dt_interna"]])
-    return dt.dt.year.astype("Int64").astype("string").fillna("sem_data")
-
-
-def has_cols(df: pd.DataFrame, cols: list[str]) -> list[str]:
-    return [c for c in cols if c not in df.columns]
-
-
-# =============================================================================
-# A1 — Códigos, protocolo e coorte
-# =============================================================================
-def a1_columns(df, cfg, rep: Report) -> None:
-    need = list(cfg["cols"].values())
-    missing = has_cols(df, need)
-    if missing:
-        rep.add("A1", "Colunas essenciais", FAIL, f"ausentes: {', '.join(missing)}")
-        print("   colunas disponíveis:", ", ".join(map(str, df.columns[:80])))
-        print("   -> ajuste 'cols' em configs/decisoes.yaml ou ALIASES em verificacoes.py para os nomes reais da base")
-    else:
-        rep.add("A1", "Colunas essenciais", OK, f"{len(need)} colunas presentes")
-
-
-def a1_code_tables(df, cfg, rep: Report) -> None:
-    ano = year_labels(df, cfg)
-    rows, unexpected = [], []
-    for col, expected in cfg["expected_codes"].items():
-        if col not in df.columns:
-            continue
-        codes = code_str(df[col]).fillna("<vazio>")
-        tab = pd.crosstab(codes, ano)
-        tab.insert(0, "campo", col)
-        tab.insert(1, "esperado", [c in expected for c in tab.index])
-        rows.append(tab.reset_index(names="codigo"))
-        bad = [c for c in tab.index if c not in expected and c != "<vazio>"]
-        if bad:
-            unexpected.append(f"{col}: {bad}")
-    if rows:
-        rep.save("a1_tabela_codigos", pd.concat(rows, ignore_index=True))
-    if unexpected:
-        rep.add("A1", "Códigos inesperados", WARN, "; ".join(unexpected))
-    else:
-        rep.add("A1", "Códigos inesperados", OK, "todos os códigos dentro do esperado")
-
-
-def a1_waterfall(df, cfg, rep: Report, sufixo: str = "") -> pd.DataFrame:
-    """Aplica os filtros em sequência, registra N antes/depois e amostras das exclusões."""
-    c = cfg["cols"]
-    today = pd.Timestamp.today().normalize()
-    dt = parse_date(df[c["dt_interna"]])
-    ok_date = (dt.notna() & (dt <= today) & (dt >= pd.Timestamp(cfg["min_date"]))).to_numpy(bool)
-    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
-    anos = dt.dt.year
-    analytic = anos.isin(cfg["dev_years"] + cfg["holdout_years"]).to_numpy(bool)
-    evo = code_str(df[c["evolucao"]])
-    closed = evo.isin(cfg["closed_codes"]).to_numpy(bool)
-    binary = evo.isin([cfg["target_positive"], cfg["target_negative"]]).to_numpy(bool)
-
-    steps = [
-        ("Hospitalização confirmada", "HOSPITAL = 1", hosp),
-        ("Data de internação válida", f"DT_INTERNA parseável, ≥ {cfg['min_date']} e ≤ hoje", ok_date),
-        ("Período analítico", f"ano(DT_INTERNA) em {cfg['dev_years'] + cfg['holdout_years']}", analytic),
-        ("Evolução encerrada", f"EVOLUCAO em {cfg['closed_codes']} (9/ausente fora)", closed),
-        ("Alvo binário definido", "EVOLUCAO em {cura, óbito}; óbito por outras causas separado", binary),
-    ]
-    if cfg["drop_date_inconsistencies"]:
-        steps.insert(3, ("Coerência de datas", "regras de datas com ação 'excluir'", _date_ok_mask(df, cfg)))
-
-    remaining = np.ones(len(df), dtype=bool)
-    rows = [dict(ordem=0, filtro="Base completa", regra="—", n_excluido=0,
-                 n_restante=len(df), pct_restante=100.0)]
-    sample_cols = [x for x in dict.fromkeys(list(c.values()) + ["NU_NOTIFIC"]) if x in df.columns]
-    for i, (name, rule, mask) in enumerate(steps, start=1):
-        excl = remaining & ~mask
-        kept = remaining & mask
-        rows.append(dict(ordem=i, filtro=name, regra=rule, n_excluido=int(excl.sum()),
-                         n_restante=int(kept.sum()), pct_restante=round(100 * kept.sum() / len(df), 2)))
-        if excl.any():
-            smp = df.loc[excl, sample_cols].head(cfg["exclusion_sample_rows"])
-            rep.save(f"a1_amostra_exclusoes{sufixo}_{i:02d}", smp)
-        remaining = kept
-    wf = pd.DataFrame(rows)
-    rep.save(f"a1_waterfall{sufixo}", wf)
-    final = int(remaining.sum())
-    status = OK if final > 0 else FAIL
-    rep.add("A1", "Waterfall da coorte" + (f" [{sufixo.strip(chr(95))}]" if sufixo else ""), status,
-            f"{len(df):,} -> {final:,} registros ({100 * final / max(len(df), 1):.1f}%)")
-    return wf
-
-
-def _date_ok_mask(df, cfg) -> np.ndarray:
-    ok = np.ones(len(df), dtype=bool)
-    for a, b, _, action in cfg["date_rules"]:
-        if action != "excluir":
-            continue
-        da, db = parse_date(df[cfg["cols"][a]]), parse_date(df[cfg["cols"][b]])
-        ok &= ~((da > db).fillna(False).to_numpy(bool))
-    return ok
-
-
-def a1_cohort(df, cfg) -> pd.DataFrame:
-    """Retorna a coorte final (mesmas regras do waterfall) com _ano e _alvo."""
-    c = cfg["cols"]
-    dt = parse_date(df[c["dt_interna"]])
-    today = pd.Timestamp.today().normalize()
-    evo = code_str(df[c["evolucao"]])
-    m = ((code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
-         & (dt.notna() & (dt <= today) & (dt >= pd.Timestamp(cfg["min_date"]))).to_numpy(bool)
-         & dt.dt.year.isin(cfg["dev_years"] + cfg["holdout_years"]).to_numpy(bool)
-         & evo.isin([cfg["target_positive"], cfg["target_negative"]]).to_numpy(bool))
-    if cfg["drop_date_inconsistencies"]:
-        m &= _date_ok_mask(df, cfg)
-    out = df.loc[m].copy()
-    out["_ano"] = dt[m].dt.year.astype(int)
-    out["_alvo"] = make_target(out[c["evolucao"]], cfg).astype(int)
-    return out
-
-
-def a1_target(df, cfg, rep: Report) -> None:
-    c = cfg["cols"]
-    ano = year_labels(df, cfg)
-    evo = code_str(df[c["evolucao"]]).fillna("<vazio>")
-    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
-    tab = pd.crosstab(ano[hosp], evo[hosp])
-    tab["total"] = tab.sum(axis=1)
-    rep.save("a1_alvo_por_ano", tab.reset_index(names="ano"))
-    # Teste de sanidade: desconhecido nunca pode virar cura
-    probe = make_target(pd.Series(["1", "2", "3", "9", None, "", "x"]), cfg)
-    expected = [0, 1, None, None, None, None, None]
-    ok = all((pd.isna(a) and e is None) or a == e for a, e in zip(probe, expected))
-    rep.add("A1", "Alvo: desconhecido ≠ cura", OK if ok else FAIL,
-            "9/ausente/3 viram NA; só 1->0 e 2->1" if ok else f"mapeamento incorreto: {list(probe)}")
-
-
-DERIVADAS = ("idade_anos", "intervalo_sint_interna_dias", "flag_intervalo_invalido",
-             "sin_semana", "cos_semana", "faixa_etaria")
-_DERIVADAS_CANON = {d.upper() for d in DERIVADAS}
-
-
-def add_derived(df: pd.DataFrame, cfg: dict, wanted=None) -> list[str]:
-    """Cria IN-PLACE (nomes canônicos em maiúsculas) as features derivadas pedidas.
-
-    Usa só o que existe na admissão (idade, DT_SIN_PRI, DT_INTERNA); nunca desfecho nem datas posteriores.
-    - idade_anos: NU_IDADE_N convertida por TP_IDADE (dias/365, meses/12, anos); fora de [0, max_age_years] -> NaN
-    - faixa_etaria: faixas de cfg['derivadas']['faixas_etarias'] (texto; NaN se idade inválida)
-    - intervalo_sint_interna_dias: DT_INTERNA - DT_SIN_PRI em dias; NaN quando inválido
-    - flag_intervalo_invalido: 1 se o intervalo é ausente, negativo ou > intervalo_max_dias; senão 0
-    - sin_semana / cos_semana: semana ISO de DT_INTERNA em círculo de periodo_semanas
-    """
-    c, d = cfg["cols"], cfg["derivadas"]
-    wanted = {canon(w) for w in (wanted if wanted is not None else DERIVADAS)} & _DERIVADAS_CANON
-    criadas: list[str] = []
-    if wanted & {"IDADE_ANOS", "FAIXA_ETARIA"}:
-        age = age_years(df, cfg)
-        age = age.where((age >= 0) & (age <= cfg["max_age_years"]))
-        if "IDADE_ANOS" in wanted:
-            df["IDADE_ANOS"] = age
-            criadas.append("IDADE_ANOS")
-        if "FAIXA_ETARIA" in wanted:
-            fx = pd.cut(age, bins=d["faixas_etarias"]["bins"], labels=d["faixas_etarias"]["labels"], right=False)
-            df["FAIXA_ETARIA"] = fx.astype(object).where(fx.notna(), np.nan)
-            criadas.append("FAIXA_ETARIA")
-    if wanted & {"INTERVALO_SINT_INTERNA_DIAS", "FLAG_INTERVALO_INVALIDO"}:
-        gap = (parse_date(df[c["dt_interna"]]) - parse_date(df[c["dt_sin_pri"]])).dt.days.astype("float64")
-        invalido = gap.isna() | (gap < 0) | (gap > d["intervalo_max_dias"])
-        if "FLAG_INTERVALO_INVALIDO" in wanted:
-            df["FLAG_INTERVALO_INVALIDO"] = invalido.astype("int8")
-            criadas.append("FLAG_INTERVALO_INVALIDO")
-        if "INTERVALO_SINT_INTERNA_DIAS" in wanted:
-            df["INTERVALO_SINT_INTERNA_DIAS"] = gap.where(~invalido)
-            criadas.append("INTERVALO_SINT_INTERNA_DIAS")
-    if wanted & {"SIN_SEMANA", "COS_SEMANA"}:
-        sem = parse_date(df[c["dt_interna"]]).dt.isocalendar().week.astype("float64")
-        ang = 2 * np.pi * sem / d["periodo_semanas"]
-        if "SIN_SEMANA" in wanted:
-            df["SIN_SEMANA"] = np.sin(ang)
-            criadas.append("SIN_SEMANA")
-        if "COS_SEMANA" in wanted:
-            df["COS_SEMANA"] = np.cos(ang)
-            criadas.append("COS_SEMANA")
-    return criadas
-
-
-def _analytical_path(cfg: dict) -> Path:
-    """Usa C.ANALYTICAL_DIR do projeto (como o C1/C2); senão, o caminho de configs/decisoes.yaml."""
-    nome = Path(cfg["dataset_analitico"]["path"]).name
-    try:
-        from src.utils import config as C  # noqa: N812
-
-        return Path(C.ANALYTICAL_DIR) / nome
-    except Exception:  # noqa: BLE001
-        return Path(cfg["dataset_analitico"]["path"])
-
-
-def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, versao="0.1",
-                      excluir_proibidas=False, extra_cols=(), split=None, rotulo="") -> dict:
-    """Grava a população analítica (coorte + alvo + tempo + features) para o C2.
-
-    Colunas: id (NU_NOTIFIC), colunas de tempo (coluna_tempo do supervised.yaml e DT_INTERNA),
-    alvo (EVOLUCAO bruta: apenas 1/2 após a coorte), features do supervised.yaml e ANO_INTERNACAO.
-    Usa os NOMES ORIGINAIS das colunas da base (os do supervised.yaml), ordenado pelo tempo.
-    Nenhuma coluna proibida além das features pedidas é enviada ao C.
-    """
-    path = Path(path) if path else _analytical_path(cfg)
-    _t = f" [{rotulo}]" if rotulo else ""
-    c = cfg["cols"]
-    orig = df.attrs.get("orig_names", {})
-    cohort = a1_cohort(df, cfg)
-    y = load_supervised_yaml(supervised_config) if supervised_config and Path(supervised_config).exists() else {}
-    if y:
-        feats = supervised_features(y)
-        target_col = canon((y.get("target") or {}).get("coluna", c["evolucao"]))
-        time_col = canon(y.get("coluna_tempo", c["dt_interna"]))
-    else:
-        feats = [canon(x) for x in cfg["allowed_vars"] if canon(x) in df.columns]
-        target_col, time_col = c["evolucao"], c["dt_interna"]
-    grupos = [canon(g) for g in (((y.get("avaliacao") or {}).get("grupos")) or [])]
-    pedir_derivadas = [f for f in dict.fromkeys(feats + grupos) if f in _DERIVADAS_CANON and f not in cohort.columns]
-    derivadas_criadas = add_derived(cohort, cfg, pedir_derivadas) if pedir_derivadas else []
-    forb = {canon(x) for x in cfg["forbidden_vars"]}
-    hits = [f for f in feats if f in forb]
-    if excluir_proibidas:
-        feats = [f for f in feats if f not in forb]
-    missing = [f for f in feats if f not in cohort.columns]
-    grupos_cols = [g for g in grupos if g in cohort.columns]
-    feats = [f for f in feats if f in cohort.columns]
-    keep = [k for k in [c["nu_notific"], time_col, c["dt_interna"], target_col, *feats, *grupos_cols,
-                        *map(canon, extra_cols)] if k in cohort.columns]
-    keep = list(dict.fromkeys(keep))
-    out = cohort[keep].copy()
-    for t in {time_col, c["dt_interna"]}:
-        if t in out.columns:
-            out[t] = parse_date(out[t])
-    out["ANO_INTERNACAO"] = cohort["_ano"].to_numpy()
-    n_data_invalida = 0
-    if time_col in out.columns:
-        n_data_invalida = int(out[time_col].isna().sum())
-        out = out.dropna(subset=[time_col]).sort_values(time_col, kind="stable")
-    if split:  # coluna `split` (treino/validacao/holdout) sorteada, estratificada pelo alvo, reprodutível pela seed
-        estr = out[target_col].astype(str).to_numpy() if split.get("estratificar_por_alvo", True) else None
-        out["SPLIT"] = split_aleatorio(len(out), estr, split.get("seed", 42), split.get("fracoes"))
-    pedidos = {}
-    if y:
-        f_ = y.get("features", {}) or {}
-        for n in ((f_.get("final") or []) or (f_.get("numericas") or []) + (f_.get("categoricas") or [])):
-            pedidos[canon(n)] = str(n)
-        for g_ in ((y.get("avaliacao") or {}).get("grupos") or []):
-            pedidos.setdefault(canon(g_), str(g_))
-        pedidos[target_col] = str((y.get("target") or {}).get("coluna", target_col))
-        pedidos[time_col] = str(y.get("coluna_tempo", time_col))
-    nome_final = lambda col: pedidos.get(col, orig.get(col, col.lower()))  # noqa: E731
-    aliases_aplicados = {nome_final(c_): orig.get(c_, c_.lower()) for c_ in out.columns
-                         if c_ in pedidos and nome_final(c_).lower() != orig.get(c_, c_.lower()).lower()}
-    out.columns = [nome_final(col) for col in out.columns]
-    tgt_name = nome_final(target_col)
-    assert set(pd.Series(out[tgt_name]).dropna().astype(float).unique()) <= {1.0, 2.0}, "alvo fora de {1,2}"
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.suffix == ".csv":
-        out.to_csv(path, index=False)
-    else:
-        out.to_parquet(path, index=False)
-    meta = dict(versao=versao, criado_em=pd.Timestamp.now().isoformat(timespec="seconds"), arquivo=str(path),
-                n_linhas=int(len(out)), colunas=list(out.columns), alvo=tgt_name,
-                coluna_tempo=nome_final(time_col),
-                anos={str(k): int(v_) for k, v_ in out["ano_internacao"].value_counts().sort_index().items()},
-                desenvolvimento=cfg["dev_years"], holdout=cfg["holdout_years"],
-                features_proibidas_no_dataset=[orig.get(h, h.lower()) for h in hits if not excluir_proibidas],
-                features_ausentes_na_base=missing, base_origem_linhas=int(len(df)),
-                aliases_aplicados_yaml_para_fisico=aliases_aplicados,
-                descartadas_data_tempo_invalida=n_data_invalida,
-                derivadas_criadas=[nome_final(x) for x in derivadas_criadas],
-                grupos_avaliacao_incluidos=[nome_final(g) for g in grupos_cols])
-    meta["sha256"] = _sha256(path)
-    if split:
-        meta["split"] = {"tipo": split.get("tipo", "aleatorio"), "seed": split.get("seed", 42),
-                         "fracoes": split.get("fracoes"), "contagem": out["split"].value_counts().to_dict()}
-    path.with_suffix(".meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    if derivadas_criadas:
-        rep.add("A1", "Features derivadas" + _t, OK,
-                f"criadas no dataset: {', '.join(nome_final(x) for x in derivadas_criadas)}")
-    if n_data_invalida:
-        rep.add("A1", "Data da coluna de tempo" + _t, WARN,
-                f"{n_data_invalida:,} linhas com {nome_final(time_col)} inválida/ausente descartadas (o C2 faria o mesmo)")
-    if aliases_aplicados:
-        rep.add("A1", "Nomes do YAML x base" + _t, WARN,
-                "colunas gravadas com o nome pedido no YAML, mas vindas de outro nome físico: "
-                + ", ".join(f"{k}<-{v_}" for k, v_ in aliases_aplicados.items()) + " (confirmar equivalência)")
-    hard = [h for h in hits if h != "HOSPITAL" and not excluir_proibidas]
-    if hard:
-        rep.add("A1", "Dataset analítico" + _t, FAIL, f"{len(out):,} linhas gravadas, MAS com features proibidas: {', '.join(hard)}")
-    elif missing:
-        rep.add("A1", "Dataset analítico" + _t, WARN, f"{len(out):,} linhas v{versao}; features ausentes na base: {', '.join(missing)}")
-    else:
-        rep.add("A1", "Dataset analítico" + _t, OK, f"{len(out):,} linhas, {out.shape[1]} colunas -> {path} (v{versao})")
-    return meta
-
-
-def validar_contrato_c2(path, supervised_config, rep: Report) -> bool:
-    """Confere o ARQUIVO gravado contra o que o C2 consome (células 6–16 do C2_pipeline_supervisionado).
-
-    O C2 faz: read_parquet -> TARGET e DATE_COLUMN presentes -> to_datetime(DATE_COLUMN) e dropna ->
-    treino[FEATURES] -> criar_alvo_binario/filtrar_rotulos_validos -> check_leakage(X).
-    """
-    st, p = "A1-C2", Path(path)
-    if not p.exists():
-        rep.add(st, "Arquivo do dataset", FAIL, f"não encontrado: {p}")
-        return False
-    y = load_supervised_yaml(supervised_config)
-    f = y.get("features", {}) or {}
-    target = (y.get("target") or {}).get("coluna")
-    data_col = y.get("coluna_tempo")
-    feats = list(f.get("final") or ((f.get("numericas") or []) + (f.get("categoricas") or [])))
-    positivos = [float(x) for x in ((y.get("target") or {}).get("positivos") or [])]
-    if p.suffix == ".csv":
-        names = list(pd.read_csv(p, nrows=0).columns)
-    else:
-        import pyarrow.parquet as pq
-
-        names = pq.ParquetFile(p).schema_arrow.names
-    wanted = [c for c in dict.fromkeys([target, data_col, *feats]) if c in names]
-    d = pd.read_csv(p, usecols=wanted) if p.suffix == ".csv" else pd.read_parquet(p, columns=wanted)
-    ok = True
-    faltam = [c for c in (target, data_col, *feats) if c not in names]
-    if faltam:
-        ok = False
-        rep.add(st, "Colunas exigidas pelo C2", FAIL, f"ausentes no dataset: {', '.join(map(str, faltam))}")
-    else:
-        rep.add(st, "Colunas exigidas pelo C2", OK, f"alvo '{target}', tempo '{data_col}' e {len(feats)} features presentes")
-    if data_col in d.columns:
-        dt = pd.to_datetime(d[data_col], errors="coerce")
-        n_bad = int(dt.isna().sum())
-        if n_bad:
-            rep.add(st, "Coluna de tempo", WARN, f"{n_bad:,} datas inválidas (o C2 descarta essas linhas)")
-        elif not dt.is_monotonic_increasing:
-            rep.add(st, "Coluna de tempo", WARN, "dataset não está ordenado por tempo (o TemporalSplit pode reordenar)")
-        else:
-            rep.add(st, "Coluna de tempo", OK, f"datetime válido, ordenado: {dt.min().date()} -> {dt.max().date()}")
-    if target in d.columns:
-        vals = set(pd.Series(d[target]).dropna().astype(float).unique())
-        if positivos and not (set(positivos) & vals):
-            ok = False
-            rep.add(st, "Alvo", FAIL, f"nenhum valor positivo {positivos} no dataset (valores: {sorted(vals)})")
-        elif vals - {1.0, 2.0}:
-            rep.add(st, "Alvo", WARN, f"valores fora de {{1,2}}: {sorted(vals - {1.0, 2.0})} (o C2 os descarta)")
-        else:
-            rep.add(st, "Alvo", OK, f"apenas cura/óbito; positivos {positivos} presentes")
-    prib = {str(x).lower() for x in (f.get("proibidas") or [])}
-    vazam = [c for c in feats if str(c).lower() in prib]
-    if vazam:
-        ok = False
-        rep.add(st, "check_leakage (C2)", FAIL, f"features em `proibidas`: {', '.join(vazam)}")
-    else:
-        rep.add(st, "check_leakage (C2)", OK, "nenhuma feature está em `proibidas`")
-    rep.add(st, "Tamanho", OK if len(d) else FAIL, f"{len(d):,} linhas")
-    return ok and len(d) > 0
-
-
-# =============================================================================
-# Experimentos de split: aleatório 70-15-15 e cenários de período (A3b)
-# =============================================================================
-def _sha256(path) -> str:
-    import hashlib
-
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for bloco in iter(lambda: f.read(1 << 20), b""):
-            h.update(bloco)
-    return h.hexdigest()
-
-
-def verificar_dataset_congelado(path, rep: Report) -> bool:
-    """Compara o SHA-256 do arquivo com o gravado no .meta.json (população analítica congelada)."""
-    p = Path(path)
-    meta_p = p.with_suffix(".meta.json")
-    if not p.exists() or not meta_p.exists():
-        rep.add("A4", "Dataset congelado", FAIL, f"arquivo ou metadados ausentes: {p.name}")
-        return False
-    meta = json.loads(meta_p.read_text(encoding="utf-8"))
-    ok = meta.get("sha256") == _sha256(p)
-    rep.add("A4", "Dataset congelado", OK if ok else FAIL,
-            f"{p.name} v{meta.get('versao')} " + ("inalterado desde a exportação" if ok else "FOI ALTERADO após a exportação"))
-    return ok
-
-
-def cfg_para_anos(cfg: dict, anos) -> dict:
-    """Cópia de cfg com o período analítico = `anos` (sem holdout temporal): usada nos cenários."""
-    c2 = json.loads(json.dumps(cfg))
-    c2["dev_years"] = [int(a) for a in anos]
-    c2["holdout_years"] = []
-    return c2
-
-
-def split_aleatorio(n: int, estratos=None, seed: int = 42, fracoes: dict | None = None) -> np.ndarray:
-    """Rótulos 'treino'/'validacao'/'holdout' sorteados (opcionalmente estratificados), reprodutíveis pela seed."""
-    fr = fracoes or {"treino": 0.70, "validacao": 0.15, "holdout": 0.15}
-    if abs(sum(fr.values()) - 1) > 1e-9:
-        raise ValueError(f"frações devem somar 1: {fr}")
-    rng = np.random.default_rng(seed)
-    rot = np.empty(n, dtype=object)
-    if estratos is None:
-        grupos = [np.arange(n)]
-    else:
-        est = np.asarray(estratos).astype(str)
-        grupos = [np.flatnonzero(est == k) for k in sorted(set(est))]
-    for idx in grupos:
-        idx = rng.permutation(idx)
-        m = len(idx)
-        n_tr, n_va = int(round(m * fr["treino"])), int(round(m * fr["validacao"]))
-        rot[idx[:n_tr]] = "treino"
-        rot[idx[n_tr:n_tr + n_va]] = "validacao"
-        rot[idx[n_tr + n_va:]] = "holdout"
-    return rot
-
-
-def split_por_ordem(valores_tempo, fracoes: dict | None = None) -> np.ndarray:
-    """Divisão temporal por posição (como o TemporalSplit por fração do C2): passado -> treino, futuro -> holdout."""
-    fr = fracoes or {"treino": 0.70, "validacao": 0.15, "holdout": 0.15}
-    v_ = np.asarray(valores_tempo)
-    ordem = np.argsort(v_, kind="stable")
-    n = len(v_)
-    n_tr, n_va = int(round(n * fr["treino"])), int(round(n * fr["validacao"]))
-    rot = np.empty(n, dtype=object)
-    rot[ordem[:n_tr]] = "treino"
-    rot[ordem[n_tr:n_tr + n_va]] = "validacao"
-    rot[ordem[n_tr + n_va:]] = "holdout"
-    return rot
-
-
-def _ler(path, cols):
-    p = Path(path)
-    if p.suffix == ".csv":
-        return pd.read_csv(p, usecols=[c for c in cols if c in pd.read_csv(p, nrows=0).columns])
-    import pyarrow.parquet as pq
-
-    nomes = pq.ParquetFile(p).schema_arrow.names
-    return pd.read_parquet(p, columns=[c for c in cols if c in nomes])
-
-
-def _relatorio_split(path, meta: dict, cfg: dict, rep: Report, nome: str) -> pd.DataFrame:
-    st, tag = "A3b", f" [{nome}]"
-    fr = cfg["experimentos_split"]["fracoes"]
-    d = _ler(path, ["split", meta["alvo"], "ano_internacao", "nu_notific"])
-    d["_y"] = (pd.to_numeric(d[meta["alvo"]], errors="coerce") == float(cfg["target_positive"])).astype(int)
-    t = d.groupby("split").agg(n=("_y", "size"), n_obitos=("_y", "sum"))
-    t["pct_linhas"] = (100 * t["n"] / t["n"].sum()).round(2)
-    t["prevalencia_obito_pct"] = (100 * t["n_obitos"] / t["n"]).round(2)
-    t = t.reindex(["treino", "validacao", "holdout"]).reset_index()
-    rep.save(f"a3_split_aleatorio_{nome}", t)
-    por_ano = pd.crosstab(d["ano_internacao"], d["split"]).reindex(columns=["treino", "validacao", "holdout"], fill_value=0)
-    rep.save(f"a3_split_aleatorio_{nome}_por_ano", por_ano.reset_index())
-
-    dev = max(abs(float(t.loc[t["split"] == k, "pct_linhas"].iloc[0]) - 100 * fr[k]) for k in fr)
-    rep.add(st, "Proporções 70/15/15" + tag, OK if dev <= 0.5 else WARN,
-            f"desvio máximo {dev:.2f} p.p. | " + ", ".join(f"{r.split}={r.n:,}" for r in t.itertuples()))
-    amp = float(t["prevalencia_obito_pct"].max() - t["prevalencia_obito_pct"].min())
-    rep.add(st, "Estratificação do alvo" + tag, OK if amp <= 0.5 else WARN,
-            f"prevalência de óbito por split: " + ", ".join(f"{r.split}={r.prevalencia_obito_pct}%" for r in t.itertuples())
-            + f" (amplitude {amp:.2f} p.p.)")
-    faltam = [(int(a), s) for a in por_ano.index for s in por_ano.columns if por_ano.loc[a, s] == 0]
-    rep.add(st, "Anos em cada split" + tag, OK if not faltam else WARN,
-            "todos os anos aparecem nos 3 splits (split aleatório mistura os períodos)" if not faltam
-            else f"anos ausentes em algum split: {faltam[:6]}")
-    if "nu_notific" in d.columns:
-        g = d.dropna(subset=["nu_notific"]).groupby("nu_notific")["split"].nunique()
-        n_dup = int((g > 1).sum())
-        rep.add(st, "NU_NOTIFIC entre splits" + tag, OK if n_dup == 0 else WARN,
-                "nenhum NU_NOTIFIC repetido em splits diferentes" if n_dup == 0
-                else f"{n_dup:,} NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação)")
-    return t
-
-
-def a3_split_aleatorio_cenario(df, cfg, rep: Report, nome: str, anos, supervised_config=None,
-                               versao: str = "0.1", excluir_proibidas: bool = False) -> dict:
-    """Coorte do cenário (anos informados) + dataset com coluna `split` aleatória 70/15/15 + relatório."""
-    cfg_s = cfg_para_anos(cfg, anos)
-    a1_waterfall(df, cfg_s, rep, sufixo=f"_{nome}")
-    base = _analytical_path(cfg)
-    caminho = base.with_name(f"dataset_supervisionado_{nome}{base.suffix}")
-    e = cfg["experimentos_split"]
-    meta = a1_export_dataset(df, cfg_s, rep, supervised_config, path=caminho, versao=versao,
-                             excluir_proibidas=excluir_proibidas, rotulo=nome,
-                             split={"tipo": "aleatorio", "seed": e["seed"], "fracoes": e["fracoes"],
-                                    "estratificar_por_alvo": e["estratificar_por_alvo"]})
-    meta["anos_cenario"] = [int(a) for a in anos]
-    _relatorio_split(caminho, meta, cfg, rep, nome)
-    return meta
-
-
-def a3_benchmark_split(path, supervised_config, cfg: dict, rep: Report, nome: str,
-                       max_rows: int = 200_000, seed: int = 42) -> pd.DataFrame:
-    """Regressão logística treino -> VALIDAÇÃO em split aleatório e em split temporal por ordem (o holdout NÃO é aberto).
-
-    Mostra o quanto o split aleatório é otimista frente ao temporal (autocorrelação no tempo).
-    """
-    from sklearn.compose import ColumnTransformer
-    from sklearn.impute import SimpleImputer
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-    y = load_supervised_yaml(supervised_config)
-    f = y.get("features", {}) or {}
-    numericas = list(f.get("numericas") or [])
-    categoricas = list(f.get("categoricas") or [])
-    if f.get("final"):
-        numericas = [x for x in f["final"] if x in numericas]
-        categoricas = [x for x in f["final"] if x not in numericas]
-    alvo, tempo = y["target"]["coluna"], y["coluna_tempo"]
-    pos = float(y["target"]["positivos"][0])
-    d = _ler(path, [alvo, tempo, "split", *numericas, *categoricas])
-    numericas = [c for c in numericas if c in d.columns]
-    categoricas = [c for c in categoricas if c in d.columns]
-    d[tempo] = pd.to_datetime(d[tempo], errors="coerce")
-    d = d.dropna(subset=[tempo]).reset_index(drop=True)
-    d["part_aleatoria"] = d["split"].to_numpy()
-    d["part_temporal"] = split_por_ordem(d[tempo].to_numpy(), cfg["experimentos_split"]["fracoes"])
-    if len(d) > max_rows:
-        d = d.sample(max_rows, random_state=seed).reset_index(drop=True)
-    yb = (pd.to_numeric(d[alvo], errors="coerce") == pos).astype(int).to_numpy()
-    X = d[numericas + categoricas].copy()
-    for c in numericas:
-        X[c] = pd.to_numeric(X[c], errors="coerce")
-    for c in categoricas:
-        X[c] = X[c].astype("string").fillna("__NA__").astype(object)
-
-    linhas = []
-    for particao, col in (("aleatoria", "part_aleatoria"), ("temporal_por_ordem", "part_temporal")):
-        tr = (d[col] == "treino").to_numpy()
-        va = (d[col] == "validacao").to_numpy()
-        if len(np.unique(yb[tr])) < 2 or len(np.unique(yb[va])) < 2:
-            continue
-        prep = ColumnTransformer([
-            ("num", Pipeline([("imp", SimpleImputer(strategy="median")), ("sc", StandardScaler())]), numericas),
-            ("cat", OneHotEncoder(handle_unknown="ignore", min_frequency=30), categoricas),
-        ])
-        pipe = Pipeline([("prep", prep), ("clf", LogisticRegression(max_iter=300, class_weight="balanced"))])
-        pipe.fit(X[tr], yb[tr])
-        p = pipe.predict_proba(X[va])[:, 1]
-        prior = float(yb[tr].mean())
-        base = dict(cenario=nome, particao=particao, n_treino=int(tr.sum()), n_validacao=int(va.sum()),
-                    prevalencia_validacao=round(float(yb[va].mean()), 4))
-        linhas.append(dict(base, modelo="baseline_prior", roc_auc=0.5, pr_auc=round(float(yb[va].mean()), 4),
-                           brier=round(float(np.mean((prior - yb[va]) ** 2)), 4)))
-        linhas.append(dict(base, modelo="logistica", roc_auc=round(roc_auc_score(yb[va], p), 4),
-                           pr_auc=round(average_precision_score(yb[va], p), 4),
-                           brier=round(brier_score_loss(yb[va], p), 4)))
-    res = pd.DataFrame(linhas)
-    rep.save(f"a3_benchmark_split_{nome}", res)
-    tag = f" [{nome}]"
-    lg = res[res["modelo"] == "logistica"].set_index("particao") if len(res) else res
-    if len(res) and {"aleatoria", "temporal_por_ordem"} <= set(lg.index):
-        delta = float(lg.loc["aleatoria", "pr_auc"] - lg.loc["temporal_por_ordem", "pr_auc"])
-        rep.add("A3b", "Split aleatório x temporal" + tag, WARN if delta > 0.02 else OK,
-                f"PR-AUC (validação): aleatório {lg.loc['aleatoria', 'pr_auc']:.3f} vs temporal {lg.loc['temporal_por_ordem', 'pr_auc']:.3f} "
-                f"(Δ {delta:+.3f})" + (" — o aleatório está otimista; decidir pelo temporal" if delta > 0.02 else ""))
-    else:
-        rep.add("A3b", "Split aleatório x temporal" + tag, WARN, "benchmark não executado (alvo com uma só classe em algum split)")
-    return res
-
-
-_COR_SPLIT = {"treino": "#2F6DB5", "validacao": "#E8912D", "holdout": "#6BA368"}
-_ORDEM_SPLIT = ["treino", "validacao", "holdout"]
-
-
-def _rotulos_barras(ax, barras, textos, dy=0.0):
-    for b, t in zip(barras, textos):
-        ax.annotate(t, (b.get_x() + b.get_width() / 2, b.get_height() + dy), ha="center", va="bottom", fontsize=9)
-
-
-def grafico_split_cenario(rep: Report, cfg: dict, nome: str, anos=None, fig_dir="outputs/figures/pessoa_a",
-                          mostrar: bool = False):
-    """3 painéis do split aleatório de um cenário (a partir das tabelas já gravadas em rep.out):
-    (a) % de linhas por split x meta 70/15/15; (b) prevalência de óbito por split; (c) composição dos splits dentro de cada ano.
-    """
-    import matplotlib.pyplot as plt
-
-    t = pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{nome}.csv").set_index("split").reindex(_ORDEM_SPLIT)
-    pa = pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{nome}_por_ano.csv").set_index("ano_internacao")[_ORDEM_SPLIT]
-    fr = cfg["experimentos_split"]["fracoes"]
-    cores = [_COR_SPLIT[s] for s in _ORDEM_SPLIT]
-    fig, axs = plt.subplots(1, 3, figsize=(17, 4.8), gridspec_kw={"width_ratios": [1, 1, 1.5]})
-
-    ax = axs[0]  # (a) proporção de linhas
-    barras = ax.bar(_ORDEM_SPLIT, t["pct_linhas"], color=cores)
-    for i, s in enumerate(_ORDEM_SPLIT):
-        ax.hlines(100 * fr[s], i - 0.42, i + 0.42, colors="black", linestyles="--", linewidth=1.4,
-                  label="meta 70/15/15" if i == 0 else None)
-    _rotulos_barras(ax, barras, [f"{p:.1f}%\nn={int(n):,}" for p, n in zip(t["pct_linhas"], t["n"])], dy=1)
-    ax.set_ylim(0, 100 * max(fr.values()) * 1.25)
-    ax.set_ylabel("% das linhas da coorte")
-    ax.set_title("(a) Proporção de linhas por split")
-    ax.legend(loc="upper right", fontsize=9)
-
-    ax = axs[1]  # (b) prevalência do alvo
-    prev = t["prevalencia_obito_pct"]
-    geral = 100 * t["n_obitos"].sum() / t["n"].sum()
-    barras = ax.bar(_ORDEM_SPLIT, prev, color=cores)
-    ax.axhline(geral, color="black", linestyle="--", linewidth=1.4, label=f"geral {geral:.2f}%")
-    _rotulos_barras(ax, barras, [f"{p:.2f}%" for p in prev], dy=0.3)
-    ax.set_ylim(0, max(prev.max(), geral) * 1.3)
-    ax.set_ylabel("% de óbitos (alvo = 1)")
-    ax.set_title(f"(b) Prevalência de óbito por split (amplitude {prev.max() - prev.min():.2f} p.p.)")
-    ax.legend(loc="upper right", fontsize=9)
-
-    ax = axs[2]  # (c) composição por ano
-    comp = pa.div(pa.sum(axis=1), axis=0) * 100
-    base = np.zeros(len(comp))
-    for s in _ORDEM_SPLIT:
-        ax.bar(comp.index.astype(str), comp[s], bottom=base, color=_COR_SPLIT[s], label=s)
-        for x, (v_, b_) in enumerate(zip(comp[s], base)):
-            if v_ >= 6:
-                ax.text(x, b_ + v_ / 2, f"{v_:.0f}%", ha="center", va="center", fontsize=8, color="white")
-        base = base + comp[s].to_numpy()
-    ax.axhline(70, color="black", linestyle=":", linewidth=1)
-    ax.axhline(85, color="black", linestyle=":", linewidth=1)
-    ax.set_ylim(0, 100)
-    ax.set_xticks(range(len(comp)), [f"{a}\nn={int(n):,}" for a, n in zip(comp.index, pa.sum(axis=1))], fontsize=8)
-    ax.set_ylabel("% do ano em cada split")
-    ax.set_title("(c) Composição dos splits dentro de cada ano")
-    ax.legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.17), fontsize=9)
-
-    anos_txt = f" — anos {', '.join(map(str, anos))}" if anos else ""
-    fig.suptitle(f"Split aleatório estratificado 70/15/15 — {nome}{anos_txt}", fontsize=13, y=1.02)
-    fig.tight_layout()
-    destino = Path(fig_dir)
-    destino.mkdir(parents=True, exist_ok=True)
-    caminho = destino / f"split_{nome}.png"
-    fig.savefig(caminho, dpi=140, bbox_inches="tight")
-    if mostrar:
-        plt.show()
-    else:
-        plt.close(fig)
-    return caminho
-
-
-def grafico_comparacao_cenarios(rep: Report, cfg: dict, nomes, fig_dir="outputs/figures/pessoa_a", mostrar: bool = False):
-    """Compara os cenários: N por ano empilhado por split (um painel por cenário, mesmo eixo) + prevalência por split."""
-    import matplotlib.pyplot as plt
-
-    nomes = list(nomes)
-    por_ano = {n: pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{n}_por_ano.csv").set_index("ano_internacao")[_ORDEM_SPLIT]
-               for n in nomes}
-    resumo = {n: pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{n}.csv").set_index("split").reindex(_ORDEM_SPLIT) for n in nomes}
-    anos = sorted(set().union(*[set(p.index) for p in por_ano.values()]))
-    topo = max(p.sum(axis=1).max() for p in por_ano.values()) * 1.12
-    fig, axs = plt.subplots(1, len(nomes) + 1, figsize=(6 * len(nomes) + 5.5, 4.8),
-                            gridspec_kw={"width_ratios": [1.3] * len(nomes) + [1]})
-    for ax, n in zip(axs, nomes):
-        p = por_ano[n].reindex(anos, fill_value=0)
-        base = np.zeros(len(p))
-        for s in _ORDEM_SPLIT:
-            ax.bar(p.index.astype(str), p[s], bottom=base, color=_COR_SPLIT[s], label=s)
-            base = base + p[s].to_numpy()
-        for x, tot in enumerate(base):
-            if tot == 0:
-                ax.axvspan(x - 0.5, x + 0.5, color="#DDDDDD", alpha=0.6)
-                ax.text(x, topo * 0.5, "fora do\ncenário", ha="center", va="center", fontsize=9, color="#555555")
-            else:
-                ax.text(x, tot + topo * 0.01, f"{int(tot):,}", ha="center", va="bottom", fontsize=8)
-        ax.set_ylim(0, topo)
-        ax.set_ylabel("registros na coorte")
-        ax.set_title(f"{n}  (N={int(base.sum()):,})")
-    axs[0].legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.1), fontsize=9)
-
-    ax = axs[-1]
-    larg = 0.8 / len(nomes)
-    cores_cen = ["#444444", "#B5B5B5", "#8A6FBF", "#C96F6F"]
-    for i, n in enumerate(nomes):
-        x = np.arange(3) + (i - (len(nomes) - 1) / 2) * larg
-        barras = ax.bar(x, resumo[n]["prevalencia_obito_pct"], larg, label=n, color=cores_cen[i % len(cores_cen)])
-        _rotulos_barras(ax, barras, [f"{p:.1f}%" for p in resumo[n]["prevalencia_obito_pct"]], dy=0.2)
-    ax.set_xticks(range(3), _ORDEM_SPLIT)
-    ymax = max(r["prevalencia_obito_pct"].max() for r in resumo.values())
-    ax.set_ylim(0, ymax * 1.3)
-    ax.set_ylabel("% de óbitos")
-    ax.set_title("Prevalência de óbito por split")
-    ax.legend(fontsize=8, loc="upper right")
-    fig.suptitle("Comparação dos cenários — split aleatório 70/15/15", fontsize=13, y=1.02)
-    fig.tight_layout()
-    destino = Path(fig_dir)
-    destino.mkdir(parents=True, exist_ok=True)
-    caminho = destino / "split_comparacao_cenarios.png"
-    fig.savefig(caminho, dpi=140, bbox_inches="tight")
-    if mostrar:
-        plt.show()
-    else:
-        plt.close(fig)
-    return caminho
-
-
-def comparar_cenarios(metas: dict, benchs: dict, rep: Report) -> pd.DataFrame:
-    """Tabela única: N, prevalência e desempenho (validação) por cenário."""
-    linhas = []
-    for nome, m in metas.items():
-        d = _ler(m["arquivo"], [m["alvo"]])
-        y = (pd.to_numeric(d[m["alvo"]], errors="coerce") == 2).astype(int)
-        r = dict(cenario=nome, anos=",".join(map(str, m.get("anos_cenario", []))), n_linhas=len(d),
-                 n_obitos=int(y.sum()), prevalencia_obito_pct=round(100 * float(y.mean()), 2))
-        b = benchs.get(nome)
-        if b is not None and len(b):
-            for part in ("aleatoria", "temporal_por_ordem"):
-                x = b[(b["modelo"] == "logistica") & (b["particao"] == part)]
-                if len(x):
-                    r[f"pr_auc_{part}"], r[f"roc_auc_{part}"] = float(x["pr_auc"].iloc[0]), float(x["roc_auc"].iloc[0])
-        linhas.append(r)
-    t = pd.DataFrame(linhas)
-    rep.save("comparacao_cenarios", t)
-    return t
-
-
-# =============================================================================
-# A2 — Qualidade, datas e elegibilidade
-# =============================================================================
-def a2_missing(df, cfg, rep: Report) -> None:
-    ano = year_labels(df, cfg)
-    coded = set(cfg["expected_codes"])
-    rows = []
-    for col in df.columns:
-        s = df[col]
-        isna = s.isna()
-        if s.dtype == object or pd.api.types.is_string_dtype(s):
-            isna = isna | (s.astype("string").str.strip() == "").fillna(False)
-        g = isna.groupby(ano).agg(["mean", "size"])
-        ign = None
-        if col in coded:
-            ign = (code_str(s) == "9").fillna(False).groupby(ano).mean()
-        for y, r in g.iterrows():
-            rows.append(dict(coluna=col, ano=y, n=int(r["size"]), pct_vazio=round(100 * r["mean"], 2),
-                             pct_ignorado=None if ign is None else round(100 * ign.loc[y], 2)))
-    long = pd.DataFrame(rows)
-    rep.save("a2_vazios_ignorados_por_ano", long)
-    piv = long[long["ano"] != "sem_data"].pivot(index="coluna", columns="ano", values="pct_vazio")
-    inexistente = piv[(piv >= 99.9).any(axis=1) & (piv < 99.9).any(axis=1)]
-    rep.save("a2_campos_inexistentes_por_ano", inexistente.reset_index())
-    if len(inexistente):
-        rep.add("A2", "Campo inexistente por ano", WARN,
-                f"{len(inexistente)} campos 100% vazios em algum ano (ex.: {', '.join(inexistente.index[:5])})")
-    else:
-        rep.add("A2", "Campo inexistente por ano", OK, "nenhuma ruptura total de preenchimento")
-
-
-def a2_dates(df, cfg, rep: Report) -> None:
-    c = cfg["cols"]
-    today = pd.Timestamp.today().normalize()
-    rows = []
-    for a, b, desc, action in cfg["date_rules"]:
-        if c[a] not in df.columns or c[b] not in df.columns:
-            continue
-        da, db = parse_date(df[c[a]]), parse_date(df[c[b]])
-        both = da.notna() & db.notna()
-        bad = (da > db).fillna(False)
-        rows.append(dict(regra=f"{c[a]} <= {c[b]}", descricao=desc, n_comparaveis=int(both.sum()),
-                         n_violacoes=int(bad.sum()),
-                         pct=round(100 * bad.sum() / max(both.sum(), 1), 3), acao_sugerida=action))
-    for key in ("dt_nasc", "dt_sin_pri", "dt_notific", "dt_interna", "dt_evoluca", "dt_encerra"):
-        if c[key] in df.columns:
-            d = parse_date(df[c[key]])
-            raw_filled = df[c[key]].notna()
-            unparsable = int((raw_filled & d.isna()).sum())
-            future = int((d > today).sum())
-            rows.append(dict(regra=f"{c[key]} válida", descricao="Data futura, não interpretável ou fora de 1900–2100",
-                             n_comparaveis=int(raw_filled.sum()), n_violacoes=unparsable + future,
-                             pct=round(100 * (unparsable + future) / max(raw_filled.sum(), 1), 3),
-                             acao_sugerida="transformar em ausente"))
-    if {c["dt_sin_pri"], c["dt_interna"]} <= set(df.columns):
-        gap = (parse_date(df[c["dt_interna"]]) - parse_date(df[c["dt_sin_pri"]])).dt.days
-        big = int((gap > cfg["max_symptom_to_admission_days"]).sum())
-        rows.append(dict(regra="sintomas->internação", descricao=f"> {cfg['max_symptom_to_admission_days']} dias",
-                         n_comparaveis=int(gap.notna().sum()), n_violacoes=big,
-                         pct=round(100 * big / max(gap.notna().sum(), 1), 3), acao_sugerida="manter com flag"))
-    if {c["nu_idade"], c["tp_idade"]} <= set(df.columns):
-        age = age_years(df, cfg)
-        bad = int(((age < 0) | (age > cfg["max_age_years"])).sum())
-        rows.append(dict(regra="idade em anos", descricao=f"< 0 ou > {cfg['max_age_years']}",
-                         n_comparaveis=int(age.notna().sum()), n_violacoes=bad,
-                         pct=round(100 * bad / max(age.notna().sum(), 1), 3), acao_sugerida="transformar em ausente"))
-    res = pd.DataFrame(rows)
-    rep.save("a2_coerencia_datas", res)
-    crit = res[(res["n_violacoes"] > 0) & ((res["pct"] > 1.0) | (res["acao_sugerida"] == "excluir"))]
-    if len(crit):
-        rep.add("A2", "Coerência de datas", WARN,
-                f"{len(crit)} regra(s) com violações relevantes: "
-                + "; ".join(f"{r.regra} ({r.n_violacoes})" for r in crit.itertuples()))
-    else:
-        rep.add("A2", "Coerência de datas", OK, "violações ≤ 1% e nenhuma regra de exclusão violada")
-
-
-def a2_duplicates(df, cfg, rep: Report) -> None:
-    c = cfg["cols"]
-    exact = int(pd.util.hash_pandas_object(df, index=False).duplicated().sum())  # hash: evita cópia da base
-    rows = [dict(tipo="linhas exatamente duplicadas", n_linhas=exact, n_grupos=exact)]
-    nn = c["nu_notific"]
-    if nn in df.columns:
-        d = df[df[nn].notna()].duplicated(subset=[nn], keep=False)
-        grp = df.loc[d.index[d], nn].nunique()
-        rows.append(dict(tipo=f"{nn} repetido (não implica mesma pessoa)", n_linhas=int(d.sum()), n_grupos=int(grp)))
-        key = [x for x in (nn, c["dt_notific"], c["dt_nasc"]) if x in df.columns]
-        if len(key) > 1:
-            d2 = df.duplicated(subset=key, keep=False)
-            rows.append(dict(tipo=f"mesma chave {key}", n_linhas=int(d2.sum()), n_grupos=int(df[d2][key].drop_duplicates().shape[0])))
-    res = pd.DataFrame(rows)
-    rep.save("a2_duplicidades", res)
-    rep.add("A2", "Duplicidades", WARN if exact else OK,
-            f"{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv")
-
-
-def a2_maturity(df, cfg, rep: Report) -> None:
-    c = cfg["cols"]
-    dt = parse_date(df[c["dt_interna"]])
-    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
-    m = hosp & dt.notna().to_numpy(bool)
-    sub = df.loc[m]
-    mes = dt[m].dt.to_period("M").astype(str)
-    closed = code_str(sub[c["evolucao"]]).isin(cfg["closed_codes"])
-    enc = parse_date(sub[c["dt_encerra"]]) if c["dt_encerra"] in sub.columns else pd.Series(pd.NaT, index=sub.index)
-    days = (enc - dt[m]).dt.days
-    res = pd.DataFrame({"mes": mes, "fechado": closed, "tem_encerra": enc.notna(), "dias": days})
-    out = res.groupby("mes").agg(n=("fechado", "size"), pct_evolucao_fechada=("fechado", lambda x: round(100 * x.mean(), 2)),
-                                 pct_com_dt_encerra=("tem_encerra", lambda x: round(100 * x.mean(), 2)),
-                                 mediana_dias_ate_encerra=("dias", "median")).reset_index()
-    rep.save("a2_maturidade_evolucao_por_mes", out)
-    out["ano"] = out["mes"].str[:4].astype(int)
-    imaturo = out[out["ano"].isin(cfg["holdout_years"]) & (out["pct_evolucao_fechada"] < cfg["maturity_min_closed_pct"])]
-    if len(imaturo):
-        rep.add("A2", "Maturidade de EVOLUCAO (holdout)", WARN,
-                f"{len(imaturo)} mês(es) abaixo de {cfg['maturity_min_closed_pct']}% fechados: "
-                f"{', '.join(imaturo['mes'].head(6))}")
-    else:
-        rep.add("A2", "Maturidade de EVOLUCAO (holdout)", OK, "todos os meses do holdout com evolução madura")
-
-
-def classify_variable(col: str, pct_vazio: float, cfg: dict) -> tuple[str, str, str]:
-    if col in cfg["forbidden_vars"]:
-        return "excluir", "Pós-admissão, desfecho ou critério de inclusão (risco de vazamento)", "Não"
-    if col in cfg["conditional_vars"]:
-        return "incluir com condição", "Depende de quando foi registrada/completa na admissão", "Verificar"
-    if col in cfg["allowed_vars"]:
-        if pct_vazio > 95:
-            return "auditoria", "Permitida, mas quase toda vazia", "Verificar"
-        return "incluir", "Disponível na admissão (proposta inicial)", "Sim"
-    return "auditoria", "Não classificada: consultar dicionário", "Verificar"
-
-
-def a2_eligibility(df, cfg, rep: Report) -> None:
-    sample = df.sample(min(len(df), 100_000), random_state=0) if len(df) > 100_000 else df
-    rows = []
-    for col in df.columns:
-        s = df[col]
-        pv = float(100 * (s.isna() | (s.astype("string").str.strip() == "").fillna(False)).mean()) \
-            if s.dtype == object or pd.api.types.is_string_dtype(s) else float(100 * s.isna().mean())
-        classe, why, na_adm = classify_variable(col, pv, cfg)
-        rows.append(dict(coluna=col, classe=classe, justificativa=why, existe_na_admissao_sugerido=na_adm,
-                         pct_vazio=round(pv, 2), n_distintos_amostra=int(sample[col].nunique(dropna=True)),
-                         quando_observada="", quando_chegou_na_base="", decisao_final="", responsavel="", data=""))
-    carregadas = set(df.columns)
-    for c_ in df.attrs.get("schema_cols", []):
-        if canon(c_) not in carregadas:
-            rows.append(dict(coluna=str(c_).upper(), classe="auditoria",
-                             justificativa="Existe no Parquet, mas não foi carregada (fora das listas classificadas)",
-                             existe_na_admissao_sugerido="Verificar", pct_vazio=None, n_distintos_amostra=None,
-                             quando_observada="", quando_chegou_na_base="", decisao_final="", responsavel="", data=""))
-    mat = pd.DataFrame(rows).sort_values(["classe", "coluna"])
-    rep.save("a2_matriz_elegibilidade", mat)
-    cont = mat["classe"].value_counts().to_dict()
-    rep.add("A2", "Matriz de elegibilidade", WARN if cont.get("auditoria") else OK,
-            f"{cont} — preencher colunas em branco e fechar 'auditoria'")
-
-
-# =============================================================================
-# A3 — Desenho experimental e pilotos
-# =============================================================================
-def load_feature_list(path: str | Path) -> list[str]:
-    """Lê lista de features de .txt (1 por linha), .json ou .yaml/.yml."""
-    p = Path(path)
-    txt = p.read_text(encoding="utf-8")
-    if p.suffix in (".yaml", ".yml"):
-        import yaml
-
-        data = yaml.safe_load(txt)
-    elif p.suffix == ".json":
-        data = json.loads(txt)
-    else:
-        return [canon(ln.split("#")[0]) for ln in txt.splitlines() if ln.split("#")[0].strip()]
-
-    def find(obj):
-        if isinstance(obj, list) and all(isinstance(x, str) for x in obj):
-            return obj
-        if isinstance(obj, dict) and ("numericas" in obj or "categoricas" in obj):
-            return supervised_features({"features": obj})
-        if isinstance(obj, dict):
-            for k in ("features", "feature_cols", "variaveis", "variáveis", "colunas", "columns"):
-                if k in obj:
-                    r = find(obj[k])
-                    if r:
-                        return r
-            for v in obj.values():
-                r = find(v)
-                if r:
-                    return r
-        return None
-
-    res = find(data)
-    if not res:
-        raise ValueError(f"Nenhuma lista de features encontrada em {p}")
-    return [canon(x) for x in res]
-
-
-def load_supervised_yaml(path: str | Path) -> dict:
-    import yaml
-
-    return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-
-
-def supervised_features(y: dict) -> list[str]:
-    """Features efetivas do configs/supervised.yaml: `final` se preenchida, senão numéricas + categóricas."""
-    f = y.get("features", {}) or {}
-    lst = f.get("final") or ((f.get("numericas") or []) + (f.get("categoricas") or []))
-    return [canon(x) for x in lst]
-
-
-def a3_config_audit(y: dict, cfg: dict, rep: Report, schema_cols=None) -> None:
-    """Confere o supervised.yaml contra as decisões do plano (A1–A3)."""
-    st = "A3-cfg"
-    tg = y.get("target", {}) or {}
-    pos = [float(x) for x in (tg.get("positivos") or [])]
-    if pos != [float(cfg["target_positive"])]:
-        rep.add(st, "Alvo: positivos", WARN, f"positivos={pos}; plano prevê óbito SRAG = [{cfg['target_positive']}]")
-    else:
-        rep.add(st, "Alvo: positivos", OK, "óbito SRAG (evolucao=2) como positivo")
-    if not any(k for k in tg if "outras" in k or "ausente" in k or "nulo" in k):
-        rep.add(st, "Alvo: evolucao=3 e ausente", WARN,
-                "o YAML só tem `descartar_ignorado` (evolucao==9). O C2 descarta 3/9/nulos em "
-                "`filtrar_rotulos_validos`; confirmar em src/models/pipeline.py que `criar_alvo_binario` "
-                "trata 3 e ausente como inválidos (nunca como cura)")
-    ct = canon(y.get("coluna_tempo", ""))
-    if ct != "DT_INTERNA":
-        rep.add(st, "Coluna temporal", WARN,
-                f"split usa '{y.get('coluna_tempo')}', mas o ponto de previsão do plano é DT_INTERNA")
-    else:
-        rep.add(st, "Coluna temporal", OK, "split por DT_INTERNA")
-    tp = y.get("temporal", {}) or {}
-    rep.add(st, "C2 x split por datas", WARN,
-            "o C2 enviado cria `TemporalSplit(df, coluna_tempo, frac_treino, frac_validacao)` e não lê "
-            "`temporal.modo`/`temporal.datas`: para holdout = 2025 o C precisa adaptar o split")
-    if tp.get("modo") != "datas":
-        rep.add(st, "Split temporal", WARN,
-                f"modo='{tp.get('modo')}' (fração). Plano: desenvolvimento {cfg['dev_years']} / holdout "
-                f"{cfg['holdout_years']} -> usar modo 'datas' (G2)")
-    else:
-        d = tp.get("datas", {}) or {}
-        try:
-            h0 = pd.Timestamp(d["holdout"]["start"])
-            v1 = pd.Timestamp(d["validacao"]["end"])
-            t0 = pd.Timestamp(d["treino"]["start"])
-            ok = v1 < h0 and h0.year == min(cfg["holdout_years"]) and t0.year == min(cfg["dev_years"])
-            rep.add(st, "Split temporal (datas)", OK if ok else FAIL,
-                    f"treino>={t0.date()}, validação<={v1.date()}, holdout>={h0.date()}"
-                    + ("" if ok else " — inconsistente com o plano"))
-        except Exception:
-            rep.add(st, "Split temporal (datas)", FAIL, "datas incompletas ou inválidas")
-    if schema_cols:
-        fisico = {str(c).lower() for c in schema_cols}
-        por_canon = {canon(c): str(c).lower() for c in schema_cols}
-        f = y.get("features", {}) or {}
-        pedidas = [str(x).lower() for x in ((f.get("final") or []) + (f.get("numericas") or []) + (f.get("categoricas") or []))]
-        if f.get("final"):
-            pedidas = [str(x).lower() for x in f["final"]]
-        deriv_pedidas = [n for n in pedidas if n in DERIVADAS]
-        if deriv_pedidas:
-            rep.add(st, "Features derivadas do YAML", OK,
-                    f"{', '.join(deriv_pedidas)} não existem no Parquet: a Pessoa A as cria no dataset analítico")
-        for rotulo, nomes, status in (("Features do YAML x Parquet", pedidas, FAIL),
-                                      ("`proibidas` do YAML x Parquet", [str(x).lower() for x in (f.get("proibidas") or [])], WARN)):
-            ausentes = [n for n in nomes if n not in fisico and n not in DERIVADAS]
-            if ausentes:
-                dicas = [f"{n}->{por_canon[canon(n)]}" for n in ausentes if canon(n) in por_canon]
-                rep.add(st, rotulo, status,
-                        f"não existem no Parquet: {', '.join(ausentes)}"
-                        + (f" (nome físico provável: {', '.join(dicas)})" if dicas else "")
-                        + (" — o C2 não conseguirá carregá-las" if status == FAIL else " — test_leakage não protege as colunas reais"))
-            else:
-                rep.add(st, rotulo, OK, "todos os nomes existem no Parquet")
-    feats = supervised_features(y)
-    forb = {canon(v) for v in cfg["forbidden_vars"]}
-    yml_forb = {canon(v) for v in (y.get("features", {}) or {}).get("proibidas", []) or []}
-    hit = sorted(set(feats) & (forb | yml_forb))
-    soft = [h for h in hit if h == "HOSPITAL"]
-    hard = [h for h in hit if h not in soft]
-    if hard:
-        rep.add(st, "Features x proibidas", FAIL, f"em X: {', '.join(hard)}")
-    if soft:
-        rep.add(st, "Feature constante", WARN, "internado/HOSPITAL é critério de inclusão (constante na coorte)")
-    if not hit:
-        rep.add(st, "Features x proibidas", OK, f"{len(feats)} features sem conflito")
-    faltam = sorted(forb - yml_forb - {"HOSPITAL"})
-    if faltam:
-        rep.add(st, "Lista `proibidas` do YAML", WARN,
-                f"{len(faltam)} do plano não protegidas pelo test_leakage: {', '.join(faltam[:12])}")
-    if "NU_IDADE_N" in feats and not any(f in feats for f in ("TP_IDADE", "IDADE_ANOS")):
-        rep.add(st, "Idade", WARN, "nu_idade_n sem tp_idade: unidade mistura dias/meses/anos; converter para anos")
-    cond = sorted(set(feats) & {canon(v) for v in cfg["conditional_vars"]})
-    if cond:
-        rep.add(st, "Features condicionais", WARN, f"confirmar condição de uso: {', '.join(cond)}")
-    pend = [k for k, v in (y.get("gates") or {}).items() if (v or {}).get("status") != "aprovado"]
-    if pend:
-        rep.add(st, "Gates", WARN, f"{len(pend)} pendentes: {', '.join(pend[:4])}... (A aprova G1/G2 com as regras A1–A3)")
-
-
-def a3_forbidden(features: list[str], label: str, cfg, rep: Report, must_exclude_target=True) -> None:
-    forb = {v.upper() for v in cfg["forbidden_vars"]}
-    hit = sorted(set(features) & forb)
-    hard = [h for h in hit if h != "HOSPITAL"]
-    if "HOSPITAL" in hit:
-        rep.add("A3", f"Feature constante ({label})", WARN, "HOSPITAL/internado é critério de inclusão (constante na coorte)")
-    if hard:
-        rep.add("A3", f"Variáveis proibidas ({label})", FAIL, f"presentes: {', '.join(hard)}")
-    elif not hit:
-        rep.add("A3", f"Variáveis proibidas ({label})", OK, f"{len(features)} variáveis, nenhuma proibida")
-    cond = sorted(set(features) & {v.upper() for v in cfg["conditional_vars"]})
-    if cond:
-        rep.add("A3", f"Variáveis condicionais ({label})", WARN, f"confirmar condição de uso: {', '.join(cond)}")
-    if label == "clustering" and must_exclude_target and cfg["cols"]["evolucao"] in features:
-        rep.add("A3", "Desfecho no clustering", FAIL, "EVOLUCAO não pode formar clusters")
-
-
-def a3_temporal_split(cohort: pd.DataFrame, cfg, rep: Report) -> None:
-    dev, hold = set(cfg["dev_years"]), set(cfg["holdout_years"])
-    problems = []
-    if dev & hold:
-        problems.append(f"anos sobrepostos: {sorted(dev & hold)}")
-    if hold and dev and min(hold) <= max(dev):
-        problems.append("holdout não é posterior ao desenvolvimento")
-    present = set(cohort["_ano"].unique())
-    if hold - present:
-        problems.append(f"holdout sem registros: {sorted(hold - present)}")
-    if dev - present:
-        problems.append(f"desenvolvimento sem registros: {sorted(dev - present)}")
-    split = np.where(cohort["_ano"].isin(dev), "desenvolvimento", np.where(cohort["_ano"].isin(hold), "holdout", "fora"))
-    tab = (cohort.assign(split=split).groupby(["split", "_ano"])["_alvo"]
-           .agg(n="size", n_obitos="sum", prevalencia_obito=lambda x: round(100 * x.mean(), 2)).reset_index())
-    rep.save("a3_split_temporal", tab)
-    if problems:
-        rep.add("A3", "Split temporal", FAIL, "; ".join(problems))
-        return
-    prev = tab.groupby("split")["n_obitos"].sum() / tab.groupby("split")["n"].sum() * 100
-    diff = abs(prev.get("holdout", np.nan) - prev.get("desenvolvimento", np.nan))
-    if diff > 10:
-        rep.add("A3", "Split temporal", WARN, f"prevalência difere {diff:.1f} p.p. entre dev e holdout (drift)")
-    else:
-        rep.add("A3", "Split temporal", OK, f"dev {sorted(dev)} < holdout {sorted(hold)}; Δ prevalência {diff:.1f} p.p.")
-
-
-def a3_leak_scan(cohort: pd.DataFrame, cfg, rep: Report) -> None:
-    """AUC univariada contra o alvo: valores ~1 sugerem vazamento (indicativo, não prova)."""
-    from sklearn.metrics import roc_auc_score
-
-    skip = set(cfg["cols"].values()) | {"_ano", "_alvo"}
-    data = cohort.sample(min(len(cohort), cfg["leak_sample"]), random_state=0)
-    y = data["_alvo"].to_numpy()
-    if len(np.unique(y)) < 2:
-        rep.add("A3", "Varredura de vazamento", WARN, "alvo com uma única classe; varredura não executada")
-        return
-    rows = []
-    for col in data.columns:
-        if col in skip:
-            continue
-        s = data[col]
-        try:
-            if pd.api.types.is_numeric_dtype(s):
-                x = s.fillna(s.median()).to_numpy(float)
-            else:
-                if s.nunique() > cfg["leak_max_categories"]:
-                    continue
-                x = data.groupby(s.astype("string").fillna("<NA>"))["_alvo"].transform("mean").to_numpy(float)
-            auc = roc_auc_score(y, x)
-        except Exception:
-            continue
-        rows.append(dict(coluna=col, auc_univariada=round(auc, 4), forca=round(abs(auc - 0.5) * 2, 4)))
-    res = pd.DataFrame(rows).sort_values("forca", ascending=False)
-    rep.save("a3_varredura_vazamento", res)
-    thr = cfg["leak_auc_threshold"]
-    sus = res[(res["auc_univariada"] >= thr) | (res["auc_univariada"] <= 1 - thr)]
-    if len(sus):
-        rep.add("A3", "Varredura de vazamento", WARN,
-                f"AUC univariada ≥ {thr}: {', '.join(sus['coluna'].head(8))} — investigar")
-    else:
-        rep.add("A3", "Varredura de vazamento", OK, f"nenhuma variável com AUC univariada ≥ {thr}")
-
-
-def a3_suspicious_metrics(results: pd.DataFrame, cfg, rep: Report) -> None:
-    res = results.copy()
-    res.columns = [c.lower() for c in res.columns]
-    thr = cfg["suspicious_metric_threshold"]
-    cols = [c for c in ("roc_auc", "pr_auc") if c in res.columns]
-    if not cols:
-        rep.add("A3", "Métricas suspeitas", WARN, "colunas roc_auc/pr_auc não encontradas")
-        return
-    flag = res[(res[cols] >= thr).any(axis=1)]
-    if len(flag):
-        rep.add("A3", "Métricas suspeitas", WARN, f"{len(flag)} linha(s) com métrica ≥ {thr}: possível vazamento")
-    else:
-        rep.add("A3", "Métricas suspeitas", OK, f"nenhuma métrica ≥ {thr}")
-
-
-def a3_audit_logs(logs_dir: str | Path, cfg, rep: Report) -> None:
-    d = Path(logs_dir)
-    files = [p for p in d.rglob("*") if p.is_file() and p.suffix in (".json", ".jsonl", ".log", ".txt")] if d.exists() else []
-    if not files:
-        rep.add("A3", "Auditoria de logs", WARN, f"nenhum log encontrado em {d}")
-        return
-    rows = []
-    for p in files:
-        txt = p.read_text(encoding="utf-8", errors="ignore")
-        row = {"arquivo": str(p)}
-        for k, rx in cfg["log_required_keys"].items():
-            row[k] = bool(re.search(rx, txt, flags=re.I))
-        rows.append(row)
-    res = pd.DataFrame(rows)
-    rep.save("a3_auditoria_logs", res)
-    keys = list(cfg["log_required_keys"])
-    incompletos = res[~res[keys].all(axis=1)]
-    if len(incompletos):
-        faltas = {k for k in keys if not res[k].all()}
-        rep.add("A3", "Auditoria de logs", WARN, f"{len(incompletos)}/{len(res)} logs incompletos (faltam: {', '.join(sorted(faltas))})")
-    else:
-        rep.add("A3", "Auditoria de logs", OK, f"{len(res)} logs com todos os campos mínimos")
-
-
-# =============================================================================
-# A4 — Candidatos e decisão
-# =============================================================================
-def a4_decision_table(results: pd.DataFrame, cfg, rep: Report) -> None:
-    """Espera colunas: modelo, [fold], roc_auc, pr_auc, brier (nomes case-insensitive)."""
-    res = results.copy()
-    res.columns = [c.lower() for c in res.columns]
-    alias = {"model": "modelo", "candidate": "modelo", "candidato": "modelo"}
-    res = res.rename(columns=alias)
-    if "modelo" not in res.columns:
-        rep.add("A4", "Tabela de decisão", FAIL, "coluna 'modelo' não encontrada")
-        return
-    metrics = [m for m in ("pr_auc", "roc_auc", "brier") if m in res.columns]
-    agg = res.groupby("modelo")[metrics].agg(["mean", "std"])
-    agg.columns = [f"{m}_{s}" for m, s in agg.columns]
-    agg = agg.reset_index()
-    lower = agg["modelo"].str.lower()
-    base = agg[lower.str.contains("baseline|dummy|prevalen")]
-    logi = agg[lower.str.contains("log")]
-    notes = []
-    for _, r in agg.iterrows():
-        n = []
-        if "pr_auc_mean" in agg.columns and len(logi) and "log" not in r["modelo"].lower() \
-                and not re.search("baseline|dummy|prevalen", r["modelo"].lower()):
-            gain = r["pr_auc_mean"] - logi["pr_auc_mean"].iloc[0]
-            if gain < cfg["decision_min_pr_auc_gain"]:
-                n.append(f"ganho de PR-AUC sobre a logística ({gain:+.3f}) não justifica complexidade")
-            if "brier_mean" in agg.columns and r["brier_mean"] > logi["brier_mean"].iloc[0]:
-                n.append("Brier pior que a logística")
-        if "pr_auc_mean" in agg.columns and len(base) and r["pr_auc_mean"] <= base["pr_auc_mean"].iloc[0] \
-                and not re.search("baseline|dummy|prevalen", r["modelo"].lower()):
-            n.append("não supera o baseline em PR-AUC")
-        if "pr_auc_std" in agg.columns and r["pr_auc_mean"] > 0 and r["pr_auc_std"] / r["pr_auc_mean"] > cfg["decision_max_cv_ratio"]:
-            n.append("alta variação entre folds")
-        notes.append("; ".join(n) if n else "sem alerta automático")
-    agg["alertas_automaticos"] = notes
-    agg["decisao"] = ""
-    agg["justificativa_descarte_ou_manutencao"] = ""
-    agg["pendencia_para_18_10"] = ""
-    rep.save("a4_tabela_decisao", agg.round(4))
-    n_alert = sum(n != "sem alerta automático" for n in notes)
-    rep.add("A4", "Tabela de decisão", WARN if n_alert else OK,
-            f"{len(agg)} candidatos; {n_alert} com alerta — preencher decisão/justificativa")
-
-
-# =============================================================================
-# Config, carga da base e registros (decisões / atas)
-# =============================================================================
-def load_config(path: str | Path | None = "configs/decisoes.yaml") -> dict:
-    """DEFAULT_CONFIG sobreposto pelo YAML de decisões (se existir)."""
-    cfg = json.loads(json.dumps(DEFAULT_CONFIG))
-    if path and Path(path).exists():
-        import yaml
-
-        for k, v in (yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}).items():
-            cfg[k] = {**cfg[k], **v} if isinstance(cfg.get(k), dict) and isinstance(v, dict) else v
-    return cfg
-
-
-def find_base(root: str | Path = ".") -> Path | None:
-    """Procura a base ORIGINAL (Parquet/CSV). Ignora data/analytical (saída da Pessoa A) e metadados."""
-    r = Path(root)
-    for pat in ("data/raw/**/*.parquet", "data/**/*.parquet", "data/raw/**/*.csv", "data/**/*.csv"):
-        hits = [h for h in sorted(r.glob(pat))
-                if "analytical" not in h.parts and "dataset_supervisionado" not in h.name]
-        if hits:
-            return hits[0]
-    return None
-
-
-def colunas_necessarias(schema_cols, cfg: dict, supervised_config=None, modo: str = "classificadas") -> list[str]:
-    """Colunas físicas do Parquet que as verificações realmente usam (a base tem ~194; carregar todas estoura a memória).
-
-    modo "minimas": essenciais (coorte/alvo/datas) + códigos esperados + o que o supervised.yaml pede
-    (features, alvo, tempo, grupos). modo "classificadas": soma as listas proibidas/condicionais/permitidas (A2).
-    """
-    need = {canon(x) for x in cfg["cols"].values()} | {canon(x) for x in cfg["expected_codes"]}
-    if modo != "minimas":
-        for k in ("forbidden_vars", "conditional_vars", "allowed_vars"):
-            need |= {canon(x) for x in cfg[k]}
-    if supervised_config and Path(supervised_config).exists():
-        y = load_supervised_yaml(supervised_config)
-        f = y.get("features", {}) or {}
-        need |= {canon(x) for x in supervised_features(y)}
-        need |= {canon(x) for x in (f.get("proibidas") or [])}
-        need |= {canon(x) for x in ((y.get("avaliacao") or {}).get("grupos") or [])}
-        need |= {canon((y.get("target") or {}).get("coluna", cfg["cols"]["evolucao"])), canon(y.get("coluna_tempo", ""))}
-    return [c for c in schema_cols if canon(c) in need]
-
-
-def carregar_base(path=None, demo: bool = False, sample: int = 0, colunas="classificadas",
-                  cfg: dict | None = None, supervised_config=None, compactar: bool = True) -> pd.DataFrame:
-    """Lê a base. path=None -> usa `src.utils.storage.get_parquet()` do projeto (ou procura em data/).
-
-    colunas: "minimas" (só o essencial + o que o supervised.yaml pede; A1/A3/A3b), "classificadas" (soma as listas de
-    variáveis; A2), "todas" (pesado) ou lista de nomes. O schema completo fica em df.attrs["schema_cols"].
-    compactar=True lê o Parquet via pyarrow com texto em `category` (e libera a tabela Arrow durante a conversão):
-    reduz muito o pico de memória (a base tem milhões de linhas).
-    """
-    if demo:
-        print("[demo] usando dados sintéticos")
-        df = make_demo()[0]
-        df.attrs["schema_cols"] = list(df.columns)
-        return df
-    p = Path(path) if path else None
-    if p is None:
-        try:
-            from src.utils import storage  # pipeline do projeto
-
-            p = Path(storage.get_parquet(force=False))
-        except Exception as e:  # noqa: BLE001
-            print(f"[storage] indisponível ({type(e).__name__}); procurando em data/ ...")
-            p = find_base()
-    if p is None or not p.exists():
-        raise FileNotFoundError(
-            f"Base não encontrada (procurei em '{Path.cwd() / 'data'}' por *.parquet e *.csv). "
-            "Informe DATA_PATH com o caminho do arquivo ou coloque-o em data/raw/.")
-    cfg = cfg or load_config()
-    modo_leitura = "padrão"
-    if p.suffix == ".parquet":
-        import pyarrow.parquet as pq
-
-        schema_cols = pq.ParquetFile(p).schema_arrow.names
-        if colunas == "todas":
-            cols = None
-        elif isinstance(colunas, (list, tuple)):
-            cols = [c for c in schema_cols if c.lower() in {str(x).lower() for x in colunas}]
-        else:
-            cols = colunas_necessarias(schema_cols, cfg, supervised_config, modo=str(colunas))
-        df = None
-        if compactar:
-            try:
-                tabela = pq.read_table(p, columns=cols)
-                df = tabela.to_pandas(self_destruct=True, strings_to_categorical=True, split_blocks=True)
-                del tabela
-                modo_leitura = "compacto (texto em category)"
-            except Exception as e:  # noqa: BLE001
-                print(f"[leitura compacta falhou: {type(e).__name__}: {str(e)[:80]}] usando leitura padrão")
-                df = None
-        if df is None:
-            df = pd.read_parquet(p, columns=cols)
-    else:
-        df = pd.read_csv(p, low_memory=False)
-        schema_cols = list(df.columns)
-    df.attrs["schema_cols"] = list(schema_cols)
-    print(f"[base] {p} -> {len(df):,} linhas x {df.shape[1]} colunas carregadas (de {len(schema_cols)} no arquivo) | leitura {modo_leitura}")
-    if sample and len(df) > sample:
-        df = df.sample(sample, random_state=0)
-        print(f"[amostra] {sample:,} linhas")
-    return df
-
-
-def uso_memoria_gb(df: pd.DataFrame) -> float:
-    return float(df.memory_usage(index=False, deep=True).sum() / 1e9)
-
-
-DECISION_COLS = ["id", "etapa", "tema", "decisao", "responsavel", "data", "status", "impacto", "evidencia"]
-
-
-def log_decision(out, id: str, tema: str, decisao: str, etapa: str = "", responsavel: str = "Pessoa A",
-                 status: str = "proposta", impacto: str = "", evidencia: str = "") -> pd.DataFrame:
-    """Insere/atualiza (por id) uma linha na tabela de decisões. status: proposta | aprovada | revisar."""
-    path = Path(out) / "tabela_decisoes.csv"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    row = dict(id=id, etapa=etapa, tema=tema, decisao=decisao, responsavel=responsavel,
-               data=pd.Timestamp.today().date().isoformat(), status=status, impacto=impacto, evidencia=evidencia)
-    t = pd.read_csv(path, dtype=str).fillna("") if path.exists() else pd.DataFrame(columns=DECISION_COLS)
-    t = pd.concat([t[t["id"] != id], pd.DataFrame([row])], ignore_index=True)[DECISION_COLS]
-    t.to_csv(path, index=False, encoding="utf-8-sig")
-    return t
-
-
-def write_ata(out, nome: str, data: str, decisoes=(), pendencias=(), riscos=(), shortlist=(),
-              descartes=(), rep: Report | None = None) -> Path:
-    """Gera a ata (Gates 2/3, 17/10...) em Markdown a partir de listas e dos alertas do relatório."""
-    def sec(titulo, itens):
-        return [f"## {titulo}", ""] + ([f"- {i}" for i in itens] if itens else ["- (nenhum registrado)"]) + [""]
-
-    lines = [f"# {nome}", "", f"**Data:** {data}", ""]
-    lines += sec("Decisões", decisoes) + sec("Candidatos na shortlist", shortlist) + sec("Descartes e justificativas", descartes)
-    lines += sec("Riscos", riscos) + sec("Pendências", pendencias)
-    if rep is not None:
-        alerts = [f for f in rep.findings if f[2] != OK]
-        lines += ["## Alertas das verificações automáticas", ""]
-        lines += [f"- [{f[2]}] {f[0]} / {f[1]}: {f[3]}" for f in alerts] or ["- nenhum"]
-    slug = re.sub(r"[^a-z0-9]+", "_", nome.lower()).strip("_")
-    path = Path(out) / (slug if slug.startswith("ata_") else f"ata_{slug}") 
-    path = path.with_suffix(".md")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines), encoding="utf-8")
-    return path
-
-
-# =============================================================================
-# Execução
-# =============================================================================
-def run(df: pd.DataFrame, args, cfg: dict) -> Report:
-    rep = Report(args.out)
-    df = prepare(df)
-    if args.sample and len(df) > args.sample:
-        df = df.sample(args.sample, random_state=0)
-        print(f"[amostra] usando {args.sample:,} linhas")
-    stage = args.stage
-    do = lambda s: stage in (s, "all")  # noqa: E731
-
-    a1_columns(df, cfg, rep)
-    if rep.has_failure:
-        rep.write_md()
-        return rep
-
-    cohort = None
-    if do("a1") or do("a3"):
-        if do("a1"):
-            a1_code_tables(df, cfg, rep)
-            a1_waterfall(df, cfg, rep)
-            a1_target(df, cfg, rep)
-        cohort = a1_cohort(df, cfg)
-    if do("a2"):
-        a2_missing(df, cfg, rep)
-        a2_dates(df, cfg, rep)
-        a2_duplicates(df, cfg, rep)
-        a2_maturity(df, cfg, rep)
-        a2_eligibility(df, cfg, rep)
-    if do("a3"):
-        if args.supervised_config:
-            y = load_supervised_yaml(args.supervised_config)
-            a3_config_audit(y, cfg, rep, df.attrs.get("schema_cols"))
-            if not args.features_supervised:
-                a3_forbidden(supervised_features(y), "supervisionado", cfg, rep)
-        if args.features_supervised:
-            a3_forbidden(load_feature_list(args.features_supervised), "supervisionado", cfg, rep)
-        if args.features_clustering:
-            a3_forbidden(load_feature_list(args.features_clustering), "clustering", cfg, rep)
-        if cohort is not None and len(cohort):
-            a3_temporal_split(cohort, cfg, rep)
-            a3_leak_scan(cohort, cfg, rep)
-        if args.logs_dir:
-            a3_audit_logs(args.logs_dir, cfg, rep)
-        if args.results:
-            a3_suspicious_metrics(pd.read_csv(args.results), cfg, rep)
-    if do("a4") and args.results:
-        a4_decision_table(pd.read_csv(args.results), cfg, rep)
-    elif stage == "a4":
-        rep.add("A4", "Tabela de decisão", FAIL, "informe --results com a tabela de experimentos")
-    path = rep.write_md()
-    print(f"\nRelatório: {path}")
-    return rep
-
-
-def make_demo(n: int = 30_000, seed: int = 0, inicio: str = "2022-01-01", anos: int = 4) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Dados sintéticos com defeitos plantados, para testar o script."""
-    rng = np.random.default_rng(seed)
-    interna = pd.Timestamp(inicio) + pd.to_timedelta(rng.integers(0, 365 * anos - 30, n), unit="D")
-    sint = interna - pd.to_timedelta(rng.integers(0, 10, n), unit="D")
-    df = pd.DataFrame({
-        "NU_NOTIFIC": rng.integers(10**8, 10**9, n).astype(str),
-        "DT_NOTIFIC": sint + pd.to_timedelta(rng.integers(0, 5, n), unit="D"),
-        "DT_SIN_PRI": sint,
-        "DT_INTERNA": interna,
-        "DT_NASC": sint - pd.to_timedelta(rng.integers(365, 365 * 90, n), unit="D"),
-        "NU_IDADE_N": rng.integers(1, 90, n),
-        "TP_IDADE": 3,
-        "HOSPITAL": rng.choice([1, 2, 9], n, p=[0.9, 0.08, 0.02]),
-        "CS_SEXO": rng.choice(["M", "F", "I"], n, p=[0.49, 0.5, 0.01]),
-        "FEBRE": rng.choice([1, 2, 9], n),
-        "DISPNEIA": rng.choice([1, 2, 9], n),
-        "SATURACAO": rng.choice([1, 2, 9, np.nan], n),
-    })
-    risk = (df["NU_IDADE_N"] / 90 + (df["DISPNEIA"] == 1) * 0.3 + rng.normal(0, 0.4, n))
-    obito = risk > 0.9
-    evo = np.where(obito, 2, 1)
-    evo = np.where(rng.random(n) < 0.03, 3, evo)
-    evo = np.where(rng.random(n) < 0.04, 9, evo)
-    df["EVOLUCAO"] = evo
-    df["DT_EVOLUCA"] = interna + pd.to_timedelta(rng.integers(2, 30, n), unit="D")
-    df["DT_ENCERRA"] = df["DT_EVOLUCA"] + pd.to_timedelta(rng.integers(0, 40, n), unit="D")
-    df["UTI"] = np.where(obito, rng.choice([1, 2], n, p=[0.8, 0.2]), rng.choice([1, 2], n, p=[0.3, 0.7]))
-    df["VAZ_DEMO"] = (obito).astype(int)  # vazamento plantado
-    # defeitos plantados
-    df.loc[:30, "DT_INTERNA"] = pd.NaT
-    df.loc[31:60, "DT_EVOLUCA"] = df.loc[31:60, "DT_INTERNA"] - pd.Timedelta(days=5)
-    df.loc[61:90, "EVOLUCAO"] = 7
-    df = pd.concat([df, df.iloc[200:230]], ignore_index=True)  # duplicatas exatas
-    # 2025 imaturo: evolução ainda aberta nos meses finais
-    late = df["DT_INTERNA"] >= pd.Timestamp("2025-09-01")
-    df.loc[late & (rng.random(len(df)) < 0.5), "EVOLUCAO"] = np.nan
-    res = pd.DataFrame({
-        "modelo": ["baseline"] * 3 + ["logistica"] * 3 + ["boosting"] * 3 + ["boosting_leak"] * 3,
-        "fold": [1, 2, 3] * 4,
-        "pr_auc": [0.15, 0.16, 0.15, 0.40, 0.42, 0.38, 0.405, 0.41, 0.39, 0.99, 0.99, 0.98],
-        "roc_auc": [0.5, 0.5, 0.5, 0.80, 0.81, 0.79, 0.805, 0.81, 0.80, 0.99, 0.99, 0.99],
-        "brier": [0.15, 0.15, 0.15, 0.10, 0.10, 0.11, 0.11, 0.10, 0.11, 0.01, 0.01, 0.01],
-    })
-    return df, res
-```
-
-## `src/utils/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-06 02:28 UTC`
-- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-
-```python
-
-```
-
-## `src/utils/config.py`
-
-- Git: `tracked` · status `clean`
-- Size: `8.0 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `83593c64261804f7b18aab33d121ef6e4d90c7a65aa612fb5649bf4889fed358`
-
-```python
-"""
-Configurações centralizadas do Projeto Integrador.
-
-Fonte única da verdade para diretórios, identificação da versão dos dados,
-seed de reprodutibilidade e acesso tipado ao ``configs/supervised.yaml``.
-
-Segredos e URLs sensíveis (``GITHUB_TOKEN``, ``SRAG_PARQUET_URL``) são lidos
-em tempo de execução via ``os.getenv``, nunca no import. O YAML aceita
-interpolação ``${VAR}``, resolvida no momento da leitura.
-
-Uso típico::
-
-    from src.utils import config as C
-
-    C.SEED
-    C.OUTPUTS_DIR
-    C.cfg("target", "coluna")
-    C.exigir_gate("G7_calibracao")
-"""
-
-from __future__ import annotations
-
-import hashlib
-import os
-import re
-from functools import lru_cache
-from pathlib import Path
-from typing import Any
-
-import yaml
-
-
-ROOT_DIR: Path = Path(__file__).resolve().parents[2]
-
-SEED         = 42
-RANDOM_STATE = SEED
-
-DATA_DIR       = ROOT_DIR / "data"
-RAW_DIR        = DATA_DIR / "raw"
-PROCESSED_DIR  = DATA_DIR / "processed"
-ANALYTICAL_DIR = DATA_DIR / "analytical"
-TREINO_DIR     = DATA_DIR / "treino"
-
-CONFIGS_DIR  = ROOT_DIR / "configs"
-MODELS_DIR   = ROOT_DIR / "models"
-OUTPUTS_DIR  = ROOT_DIR / "outputs"
-RUNS_DIR     = OUTPUTS_DIR / "runs"
-LOGS_DIR     = ROOT_DIR / "logs"
-REPORTS_DIR  = ROOT_DIR / "reports"
-FIGURES_DIR  = REPORTS_DIR / "figures"
-
-TABLES_DIR      = OUTPUTS_DIR / "tables"
-PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
-
-SUPERVISED_YAML = CONFIGS_DIR / "supervised.yaml"
-
-GITHUB_REPO  = "Ivan-S-Oliveira/Projeto_Integrador"
-DATA_VERSION = "dados-v2"
-PARQUET_NAME = "srag.parquet"
-
-GITHUB_RELEASE_URL = (
-    f"https://github.com/{GITHUB_REPO}/releases/download/{DATA_VERSION}/"
-)
-
-HTTP_TIMEOUT    = 180
-HTTP_TENTATIVAS = 3
-HTTP_BACKOFF    = 5
-
-CSV_SEP      = ","
-CSV_ENCODING = "utf-8-sig"
-COLS         = None
-
-PARQUET_COMPRESSION = "zstd"
-CSV_CHUNKSIZE       = 500_000
-
-
-class GatePendenteError(RuntimeError):
-    """Levantado quando se tenta usar um valor que depende de gate não aprovado."""
-
-
-def github_token() -> str | None:
-    """Token do GitHub (opcional) para releases/downloads autenticados."""
-    return os.getenv("GITHUB_TOKEN")
-
-
-def srag_parquet_url() -> str:
-    """URL do Parquet oficial processado.
-
-    Construída a partir de ``GITHUB_REPO`` / ``DATA_VERSION`` /
-    ``PARQUET_NAME``. Pode ser sobrescrita via ``SRAG_PARQUET_URL``.
-    """
-    url_padrao = (
-        f"https://github.com/{GITHUB_REPO}/releases/download/"
-        f"{DATA_VERSION}/{PARQUET_NAME}"
-    )
-    return os.getenv("SRAG_PARQUET_URL", url_padrao).strip() or url_padrao
-
-
-_ENV_PATTERN = re.compile(r"\$\{(\w+)\}")
-
-
-def _interpolar_env(texto: str) -> str:
-    """Substitui ``${VAR}`` pelo valor de ``os.getenv``; ausente vira ``""``."""
-    return _ENV_PATTERN.sub(lambda m: os.getenv(m.group(1), ""), texto)
-
-
-def _get_nested(mapping: Any, *chaves: str, default: Any = None) -> Any:
-    """Acesso a caminho de chaves num dict; devolve ``default`` se faltar."""
-    atual = mapping
-    for k in chaves:
-        if not isinstance(atual, dict) or k not in atual:
-            return default
-        atual = atual[k]
-    return atual
-
-
-@lru_cache(maxsize=1)
-def carregar_supervised() -> dict[str, Any]:
-    """Lê ``configs/supervised.yaml`` e devolve o dict parseado (cacheado).
-
-    Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError`` se o
-    YAML não existir e ``ValueError`` se a raiz não for mapping.
-    """
-    if not SUPERVISED_YAML.exists():
-        raise FileNotFoundError(
-            f"Configuração não encontrada: {SUPERVISED_YAML}\n"
-            f"Crie o arquivo em {CONFIGS_DIR}/supervised.yaml "
-            f"ou ajuste CONFIGS_DIR / SUPERVISED_YAML em config.py."
-        )
-
-    texto = _interpolar_env(SUPERVISED_YAML.read_text(encoding="utf-8"))
-    dados = yaml.safe_load(texto) or {}
-
-    if not isinstance(dados, dict):
-        raise ValueError(
-            f"{SUPERVISED_YAML} deve conter um mapeamento (dict) na raiz, "
-            f"mas veio {type(dados).__name__}."
-        )
-    return dados
-
-
-def supervised_yaml_sha256() -> str | None:
-    """SHA-256 do ``supervised.yaml``, ou ``None`` se o arquivo não existir."""
-    if not SUPERVISED_YAML.exists():
-        return None
-    h = hashlib.sha256()
-    with open(SUPERVISED_YAML, "rb") as f:
-        while chunk := f.read(1024 * 1024):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def cfg(*chaves: str, default: Any = None) -> Any:
-    """Acessa ``configs/supervised.yaml`` por caminho de chaves.
-
-    Exemplo::
-
-        cfg("target", "coluna")       # → "evolucao"
-        cfg("temporal", "fracao")     # → {"treino": 0.7, "validacao": 0.15}
-
-    Devolve ``default`` se qualquer chave do caminho não existir.
-    """
-    return _get_nested(carregar_supervised(), *chaves, default=default)
-
-
-def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any:
-    """Devolve ``valor`` se preenchido; levanta ``GatePendenteError`` se ``None`` ou ``"TBD"``.
-
-    Usado para valores do YAML que só podem ser preenchidos após gate aprovado.
-    """
-    if valor is None or valor == "TBD":
-        raise GatePendenteError(
-            f"Valor não definido em '{caminho}'. "
-            f"Aprove o gate '{gate}' em configs/supervised.yaml antes de usar."
-        )
-    return valor
-
-
-def gate_aprovado(nome_gate: str) -> bool:
-    """True se ``gates.<nome_gate>.status == 'aprovado'``."""
-    return _get_nested(carregar_supervised(), "gates", nome_gate, default={}).get("status") == "aprovado"
-
-
-def exigir_gate(nome_gate: str) -> None:
-    """Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado.
-
-    Use no início de etapas que dependem de decisão metodológica congelada
-    (ex.: holdout antes de G9).
-    """
-    if not gate_aprovado(nome_gate):
-        raise GatePendenteError(
-            f"Gate '{nome_gate}' está pendente. "
-            f"Aprove-o em configs/supervised.yaml (status: aprovado) "
-            f"antes de rodar esta etapa."
-        )
-
-
-def features_finais() -> list[str]:
-    """Lista final de features.
-
-    Usa ``features.final`` se preenchida; caso contrário, concatena
-    ``features.numericas`` + ``features.categoricas``.
-    """
-    f = cfg("features") or {}
-    return list(f["final"]) if f.get("final") else (
-        list(f.get("numericas", [])) + list(f.get("categoricas", []))
-    )
-
-
-def limiar_ativo() -> float:
-    """Limiar de decisão vigente.
-
-    Usa ``limiar.otimo`` se o gate ``G8_limiar`` estiver aprovado e o valor
-    preenchido; caso contrário, cai em ``limiar.default`` (0.5).
-    """
-    lim = cfg("limiar") or {}
-    if gate_aprovado("G8_limiar") and lim.get("otimo") is not None:
-        return float(lim["otimo"])
-    return float(lim.get("default", 0.5))
-
-
-def resumo() -> str:
-    """Resumo legível das configurações ativas — usado em bootstrap de notebooks."""
-    yaml_ok = "ok" if SUPERVISED_YAML.exists() else "AUSENTE"
-    linhas = [
-        ("ROOT_DIR",          ROOT_DIR),
-        ("DATA_DIR",          DATA_DIR),
-        ("RAW_DIR",           RAW_DIR),
-        ("PROCESSED_DIR",     PROCESSED_DIR),
-        ("ANALYTICAL_DIR",    ANALYTICAL_DIR),
-        ("TREINO_DIR",        TREINO_DIR),
-        ("OUTPUTS_DIR",       OUTPUTS_DIR),
-        ("RUNS_DIR",          RUNS_DIR),
-        ("LOGS_DIR",          LOGS_DIR),
-        ("CONFIGS_DIR",       CONFIGS_DIR),
-        ("SUPERVISED_YAML",   f"{SUPERVISED_YAML} ({yaml_ok})"),
-        ("PARQUET_NAME",      PARQUET_NAME),
-        ("DATA_VERSION",      DATA_VERSION),
-        ("GITHUB_REPO",       GITHUB_REPO),
-        ("HTTP_TIMEOUT",      HTTP_TIMEOUT),
-        ("HTTP_TENTATIVAS",   HTTP_TENTATIVAS),
-        ("SEED",              SEED),
-        ("GITHUB_TOKEN?",     bool(github_token())),
-        ("SRAG_PARQUET_URL",  srag_parquet_url()),
-        ("SUPERVISED_SHA256", supervised_yaml_sha256()),
-    ]
-    return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
-
-
-if __name__ == "__main__":
-    print(resumo())
-```
-
-## `src/utils/env.py`
-
-- Git: `tracked` · status `clean`
-- Size: `3.7 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `7dce7d27c80c42f4efe7f89128fafb3763fe78c8070593ad5c3d508284ce866b`
-
-```python
-"""
-Variáveis de ambiente e segredos do projeto.
-
-Fluxo: ``.env`` → ``os.environ`` → ``config.py`` → restante do projeto.
-
-O arquivo ``.env`` nunca é versionado (ver ``.gitignore``); use
-``.env.example`` como template. Diretórios são aliases de
-``src.utils.config``, fonte única da verdade.
-"""
-
-from __future__ import annotations
-
-import os
-from pathlib import Path
-
-from src.utils import config as C
-
-
-# Aliases públicos — conveniência para notebooks e testes.
-ROOT      = C.ROOT_DIR
-DATA      = C.DATA_DIR
-RAW       = C.RAW_DIR
-PROCESSED = C.PROCESSED_DIR
-TREINO    = C.TREINO_DIR
-FIGURES   = C.FIGURES_DIR
-
-# Diretórios criados por ``garantir_diretorios``. A ordem não importa —
-# ``mkdir(parents=True)`` cria a árvore conforme necessário.
-_DIRS_PADRAO = (
-    C.DATA_DIR, C.RAW_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR,
-    C.TREINO_DIR, C.CONFIGS_DIR, C.MODELS_DIR, C.OUTPUTS_DIR,
-    C.RUNS_DIR, C.LOGS_DIR, C.REPORTS_DIR, C.FIGURES_DIR,
-    C.TABLES_DIR, C.PREDICTIONS_DIR,
-)
-
-
-def garantir_diretorios() -> None:
-    """Cria todos os diretórios padrão do projeto, se ainda não existirem.
-
-    Percorre as constantes de ``config.py`` — nenhum caminho é redefinido aqui.
-    """
-    for p in _DIRS_PADRAO:
-        p.mkdir(parents=True, exist_ok=True)
-
-
-def carregar_dotenv(caminho: Path | None = None) -> bool:
-    """Carrega ``.env`` da raiz do projeto (ou de ``caminho``).
-
-    Retorna ``True`` se o arquivo foi encontrado e carregado, ``False`` caso
-    contrário (arquivo ausente ou ``python-dotenv`` indisponível). Não
-    sobrescreve variáveis já definidas no ambiente.
-    """
-    # Lazy: python-dotenv não é dependência obrigatória — permite importar
-    # este módulo em ambientes que não o têm instalado.
-    try:
-        from dotenv import load_dotenv
-    except ImportError:
-        return False
-
-    caminho = Path(caminho) if caminho else ROOT / ".env"
-    if not caminho.exists():
-        return False
-
-    load_dotenv(dotenv_path=caminho, override=False)
-    return True
-
-
-def detectar_ambiente() -> str:
-    """``"ci"`` se estiver em pipeline, senão ``"local"``."""
-    return "ci" if os.getenv("CI") or os.getenv("GITHUB_ACTIONS") else "local"
-
-
-ENV = detectar_ambiente()
-
-
-def get_env(nome: str, default: str | None = None) -> str | None:
-    """Lê uma variável de ambiente, com default opcional."""
-    return os.getenv(nome, default)
-
-
-def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
-    """Lê um segredo/variável sensível do ambiente.
-
-    Se ``obrigatorio=True`` (default) e a variável não existir, levanta
-    ``RuntimeError`` com instruções de configuração. Se ``False``, devolve
-    ``None``.
-    """
-    valor = os.getenv(nome)
-    if valor:
-        return valor
-    if not obrigatorio:
-        return None
-
-    raise RuntimeError(
-        f"Variável de ambiente '{nome}' não definida.\n"
-        f"Defina-a de uma destas formas:\n"
-        f"  1) Crie/edite o arquivo {ROOT / '.env'} (não versionado):\n"
-        f"         {nome}=seu_valor_aqui\n"
-        f"  2) Exporte no shell antes de rodar o projeto:\n"
-        f"         Linux/macOS:  export {nome}=seu_valor_aqui\n"
-        f"         PowerShell:   $env:{nome} = \"seu_valor_aqui\"\n"
-    )
-
-
-def resumo() -> str:
-    """Resumo legível do estado do ambiente."""
-    linhas = [
-        ("ROOT_DIR",         ROOT),
-        ("ENV",              ENV),
-        (".env encontrado?", (ROOT / ".env").exists()),
-        ("GITHUB_TOKEN?",    bool(os.getenv("GITHUB_TOKEN"))),
-    ]
-    return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
-
-
-if __name__ == "__main__":
-    carregar_dotenv()
-    garantir_diretorios()
-    print(resumo())
-```
-
-## `src/utils/hashing.py`
-
-- Git: `tracked` · status `clean`
-- Size: `891 B` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `aa96962d96190d264f1a459148e77cafb11afeb5598f0bc557f8422f797e044f`
-
-```python
-"""Hashing de arquivos para verificação de integridade.
-
-Centraliza ``sha256_file``, usado tanto pela resolução de coorte
-(``src/data/cohort_source.py``) quanto pela persistência do artefato
-supervisionado (``src/data/supervised_artifact.py``).
-"""
-
-from __future__ import annotations
-
-import hashlib
-from pathlib import Path
-
-__all__ = ["sha256_file"]
-
-_DEFAULT_CHUNK_SIZE = 1024 * 1024
-
-
-def sha256_file(path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE) -> str:
-    """Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória.
-
-    Lê em blocos de ``chunk_size`` bytes (default 1 MiB), permitindo
-    hashear arquivos grandes com memória constante.
-    """
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
-```
-
-## `src/utils/reproducibility.py`
-
-- Git: `tracked` · status `clean`
-- Size: `13.1 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `15c5a5196d30fb740693656dc5700fc2ef5b7ff4c1cb9c9e55dd3bf876094064`
-
-```python
-"""
-Registro de execuções para reprodutibilidade (critério C1).
-
-Cada execução grava em ``outputs/runs/<RUN_ID>/``:
-
-- ``metadata.json`` — tudo estruturado
-- ``summary.txt``   — versão legível
-
-Uso::
-
-    from src.utils.reproducibility import Run
-
-    with Run(modelo="logistic", parametros={"C": 1.0}) as r:
-        ... treino ...
-        r.metrica(auc=0.82, accuracy=0.78)
-        r.anotar("split aleatorio estratificado")
-"""
-
-from __future__ import annotations
-
-import json
-import os
-import platform
-import subprocess
-import sys
-import time
-import traceback
-from datetime import datetime, timezone
-from importlib import metadata
-from pathlib import Path
-from typing import Any, Literal
-
-from src.utils import config as C
-from src.utils.storage import read_sha256
-
-RUNS_DIR: Path = C.RUNS_DIR
-
-Status = Literal["success", "error"]
-_VERSOES_PACOTES = ("numpy", "pandas", "pyarrow", "scikit-learn", "scipy", "matplotlib", "seaborn")
-_DATASET_TAMANHOS = ("n_rows", "train_rows", "valid_rows", "test_rows")
-
-
-# ---------------------------------------------------------------------------
-# Helpers de metadados
-# ---------------------------------------------------------------------------
-
-def _agora() -> dict[str, str]:
-    utc = datetime.now(timezone.utc)
-    return {
-        "utc":   utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "local": utc.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z"),
-    }
-
-
-def _coletar_gates() -> dict[str, str]:
-    """Estado atual de cada gate em ``supervised.yaml`` como ``{nome: status}``."""
-    gates = C.cfg("gates") or {}
-    return {nome: (info or {}).get("status", "desconhecido") for nome, info in gates.items()}
-
-
-def _versoes() -> dict[str, str | None]:
-    """Versões das bibliotecas fundamentais e do Python."""
-    resultado: dict[str, str | None] = {"python": platform.python_version()}
-    for pacote in _VERSOES_PACOTES:
-        try:
-            resultado[pacote] = metadata.version(pacote)
-        except metadata.PackageNotFoundError:
-            resultado[pacote] = None
-    return resultado
-
-
-def _run_git(args: list[str]) -> str | None:
-    """Corre ``git args`` em ``C.ROOT_DIR``; devolve stdout ou ``None``."""
-    try:
-        proc = subprocess.run(
-            ["git", *args],
-            cwd=C.ROOT_DIR,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-        )
-    except OSError:
-        return None
-    return proc.stdout.strip() if proc.returncode == 0 else None
-
-
-def _git_info() -> dict[str, str | bool | None]:
-    """Commit, branch e estado da árvore de trabalho."""
-    status = _run_git(["status", "--porcelain"])
-    return {
-        "commit": _run_git(["rev-parse", "HEAD"]),
-        "branch": _run_git(["branch", "--show-current"]),
-        "dirty":  bool(status) if status is not None else None,
-    }
-
-
-def _env_info() -> dict[str, str | bool]:
-    """Informações não sensíveis do ambiente."""
-    return {
-        "python_executable": sys.executable,
-        "python_version":    platform.python_version(),
-        "platform":          platform.platform(),
-        "cwd":               str(Path.cwd()),
-        "ci":                bool(os.getenv("CI") or os.getenv("GITHUB_ACTIONS")),
-    }
-
-
-def _resolver_dataset_sha256(
-    dataset_sha256: str | None,
-    dataset_path: Path | None,
-) -> str | None:
-    """SHA-256 do dataset por prioridade: explícito > sidecar > ``None``.
-
-    O sidecar é ``<dataset_path>.sha256`` (ver ``src.utils.storage``).
-    """
-    if dataset_sha256:
-        return dataset_sha256
-    if dataset_path is None:
-        return None
-    try:
-        return read_sha256(Path(dataset_path))
-    except OSError:
-        return None
-
-
-# ---------------------------------------------------------------------------
-# summary.txt
-# ---------------------------------------------------------------------------
-
-def _bloco(titulo: str, itens: dict[str, Any], largura: int = 20) -> list[str]:
-    """``titulo`` seguido de ``k: v`` alinhados — devolve linhas já vazias acima."""
-    linhas = ["", f"{titulo}:"]
-    for k, v in itens.items():
-        if isinstance(v, float):
-            linhas.append(f"  {k:{largura}s} {v:.4f}")
-        else:
-            linhas.append(f"  {k:{largura}s} {v}")
-    return linhas
-
-
-def _resumo(meta: dict[str, Any]) -> str:
-    """``summary.txt`` curto e legível a partir do metadata."""
-    linhas = [
-        f"RUN_ID:   {meta['run_id']}",
-        f"MODELO:   {meta['modelo']}",
-        f"SEED:     {meta['seed']}",
-        f"STATUS:   {meta.get('status', 'desconhecido')}",
-    ]
-
-    if meta.get("data_version"):
-        linhas.append(f"DADOS:    {meta['data_version']}")
-    if meta.get("dataset_sha256"):
-        linhas.append(f"SHA-256:  {meta['dataset_sha256']}")
-
-    ds = meta.get("dataset") or {}
-    for k in _DATASET_TAMANHOS:
-        if k in ds:
-            linhas.append(f"{k.upper():10s} {ds[k]:,}")
-
-    if meta.get("duracao_s") is not None:
-        linhas.append(f"DURACAO:  {meta['duracao_s']:.1f}s")
-
-    if meta.get("erro"):
-        err = meta["erro"]
-        linhas += ["", "ERRO:",
-                   f"  tipo:     {err.get('tipo')}",
-                   f"  mensagem: {err.get('mensagem')}"]
-
-    if meta.get("metricas"):
-        linhas += _bloco("MÉTRICAS", meta["metricas"])
-
-    if meta.get("parametros"):
-        linhas += _bloco("PARÂMETROS", meta["parametros"])
-
-    if meta.get("gates"):
-        linhas += _bloco("GATES", meta["gates"], largura=34)
-
-    if meta.get("notas"):
-        linhas += ["", f"NOTAS: {meta['notas']}"]
-
-    linhas += ["", f"TIMESTAMP_UTC: {meta['timestamp']['utc']}"]
-    return "\n".join(linhas) + "\n"
-
-
-# ---------------------------------------------------------------------------
-# API pública: gerar, registar, listar, carregar
-# ---------------------------------------------------------------------------
-
-def gerar_run_id(
-    modelo: str | None = None,
-    base_dir: Path | None = None,
-) -> str:
-    """Identificador único ``YYYY-MM-DD_HHMMSS_micros[_modelo]``.
-
-    Com ``base_dir``, acrescenta sufixo ``_NN`` em caso de colisão no
-    sistema de arquivos.
-    """
-    candidato = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
-    if modelo:
-        candidato = f"{candidato}_{modelo}"
-    if base_dir is None:
-        return candidato
-
-    base = Path(base_dir)
-    run_id, contador = candidato, 1
-    while (base / run_id).exists():
-        run_id = f"{candidato}_{contador:02d}"
-        contador += 1
-    return run_id
-
-
-def registrar_execucao(
-    modelo: str,
-    *,
-    seed: int | None = None,
-    parametros: dict[str, Any] | None = None,
-    dataset: dict[str, Any] | None = None,
-    features: dict[str, Any] | None = None,
-    metricas: dict[str, Any] | None = None,
-    duracao_s: float | None = None,
-    notas: str | None = None,
-    run_id: str | None = None,
-    output_dir: Path | None = None,
-    status: Status = "success",
-    erro: dict[str, Any] | None = None,
-    dataset_sha256: str | None = None,
-) -> Path:
-    """Grava ``metadata.json`` + ``summary.txt`` em ``outputs/runs/<RUN_ID>/``.
-
-    ``status='error'`` deve vir acompanhado de ``erro`` (dict com ``tipo``,
-    ``mensagem`` e opcionalmente ``traceback``). ``dataset_sha256=None``
-    deixa a chave ausente do metadata.
-    """
-    base = Path(output_dir) if output_dir is not None else RUNS_DIR
-    if run_id is None:
-        run_id = gerar_run_id(modelo=modelo, base_dir=base)
-
-    pasta = base / run_id
-    pasta.mkdir(parents=True, exist_ok=False)
-
-    meta: dict[str, Any] = {
-        "run_id":         pasta.name,
-        "timestamp":      _agora(),
-        "modelo":         modelo,
-        "seed":           seed if seed is not None else C.SEED,
-        "status":         status,
-        "erro":           erro,
-        "duracao_s":      duracao_s,
-        "parametros":     parametros or {},
-        "dataset":        dataset or {},
-        "dataset_sha256": dataset_sha256,
-        "data_version":   C.DATA_VERSION,
-        "features":       features or {},
-        "metricas":       metricas or {},
-        "gates":          _coletar_gates(),
-        "notas":          notas,
-        "versoes":        _versoes(),
-        "git":            _git_info(),
-        "env":            _env_info(),
-        "supervised_yaml_sha256": C.supervised_yaml_sha256(),
-    }
-
-    (pasta / "metadata.json").write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
-    (pasta / "summary.txt").write_text(_resumo(meta), encoding="utf-8")
-
-    print(f"[reproducibility] run registrado em: {pasta}")
-    return pasta
-
-
-def listar_runs(output_dir: Path | None = None) -> list[dict[str, Any]]:
-    """Metadados das execuções registadas, ordenados por ``run_id`` decrescente.
-
-    Cada item inclui ``"pasta"`` com o caminho absoluto.
-    """
-    raiz = Path(output_dir) if output_dir is not None else RUNS_DIR
-    if not raiz.exists():
-        return []
-
-    runs: list[dict[str, Any]] = []
-    for pasta in raiz.iterdir():
-        if not pasta.is_dir():
-            continue
-        meta_path = pasta / "metadata.json"
-        if not meta_path.exists():
-            continue
-        try:
-            meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        meta["pasta"] = str(pasta)
-        runs.append(meta)
-
-    return sorted(runs, key=lambda m: str(m.get("run_id", "")), reverse=True)
-
-
-def carregar_run(
-    run: str | Path,
-    output_dir: Path | None = None,
-) -> dict[str, Any]:
-    """Carrega o ``metadata.json`` de uma execução."""
-    caminho = Path(run)
-    if not caminho.is_absolute():
-        caminho = (Path(output_dir) if output_dir else RUNS_DIR) / caminho
-
-    meta_path = caminho / "metadata.json"
-    if not meta_path.exists():
-        raise FileNotFoundError(f"metadata.json não encontrado em {caminho}")
-    return json.loads(meta_path.read_text(encoding="utf-8"))
-
-
-# ---------------------------------------------------------------------------
-# Context manager
-# ---------------------------------------------------------------------------
-
-class Run:
-    """Context manager de registo de execução.
-
-    O metadata é gravado sempre ao sair do bloco, inclusive em caso de
-    excepção (com ``status="error"`` e ``erro`` estruturado). A excepção
-    não é suprimida — ``__exit__`` devolve ``False``.
-    """
-
-    def __init__(
-        self,
-        modelo: str,
-        *,
-        seed: int | None = None,
-        parametros: dict[str, Any] | None = None,
-        dataset: dict[str, Any] | None = None,
-        features: dict[str, Any] | None = None,
-        notas: str | None = None,
-        output_dir: Path | None = None,
-        dataset_path: Path | None = None,
-        dataset_sha256: str | None = None,
-    ) -> None:
-        self.modelo         = modelo
-        self.seed           = seed
-        self.parametros     = dict(parametros or {})
-        self.dataset        = dict(dataset or {})
-        self.features       = dict(features or {})
-        self.notas          = notas
-        self.output_dir     = output_dir
-        self.dataset_path   = dataset_path
-        self.dataset_sha256 = dataset_sha256
-        self._metricas: dict[str, Any] = {}
-        self._inicio: float | None = None
-        self.pasta: Path | None = None
-
-    def metrica(self, **kwargs: Any) -> "Run":
-        self._metricas.update(kwargs)
-        return self
-
-    def anotar(self, texto: str) -> "Run":
-        self.notas = f"{self.notas}\n{texto}" if self.notas else texto
-        return self
-
-    def add_dataset(self, **kwargs: Any) -> "Run":
-        self.dataset.update(kwargs)
-        return self
-
-    def __enter__(self) -> "Run":
-        self._inicio = time.perf_counter()
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> bool:
-        duracao = time.perf_counter() - self._inicio if self._inicio else None
-
-        if exc_type is None:
-            status: Status = "success"
-            erro: dict[str, Any] | None = None
-        else:
-            status = "error"
-            erro = {
-                "tipo":      exc_type.__name__,
-                "modulo":    getattr(exc_type, "__module__", None),
-                "mensagem":  str(exc) if exc is not None else None,
-                "traceback": (
-                    "".join(traceback.format_exception(exc_type, exc, tb))
-                    if tb is not None else None
-                ),
-            }
-
-        self.pasta = registrar_execucao(
-            modelo=self.modelo,
-            seed=self.seed,
-            parametros=self.parametros,
-            dataset=self.dataset,
-            features=self.features,
-            metricas=self._metricas,
-            duracao_s=duracao,
-            notas=self.notas,
-            output_dir=self.output_dir,
-            status=status,
-            erro=erro,
-            dataset_sha256=_resolver_dataset_sha256(self.dataset_sha256, self.dataset_path),
-        )
-        return False
-```
-
-## `src/utils/storage.py`
-
-- Git: `tracked` · status `clean`
-- Size: `8.8 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `05b2bbcc41102e5028f55a7cc665d49df4b25eca58f050f77a004b74e20dc724`
-
-```python
-"""
-Contrato oficial de acesso ao Parquet de SRAG.
-
-Fluxo: ``GitHub Release → data/processed/<DATA_VERSION>/srag.parquet``.
-
-Tenta o download público via release; se falhar e houver ``GITHUB_TOKEN``,
-usa o asset privado via API do GitHub. Grava um sidecar ``<arquivo>.sha256``
-para reprodutibilidade. ``force=True`` rebaixa e descarta o sidecar antigo.
-"""
-
-from __future__ import annotations
-
-import hashlib
-import time
-from pathlib import Path
-from typing import Iterable
-
-import pandas as pd
-import requests
-
-from src.utils import config as C
-from src.utils.env import PROCESSED, get_secret
-
-
-PARQUET_MAGIC: bytes = b"PAR1"
-_CHUNK: int = 8 * 1024 * 1024
-
-
-def _token() -> str | None:
-    """``GITHUB_TOKEN`` se definido; caso contrário, ``None``."""
-    return get_secret("GITHUB_TOKEN", obrigatorio=False)
-
-
-def sha256_path(parquet_path: Path) -> Path:
-    """Caminho do sidecar ``.sha256`` associado a um Parquet."""
-    return parquet_path.with_suffix(parquet_path.suffix + ".sha256")
-
-
-def read_sha256(parquet_path: Path) -> str | None:
-    """Lê o SHA-256 do sidecar, ou ``None`` se ele não existir."""
-    sidecar = sha256_path(parquet_path)
-    if not sidecar.exists():
-        return None
-    linha = sidecar.read_text(encoding="utf-8").strip()
-    return linha.split()[0] if linha else None
-
-
-def _abrir_stream(
-    url: str,
-    *,
-    headers: dict[str, str] | None,
-    tentativas: int,
-    backoff: float,
-    timeout: float,
-) -> requests.Response:
-    """Abre um stream HTTP com retry linear.
-
-    4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
-    conexão são retentados até ``tentativas`` vezes, com espera
-    ``backoff * tentativa`` entre elas.
-    """
-    last_exc: Exception | None = None
-
-    for tentativa in range(1, tentativas + 1):
-        try:
-            r = requests.get(
-                url,
-                headers=headers or {},
-                stream=True,
-                timeout=timeout,
-                allow_redirects=True,
-            )
-        except requests.RequestException as exc:
-            last_exc = exc
-            if tentativa < tentativas:
-                time.sleep(backoff * tentativa)
-            continue
-
-        if r.ok:
-            return r
-
-        # 4xx permanente (excepto 429): falha sem retentar.
-        if 400 <= r.status_code < 500 and r.status_code != 429:
-            r.close()
-            r.raise_for_status()
-
-        status = r.status_code
-        r.close()
-        last_exc = requests.HTTPError(f"HTTP {status} em {url}")
-        if tentativa < tentativas:
-            time.sleep(backoff * tentativa)
-
-    if last_exc is None:
-        raise RuntimeError(f"Nenhuma tentativa executada para {url}")
-    raise last_exc
-
-
-def _baixar_para_part(
-    r: requests.Response,
-    tmp: Path,
-) -> tuple[str, bytes]:
-    """Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``.
-
-    Imprime progresso quando o servidor declara ``content-length``.
-    """
-    h = hashlib.sha256()
-    first = b""
-    total = int(r.headers.get("content-length", 0))
-    done = 0
-
-    with open(tmp, "wb") as f:
-        for chunk in r.iter_content(_CHUNK):
-            if not chunk:
-                continue
-            if not first:
-                first = chunk[:16]
-            f.write(chunk)
-            h.update(chunk)
-            done += len(chunk)
-            if total:
-                print(
-                    f"\rBaixando: {done / 1e6:.0f}/{total / 1e6:.0f} MB",
-                    end="",
-                    flush=True,
-                )
-
-    if total:
-        print()
-    return h.hexdigest(), first
-
-
-def download_file(
-    url: str,
-    dest: Path,
-    *,
-    headers: dict[str, str] | None = None,
-    expected_magic: bytes | None = None,
-    expected_sha256: str | None = None,
-) -> str:
-    """Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256.
-
-    Retorna o SHA-256 hex e grava o sidecar ``<dest>.sha256``. O download
-    passa por ``<dest>.part``, removido em qualquer falha. Levanta
-    ``RuntimeError`` se o content-type indicar HTML/JSON, se o magic não
-    bater ou se o SHA-256 divergir.
-    """
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    tmp.unlink(missing_ok=True)
-
-    r = _abrir_stream(
-        url,
-        headers=headers,
-        tentativas=C.HTTP_TENTATIVAS,
-        backoff=C.HTTP_BACKOFF,
-        timeout=C.HTTP_TIMEOUT,
-    )
-    try:
-        ctype = r.headers.get("content-type", "").lower()
-        if "text/html" in ctype or "application/json" in ctype:
-            preview = next(r.iter_content(256), b"")
-            raise RuntimeError(
-                f"Download retornou {ctype!r} em vez de binário. "
-                f"URL: {url}\nPrimeiros bytes: {preview[:80]!r}"
-            )
-        digest, first_bytes = _baixar_para_part(r, tmp)
-    except Exception:
-        tmp.unlink(missing_ok=True)
-        raise
-    finally:
-        r.close()
-
-    if expected_magic and not first_bytes.startswith(expected_magic):
-        tmp.unlink(missing_ok=True)
-        raise RuntimeError(
-            f"Arquivo baixado não é válido. Esperado começar com "
-            f"{expected_magic!r}, recebido {first_bytes!r}. URL: {url}"
-        )
-
-    if expected_sha256 and digest.lower() != expected_sha256.lower():
-        tmp.unlink(missing_ok=True)
-        raise RuntimeError(
-            f"SHA-256 divergente para {url}.\n"
-            f"  esperado: {expected_sha256}\n"
-            f"  obtido:   {digest}"
-        )
-
-    tmp.replace(dest)
-    sha256_path(dest).write_text(f"{digest}  {dest.name}\n", encoding="utf-8")
-    return digest
-
-
-def _private_asset_url(token: str) -> str:
-    """URL do asset Parquet via API do GitHub (repositório privado)."""
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-    }
-    url = (
-        f"https://api.github.com/repos/{C.GITHUB_REPO}/releases/tags/"
-        f"{C.DATA_VERSION}"
-    )
-    r = requests.get(url, headers=headers, timeout=C.HTTP_TIMEOUT)
-    r.raise_for_status()
-
-    assets = r.json().get("assets", [])
-    asset = next((a for a in assets if a["name"] == C.PARQUET_NAME), None)
-    if asset is None:
-        nomes = [a["name"] for a in assets]
-        raise RuntimeError(
-            f"Asset {C.PARQUET_NAME!r} não encontrado na release "
-            f"{C.DATA_VERSION!r}. Disponíveis: {nomes}"
-        )
-    return asset["url"]
-
-
-def get_parquet(
-    force: bool = False,
-    *,
-    expected_sha256: str | None = None,
-) -> Path:
-    """Devolve o caminho local do Parquet de SRAG, baixando se necessário.
-
-    Ordem: release pública; se falhar e ``GITHUB_TOKEN`` estiver definido,
-    asset privado via API. ``force=True`` rebaixa mesmo que o arquivo
-    exista e descarta o sidecar antigo. ``expected_sha256`` valida o hash
-    do arquivo baixado.
-
-    Efeito colateral: Parquet gravado em
-    ``data/processed/<DATA_VERSION>/<PARQUET_NAME>``, sidecar ``.sha256``
-    ao lado, e SHA-256 impresso no stdout.
-    """
-    folder = PROCESSED / C.DATA_VERSION
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / C.PARQUET_NAME
-
-    if path.exists() and not force:
-        return path
-
-    if force and path.exists():
-        path.unlink()
-        sha256_path(path).unlink(missing_ok=True)
-
-    public_url = (
-        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
-        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
-    )
-
-    try:
-        digest = download_file(
-            public_url,
-            path,
-            expected_magic=PARQUET_MAGIC,
-            expected_sha256=expected_sha256,
-        )
-    except (requests.HTTPError, RuntimeError):
-        token = _token()
-        if not token:
-            raise RuntimeError(
-                "Download falhou. Repositório privado ou asset inválido? "
-                "Cadastre o segredo GITHUB_TOKEN."
-            )
-        digest = download_file(
-            _private_asset_url(token),
-            path,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/octet-stream",
-            },
-            expected_magic=PARQUET_MAGIC,
-            expected_sha256=expected_sha256,
-        )
-
-    print(f"[storage] SHA-256: {digest}")
-    return path
-
-
-def read_srag(
-    columns: Iterable[str] | None = None,
-    filters: list[tuple] | None = None,
-) -> pd.DataFrame:
-    """Lê o Parquet de SRAG como DataFrame.
-
-    ``columns`` restringe o subconjunto carregado (pushdown do Parquet);
-    ``filters`` segue o formato de ``pd.read_parquet(filters=...)``.
-    """
-    return pd.read_parquet(
-        get_parquet(),
-        columns=list(columns) if columns is not None else None,
-        filters=filters,
-    )
-```
-
-## `tests/conftest.py`
-
-- Git: `tracked` · status `clean`
-- Size: `639 B` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `d09e0a36c305a02829b974b59774ccf94a97163357a9f419d17ec98e22a5d549`
-
-```python
-"""Fixtures partilhadas entre testes."""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-import pytest
-
-from src.utils import config as C
-
-
-@pytest.fixture(scope="session")
-def parquet_disponivel() -> Path | None:
-    """Parquet processado, ou ``None`` se ainda não foi gerado.
-
-    Fixture de sessão — o path é calculado uma vez por execução. Testes
-    que dependem dela devem fazer ``pytest.skip()`` quando o retorno é
-    ``None`` (o Parquet não vem versionado no Git).
-    """
-    caminho = C.PROCESSED_DIR / C.DATA_VERSION / C.PARQUET_NAME
-    return caminho if caminho.is_file() else None
-```
-
-## `tests/test_calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `3.5 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `993b7617cdacd34f6659bdf2b40134f6a21a79b3af9fc7c9d12c44a642bfeca5`
-
-```python
-"""Testes de calibração e escolha de limiar."""
-
-from __future__ import annotations
-
-import numpy as np
-import pandas as pd
-import pytest
-from sklearn.linear_model import LogisticRegression
-
-from src.models.calibration import calibrar, escolher_limiar
-
-
-@pytest.fixture
-def dados_limiar() -> tuple[np.ndarray, np.ndarray]:
-    """10 amostras balanceadas — y_true binário, y_prob em [0, 1]."""
-    y = np.array([0, 0, 1, 1, 1, 0, 1, 0, 1, 1])
-    p = np.array([0.1, 0.2, 0.8, 0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.75])
-    return y, p
-
-
-@pytest.fixture
-def modelo_ajustado() -> tuple[LogisticRegression, pd.DataFrame, pd.Series]:
-    """``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal.
-
-    Fixture separada (não por teste) para que múltiplos testes de calibração
-    reutilizem o mesmo modelo — o objecto é imutável após ``fit``.
-    """
-    pytest.importorskip("sklearn.frozen")
-    rng = np.random.RandomState(0)
-    X = pd.DataFrame({"a": rng.randn(200)})
-    y = pd.Series((X["a"] + rng.randn(200) * 0.1 > 0).astype(int))
-    return LogisticRegression().fit(X, y), X, y
-
-
-# ---------------------------------------------------------------------------
-# escolher_limiar
-# ---------------------------------------------------------------------------
-
-def test_escolher_limiar_retorna_dict(dados_limiar):
-    y, p = dados_limiar
-    r = escolher_limiar(y, p, metrica="f1")
-    assert {"limiar", "valor", "metrica", "auc", "brier", "tabela"} <= set(r)
-    assert r["metrica"] == "f1"
-    assert 0 < r["limiar"] < 1
-
-
-def test_escolher_limiar_metrica_invalida(dados_limiar):
-    y, p = dados_limiar
-    # Metrica não existe no Literal — passagem intencional de valor inválido.
-    with pytest.raises(ValueError, match="metrica inválida"):
-        escolher_limiar(y, p, metrica="nao_existe")  # type: ignore[arg-type]
-
-
-def test_escolher_limiar_min_precision_respeitado():
-    y = np.array([0, 0, 1, 1])
-    p = np.array([0.1, 0.2, 0.8, 0.9])
-    r = escolher_limiar(y, p, metrica="recall", min_precision=0.9)
-    linha = r["tabela"][r["tabela"]["limiar"] == r["limiar"]]
-    assert linha["precision"].iloc[0] >= 0.9
-
-
-def test_escolher_limiar_min_precision_impossivel():
-    y = np.array([1, 0, 0, 0])
-    p = np.array([0.1, 0.9, 0.8, 0.85])
-    with pytest.raises(ValueError, match="precision"):
-        escolher_limiar(y, p, min_precision=0.5)
-
-
-# ---------------------------------------------------------------------------
-# calibrar
-# ---------------------------------------------------------------------------
-
-def test_calibrar_metodo_invalido(modelo_ajustado):
-    modelo, X, y = modelo_ajustado
-    with pytest.raises(ValueError, match="method inválido"):
-        calibrar(modelo, X, y, method="nao_existe")  # type: ignore[arg-type]
-
-
-def test_calibrar_sigmoid_preserva_shape(modelo_ajustado):
-    modelo, X, y = modelo_ajustado
-    cal = calibrar(modelo, X, y, method="sigmoid")
-    proba = cal.predict_proba(X)
-    assert proba.shape == (len(X), 2)
-    assert np.allclose(proba.sum(axis=1), 1.0)
-    assert np.all((proba >= 0) & (proba <= 1))
-
-
-def test_calibrar_isotonic_preserva_shape():
-    pytest.importorskip("sklearn.frozen")
-    rng = np.random.RandomState(1)
-    X = pd.DataFrame({"a": rng.randn(500)})
-    y = pd.Series((X["a"] > 0).astype(int))
-    modelo = LogisticRegression().fit(X, y)
-
-    cal = calibrar(modelo, X, y, method="isotonic")
-    assert cal.predict_proba(X).shape == (len(X), 2)
-```
-
-## `tests/test_cohort_source.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.1 KB` · modified `2026-10-16 01:28 UTC`
-- SHA-256: `81aae255c95584ea1c6178160a6e4b8a19fd4d8833ff17fa29bc4ec9b22c67e4`
-
-```python
-"""Testes do resolvedor de coorte (provisória, final, auto)."""
-
-from pathlib import Path
-
-import pandas as pd
-import pytest
-
-from src.data.cohort_source import cohort_candidates, load_cohort, resolve_cohort_path
-
-
-@pytest.fixture(autouse=True)
-def _sem_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Limpa ``SRAG_COHORT_KIND`` do ambiente antes de cada teste.
-
-    Sem isto, um ``SRAG_COHORT_KIND`` definido no shell do runner
-    tornaria os testes dependentes do estado local.
-    """
-    monkeypatch.delenv("SRAG_COHORT_KIND", raising=False)
-
-
-def _write(path: Path, value: int) -> None:
-    """Grava um Parquet 1×1 com uma única coluna ``value``."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame({"value": [value]}).to_parquet(path, index=False)
-
-
-def test_padrao_permanece_provisorio(tmp_path: Path) -> None:
-    paths = cohort_candidates(tmp_path)
-    _write(paths["provisional"][1], 1)   # coorte_provisoria_b.parquet
-    _write(paths["final"][0], 2)         # coorte_final.parquet (existe, mas não é o default)
-
-    kind, path = resolve_cohort_path(tmp_path)
-
-    assert kind == "provisional"
-    assert path.name == "coorte_provisoria_b.parquet"
-
-
-def test_final_exige_escolha_explicita(tmp_path: Path) -> None:
-    path = cohort_candidates(tmp_path)["final"][0]
-    _write(path, 2)
-
-    frame, source = load_cohort(tmp_path, kind="final")
-
-    assert frame["value"].tolist() == [2]
-    assert source.kind == "final"
-    assert source.rows == 1
-    assert len(source.sha256) == 64
-
-
-def test_auto_prefere_final(tmp_path: Path) -> None:
-    paths = cohort_candidates(tmp_path)
-    _write(paths["provisional"][0], 1)
-    _write(paths["final"][0], 2)
-
-    kind, path = resolve_cohort_path(tmp_path, kind="auto")
-
-    assert kind == "final"
-    assert path.name == "coorte_final.parquet"
-
-
-def test_tipo_invalido_falha(tmp_path: Path) -> None:
-    # Valor viola intencionalmente o Literal CohortKind.
-    with pytest.raises(ValueError, match="provisional, final ou auto"):
-        resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
 ```
 

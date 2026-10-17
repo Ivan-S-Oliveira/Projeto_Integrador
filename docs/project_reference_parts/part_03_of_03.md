@@ -1,4 +1,3103 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 3/3 -->
+## `src/protocolo/verificacoes.py`
+
+- Git: `tracked` · status `clean`
+- Size: `89.8 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `2bf4f22f18037a036d9db390362ee569764e67732feb4adf65d5e3fc51f957fd`
+
+```python
+"""
+Verificações da Pessoa A (A1–A4) — Projeto Integrador SRAG
+==========================================================
+
+Lógica reutilizável usada pelos notebooks `notebooks/A/A1..A4`. Os notebooks só
+executam, exibem e documentam; as regras ficam aqui e em `configs/decisoes.yaml`.
+
+  A1  códigos, protocolo e coorte      a1_columns, a1_code_tables, a1_waterfall, a1_target
+  A2  qualidade, datas, elegibilidade  a2_missing, a2_dates, a2_duplicates, a2_maturity, a2_eligibility
+  A3  desenho experimental e pilotos   a3_config_audit, a3_forbidden, a3_temporal_split,
+                                       a3_leak_scan, a3_suspicious_metrics, a3_audit_logs
+  A4  candidatos e decisão             a4_decision_table
+  Registro                             log_decision (tabela de decisões), write_ata (atas de gate)
+
+As listas de variáveis e ações sugeridas são PROPOSTA INICIAL: confirmar no dicionário
+oficial do SIVEP-Gripe e registrar a decisão com `log_decision`.
+"""
+from __future__ import annotations
+
+MODULE_VERSION = "0.8"  # incrementar quando a assinatura das funções mudar (os notebooks conferem)
+
+import json
+import re
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+# =============================================================================
+# CONFIGURAÇÃO PADRÃO (a fonte de verdade é configs/decisoes.yaml; ver load_config)
+# =============================================================================
+DEFAULT_CONFIG: dict = {
+    "cols": {
+        "hospital": "HOSPITAL",
+        "dt_interna": "DT_INTERNA",
+        "evolucao": "EVOLUCAO",
+        "tp_idade": "TP_IDADE",
+        "nu_idade": "NU_IDADE_N",
+        "dt_nasc": "DT_NASC",
+        "dt_sin_pri": "DT_SIN_PRI",
+        "dt_notific": "DT_NOTIFIC",
+        "dt_evoluca": "DT_EVOLUCA",
+        "dt_encerra": "DT_ENCERRA",
+        "nu_notific": "NU_NOTIFIC",
+    },
+    # Períodos (ano de DT_INTERNA)
+    "dev_years": [2022, 2023, 2024],
+    "holdout_years": [2025],
+    "min_date": "2009-01-01",  # início do SIVEP-Gripe
+    # Códigos esperados por campo (strings). Estenda conforme o dicionário.
+    "expected_codes": {
+        "HOSPITAL": ["1", "2", "9"],
+        "EVOLUCAO": ["1", "2", "3", "9"],
+        "TP_IDADE": ["1", "2", "3"],
+        "UTI": ["1", "2", "9"],
+        "FEBRE": ["1", "2", "9"],
+        "TOSSE": ["1", "2", "9"],
+        "DISPNEIA": ["1", "2", "9"],
+        "SATURACAO": ["1", "2", "9"],
+    },
+    # Alvo: 1 = óbito (EVOLUCAO=2); 0 = cura (EVOLUCAO=1).
+    # EVOLUCAO=3 (óbito por outras causas) fica como categoria separada;
+    # 9/ausente NUNCA vira cura -> NA e sai da coorte.
+    "target_positive": "2",
+    "target_negative": "1",
+    "target_separate": ["3"],
+    "closed_codes": ["1", "2", "3"],
+    # Se True, o waterfall exclui registros com inconsistência de datas "excluir"
+    "drop_date_inconsistencies": False,
+    # Maturidade de EVOLUCAO: mínimo de % encerrados por mês de internação
+    "maturity_min_closed_pct": 90.0,
+    # Datas: regra, descrição, ação sugerida
+    # (excluir | transformar em ausente | manter com flag | apenas documentar)
+    "date_rules": [
+        ["dt_nasc", "dt_sin_pri", "Nascimento posterior ao início dos sintomas", "excluir"],
+        ["dt_sin_pri", "dt_notific", "Início dos sintomas posterior à notificação", "manter com flag"],
+        ["dt_sin_pri", "dt_interna", "Início dos sintomas posterior à internação", "manter com flag"],
+        ["dt_interna", "dt_evoluca", "Evolução anterior à internação", "excluir"],
+        ["dt_evoluca", "dt_encerra", "Encerramento anterior à evolução", "manter com flag"],
+    ],
+    "max_symptom_to_admission_days": 30,
+    "max_age_years": 120,
+    # Classificação de variáveis (proposta inicial -> confirmar no dicionário)
+    "forbidden_vars": [
+        "EVOLUCAO", "DT_EVOLUCA", "DT_ENCERRA", "CLASSI_FIN", "CLASSI_OUT", "CRITERIO",
+        "UTI", "DT_ENTUTI", "DT_SAIDUTI", "SUPORT_VEN", "ANTIVIRAL", "DT_ANTIVIR",
+        "DT_COLETA", "TP_AMOSTRA", "PCR_RESUL", "DT_PCR", "RES_AN", "DT_RES_AN",
+        "RES_IGG", "RES_IGM", "RES_IGA", "DT_RES", "POS_PCRFLU", "POS_PCROUT",
+        "HOSPITAL",  # critério de inclusão (constante na coorte), não feature
+        "EVOLUCAO_COVID19", "SOROLOGIA", "PCR",
+        "UTILIZOUVNI",  # suporte ventilatório: tratamento durante a internação (confirmar)
+    ],
+    "conditional_vars": [
+        "SATURACAO", "VACINA", "VACINA_COV", "DOSE_1_COV", "DOSE_2_COV", "DOSE_REF",
+        "SG_UF", "SG_UF_NOT", "CO_MUN_RES", "ID_MN_RESI", "CS_ZONA", "SURTO_SG",
+    ],
+    "allowed_vars": [
+        "CS_SEXO", "NU_IDADE_N", "TP_IDADE", "CS_RACA", "CS_GESTANT", "FEBRE", "TOSSE",
+        "GARGANTA", "DISPNEIA", "DESC_RESP", "DIARREIA", "VOMITO", "DOR_ABD", "FADIGA",
+        "PERD_OLFT", "PERD_PALA", "CARDIOPATI", "HEMATOLOGI", "SIND_DOWN", "HEPATICA",
+        "ASMA", "DIABETES", "NEUROLOGIC", "PNEUMOPATI", "IMUNODEPRE", "RENAL", "OBESIDADE",
+        "DT_SIN_PRI", "DT_INTERNA", "DT_NOTIFIC", "SEM_PRI",
+    ],
+    # Varredura de vazamento univariado
+    "leak_auc_threshold": 0.90,
+    "leak_max_categories": 50,
+    "leak_sample": 200_000,
+    "suspicious_metric_threshold": 0.95,
+    # Logs: chaves mínimas esperadas (regex, case-insensitive)
+    "log_required_keys": {
+        "timestamp": r"timestamp|data_hora|datetime",
+        "versão": r"vers[aã]o|version",
+        "seed": r"seed|semente",
+        "config": r"config",
+        "variáveis": r"features|vari[aá]veis|columns",
+        "folds": r"fold",
+        "parâmetros": r"params|par[aâ]metros|hiperpar",
+        "artefatos": r"artefato|artifact|output",
+    },
+    # A4
+    "decision_min_pr_auc_gain": 0.01,
+    "decision_max_cv_ratio": 0.10,
+    "exclusion_sample_rows": 50,
+    # População analítica entregue ao C (C2 espera exatamente este arquivo)
+    "dataset_analitico": {"path": "data/analytical/dataset_supervisionado.parquet"},
+    # Experimentos de split (A3b): aleatório 70-15-15 em cenários de período (anos de DT_INTERNA)
+    "experimentos_split": {
+        "seed": 42,
+        "fracoes": {"treino": 0.70, "validacao": 0.15, "holdout": 0.15},
+        "estratificar_por_alvo": True,
+        "bench_max_linhas": 200000,
+        "cenarios": {
+            "todos_2019_2025": {"anos": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
+                                "descricao": "Base completa 2019-2025"},
+            "sem_2020_2021": {"anos": [2019, 2022, 2023, 2024, 2025],
+                              "descricao": "Remove 2020 e 2021 (anos de pandemia)"},
+        },
+    },
+    # Features derivadas criadas na exportação (só com informação disponível na admissão)
+    "derivadas": {
+        "intervalo_max_dias": 30,          # sintomas -> internação acima disso (ou < 0, ou ausente) = inválido
+        "periodo_semanas": 52.1775,        # sazonalidade: sin/cos(2*pi*semana_ISO_da_internação/período)
+        "faixas_etarias": {
+            "bins": [0, 1, 5, 12, 18, 30, 40, 50, 60, 70, 80, 200],
+            "labels": ["<1", "1-4", "5-11", "12-17", "18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"],
+        },
+    },
+}
+
+OK, WARN, FAIL = "OK", "ATENÇÃO", "FALHA"
+
+# Nomes físicos observados na EDA 01 (Parquet dados-v1, 194 colunas) usados para classificar variáveis.
+_EDA_TRATAMENTO = ["ANTIVIRAL", "TP_ANTIVIR", "DT_ANTIVIR", "TRAT_COV", "TIPO_TRAT", "DT_TRT_COV", "OUT_ANTIV", "OUT_TRAT"]
+_EDA_DESFECHO = ["EVOLUCAO", "DT_EVOLUCA", "DT_ENCERRA", "DT_DIGITA"]
+_EDA_GEOGRAFIA = ["SG_UF_NOT", "CO_REGIONA", "CO_MUN_NOT", "CO_PAIS", "SG_UF", "CO_RG_RESI", "CO_MUN_RES",
+                  "SG_UF_INTE", "CO_RG_INTE", "CO_MU_INTE"]
+_EDA_VACINACAO = ["VACINA", "DT_UT_DOSE", "MAE_VAC", "DT_VAC_MAE", "M_AMAMENTA", "DT_DOSEUNI", "DT_1_DOSE",
+                  "DT_2_DOSE", "VACINA_COV", "DOSE_1_COV", "DOSE_2_COV", "DOSE_REF", "DOSE_2REF", "DOSE_ADIC", "DOS_RE_BI"]
+_EDA_SOCIAL_TEXTO = ["PAC_COCBO", "PAC_DSCBO", "POV_CT", "TP_POV_CT", "ESTRANG",
+                     "OUTRO_SIN", "OUTRO_DES", "OBES_IMC", "OUT_MORBI", "MORB_DESC"]
+_EDA_CANDIDATAS_EXTRA = ["CS_ETINIA", "CS_ESCOL_N", "AVE_SUINO", "OUT_ANIM", "PUERPERA", "TABAG"]
+
+# Nomes alternativos (base da API / supervised.yaml) -> nome canônico SIVEP usado aqui.
+# CONFIRMAR no dicionário da base: p.ex. 'internado' é assumido equivalente a HOSPITAL.
+ALIASES = {
+    "HOSPITAL": ["INTERNADO"],
+    "DT_INTERNA": ["DT_INTERNACAO"],
+    "DT_EVOLUCA": ["DT_EVOLUCAO"],
+    "DT_ENCERRA": ["DT_ENCERRAMENTO"],
+    "CLASSI_FIN": ["CLASSIFICACAO_FINAL"],
+    "CRITERIO": ["CRITERIO_CONFIRMACAO"],
+}
+_ALT2CANON = {alt: can for can, alts in ALIASES.items() for alt in alts}
+
+
+def _merge_lists() -> None:
+    """Acrescenta a DEFAULT_CONFIG os grupos da EDA (sem duplicar nem conflitar entre classes)."""
+    f, c, a = (DEFAULT_CONFIG[k] for k in ("forbidden_vars", "conditional_vars", "allowed_vars"))
+    f += [x for x in _EDA_TRATAMENTO + _EDA_DESFECHO if x not in f]
+    c += [x for x in _EDA_GEOGRAFIA + _EDA_VACINACAO + _EDA_SOCIAL_TEXTO if x not in c and x not in f]
+    a += [x for x in _EDA_CANDIDATAS_EXTRA if x not in a and x not in f and x not in c]
+
+
+_merge_lists()
+
+
+def canon(name) -> str:
+    n = str(name).strip().upper()
+    return _ALT2CANON.get(n, n)
+
+
+# =============================================================================
+# Utilitários
+# =============================================================================
+class Report:
+    """Acumula achados e grava tabelas/relatório."""
+
+    def __init__(self, out: str | Path, nome: str = "relatorio_pessoa_a"):
+        self.nome = nome
+        self.out = Path(out)
+        self.out.mkdir(parents=True, exist_ok=True)
+        self.findings: list[tuple[str, str, str, str]] = []
+
+    def add(self, stage: str, check: str, status: str, detail: str) -> None:
+        self.findings.append((stage, check, status, detail))
+        icon = {OK: "[ok]", WARN: "[!!]", FAIL: "[XX]"}[status]
+        print(f"{icon} {stage} | {check}: {detail}")
+
+    def save(self, name: str, df: pd.DataFrame) -> None:
+        df.to_csv(self.out / f"{name}.csv", index=False, encoding="utf-8-sig")
+
+    def write_md(self) -> Path:
+        path = self.out / f"{self.nome}.md"
+        lines = [f"# Relatório de verificações — {self.nome}", ""]
+        lines += ["| Etapa | Verificação | Status | Detalhe |", "| --- | --- | --- | --- |"]
+        for stage, check, status, detail in self.findings:
+            lines.append(f"| {stage} | {check} | {status} | {detail.replace('|', '/')} |")
+        n = {s: sum(1 for f in self.findings if f[2] == s) for s in (OK, WARN, FAIL)}
+        lines += ["", f"**Resumo:** {n[OK]} OK · {n[WARN]} atenção · {n[FAIL]} falha(s)."]
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return path
+
+    @property
+    def has_failure(self) -> bool:
+        return any(f[2] == FAIL for f in self.findings)
+
+
+PLAUSIBLE_YEARS = (1900, 2100)  # datas fora disso (0001, 9999, 20224...) viram NaT
+
+
+def parse_date(s: pd.Series) -> pd.Series:
+    """Converte para datetime64[ns] aceitando ISO (aaaa-mm-dd) e dd/mm/aaaa.
+
+    Datas fora de 1900–2100 viram NaT ANTES de qualquer conta (evita OverflowError em
+    subtrações/comparações com anos absurdos) e a resolução é padronizada (Parquet pode
+    trazer s/ms/us). Quem precisa contar datas inválidas usa `raw.notna() & parsed.isna()`.
+    """
+    if isinstance(s.dtype, pd.CategoricalDtype):  # converte só as categorias únicas (poucos milhares de datas)
+        cats = parse_date(pd.Series(s.cat.categories.astype("string")))
+        codes = s.cat.codes.to_numpy()
+        arr = cats.to_numpy(dtype="datetime64[ns]") if len(cats) else np.array([], dtype="datetime64[ns]")
+        vals = np.full(len(s), np.datetime64("NaT"), dtype="datetime64[ns]")
+        ok = codes >= 0
+        if ok.any():
+            vals[ok] = arr[codes[ok]]
+        return pd.Series(vals, index=s.index)
+    if pd.api.types.is_datetime64_any_dtype(s):
+        out = s
+        if getattr(out.dt, "tz", None) is not None:
+            out = out.dt.tz_localize(None)
+    else:
+        t = s.astype("string").str.strip()
+        out = pd.to_datetime(t, errors="coerce", format="ISO8601")
+        miss = out.isna() & t.notna() & (t != "")
+        if miss.any():
+            out[miss] = pd.to_datetime(t[miss], errors="coerce", format="%d/%m/%Y")
+        miss = out.isna() & t.notna() & (t != "")
+        if miss.any():  # formatos mistos (ex.: '05/03/2022 00:00', '2022/03/05')
+            try:
+                out[miss] = pd.to_datetime(t[miss], errors="coerce", format="mixed", dayfirst=True)
+            except (TypeError, ValueError):
+                pass
+    yr = out.dt.year
+    out = out.mask((yr < PLAUSIBLE_YEARS[0]) | (yr > PLAUSIBLE_YEARS[1]))
+    return out.astype("datetime64[ns]")
+
+
+def code_str(s: pd.Series) -> pd.Series:
+    """Normaliza códigos (1, 1.0, '1', ' 1 ') para string; vazio -> <NA>."""
+    n = pd.to_numeric(s, errors="coerce")
+    txt = s.astype("string").str.strip()
+    res = txt.where(n.isna(), n.round().astype("Int64").astype("string"))
+    return res.mask(res == "")
+
+
+def make_target(evolucao: pd.Series, cfg: dict = DEFAULT_CONFIG) -> pd.Series:
+    """1 = óbito, 0 = cura; qualquer outro valor (inclusive 9/ausente) -> NA."""
+    e = code_str(evolucao)
+    out = pd.Series(pd.NA, index=e.index, dtype="Int64")
+    out[(e == cfg["target_positive"]).fillna(False).to_numpy(bool)] = 1
+    out[(e == cfg["target_negative"]).fillna(False).to_numpy(bool)] = 0
+    return out
+
+
+def age_years(df: pd.DataFrame, cfg: dict) -> pd.Series:
+    c = cfg["cols"]
+    n = pd.to_numeric(df[c["nu_idade"]], errors="coerce").to_numpy(float)
+    t = code_str(df[c["tp_idade"]])
+    is_ = lambda v: (t == v).fillna(False).to_numpy(bool)  # noqa: E731
+    vals = np.select([is_("3"), is_("2"), is_("1")], [n, n / 12, n / 365], default=np.nan)
+    return pd.Series(vals, index=df.index)
+
+
+def prepare(df: pd.DataFrame) -> pd.DataFrame:
+    """Padroniza nomes (maiúsculas + aliases -> nome canônico SIVEP). Renomeia IN-PLACE (sem copiar)."""
+    up = [str(c).strip().upper() for c in df.columns]
+    present = set(up)
+    new, renamed = [], []
+    for u in up:
+        c = canon(u)
+        if c != u and c not in present:
+            renamed.append(f"{u}->{c}")
+            new.append(c)
+        else:
+            new.append(u)
+    df.attrs["orig_names"] = {n: str(o).strip() for o, n in zip(df.columns, new)}  # canônico -> nome original
+    df.columns = new
+    if renamed:
+        print(f"[aliases] colunas renomeadas: {', '.join(renamed)}")
+    return df
+
+
+def year_labels(df: pd.DataFrame, cfg: dict) -> pd.Series:
+    dt = parse_date(df[cfg["cols"]["dt_interna"]])
+    return dt.dt.year.astype("Int64").astype("string").fillna("sem_data")
+
+
+def has_cols(df: pd.DataFrame, cols: list[str]) -> list[str]:
+    return [c for c in cols if c not in df.columns]
+
+
+# =============================================================================
+# A1 — Códigos, protocolo e coorte
+# =============================================================================
+def a1_columns(df, cfg, rep: Report) -> None:
+    need = list(cfg["cols"].values())
+    missing = has_cols(df, need)
+    if missing:
+        rep.add("A1", "Colunas essenciais", FAIL, f"ausentes: {', '.join(missing)}")
+        print("   colunas disponíveis:", ", ".join(map(str, df.columns[:80])))
+        print("   -> ajuste 'cols' em configs/decisoes.yaml ou ALIASES em verificacoes.py para os nomes reais da base")
+    else:
+        rep.add("A1", "Colunas essenciais", OK, f"{len(need)} colunas presentes")
+
+
+def a1_code_tables(df, cfg, rep: Report) -> None:
+    ano = year_labels(df, cfg)
+    rows, unexpected = [], []
+    for col, expected in cfg["expected_codes"].items():
+        if col not in df.columns:
+            continue
+        codes = code_str(df[col]).fillna("<vazio>")
+        tab = pd.crosstab(codes, ano)
+        tab.insert(0, "campo", col)
+        tab.insert(1, "esperado", [c in expected for c in tab.index])
+        rows.append(tab.reset_index(names="codigo"))
+        bad = [c for c in tab.index if c not in expected and c != "<vazio>"]
+        if bad:
+            unexpected.append(f"{col}: {bad}")
+    if rows:
+        rep.save("a1_tabela_codigos", pd.concat(rows, ignore_index=True))
+    if unexpected:
+        rep.add("A1", "Códigos inesperados", WARN, "; ".join(unexpected))
+    else:
+        rep.add("A1", "Códigos inesperados", OK, "todos os códigos dentro do esperado")
+
+
+def a1_waterfall(df, cfg, rep: Report, sufixo: str = "") -> pd.DataFrame:
+    """Aplica os filtros em sequência, registra N antes/depois e amostras das exclusões."""
+    c = cfg["cols"]
+    today = pd.Timestamp.today().normalize()
+    dt = parse_date(df[c["dt_interna"]])
+    ok_date = (dt.notna() & (dt <= today) & (dt >= pd.Timestamp(cfg["min_date"]))).to_numpy(bool)
+    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
+    anos = dt.dt.year
+    analytic = anos.isin(cfg["dev_years"] + cfg["holdout_years"]).to_numpy(bool)
+    evo = code_str(df[c["evolucao"]])
+    closed = evo.isin(cfg["closed_codes"]).to_numpy(bool)
+    binary = evo.isin([cfg["target_positive"], cfg["target_negative"]]).to_numpy(bool)
+
+    steps = [
+        ("Hospitalização confirmada", "HOSPITAL = 1", hosp),
+        ("Data de internação válida", f"DT_INTERNA parseável, ≥ {cfg['min_date']} e ≤ hoje", ok_date),
+        ("Período analítico", f"ano(DT_INTERNA) em {cfg['dev_years'] + cfg['holdout_years']}", analytic),
+        ("Evolução encerrada", f"EVOLUCAO em {cfg['closed_codes']} (9/ausente fora)", closed),
+        ("Alvo binário definido", "EVOLUCAO em {cura, óbito}; óbito por outras causas separado", binary),
+    ]
+    if cfg["drop_date_inconsistencies"]:
+        steps.insert(3, ("Coerência de datas", "regras de datas com ação 'excluir'", _date_ok_mask(df, cfg)))
+
+    remaining = np.ones(len(df), dtype=bool)
+    rows = [dict(ordem=0, filtro="Base completa", regra="—", n_excluido=0,
+                 n_restante=len(df), pct_restante=100.0)]
+    sample_cols = [x for x in dict.fromkeys(list(c.values()) + ["NU_NOTIFIC"]) if x in df.columns]
+    for i, (name, rule, mask) in enumerate(steps, start=1):
+        excl = remaining & ~mask
+        kept = remaining & mask
+        rows.append(dict(ordem=i, filtro=name, regra=rule, n_excluido=int(excl.sum()),
+                         n_restante=int(kept.sum()), pct_restante=round(100 * kept.sum() / len(df), 2)))
+        if excl.any():
+            smp = df.loc[excl, sample_cols].head(cfg["exclusion_sample_rows"])
+            rep.save(f"a1_amostra_exclusoes{sufixo}_{i:02d}", smp)
+        remaining = kept
+    wf = pd.DataFrame(rows)
+    rep.save(f"a1_waterfall{sufixo}", wf)
+    final = int(remaining.sum())
+    status = OK if final > 0 else FAIL
+    rep.add("A1", "Waterfall da coorte" + (f" [{sufixo.strip(chr(95))}]" if sufixo else ""), status,
+            f"{len(df):,} -> {final:,} registros ({100 * final / max(len(df), 1):.1f}%)")
+    return wf
+
+
+def _date_ok_mask(df, cfg) -> np.ndarray:
+    ok = np.ones(len(df), dtype=bool)
+    for a, b, _, action in cfg["date_rules"]:
+        if action != "excluir":
+            continue
+        da, db = parse_date(df[cfg["cols"][a]]), parse_date(df[cfg["cols"][b]])
+        ok &= ~((da > db).fillna(False).to_numpy(bool))
+    return ok
+
+
+def a1_cohort(df, cfg) -> pd.DataFrame:
+    """Retorna a coorte final (mesmas regras do waterfall) com _ano e _alvo."""
+    c = cfg["cols"]
+    dt = parse_date(df[c["dt_interna"]])
+    today = pd.Timestamp.today().normalize()
+    evo = code_str(df[c["evolucao"]])
+    m = ((code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
+         & (dt.notna() & (dt <= today) & (dt >= pd.Timestamp(cfg["min_date"]))).to_numpy(bool)
+         & dt.dt.year.isin(cfg["dev_years"] + cfg["holdout_years"]).to_numpy(bool)
+         & evo.isin([cfg["target_positive"], cfg["target_negative"]]).to_numpy(bool))
+    if cfg["drop_date_inconsistencies"]:
+        m &= _date_ok_mask(df, cfg)
+    out = df.loc[m].copy()
+    out["_ano"] = dt[m].dt.year.astype(int)
+    out["_alvo"] = make_target(out[c["evolucao"]], cfg).astype(int)
+    return out
+
+
+def a1_target(df, cfg, rep: Report) -> None:
+    c = cfg["cols"]
+    ano = year_labels(df, cfg)
+    evo = code_str(df[c["evolucao"]]).fillna("<vazio>")
+    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
+    tab = pd.crosstab(ano[hosp], evo[hosp])
+    tab["total"] = tab.sum(axis=1)
+    rep.save("a1_alvo_por_ano", tab.reset_index(names="ano"))
+    # Teste de sanidade: desconhecido nunca pode virar cura
+    probe = make_target(pd.Series(["1", "2", "3", "9", None, "", "x"]), cfg)
+    expected = [0, 1, None, None, None, None, None]
+    ok = all((pd.isna(a) and e is None) or a == e for a, e in zip(probe, expected))
+    rep.add("A1", "Alvo: desconhecido ≠ cura", OK if ok else FAIL,
+            "9/ausente/3 viram NA; só 1->0 e 2->1" if ok else f"mapeamento incorreto: {list(probe)}")
+
+
+DERIVADAS = ("idade_anos", "intervalo_sint_interna_dias", "flag_intervalo_invalido",
+             "sin_semana", "cos_semana", "faixa_etaria")
+_DERIVADAS_CANON = {d.upper() for d in DERIVADAS}
+
+
+def add_derived(df: pd.DataFrame, cfg: dict, wanted=None) -> list[str]:
+    """Cria IN-PLACE (nomes canônicos em maiúsculas) as features derivadas pedidas.
+
+    Usa só o que existe na admissão (idade, DT_SIN_PRI, DT_INTERNA); nunca desfecho nem datas posteriores.
+    - idade_anos: NU_IDADE_N convertida por TP_IDADE (dias/365, meses/12, anos); fora de [0, max_age_years] -> NaN
+    - faixa_etaria: faixas de cfg['derivadas']['faixas_etarias'] (texto; NaN se idade inválida)
+    - intervalo_sint_interna_dias: DT_INTERNA - DT_SIN_PRI em dias; NaN quando inválido
+    - flag_intervalo_invalido: 1 se o intervalo é ausente, negativo ou > intervalo_max_dias; senão 0
+    - sin_semana / cos_semana: semana ISO de DT_INTERNA em círculo de periodo_semanas
+    """
+    c, d = cfg["cols"], cfg["derivadas"]
+    wanted = {canon(w) for w in (wanted if wanted is not None else DERIVADAS)} & _DERIVADAS_CANON
+    criadas: list[str] = []
+    if wanted & {"IDADE_ANOS", "FAIXA_ETARIA"}:
+        age = age_years(df, cfg)
+        age = age.where((age >= 0) & (age <= cfg["max_age_years"]))
+        if "IDADE_ANOS" in wanted:
+            df["IDADE_ANOS"] = age
+            criadas.append("IDADE_ANOS")
+        if "FAIXA_ETARIA" in wanted:
+            fx = pd.cut(age, bins=d["faixas_etarias"]["bins"], labels=d["faixas_etarias"]["labels"], right=False)
+            df["FAIXA_ETARIA"] = fx.astype(object).where(fx.notna(), np.nan)
+            criadas.append("FAIXA_ETARIA")
+    if wanted & {"INTERVALO_SINT_INTERNA_DIAS", "FLAG_INTERVALO_INVALIDO"}:
+        gap = (parse_date(df[c["dt_interna"]]) - parse_date(df[c["dt_sin_pri"]])).dt.days.astype("float64")
+        invalido = gap.isna() | (gap < 0) | (gap > d["intervalo_max_dias"])
+        if "FLAG_INTERVALO_INVALIDO" in wanted:
+            df["FLAG_INTERVALO_INVALIDO"] = invalido.astype("int8")
+            criadas.append("FLAG_INTERVALO_INVALIDO")
+        if "INTERVALO_SINT_INTERNA_DIAS" in wanted:
+            df["INTERVALO_SINT_INTERNA_DIAS"] = gap.where(~invalido)
+            criadas.append("INTERVALO_SINT_INTERNA_DIAS")
+    if wanted & {"SIN_SEMANA", "COS_SEMANA"}:
+        sem = parse_date(df[c["dt_interna"]]).dt.isocalendar().week.astype("float64")
+        ang = 2 * np.pi * sem / d["periodo_semanas"]
+        if "SIN_SEMANA" in wanted:
+            df["SIN_SEMANA"] = np.sin(ang)
+            criadas.append("SIN_SEMANA")
+        if "COS_SEMANA" in wanted:
+            df["COS_SEMANA"] = np.cos(ang)
+            criadas.append("COS_SEMANA")
+    return criadas
+
+
+def _analytical_path(cfg: dict) -> Path:
+    """Usa C.ANALYTICAL_DIR do projeto (como o C1/C2); senão, o caminho de configs/decisoes.yaml."""
+    nome = Path(cfg["dataset_analitico"]["path"]).name
+    try:
+        from src.utils import config as C  # noqa: N812
+
+        return Path(C.ANALYTICAL_DIR) / nome
+    except Exception:  # noqa: BLE001
+        return Path(cfg["dataset_analitico"]["path"])
+
+
+def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, versao="0.1",
+                      excluir_proibidas=False, extra_cols=(), split=None, rotulo="") -> dict:
+    """Grava a população analítica (coorte + alvo + tempo + features) para o C2.
+
+    Colunas: id (NU_NOTIFIC), colunas de tempo (coluna_tempo do supervised.yaml e DT_INTERNA),
+    alvo (EVOLUCAO bruta: apenas 1/2 após a coorte), features do supervised.yaml e ANO_INTERNACAO.
+    Usa os NOMES ORIGINAIS das colunas da base (os do supervised.yaml), ordenado pelo tempo.
+    Nenhuma coluna proibida além das features pedidas é enviada ao C.
+    """
+    path = Path(path) if path else _analytical_path(cfg)
+    _t = f" [{rotulo}]" if rotulo else ""
+    c = cfg["cols"]
+    orig = df.attrs.get("orig_names", {})
+    cohort = a1_cohort(df, cfg)
+    y = load_supervised_yaml(supervised_config) if supervised_config and Path(supervised_config).exists() else {}
+    if y:
+        feats = supervised_features(y)
+        target_col = canon((y.get("target") or {}).get("coluna", c["evolucao"]))
+        time_col = canon(y.get("coluna_tempo", c["dt_interna"]))
+    else:
+        feats = [canon(x) for x in cfg["allowed_vars"] if canon(x) in df.columns]
+        target_col, time_col = c["evolucao"], c["dt_interna"]
+    grupos = [canon(g) for g in (((y.get("avaliacao") or {}).get("grupos")) or [])]
+    pedir_derivadas = [f for f in dict.fromkeys(feats + grupos) if f in _DERIVADAS_CANON and f not in cohort.columns]
+    derivadas_criadas = add_derived(cohort, cfg, pedir_derivadas) if pedir_derivadas else []
+    forb = {canon(x) for x in cfg["forbidden_vars"]}
+    hits = [f for f in feats if f in forb]
+    if excluir_proibidas:
+        feats = [f for f in feats if f not in forb]
+    missing = [f for f in feats if f not in cohort.columns]
+    grupos_cols = [g for g in grupos if g in cohort.columns]
+    feats = [f for f in feats if f in cohort.columns]
+    keep = [k for k in [c["nu_notific"], time_col, c["dt_interna"], target_col, *feats, *grupos_cols,
+                        *map(canon, extra_cols)] if k in cohort.columns]
+    keep = list(dict.fromkeys(keep))
+    out = cohort[keep].copy()
+    for t in {time_col, c["dt_interna"]}:
+        if t in out.columns:
+            out[t] = parse_date(out[t])
+    out["ANO_INTERNACAO"] = cohort["_ano"].to_numpy()
+    n_data_invalida = 0
+    if time_col in out.columns:
+        n_data_invalida = int(out[time_col].isna().sum())
+        out = out.dropna(subset=[time_col]).sort_values(time_col, kind="stable")
+    if split:  # coluna `split` (treino/validacao/holdout) sorteada, estratificada pelo alvo, reprodutível pela seed
+        estr = out[target_col].astype(str).to_numpy() if split.get("estratificar_por_alvo", True) else None
+        out["SPLIT"] = split_aleatorio(len(out), estr, split.get("seed", 42), split.get("fracoes"))
+    pedidos = {}
+    if y:
+        f_ = y.get("features", {}) or {}
+        for n in ((f_.get("final") or []) or (f_.get("numericas") or []) + (f_.get("categoricas") or [])):
+            pedidos[canon(n)] = str(n)
+        for g_ in ((y.get("avaliacao") or {}).get("grupos") or []):
+            pedidos.setdefault(canon(g_), str(g_))
+        pedidos[target_col] = str((y.get("target") or {}).get("coluna", target_col))
+        pedidos[time_col] = str(y.get("coluna_tempo", time_col))
+    nome_final = lambda col: pedidos.get(col, orig.get(col, col.lower()))  # noqa: E731
+    aliases_aplicados = {nome_final(c_): orig.get(c_, c_.lower()) for c_ in out.columns
+                         if c_ in pedidos and nome_final(c_).lower() != orig.get(c_, c_.lower()).lower()}
+    out.columns = [nome_final(col) for col in out.columns]
+    tgt_name = nome_final(target_col)
+    assert set(pd.Series(out[tgt_name]).dropna().astype(float).unique()) <= {1.0, 2.0}, "alvo fora de {1,2}"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.suffix == ".csv":
+        out.to_csv(path, index=False)
+    else:
+        out.to_parquet(path, index=False)
+    meta = dict(versao=versao, criado_em=pd.Timestamp.now().isoformat(timespec="seconds"), arquivo=str(path),
+                n_linhas=int(len(out)), colunas=list(out.columns), alvo=tgt_name,
+                coluna_tempo=nome_final(time_col),
+                anos={str(k): int(v_) for k, v_ in out["ano_internacao"].value_counts().sort_index().items()},
+                desenvolvimento=cfg["dev_years"], holdout=cfg["holdout_years"],
+                features_proibidas_no_dataset=[orig.get(h, h.lower()) for h in hits if not excluir_proibidas],
+                features_ausentes_na_base=missing, base_origem_linhas=int(len(df)),
+                aliases_aplicados_yaml_para_fisico=aliases_aplicados,
+                descartadas_data_tempo_invalida=n_data_invalida,
+                derivadas_criadas=[nome_final(x) for x in derivadas_criadas],
+                grupos_avaliacao_incluidos=[nome_final(g) for g in grupos_cols])
+    meta["sha256"] = _sha256(path)
+    if split:
+        meta["split"] = {"tipo": split.get("tipo", "aleatorio"), "seed": split.get("seed", 42),
+                         "fracoes": split.get("fracoes"), "contagem": out["split"].value_counts().to_dict()}
+    path.with_suffix(".meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    if derivadas_criadas:
+        rep.add("A1", "Features derivadas" + _t, OK,
+                f"criadas no dataset: {', '.join(nome_final(x) for x in derivadas_criadas)}")
+    if n_data_invalida:
+        rep.add("A1", "Data da coluna de tempo" + _t, WARN,
+                f"{n_data_invalida:,} linhas com {nome_final(time_col)} inválida/ausente descartadas (o C2 faria o mesmo)")
+    if aliases_aplicados:
+        rep.add("A1", "Nomes do YAML x base" + _t, WARN,
+                "colunas gravadas com o nome pedido no YAML, mas vindas de outro nome físico: "
+                + ", ".join(f"{k}<-{v_}" for k, v_ in aliases_aplicados.items()) + " (confirmar equivalência)")
+    hard = [h for h in hits if h != "HOSPITAL" and not excluir_proibidas]
+    if hard:
+        rep.add("A1", "Dataset analítico" + _t, FAIL, f"{len(out):,} linhas gravadas, MAS com features proibidas: {', '.join(hard)}")
+    elif missing:
+        rep.add("A1", "Dataset analítico" + _t, WARN, f"{len(out):,} linhas v{versao}; features ausentes na base: {', '.join(missing)}")
+    else:
+        rep.add("A1", "Dataset analítico" + _t, OK, f"{len(out):,} linhas, {out.shape[1]} colunas -> {path} (v{versao})")
+    return meta
+
+
+def validar_contrato_c2(path, supervised_config, rep: Report) -> bool:
+    """Confere o ARQUIVO gravado contra o que o C2 consome (células 6–16 do C2_pipeline_supervisionado).
+
+    O C2 faz: read_parquet -> TARGET e DATE_COLUMN presentes -> to_datetime(DATE_COLUMN) e dropna ->
+    treino[FEATURES] -> criar_alvo_binario/filtrar_rotulos_validos -> check_leakage(X).
+    """
+    st, p = "A1-C2", Path(path)
+    if not p.exists():
+        rep.add(st, "Arquivo do dataset", FAIL, f"não encontrado: {p}")
+        return False
+    y = load_supervised_yaml(supervised_config)
+    f = y.get("features", {}) or {}
+    target = (y.get("target") or {}).get("coluna")
+    data_col = y.get("coluna_tempo")
+    feats = list(f.get("final") or ((f.get("numericas") or []) + (f.get("categoricas") or [])))
+    positivos = [float(x) for x in ((y.get("target") or {}).get("positivos") or [])]
+    if p.suffix == ".csv":
+        names = list(pd.read_csv(p, nrows=0).columns)
+    else:
+        import pyarrow.parquet as pq
+
+        names = pq.ParquetFile(p).schema_arrow.names
+    wanted = [c for c in dict.fromkeys([target, data_col, *feats]) if c in names]
+    d = pd.read_csv(p, usecols=wanted) if p.suffix == ".csv" else pd.read_parquet(p, columns=wanted)
+    ok = True
+    faltam = [c for c in (target, data_col, *feats) if c not in names]
+    if faltam:
+        ok = False
+        rep.add(st, "Colunas exigidas pelo C2", FAIL, f"ausentes no dataset: {', '.join(map(str, faltam))}")
+    else:
+        rep.add(st, "Colunas exigidas pelo C2", OK, f"alvo '{target}', tempo '{data_col}' e {len(feats)} features presentes")
+    if data_col in d.columns:
+        dt = pd.to_datetime(d[data_col], errors="coerce")
+        n_bad = int(dt.isna().sum())
+        if n_bad:
+            rep.add(st, "Coluna de tempo", WARN, f"{n_bad:,} datas inválidas (o C2 descarta essas linhas)")
+        elif not dt.is_monotonic_increasing:
+            rep.add(st, "Coluna de tempo", WARN, "dataset não está ordenado por tempo (o TemporalSplit pode reordenar)")
+        else:
+            rep.add(st, "Coluna de tempo", OK, f"datetime válido, ordenado: {dt.min().date()} -> {dt.max().date()}")
+    if target in d.columns:
+        vals = set(pd.Series(d[target]).dropna().astype(float).unique())
+        if positivos and not (set(positivos) & vals):
+            ok = False
+            rep.add(st, "Alvo", FAIL, f"nenhum valor positivo {positivos} no dataset (valores: {sorted(vals)})")
+        elif vals - {1.0, 2.0}:
+            rep.add(st, "Alvo", WARN, f"valores fora de {{1,2}}: {sorted(vals - {1.0, 2.0})} (o C2 os descarta)")
+        else:
+            rep.add(st, "Alvo", OK, f"apenas cura/óbito; positivos {positivos} presentes")
+    prib = {str(x).lower() for x in (f.get("proibidas") or [])}
+    vazam = [c for c in feats if str(c).lower() in prib]
+    if vazam:
+        ok = False
+        rep.add(st, "check_leakage (C2)", FAIL, f"features em `proibidas`: {', '.join(vazam)}")
+    else:
+        rep.add(st, "check_leakage (C2)", OK, "nenhuma feature está em `proibidas`")
+    rep.add(st, "Tamanho", OK if len(d) else FAIL, f"{len(d):,} linhas")
+    return ok and len(d) > 0
+
+
+# =============================================================================
+# Experimentos de split: aleatório 70-15-15 e cenários de período (A3b)
+# =============================================================================
+def _sha256(path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for bloco in iter(lambda: f.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def verificar_dataset_congelado(path, rep: Report) -> bool:
+    """Compara o SHA-256 do arquivo com o gravado no .meta.json (população analítica congelada)."""
+    p = Path(path)
+    meta_p = p.with_suffix(".meta.json")
+    if not p.exists() or not meta_p.exists():
+        rep.add("A4", "Dataset congelado", FAIL, f"arquivo ou metadados ausentes: {p.name}")
+        return False
+    meta = json.loads(meta_p.read_text(encoding="utf-8"))
+    ok = meta.get("sha256") == _sha256(p)
+    rep.add("A4", "Dataset congelado", OK if ok else FAIL,
+            f"{p.name} v{meta.get('versao')} " + ("inalterado desde a exportação" if ok else "FOI ALTERADO após a exportação"))
+    return ok
+
+
+def cfg_para_anos(cfg: dict, anos) -> dict:
+    """Cópia de cfg com o período analítico = `anos` (sem holdout temporal): usada nos cenários."""
+    c2 = json.loads(json.dumps(cfg))
+    c2["dev_years"] = [int(a) for a in anos]
+    c2["holdout_years"] = []
+    return c2
+
+
+def split_aleatorio(n: int, estratos=None, seed: int = 42, fracoes: dict | None = None) -> np.ndarray:
+    """Rótulos 'treino'/'validacao'/'holdout' sorteados (opcionalmente estratificados), reprodutíveis pela seed."""
+    fr = fracoes or {"treino": 0.70, "validacao": 0.15, "holdout": 0.15}
+    if abs(sum(fr.values()) - 1) > 1e-9:
+        raise ValueError(f"frações devem somar 1: {fr}")
+    rng = np.random.default_rng(seed)
+    rot = np.empty(n, dtype=object)
+    if estratos is None:
+        grupos = [np.arange(n)]
+    else:
+        est = np.asarray(estratos).astype(str)
+        grupos = [np.flatnonzero(est == k) for k in sorted(set(est))]
+    for idx in grupos:
+        idx = rng.permutation(idx)
+        m = len(idx)
+        n_tr, n_va = int(round(m * fr["treino"])), int(round(m * fr["validacao"]))
+        rot[idx[:n_tr]] = "treino"
+        rot[idx[n_tr:n_tr + n_va]] = "validacao"
+        rot[idx[n_tr + n_va:]] = "holdout"
+    return rot
+
+
+def split_por_ordem(valores_tempo, fracoes: dict | None = None) -> np.ndarray:
+    """Divisão temporal por posição (como o TemporalSplit por fração do C2): passado -> treino, futuro -> holdout."""
+    fr = fracoes or {"treino": 0.70, "validacao": 0.15, "holdout": 0.15}
+    v_ = np.asarray(valores_tempo)
+    ordem = np.argsort(v_, kind="stable")
+    n = len(v_)
+    n_tr, n_va = int(round(n * fr["treino"])), int(round(n * fr["validacao"]))
+    rot = np.empty(n, dtype=object)
+    rot[ordem[:n_tr]] = "treino"
+    rot[ordem[n_tr:n_tr + n_va]] = "validacao"
+    rot[ordem[n_tr + n_va:]] = "holdout"
+    return rot
+
+
+def _ler(path, cols):
+    p = Path(path)
+    if p.suffix == ".csv":
+        return pd.read_csv(p, usecols=[c for c in cols if c in pd.read_csv(p, nrows=0).columns])
+    import pyarrow.parquet as pq
+
+    nomes = pq.ParquetFile(p).schema_arrow.names
+    return pd.read_parquet(p, columns=[c for c in cols if c in nomes])
+
+
+def _relatorio_split(path, meta: dict, cfg: dict, rep: Report, nome: str) -> pd.DataFrame:
+    st, tag = "A3b", f" [{nome}]"
+    fr = cfg["experimentos_split"]["fracoes"]
+    d = _ler(path, ["split", meta["alvo"], "ano_internacao", "nu_notific"])
+    d["_y"] = (pd.to_numeric(d[meta["alvo"]], errors="coerce") == float(cfg["target_positive"])).astype(int)
+    t = d.groupby("split").agg(n=("_y", "size"), n_obitos=("_y", "sum"))
+    t["pct_linhas"] = (100 * t["n"] / t["n"].sum()).round(2)
+    t["prevalencia_obito_pct"] = (100 * t["n_obitos"] / t["n"]).round(2)
+    t = t.reindex(["treino", "validacao", "holdout"]).reset_index()
+    rep.save(f"a3_split_aleatorio_{nome}", t)
+    por_ano = pd.crosstab(d["ano_internacao"], d["split"]).reindex(columns=["treino", "validacao", "holdout"], fill_value=0)
+    rep.save(f"a3_split_aleatorio_{nome}_por_ano", por_ano.reset_index())
+
+    dev = max(abs(float(t.loc[t["split"] == k, "pct_linhas"].iloc[0]) - 100 * fr[k]) for k in fr)
+    rep.add(st, "Proporções 70/15/15" + tag, OK if dev <= 0.5 else WARN,
+            f"desvio máximo {dev:.2f} p.p. | " + ", ".join(f"{r.split}={r.n:,}" for r in t.itertuples()))
+    amp = float(t["prevalencia_obito_pct"].max() - t["prevalencia_obito_pct"].min())
+    rep.add(st, "Estratificação do alvo" + tag, OK if amp <= 0.5 else WARN,
+            f"prevalência de óbito por split: " + ", ".join(f"{r.split}={r.prevalencia_obito_pct}%" for r in t.itertuples())
+            + f" (amplitude {amp:.2f} p.p.)")
+    faltam = [(int(a), s) for a in por_ano.index for s in por_ano.columns if por_ano.loc[a, s] == 0]
+    rep.add(st, "Anos em cada split" + tag, OK if not faltam else WARN,
+            "todos os anos aparecem nos 3 splits (split aleatório mistura os períodos)" if not faltam
+            else f"anos ausentes em algum split: {faltam[:6]}")
+    if "nu_notific" in d.columns:
+        g = d.dropna(subset=["nu_notific"]).groupby("nu_notific")["split"].nunique()
+        n_dup = int((g > 1).sum())
+        rep.add(st, "NU_NOTIFIC entre splits" + tag, OK if n_dup == 0 else WARN,
+                "nenhum NU_NOTIFIC repetido em splits diferentes" if n_dup == 0
+                else f"{n_dup:,} NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação)")
+    return t
+
+
+def a3_split_aleatorio_cenario(df, cfg, rep: Report, nome: str, anos, supervised_config=None,
+                               versao: str = "0.1", excluir_proibidas: bool = False) -> dict:
+    """Coorte do cenário (anos informados) + dataset com coluna `split` aleatória 70/15/15 + relatório."""
+    cfg_s = cfg_para_anos(cfg, anos)
+    a1_waterfall(df, cfg_s, rep, sufixo=f"_{nome}")
+    base = _analytical_path(cfg)
+    caminho = base.with_name(f"dataset_supervisionado_{nome}{base.suffix}")
+    e = cfg["experimentos_split"]
+    meta = a1_export_dataset(df, cfg_s, rep, supervised_config, path=caminho, versao=versao,
+                             excluir_proibidas=excluir_proibidas, rotulo=nome,
+                             split={"tipo": "aleatorio", "seed": e["seed"], "fracoes": e["fracoes"],
+                                    "estratificar_por_alvo": e["estratificar_por_alvo"]})
+    meta["anos_cenario"] = [int(a) for a in anos]
+    _relatorio_split(caminho, meta, cfg, rep, nome)
+    return meta
+
+
+def a3_benchmark_split(path, supervised_config, cfg: dict, rep: Report, nome: str,
+                       max_rows: int = 200_000, seed: int = 42) -> pd.DataFrame:
+    """Regressão logística treino -> VALIDAÇÃO em split aleatório e em split temporal por ordem (o holdout NÃO é aberto).
+
+    Mostra o quanto o split aleatório é otimista frente ao temporal (autocorrelação no tempo).
+    """
+    from sklearn.compose import ColumnTransformer
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+    y = load_supervised_yaml(supervised_config)
+    f = y.get("features", {}) or {}
+    numericas = list(f.get("numericas") or [])
+    categoricas = list(f.get("categoricas") or [])
+    if f.get("final"):
+        numericas = [x for x in f["final"] if x in numericas]
+        categoricas = [x for x in f["final"] if x not in numericas]
+    alvo, tempo = y["target"]["coluna"], y["coluna_tempo"]
+    pos = float(y["target"]["positivos"][0])
+    d = _ler(path, [alvo, tempo, "split", *numericas, *categoricas])
+    numericas = [c for c in numericas if c in d.columns]
+    categoricas = [c for c in categoricas if c in d.columns]
+    d[tempo] = pd.to_datetime(d[tempo], errors="coerce")
+    d = d.dropna(subset=[tempo]).reset_index(drop=True)
+    d["part_aleatoria"] = d["split"].to_numpy()
+    d["part_temporal"] = split_por_ordem(d[tempo].to_numpy(), cfg["experimentos_split"]["fracoes"])
+    if len(d) > max_rows:
+        d = d.sample(max_rows, random_state=seed).reset_index(drop=True)
+    yb = (pd.to_numeric(d[alvo], errors="coerce") == pos).astype(int).to_numpy()
+    X = d[numericas + categoricas].copy()
+    for c in numericas:
+        X[c] = pd.to_numeric(X[c], errors="coerce")
+    for c in categoricas:
+        X[c] = X[c].astype("string").fillna("__NA__").astype(object)
+
+    linhas = []
+    for particao, col in (("aleatoria", "part_aleatoria"), ("temporal_por_ordem", "part_temporal")):
+        tr = (d[col] == "treino").to_numpy()
+        va = (d[col] == "validacao").to_numpy()
+        if len(np.unique(yb[tr])) < 2 or len(np.unique(yb[va])) < 2:
+            continue
+        prep = ColumnTransformer([
+            ("num", Pipeline([("imp", SimpleImputer(strategy="median")), ("sc", StandardScaler())]), numericas),
+            ("cat", OneHotEncoder(handle_unknown="ignore", min_frequency=30), categoricas),
+        ])
+        pipe = Pipeline([("prep", prep), ("clf", LogisticRegression(max_iter=300, class_weight="balanced"))])
+        pipe.fit(X[tr], yb[tr])
+        p = pipe.predict_proba(X[va])[:, 1]
+        prior = float(yb[tr].mean())
+        base = dict(cenario=nome, particao=particao, n_treino=int(tr.sum()), n_validacao=int(va.sum()),
+                    prevalencia_validacao=round(float(yb[va].mean()), 4))
+        linhas.append(dict(base, modelo="baseline_prior", roc_auc=0.5, pr_auc=round(float(yb[va].mean()), 4),
+                           brier=round(float(np.mean((prior - yb[va]) ** 2)), 4)))
+        linhas.append(dict(base, modelo="logistica", roc_auc=round(roc_auc_score(yb[va], p), 4),
+                           pr_auc=round(average_precision_score(yb[va], p), 4),
+                           brier=round(brier_score_loss(yb[va], p), 4)))
+    res = pd.DataFrame(linhas)
+    rep.save(f"a3_benchmark_split_{nome}", res)
+    tag = f" [{nome}]"
+    lg = res[res["modelo"] == "logistica"].set_index("particao") if len(res) else res
+    if len(res) and {"aleatoria", "temporal_por_ordem"} <= set(lg.index):
+        delta = float(lg.loc["aleatoria", "pr_auc"] - lg.loc["temporal_por_ordem", "pr_auc"])
+        rep.add("A3b", "Split aleatório x temporal" + tag, WARN if delta > 0.02 else OK,
+                f"PR-AUC (validação): aleatório {lg.loc['aleatoria', 'pr_auc']:.3f} vs temporal {lg.loc['temporal_por_ordem', 'pr_auc']:.3f} "
+                f"(Δ {delta:+.3f})" + (" — o aleatório está otimista; decidir pelo temporal" if delta > 0.02 else ""))
+    else:
+        rep.add("A3b", "Split aleatório x temporal" + tag, WARN, "benchmark não executado (alvo com uma só classe em algum split)")
+    return res
+
+
+_COR_SPLIT = {"treino": "#2F6DB5", "validacao": "#E8912D", "holdout": "#6BA368"}
+_ORDEM_SPLIT = ["treino", "validacao", "holdout"]
+
+
+def _rotulos_barras(ax, barras, textos, dy=0.0):
+    for b, t in zip(barras, textos):
+        ax.annotate(t, (b.get_x() + b.get_width() / 2, b.get_height() + dy), ha="center", va="bottom", fontsize=9)
+
+
+def grafico_split_cenario(rep: Report, cfg: dict, nome: str, anos=None, fig_dir="outputs/figures/pessoa_a",
+                          mostrar: bool = False):
+    """3 painéis do split aleatório de um cenário (a partir das tabelas já gravadas em rep.out):
+    (a) % de linhas por split x meta 70/15/15; (b) prevalência de óbito por split; (c) composição dos splits dentro de cada ano.
+    """
+    import matplotlib.pyplot as plt
+
+    t = pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{nome}.csv").set_index("split").reindex(_ORDEM_SPLIT)
+    pa = pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{nome}_por_ano.csv").set_index("ano_internacao")[_ORDEM_SPLIT]
+    fr = cfg["experimentos_split"]["fracoes"]
+    cores = [_COR_SPLIT[s] for s in _ORDEM_SPLIT]
+    fig, axs = plt.subplots(1, 3, figsize=(17, 4.8), gridspec_kw={"width_ratios": [1, 1, 1.5]})
+
+    ax = axs[0]  # (a) proporção de linhas
+    barras = ax.bar(_ORDEM_SPLIT, t["pct_linhas"], color=cores)
+    for i, s in enumerate(_ORDEM_SPLIT):
+        ax.hlines(100 * fr[s], i - 0.42, i + 0.42, colors="black", linestyles="--", linewidth=1.4,
+                  label="meta 70/15/15" if i == 0 else None)
+    _rotulos_barras(ax, barras, [f"{p:.1f}%\nn={int(n):,}" for p, n in zip(t["pct_linhas"], t["n"])], dy=1)
+    ax.set_ylim(0, 100 * max(fr.values()) * 1.25)
+    ax.set_ylabel("% das linhas da coorte")
+    ax.set_title("(a) Proporção de linhas por split")
+    ax.legend(loc="upper right", fontsize=9)
+
+    ax = axs[1]  # (b) prevalência do alvo
+    prev = t["prevalencia_obito_pct"]
+    geral = 100 * t["n_obitos"].sum() / t["n"].sum()
+    barras = ax.bar(_ORDEM_SPLIT, prev, color=cores)
+    ax.axhline(geral, color="black", linestyle="--", linewidth=1.4, label=f"geral {geral:.2f}%")
+    _rotulos_barras(ax, barras, [f"{p:.2f}%" for p in prev], dy=0.3)
+    ax.set_ylim(0, max(prev.max(), geral) * 1.3)
+    ax.set_ylabel("% de óbitos (alvo = 1)")
+    ax.set_title(f"(b) Prevalência de óbito por split (amplitude {prev.max() - prev.min():.2f} p.p.)")
+    ax.legend(loc="upper right", fontsize=9)
+
+    ax = axs[2]  # (c) composição por ano
+    comp = pa.div(pa.sum(axis=1), axis=0) * 100
+    base = np.zeros(len(comp))
+    for s in _ORDEM_SPLIT:
+        ax.bar(comp.index.astype(str), comp[s], bottom=base, color=_COR_SPLIT[s], label=s)
+        for x, (v_, b_) in enumerate(zip(comp[s], base)):
+            if v_ >= 6:
+                ax.text(x, b_ + v_ / 2, f"{v_:.0f}%", ha="center", va="center", fontsize=8, color="white")
+        base = base + comp[s].to_numpy()
+    ax.axhline(70, color="black", linestyle=":", linewidth=1)
+    ax.axhline(85, color="black", linestyle=":", linewidth=1)
+    ax.set_ylim(0, 100)
+    ax.set_xticks(range(len(comp)), [f"{a}\nn={int(n):,}" for a, n in zip(comp.index, pa.sum(axis=1))], fontsize=8)
+    ax.set_ylabel("% do ano em cada split")
+    ax.set_title("(c) Composição dos splits dentro de cada ano")
+    ax.legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.17), fontsize=9)
+
+    anos_txt = f" — anos {', '.join(map(str, anos))}" if anos else ""
+    fig.suptitle(f"Split aleatório estratificado 70/15/15 — {nome}{anos_txt}", fontsize=13, y=1.02)
+    fig.tight_layout()
+    destino = Path(fig_dir)
+    destino.mkdir(parents=True, exist_ok=True)
+    caminho = destino / f"split_{nome}.png"
+    fig.savefig(caminho, dpi=140, bbox_inches="tight")
+    if mostrar:
+        plt.show()
+    else:
+        plt.close(fig)
+    return caminho
+
+
+def grafico_comparacao_cenarios(rep: Report, cfg: dict, nomes, fig_dir="outputs/figures/pessoa_a", mostrar: bool = False):
+    """Compara os cenários: N por ano empilhado por split (um painel por cenário, mesmo eixo) + prevalência por split."""
+    import matplotlib.pyplot as plt
+
+    nomes = list(nomes)
+    por_ano = {n: pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{n}_por_ano.csv").set_index("ano_internacao")[_ORDEM_SPLIT]
+               for n in nomes}
+    resumo = {n: pd.read_csv(Path(rep.out) / f"a3_split_aleatorio_{n}.csv").set_index("split").reindex(_ORDEM_SPLIT) for n in nomes}
+    anos = sorted(set().union(*[set(p.index) for p in por_ano.values()]))
+    topo = max(p.sum(axis=1).max() for p in por_ano.values()) * 1.12
+    fig, axs = plt.subplots(1, len(nomes) + 1, figsize=(6 * len(nomes) + 5.5, 4.8),
+                            gridspec_kw={"width_ratios": [1.3] * len(nomes) + [1]})
+    for ax, n in zip(axs, nomes):
+        p = por_ano[n].reindex(anos, fill_value=0)
+        base = np.zeros(len(p))
+        for s in _ORDEM_SPLIT:
+            ax.bar(p.index.astype(str), p[s], bottom=base, color=_COR_SPLIT[s], label=s)
+            base = base + p[s].to_numpy()
+        for x, tot in enumerate(base):
+            if tot == 0:
+                ax.axvspan(x - 0.5, x + 0.5, color="#DDDDDD", alpha=0.6)
+                ax.text(x, topo * 0.5, "fora do\ncenário", ha="center", va="center", fontsize=9, color="#555555")
+            else:
+                ax.text(x, tot + topo * 0.01, f"{int(tot):,}", ha="center", va="bottom", fontsize=8)
+        ax.set_ylim(0, topo)
+        ax.set_ylabel("registros na coorte")
+        ax.set_title(f"{n}  (N={int(base.sum()):,})")
+    axs[0].legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.1), fontsize=9)
+
+    ax = axs[-1]
+    larg = 0.8 / len(nomes)
+    cores_cen = ["#444444", "#B5B5B5", "#8A6FBF", "#C96F6F"]
+    for i, n in enumerate(nomes):
+        x = np.arange(3) + (i - (len(nomes) - 1) / 2) * larg
+        barras = ax.bar(x, resumo[n]["prevalencia_obito_pct"], larg, label=n, color=cores_cen[i % len(cores_cen)])
+        _rotulos_barras(ax, barras, [f"{p:.1f}%" for p in resumo[n]["prevalencia_obito_pct"]], dy=0.2)
+    ax.set_xticks(range(3), _ORDEM_SPLIT)
+    ymax = max(r["prevalencia_obito_pct"].max() for r in resumo.values())
+    ax.set_ylim(0, ymax * 1.3)
+    ax.set_ylabel("% de óbitos")
+    ax.set_title("Prevalência de óbito por split")
+    ax.legend(fontsize=8, loc="upper right")
+    fig.suptitle("Comparação dos cenários — split aleatório 70/15/15", fontsize=13, y=1.02)
+    fig.tight_layout()
+    destino = Path(fig_dir)
+    destino.mkdir(parents=True, exist_ok=True)
+    caminho = destino / "split_comparacao_cenarios.png"
+    fig.savefig(caminho, dpi=140, bbox_inches="tight")
+    if mostrar:
+        plt.show()
+    else:
+        plt.close(fig)
+    return caminho
+
+
+def comparar_cenarios(metas: dict, benchs: dict, rep: Report) -> pd.DataFrame:
+    """Tabela única: N, prevalência e desempenho (validação) por cenário."""
+    linhas = []
+    for nome, m in metas.items():
+        d = _ler(m["arquivo"], [m["alvo"]])
+        y = (pd.to_numeric(d[m["alvo"]], errors="coerce") == 2).astype(int)
+        r = dict(cenario=nome, anos=",".join(map(str, m.get("anos_cenario", []))), n_linhas=len(d),
+                 n_obitos=int(y.sum()), prevalencia_obito_pct=round(100 * float(y.mean()), 2))
+        b = benchs.get(nome)
+        if b is not None and len(b):
+            for part in ("aleatoria", "temporal_por_ordem"):
+                x = b[(b["modelo"] == "logistica") & (b["particao"] == part)]
+                if len(x):
+                    r[f"pr_auc_{part}"], r[f"roc_auc_{part}"] = float(x["pr_auc"].iloc[0]), float(x["roc_auc"].iloc[0])
+        linhas.append(r)
+    t = pd.DataFrame(linhas)
+    rep.save("comparacao_cenarios", t)
+    return t
+
+
+# =============================================================================
+# A2 — Qualidade, datas e elegibilidade
+# =============================================================================
+def a2_missing(df, cfg, rep: Report) -> None:
+    ano = year_labels(df, cfg)
+    coded = set(cfg["expected_codes"])
+    rows = []
+    for col in df.columns:
+        s = df[col]
+        isna = s.isna()
+        if s.dtype == object or pd.api.types.is_string_dtype(s):
+            isna = isna | (s.astype("string").str.strip() == "").fillna(False)
+        g = isna.groupby(ano).agg(["mean", "size"])
+        ign = None
+        if col in coded:
+            ign = (code_str(s) == "9").fillna(False).groupby(ano).mean()
+        for y, r in g.iterrows():
+            rows.append(dict(coluna=col, ano=y, n=int(r["size"]), pct_vazio=round(100 * r["mean"], 2),
+                             pct_ignorado=None if ign is None else round(100 * ign.loc[y], 2)))
+    long = pd.DataFrame(rows)
+    rep.save("a2_vazios_ignorados_por_ano", long)
+    piv = long[long["ano"] != "sem_data"].pivot(index="coluna", columns="ano", values="pct_vazio")
+    inexistente = piv[(piv >= 99.9).any(axis=1) & (piv < 99.9).any(axis=1)]
+    rep.save("a2_campos_inexistentes_por_ano", inexistente.reset_index())
+    if len(inexistente):
+        rep.add("A2", "Campo inexistente por ano", WARN,
+                f"{len(inexistente)} campos 100% vazios em algum ano (ex.: {', '.join(inexistente.index[:5])})")
+    else:
+        rep.add("A2", "Campo inexistente por ano", OK, "nenhuma ruptura total de preenchimento")
+
+
+def a2_dates(df, cfg, rep: Report) -> None:
+    c = cfg["cols"]
+    today = pd.Timestamp.today().normalize()
+    rows = []
+    for a, b, desc, action in cfg["date_rules"]:
+        if c[a] not in df.columns or c[b] not in df.columns:
+            continue
+        da, db = parse_date(df[c[a]]), parse_date(df[c[b]])
+        both = da.notna() & db.notna()
+        bad = (da > db).fillna(False)
+        rows.append(dict(regra=f"{c[a]} <= {c[b]}", descricao=desc, n_comparaveis=int(both.sum()),
+                         n_violacoes=int(bad.sum()),
+                         pct=round(100 * bad.sum() / max(both.sum(), 1), 3), acao_sugerida=action))
+    for key in ("dt_nasc", "dt_sin_pri", "dt_notific", "dt_interna", "dt_evoluca", "dt_encerra"):
+        if c[key] in df.columns:
+            d = parse_date(df[c[key]])
+            raw_filled = df[c[key]].notna()
+            unparsable = int((raw_filled & d.isna()).sum())
+            future = int((d > today).sum())
+            rows.append(dict(regra=f"{c[key]} válida", descricao="Data futura, não interpretável ou fora de 1900–2100",
+                             n_comparaveis=int(raw_filled.sum()), n_violacoes=unparsable + future,
+                             pct=round(100 * (unparsable + future) / max(raw_filled.sum(), 1), 3),
+                             acao_sugerida="transformar em ausente"))
+    if {c["dt_sin_pri"], c["dt_interna"]} <= set(df.columns):
+        gap = (parse_date(df[c["dt_interna"]]) - parse_date(df[c["dt_sin_pri"]])).dt.days
+        big = int((gap > cfg["max_symptom_to_admission_days"]).sum())
+        rows.append(dict(regra="sintomas->internação", descricao=f"> {cfg['max_symptom_to_admission_days']} dias",
+                         n_comparaveis=int(gap.notna().sum()), n_violacoes=big,
+                         pct=round(100 * big / max(gap.notna().sum(), 1), 3), acao_sugerida="manter com flag"))
+    if {c["nu_idade"], c["tp_idade"]} <= set(df.columns):
+        age = age_years(df, cfg)
+        bad = int(((age < 0) | (age > cfg["max_age_years"])).sum())
+        rows.append(dict(regra="idade em anos", descricao=f"< 0 ou > {cfg['max_age_years']}",
+                         n_comparaveis=int(age.notna().sum()), n_violacoes=bad,
+                         pct=round(100 * bad / max(age.notna().sum(), 1), 3), acao_sugerida="transformar em ausente"))
+    res = pd.DataFrame(rows)
+    rep.save("a2_coerencia_datas", res)
+    crit = res[(res["n_violacoes"] > 0) & ((res["pct"] > 1.0) | (res["acao_sugerida"] == "excluir"))]
+    if len(crit):
+        rep.add("A2", "Coerência de datas", WARN,
+                f"{len(crit)} regra(s) com violações relevantes: "
+                + "; ".join(f"{r.regra} ({r.n_violacoes})" for r in crit.itertuples()))
+    else:
+        rep.add("A2", "Coerência de datas", OK, "violações ≤ 1% e nenhuma regra de exclusão violada")
+
+
+def a2_duplicates(df, cfg, rep: Report) -> None:
+    c = cfg["cols"]
+    exact = int(pd.util.hash_pandas_object(df, index=False).duplicated().sum())  # hash: evita cópia da base
+    rows = [dict(tipo="linhas exatamente duplicadas", n_linhas=exact, n_grupos=exact)]
+    nn = c["nu_notific"]
+    if nn in df.columns:
+        d = df[df[nn].notna()].duplicated(subset=[nn], keep=False)
+        grp = df.loc[d.index[d], nn].nunique()
+        rows.append(dict(tipo=f"{nn} repetido (não implica mesma pessoa)", n_linhas=int(d.sum()), n_grupos=int(grp)))
+        key = [x for x in (nn, c["dt_notific"], c["dt_nasc"]) if x in df.columns]
+        if len(key) > 1:
+            d2 = df.duplicated(subset=key, keep=False)
+            rows.append(dict(tipo=f"mesma chave {key}", n_linhas=int(d2.sum()), n_grupos=int(df[d2][key].drop_duplicates().shape[0])))
+    res = pd.DataFrame(rows)
+    rep.save("a2_duplicidades", res)
+    rep.add("A2", "Duplicidades", WARN if exact else OK,
+            f"{exact:,} linhas exatas duplicadas; demais tipos em a2_duplicidades.csv")
+
+
+def a2_maturity(df, cfg, rep: Report) -> None:
+    c = cfg["cols"]
+    dt = parse_date(df[c["dt_interna"]])
+    hosp = (code_str(df[c["hospital"]]) == "1").fillna(False).to_numpy(bool)
+    m = hosp & dt.notna().to_numpy(bool)
+    sub = df.loc[m]
+    mes = dt[m].dt.to_period("M").astype(str)
+    closed = code_str(sub[c["evolucao"]]).isin(cfg["closed_codes"])
+    enc = parse_date(sub[c["dt_encerra"]]) if c["dt_encerra"] in sub.columns else pd.Series(pd.NaT, index=sub.index)
+    days = (enc - dt[m]).dt.days
+    res = pd.DataFrame({"mes": mes, "fechado": closed, "tem_encerra": enc.notna(), "dias": days})
+    out = res.groupby("mes").agg(n=("fechado", "size"), pct_evolucao_fechada=("fechado", lambda x: round(100 * x.mean(), 2)),
+                                 pct_com_dt_encerra=("tem_encerra", lambda x: round(100 * x.mean(), 2)),
+                                 mediana_dias_ate_encerra=("dias", "median")).reset_index()
+    rep.save("a2_maturidade_evolucao_por_mes", out)
+    out["ano"] = out["mes"].str[:4].astype(int)
+    imaturo = out[out["ano"].isin(cfg["holdout_years"]) & (out["pct_evolucao_fechada"] < cfg["maturity_min_closed_pct"])]
+    if len(imaturo):
+        rep.add("A2", "Maturidade de EVOLUCAO (holdout)", WARN,
+                f"{len(imaturo)} mês(es) abaixo de {cfg['maturity_min_closed_pct']}% fechados: "
+                f"{', '.join(imaturo['mes'].head(6))}")
+    else:
+        rep.add("A2", "Maturidade de EVOLUCAO (holdout)", OK, "todos os meses do holdout com evolução madura")
+
+
+def classify_variable(col: str, pct_vazio: float, cfg: dict) -> tuple[str, str, str]:
+    if col in cfg["forbidden_vars"]:
+        return "excluir", "Pós-admissão, desfecho ou critério de inclusão (risco de vazamento)", "Não"
+    if col in cfg["conditional_vars"]:
+        return "incluir com condição", "Depende de quando foi registrada/completa na admissão", "Verificar"
+    if col in cfg["allowed_vars"]:
+        if pct_vazio > 95:
+            return "auditoria", "Permitida, mas quase toda vazia", "Verificar"
+        return "incluir", "Disponível na admissão (proposta inicial)", "Sim"
+    return "auditoria", "Não classificada: consultar dicionário", "Verificar"
+
+
+def a2_eligibility(df, cfg, rep: Report) -> None:
+    sample = df.sample(min(len(df), 100_000), random_state=0) if len(df) > 100_000 else df
+    rows = []
+    for col in df.columns:
+        s = df[col]
+        pv = float(100 * (s.isna() | (s.astype("string").str.strip() == "").fillna(False)).mean()) \
+            if s.dtype == object or pd.api.types.is_string_dtype(s) else float(100 * s.isna().mean())
+        classe, why, na_adm = classify_variable(col, pv, cfg)
+        rows.append(dict(coluna=col, classe=classe, justificativa=why, existe_na_admissao_sugerido=na_adm,
+                         pct_vazio=round(pv, 2), n_distintos_amostra=int(sample[col].nunique(dropna=True)),
+                         quando_observada="", quando_chegou_na_base="", decisao_final="", responsavel="", data=""))
+    carregadas = set(df.columns)
+    for c_ in df.attrs.get("schema_cols", []):
+        if canon(c_) not in carregadas:
+            rows.append(dict(coluna=str(c_).upper(), classe="auditoria",
+                             justificativa="Existe no Parquet, mas não foi carregada (fora das listas classificadas)",
+                             existe_na_admissao_sugerido="Verificar", pct_vazio=None, n_distintos_amostra=None,
+                             quando_observada="", quando_chegou_na_base="", decisao_final="", responsavel="", data=""))
+    mat = pd.DataFrame(rows).sort_values(["classe", "coluna"])
+    rep.save("a2_matriz_elegibilidade", mat)
+    cont = mat["classe"].value_counts().to_dict()
+    rep.add("A2", "Matriz de elegibilidade", WARN if cont.get("auditoria") else OK,
+            f"{cont} — preencher colunas em branco e fechar 'auditoria'")
+
+
+# =============================================================================
+# A3 — Desenho experimental e pilotos
+# =============================================================================
+def load_feature_list(path: str | Path) -> list[str]:
+    """Lê lista de features de .txt (1 por linha), .json ou .yaml/.yml."""
+    p = Path(path)
+    txt = p.read_text(encoding="utf-8")
+    if p.suffix in (".yaml", ".yml"):
+        import yaml
+
+        data = yaml.safe_load(txt)
+    elif p.suffix == ".json":
+        data = json.loads(txt)
+    else:
+        return [canon(ln.split("#")[0]) for ln in txt.splitlines() if ln.split("#")[0].strip()]
+
+    def find(obj):
+        if isinstance(obj, list) and all(isinstance(x, str) for x in obj):
+            return obj
+        if isinstance(obj, dict) and ("numericas" in obj or "categoricas" in obj):
+            return supervised_features({"features": obj})
+        if isinstance(obj, dict):
+            for k in ("features", "feature_cols", "variaveis", "variáveis", "colunas", "columns"):
+                if k in obj:
+                    r = find(obj[k])
+                    if r:
+                        return r
+            for v in obj.values():
+                r = find(v)
+                if r:
+                    return r
+        return None
+
+    res = find(data)
+    if not res:
+        raise ValueError(f"Nenhuma lista de features encontrada em {p}")
+    return [canon(x) for x in res]
+
+
+def load_supervised_yaml(path: str | Path) -> dict:
+    import yaml
+
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+
+
+def supervised_features(y: dict) -> list[str]:
+    """Features efetivas do configs/supervised.yaml: `final` se preenchida, senão numéricas + categóricas."""
+    f = y.get("features", {}) or {}
+    lst = f.get("final") or ((f.get("numericas") or []) + (f.get("categoricas") or []))
+    return [canon(x) for x in lst]
+
+
+def a3_config_audit(y: dict, cfg: dict, rep: Report, schema_cols=None) -> None:
+    """Confere o supervised.yaml contra as decisões do plano (A1–A3)."""
+    st = "A3-cfg"
+    tg = y.get("target", {}) or {}
+    pos = [float(x) for x in (tg.get("positivos") or [])]
+    if pos != [float(cfg["target_positive"])]:
+        rep.add(st, "Alvo: positivos", WARN, f"positivos={pos}; plano prevê óbito SRAG = [{cfg['target_positive']}]")
+    else:
+        rep.add(st, "Alvo: positivos", OK, "óbito SRAG (evolucao=2) como positivo")
+    if not any(k for k in tg if "outras" in k or "ausente" in k or "nulo" in k):
+        rep.add(st, "Alvo: evolucao=3 e ausente", WARN,
+                "o YAML só tem `descartar_ignorado` (evolucao==9). O C2 descarta 3/9/nulos em "
+                "`filtrar_rotulos_validos`; confirmar em src/models/pipeline.py que `criar_alvo_binario` "
+                "trata 3 e ausente como inválidos (nunca como cura)")
+    ct = canon(y.get("coluna_tempo", ""))
+    if ct != "DT_INTERNA":
+        rep.add(st, "Coluna temporal", WARN,
+                f"split usa '{y.get('coluna_tempo')}', mas o ponto de previsão do plano é DT_INTERNA")
+    else:
+        rep.add(st, "Coluna temporal", OK, "split por DT_INTERNA")
+    tp = y.get("temporal", {}) or {}
+    rep.add(st, "C2 x split por datas", WARN,
+            "o C2 enviado cria `TemporalSplit(df, coluna_tempo, frac_treino, frac_validacao)` e não lê "
+            "`temporal.modo`/`temporal.datas`: para holdout = 2025 o C precisa adaptar o split")
+    if tp.get("modo") != "datas":
+        rep.add(st, "Split temporal", WARN,
+                f"modo='{tp.get('modo')}' (fração). Plano: desenvolvimento {cfg['dev_years']} / holdout "
+                f"{cfg['holdout_years']} -> usar modo 'datas' (G2)")
+    else:
+        d = tp.get("datas", {}) or {}
+        try:
+            h0 = pd.Timestamp(d["holdout"]["start"])
+            v1 = pd.Timestamp(d["validacao"]["end"])
+            t0 = pd.Timestamp(d["treino"]["start"])
+            ok = v1 < h0 and h0.year == min(cfg["holdout_years"]) and t0.year == min(cfg["dev_years"])
+            rep.add(st, "Split temporal (datas)", OK if ok else FAIL,
+                    f"treino>={t0.date()}, validação<={v1.date()}, holdout>={h0.date()}"
+                    + ("" if ok else " — inconsistente com o plano"))
+        except Exception:
+            rep.add(st, "Split temporal (datas)", FAIL, "datas incompletas ou inválidas")
+    if schema_cols:
+        fisico = {str(c).lower() for c in schema_cols}
+        por_canon = {canon(c): str(c).lower() for c in schema_cols}
+        f = y.get("features", {}) or {}
+        pedidas = [str(x).lower() for x in ((f.get("final") or []) + (f.get("numericas") or []) + (f.get("categoricas") or []))]
+        if f.get("final"):
+            pedidas = [str(x).lower() for x in f["final"]]
+        deriv_pedidas = [n for n in pedidas if n in DERIVADAS]
+        if deriv_pedidas:
+            rep.add(st, "Features derivadas do YAML", OK,
+                    f"{', '.join(deriv_pedidas)} não existem no Parquet: a Pessoa A as cria no dataset analítico")
+        for rotulo, nomes, status in (("Features do YAML x Parquet", pedidas, FAIL),
+                                      ("`proibidas` do YAML x Parquet", [str(x).lower() for x in (f.get("proibidas") or [])], WARN)):
+            ausentes = [n for n in nomes if n not in fisico and n not in DERIVADAS]
+            if ausentes:
+                dicas = [f"{n}->{por_canon[canon(n)]}" for n in ausentes if canon(n) in por_canon]
+                rep.add(st, rotulo, status,
+                        f"não existem no Parquet: {', '.join(ausentes)}"
+                        + (f" (nome físico provável: {', '.join(dicas)})" if dicas else "")
+                        + (" — o C2 não conseguirá carregá-las" if status == FAIL else " — test_leakage não protege as colunas reais"))
+            else:
+                rep.add(st, rotulo, OK, "todos os nomes existem no Parquet")
+    feats = supervised_features(y)
+    forb = {canon(v) for v in cfg["forbidden_vars"]}
+    yml_forb = {canon(v) for v in (y.get("features", {}) or {}).get("proibidas", []) or []}
+    hit = sorted(set(feats) & (forb | yml_forb))
+    soft = [h for h in hit if h == "HOSPITAL"]
+    hard = [h for h in hit if h not in soft]
+    if hard:
+        rep.add(st, "Features x proibidas", FAIL, f"em X: {', '.join(hard)}")
+    if soft:
+        rep.add(st, "Feature constante", WARN, "internado/HOSPITAL é critério de inclusão (constante na coorte)")
+    if not hit:
+        rep.add(st, "Features x proibidas", OK, f"{len(feats)} features sem conflito")
+    faltam = sorted(forb - yml_forb - {"HOSPITAL"})
+    if faltam:
+        rep.add(st, "Lista `proibidas` do YAML", WARN,
+                f"{len(faltam)} do plano não protegidas pelo test_leakage: {', '.join(faltam[:12])}")
+    if "NU_IDADE_N" in feats and not any(f in feats for f in ("TP_IDADE", "IDADE_ANOS")):
+        rep.add(st, "Idade", WARN, "nu_idade_n sem tp_idade: unidade mistura dias/meses/anos; converter para anos")
+    cond = sorted(set(feats) & {canon(v) for v in cfg["conditional_vars"]})
+    if cond:
+        rep.add(st, "Features condicionais", WARN, f"confirmar condição de uso: {', '.join(cond)}")
+    pend = [k for k, v in (y.get("gates") or {}).items() if (v or {}).get("status") != "aprovado"]
+    if pend:
+        rep.add(st, "Gates", WARN, f"{len(pend)} pendentes: {', '.join(pend[:4])}... (A aprova G1/G2 com as regras A1–A3)")
+
+
+def a3_forbidden(features: list[str], label: str, cfg, rep: Report, must_exclude_target=True) -> None:
+    forb = {v.upper() for v in cfg["forbidden_vars"]}
+    hit = sorted(set(features) & forb)
+    hard = [h for h in hit if h != "HOSPITAL"]
+    if "HOSPITAL" in hit:
+        rep.add("A3", f"Feature constante ({label})", WARN, "HOSPITAL/internado é critério de inclusão (constante na coorte)")
+    if hard:
+        rep.add("A3", f"Variáveis proibidas ({label})", FAIL, f"presentes: {', '.join(hard)}")
+    elif not hit:
+        rep.add("A3", f"Variáveis proibidas ({label})", OK, f"{len(features)} variáveis, nenhuma proibida")
+    cond = sorted(set(features) & {v.upper() for v in cfg["conditional_vars"]})
+    if cond:
+        rep.add("A3", f"Variáveis condicionais ({label})", WARN, f"confirmar condição de uso: {', '.join(cond)}")
+    if label == "clustering" and must_exclude_target and cfg["cols"]["evolucao"] in features:
+        rep.add("A3", "Desfecho no clustering", FAIL, "EVOLUCAO não pode formar clusters")
+
+
+def a3_temporal_split(cohort: pd.DataFrame, cfg, rep: Report) -> None:
+    dev, hold = set(cfg["dev_years"]), set(cfg["holdout_years"])
+    problems = []
+    if dev & hold:
+        problems.append(f"anos sobrepostos: {sorted(dev & hold)}")
+    if hold and dev and min(hold) <= max(dev):
+        problems.append("holdout não é posterior ao desenvolvimento")
+    present = set(cohort["_ano"].unique())
+    if hold - present:
+        problems.append(f"holdout sem registros: {sorted(hold - present)}")
+    if dev - present:
+        problems.append(f"desenvolvimento sem registros: {sorted(dev - present)}")
+    split = np.where(cohort["_ano"].isin(dev), "desenvolvimento", np.where(cohort["_ano"].isin(hold), "holdout", "fora"))
+    tab = (cohort.assign(split=split).groupby(["split", "_ano"])["_alvo"]
+           .agg(n="size", n_obitos="sum", prevalencia_obito=lambda x: round(100 * x.mean(), 2)).reset_index())
+    rep.save("a3_split_temporal", tab)
+    if problems:
+        rep.add("A3", "Split temporal", FAIL, "; ".join(problems))
+        return
+    prev = tab.groupby("split")["n_obitos"].sum() / tab.groupby("split")["n"].sum() * 100
+    diff = abs(prev.get("holdout", np.nan) - prev.get("desenvolvimento", np.nan))
+    if diff > 10:
+        rep.add("A3", "Split temporal", WARN, f"prevalência difere {diff:.1f} p.p. entre dev e holdout (drift)")
+    else:
+        rep.add("A3", "Split temporal", OK, f"dev {sorted(dev)} < holdout {sorted(hold)}; Δ prevalência {diff:.1f} p.p.")
+
+
+def a3_leak_scan(cohort: pd.DataFrame, cfg, rep: Report) -> None:
+    """AUC univariada contra o alvo: valores ~1 sugerem vazamento (indicativo, não prova)."""
+    from sklearn.metrics import roc_auc_score
+
+    skip = set(cfg["cols"].values()) | {"_ano", "_alvo"}
+    data = cohort.sample(min(len(cohort), cfg["leak_sample"]), random_state=0)
+    y = data["_alvo"].to_numpy()
+    if len(np.unique(y)) < 2:
+        rep.add("A3", "Varredura de vazamento", WARN, "alvo com uma única classe; varredura não executada")
+        return
+    rows = []
+    for col in data.columns:
+        if col in skip:
+            continue
+        s = data[col]
+        try:
+            if pd.api.types.is_numeric_dtype(s):
+                x = s.fillna(s.median()).to_numpy(float)
+            else:
+                if s.nunique() > cfg["leak_max_categories"]:
+                    continue
+                x = data.groupby(s.astype("string").fillna("<NA>"))["_alvo"].transform("mean").to_numpy(float)
+            auc = roc_auc_score(y, x)
+        except Exception:
+            continue
+        rows.append(dict(coluna=col, auc_univariada=round(auc, 4), forca=round(abs(auc - 0.5) * 2, 4)))
+    res = pd.DataFrame(rows).sort_values("forca", ascending=False)
+    rep.save("a3_varredura_vazamento", res)
+    thr = cfg["leak_auc_threshold"]
+    sus = res[(res["auc_univariada"] >= thr) | (res["auc_univariada"] <= 1 - thr)]
+    if len(sus):
+        rep.add("A3", "Varredura de vazamento", WARN,
+                f"AUC univariada ≥ {thr}: {', '.join(sus['coluna'].head(8))} — investigar")
+    else:
+        rep.add("A3", "Varredura de vazamento", OK, f"nenhuma variável com AUC univariada ≥ {thr}")
+
+
+def a3_suspicious_metrics(results: pd.DataFrame, cfg, rep: Report) -> None:
+    res = results.copy()
+    res.columns = [c.lower() for c in res.columns]
+    thr = cfg["suspicious_metric_threshold"]
+    cols = [c for c in ("roc_auc", "pr_auc") if c in res.columns]
+    if not cols:
+        rep.add("A3", "Métricas suspeitas", WARN, "colunas roc_auc/pr_auc não encontradas")
+        return
+    flag = res[(res[cols] >= thr).any(axis=1)]
+    if len(flag):
+        rep.add("A3", "Métricas suspeitas", WARN, f"{len(flag)} linha(s) com métrica ≥ {thr}: possível vazamento")
+    else:
+        rep.add("A3", "Métricas suspeitas", OK, f"nenhuma métrica ≥ {thr}")
+
+
+def a3_audit_logs(logs_dir: str | Path, cfg, rep: Report) -> None:
+    d = Path(logs_dir)
+    files = [p for p in d.rglob("*") if p.is_file() and p.suffix in (".json", ".jsonl", ".log", ".txt")] if d.exists() else []
+    if not files:
+        rep.add("A3", "Auditoria de logs", WARN, f"nenhum log encontrado em {d}")
+        return
+    rows = []
+    for p in files:
+        txt = p.read_text(encoding="utf-8", errors="ignore")
+        row = {"arquivo": str(p)}
+        for k, rx in cfg["log_required_keys"].items():
+            row[k] = bool(re.search(rx, txt, flags=re.I))
+        rows.append(row)
+    res = pd.DataFrame(rows)
+    rep.save("a3_auditoria_logs", res)
+    keys = list(cfg["log_required_keys"])
+    incompletos = res[~res[keys].all(axis=1)]
+    if len(incompletos):
+        faltas = {k for k in keys if not res[k].all()}
+        rep.add("A3", "Auditoria de logs", WARN, f"{len(incompletos)}/{len(res)} logs incompletos (faltam: {', '.join(sorted(faltas))})")
+    else:
+        rep.add("A3", "Auditoria de logs", OK, f"{len(res)} logs com todos os campos mínimos")
+
+
+# =============================================================================
+# A4 — Candidatos e decisão
+# =============================================================================
+def a4_decision_table(results: pd.DataFrame, cfg, rep: Report) -> None:
+    """Espera colunas: modelo, [fold], roc_auc, pr_auc, brier (nomes case-insensitive)."""
+    res = results.copy()
+    res.columns = [c.lower() for c in res.columns]
+    alias = {"model": "modelo", "candidate": "modelo", "candidato": "modelo"}
+    res = res.rename(columns=alias)
+    if "modelo" not in res.columns:
+        rep.add("A4", "Tabela de decisão", FAIL, "coluna 'modelo' não encontrada")
+        return
+    metrics = [m for m in ("pr_auc", "roc_auc", "brier") if m in res.columns]
+    agg = res.groupby("modelo")[metrics].agg(["mean", "std"])
+    agg.columns = [f"{m}_{s}" for m, s in agg.columns]
+    agg = agg.reset_index()
+    lower = agg["modelo"].str.lower()
+    base = agg[lower.str.contains("baseline|dummy|prevalen")]
+    logi = agg[lower.str.contains("log")]
+    notes = []
+    for _, r in agg.iterrows():
+        n = []
+        if "pr_auc_mean" in agg.columns and len(logi) and "log" not in r["modelo"].lower() \
+                and not re.search("baseline|dummy|prevalen", r["modelo"].lower()):
+            gain = r["pr_auc_mean"] - logi["pr_auc_mean"].iloc[0]
+            if gain < cfg["decision_min_pr_auc_gain"]:
+                n.append(f"ganho de PR-AUC sobre a logística ({gain:+.3f}) não justifica complexidade")
+            if "brier_mean" in agg.columns and r["brier_mean"] > logi["brier_mean"].iloc[0]:
+                n.append("Brier pior que a logística")
+        if "pr_auc_mean" in agg.columns and len(base) and r["pr_auc_mean"] <= base["pr_auc_mean"].iloc[0] \
+                and not re.search("baseline|dummy|prevalen", r["modelo"].lower()):
+            n.append("não supera o baseline em PR-AUC")
+        if "pr_auc_std" in agg.columns and r["pr_auc_mean"] > 0 and r["pr_auc_std"] / r["pr_auc_mean"] > cfg["decision_max_cv_ratio"]:
+            n.append("alta variação entre folds")
+        notes.append("; ".join(n) if n else "sem alerta automático")
+    agg["alertas_automaticos"] = notes
+    agg["decisao"] = ""
+    agg["justificativa_descarte_ou_manutencao"] = ""
+    agg["pendencia_para_18_10"] = ""
+    rep.save("a4_tabela_decisao", agg.round(4))
+    n_alert = sum(n != "sem alerta automático" for n in notes)
+    rep.add("A4", "Tabela de decisão", WARN if n_alert else OK,
+            f"{len(agg)} candidatos; {n_alert} com alerta — preencher decisão/justificativa")
+
+
+# =============================================================================
+# Config, carga da base e registros (decisões / atas)
+# =============================================================================
+def load_config(path: str | Path | None = "configs/decisoes.yaml") -> dict:
+    """DEFAULT_CONFIG sobreposto pelo YAML de decisões (se existir)."""
+    cfg = json.loads(json.dumps(DEFAULT_CONFIG))
+    if path and Path(path).exists():
+        import yaml
+
+        for k, v in (yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}).items():
+            cfg[k] = {**cfg[k], **v} if isinstance(cfg.get(k), dict) and isinstance(v, dict) else v
+    return cfg
+
+
+def find_base(root: str | Path = ".") -> Path | None:
+    """Procura a base ORIGINAL (Parquet/CSV). Ignora data/analytical (saída da Pessoa A) e metadados."""
+    r = Path(root)
+    for pat in ("data/raw/**/*.parquet", "data/**/*.parquet", "data/raw/**/*.csv", "data/**/*.csv"):
+        hits = [h for h in sorted(r.glob(pat))
+                if "analytical" not in h.parts and "dataset_supervisionado" not in h.name]
+        if hits:
+            return hits[0]
+    return None
+
+
+def colunas_necessarias(schema_cols, cfg: dict, supervised_config=None, modo: str = "classificadas") -> list[str]:
+    """Colunas físicas do Parquet que as verificações realmente usam (a base tem ~194; carregar todas estoura a memória).
+
+    modo "minimas": essenciais (coorte/alvo/datas) + códigos esperados + o que o supervised.yaml pede
+    (features, alvo, tempo, grupos). modo "classificadas": soma as listas proibidas/condicionais/permitidas (A2).
+    """
+    need = {canon(x) for x in cfg["cols"].values()} | {canon(x) for x in cfg["expected_codes"]}
+    if modo != "minimas":
+        for k in ("forbidden_vars", "conditional_vars", "allowed_vars"):
+            need |= {canon(x) for x in cfg[k]}
+    if supervised_config and Path(supervised_config).exists():
+        y = load_supervised_yaml(supervised_config)
+        f = y.get("features", {}) or {}
+        need |= {canon(x) for x in supervised_features(y)}
+        need |= {canon(x) for x in (f.get("proibidas") or [])}
+        need |= {canon(x) for x in ((y.get("avaliacao") or {}).get("grupos") or [])}
+        need |= {canon((y.get("target") or {}).get("coluna", cfg["cols"]["evolucao"])), canon(y.get("coluna_tempo", ""))}
+    return [c for c in schema_cols if canon(c) in need]
+
+
+def carregar_base(path=None, demo: bool = False, sample: int = 0, colunas="classificadas",
+                  cfg: dict | None = None, supervised_config=None, compactar: bool = True) -> pd.DataFrame:
+    """Lê a base. path=None -> usa `src.utils.storage.get_parquet()` do projeto (ou procura em data/).
+
+    colunas: "minimas" (só o essencial + o que o supervised.yaml pede; A1/A3/A3b), "classificadas" (soma as listas de
+    variáveis; A2), "todas" (pesado) ou lista de nomes. O schema completo fica em df.attrs["schema_cols"].
+    compactar=True lê o Parquet via pyarrow com texto em `category` (e libera a tabela Arrow durante a conversão):
+    reduz muito o pico de memória (a base tem milhões de linhas).
+    """
+    if demo:
+        print("[demo] usando dados sintéticos")
+        df = make_demo()[0]
+        df.attrs["schema_cols"] = list(df.columns)
+        return df
+    p = Path(path) if path else None
+    if p is None:
+        try:
+            from src.utils import storage  # pipeline do projeto
+
+            p = Path(storage.get_parquet(force=False))
+        except Exception as e:  # noqa: BLE001
+            print(f"[storage] indisponível ({type(e).__name__}); procurando em data/ ...")
+            p = find_base()
+    if p is None or not p.exists():
+        raise FileNotFoundError(
+            f"Base não encontrada (procurei em '{Path.cwd() / 'data'}' por *.parquet e *.csv). "
+            "Informe DATA_PATH com o caminho do arquivo ou coloque-o em data/raw/.")
+    cfg = cfg or load_config()
+    modo_leitura = "padrão"
+    if p.suffix == ".parquet":
+        import pyarrow.parquet as pq
+
+        schema_cols = pq.ParquetFile(p).schema_arrow.names
+        if colunas == "todas":
+            cols = None
+        elif isinstance(colunas, (list, tuple)):
+            cols = [c for c in schema_cols if c.lower() in {str(x).lower() for x in colunas}]
+        else:
+            cols = colunas_necessarias(schema_cols, cfg, supervised_config, modo=str(colunas))
+        df = None
+        if compactar:
+            try:
+                tabela = pq.read_table(p, columns=cols)
+                df = tabela.to_pandas(self_destruct=True, strings_to_categorical=True, split_blocks=True)
+                del tabela
+                modo_leitura = "compacto (texto em category)"
+            except Exception as e:  # noqa: BLE001
+                print(f"[leitura compacta falhou: {type(e).__name__}: {str(e)[:80]}] usando leitura padrão")
+                df = None
+        if df is None:
+            df = pd.read_parquet(p, columns=cols)
+    else:
+        df = pd.read_csv(p, low_memory=False)
+        schema_cols = list(df.columns)
+    df.attrs["schema_cols"] = list(schema_cols)
+    print(f"[base] {p} -> {len(df):,} linhas x {df.shape[1]} colunas carregadas (de {len(schema_cols)} no arquivo) | leitura {modo_leitura}")
+    if sample and len(df) > sample:
+        df = df.sample(sample, random_state=0)
+        print(f"[amostra] {sample:,} linhas")
+    return df
+
+
+def uso_memoria_gb(df: pd.DataFrame) -> float:
+    return float(df.memory_usage(index=False, deep=True).sum() / 1e9)
+
+
+DECISION_COLS = ["id", "etapa", "tema", "decisao", "responsavel", "data", "status", "impacto", "evidencia"]
+
+
+def log_decision(out, id: str, tema: str, decisao: str, etapa: str = "", responsavel: str = "Pessoa A",
+                 status: str = "proposta", impacto: str = "", evidencia: str = "") -> pd.DataFrame:
+    """Insere/atualiza (por id) uma linha na tabela de decisões. status: proposta | aprovada | revisar."""
+    path = Path(out) / "tabela_decisoes.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    row = dict(id=id, etapa=etapa, tema=tema, decisao=decisao, responsavel=responsavel,
+               data=pd.Timestamp.today().date().isoformat(), status=status, impacto=impacto, evidencia=evidencia)
+    t = pd.read_csv(path, dtype=str).fillna("") if path.exists() else pd.DataFrame(columns=DECISION_COLS)
+    t = pd.concat([t[t["id"] != id], pd.DataFrame([row])], ignore_index=True)[DECISION_COLS]
+    t.to_csv(path, index=False, encoding="utf-8-sig")
+    return t
+
+
+def write_ata(out, nome: str, data: str, decisoes=(), pendencias=(), riscos=(), shortlist=(),
+              descartes=(), rep: Report | None = None) -> Path:
+    """Gera a ata (Gates 2/3, 17/10...) em Markdown a partir de listas e dos alertas do relatório."""
+    def sec(titulo, itens):
+        return [f"## {titulo}", ""] + ([f"- {i}" for i in itens] if itens else ["- (nenhum registrado)"]) + [""]
+
+    lines = [f"# {nome}", "", f"**Data:** {data}", ""]
+    lines += sec("Decisões", decisoes) + sec("Candidatos na shortlist", shortlist) + sec("Descartes e justificativas", descartes)
+    lines += sec("Riscos", riscos) + sec("Pendências", pendencias)
+    if rep is not None:
+        alerts = [f for f in rep.findings if f[2] != OK]
+        lines += ["## Alertas das verificações automáticas", ""]
+        lines += [f"- [{f[2]}] {f[0]} / {f[1]}: {f[3]}" for f in alerts] or ["- nenhum"]
+    slug = re.sub(r"[^a-z0-9]+", "_", nome.lower()).strip("_")
+    path = Path(out) / (slug if slug.startswith("ata_") else f"ata_{slug}") 
+    path = path.with_suffix(".md")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
+
+
+# =============================================================================
+# Execução
+# =============================================================================
+def run(df: pd.DataFrame, args, cfg: dict) -> Report:
+    rep = Report(args.out)
+    df = prepare(df)
+    if args.sample and len(df) > args.sample:
+        df = df.sample(args.sample, random_state=0)
+        print(f"[amostra] usando {args.sample:,} linhas")
+    stage = args.stage
+    do = lambda s: stage in (s, "all")  # noqa: E731
+
+    a1_columns(df, cfg, rep)
+    if rep.has_failure:
+        rep.write_md()
+        return rep
+
+    cohort = None
+    if do("a1") or do("a3"):
+        if do("a1"):
+            a1_code_tables(df, cfg, rep)
+            a1_waterfall(df, cfg, rep)
+            a1_target(df, cfg, rep)
+        cohort = a1_cohort(df, cfg)
+    if do("a2"):
+        a2_missing(df, cfg, rep)
+        a2_dates(df, cfg, rep)
+        a2_duplicates(df, cfg, rep)
+        a2_maturity(df, cfg, rep)
+        a2_eligibility(df, cfg, rep)
+    if do("a3"):
+        if args.supervised_config:
+            y = load_supervised_yaml(args.supervised_config)
+            a3_config_audit(y, cfg, rep, df.attrs.get("schema_cols"))
+            if not args.features_supervised:
+                a3_forbidden(supervised_features(y), "supervisionado", cfg, rep)
+        if args.features_supervised:
+            a3_forbidden(load_feature_list(args.features_supervised), "supervisionado", cfg, rep)
+        if args.features_clustering:
+            a3_forbidden(load_feature_list(args.features_clustering), "clustering", cfg, rep)
+        if cohort is not None and len(cohort):
+            a3_temporal_split(cohort, cfg, rep)
+            a3_leak_scan(cohort, cfg, rep)
+        if args.logs_dir:
+            a3_audit_logs(args.logs_dir, cfg, rep)
+        if args.results:
+            a3_suspicious_metrics(pd.read_csv(args.results), cfg, rep)
+    if do("a4") and args.results:
+        a4_decision_table(pd.read_csv(args.results), cfg, rep)
+    elif stage == "a4":
+        rep.add("A4", "Tabela de decisão", FAIL, "informe --results com a tabela de experimentos")
+    path = rep.write_md()
+    print(f"\nRelatório: {path}")
+    return rep
+
+
+def make_demo(n: int = 30_000, seed: int = 0, inicio: str = "2022-01-01", anos: int = 4) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Dados sintéticos com defeitos plantados, para testar o script."""
+    rng = np.random.default_rng(seed)
+    interna = pd.Timestamp(inicio) + pd.to_timedelta(rng.integers(0, 365 * anos - 30, n), unit="D")
+    sint = interna - pd.to_timedelta(rng.integers(0, 10, n), unit="D")
+    df = pd.DataFrame({
+        "NU_NOTIFIC": rng.integers(10**8, 10**9, n).astype(str),
+        "DT_NOTIFIC": sint + pd.to_timedelta(rng.integers(0, 5, n), unit="D"),
+        "DT_SIN_PRI": sint,
+        "DT_INTERNA": interna,
+        "DT_NASC": sint - pd.to_timedelta(rng.integers(365, 365 * 90, n), unit="D"),
+        "NU_IDADE_N": rng.integers(1, 90, n),
+        "TP_IDADE": 3,
+        "HOSPITAL": rng.choice([1, 2, 9], n, p=[0.9, 0.08, 0.02]),
+        "CS_SEXO": rng.choice(["M", "F", "I"], n, p=[0.49, 0.5, 0.01]),
+        "FEBRE": rng.choice([1, 2, 9], n),
+        "DISPNEIA": rng.choice([1, 2, 9], n),
+        "SATURACAO": rng.choice([1, 2, 9, np.nan], n),
+    })
+    risk = (df["NU_IDADE_N"] / 90 + (df["DISPNEIA"] == 1) * 0.3 + rng.normal(0, 0.4, n))
+    obito = risk > 0.9
+    evo = np.where(obito, 2, 1)
+    evo = np.where(rng.random(n) < 0.03, 3, evo)
+    evo = np.where(rng.random(n) < 0.04, 9, evo)
+    df["EVOLUCAO"] = evo
+    df["DT_EVOLUCA"] = interna + pd.to_timedelta(rng.integers(2, 30, n), unit="D")
+    df["DT_ENCERRA"] = df["DT_EVOLUCA"] + pd.to_timedelta(rng.integers(0, 40, n), unit="D")
+    df["UTI"] = np.where(obito, rng.choice([1, 2], n, p=[0.8, 0.2]), rng.choice([1, 2], n, p=[0.3, 0.7]))
+    df["VAZ_DEMO"] = (obito).astype(int)  # vazamento plantado
+    # defeitos plantados
+    df.loc[:30, "DT_INTERNA"] = pd.NaT
+    df.loc[31:60, "DT_EVOLUCA"] = df.loc[31:60, "DT_INTERNA"] - pd.Timedelta(days=5)
+    df.loc[61:90, "EVOLUCAO"] = 7
+    df = pd.concat([df, df.iloc[200:230]], ignore_index=True)  # duplicatas exatas
+    # 2025 imaturo: evolução ainda aberta nos meses finais
+    late = df["DT_INTERNA"] >= pd.Timestamp("2025-09-01")
+    df.loc[late & (rng.random(len(df)) < 0.5), "EVOLUCAO"] = np.nan
+    res = pd.DataFrame({
+        "modelo": ["baseline"] * 3 + ["logistica"] * 3 + ["boosting"] * 3 + ["boosting_leak"] * 3,
+        "fold": [1, 2, 3] * 4,
+        "pr_auc": [0.15, 0.16, 0.15, 0.40, 0.42, 0.38, 0.405, 0.41, 0.39, 0.99, 0.99, 0.98],
+        "roc_auc": [0.5, 0.5, 0.5, 0.80, 0.81, 0.79, 0.805, 0.81, 0.80, 0.99, 0.99, 0.99],
+        "brier": [0.15, 0.15, 0.15, 0.10, 0.10, 0.11, 0.11, 0.10, 0.11, 0.01, 0.01, 0.01],
+    })
+    return df, res
+```
+
+## `src/utils/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `0 B` · modified `2026-10-06 02:28 UTC`
+- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+```python
+
+```
+
+## `src/utils/config.py`
+
+- Git: `tracked` · status `clean`
+- Size: `8.0 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `83593c64261804f7b18aab33d121ef6e4d90c7a65aa612fb5649bf4889fed358`
+
+```python
+"""
+Configurações centralizadas do Projeto Integrador.
+
+Fonte única da verdade para diretórios, identificação da versão dos dados,
+seed de reprodutibilidade e acesso tipado ao ``configs/supervised.yaml``.
+
+Segredos e URLs sensíveis (``GITHUB_TOKEN``, ``SRAG_PARQUET_URL``) são lidos
+em tempo de execução via ``os.getenv``, nunca no import. O YAML aceita
+interpolação ``${VAR}``, resolvida no momento da leitura.
+
+Uso típico::
+
+    from src.utils import config as C
+
+    C.SEED
+    C.OUTPUTS_DIR
+    C.cfg("target", "coluna")
+    C.exigir_gate("G7_calibracao")
+"""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+ROOT_DIR: Path = Path(__file__).resolve().parents[2]
+
+SEED         = 42
+RANDOM_STATE = SEED
+
+DATA_DIR       = ROOT_DIR / "data"
+RAW_DIR        = DATA_DIR / "raw"
+PROCESSED_DIR  = DATA_DIR / "processed"
+ANALYTICAL_DIR = DATA_DIR / "analytical"
+TREINO_DIR     = DATA_DIR / "treino"
+
+CONFIGS_DIR  = ROOT_DIR / "configs"
+MODELS_DIR   = ROOT_DIR / "models"
+OUTPUTS_DIR  = ROOT_DIR / "outputs"
+RUNS_DIR     = OUTPUTS_DIR / "runs"
+LOGS_DIR     = ROOT_DIR / "logs"
+REPORTS_DIR  = ROOT_DIR / "reports"
+FIGURES_DIR  = REPORTS_DIR / "figures"
+
+TABLES_DIR      = OUTPUTS_DIR / "tables"
+PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
+
+SUPERVISED_YAML = CONFIGS_DIR / "supervised.yaml"
+
+GITHUB_REPO  = "Ivan-S-Oliveira/Projeto_Integrador"
+DATA_VERSION = "dados-v2"
+PARQUET_NAME = "srag.parquet"
+
+GITHUB_RELEASE_URL = (
+    f"https://github.com/{GITHUB_REPO}/releases/download/{DATA_VERSION}/"
+)
+
+HTTP_TIMEOUT    = 180
+HTTP_TENTATIVAS = 3
+HTTP_BACKOFF    = 5
+
+CSV_SEP      = ","
+CSV_ENCODING = "utf-8-sig"
+COLS         = None
+
+PARQUET_COMPRESSION = "zstd"
+CSV_CHUNKSIZE       = 500_000
+
+
+class GatePendenteError(RuntimeError):
+    """Levantado quando se tenta usar um valor que depende de gate não aprovado."""
+
+
+def github_token() -> str | None:
+    """Token do GitHub (opcional) para releases/downloads autenticados."""
+    return os.getenv("GITHUB_TOKEN")
+
+
+def srag_parquet_url() -> str:
+    """URL do Parquet oficial processado.
+
+    Construída a partir de ``GITHUB_REPO`` / ``DATA_VERSION`` /
+    ``PARQUET_NAME``. Pode ser sobrescrita via ``SRAG_PARQUET_URL``.
+    """
+    url_padrao = (
+        f"https://github.com/{GITHUB_REPO}/releases/download/"
+        f"{DATA_VERSION}/{PARQUET_NAME}"
+    )
+    return os.getenv("SRAG_PARQUET_URL", url_padrao).strip() or url_padrao
+
+
+_ENV_PATTERN = re.compile(r"\$\{(\w+)\}")
+
+
+def _interpolar_env(texto: str) -> str:
+    """Substitui ``${VAR}`` pelo valor de ``os.getenv``; ausente vira ``""``."""
+    return _ENV_PATTERN.sub(lambda m: os.getenv(m.group(1), ""), texto)
+
+
+def _get_nested(mapping: Any, *chaves: str, default: Any = None) -> Any:
+    """Acesso a caminho de chaves num dict; devolve ``default`` se faltar."""
+    atual = mapping
+    for k in chaves:
+        if not isinstance(atual, dict) or k not in atual:
+            return default
+        atual = atual[k]
+    return atual
+
+
+@lru_cache(maxsize=1)
+def carregar_supervised() -> dict[str, Any]:
+    """Lê ``configs/supervised.yaml`` e devolve o dict parseado (cacheado).
+
+    Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError`` se o
+    YAML não existir e ``ValueError`` se a raiz não for mapping.
+    """
+    if not SUPERVISED_YAML.exists():
+        raise FileNotFoundError(
+            f"Configuração não encontrada: {SUPERVISED_YAML}\n"
+            f"Crie o arquivo em {CONFIGS_DIR}/supervised.yaml "
+            f"ou ajuste CONFIGS_DIR / SUPERVISED_YAML em config.py."
+        )
+
+    texto = _interpolar_env(SUPERVISED_YAML.read_text(encoding="utf-8"))
+    dados = yaml.safe_load(texto) or {}
+
+    if not isinstance(dados, dict):
+        raise ValueError(
+            f"{SUPERVISED_YAML} deve conter um mapeamento (dict) na raiz, "
+            f"mas veio {type(dados).__name__}."
+        )
+    return dados
+
+
+def supervised_yaml_sha256() -> str | None:
+    """SHA-256 do ``supervised.yaml``, ou ``None`` se o arquivo não existir."""
+    if not SUPERVISED_YAML.exists():
+        return None
+    h = hashlib.sha256()
+    with open(SUPERVISED_YAML, "rb") as f:
+        while chunk := f.read(1024 * 1024):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def cfg(*chaves: str, default: Any = None) -> Any:
+    """Acessa ``configs/supervised.yaml`` por caminho de chaves.
+
+    Exemplo::
+
+        cfg("target", "coluna")       # → "evolucao"
+        cfg("temporal", "fracao")     # → {"treino": 0.7, "validacao": 0.15}
+
+    Devolve ``default`` se qualquer chave do caminho não existir.
+    """
+    return _get_nested(carregar_supervised(), *chaves, default=default)
+
+
+def exigir_valor(valor: Any, *, caminho: str, gate: str) -> Any:
+    """Devolve ``valor`` se preenchido; levanta ``GatePendenteError`` se ``None`` ou ``"TBD"``.
+
+    Usado para valores do YAML que só podem ser preenchidos após gate aprovado.
+    """
+    if valor is None or valor == "TBD":
+        raise GatePendenteError(
+            f"Valor não definido em '{caminho}'. "
+            f"Aprove o gate '{gate}' em configs/supervised.yaml antes de usar."
+        )
+    return valor
+
+
+def gate_aprovado(nome_gate: str) -> bool:
+    """True se ``gates.<nome_gate>.status == 'aprovado'``."""
+    return _get_nested(carregar_supervised(), "gates", nome_gate, default={}).get("status") == "aprovado"
+
+
+def exigir_gate(nome_gate: str) -> None:
+    """Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado.
+
+    Use no início de etapas que dependem de decisão metodológica congelada
+    (ex.: holdout antes de G9).
+    """
+    if not gate_aprovado(nome_gate):
+        raise GatePendenteError(
+            f"Gate '{nome_gate}' está pendente. "
+            f"Aprove-o em configs/supervised.yaml (status: aprovado) "
+            f"antes de rodar esta etapa."
+        )
+
+
+def features_finais() -> list[str]:
+    """Lista final de features.
+
+    Usa ``features.final`` se preenchida; caso contrário, concatena
+    ``features.numericas`` + ``features.categoricas``.
+    """
+    f = cfg("features") or {}
+    return list(f["final"]) if f.get("final") else (
+        list(f.get("numericas", [])) + list(f.get("categoricas", []))
+    )
+
+
+def limiar_ativo() -> float:
+    """Limiar de decisão vigente.
+
+    Usa ``limiar.otimo`` se o gate ``G8_limiar`` estiver aprovado e o valor
+    preenchido; caso contrário, cai em ``limiar.default`` (0.5).
+    """
+    lim = cfg("limiar") or {}
+    if gate_aprovado("G8_limiar") and lim.get("otimo") is not None:
+        return float(lim["otimo"])
+    return float(lim.get("default", 0.5))
+
+
+def resumo() -> str:
+    """Resumo legível das configurações ativas — usado em bootstrap de notebooks."""
+    yaml_ok = "ok" if SUPERVISED_YAML.exists() else "AUSENTE"
+    linhas = [
+        ("ROOT_DIR",          ROOT_DIR),
+        ("DATA_DIR",          DATA_DIR),
+        ("RAW_DIR",           RAW_DIR),
+        ("PROCESSED_DIR",     PROCESSED_DIR),
+        ("ANALYTICAL_DIR",    ANALYTICAL_DIR),
+        ("TREINO_DIR",        TREINO_DIR),
+        ("OUTPUTS_DIR",       OUTPUTS_DIR),
+        ("RUNS_DIR",          RUNS_DIR),
+        ("LOGS_DIR",          LOGS_DIR),
+        ("CONFIGS_DIR",       CONFIGS_DIR),
+        ("SUPERVISED_YAML",   f"{SUPERVISED_YAML} ({yaml_ok})"),
+        ("PARQUET_NAME",      PARQUET_NAME),
+        ("DATA_VERSION",      DATA_VERSION),
+        ("GITHUB_REPO",       GITHUB_REPO),
+        ("HTTP_TIMEOUT",      HTTP_TIMEOUT),
+        ("HTTP_TENTATIVAS",   HTTP_TENTATIVAS),
+        ("SEED",              SEED),
+        ("GITHUB_TOKEN?",     bool(github_token())),
+        ("SRAG_PARQUET_URL",  srag_parquet_url()),
+        ("SUPERVISED_SHA256", supervised_yaml_sha256()),
+    ]
+    return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
+
+
+if __name__ == "__main__":
+    print(resumo())
+```
+
+## `src/utils/env.py`
+
+- Git: `tracked` · status `clean`
+- Size: `3.7 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `7dce7d27c80c42f4efe7f89128fafb3763fe78c8070593ad5c3d508284ce866b`
+
+```python
+"""
+Variáveis de ambiente e segredos do projeto.
+
+Fluxo: ``.env`` → ``os.environ`` → ``config.py`` → restante do projeto.
+
+O arquivo ``.env`` nunca é versionado (ver ``.gitignore``); use
+``.env.example`` como template. Diretórios são aliases de
+``src.utils.config``, fonte única da verdade.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+from src.utils import config as C
+
+
+# Aliases públicos — conveniência para notebooks e testes.
+ROOT      = C.ROOT_DIR
+DATA      = C.DATA_DIR
+RAW       = C.RAW_DIR
+PROCESSED = C.PROCESSED_DIR
+TREINO    = C.TREINO_DIR
+FIGURES   = C.FIGURES_DIR
+
+# Diretórios criados por ``garantir_diretorios``. A ordem não importa —
+# ``mkdir(parents=True)`` cria a árvore conforme necessário.
+_DIRS_PADRAO = (
+    C.DATA_DIR, C.RAW_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR,
+    C.TREINO_DIR, C.CONFIGS_DIR, C.MODELS_DIR, C.OUTPUTS_DIR,
+    C.RUNS_DIR, C.LOGS_DIR, C.REPORTS_DIR, C.FIGURES_DIR,
+    C.TABLES_DIR, C.PREDICTIONS_DIR,
+)
+
+
+def garantir_diretorios() -> None:
+    """Cria todos os diretórios padrão do projeto, se ainda não existirem.
+
+    Percorre as constantes de ``config.py`` — nenhum caminho é redefinido aqui.
+    """
+    for p in _DIRS_PADRAO:
+        p.mkdir(parents=True, exist_ok=True)
+
+
+def carregar_dotenv(caminho: Path | None = None) -> bool:
+    """Carrega ``.env`` da raiz do projeto (ou de ``caminho``).
+
+    Retorna ``True`` se o arquivo foi encontrado e carregado, ``False`` caso
+    contrário (arquivo ausente ou ``python-dotenv`` indisponível). Não
+    sobrescreve variáveis já definidas no ambiente.
+    """
+    # Lazy: python-dotenv não é dependência obrigatória — permite importar
+    # este módulo em ambientes que não o têm instalado.
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return False
+
+    caminho = Path(caminho) if caminho else ROOT / ".env"
+    if not caminho.exists():
+        return False
+
+    load_dotenv(dotenv_path=caminho, override=False)
+    return True
+
+
+def detectar_ambiente() -> str:
+    """``"ci"`` se estiver em pipeline, senão ``"local"``."""
+    return "ci" if os.getenv("CI") or os.getenv("GITHUB_ACTIONS") else "local"
+
+
+ENV = detectar_ambiente()
+
+
+def get_env(nome: str, default: str | None = None) -> str | None:
+    """Lê uma variável de ambiente, com default opcional."""
+    return os.getenv(nome, default)
+
+
+def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
+    """Lê um segredo/variável sensível do ambiente.
+
+    Se ``obrigatorio=True`` (default) e a variável não existir, levanta
+    ``RuntimeError`` com instruções de configuração. Se ``False``, devolve
+    ``None``.
+    """
+    valor = os.getenv(nome)
+    if valor:
+        return valor
+    if not obrigatorio:
+        return None
+
+    raise RuntimeError(
+        f"Variável de ambiente '{nome}' não definida.\n"
+        f"Defina-a de uma destas formas:\n"
+        f"  1) Crie/edite o arquivo {ROOT / '.env'} (não versionado):\n"
+        f"         {nome}=seu_valor_aqui\n"
+        f"  2) Exporte no shell antes de rodar o projeto:\n"
+        f"         Linux/macOS:  export {nome}=seu_valor_aqui\n"
+        f"         PowerShell:   $env:{nome} = \"seu_valor_aqui\"\n"
+    )
+
+
+def resumo() -> str:
+    """Resumo legível do estado do ambiente."""
+    linhas = [
+        ("ROOT_DIR",         ROOT),
+        ("ENV",              ENV),
+        (".env encontrado?", (ROOT / ".env").exists()),
+        ("GITHUB_TOKEN?",    bool(os.getenv("GITHUB_TOKEN"))),
+    ]
+    return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
+
+
+if __name__ == "__main__":
+    carregar_dotenv()
+    garantir_diretorios()
+    print(resumo())
+```
+
+## `src/utils/hashing.py`
+
+- Git: `tracked` · status `clean`
+- Size: `891 B` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `aa96962d96190d264f1a459148e77cafb11afeb5598f0bc557f8422f797e044f`
+
+```python
+"""Hashing de arquivos para verificação de integridade.
+
+Centraliza ``sha256_file``, usado tanto pela resolução de coorte
+(``src/data/cohort_source.py``) quanto pela persistência do artefato
+supervisionado (``src/data/supervised_artifact.py``).
+"""
+
+from __future__ import annotations
+
+import hashlib
+from pathlib import Path
+
+__all__ = ["sha256_file"]
+
+_DEFAULT_CHUNK_SIZE = 1024 * 1024
+
+
+def sha256_file(path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE) -> str:
+    """Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória.
+
+    Lê em blocos de ``chunk_size`` bytes (default 1 MiB), permitindo
+    hashear arquivos grandes com memória constante.
+    """
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        while chunk := handle.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
+```
+
+## `src/utils/reproducibility.py`
+
+- Git: `tracked` · status `clean`
+- Size: `13.1 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `15c5a5196d30fb740693656dc5700fc2ef5b7ff4c1cb9c9e55dd3bf876094064`
+
+```python
+"""
+Registro de execuções para reprodutibilidade (critério C1).
+
+Cada execução grava em ``outputs/runs/<RUN_ID>/``:
+
+- ``metadata.json`` — tudo estruturado
+- ``summary.txt``   — versão legível
+
+Uso::
+
+    from src.utils.reproducibility import Run
+
+    with Run(modelo="logistic", parametros={"C": 1.0}) as r:
+        ... treino ...
+        r.metrica(auc=0.82, accuracy=0.78)
+        r.anotar("split aleatorio estratificado")
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import platform
+import subprocess
+import sys
+import time
+import traceback
+from datetime import datetime, timezone
+from importlib import metadata
+from pathlib import Path
+from typing import Any, Literal
+
+from src.utils import config as C
+from src.utils.storage import read_sha256
+
+RUNS_DIR: Path = C.RUNS_DIR
+
+Status = Literal["success", "error"]
+_VERSOES_PACOTES = ("numpy", "pandas", "pyarrow", "scikit-learn", "scipy", "matplotlib", "seaborn")
+_DATASET_TAMANHOS = ("n_rows", "train_rows", "valid_rows", "test_rows")
+
+
+# ---------------------------------------------------------------------------
+# Helpers de metadados
+# ---------------------------------------------------------------------------
+
+def _agora() -> dict[str, str]:
+    utc = datetime.now(timezone.utc)
+    return {
+        "utc":   utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "local": utc.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z"),
+    }
+
+
+def _coletar_gates() -> dict[str, str]:
+    """Estado atual de cada gate em ``supervised.yaml`` como ``{nome: status}``."""
+    gates = C.cfg("gates") or {}
+    return {nome: (info or {}).get("status", "desconhecido") for nome, info in gates.items()}
+
+
+def _versoes() -> dict[str, str | None]:
+    """Versões das bibliotecas fundamentais e do Python."""
+    resultado: dict[str, str | None] = {"python": platform.python_version()}
+    for pacote in _VERSOES_PACOTES:
+        try:
+            resultado[pacote] = metadata.version(pacote)
+        except metadata.PackageNotFoundError:
+            resultado[pacote] = None
+    return resultado
+
+
+def _run_git(args: list[str]) -> str | None:
+    """Corre ``git args`` em ``C.ROOT_DIR``; devolve stdout ou ``None``."""
+    try:
+        proc = subprocess.run(
+            ["git", *args],
+            cwd=C.ROOT_DIR,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except OSError:
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def _git_info() -> dict[str, str | bool | None]:
+    """Commit, branch e estado da árvore de trabalho."""
+    status = _run_git(["status", "--porcelain"])
+    return {
+        "commit": _run_git(["rev-parse", "HEAD"]),
+        "branch": _run_git(["branch", "--show-current"]),
+        "dirty":  bool(status) if status is not None else None,
+    }
+
+
+def _env_info() -> dict[str, str | bool]:
+    """Informações não sensíveis do ambiente."""
+    return {
+        "python_executable": sys.executable,
+        "python_version":    platform.python_version(),
+        "platform":          platform.platform(),
+        "cwd":               str(Path.cwd()),
+        "ci":                bool(os.getenv("CI") or os.getenv("GITHUB_ACTIONS")),
+    }
+
+
+def _resolver_dataset_sha256(
+    dataset_sha256: str | None,
+    dataset_path: Path | None,
+) -> str | None:
+    """SHA-256 do dataset por prioridade: explícito > sidecar > ``None``.
+
+    O sidecar é ``<dataset_path>.sha256`` (ver ``src.utils.storage``).
+    """
+    if dataset_sha256:
+        return dataset_sha256
+    if dataset_path is None:
+        return None
+    try:
+        return read_sha256(Path(dataset_path))
+    except OSError:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# summary.txt
+# ---------------------------------------------------------------------------
+
+def _bloco(titulo: str, itens: dict[str, Any], largura: int = 20) -> list[str]:
+    """``titulo`` seguido de ``k: v`` alinhados — devolve linhas já vazias acima."""
+    linhas = ["", f"{titulo}:"]
+    for k, v in itens.items():
+        if isinstance(v, float):
+            linhas.append(f"  {k:{largura}s} {v:.4f}")
+        else:
+            linhas.append(f"  {k:{largura}s} {v}")
+    return linhas
+
+
+def _resumo(meta: dict[str, Any]) -> str:
+    """``summary.txt`` curto e legível a partir do metadata."""
+    linhas = [
+        f"RUN_ID:   {meta['run_id']}",
+        f"MODELO:   {meta['modelo']}",
+        f"SEED:     {meta['seed']}",
+        f"STATUS:   {meta.get('status', 'desconhecido')}",
+    ]
+
+    if meta.get("data_version"):
+        linhas.append(f"DADOS:    {meta['data_version']}")
+    if meta.get("dataset_sha256"):
+        linhas.append(f"SHA-256:  {meta['dataset_sha256']}")
+
+    ds = meta.get("dataset") or {}
+    for k in _DATASET_TAMANHOS:
+        if k in ds:
+            linhas.append(f"{k.upper():10s} {ds[k]:,}")
+
+    if meta.get("duracao_s") is not None:
+        linhas.append(f"DURACAO:  {meta['duracao_s']:.1f}s")
+
+    if meta.get("erro"):
+        err = meta["erro"]
+        linhas += ["", "ERRO:",
+                   f"  tipo:     {err.get('tipo')}",
+                   f"  mensagem: {err.get('mensagem')}"]
+
+    if meta.get("metricas"):
+        linhas += _bloco("MÉTRICAS", meta["metricas"])
+
+    if meta.get("parametros"):
+        linhas += _bloco("PARÂMETROS", meta["parametros"])
+
+    if meta.get("gates"):
+        linhas += _bloco("GATES", meta["gates"], largura=34)
+
+    if meta.get("notas"):
+        linhas += ["", f"NOTAS: {meta['notas']}"]
+
+    linhas += ["", f"TIMESTAMP_UTC: {meta['timestamp']['utc']}"]
+    return "\n".join(linhas) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# API pública: gerar, registar, listar, carregar
+# ---------------------------------------------------------------------------
+
+def gerar_run_id(
+    modelo: str | None = None,
+    base_dir: Path | None = None,
+) -> str:
+    """Identificador único ``YYYY-MM-DD_HHMMSS_micros[_modelo]``.
+
+    Com ``base_dir``, acrescenta sufixo ``_NN`` em caso de colisão no
+    sistema de arquivos.
+    """
+    candidato = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
+    if modelo:
+        candidato = f"{candidato}_{modelo}"
+    if base_dir is None:
+        return candidato
+
+    base = Path(base_dir)
+    run_id, contador = candidato, 1
+    while (base / run_id).exists():
+        run_id = f"{candidato}_{contador:02d}"
+        contador += 1
+    return run_id
+
+
+def registrar_execucao(
+    modelo: str,
+    *,
+    seed: int | None = None,
+    parametros: dict[str, Any] | None = None,
+    dataset: dict[str, Any] | None = None,
+    features: dict[str, Any] | None = None,
+    metricas: dict[str, Any] | None = None,
+    duracao_s: float | None = None,
+    notas: str | None = None,
+    run_id: str | None = None,
+    output_dir: Path | None = None,
+    status: Status = "success",
+    erro: dict[str, Any] | None = None,
+    dataset_sha256: str | None = None,
+) -> Path:
+    """Grava ``metadata.json`` + ``summary.txt`` em ``outputs/runs/<RUN_ID>/``.
+
+    ``status='error'`` deve vir acompanhado de ``erro`` (dict com ``tipo``,
+    ``mensagem`` e opcionalmente ``traceback``). ``dataset_sha256=None``
+    deixa a chave ausente do metadata.
+    """
+    base = Path(output_dir) if output_dir is not None else RUNS_DIR
+    if run_id is None:
+        run_id = gerar_run_id(modelo=modelo, base_dir=base)
+
+    pasta = base / run_id
+    pasta.mkdir(parents=True, exist_ok=False)
+
+    meta: dict[str, Any] = {
+        "run_id":         pasta.name,
+        "timestamp":      _agora(),
+        "modelo":         modelo,
+        "seed":           seed if seed is not None else C.SEED,
+        "status":         status,
+        "erro":           erro,
+        "duracao_s":      duracao_s,
+        "parametros":     parametros or {},
+        "dataset":        dataset or {},
+        "dataset_sha256": dataset_sha256,
+        "data_version":   C.DATA_VERSION,
+        "features":       features or {},
+        "metricas":       metricas or {},
+        "gates":          _coletar_gates(),
+        "notas":          notas,
+        "versoes":        _versoes(),
+        "git":            _git_info(),
+        "env":            _env_info(),
+        "supervised_yaml_sha256": C.supervised_yaml_sha256(),
+    }
+
+    (pasta / "metadata.json").write_text(
+        json.dumps(meta, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+    (pasta / "summary.txt").write_text(_resumo(meta), encoding="utf-8")
+
+    print(f"[reproducibility] run registrado em: {pasta}")
+    return pasta
+
+
+def listar_runs(output_dir: Path | None = None) -> list[dict[str, Any]]:
+    """Metadados das execuções registadas, ordenados por ``run_id`` decrescente.
+
+    Cada item inclui ``"pasta"`` com o caminho absoluto.
+    """
+    raiz = Path(output_dir) if output_dir is not None else RUNS_DIR
+    if not raiz.exists():
+        return []
+
+    runs: list[dict[str, Any]] = []
+    for pasta in raiz.iterdir():
+        if not pasta.is_dir():
+            continue
+        meta_path = pasta / "metadata.json"
+        if not meta_path.exists():
+            continue
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        meta["pasta"] = str(pasta)
+        runs.append(meta)
+
+    return sorted(runs, key=lambda m: str(m.get("run_id", "")), reverse=True)
+
+
+def carregar_run(
+    run: str | Path,
+    output_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Carrega o ``metadata.json`` de uma execução."""
+    caminho = Path(run)
+    if not caminho.is_absolute():
+        caminho = (Path(output_dir) if output_dir else RUNS_DIR) / caminho
+
+    meta_path = caminho / "metadata.json"
+    if not meta_path.exists():
+        raise FileNotFoundError(f"metadata.json não encontrado em {caminho}")
+    return json.loads(meta_path.read_text(encoding="utf-8"))
+
+
+# ---------------------------------------------------------------------------
+# Context manager
+# ---------------------------------------------------------------------------
+
+class Run:
+    """Context manager de registo de execução.
+
+    O metadata é gravado sempre ao sair do bloco, inclusive em caso de
+    excepção (com ``status="error"`` e ``erro`` estruturado). A excepção
+    não é suprimida — ``__exit__`` devolve ``False``.
+    """
+
+    def __init__(
+        self,
+        modelo: str,
+        *,
+        seed: int | None = None,
+        parametros: dict[str, Any] | None = None,
+        dataset: dict[str, Any] | None = None,
+        features: dict[str, Any] | None = None,
+        notas: str | None = None,
+        output_dir: Path | None = None,
+        dataset_path: Path | None = None,
+        dataset_sha256: str | None = None,
+    ) -> None:
+        self.modelo         = modelo
+        self.seed           = seed
+        self.parametros     = dict(parametros or {})
+        self.dataset        = dict(dataset or {})
+        self.features       = dict(features or {})
+        self.notas          = notas
+        self.output_dir     = output_dir
+        self.dataset_path   = dataset_path
+        self.dataset_sha256 = dataset_sha256
+        self._metricas: dict[str, Any] = {}
+        self._inicio: float | None = None
+        self.pasta: Path | None = None
+
+    def metrica(self, **kwargs: Any) -> "Run":
+        self._metricas.update(kwargs)
+        return self
+
+    def anotar(self, texto: str) -> "Run":
+        self.notas = f"{self.notas}\n{texto}" if self.notas else texto
+        return self
+
+    def add_dataset(self, **kwargs: Any) -> "Run":
+        self.dataset.update(kwargs)
+        return self
+
+    def __enter__(self) -> "Run":
+        self._inicio = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        duracao = time.perf_counter() - self._inicio if self._inicio else None
+
+        if exc_type is None:
+            status: Status = "success"
+            erro: dict[str, Any] | None = None
+        else:
+            status = "error"
+            erro = {
+                "tipo":      exc_type.__name__,
+                "modulo":    getattr(exc_type, "__module__", None),
+                "mensagem":  str(exc) if exc is not None else None,
+                "traceback": (
+                    "".join(traceback.format_exception(exc_type, exc, tb))
+                    if tb is not None else None
+                ),
+            }
+
+        self.pasta = registrar_execucao(
+            modelo=self.modelo,
+            seed=self.seed,
+            parametros=self.parametros,
+            dataset=self.dataset,
+            features=self.features,
+            metricas=self._metricas,
+            duracao_s=duracao,
+            notas=self.notas,
+            output_dir=self.output_dir,
+            status=status,
+            erro=erro,
+            dataset_sha256=_resolver_dataset_sha256(self.dataset_sha256, self.dataset_path),
+        )
+        return False
+```
+
+## `src/utils/storage.py`
+
+- Git: `tracked` · status `clean`
+- Size: `8.8 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `05b2bbcc41102e5028f55a7cc665d49df4b25eca58f050f77a004b74e20dc724`
+
+```python
+"""
+Contrato oficial de acesso ao Parquet de SRAG.
+
+Fluxo: ``GitHub Release → data/processed/<DATA_VERSION>/srag.parquet``.
+
+Tenta o download público via release; se falhar e houver ``GITHUB_TOKEN``,
+usa o asset privado via API do GitHub. Grava um sidecar ``<arquivo>.sha256``
+para reprodutibilidade. ``force=True`` rebaixa e descarta o sidecar antigo.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import time
+from pathlib import Path
+from typing import Iterable
+
+import pandas as pd
+import requests
+
+from src.utils import config as C
+from src.utils.env import PROCESSED, get_secret
+
+
+PARQUET_MAGIC: bytes = b"PAR1"
+_CHUNK: int = 8 * 1024 * 1024
+
+
+def _token() -> str | None:
+    """``GITHUB_TOKEN`` se definido; caso contrário, ``None``."""
+    return get_secret("GITHUB_TOKEN", obrigatorio=False)
+
+
+def sha256_path(parquet_path: Path) -> Path:
+    """Caminho do sidecar ``.sha256`` associado a um Parquet."""
+    return parquet_path.with_suffix(parquet_path.suffix + ".sha256")
+
+
+def read_sha256(parquet_path: Path) -> str | None:
+    """Lê o SHA-256 do sidecar, ou ``None`` se ele não existir."""
+    sidecar = sha256_path(parquet_path)
+    if not sidecar.exists():
+        return None
+    linha = sidecar.read_text(encoding="utf-8").strip()
+    return linha.split()[0] if linha else None
+
+
+def _abrir_stream(
+    url: str,
+    *,
+    headers: dict[str, str] | None,
+    tentativas: int,
+    backoff: float,
+    timeout: float,
+) -> requests.Response:
+    """Abre um stream HTTP com retry linear.
+
+    4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
+    conexão são retentados até ``tentativas`` vezes, com espera
+    ``backoff * tentativa`` entre elas.
+    """
+    last_exc: Exception | None = None
+
+    for tentativa in range(1, tentativas + 1):
+        try:
+            r = requests.get(
+                url,
+                headers=headers or {},
+                stream=True,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+        except requests.RequestException as exc:
+            last_exc = exc
+            if tentativa < tentativas:
+                time.sleep(backoff * tentativa)
+            continue
+
+        if r.ok:
+            return r
+
+        # 4xx permanente (excepto 429): falha sem retentar.
+        if 400 <= r.status_code < 500 and r.status_code != 429:
+            r.close()
+            r.raise_for_status()
+
+        status = r.status_code
+        r.close()
+        last_exc = requests.HTTPError(f"HTTP {status} em {url}")
+        if tentativa < tentativas:
+            time.sleep(backoff * tentativa)
+
+    if last_exc is None:
+        raise RuntimeError(f"Nenhuma tentativa executada para {url}")
+    raise last_exc
+
+
+def _baixar_para_part(
+    r: requests.Response,
+    tmp: Path,
+) -> tuple[str, bytes]:
+    """Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``.
+
+    Imprime progresso quando o servidor declara ``content-length``.
+    """
+    h = hashlib.sha256()
+    first = b""
+    total = int(r.headers.get("content-length", 0))
+    done = 0
+
+    with open(tmp, "wb") as f:
+        for chunk in r.iter_content(_CHUNK):
+            if not chunk:
+                continue
+            if not first:
+                first = chunk[:16]
+            f.write(chunk)
+            h.update(chunk)
+            done += len(chunk)
+            if total:
+                print(
+                    f"\rBaixando: {done / 1e6:.0f}/{total / 1e6:.0f} MB",
+                    end="",
+                    flush=True,
+                )
+
+    if total:
+        print()
+    return h.hexdigest(), first
+
+
+def download_file(
+    url: str,
+    dest: Path,
+    *,
+    headers: dict[str, str] | None = None,
+    expected_magic: bytes | None = None,
+    expected_sha256: str | None = None,
+) -> str:
+    """Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256.
+
+    Retorna o SHA-256 hex e grava o sidecar ``<dest>.sha256``. O download
+    passa por ``<dest>.part``, removido em qualquer falha. Levanta
+    ``RuntimeError`` se o content-type indicar HTML/JSON, se o magic não
+    bater ou se o SHA-256 divergir.
+    """
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    tmp.unlink(missing_ok=True)
+
+    r = _abrir_stream(
+        url,
+        headers=headers,
+        tentativas=C.HTTP_TENTATIVAS,
+        backoff=C.HTTP_BACKOFF,
+        timeout=C.HTTP_TIMEOUT,
+    )
+    try:
+        ctype = r.headers.get("content-type", "").lower()
+        if "text/html" in ctype or "application/json" in ctype:
+            preview = next(r.iter_content(256), b"")
+            raise RuntimeError(
+                f"Download retornou {ctype!r} em vez de binário. "
+                f"URL: {url}\nPrimeiros bytes: {preview[:80]!r}"
+            )
+        digest, first_bytes = _baixar_para_part(r, tmp)
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
+    finally:
+        r.close()
+
+    if expected_magic and not first_bytes.startswith(expected_magic):
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"Arquivo baixado não é válido. Esperado começar com "
+            f"{expected_magic!r}, recebido {first_bytes!r}. URL: {url}"
+        )
+
+    if expected_sha256 and digest.lower() != expected_sha256.lower():
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"SHA-256 divergente para {url}.\n"
+            f"  esperado: {expected_sha256}\n"
+            f"  obtido:   {digest}"
+        )
+
+    tmp.replace(dest)
+    sha256_path(dest).write_text(f"{digest}  {dest.name}\n", encoding="utf-8")
+    return digest
+
+
+def _private_asset_url(token: str) -> str:
+    """URL do asset Parquet via API do GitHub (repositório privado)."""
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+    }
+    url = (
+        f"https://api.github.com/repos/{C.GITHUB_REPO}/releases/tags/"
+        f"{C.DATA_VERSION}"
+    )
+    r = requests.get(url, headers=headers, timeout=C.HTTP_TIMEOUT)
+    r.raise_for_status()
+
+    assets = r.json().get("assets", [])
+    asset = next((a for a in assets if a["name"] == C.PARQUET_NAME), None)
+    if asset is None:
+        nomes = [a["name"] for a in assets]
+        raise RuntimeError(
+            f"Asset {C.PARQUET_NAME!r} não encontrado na release "
+            f"{C.DATA_VERSION!r}. Disponíveis: {nomes}"
+        )
+    return asset["url"]
+
+
+def get_parquet(
+    force: bool = False,
+    *,
+    expected_sha256: str | None = None,
+) -> Path:
+    """Devolve o caminho local do Parquet de SRAG, baixando se necessário.
+
+    Ordem: release pública; se falhar e ``GITHUB_TOKEN`` estiver definido,
+    asset privado via API. ``force=True`` rebaixa mesmo que o arquivo
+    exista e descarta o sidecar antigo. ``expected_sha256`` valida o hash
+    do arquivo baixado.
+
+    Efeito colateral: Parquet gravado em
+    ``data/processed/<DATA_VERSION>/<PARQUET_NAME>``, sidecar ``.sha256``
+    ao lado, e SHA-256 impresso no stdout.
+    """
+    folder = PROCESSED / C.DATA_VERSION
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / C.PARQUET_NAME
+
+    if path.exists() and not force:
+        return path
+
+    if force and path.exists():
+        path.unlink()
+        sha256_path(path).unlink(missing_ok=True)
+
+    public_url = (
+        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
+        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
+    )
+
+    try:
+        digest = download_file(
+            public_url,
+            path,
+            expected_magic=PARQUET_MAGIC,
+            expected_sha256=expected_sha256,
+        )
+    except (requests.HTTPError, RuntimeError):
+        token = _token()
+        if not token:
+            raise RuntimeError(
+                "Download falhou. Repositório privado ou asset inválido? "
+                "Cadastre o segredo GITHUB_TOKEN."
+            )
+        digest = download_file(
+            _private_asset_url(token),
+            path,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/octet-stream",
+            },
+            expected_magic=PARQUET_MAGIC,
+            expected_sha256=expected_sha256,
+        )
+
+    print(f"[storage] SHA-256: {digest}")
+    return path
+
+
+def read_srag(
+    columns: Iterable[str] | None = None,
+    filters: list[tuple] | None = None,
+) -> pd.DataFrame:
+    """Lê o Parquet de SRAG como DataFrame.
+
+    ``columns`` restringe o subconjunto carregado (pushdown do Parquet);
+    ``filters`` segue o formato de ``pd.read_parquet(filters=...)``.
+    """
+    return pd.read_parquet(
+        get_parquet(),
+        columns=list(columns) if columns is not None else None,
+        filters=filters,
+    )
+```
+
+## `tests/conftest.py`
+
+- Git: `tracked` · status `clean`
+- Size: `639 B` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `d09e0a36c305a02829b974b59774ccf94a97163357a9f419d17ec98e22a5d549`
+
+```python
+"""Fixtures partilhadas entre testes."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from src.utils import config as C
+
+
+@pytest.fixture(scope="session")
+def parquet_disponivel() -> Path | None:
+    """Parquet processado, ou ``None`` se ainda não foi gerado.
+
+    Fixture de sessão — o path é calculado uma vez por execução. Testes
+    que dependem dela devem fazer ``pytest.skip()`` quando o retorno é
+    ``None`` (o Parquet não vem versionado no Git).
+    """
+    caminho = C.PROCESSED_DIR / C.DATA_VERSION / C.PARQUET_NAME
+    return caminho if caminho.is_file() else None
+```
+
+## `tests/test_calibration.py`
+
+- Git: `tracked` · status `clean`
+- Size: `3.5 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `993b7617cdacd34f6659bdf2b40134f6a21a79b3af9fc7c9d12c44a642bfeca5`
+
+```python
+"""Testes de calibração e escolha de limiar."""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+import pytest
+from sklearn.linear_model import LogisticRegression
+
+from src.models.calibration import calibrar, escolher_limiar
+
+
+@pytest.fixture
+def dados_limiar() -> tuple[np.ndarray, np.ndarray]:
+    """10 amostras balanceadas — y_true binário, y_prob em [0, 1]."""
+    y = np.array([0, 0, 1, 1, 1, 0, 1, 0, 1, 1])
+    p = np.array([0.1, 0.2, 0.8, 0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.75])
+    return y, p
+
+
+@pytest.fixture
+def modelo_ajustado() -> tuple[LogisticRegression, pd.DataFrame, pd.Series]:
+    """``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal.
+
+    Fixture separada (não por teste) para que múltiplos testes de calibração
+    reutilizem o mesmo modelo — o objecto é imutável após ``fit``.
+    """
+    pytest.importorskip("sklearn.frozen")
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame({"a": rng.randn(200)})
+    y = pd.Series((X["a"] + rng.randn(200) * 0.1 > 0).astype(int))
+    return LogisticRegression().fit(X, y), X, y
+
+
+# ---------------------------------------------------------------------------
+# escolher_limiar
+# ---------------------------------------------------------------------------
+
+def test_escolher_limiar_retorna_dict(dados_limiar):
+    y, p = dados_limiar
+    r = escolher_limiar(y, p, metrica="f1")
+    assert {"limiar", "valor", "metrica", "auc", "brier", "tabela"} <= set(r)
+    assert r["metrica"] == "f1"
+    assert 0 < r["limiar"] < 1
+
+
+def test_escolher_limiar_metrica_invalida(dados_limiar):
+    y, p = dados_limiar
+    # Metrica não existe no Literal — passagem intencional de valor inválido.
+    with pytest.raises(ValueError, match="metrica inválida"):
+        escolher_limiar(y, p, metrica="nao_existe")  # type: ignore[arg-type]
+
+
+def test_escolher_limiar_min_precision_respeitado():
+    y = np.array([0, 0, 1, 1])
+    p = np.array([0.1, 0.2, 0.8, 0.9])
+    r = escolher_limiar(y, p, metrica="recall", min_precision=0.9)
+    linha = r["tabela"][r["tabela"]["limiar"] == r["limiar"]]
+    assert linha["precision"].iloc[0] >= 0.9
+
+
+def test_escolher_limiar_min_precision_impossivel():
+    y = np.array([1, 0, 0, 0])
+    p = np.array([0.1, 0.9, 0.8, 0.85])
+    with pytest.raises(ValueError, match="precision"):
+        escolher_limiar(y, p, min_precision=0.5)
+
+
+# ---------------------------------------------------------------------------
+# calibrar
+# ---------------------------------------------------------------------------
+
+def test_calibrar_metodo_invalido(modelo_ajustado):
+    modelo, X, y = modelo_ajustado
+    with pytest.raises(ValueError, match="method inválido"):
+        calibrar(modelo, X, y, method="nao_existe")  # type: ignore[arg-type]
+
+
+def test_calibrar_sigmoid_preserva_shape(modelo_ajustado):
+    modelo, X, y = modelo_ajustado
+    cal = calibrar(modelo, X, y, method="sigmoid")
+    proba = cal.predict_proba(X)
+    assert proba.shape == (len(X), 2)
+    assert np.allclose(proba.sum(axis=1), 1.0)
+    assert np.all((proba >= 0) & (proba <= 1))
+
+
+def test_calibrar_isotonic_preserva_shape():
+    pytest.importorskip("sklearn.frozen")
+    rng = np.random.RandomState(1)
+    X = pd.DataFrame({"a": rng.randn(500)})
+    y = pd.Series((X["a"] > 0).astype(int))
+    modelo = LogisticRegression().fit(X, y)
+
+    cal = calibrar(modelo, X, y, method="isotonic")
+    assert cal.predict_proba(X).shape == (len(X), 2)
+```
+
+## `tests/test_cohort_source.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.1 KB` · modified `2026-10-16 01:28 UTC`
+- SHA-256: `81aae255c95584ea1c6178160a6e4b8a19fd4d8833ff17fa29bc4ec9b22c67e4`
+
+```python
+"""Testes do resolvedor de coorte (provisória, final, auto)."""
+
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from src.data.cohort_source import cohort_candidates, load_cohort, resolve_cohort_path
+
+
+@pytest.fixture(autouse=True)
+def _sem_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Limpa ``SRAG_COHORT_KIND`` do ambiente antes de cada teste.
+
+    Sem isto, um ``SRAG_COHORT_KIND`` definido no shell do runner
+    tornaria os testes dependentes do estado local.
+    """
+    monkeypatch.delenv("SRAG_COHORT_KIND", raising=False)
+
+
+def _write(path: Path, value: int) -> None:
+    """Grava um Parquet 1×1 com uma única coluna ``value``."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"value": [value]}).to_parquet(path, index=False)
+
+
+def test_padrao_permanece_provisorio(tmp_path: Path) -> None:
+    paths = cohort_candidates(tmp_path)
+    _write(paths["provisional"][1], 1)   # coorte_provisoria_b.parquet
+    _write(paths["final"][0], 2)         # coorte_final.parquet (existe, mas não é o default)
+
+    kind, path = resolve_cohort_path(tmp_path)
+
+    assert kind == "provisional"
+    assert path.name == "coorte_provisoria_b.parquet"
+
+
+def test_final_exige_escolha_explicita(tmp_path: Path) -> None:
+    path = cohort_candidates(tmp_path)["final"][0]
+    _write(path, 2)
+
+    frame, source = load_cohort(tmp_path, kind="final")
+
+    assert frame["value"].tolist() == [2]
+    assert source.kind == "final"
+    assert source.rows == 1
+    assert len(source.sha256) == 64
+
+
+def test_auto_prefere_final(tmp_path: Path) -> None:
+    paths = cohort_candidates(tmp_path)
+    _write(paths["provisional"][0], 1)
+    _write(paths["final"][0], 2)
+
+    kind, path = resolve_cohort_path(tmp_path, kind="auto")
+
+    assert kind == "final"
+    assert path.name == "coorte_final.parquet"
+
+
+def test_tipo_invalido_falha(tmp_path: Path) -> None:
+    # Valor viola intencionalmente o Literal CohortKind.
+    with pytest.raises(ValueError, match="provisional, final ou auto"):
+        resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
+```
+
 ## `tests/test_config.py`
 
 - Git: `tracked` · status `clean`
@@ -5342,14 +8441,299 @@ validacao:
   hash_confirmado_manualmente: true
 ```
 
+### `data/analytical/dataset_supervisionado.meta.json`
+
+- Git: `ignored` · `1.6 KB` · modified `2026-10-17 00:27 UTC`
+
+```json
+{
+  "versao": "1.0",
+  "criado_em": "2026-10-16T21:27:25",
+  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
+  "n_linhas": 1236075,
+  "colunas": [
+    "nu_notific",
+    "dt_interna",
+    "evolucao",
+    "idade_anos",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi",
+    "sg_uf",
+    "faixa_etaria",
+    "ano_internacao"
+  ],
+  "alvo": "evolucao",
+  "coluna_tempo": "dt_interna",
+  "anos": {
+    "2022": 475980,
+    "2023": 240704,
+    "2024": 229478,
+    "2025": 289913
+  },
+  "desenvolvimento": [
+    2022,
+    2023,
+    2024
+  ],
+  "holdout": [
+    2025
+  ],
+  "features_proibidas_no_dataset": [],
+  "features_ausentes_na_base": [
+    "DIAS_SINTOMAS_ATE_INTERNACAO",
+    "SEXO_CATEGORIA"
+  ],
+  "base_origem_linhas": 4666910,
+  "aliases_aplicados_yaml_para_fisico": {},
+  "descartadas_data_tempo_invalida": 0,
+  "derivadas_criadas": [
+    "idade_anos",
+    "faixa_etaria"
+  ],
+  "grupos_avaliacao_incluidos": [
+    "sg_uf",
+    "faixa_etaria"
+  ],
+  "sha256": "add8eeb8a6a250383d2203a05135844da9e823acc3a9557b785b7a01b159d27c"
+}
+```
+
+### `data/analytical/dataset_supervisionado_sem_2020_2021.meta.json`
+
+- Git: `ignored` · `1.9 KB` · modified `2026-10-17 00:51 UTC`
+
+```json
+{
+  "versao": "0.1",
+  "criado_em": "2026-10-16T21:51:46",
+  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado_sem_2020_2021.parquet",
+  "n_linhas": 1279588,
+  "colunas": [
+    "nu_notific",
+    "dt_interna",
+    "evolucao",
+    "idade_anos",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi",
+    "sg_uf",
+    "faixa_etaria",
+    "ano_internacao",
+    "split"
+  ],
+  "alvo": "evolucao",
+  "coluna_tempo": "dt_interna",
+  "anos": {
+    "2019": 43513,
+    "2022": 475980,
+    "2023": 240704,
+    "2024": 229478,
+    "2025": 289913
+  },
+  "desenvolvimento": [
+    2019,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "holdout": [],
+  "features_proibidas_no_dataset": [],
+  "features_ausentes_na_base": [
+    "DIAS_SINTOMAS_ATE_INTERNACAO",
+    "SEXO_CATEGORIA"
+  ],
+  "base_origem_linhas": 4666910,
+  "aliases_aplicados_yaml_para_fisico": {},
+  "descartadas_data_tempo_invalida": 0,
+  "derivadas_criadas": [
+    "idade_anos",
+    "faixa_etaria"
+  ],
+  "grupos_avaliacao_incluidos": [
+    "sg_uf",
+    "faixa_etaria"
+  ],
+  "sha256": "e7c5c4a56d29bc72aab0b0c9a7b6dd67dae4830e758c97998a4bac1aca5444b9",
+  "split": {
+    "tipo": "aleatorio",
+    "seed": 42,
+    "fracoes": {
+      "treino": 0.7,
+      "validacao": 0.15,
+      "holdout": 0.15
+    },
+    "contagem": {
+      "treino": 895712,
+      "holdout": 191938,
+      "validacao": 191938
+    }
+  }
+}
+```
+
+### `data/analytical/dataset_supervisionado_todos_2019_2025.meta.json`
+
+- Git: `ignored` · `1.9 KB` · modified `2026-10-17 00:50 UTC`
+
+```json
+{
+  "versao": "0.1",
+  "criado_em": "2026-10-16T21:50:56",
+  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado_todos_2019_2025.parquet",
+  "n_linhas": 3739615,
+  "colunas": [
+    "nu_notific",
+    "dt_interna",
+    "evolucao",
+    "idade_anos",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi",
+    "sg_uf",
+    "faixa_etaria",
+    "ano_internacao",
+    "split"
+  ],
+  "alvo": "evolucao",
+  "coluna_tempo": "dt_interna",
+  "anos": {
+    "2019": 43513,
+    "2020": 979812,
+    "2021": 1480215,
+    "2022": 475980,
+    "2023": 240704,
+    "2024": 229478,
+    "2025": 289913
+  },
+  "desenvolvimento": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "holdout": [],
+  "features_proibidas_no_dataset": [],
+  "features_ausentes_na_base": [
+    "DIAS_SINTOMAS_ATE_INTERNACAO",
+    "SEXO_CATEGORIA"
+  ],
+  "base_origem_linhas": 4666910,
+  "aliases_aplicados_yaml_para_fisico": {},
+  "descartadas_data_tempo_invalida": 0,
+  "derivadas_criadas": [
+    "idade_anos",
+    "faixa_etaria"
+  ],
+  "grupos_avaliacao_incluidos": [
+    "sg_uf",
+    "faixa_etaria"
+  ],
+  "sha256": "7348b0e2f7403116d544fc27117dfe5f838fbd707f112c6b35df50ea3d2b94e4",
+  "split": {
+    "tipo": "aleatorio",
+    "seed": 42,
+    "fracoes": {
+      "treino": 0.7,
+      "validacao": 0.15,
+      "holdout": 0.15
+    },
+    "contagem": {
+      "treino": 2617730,
+      "holdout": 560943,
+      "validacao": 560942
+    }
+  }
+}
+```
+
 ### `data/analytical/manifesto_supervisionado.json`
 
-- Git: `ignored` · `2.3 KB` · modified `2026-10-16 03:40 UTC`
+- Git: `ignored` · `2.3 KB` · modified `2026-10-17 00:43 UTC`
 
 ```json
 {
   "schema_version": 2,
-  "generated_utc": "2026-10-16T03:40:07.143029+00:00",
+  "generated_utc": "2026-10-17T00:43:25.222942+00:00",
   "cohort_kind": "provisional",
   "source": {
     "kind": "provisional",
@@ -5455,942 +8839,40 @@ validacao:
 }
 ```
 
-### `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/metadata.json`
+### `outputs/C2/split_info.json`
 
-- Git: `ignored` · `2.8 KB` · modified `2026-10-12 02:13 UTC`
+- Git: `ignored` · `280 B` · modified `2026-10-17 00:58 UTC`
 
 ```json
 {
-  "run_id": "2026-10-11_231339_836520_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-12T02:13:39Z",
-    "local": "2026-10-11T23:13:39-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 7.0999376475811005e-06,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740583,
-    "valid_rows": 587262,
-    "test_rows": 587287
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21867922664841247,
-    "logistica_pr_auc": 0.43942331586040556,
-    "logistica_roc_auc": 0.7753013260187773,
-    "logistica_brier": 0.19788284048088187
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G3_validacao_coorte": "pendente",
-    "G4_baseline": "pendente",
-    "G5_pilotos": "pendente",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisório. Holdout não consultado. Sem tuning, calibração ou seleção de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "b12e787837a83922a50ffa899be36ff84455715e",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "c359819b5c879f44d3157afe46104a434683e8a3685225c2dce1e5ff950a6d77"
+  "origem": "artefato_supervisionado",
+  "cohort_kind": "provisional",
+  "partition_column": "particao",
+  "n_total": 3915132,
+  "n_treino_split": 2740584,
+  "n_val_split": 587272,
+  "n_teste_split": 587276,
+  "n_treino_rotulado": 2740584,
+  "n_val_rotulado": 587272
 }
 ```
 
-### `outputs/runs/2026-10-11_231339_836520_03_supervisionado_pilotos/summary.txt`
+### `outputs/runs/2026-10-16_214409_272745_03_supervisionado_pilotos/metadata.json`
 
-- Git: `ignored` · `1.1 KB` · modified `2026-10-12 02:13 UTC`
-
-```text
-RUN_ID:   2026-10-11_231339_836520_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS    3,915,132
-TRAIN_ROWS 2,740,583
-VALID_ROWS 587,262
-TEST_ROWS 587,287
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4394
-  logistica_roc_auc    0.7753
-  logistica_brier      0.1979
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G3_validacao_coorte                pendente
-  G4_baseline                        pendente
-  G5_pilotos                         pendente
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisório. Holdout não consultado. Sem tuning, calibração ou seleção de limiar.
-
-TIMESTAMP_UTC: 2026-10-12T02:13:39Z
-```
-
-### `outputs/runs/2026-10-12_095946_799810_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-12 12:59 UTC`
+- Git: `ignored` · `2.7 KB` · modified `2026-10-17 00:44 UTC`
 
 ```json
 {
-  "run_id": "2026-10-12_095946_799810_03_supervisionado_pilotos",
+  "run_id": "2026-10-16_214409_272745_03_supervisionado_pilotos",
   "timestamp": {
-    "utc": "2026-10-12T12:59:46Z",
-    "local": "2026-10-12T09:59:46-0300"
+    "utc": "2026-10-17T00:44:09Z",
+    "local": "2026-10-16T21:44:09-0300"
   },
   "modelo": "03_supervisionado_pilotos",
   "seed": 42,
   "status": "success",
   "erro": null,
-  "duracao_s": 9.499955922365189e-06,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740583,
-    "valid_rows": 587262,
-    "test_rows": 587287
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21867922664841247,
-    "logistica_pr_auc": 0.43942331586040556,
-    "logistica_roc_auc": 0.7753013260187773,
-    "logistica_brier": 0.19788284048088187
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G4_baseline": "aprovado",
-    "G5_pilotos": "aprovado",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisório. Holdout não consultado. Sem tuning, calibração ou seleção de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "c8a9997c290da12199cb93e859f639bbfb3d2e74",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "f00fb401da7cf2e8e8ee7f1317e7f21f7040fbe255cfbc5288c56bbdbbd73e9e"
-}
-```
-
-### `outputs/runs/2026-10-12_095946_799810_03_supervisionado_pilotos/summary.txt`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-12 12:59 UTC`
-
-```text
-RUN_ID:   2026-10-12_095946_799810_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS    3,915,132
-TRAIN_ROWS 2,740,583
-VALID_ROWS 587,262
-TEST_ROWS 587,287
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4394
-  logistica_roc_auc    0.7753
-  logistica_brier      0.1979
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G4_baseline                        aprovado
-  G5_pilotos                         aprovado
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisório. Holdout não consultado. Sem tuning, calibração ou seleção de limiar.
-
-TIMESTAMP_UTC: 2026-10-12T12:59:46Z
-```
-
-### `outputs/runs/2026-10-14_000946_434671_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-14 03:09 UTC`
-
-```json
-{
-  "run_id": "2026-10-14_000946_434671_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-14T03:09:46Z",
-    "local": "2026-10-14T00:09:46-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 0.00026490003801882267,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740587,
-    "valid_rows": 587271,
-    "test_rows": 587274
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21868609211079723,
-    "logistica_pr_auc": 0.4407647509558362,
-    "logistica_roc_auc": 0.7752527151170048,
-    "logistica_brier": 0.19837290335933982
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G4_baseline": "aprovado",
-    "G5_pilotos": "aprovado",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "1ff4fc8a619db2b0a5cd5ad237032979e17327bb",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "f2be64d77265c73c658864770f251ed5faee644274d1403067ec9c5f3daccb41"
-}
-```
-
-### `outputs/runs/2026-10-14_000946_434671_03_supervisionado_pilotos/summary.txt`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-14 03:09 UTC`
-
-```text
-RUN_ID:   2026-10-14_000946_434671_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS    3,915,132
-TRAIN_ROWS 2,740,587
-VALID_ROWS 587,271
-TEST_ROWS 587,274
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4408
-  logistica_roc_auc    0.7753
-  logistica_brier      0.1984
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G4_baseline                        aprovado
-  G5_pilotos                         aprovado
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
-
-TIMESTAMP_UTC: 2026-10-14T03:09:46Z
-```
-
-### `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-14 23:46 UTC`
-
-```json
-{
-  "run_id": "2026-10-14_204618_338775_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-14T23:46:18Z",
-    "local": "2026-10-14T20:46:18-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 8.819997310638428e-05,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740587,
-    "valid_rows": 587271,
-    "test_rows": 587274
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21868609211079723,
-    "logistica_pr_auc": 0.4407647509558362,
-    "logistica_roc_auc": 0.7752527151170048,
-    "logistica_brier": 0.19837290335933982
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G4_baseline": "aprovado",
-    "G5_pilotos": "aprovado",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "c4a1470aa7a47f4e3910adc9b7225c34f64e1e70",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "ced8d5cad5268e995a8ba324b0ac3d094665bac9977b43c8a8ef806cc0d03cf8"
-}
-```
-
-### `outputs/runs/2026-10-14_204618_338775_03_supervisionado_pilotos/summary.txt`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-14 23:46 UTC`
-
-```text
-RUN_ID:   2026-10-14_204618_338775_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS    3,915,132
-TRAIN_ROWS 2,740,587
-VALID_ROWS 587,271
-TEST_ROWS 587,274
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4408
-  logistica_roc_auc    0.7753
-  logistica_brier      0.1984
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G4_baseline                        aprovado
-  G5_pilotos                         aprovado
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
-
-TIMESTAMP_UTC: 2026-10-14T23:46:18Z
-```
-
-### `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-16 02:59 UTC`
-
-```json
-{
-  "run_id": "2026-10-15_235914_672066_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-16T02:59:14Z",
-    "local": "2026-10-15T23:59:14-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 1.3699987903237343e-05,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740587,
-    "valid_rows": 587271,
-    "test_rows": 587274
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21868609211079723,
-    "logistica_pr_auc": 0.44057383963272745,
-    "logistica_roc_auc": 0.775231023582668,
-    "logistica_brier": 0.19836948367684218
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G4_baseline": "aprovado",
-    "G5_pilotos": "aprovado",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "4953a4562a8def587a79259dec18371c633343b4",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "87786f6ecc437d2f80855d970c897083476e6fd5941997bd2c611b1f2de681ee"
-}
-```
-
-### `outputs/runs/2026-10-15_235914_672066_03_supervisionado_pilotos/summary.txt`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-16 02:59 UTC`
-
-```text
-RUN_ID:   2026-10-15_235914_672066_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS     3,915,132
-TRAIN_ROWS 2,740,587
-VALID_ROWS 587,271
-TEST_ROWS  587,274
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4406
-  logistica_roc_auc    0.7752
-  logistica_brier      0.1984
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G4_baseline                        aprovado
-  G5_pilotos                         aprovado
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
-
-TIMESTAMP_UTC: 2026-10-16T02:59:14Z
-```
-
-### `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-16 03:25 UTC`
-
-```json
-{
-  "run_id": "2026-10-16_002506_352890_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-16T03:25:06Z",
-    "local": "2026-10-16T00:25:06-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 1.3499986380338669e-05,
-  "parametros": {
-    "status_coorte": "provisoria",
-    "versao_execucao": "piloto_v1",
-    "split": "aleatorio_estratificado_por_alvo_ano_com_grupo",
-    "teste_aberto": false
-  },
-  "dataset": {
-    "n_rows": 3915132,
-    "train_rows": 2740620,
-    "valid_rows": 586136,
-    "test_rows": 588376
-  },
-  "dataset_sha256": null,
-  "data_version": "dados-v2",
-  "features": {
-    "n_features": 31,
-    "usadas": [
-      "idade_anos",
-      "dias_sintomas_ate_internacao",
-      "sexo_categoria",
-      "cs_gestant",
-      "cs_raca",
-      "cs_zona",
-      "ave_suino",
-      "febre",
-      "tosse",
-      "garganta",
-      "dispneia",
-      "diarreia",
-      "vomito",
-      "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
-      "outro_sin",
-      "puerpera",
-      "cardiopati",
-      "hematologi",
-      "sind_down",
-      "hepatica",
-      "asma",
-      "diabetes",
-      "neurologic",
-      "pneumopati",
-      "imunodepre",
-      "renal",
-      "obesidade",
-      "out_morbi"
-    ],
-    "features_final_congelada": false
-  },
-  "metricas": {
-    "dummy_pr_auc": 0.21865403251122606,
-    "logistica_pr_auc": 0.44026295736440524,
-    "logistica_roc_auc": 0.7749898302178317,
-    "logistica_brier": 0.19812912680779646
-  },
-  "gates": {
-    "G1_definicao_alvo_features": "pendente",
-    "G2_janela_temporal": "aprovado",
-    "G4_baseline": "aprovado",
-    "G5_pilotos": "aprovado",
-    "G6_finalistas_tuning": "pendente",
-    "G7_calibracao": "pendente",
-    "G8_limiar": "pendente",
-    "G9_holdout": "pendente"
-  },
-  "notas": "Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.",
-  "versoes": {
-    "python": "3.14.7",
-    "numpy": "2.5.3",
-    "pandas": "3.0.6",
-    "pyarrow": "25.0.1",
-    "scikit-learn": "1.9.1",
-    "scipy": "1.18.1",
-    "matplotlib": "3.11.2",
-    "seaborn": "0.13.2"
-  },
-  "git": {
-    "commit": "4953a4562a8def587a79259dec18371c633343b4",
-    "branch": "main",
-    "dirty": true
-  },
-  "env": {
-    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
-    "python_version": "3.14.7",
-    "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
-    "ci": false
-  },
-  "supervised_yaml_sha256": "87786f6ecc437d2f80855d970c897083476e6fd5941997bd2c611b1f2de681ee"
-}
-```
-
-### `outputs/runs/2026-10-16_002506_352890_03_supervisionado_pilotos/summary.txt`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-16 03:25 UTC`
-
-```text
-RUN_ID:   2026-10-16_002506_352890_03_supervisionado_pilotos
-MODELO:   03_supervisionado_pilotos
-SEED:     42
-STATUS:   success
-DADOS:    dados-v2
-N_ROWS     3,915,132
-TRAIN_ROWS 2,740,620
-VALID_ROWS 586,136
-TEST_ROWS  588,376
-DURACAO:  0.0s
-
-MÉTRICAS:
-  dummy_pr_auc         0.2187
-  logistica_pr_auc     0.4403
-  logistica_roc_auc    0.7750
-  logistica_brier      0.1981
-
-PARÂMETROS:
-  status_coorte        provisoria
-  versao_execucao      piloto_v1
-  split                aleatorio_estratificado_por_alvo_ano_com_grupo
-  teste_aberto         False
-
-GATES:
-  G1_definicao_alvo_features         pendente
-  G2_janela_temporal                 aprovado
-  G4_baseline                        aprovado
-  G5_pilotos                         aprovado
-  G6_finalistas_tuning               pendente
-  G7_calibracao                      pendente
-  G8_limiar                          pendente
-  G9_holdout                         pendente
-
-NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
-
-TIMESTAMP_UTC: 2026-10-16T03:25:06Z
-```
-
-### `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/metadata.json`
-
-- Git: `ignored` · `2.8 KB` · modified `2026-10-16 03:41 UTC`
-
-```json
-{
-  "run_id": "2026-10-16_004101_436301_03_supervisionado_pilotos",
-  "timestamp": {
-    "utc": "2026-10-16T03:41:01Z",
-    "local": "2026-10-16T00:41:01-0300"
-  },
-  "modelo": "03_supervisionado_pilotos",
-  "seed": 42,
-  "status": "success",
-  "erro": null,
-  "duracao_s": 7.5998250395059586e-06,
+  "duracao_s": 9.900000804918818e-06,
   "parametros": {
     "status_coorte": "provisoria",
     "versao_execucao": "piloto_v1",
@@ -6470,7 +8952,7 @@ TIMESTAMP_UTC: 2026-10-16T03:25:06Z
     "seaborn": "0.13.2"
   },
   "git": {
-    "commit": "4953a4562a8def587a79259dec18371c633343b4",
+    "commit": "17693b360302d14eccc6fb6719ec606ba002d501",
     "branch": "main",
     "dirty": true
   },
@@ -6478,19 +8960,19 @@ TIMESTAMP_UTC: 2026-10-16T03:25:06Z
     "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
     "python_version": "3.14.7",
     "platform": "Windows-11-10.0.22631-SP0",
-    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\02_eda",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\B",
     "ci": false
   },
   "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
 }
 ```
 
-### `outputs/runs/2026-10-16_004101_436301_03_supervisionado_pilotos/summary.txt`
+### `outputs/runs/2026-10-16_214409_272745_03_supervisionado_pilotos/summary.txt`
 
-- Git: `ignored` · `1.1 KB` · modified `2026-10-16 03:41 UTC`
+- Git: `ignored` · `1.1 KB` · modified `2026-10-17 00:44 UTC`
 
 ```text
-RUN_ID:   2026-10-16_004101_436301_03_supervisionado_pilotos
+RUN_ID:   2026-10-16_214409_272745_03_supervisionado_pilotos
 MODELO:   03_supervisionado_pilotos
 SEED:     42
 STATUS:   success
@@ -6525,984 +9007,649 @@ GATES:
 
 NOTAS: Piloto provisorio. Holdout nao consultado. Sem tuning, calibracao ou selecao de limiar.
 
-TIMESTAMP_UTC: 2026-10-16T03:41:01Z
+TIMESTAMP_UTC: 2026-10-17T00:44:09Z
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_amostras.csv`
+### `outputs/runs/2026-10-16_215802_867822_C2_pipeline/metadata.json`
 
-- Git: `ignored` · `211 B` · modified `2026-10-12 02:26 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740583,300000,0.2186852213561859,0.21868333333333334
-validacao,587262,120000,0.21867922664841247,0.21868333333333334
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-12 02:26 UTC`
+- Git: `ignored` · `2.5 KB` · modified `2026-10-17 00:58 UTC`
 
 ```json
 {
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
+  "run_id": "2026-10-16_215802_867822_C2_pipeline",
+  "timestamp": {
+    "utc": "2026-10-17T00:58:02Z",
+    "local": "2026-10-16T21:58:02-0300"
+  },
+  "modelo": "C2_pipeline",
   "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T022616Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
+  "status": "success",
+  "erro": null,
+  "duracao_s": 3.389999983482994e-05,
+  "parametros": {
+    "target": "alvo_obito_srag",
+    "partition_column": "particao",
+    "origem_particao": "artefato_supervisionado",
+    "cohort_kind": "provisional"
+  },
+  "dataset": {
+    "n_rows": 3915132,
+    "train_rows": 2740584,
+    "valid_rows": 587272,
+    "test_rows": 587276
+  },
+  "dataset_sha256": null,
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "numericas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao"
+    ],
+    "categoricas": [
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ]
+  },
+  "metricas": {
+    "n_features_processadas": 126
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "Arquitetura do pipeline supervisionado",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "17693b360302d14eccc6fb6719ec606ba002d501",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\C",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
 }
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_metricas.csv`
+### `outputs/runs/2026-10-16_215802_867822_C2_pipeline/summary.txt`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-12 02:26 UTC` · 5 rows
+- Git: `ignored` · `915 B` · modified `2026-10-17 00:58 UTC`
 
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,8.256994000053965,1.2180373000446707
-0.7766099783482298,0.4417841314225881,0.19715853705227934,0.5050073674483654,0.37557578008915304,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,7.147862800047733,2.1252258999738842
-0.76861565019124,0.43319219477549786,0.20019895523930883,0.494446958883125,0.3554825037128506,0.811790259888728,0.636975,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,46.086997400037944,1.2600113999797031
-0.7617160608193709,0.40728455571077143,0.20481653952151763,0.4902320513248163,0.3461025198210221,0.8400655437847725,0.6179416666666666,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,7.940202799974941,0.8916802000021562
-0.5,0.21868333333333334,0.17086093305555553,0.0,0.0,0.0,0.7813166666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,3.299485000083223,1.062863599974662
+```text
+RUN_ID:   2026-10-16_215802_867822_C2_pipeline
+MODELO:   C2_pipeline
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+N_ROWS     3,915,132
+TRAIN_ROWS 2,740,584
+VALID_ROWS 587,272
+TEST_ROWS  587,276
+DURACAO:  0.0s
+
+MÉTRICAS:
+  n_features_processadas 126
+
+PARÂMETROS:
+  target               alvo_obito_srag
+  partition_column     particao
+  origem_particao      artefato_supervisionado
+  cohort_kind          provisional
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: Arquitetura do pipeline supervisionado
+
+TIMESTAMP_UTC: 2026-10-17T00:58:02Z
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_metricas_por_ano.csv`
+### `outputs/runs/2026-10-16_220044_988905_C3_baseline_logistica/metadata.json`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-12 02:26 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1333,160,0.12003000750187547,0.27737472101471217,0.7681852088661552,0.12954414650788715,0.23949372497234633
-arvore_rasa_v2,2020,30032,8402,0.2797682472029835,0.46204353444260743,0.7299505005247745,0.23773609663640086,0.518321829786896
-arvore_rasa_v2,2021,45369,12790,0.28191055566576295,0.4483744267523131,0.7140094789975968,0.2302788511782179,0.4966641925479579
-arvore_rasa_v2,2022,14589,2649,0.18157515936664612,0.3518948208359657,0.7650213759118987,0.21104072104961347,0.42439999828331226
-arvore_rasa_v2,2023,7378,706,0.09568988885876932,0.30397052180941103,0.8447818586490581,0.1373402525546229,0.27732819337428366
-arvore_rasa_v2,2024,7033,586,0.08332148443054173,0.2505658053327788,0.8298825127542986,0.13229124508468842,0.26003378993627846
-arvore_rasa_v2,2025,8886,650,0.07314877335133918,0.22594562783702532,0.826648858669257,0.1338003945232509,0.2586496242453462
-arvore_rasa_v2,2026,5380,299,0.05557620817843866,0.18315878363905225,0.8293590325028846,0.11274472989648678,0.2195897214006603
-dummy_prior_v2,2019,1333,160,0.12003000750187547,0.12003000750187547,0.5,0.11535528349858296,0.21868333333333334
-dummy_prior_v2,2020,30032,8402,0.2797682472029835,0.2797682472029835,0.5,0.20522934176241636,0.21868333333333337
-dummy_prior_v2,2021,45369,12790,0.28191055566576295,0.28191055566576295,0.5,0.20643467591385817,0.2186833333333334
-dummy_prior_v2,2022,14589,2649,0.18157515936664612,0.18157515936664612,0.5,0.14998263744276508,0.21868333333333334
-dummy_prior_v2,2023,7378,706,0.09568988885876932,0.09568988885876932,0.5,0.10166072141268336,0.2186833333333333
-dummy_prior_v2,2024,7033,586,0.08332148443054173,0.08332148443054173,0.5,0.09470184480121491,0.21868333333333334
-dummy_prior_v2,2025,8886,650,0.07314877335133918,0.07314877335133918,0.5,0.08897833845768624,0.21868333333333334
-dummy_prior_v2,2026,5380,299,0.05557620817843866,0.05557620817843866,0.5,0.07909142753923998,0.2186833333333333
-hist_gradient_boosting_v2,2019,1333,160,0.12003000750187547,0.30019106734763984,0.7887761082693947,0.13343271932108414,0.25408936855432096
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.23184032785504743,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.28191055566576295,0.4943006000217229,0.7388493024029806,0.21806759681874804,0.48068973345573024
-hist_gradient_boosting_v2,2022,14589,2649,0.18157515936664612,0.41848426397018734,0.796459205553374,0.19963446669453896,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.09568988885876932,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.08332148443054173,0.28939271725997945,0.850534365006133,0.12440206733595124,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.07314877335133918,0.2522818688880946,0.8410329883812155,0.12552411946881167,0.24823191837117484
-hist_gradient_boosting_v2,2026,5380,299,0.05557620817843866,0.2119003176841704,0.8509362376326258,0.10525295433015461,0.20967308079088848
-logistica_C1_v2,2019,1333,160,0.12003000750187547,0.2694926891465062,0.7737825021312872,0.13459246107965342,0.27270410476504964
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.22960917874617046,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.28191055566576295,0.48116482567497293,0.7295302132128889,0.21734862189921175,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.18157515936664612,0.3890711402032777,0.7849080876889797,0.20650515201756284,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.09568988885876932,0.3343534722267585,0.850611154136181,0.13644891197117298,0.29460685646593465
-logistica_C1_v2,2024,7033,586,0.08332148443054173,0.26808600506499275,0.8359572486819544,0.1312028661322752,0.27653700873714565
-logistica_C1_v2,2025,8886,650,0.07314877335133918,0.24916350623804895,0.8357842679418688,0.13226669928182114,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.05557620817843866,0.196244141248507,0.8382300379339648,0.11256595352600748,0.23949973283566506
-random_forest_contida_v2,2019,1333,160,0.12003000750187547,0.2895065864745612,0.7754422421142371,0.1461234951789033,0.3347532679230221
-random_forest_contida_v2,2020,30032,8402,0.2797682472029835,0.4781529511487426,0.7299327521802869,0.23513976149545623,0.5193181861875517
-random_forest_contida_v2,2021,45369,12790,0.28191055566576295,0.46587376836437583,0.7168180186582487,0.2242974953186891,0.4912603622133061
-random_forest_contida_v2,2022,14589,2649,0.18157515936664612,0.3859098265574093,0.7809732252555086,0.19757991816902387,0.43278305596955313
-random_forest_contida_v2,2023,7378,706,0.09568988885876932,0.3277923343690909,0.8479996102268327,0.13806511042439823,0.3243400642135829
-random_forest_contida_v2,2024,7033,586,0.08332148443054173,0.27920468615283467,0.8442116104482282,0.13122239292102064,0.30872240177361154
-random_forest_contida_v2,2025,8886,650,0.07314877335133918,0.24296993362451258,0.8354937049351815,0.13074882028402598,0.3034677376183782
-random_forest_contida_v2,2026,5380,299,0.05557620817843866,0.20378972591100886,0.8382932282969079,0.112520949807053,0.27180233714357155
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261012T022616Z_variacao_temporal.csv`
-
-- Git: `ignored` · `905 B` · modified `2026-10-12 02:26 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.18315878363905225,0.46204353444260743,0.3129160302079832,0.7140094789975968,0.8447818586490581,0.11274472989648678,0.23773609663640086,0.2788847508035552,0.13077237965146127
-hist_gradient_boosting_v2,0.2119003176841704,0.513564896635687,0.3530890682388135,0.7388493024029806,0.8577794987805789,0.10525295433015461,0.23184032785504743,0.30166457895151666,0.11893019637759827
-logistica_C1_v2,0.196244141248507,0.5046763341300456,0.3365315142416387,0.7295302132128889,0.850611154136181,0.11256595352600748,0.22960917874617046,0.30843219288153867,0.12108094092329214
-random_forest_contida_v2,0.20378972591100886,0.4781529511487426,0.334149976575317,0.7168180186582487,0.8479996102268327,0.112520949807053,0.23513976149545623,0.27436322523773377,0.131181591568584
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_amostras.csv`
-
-- Git: `ignored` · `211 B` · modified `2026-10-12 13:01 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740583,300000,0.2186852213561859,0.21868333333333334
-validacao,587262,120000,0.21867922664841247,0.21868333333333334
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-12 13:01 UTC`
+- Git: `ignored` · `2.8 KB` · modified `2026-10-17 01:00 UTC`
 
 ```json
 {
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
+  "run_id": "2026-10-16_220044_988905_C3_baseline_logistica",
+  "timestamp": {
+    "utc": "2026-10-17T01:00:44Z",
+    "local": "2026-10-16T22:00:44-0300"
+  },
+  "modelo": "C3_baseline_logistica",
   "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
+  "status": "success",
+  "erro": null,
+  "duracao_s": 6.099999154685065e-06,
+  "parametros": {
+    "cohort_kind": "provisional",
+    "logistic_C": 1.0,
+    "logistic_solver": "lbfgs",
+    "limiar_diagnostico": 0.5,
+    "tuning_realizado": false,
+    "calibracao_aplicada": false,
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_treino": 2740584,
+    "n_validacao": 587272,
+    "n_teste_fechado": 587276
+  },
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ]
+  },
+  "metricas": {
+    "dummy_ap": 0.21868742252312387,
+    "dummy_auc": 0.5,
+    "logistica_ap": 0.44061592989801807,
+    "logistica_auc": 0.7752355926034296,
+    "logistica_brier": 0.19806308229531083
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "C3 — baseline e logística na partição persistida. Teste não consultado.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "17693b360302d14eccc6fb6719ec606ba002d501",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\C",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
 }
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_metricas.csv`
+### `outputs/runs/2026-10-16_220044_988905_C3_baseline_logistica/summary.txt`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-12 13:01 UTC` · 5 rows
+- Git: `ignored` · `1.1 KB` · modified `2026-10-17 01:00 UTC`
 
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.19715853705227934,0.5050073674483654,0.37557578008915304,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-0.76861565019124,0.43319219477549786,0.20019895523930883,0.494446958883125,0.3554825037128506,0.811790259888728,0.636975,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,48.15164270007517,1.2698520000558347
-0.7617160608193709,0.40728455571077143,0.20481653952151763,0.4902320513248163,0.3461025198210221,0.8400655437847725,0.6179416666666666,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,8.021366199944168,1.0698978001018986
-0.5,0.21868333333333334,0.17086093305555553,0.0,0.0,0.0,0.7813166666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,3.4979247000301257,0.9371980000287294
+```text
+RUN_ID:   2026-10-16_220044_988905_C3_baseline_logistica
+MODELO:   C3_baseline_logistica
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+SHA-256:  408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b
+DURACAO:  0.0s
+
+MÉTRICAS:
+  dummy_ap             0.2187
+  dummy_auc            0.5000
+  logistica_ap         0.4406
+  logistica_auc        0.7752
+  logistica_brier      0.1981
+
+PARÂMETROS:
+  cohort_kind          provisional
+  logistic_C           1.0000
+  logistic_solver      lbfgs
+  limiar_diagnostico   0.5000
+  tuning_realizado     False
+  calibracao_aplicada  False
+  teste_aberto         False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: C3 — baseline e logística na partição persistida. Teste não consultado.
+
+TIMESTAMP_UTC: 2026-10-17T01:00:44Z
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv`
+### `outputs/runs/2026-10-16_220744_784223_C4_boosting/metadata.json`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-12 13:01 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1333,160,0.12003000750187547,0.27737472101471217,0.7681852088661552,0.12954414650788715,0.23949372497234633
-arvore_rasa_v2,2020,30032,8402,0.2797682472029835,0.46204353444260743,0.7299505005247745,0.23773609663640086,0.518321829786896
-arvore_rasa_v2,2021,45369,12790,0.28191055566576295,0.4483744267523131,0.7140094789975968,0.2302788511782179,0.4966641925479579
-arvore_rasa_v2,2022,14589,2649,0.18157515936664612,0.3518948208359657,0.7650213759118987,0.21104072104961347,0.42439999828331226
-arvore_rasa_v2,2023,7378,706,0.09568988885876932,0.30397052180941103,0.8447818586490581,0.1373402525546229,0.27732819337428366
-arvore_rasa_v2,2024,7033,586,0.08332148443054173,0.2505658053327788,0.8298825127542986,0.13229124508468842,0.26003378993627846
-arvore_rasa_v2,2025,8886,650,0.07314877335133918,0.22594562783702532,0.826648858669257,0.1338003945232509,0.2586496242453462
-arvore_rasa_v2,2026,5380,299,0.05557620817843866,0.18315878363905225,0.8293590325028846,0.11274472989648678,0.2195897214006603
-dummy_prior_v2,2019,1333,160,0.12003000750187547,0.12003000750187547,0.5,0.11535528349858296,0.21868333333333334
-dummy_prior_v2,2020,30032,8402,0.2797682472029835,0.2797682472029835,0.5,0.20522934176241636,0.21868333333333337
-dummy_prior_v2,2021,45369,12790,0.28191055566576295,0.28191055566576295,0.5,0.20643467591385817,0.2186833333333334
-dummy_prior_v2,2022,14589,2649,0.18157515936664612,0.18157515936664612,0.5,0.14998263744276508,0.21868333333333334
-dummy_prior_v2,2023,7378,706,0.09568988885876932,0.09568988885876932,0.5,0.10166072141268336,0.2186833333333333
-dummy_prior_v2,2024,7033,586,0.08332148443054173,0.08332148443054173,0.5,0.09470184480121491,0.21868333333333334
-dummy_prior_v2,2025,8886,650,0.07314877335133918,0.07314877335133918,0.5,0.08897833845768624,0.21868333333333334
-dummy_prior_v2,2026,5380,299,0.05557620817843866,0.05557620817843866,0.5,0.07909142753923998,0.2186833333333333
-hist_gradient_boosting_v2,2019,1333,160,0.12003000750187547,0.30019106734763984,0.7887761082693947,0.13343271932108414,0.25408936855432096
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.23184032785504743,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.28191055566576295,0.4943006000217229,0.7388493024029806,0.21806759681874804,0.48068973345573024
-hist_gradient_boosting_v2,2022,14589,2649,0.18157515936664612,0.41848426397018734,0.796459205553374,0.19963446669453896,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.09568988885876932,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.08332148443054173,0.28939271725997945,0.850534365006133,0.12440206733595124,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.07314877335133918,0.2522818688880946,0.8410329883812155,0.12552411946881167,0.24823191837117484
-hist_gradient_boosting_v2,2026,5380,299,0.05557620817843866,0.2119003176841704,0.8509362376326258,0.10525295433015461,0.20967308079088848
-logistica_C1_v2,2019,1333,160,0.12003000750187547,0.2694926891465062,0.7737825021312872,0.13459246107965342,0.27270410476504964
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.22960917874617046,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.28191055566576295,0.48116482567497293,0.7295302132128889,0.21734862189921175,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.18157515936664612,0.3890711402032777,0.7849080876889797,0.20650515201756284,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.09568988885876932,0.3343534722267585,0.850611154136181,0.13644891197117298,0.29460685646593465
-logistica_C1_v2,2024,7033,586,0.08332148443054173,0.26808600506499275,0.8359572486819544,0.1312028661322752,0.27653700873714565
-logistica_C1_v2,2025,8886,650,0.07314877335133918,0.24916350623804895,0.8357842679418688,0.13226669928182114,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.05557620817843866,0.196244141248507,0.8382300379339648,0.11256595352600748,0.23949973283566506
-random_forest_contida_v2,2019,1333,160,0.12003000750187547,0.2895065864745612,0.7754422421142371,0.1461234951789033,0.3347532679230221
-random_forest_contida_v2,2020,30032,8402,0.2797682472029835,0.4781529511487426,0.7299327521802869,0.23513976149545623,0.5193181861875517
-random_forest_contida_v2,2021,45369,12790,0.28191055566576295,0.46587376836437583,0.7168180186582487,0.2242974953186891,0.4912603622133061
-random_forest_contida_v2,2022,14589,2649,0.18157515936664612,0.3859098265574093,0.7809732252555086,0.19757991816902387,0.43278305596955324
-random_forest_contida_v2,2023,7378,706,0.09568988885876932,0.3277923343690909,0.8479996102268327,0.1380651104243982,0.3243400642135829
-random_forest_contida_v2,2024,7033,586,0.08332148443054173,0.27920468615283467,0.8442116104482282,0.13122239292102064,0.30872240177361154
-random_forest_contida_v2,2025,8886,650,0.07314877335133918,0.24296993362451258,0.8354937049351815,0.13074882028402598,0.3034677376183782
-random_forest_contida_v2,2026,5380,299,0.05557620817843866,0.20378972591100886,0.8382932282969079,0.11252094980705302,0.27180233714357155
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv`
-
-- Git: `ignored` · `907 B` · modified `2026-10-12 13:01 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.18315878363905225,0.46204353444260743,0.3129160302079832,0.7140094789975968,0.8447818586490581,0.11274472989648678,0.23773609663640086,0.2788847508035552,0.13077237965146127
-hist_gradient_boosting_v2,0.2119003176841704,0.513564896635687,0.3530890682388135,0.7388493024029806,0.8577794987805789,0.10525295433015461,0.23184032785504743,0.30166457895151666,0.11893019637759827
-logistica_C1_v2,0.196244141248507,0.5046763341300456,0.3365315142416387,0.7295302132128889,0.850611154136181,0.11256595352600748,0.22960917874617046,0.30843219288153867,0.12108094092329214
-random_forest_contida_v2,0.20378972591100886,0.4781529511487426,0.334149976575317,0.7168180186582487,0.8479996102268327,0.11252094980705302,0.23513976149545623,0.27436322523773377,0.131181591568584
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_amostras.csv`
-
-- Git: `ignored` · `212 B` · modified `2026-10-14 03:11 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740587,300000,0.21868563194673257,0.21868333333333334
-validacao,587271,120000,0.21868609211079723,0.21869166666666667
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-14 03:11 UTC`
+- Git: `ignored` · `2.9 KB` · modified `2026-10-17 01:07 UTC`
 
 ```json
 {
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
+  "run_id": "2026-10-16_220744_784223_C4_boosting",
+  "timestamp": {
+    "utc": "2026-10-17T01:07:44Z",
+    "local": "2026-10-16T22:07:44-0300"
+  },
+  "modelo": "C4_boosting",
   "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T031127Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T031127Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T031127Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T031127Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261014T031127Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
+  "status": "success",
+  "erro": null,
+  "duracao_s": 6.50000038149301e-06,
+  "parametros": {
+    "cohort_kind": "provisional",
+    "g6_status": "pendente",
+    "buscas_executadas": false,
+    "metrica_principal": "pr_auc",
+    "max_configs": 30,
+    "limiar_diagnostico": 0.5,
+    "calibracao_aplicada": false,
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_treino": 2740584,
+    "n_validacao": 587272,
+    "n_teste_fechado": 587276
+  },
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ]
+  },
+  "metricas": {
+    "logistica_ap": 0.44061592989801807,
+    "logistica_auc": 0.7752355926034296,
+    "boosting_ap": 0.46752119135143005,
+    "boosting_auc": 0.7874327329924564,
+    "boosting_brier": 0.1959726068522269,
+    "delta_ap": 0.02690526145341199
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "C4 — boosting na partição do C3. Buscas condicionadas ao G6. Teste não consultado.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "17693b360302d14eccc6fb6719ec606ba002d501",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\C",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
 }
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_metricas.csv`
+### `outputs/runs/2026-10-16_220744_784223_C4_boosting/summary.txt`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-14 03:11 UTC` · 5 rows
+- Git: `ignored` · `1.2 KB` · modified `2026-10-17 01:07 UTC`
 
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7837338025141412,0.4577975780425485,0.19719355553237866,0.5098122866894198,0.3699626769405411,0.8196471440003048,0.6553,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,13.88727279996965,2.667994700022973
-0.7742724458341613,0.43856004509006286,0.19910056824861047,0.5055658052772997,0.37446347995157564,0.7779217315093548,0.6672416666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.573903199983761,0.9535744999302551
-0.7665168716317146,0.4299862045991363,0.20138297179217352,0.4940412952099404,0.354431428429407,0.8151126014556263,0.6348833333333334,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,47.386392700020224,1.7682791000697762
-0.759284397951174,0.40228534443387626,0.2068909780780606,0.4922231331478124,0.3531146454605699,0.8121784856914225,0.6335416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,8.939963600016199,1.316284399945289
-0.5,0.21869166666666667,0.17086562166666663,0.0,0.0,0.0,0.7813083333333334,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.3938221000134945,0.957107099937275
+```text
+RUN_ID:   2026-10-16_220744_784223_C4_boosting
+MODELO:   C4_boosting
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+SHA-256:  408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b
+DURACAO:  0.0s
+
+MÉTRICAS:
+  logistica_ap         0.4406
+  logistica_auc        0.7752
+  boosting_ap          0.4675
+  boosting_auc         0.7874
+  boosting_brier       0.1960
+  delta_ap             0.0269
+
+PARÂMETROS:
+  cohort_kind          provisional
+  g6_status            pendente
+  buscas_executadas    False
+  metrica_principal    pr_auc
+  max_configs          30
+  limiar_diagnostico   0.5000
+  calibracao_aplicada  False
+  teste_aberto         False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: C4 — boosting na partição do C3. Buscas condicionadas ao G6. Teste não consultado.
+
+TIMESTAMP_UTC: 2026-10-17T01:07:44Z
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_metricas_por_ano.csv`
+### `outputs/runs/2026-10-16_231055_901408_C5_calibracao_limiar/metadata.json`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-14 03:11 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1355,163,0.12029520295202951,0.25618294661337704,0.7722315436241611,0.13273510512876757,0.25683723310132156
-arvore_rasa_v2,2020,29987,8388,0.2797212125254277,0.44608515893392486,0.720250887315007,0.24177495708969896,0.5229989687720558
-arvore_rasa_v2,2021,45324,12785,0.2820801341452652,0.43988752846501067,0.7106558775478871,0.2317449500902894,0.49832380157870104
-arvore_rasa_v2,2022,14664,2659,0.18132842334969995,0.3603111099229618,0.7745634849713962,0.21051625880764274,0.42780471751149857
-arvore_rasa_v2,2023,7363,724,0.09832948526415863,0.2982065466728109,0.8294313320168201,0.14307735417577414,0.2829710385148049
-arvore_rasa_v2,2024,7015,585,0.08339272986457591,0.261546747130475,0.8376020523454427,0.13589515715614278,0.2697817184015538
-arvore_rasa_v2,2025,8900,651,0.07314606741573033,0.2247244113330193,0.8265799196625612,0.1327358231436628,0.2584164339395812
-arvore_rasa_v2,2026,5392,288,0.05341246290801187,0.17873622364881353,0.83846207223093,0.11465230237319544,0.22582339678675914
-dummy_prior_v2,2019,1355,163,0.12029520295202951,0.12029520295202951,0.5,0.11550449129868798,0.21868333333333334
-dummy_prior_v2,2020,29987,8388,0.2797212125254277,0.2797212125254277,0.5,0.20520287848500085,0.21868333333333334
-dummy_prior_v2,2021,45324,12785,0.2820801341452652,0.2820801341452652,0.5,0.2065300864190421,0.21868333333333337
-dummy_prior_v2,2022,14664,2659,0.18132842334969995,0.18132842334969995,0.5,0.1498438155350973,0.21868333333333334
-dummy_prior_v2,2023,7363,724,0.09832948526415863,0.09832948526415863,0.5,0.10314584633690223,0.21868333333333334
-dummy_prior_v2,2024,7015,585,0.08339272986457591,0.08339272986457591,0.5,0.09474192985725033,0.21868333333333334
-dummy_prior_v2,2025,8900,651,0.07314606741573033,0.07314606741573033,0.5,0.08897681600811484,0.21868333333333334
-dummy_prior_v2,2026,5392,288,0.05341246290801187,0.05341246290801187,0.5,0.07787403232525551,0.2186833333333333
-hist_gradient_boosting_v2,2019,1355,163,0.12029520295202951,0.28745930015036397,0.7921367398196566,0.13406375508538068,0.26120407564571707
-hist_gradient_boosting_v2,2020,29987,8388,0.2797212125254277,0.510874944902731,0.7539260116490583,0.2337380637317967,0.5212712594470571
-hist_gradient_boosting_v2,2021,45324,12785,0.2820801341452652,0.48808251430763916,0.7373332392813592,0.21899203197293501,0.4826943399848201
-hist_gradient_boosting_v2,2022,14664,2659,0.18132842334969995,0.4150340682318508,0.7968962255447343,0.20103156704927577,0.41749244464931884
-hist_gradient_boosting_v2,2023,7363,724,0.09832948526415863,0.3679242282970099,0.8483983392959233,0.1351947036478361,0.27382611447688543
-hist_gradient_boosting_v2,2024,7015,585,0.08339272986457591,0.3117292798082803,0.8570197126184684,0.12791145133160842,0.2595455633776146
-hist_gradient_boosting_v2,2025,8900,651,0.07314606741573033,0.25062632936211743,0.8409368244421564,0.12607691261330622,0.2495485096608725
-hist_gradient_boosting_v2,2026,5392,288,0.05341246290801187,0.19735505575855672,0.8578361742424242,0.10833146252945079,0.21707997489681424
-logistica_C1_v2,2019,1355,163,0.12029520295202951,0.27886648420402027,0.777995944332359,0.13779899060352996,0.28052390755888873
-logistica_C1_v2,2020,29987,8388,0.2797212125254277,0.49627806440291294,0.7454688769060491,0.23313232567214978,0.518726405601904
-logistica_C1_v2,2021,45324,12785,0.2820801341452652,0.47829952070053683,0.7289671034390512,0.21809318472711914,0.47716017171172576
-logistica_C1_v2,2022,14664,2659,0.18132842334969995,0.4002593509577733,0.7912969226342478,0.2068711246693542,0.4328685933134279
-logistica_C1_v2,2023,7363,724,0.09832948526415863,0.3358602768626264,0.8418912936199038,0.14186083158917648,0.29932086022575843
-logistica_C1_v2,2024,7015,585,0.08339272986457591,0.2773719795919383,0.8435433531389985,0.13530229834466362,0.2859023462082121
-logistica_C1_v2,2025,8900,651,0.07314606741573033,0.2389680618999371,0.830904327834552,0.13274754432959163,0.2751367422542223
-logistica_C1_v2,2026,5392,288,0.05341246290801187,0.18301817544279506,0.845789522378962,0.11514795261481299,0.2448978904179417
-random_forest_contida_v2,2019,1355,163,0.12029520295202951,0.30895800640178117,0.7924429736072796,0.14754883625126058,0.3418388212678265
-random_forest_contida_v2,2020,29987,8388,0.2797212125254277,0.4749971817717371,0.7273694186949391,0.23643266359095655,0.5209719249838256
-random_forest_contida_v2,2021,45324,12785,0.2820801341452652,0.46129484831425405,0.7161846697293173,0.22442010867181497,0.49154709471432123
-random_forest_contida_v2,2022,14664,2659,0.18132842334969995,0.38258765054187344,0.7798093561053836,0.19946632636017927,0.43607756344093007
-random_forest_contida_v2,2023,7363,724,0.09832948526415863,0.3160220767092553,0.8320679993242677,0.14260424667953248,0.32754202259906146
-random_forest_contida_v2,2024,7015,585,0.08339272986457591,0.299455308465333,0.8461763102976166,0.13410453818733847,0.3145085245659218
-random_forest_contida_v2,2025,8900,651,0.07314606741573033,0.2408759653413334,0.8327555972431794,0.131331408138215,0.3041290265394911
-random_forest_contida_v2,2026,5392,288,0.05341246290801187,0.20399440218689455,0.8541309512147335,0.11497450065572155,0.2781408670049724
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T031127Z_variacao_temporal.csv`
-
-- Git: `ignored` · `912 B` · modified `2026-10-14 03:11 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.17873622364881353,0.44608515893392486,0.30821008409004913,0.7106558775478871,0.83846207223093,0.11465230237319544,0.24177495708969896,0.26734893528511133,0.12780619468304288
-hist_gradient_boosting_v2,0.19735505575855672,0.510874944902731,0.35363571510231867,0.7373332392813592,0.8578361742424242,0.10833146252945079,0.2337380637317967,0.3135198891441743,0.12050293496106501
-logistica_C1_v2,0.18301817544279506,0.49627806440291294,0.3361152392578175,0.7289671034390512,0.845789522378962,0.11514795261481299,0.23313232567214978,0.3132598889601179,0.11682241893991074
-random_forest_contida_v2,0.20399440218689455,0.4749971817717371,0.33602317996655773,0.7161846697293173,0.8541309512147335,0.11497450065572155,0.23643266359095655,0.27100277958484253,0.1379462814854162
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_amostras.csv`
-
-- Git: `ignored` · `212 B` · modified `2026-10-14 23:48 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740587,300000,0.21868563194673257,0.21868333333333334
-validacao,587271,120000,0.21868609211079723,0.21869166666666667
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-14 23:48 UTC`
+- Git: `ignored` · `3.2 KB` · modified `2026-10-17 02:10 UTC`
 
 ```json
 {
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
+  "run_id": "2026-10-16_231055_901408_C5_calibracao_limiar",
+  "timestamp": {
+    "utc": "2026-10-17T02:10:55Z",
+    "local": "2026-10-16T23:10:55-0300"
+  },
+  "modelo": "C5_calibracao_limiar",
   "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261014T234809Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
+  "status": "success",
+  "erro": null,
+  "duracao_s": 1.2999997125007212e-05,
+  "parametros": {
+    "cohort_kind": "provisional",
+    "finalistas": [
+      "hist_gradient_boosting",
+      "logistic"
+    ],
+    "calibracao_ativa": true,
+    "metodos_candidatos": [
+      "sigmoid",
+      "isotonic"
+    ],
+    "honest_calib_split": true,
+    "limiar_metrica": "f1",
+    "min_precision": null,
+    "teste_aberto": false,
+    "yaml_atualizado": false
+  },
+  "dataset": {
+    "n_treino": 2740584,
+    "n_val_cal": 293636,
+    "n_val_meas": 293636,
+    "n_teste_fechado": 587276
+  },
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "data_version": "dados-v2",
+  "features": {
+    "n_features": 31,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ]
+  },
+  "metricas": {
+    "hist_gradient_boosting_brier_base": 0.19588851055358997,
+    "hist_gradient_boosting_brier_calibrado": 0.14094344151171814,
+    "hist_gradient_boosting_limiar": 0.255,
+    "hist_gradient_boosting_auc": 0.7874607762382129,
+    "logistic_brier_base": 0.1981048319609869,
+    "logistic_brier_calibrado": 0.1438547651248468,
+    "logistic_limiar": 0.255,
+    "logistic_auc": 0.7750213489731965
+  },
+  "gates": {
+    "G1_definicao_alvo_features": "pendente",
+    "G2_janela_temporal": "aprovado",
+    "G4_baseline": "aprovado",
+    "G5_pilotos": "aprovado",
+    "G6_finalistas_tuning": "pendente",
+    "G7_calibracao": "pendente",
+    "G8_limiar": "pendente",
+    "G9_holdout": "pendente"
+  },
+  "notas": "C5 — calibração e limiar escolhidos na validação. Teste não consultado.",
+  "versoes": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "seaborn": "0.13.2"
+  },
+  "git": {
+    "commit": "17693b360302d14eccc6fb6719ec606ba002d501",
+    "branch": "main",
+    "dirty": true
+  },
+  "env": {
+    "python_executable": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\.venv\\Scripts\\python.exe",
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "cwd": "<HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\notebooks\\C",
+    "ci": false
+  },
+  "supervised_yaml_sha256": "6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6"
 }
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas.csv`
+### `outputs/runs/2026-10-16_231055_901408_C5_calibracao_limiar/summary.txt`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-14 23:48 UTC` · 5 rows
+- Git: `ignored` · `1.4 KB` · modified `2026-10-17 02:10 UTC`
 
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7837338025141412,0.4577975780425485,0.19719355553237866,0.5098122866894198,0.3699626769405411,0.8196471440003048,0.6553,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,13.10794989997521,1.6257725999457762
-0.7742724458341613,0.43856004509006286,0.19910056824861047,0.5055658052772997,0.37446347995157564,0.7779217315093548,0.6672416666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.443985000019893,1.0642294000135735
-0.7665168716317146,0.4299862045991363,0.20138297179217352,0.4940412952099404,0.354431428429407,0.8151126014556263,0.6348833333333334,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,58.38709880004171,2.2917184999678284
-0.759284397951174,0.40228534443387626,0.2068909780780606,0.4922231331478124,0.3531146454605699,0.8121784856914225,0.6335416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,7.5551238000625744,1.02772189991083
-0.5,0.21869166666666667,0.17086562166666663,0.0,0.0,0.0,0.7813083333333334,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.861158599960618,1.2276639000046998
+```text
+RUN_ID:   2026-10-16_231055_901408_C5_calibracao_limiar
+MODELO:   C5_calibracao_limiar
+SEED:     42
+STATUS:   success
+DADOS:    dados-v2
+SHA-256:  408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b
+DURACAO:  0.0s
+
+MÉTRICAS:
+  hist_gradient_boosting_brier_base 0.1959
+  hist_gradient_boosting_brier_calibrado 0.1409
+  hist_gradient_boosting_limiar 0.2550
+  hist_gradient_boosting_auc 0.7875
+  logistic_brier_base  0.1981
+  logistic_brier_calibrado 0.1439
+  logistic_limiar      0.2550
+  logistic_auc         0.7750
+
+PARÂMETROS:
+  cohort_kind          provisional
+  finalistas           ['hist_gradient_boosting', 'logistic']
+  calibracao_ativa     True
+  metodos_candidatos   ['sigmoid', 'isotonic']
+  honest_calib_split   True
+  limiar_metrica       f1
+  min_precision        None
+  teste_aberto         False
+  yaml_atualizado      False
+
+GATES:
+  G1_definicao_alvo_features         pendente
+  G2_janela_temporal                 aprovado
+  G4_baseline                        aprovado
+  G5_pilotos                         aprovado
+  G6_finalistas_tuning               pendente
+  G7_calibracao                      pendente
+  G8_limiar                          pendente
+  G9_holdout                         pendente
+
+NOTAS: C5 — calibração e limiar escolhidos na validação. Teste não consultado.
+
+TIMESTAMP_UTC: 2026-10-17T02:10:55Z
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_metricas_por_ano.csv`
+### `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_amostras.csv`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-14 23:48 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1355,163,0.12029520295202951,0.25618294661337704,0.7722315436241611,0.13273510512876757,0.25683723310132156
-arvore_rasa_v2,2020,29987,8388,0.2797212125254277,0.44608515893392486,0.720250887315007,0.24177495708969896,0.5229989687720558
-arvore_rasa_v2,2021,45324,12785,0.2820801341452652,0.43988752846501067,0.7106558775478871,0.2317449500902894,0.49832380157870104
-arvore_rasa_v2,2022,14664,2659,0.18132842334969995,0.3603111099229618,0.7745634849713962,0.21051625880764274,0.42780471751149857
-arvore_rasa_v2,2023,7363,724,0.09832948526415863,0.2982065466728109,0.8294313320168201,0.14307735417577414,0.2829710385148049
-arvore_rasa_v2,2024,7015,585,0.08339272986457591,0.261546747130475,0.8376020523454427,0.13589515715614278,0.2697817184015538
-arvore_rasa_v2,2025,8900,651,0.07314606741573033,0.2247244113330193,0.8265799196625612,0.1327358231436628,0.2584164339395812
-arvore_rasa_v2,2026,5392,288,0.05341246290801187,0.17873622364881353,0.83846207223093,0.11465230237319544,0.22582339678675914
-dummy_prior_v2,2019,1355,163,0.12029520295202951,0.12029520295202951,0.5,0.11550449129868798,0.21868333333333334
-dummy_prior_v2,2020,29987,8388,0.2797212125254277,0.2797212125254277,0.5,0.20520287848500085,0.21868333333333334
-dummy_prior_v2,2021,45324,12785,0.2820801341452652,0.2820801341452652,0.5,0.2065300864190421,0.21868333333333337
-dummy_prior_v2,2022,14664,2659,0.18132842334969995,0.18132842334969995,0.5,0.1498438155350973,0.21868333333333334
-dummy_prior_v2,2023,7363,724,0.09832948526415863,0.09832948526415863,0.5,0.10314584633690223,0.21868333333333334
-dummy_prior_v2,2024,7015,585,0.08339272986457591,0.08339272986457591,0.5,0.09474192985725033,0.21868333333333334
-dummy_prior_v2,2025,8900,651,0.07314606741573033,0.07314606741573033,0.5,0.08897681600811484,0.21868333333333334
-dummy_prior_v2,2026,5392,288,0.05341246290801187,0.05341246290801187,0.5,0.07787403232525551,0.2186833333333333
-hist_gradient_boosting_v2,2019,1355,163,0.12029520295202951,0.28745930015036397,0.7921367398196566,0.13406375508538068,0.26120407564571707
-hist_gradient_boosting_v2,2020,29987,8388,0.2797212125254277,0.510874944902731,0.7539260116490583,0.2337380637317967,0.5212712594470571
-hist_gradient_boosting_v2,2021,45324,12785,0.2820801341452652,0.48808251430763916,0.7373332392813592,0.21899203197293501,0.4826943399848201
-hist_gradient_boosting_v2,2022,14664,2659,0.18132842334969995,0.4150340682318508,0.7968962255447343,0.20103156704927577,0.41749244464931884
-hist_gradient_boosting_v2,2023,7363,724,0.09832948526415863,0.3679242282970099,0.8483983392959233,0.1351947036478361,0.27382611447688543
-hist_gradient_boosting_v2,2024,7015,585,0.08339272986457591,0.3117292798082803,0.8570197126184684,0.12791145133160842,0.2595455633776146
-hist_gradient_boosting_v2,2025,8900,651,0.07314606741573033,0.25062632936211743,0.8409368244421564,0.12607691261330622,0.2495485096608725
-hist_gradient_boosting_v2,2026,5392,288,0.05341246290801187,0.19735505575855672,0.8578361742424242,0.10833146252945079,0.21707997489681424
-logistica_C1_v2,2019,1355,163,0.12029520295202951,0.27886648420402027,0.777995944332359,0.13779899060352996,0.28052390755888873
-logistica_C1_v2,2020,29987,8388,0.2797212125254277,0.49627806440291294,0.7454688769060491,0.23313232567214978,0.518726405601904
-logistica_C1_v2,2021,45324,12785,0.2820801341452652,0.47829952070053683,0.7289671034390512,0.21809318472711914,0.47716017171172576
-logistica_C1_v2,2022,14664,2659,0.18132842334969995,0.4002593509577733,0.7912969226342478,0.2068711246693542,0.4328685933134279
-logistica_C1_v2,2023,7363,724,0.09832948526415863,0.3358602768626264,0.8418912936199038,0.14186083158917648,0.29932086022575843
-logistica_C1_v2,2024,7015,585,0.08339272986457591,0.2773719795919383,0.8435433531389985,0.13530229834466362,0.2859023462082121
-logistica_C1_v2,2025,8900,651,0.07314606741573033,0.2389680618999371,0.830904327834552,0.13274754432959163,0.2751367422542223
-logistica_C1_v2,2026,5392,288,0.05341246290801187,0.18301817544279506,0.845789522378962,0.11514795261481299,0.2448978904179417
-random_forest_contida_v2,2019,1355,163,0.12029520295202951,0.30895800640178117,0.7924429736072796,0.14754883625126058,0.3418388212678265
-random_forest_contida_v2,2020,29987,8388,0.2797212125254277,0.4749971817717371,0.7273694186949391,0.23643266359095655,0.5209719249838256
-random_forest_contida_v2,2021,45324,12785,0.2820801341452652,0.46129484831425405,0.7161846697293173,0.22442010867181497,0.49154709471432123
-random_forest_contida_v2,2022,14664,2659,0.18132842334969995,0.38258765054187344,0.7798093561053836,0.19946632636017927,0.43607756344093007
-random_forest_contida_v2,2023,7363,724,0.09832948526415863,0.3160220767092553,0.8320679993242677,0.14260424667953248,0.32754202259906146
-random_forest_contida_v2,2024,7015,585,0.08339272986457591,0.299455308465333,0.8461763102976166,0.13410453818733847,0.3145085245659219
-random_forest_contida_v2,2025,8900,651,0.07314606741573033,0.2408759653413334,0.8327555972431794,0.131331408138215,0.3041290265394911
-random_forest_contida_v2,2026,5392,288,0.05341246290801187,0.20399440218689455,0.8541309512147335,0.11497450065572158,0.2781408670049724
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261014T234809Z_variacao_temporal.csv`
-
-- Git: `ignored` · `912 B` · modified `2026-10-14 23:48 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.17873622364881353,0.44608515893392486,0.30821008409004913,0.7106558775478871,0.83846207223093,0.11465230237319544,0.24177495708969896,0.26734893528511133,0.12780619468304288
-hist_gradient_boosting_v2,0.19735505575855672,0.510874944902731,0.35363571510231867,0.7373332392813592,0.8578361742424242,0.10833146252945079,0.2337380637317967,0.3135198891441743,0.12050293496106501
-logistica_C1_v2,0.18301817544279506,0.49627806440291294,0.3361152392578175,0.7289671034390512,0.845789522378962,0.11514795261481299,0.23313232567214978,0.3132598889601179,0.11682241893991074
-random_forest_contida_v2,0.20399440218689455,0.4749971817717371,0.33602317996655773,0.7161846697293173,0.8541309512147335,0.11497450065572158,0.23643266359095655,0.27100277958484253,0.1379462814854162
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_amostras.csv`
-
-- Git: `ignored` · `212 B` · modified `2026-10-16 03:01 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740587,300000,0.21868563194673257,0.21868333333333334
-validacao,587271,120000,0.21868609211079723,0.21869166666666667
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:01 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
-  "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T030120Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T030120Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
-}
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas.csv`
-
-- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:01 UTC` · 5 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7837338025141412,0.4577975780425485,0.19719355553237866,0.5098122866894198,0.3699626769405411,0.8196471440003048,0.6553,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,17.681844499893486,1.5374936999287456
-0.7742724458341613,0.43856004509006286,0.19910056824861047,0.5055658052772997,0.37446347995157564,0.7779217315093548,0.6672416666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.587622199906036,1.2053819000720978
-0.7665168716317146,0.4299862045991363,0.20138297179217352,0.4940412952099404,0.354431428429407,0.8151126014556263,0.6348833333333334,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,71.1057296001818,1.8488002999220043
-0.759284397951174,0.40228534443387626,0.2068909780780606,0.4922231331478124,0.3531146454605699,0.8121784856914225,0.6335416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,8.705420000012964,1.154251700034365
-0.5,0.21869166666666667,0.17086562166666663,0.0,0.0,0.0,0.7813083333333334,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.118621199857444,1.0784217999316752
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_metricas_por_ano.csv`
-
-- Git: `ignored` · `5.2 KB` · modified `2026-10-16 03:01 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1355,163,0.12029520295202951,0.25618294661337704,0.7722315436241611,0.13273510512876757,0.25683723310132156
-arvore_rasa_v2,2020,29987,8388,0.2797212125254277,0.44608515893392486,0.720250887315007,0.24177495708969896,0.5229989687720558
-arvore_rasa_v2,2021,45324,12785,0.2820801341452652,0.43988752846501067,0.7106558775478871,0.2317449500902894,0.49832380157870104
-arvore_rasa_v2,2022,14664,2659,0.18132842334969995,0.3603111099229618,0.7745634849713962,0.21051625880764274,0.42780471751149857
-arvore_rasa_v2,2023,7363,724,0.09832948526415863,0.2982065466728109,0.8294313320168201,0.14307735417577414,0.2829710385148049
-arvore_rasa_v2,2024,7015,585,0.08339272986457591,0.261546747130475,0.8376020523454427,0.13589515715614278,0.2697817184015538
-arvore_rasa_v2,2025,8900,651,0.07314606741573033,0.2247244113330193,0.8265799196625612,0.1327358231436628,0.2584164339395812
-arvore_rasa_v2,2026,5392,288,0.05341246290801187,0.17873622364881353,0.83846207223093,0.11465230237319544,0.22582339678675914
-dummy_prior_v2,2019,1355,163,0.12029520295202951,0.12029520295202951,0.5,0.11550449129868798,0.21868333333333334
-dummy_prior_v2,2020,29987,8388,0.2797212125254277,0.2797212125254277,0.5,0.20520287848500085,0.21868333333333334
-dummy_prior_v2,2021,45324,12785,0.2820801341452652,0.2820801341452652,0.5,0.2065300864190421,0.21868333333333337
-dummy_prior_v2,2022,14664,2659,0.18132842334969995,0.18132842334969995,0.5,0.1498438155350973,0.21868333333333334
-dummy_prior_v2,2023,7363,724,0.09832948526415863,0.09832948526415863,0.5,0.10314584633690223,0.21868333333333334
-dummy_prior_v2,2024,7015,585,0.08339272986457591,0.08339272986457591,0.5,0.09474192985725033,0.21868333333333334
-dummy_prior_v2,2025,8900,651,0.07314606741573033,0.07314606741573033,0.5,0.08897681600811484,0.21868333333333334
-dummy_prior_v2,2026,5392,288,0.05341246290801187,0.05341246290801187,0.5,0.07787403232525551,0.2186833333333333
-hist_gradient_boosting_v2,2019,1355,163,0.12029520295202951,0.28745930015036397,0.7921367398196566,0.13406375508538068,0.26120407564571707
-hist_gradient_boosting_v2,2020,29987,8388,0.2797212125254277,0.510874944902731,0.7539260116490583,0.2337380637317967,0.5212712594470571
-hist_gradient_boosting_v2,2021,45324,12785,0.2820801341452652,0.48808251430763916,0.7373332392813592,0.21899203197293501,0.4826943399848201
-hist_gradient_boosting_v2,2022,14664,2659,0.18132842334969995,0.4150340682318508,0.7968962255447343,0.20103156704927577,0.41749244464931884
-hist_gradient_boosting_v2,2023,7363,724,0.09832948526415863,0.3679242282970099,0.8483983392959233,0.1351947036478361,0.27382611447688543
-hist_gradient_boosting_v2,2024,7015,585,0.08339272986457591,0.3117292798082803,0.8570197126184684,0.12791145133160842,0.2595455633776146
-hist_gradient_boosting_v2,2025,8900,651,0.07314606741573033,0.25062632936211743,0.8409368244421564,0.12607691261330622,0.2495485096608725
-hist_gradient_boosting_v2,2026,5392,288,0.05341246290801187,0.19735505575855672,0.8578361742424242,0.10833146252945079,0.21707997489681424
-logistica_C1_v2,2019,1355,163,0.12029520295202951,0.27886648420402027,0.777995944332359,0.13779899060352996,0.28052390755888873
-logistica_C1_v2,2020,29987,8388,0.2797212125254277,0.49627806440291294,0.7454688769060491,0.23313232567214978,0.518726405601904
-logistica_C1_v2,2021,45324,12785,0.2820801341452652,0.47829952070053683,0.7289671034390512,0.21809318472711914,0.47716017171172576
-logistica_C1_v2,2022,14664,2659,0.18132842334969995,0.4002593509577733,0.7912969226342478,0.2068711246693542,0.4328685933134279
-logistica_C1_v2,2023,7363,724,0.09832948526415863,0.3358602768626264,0.8418912936199038,0.14186083158917648,0.29932086022575843
-logistica_C1_v2,2024,7015,585,0.08339272986457591,0.2773719795919383,0.8435433531389985,0.13530229834466362,0.2859023462082121
-logistica_C1_v2,2025,8900,651,0.07314606741573033,0.2389680618999371,0.830904327834552,0.13274754432959163,0.2751367422542223
-logistica_C1_v2,2026,5392,288,0.05341246290801187,0.18301817544279506,0.845789522378962,0.11514795261481299,0.2448978904179417
-random_forest_contida_v2,2019,1355,163,0.12029520295202951,0.30895800640178117,0.7924429736072796,0.14754883625126058,0.3418388212678265
-random_forest_contida_v2,2020,29987,8388,0.2797212125254277,0.4749971817717371,0.7273694186949391,0.23643266359095652,0.5209719249838256
-random_forest_contida_v2,2021,45324,12785,0.2820801341452652,0.46129484831425405,0.7161846697293173,0.22442010867181497,0.49154709471432123
-random_forest_contida_v2,2022,14664,2659,0.18132842334969995,0.38258765054187344,0.7798093561053836,0.19946632636017925,0.43607756344093007
-random_forest_contida_v2,2023,7363,724,0.09832948526415863,0.3160220767092553,0.8320679993242677,0.14260424667953248,0.32754202259906146
-random_forest_contida_v2,2024,7015,585,0.08339272986457591,0.299455308465333,0.8461763102976166,0.13410453818733847,0.3145085245659218
-random_forest_contida_v2,2025,8900,651,0.07314606741573033,0.2408759653413334,0.8327555972431794,0.131331408138215,0.3041290265394911
-random_forest_contida_v2,2026,5392,288,0.05341246290801187,0.20399440218689455,0.8541309512147335,0.11497450065572158,0.2781408670049724
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T030120Z_variacao_temporal.csv`
-
-- Git: `ignored` · `912 B` · modified `2026-10-16 03:01 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.17873622364881353,0.44608515893392486,0.30821008409004913,0.7106558775478871,0.83846207223093,0.11465230237319544,0.24177495708969896,0.26734893528511133,0.12780619468304288
-hist_gradient_boosting_v2,0.19735505575855672,0.510874944902731,0.35363571510231867,0.7373332392813592,0.8578361742424242,0.10833146252945079,0.2337380637317967,0.3135198891441743,0.12050293496106501
-logistica_C1_v2,0.18301817544279506,0.49627806440291294,0.3361152392578175,0.7289671034390512,0.845789522378962,0.11514795261481299,0.23313232567214978,0.3132598889601179,0.11682241893991074
-random_forest_contida_v2,0.20399440218689455,0.4749971817717371,0.33602317996655773,0.7161846697293173,0.8541309512147335,0.11497450065572158,0.23643266359095652,0.27100277958484253,0.1379462814854162
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_amostras.csv`
-
-- Git: `ignored` · `211 B` · modified `2026-10-16 03:26 UTC` · 2 rows
-
-```csv
-particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
-treino,2740620,300000,0.2186125767162175,0.21861333333333333
-validacao,586136,120000,0.21865403251122606,0.21865833333333334
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_manifesto.json`
-
-- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:26 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v2_cinco_familias",
-  "carater": "comparacao_provisoria_de_integracao",
-  "seed": 42,
-  "n_treino_piloto": 300000,
-  "n_validacao_piloto": 120000,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "modelos": [
-    "dummy_prior_v2",
-    "logistica_C1_v2",
-    "arvore_rasa_v2",
-    "random_forest_contida_v2",
-    "hist_gradient_boosting_v2"
-  ],
-  "shortlist_provisoria": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_aberto": false,
-  "limiar_selecionado": false,
-  "calibracao_aplicada": false,
-  "tuning_realizado": false,
-  "observacoes": [
-    "Resultados dependem da coorte provisória.",
-    "Amostras comparáveis foram usadas para controlar custo.",
-    "A shortlist não congela finalistas.",
-    "O teste permaneceu fechado.",
-    "Calibração e limiar pertencem à próxima etapa."
-  ],
-  "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T032647Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T032647Z_predicoes_validacao.parquet",
-    "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
-    "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
-  }
-}
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas.csv`
-
-- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:26 UTC` · 5 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7854381459754272,0.46511988372289026,0.19591399211546381,0.5086482410255796,0.3707769091162921,0.8097488471359426,0.657925,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,11.12510609999299,1.7038799999281764
-0.7757959730311267,0.4441037099454647,0.19760302104966157,0.5056380861794927,0.37643485390578413,0.7698845230382255,0.670825,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.407828999916092,0.9214737999718636
-0.7682612526485143,0.434532197090352,0.2006861087655751,0.49444721664558505,0.3554576701037808,0.8119211860208088,0.6369583333333333,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,54.45230249990709,1.7206465997733176
-0.7615103388726303,0.40670703793942975,0.20542996953715997,0.49329172088952356,0.35345083671650657,0.8162277525820344,0.6333416666666667,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,7.0971053999383,1.1714217001572251
-0.5,0.21865833333333334,0.17084686862222226,0.0,0.0,0.0,0.7813416666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,4.040675699943677,0.977710000006482
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_metricas_por_ano.csv`
-
-- Git: `ignored` · `5.1 KB` · modified `2026-10-16 03:26 UTC` · 40 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-arvore_rasa_v2,2019,1342,166,0.12369597615499255,0.2682433138203361,0.7365533562822719,0.1411616809872305,0.2588171299104684
-arvore_rasa_v2,2020,30023,8360,0.278453185890817,0.4523143667507715,0.7243883690732793,0.2400973844756979,0.520568819291174
-arvore_rasa_v2,2021,45449,12836,0.2824264560276354,0.45250283237977196,0.7186199839612237,0.22879873130012723,0.49581870034676895
-arvore_rasa_v2,2022,14592,2653,0.18181195175438597,0.3442382470259642,0.7617138123948137,0.2128592676228337,0.4269152083492362
-arvore_rasa_v2,2023,7367,692,0.09393240124881228,0.28012479403765445,0.831595115931675,0.1402943182907454,0.27641648436215266
-arvore_rasa_v2,2024,6979,601,0.08611548932511821,0.25852782195827795,0.8248457285312605,0.1377712740010943,0.26966041068108904
-arvore_rasa_v2,2025,8867,632,0.0712755159580467,0.24069291487664007,0.8403319614488944,0.13031476844556802,0.25656833404777346
-arvore_rasa_v2,2026,5381,299,0.05556587994796506,0.20609677351320768,0.8381049122155841,0.11121401348079846,0.21918997746003202
-dummy_prior_v2,2019,1342,166,0.12369597615499255,0.12369597615499255,0.5,0.11740458633177676,0.21861333333333335
-dummy_prior_v2,2020,30023,8360,0.278453185890817,0.278453185890817,0.5,0.20449781711217255,0.21861333333333333
-dummy_prior_v2,2021,45449,12836,0.2824264560276354,0.2824264560276354,0.5,0.20673386759130358,0.21861333333333333
-dummy_prior_v2,2022,14592,2653,0.18181195175438597,0.18181195175438597,0.5,0.15011070763976606,0.21861333333333333
-dummy_prior_v2,2023,7367,692,0.09393240124881228,0.09393240124881228,0.5,0.10065444006990934,0.21861333333333335
-dummy_prior_v2,2024,6979,601,0.08611548932511821,0.08611548932511821,0.5,0.09625529049023895,0.21861333333333333
-dummy_prior_v2,2025,8867,632,0.0712755159580467,0.0712755159580467,0.5,0.08790374921187423,0.2186133333333333
-dummy_prior_v2,2026,5381,299,0.05556587994796506,0.05556587994796506,0.5,0.07906278498902723,0.21861333333333338
-hist_gradient_boosting_v2,2019,1342,166,0.12369597615499255,0.3050787008424183,0.7628473075977379,0.1398506943941787,0.2627820432450887
-hist_gradient_boosting_v2,2020,30023,8360,0.278453185890817,0.5120674457512532,0.7548250114244582,0.23276591523218196,0.5192658809925419
-hist_gradient_boosting_v2,2021,45449,12836,0.2824264560276354,0.5013728501557873,0.7397146488785638,0.21785588602960376,0.4810054082287621
-hist_gradient_boosting_v2,2022,14592,2653,0.18181195175438597,0.42172816137868513,0.7971125965206913,0.2003051990513586,0.41503273667096613
-hist_gradient_boosting_v2,2023,7367,692,0.09393240124881228,0.3309265119886693,0.8524351064060097,0.13211058334381415,0.2666420140554942
-hist_gradient_boosting_v2,2024,6979,601,0.08611548932511821,0.31442891140099793,0.8453621251087218,0.12818982577044055,0.2584430101421541
-hist_gradient_boosting_v2,2025,8867,632,0.0712755159580467,0.272777664047418,0.8532101903729835,0.12182187772788222,0.24507904216381612
-hist_gradient_boosting_v2,2026,5381,299,0.05556587994796506,0.21622435505389218,0.8530487957365428,0.10432868776938624,0.20886725450924717
-logistica_C1_v2,2019,1342,166,0.12369597615499255,0.2982157409603792,0.7419550651585934,0.14011325242965963,0.2755574196387101
-logistica_C1_v2,2020,30023,8360,0.278453185890817,0.4962705396832904,0.7462652292058847,0.23193217624501253,0.5158978714864526
-logistica_C1_v2,2021,45449,12836,0.2824264560276354,0.4866531998150035,0.7317871721934055,0.2163999918264269,0.4747146257874991
-logistica_C1_v2,2022,14592,2653,0.18181195175438597,0.3970210658529631,0.7855662628791469,0.20754925487406256,0.43034633902877667
-logistica_C1_v2,2023,7367,692,0.09393240124881228,0.31466246468509285,0.8422002121625424,0.13840208486988698,0.29229037882768366
-logistica_C1_v2,2024,6979,601,0.08611548932511821,0.2985793898407893,0.8359746142756742,0.13513907293065566,0.28444638790154847
-logistica_C1_v2,2025,8867,632,0.0712755159580467,0.25369421948251475,0.8441906266091781,0.12858901285927668,0.2726489806134789
-logistica_C1_v2,2026,5381,299,0.05556587994796506,0.21234494497666187,0.8456905413427152,0.11045648242157081,0.23715114266964818
-random_forest_contida_v2,2019,1342,166,0.12369597615499255,0.2967394146096136,0.7505429882796493,0.15392760709825884,0.3432529604716412
-random_forest_contida_v2,2020,30023,8360,0.278453185890817,0.4764224650016379,0.7286653046768826,0.23573624909696456,0.5195917432477899
-random_forest_contida_v2,2021,45449,12836,0.2824264560276354,0.4706516351992469,0.7189415891150358,0.22408685482284618,0.49191092322093083
-random_forest_contida_v2,2022,14592,2653,0.18181195175438597,0.3789560486927598,0.7750006969401911,0.19974872164865612,0.43430754332055943
-random_forest_contida_v2,2023,7367,692,0.09393240124881228,0.3016924890184959,0.8408093568011085,0.13814437371232294,0.3193374778492295
-random_forest_contida_v2,2024,6979,601,0.08611548932511821,0.29742514243489176,0.8371159648730113,0.134933993927624,0.3134310861692245
-random_forest_contida_v2,2025,8867,632,0.0712755159580467,0.25518394431940394,0.848707469660987,0.12840486183199173,0.3008361912461604
-random_forest_contida_v2,2026,5381,299,0.05556587994796506,0.216398258264822,0.846279872959715,0.11169227480773387,0.2695585967559024
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T032647Z_variacao_temporal.csv`
-
-- Git: `ignored` · `913 B` · modified `2026-10-16 03:26 UTC` · 4 rows
-
-```csv
-modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
-arvore_rasa_v2,0.20609677351320768,0.45250283237977196,0.312842633045328,0.7186199839612237,0.8403319614488944,0.11121401348079846,0.2400973844756979,0.24640605886656428,0.12171197748767071
-hist_gradient_boosting_v2,0.21622435505389218,0.5120674457512532,0.35932557507739016,0.7397146488785638,0.8532101903729835,0.10432868776938624,0.23276591523218196,0.29584309069736103,0.11349554149441976
-logistica_C1_v2,0.21234494497666187,0.4962705396832904,0.34468019566208685,0.7317871721934055,0.8456905413427152,0.11045648242157081,0.23193217624501253,0.2839255947066285,0.11390336914930965
-random_forest_contida_v2,0.216398258264822,0.4764224650016379,0.33668367469260896,0.7189415891150358,0.848707469660987,0.11169227480773387,0.23573624909696456,0.26002420673681587,0.12976588054595117
-```
-
-### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_amostras.csv`
-
-- Git: `ignored` · `212 B` · modified `2026-10-16 03:42 UTC` · 2 rows
+- Git: `ignored` · `212 B` · modified `2026-10-17 00:45 UTC` · 2 rows
 
 ```csv
 particao,linhas_originais,linhas_piloto,prevalencia_original,prevalencia_piloto
@@ -7510,9 +9657,9 @@ treino,2740584,300000,0.21868441178960396,0.21868333333333334
 validacao,587272,120000,0.21868742252312387,0.21868333333333334
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_manifesto.json`
+### `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_manifesto.json`
 
-- Git: `ignored` · `2.7 KB` · modified `2026-10-16 03:42 UTC`
+- Git: `ignored` · `2.7 KB` · modified `2026-10-17 00:45 UTC`
 
 ```json
 {
@@ -7578,33 +9725,33 @@ validacao,587272,120000,0.21868742252312387,0.21868333333333334
     "Calibração e limiar pertencem à próxima etapa."
   ],
   "artefatos": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv",
-    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_amostras.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet",
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_variacao_temporal.csv",
+    "amostras": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_amostras.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261017T004540Z_predicoes_validacao.parquet",
     "figura_curvas": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_curvas_pr_roc_calibracao.png",
     "figura_temporal": "<REPO>\\reports\\figures\\supervisionado_03\\03_pilotos_metricas_por_ano.png"
   }
 }
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas.csv`
+### `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_metricas.csv`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-16 03:42 UTC` · 5 rows
+- Git: `ignored` · `1.3 KB` · modified `2026-10-17 00:45 UTC` · 5 rows
 
 ```csv
 roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7833709454003838,0.4596864874551059,0.19632903073476674,0.5089796841341061,0.37006974611031307,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,9.506548200035468,1.6669316999614239
-0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,5.923188799992204,0.9672848999034613
-0.7651780559732301,0.42991604084878565,0.20114864848557457,0.4926865930508181,0.3536510465946251,0.8118664735919519,0.634375,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,53.28373220004141,1.5794817998539656
-0.756532095491909,0.39921961347201546,0.20657001421031662,0.4893024932682883,0.3473455220180111,0.827490282752839,0.6222583333333334,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,6.883358600083739,0.9537774999625981
-0.5,0.21868333333333334,0.1708609330555555,0.0,0.0,0.0,0.7813166666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,3.532367399893701,0.8906467999331653
+0.7833709454003838,0.4596864874551059,0.19632903073476674,0.5089796841341061,0.37006974611031307,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,11.14434540000002,1.424537799999598
+0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.388927399999375,1.5536587000005966
+0.7651780559732301,0.42991604084878565,0.20114864848557457,0.4926865930508181,0.3536510465946251,0.8118664735919519,0.634375,0.5,120000,random_forest_contida_v2,provisoria,piloto_v2_cinco_familias,300000,43.91674210000019,1.5719465000001946
+0.756532095491909,0.39921961347201546,0.20657001421031662,0.4893024932682883,0.3473455220180111,0.827490282752839,0.6222583333333334,0.5,120000,arvore_rasa_v2,provisoria,piloto_v2_cinco_familias,300000,8.28684869999961,0.9775219000002835
+0.5,0.21868333333333334,0.1708609330555555,0.0,0.0,0.0,0.7813166666666667,0.5,120000,dummy_prior_v2,provisoria,piloto_v2_cinco_familias,300000,3.7708654000016395,0.972776900000099
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv`
+### `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_metricas_por_ano.csv`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-16 03:42 UTC` · 40 rows
+- Git: `ignored` · `5.2 KB` · modified `2026-10-17 00:45 UTC` · 40 rows
 
 ```csv
 modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
@@ -7641,30 +9788,30 @@ logistica_C1_v2,2024,7034,586,0.08330963889678704,0.25917395137361576,0.82560642
 logistica_C1_v2,2025,8886,651,0.07326130992572587,0.2462244144676162,0.8324111147485024,0.13024540290776948,0.272552470357743
 logistica_C1_v2,2026,5379,298,0.055400632087748654,0.22327198776182794,0.8452558485422068,0.11204739355874034,0.2393976573825986
 random_forest_contida_v2,2019,1334,160,0.1199400299850075,0.32572426198480253,0.8007905664395228,0.14916144376578358,0.3496393534401367
-random_forest_contida_v2,2020,30032,8402,0.2797682472029835,0.4760313531234205,0.7293101047094549,0.23487862905051657,0.5181114482469674
+random_forest_contida_v2,2020,30032,8402,0.2797682472029835,0.4760313531234205,0.7293101047094549,0.2348786290505166,0.5181114482469674
 random_forest_contida_v2,2021,45369,12790,0.28191055566576295,0.45705715051531104,0.7106745290169867,0.2253093920542841,0.49057310298612267
 random_forest_contida_v2,2022,14589,2649,0.18157515936664612,0.3883585268711113,0.7770167529480799,0.1992066532945187,0.4348338092351371
-random_forest_contida_v2,2023,7377,706,0.0957028602412905,0.3102233058174007,0.8332522953564603,0.14005422778055931,0.32473932034286557
+random_forest_contida_v2,2023,7377,706,0.0957028602412905,0.3102233058174007,0.8332522953564603,0.14005422778055934,0.32473932034286557
 random_forest_contida_v2,2024,7034,586,0.08330963889678704,0.26557302373811287,0.821075429373555,0.1358453544198026,0.31438593293411254
 random_forest_contida_v2,2025,8886,651,0.07326130992572587,0.25951051724284785,0.8375352663736234,0.13068176776563886,0.3063814328044761
 random_forest_contida_v2,2026,5379,298,0.055400632087748654,0.22759773633077704,0.8514527737894432,0.11279779548692852,0.2751319441993206
 ```
 
-### `outputs/tables/03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv`
+### `outputs/tables/03_cinco_familias_provisoria_20261017T004540Z_variacao_temporal.csv`
 
-- Git: `ignored` · `912 B` · modified `2026-10-16 03:42 UTC` · 4 rows
+- Git: `ignored` · `911 B` · modified `2026-10-17 00:45 UTC` · 4 rows
 
 ```csv
 modelo,pr_auc_min,pr_auc_max,pr_auc_media,roc_auc_min,roc_auc_max,brier_min,brier_max,amplitude_pr_auc,amplitude_roc_auc
 arvore_rasa_v2,0.20227650155666232,0.4515074952948283,0.31110662196667527,0.7073288419193751,0.8450349307658879,0.11020475887700545,0.24028885773394879,0.24923099373816598,0.1377060888465128
 hist_gradient_boosting_v2,0.21691908816802885,0.5164997626409047,0.3565288814730848,0.7341272640191554,0.8560976608472939,0.10503800938030636,0.23151814174484173,0.29958067447287584,0.12197039682813848
 logistica_C1_v2,0.22327198776182794,0.5002695045987536,0.3426381924395379,0.725251437289345,0.8452558485422068,0.11204739355874034,0.23079501402819952,0.2769975168369257,0.12000441125286176
-random_forest_contida_v2,0.22759773633077704,0.4760313531234205,0.338759484452973,0.7106745290169867,0.8514527737894432,0.11279779548692852,0.23487862905051657,0.24843361679264345,0.14077824477245648
+random_forest_contida_v2,0.22759773633077704,0.4760313531234205,0.338759484452973,0.7106745290169867,0.8514527737894432,0.11279779548692852,0.2348786290505166,0.24843361679264345,0.14077824477245648
 ```
 
-### `outputs/tables/03_pilotos_provisional_20261012T124857Z_contrato.csv`
+### `outputs/tables/03_pilotos_provisoria_20261017T004408Z_contrato.csv`
 
-- Git: `ignored` · `213 B` · modified `2026-10-12 12:48 UTC` · 8 rows
+- Git: `ignored` · `213 B` · modified `2026-10-17 00:44 UTC` · 8 rows
 
 ```csv
 item,resultado
@@ -7678,695 +9825,9 @@ features_sem_proibidas,True
 features_presentes,True
 ```
 
-### `outputs/tables/03_pilotos_provisional_20261012T124857Z_manifesto.json`
+### `outputs/tables/03_pilotos_provisoria_20261017T004408Z_manifesto.json`
 
-- Git: `ignored` · `1.7 KB` · modified `2026-10-12 12:48 UTC`
-
-```json
-{
-  "status_coorte": "provisional",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740583,
-  "n_validacao": 587262,
-  "n_teste_criado_mas_nao_aberto": 587287,
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisional_20261012T124857Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisional_20261012T124857Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisional_20261012T124857Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisional_20261012T124857Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisional_20261012T124857Z_metricas_validacao.csv`
-
-- Git: `ignored` · `540 B` · modified `2026-10-12 12:48 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,duracao_fit_s,duracao_pred_s
-0.7753013260187773,0.43942331586040556,0.19788284048088187,0.5058403237149759,0.3759421563354569,0.7728971671520456,0.6697726057534797,0.5,587262,logistica_piloto_C1,provisoria,piloto_v1,46.745055399951525,4.407911600079387
-0.5,0.21867922664841247,0.17085862251680126,0.0,0.0,0.0,0.7813207733515876,0.5,587262,dummy_prior,provisoria,piloto_v1,31.225839799968526,4.341758299968205
-```
-
-### `outputs/tables/03_pilotos_provisional_20261012T124857Z_particoes.csv`
-
-- Git: `ignored` · `312 B` · modified `2026-10-12 12:48 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587287,128436,0.2186937562043771,2019,2026,587286,15.000439321075254
-treino,2740583,599325,0.2186852213561859,2019,2026,2740574,69.99975990592398
-validacao,587262,128422,0.21867922664841247,2019,2026,587259,14.999800773000757
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T021331Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-12 02:13 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T021331Z_manifesto.json`
-
-- Git: `ignored` · `1.7 KB` · modified `2026-10-12 02:13 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740583,
-  "n_validacao": 587262,
-  "n_teste_criado_mas_nao_aberto": 587287,
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T021331Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T021331Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T021331Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261012T021331Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T021331Z_metricas_validacao.csv`
-
-- Git: `ignored` · `540 B` · modified `2026-10-12 02:13 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,duracao_fit_s,duracao_pred_s
-0.7753013260187773,0.43942331586040556,0.19788284048088187,0.5058403237149759,0.3759421563354569,0.7728971671520456,0.6697726057534797,0.5,587262,logistica_piloto_C1,provisoria,piloto_v1,46.745055399951525,4.407911600079387
-0.5,0.21867922664841247,0.17085862251680126,0.0,0.0,0.0,0.7813207733515876,0.5,587262,dummy_prior,provisoria,piloto_v1,31.225839799968526,4.341758299968205
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T021331Z_particoes.csv`
-
-- Git: `ignored` · `312 B` · modified `2026-10-12 02:13 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587287,128436,0.2186937562043771,2019,2026,587286,15.000439321075254
-treino,2740583,599325,0.2186852213561859,2019,2026,2740574,69.99975990592398
-validacao,587262,128422,0.21867922664841247,2019,2026,587259,14.999800773000757
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T125945Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-12 12:59 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T125945Z_manifesto.json`
-
-- Git: `ignored` · `1.7 KB` · modified `2026-10-12 12:59 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740583,
-  "n_validacao": 587262,
-  "n_teste_criado_mas_nao_aberto": 587287,
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T125945Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T125945Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261012T125945Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261012T125945Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T125945Z_metricas_validacao.csv`
-
-- Git: `ignored` · `537 B` · modified `2026-10-12 12:59 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,duracao_fit_s,duracao_pred_s
-0.7753013260187773,0.43942331586040556,0.19788284048088187,0.5058403237149759,0.3759421563354569,0.7728971671520456,0.6697726057534797,0.5,587262,logistica_piloto_C1,provisoria,piloto_v1,51.10458749998361,4.318254200043157
-0.5,0.21867922664841247,0.17085862251680126,0.0,0.0,0.0,0.7813207733515876,0.5,587262,dummy_prior,provisoria,piloto_v1,37.4147043999983,5.133523200056516
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261012T125945Z_particoes.csv`
-
-- Git: `ignored` · `312 B` · modified `2026-10-12 12:59 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587287,128436,0.2186937562043771,2019,2026,587286,15.000439321075254
-treino,2740583,599325,0.2186852213561859,2019,2026,2740574,69.99975990592398
-validacao,587262,128422,0.21867922664841247,2019,2026,587259,14.999800773000757
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T030944Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-14 03:09 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T030944Z_manifesto.json`
-
-- Git: `ignored` · `2.0 KB` · modified `2026-10-14 03:09 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740587,
-  "n_validacao": 587271,
-  "n_teste_criado_mas_nao_aberto": 587274,
-  "teste_aberto": false,
-  "quarentena_conflitos_split": {
-    "politica": "quarentena_provisoria",
-    "grupos_conflitantes": 2,
-    "linhas_excluidas": 4,
-    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
-  },
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T030944Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T030944Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T030944Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261014T030944Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T030944Z_metricas_validacao.csv`
-
-- Git: `ignored` · `536 B` · modified `2026-10-14 03:09 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,duracao_fit_s,duracao_pred_s
-0.7752527151170048,0.4407647509558362,0.19837290335933982,0.5056117549626814,0.3752271784623506,0.774862179587006,0.6686197683863156,0.5,587271,logistica_piloto_C1,provisoria,piloto_v1,60.564727000077255,5.747775800060481
-0.5,0.21868609211079723,0.1708624852283169,0.0,0.0,0.0,0.7813139078892027,0.5,587271,dummy_prior,provisoria,piloto_v1,37.23039289994631,5.613179499981925
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T030944Z_particoes.csv`
-
-- Git: `ignored` · `313 B` · modified `2026-10-14 03:09 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587274,128428,0.21868497498612233,2019,2026,587270,15.000107276076516
-treino,2740587,599327,0.21868563194673257,2019,2026,2740582,69.9998620736159
-validacao,587271,128428,0.21868609211079723,2019,2026,587267,15.000030650307576
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T234615Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-14 23:46 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T234615Z_manifesto.json`
-
-- Git: `ignored` · `2.0 KB` · modified `2026-10-14 23:46 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740587,
-  "n_validacao": 587271,
-  "n_teste_criado_mas_nao_aberto": 587274,
-  "teste_aberto": false,
-  "quarentena_conflitos_split": {
-    "politica": "quarentena_provisoria",
-    "grupos_conflitantes": 2,
-    "linhas_excluidas": 4,
-    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
-  },
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T234615Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T234615Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261014T234615Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261014T234615Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T234615Z_metricas_validacao.csv`
-
-- Git: `ignored` · `534 B` · modified `2026-10-14 23:46 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,duracao_fit_s,duracao_pred_s
-0.7752527151170048,0.4407647509558362,0.19837290335933982,0.5056117549626814,0.3752271784623506,0.774862179587006,0.6686197683863156,0.5,587271,logistica_piloto_C1,provisoria,piloto_v1,66.1743845999008,7.088190600043163
-0.5,0.21868609211079723,0.1708624852283169,0.0,0.0,0.0,0.7813139078892027,0.5,587271,dummy_prior,provisoria,piloto_v1,44.04253809992224,6.498549000010826
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261014T234615Z_particoes.csv`
-
-- Git: `ignored` · `313 B` · modified `2026-10-14 23:46 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587274,128428,0.21868497498612233,2019,2026,587270,15.000107276076516
-treino,2740587,599327,0.21868563194673257,2019,2026,2740582,69.9998620736159
-validacao,587271,128428,0.21868609211079723,2019,2026,587267,15.000030650307576
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-16 02:59 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_manifesto.json`
-
-- Git: `ignored` · `2.0 KB` · modified `2026-10-16 02:59 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740587,
-  "n_validacao": 587271,
-  "n_teste_criado_mas_nao_aberto": 587274,
-  "teste_aberto": false,
-  "quarentena_conflitos_split": {
-    "politica": "quarentena_provisoria",
-    "grupos_conflitantes": 2,
-    "linhas_excluidas": 4,
-    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
-  },
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T025913Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_metricas_validacao.csv`
-
-- Git: `ignored` · `574 B` · modified `2026-10-16 02:59 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
-0.775231023582668,0.44057383963272745,0.19836948367684218,0.5056485259964325,0.37529325679111064,0.7747531690908525,0.6687151247039271,0.5,587271,logistica_piloto_C1,provisoria,piloto_v1,1000000,23.887339500011876,5.565829900093377
-0.5,0.21868609211079723,0.1708624852283169,0.0,0.0,0.0,0.7813139078892027,0.5,587271,dummy_prior,provisoria,piloto_v1,2740587,0.16530180000700057,0.011786699993535876
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T025913Z_particoes.csv`
-
-- Git: `ignored` · `313 B` · modified `2026-10-16 02:59 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-teste,587274,128428,0.21868497498612233,2019,2026,587270,15.000107276076516
-treino,2740587,599327,0.21868563194673257,2019,2026,2740582,69.9998620736159
-validacao,587271,128428,0.21868609211079723,2019,2026,587267,15.000030650307576
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-16 03:25 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_manifesto.json`
-
-- Git: `ignored` · `2.0 KB` · modified `2026-10-16 03:25 UTC`
-
-```json
-{
-  "status_coorte": "provisoria",
-  "versao_execucao": "piloto_v1",
-  "fonte": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-  "seed": 42,
-  "features": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "features_final_congelada": false,
-  "n_base_modelagem": 3915132,
-  "n_treino": 2740620,
-  "n_validacao": 586136,
-  "n_teste_criado_mas_nao_aberto": 588376,
-  "teste_aberto": false,
-  "quarentena_conflitos_split": {
-    "politica": "quarentena_provisoria",
-    "grupos_conflitantes": 2,
-    "linhas_excluidas": 4,
-    "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
-  },
-  "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T032505Z_predicoes_validacao.parquet"
-  }
-}
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_metricas_validacao.csv`
-
-- Git: `ignored` · `571 B` · modified `2026-10-16 03:25 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
-0.7749898302178317,0.44026295736440524,0.19812912680779646,0.5056354628528861,0.37563347876022,0.7732461513252862,0.6693907216072721,0.5,586136,logistica_piloto_C1,provisoria,piloto_v1,1000000,19.8268175998237,6.868487499887124
-0.5,0.21865403251122606,0.17084444829638873,0.0,0.0,0.0,0.7813459674887739,0.5,586136,dummy_prior,provisoria,piloto_v1,2740620,0.15075719985179603,0.012463700026273727
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T032505Z_particoes.csv`
-
-- Git: `ignored` · `312 B` · modified `2026-10-16 03:25 UTC` · 3 rows
-
-```csv
-particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
-treino,2740620,599134,0.2186125767162175,2019,2026,2740610,70.00070495707425
-validacao,586136,128161,0.21865403251122606,2019,2026,586134,14.97104056772543
-teste,588376,128888,0.21905720151739705,2019,2026,588375,15.028254475200326
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_contrato.csv`
-
-- Git: `ignored` · `213 B` · modified `2026-10-16 03:41 UTC` · 8 rows
-
-```csv
-item,resultado
-coorte_nao_vazia,True
-dt_interna_disponivel,True
-dt_interna_sem_nulos,True
-ano_disponivel,True
-alvo_disponivel,True
-alvo_binario,True
-features_sem_proibidas,True
-features_presentes,True
-```
-
-### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_manifesto.json`
-
-- Git: `ignored` · `2.0 KB` · modified `2026-10-16 03:41 UTC`
+- Git: `ignored` · `2.0 KB` · modified `2026-10-17 00:44 UTC`
 
 ```json
 {
@@ -8420,27 +9881,27 @@ features_presentes,True
     "waterfall": "<REPO>\\outputs\\tables\\supervisionado_waterfall_conflitos_split_provisorio.csv"
   },
   "artefatos": {
-    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_contrato.csv",
-    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_particoes.csv",
-    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261016T034100Z_predicoes_validacao.parquet"
+    "contrato": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261017T004408Z_contrato.csv",
+    "particoes": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261017T004408Z_particoes.csv",
+    "metricas_validacao": "<REPO>\\outputs\\tables\\03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet"
   }
 }
 ```
 
-### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_metricas_validacao.csv`
+### `outputs/tables/03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv`
 
-- Git: `ignored` · `573 B` · modified `2026-10-16 03:41 UTC` · 2 rows
+- Git: `ignored` · `574 B` · modified `2026-10-17 00:44 UTC` · 2 rows
 
 ```csv
 roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_apenas_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino_usado,duracao_fit_s,duracao_pred_s
-0.7751607183667255,0.4405563015380145,0.1980742897570493,0.5056971968518372,0.37570939963981415,0.7732132150838207,0.6694359683417564,0.5,587272,logistica_piloto_C1,provisoria,piloto_v1,1000000,20.387693400029093,4.755244900006801
-0.5,0.21868742252312387,0.17086323376238108,0.0,0.0,0.0,0.7813125774768761,0.5,587272,dummy_prior,provisoria,piloto_v1,2740584,1.2111138999462128,0.013503400143235922
+0.7751607183667255,0.4405563015380145,0.1980742897570493,0.5056971968518372,0.37570939963981415,0.7732132150838207,0.6694359683417564,0.5,587272,logistica_piloto_C1,provisoria,piloto_v1,1000000,18.607920899999954,4.496747799999866
+0.5,0.21868742252312387,0.17086323376238108,0.0,0.0,0.0,0.7813125774768761,0.5,587272,dummy_prior,provisoria,piloto_v1,2740584,0.27957860000060464,0.011728299999958836
 ```
 
-### `outputs/tables/03_pilotos_provisoria_20261016T034100Z_particoes.csv`
+### `outputs/tables/03_pilotos_provisoria_20261017T004408Z_particoes.csv`
 
-- Git: `ignored` · `313 B` · modified `2026-10-16 03:41 UTC` · 3 rows
+- Git: `ignored` · `313 B` · modified `2026-10-17 00:44 UTC` · 3 rows
 
 ```csv
 particao,n,positivos,prevalencia,ano_minimo,ano_maximo,grupos,percentual
@@ -8449,706 +9910,9 @@ validacao,587272,128429,0.21868742252312387,2019,2026,587270,15.000056192230558
 teste,587276,128431,0.2186893385733454,2019,2026,587275,15.000158359922475
 ```
 
-### `outputs/tables/04_handoff_provisional_20261012T123353Z_calibracao_bruta.csv`
+### `outputs/tables/04_handoff_provisional_20261017T005359Z_calibracao_bruta.csv`
 
-- Git: `ignored` · `238 B` · modified `2026-10-12 12:33 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T123353Z_manifesto.json`
-
-- Git: `ignored` · `2.5 KB` · modified `2026-10-12 12:33 UTC`
-
-```json
-{
-  "tipo_coorte": "provisional",
-  "fonte_coorte": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "status_execucao": "provisoria",
-  "shortlist_yaml": [
-    "hist_gradient_boosting",
-    "logistic"
-  ],
-  "shortlist_execucao": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_consultado": false,
-  "tuning_realizado": false,
-  "calibracao_escolhida": false,
-  "limiar_escolhido": false,
-  "gate_g1": "pendente",
-  "gate_g6": "pendente",
-  "features_final_congelada": false,
-  "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T022616Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T022616Z_predicoes_validacao.parquet"
-  },
-  "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T123353Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T123353Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T123353Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T123353Z_transicao.csv"
-  }
-}
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T123353Z_shortlist.csv`
-
-- Git: `ignored` · `638 B` · modified `2026-10-12 12:33 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,8.256994000053965,1.2180373000446707
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,7.147862800047733,2.125225899973884
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T123353Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-12 12:33 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T123353Z_transicao.csv`
-
-- Git: `ignored` · `671 B` · modified `2026-10-12 12:33 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponível,nenhuma,False
-Schema de features,piloto,features.final preenchida após validação do schema,nenhuma; somente YAML,False
-Definição de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,False
-Partição fixa,ausente,"treino, validacao e teste persistidos na coorte",nenhuma,False
-Pilotos comparáveis,concluídos,rerodar Notebook 03 com a fonte final,nenhuma,False
-Tuning dos finalistas,pendente,executar somente após G1 e repetição dos pilotos,Notebook posterior,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130545Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `238 B` · modified `2026-10-12 13:05 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130545Z_shortlist.csv`
-
-- Git: `ignored` · `639 B` · modified `2026-10-12 13:05 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130545Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-12 13:05 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130545Z_transicao.csv`
-
-- Git: `ignored` · `689 B` · modified `2026-10-12 13:05 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponível,nenhuma,False
-Schema de features,piloto,features.final preenchida após validação do schema,nenhuma; somente YAML,False
-Definição de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,False
-Partição fixa,"teste, treino, validacao","treino, validacao e teste persistidos na coorte",nenhuma,True
-Pilotos comparáveis,concluídos,rerodar Notebook 03 com a fonte final,nenhuma,False
-Tuning dos finalistas,pendente,executar somente após G1 e repetição dos pilotos,Notebook posterior,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130652Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `238 B` · modified `2026-10-12 13:06 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130652Z_shortlist.csv`
-
-- Git: `ignored` · `639 B` · modified `2026-10-12 13:06 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130652Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-12 13:06 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130652Z_transicao.csv`
-
-- Git: `ignored` · `742 B` · modified `2026-10-12 13:06 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
-Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
-Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
-Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
-Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
-Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130722Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `238 B` · modified `2026-10-12 13:07 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130722Z_manifesto.json`
-
-- Git: `ignored` · `2.9 KB` · modified `2026-10-12 13:07 UTC`
-
-```json
-{
-  "tipo_coorte": "provisional",
-  "fonte_coorte": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "dataset_supervisionado": {
-    "path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-    "sha256": "5dae83d596d07a21c33ac74260f5673506263041d4744b355fa778914b1329cf",
-    "rows": 3915132,
-    "columns": 36,
-    "partition_column": "particao",
-    "partition_counts": {
-      "treino": 2740583,
-      "teste": 587287,
-      "validacao": 587262
-    },
-    "seed": 42,
-    "test_opened": false
-  },
-  "status_execucao": "provisoria",
-  "shortlist_yaml": [
-    "hist_gradient_boosting",
-    "logistic"
-  ],
-  "shortlist_execucao": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_consultado": false,
-  "tuning_realizado": false,
-  "calibracao_escolhida": false,
-  "limiar_escolhido": false,
-  "gate_g1": "pendente",
-  "gate_g6": "pendente",
-  "features_final_congelada": false,
-  "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet"
-  },
-  "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130722Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130722Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130722Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130722Z_transicao.csv"
-  }
-}
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130722Z_shortlist.csv`
-
-- Git: `ignored` · `639 B` · modified `2026-10-12 13:07 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130722Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-12 13:07 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130722Z_transicao.csv`
-
-- Git: `ignored` · `742 B` · modified `2026-10-12 13:07 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
-Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
-Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
-Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
-Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
-Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130953Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `238 B` · modified `2026-10-12 13:09 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130953Z_manifesto.json`
-
-- Git: `ignored` · `2.9 KB` · modified `2026-10-12 13:09 UTC`
-
-```json
-{
-  "tipo_coorte": "provisional",
-  "fonte_coorte": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "dataset_supervisionado": {
-    "path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-    "sha256": "5dae83d596d07a21c33ac74260f5673506263041d4744b355fa778914b1329cf",
-    "rows": 3915132,
-    "columns": 36,
-    "partition_column": "particao",
-    "partition_counts": {
-      "treino": 2740583,
-      "teste": 587287,
-      "validacao": 587262
-    },
-    "seed": 42,
-    "test_opened": false
-  },
-  "status_execucao": "provisoria",
-  "shortlist_yaml": [
-    "hist_gradient_boosting",
-    "logistic"
-  ],
-  "shortlist_execucao": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_consultado": false,
-  "tuning_realizado": false,
-  "calibracao_escolhida": false,
-  "limiar_escolhido": false,
-  "gate_g1": "pendente",
-  "gate_g6": "pendente",
-  "features_final_congelada": false,
-  "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet"
-  },
-  "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130953Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130953Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130953Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261012T130953Z_transicao.csv"
-  }
-}
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130953Z_shortlist.csv`
-
-- Git: `ignored` · `639 B` · modified `2026-10-12 13:09 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130953Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-12 13:09 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261012T130953Z_transicao.csv`
-
-- Git: `ignored` · `742 B` · modified `2026-10-12 13:09 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
-Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
-Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
-Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
-Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
-Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T030209Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `238 B` · modified `2026-10-14 03:02 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21868333333333334,0.42388773529076346,0.20520440195743012
-logistica_C1_v2,120000,0.21868333333333334,0.42976359899451055,0.2110802656611772
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T030209Z_manifesto.json`
-
-- Git: `ignored` · `2.9 KB` · modified `2026-10-14 03:02 UTC`
-
-```json
-{
-  "tipo_coorte": "provisional",
-  "fonte_coorte": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "dataset_supervisionado": {
-    "path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-    "sha256": "5dae83d596d07a21c33ac74260f5673506263041d4744b355fa778914b1329cf",
-    "rows": 3915132,
-    "columns": 36,
-    "partition_column": "particao",
-    "partition_counts": {
-      "treino": 2740583,
-      "teste": 587287,
-      "validacao": 587262
-    },
-    "seed": 42,
-    "test_opened": false
-  },
-  "status_execucao": "provisoria",
-  "shortlist_yaml": [
-    "hist_gradient_boosting",
-    "logistic"
-  ],
-  "shortlist_execucao": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_consultado": false,
-  "tuning_realizado": false,
-  "calibracao_escolhida": false,
-  "limiar_escolhido": false,
-  "gate_g1": "pendente",
-  "gate_g6": "pendente",
-  "features_final_congelada": false,
-  "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261012T130116Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261012T130116Z_predicoes_validacao.parquet"
-  },
-  "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T030209Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T030209Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T030209Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T030209Z_transicao.csv"
-  }
-}
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T030209Z_shortlist.csv`
-
-- Git: `ignored` · `639 B` · modified `2026-10-14 03:02 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.78610522357088,0.4613001114076733,0.1955623845548722,0.5099550569792124,0.3701688846041283,0.8193735233595001,0.655625,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,10.287957499967888,1.423935899976641
-0.7766099783482298,0.4417841314225881,0.1971585370522793,0.5050073674483654,0.375575780089153,0.7705586464446308,0.6696666666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.043404099997133,0.8790224000113085
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T030209Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-14 03:02 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1333,160,0.1200300075018754,0.3001910673476398,0.7887761082693947,0.1334327193210841,0.2540893685543209
-hist_gradient_boosting_v2,2020,30032,8402,0.2797682472029835,0.513564896635687,0.758590941570722,0.2318403278550474,0.5195689558418913
-hist_gradient_boosting_v2,2021,45369,12790,0.2819105556657629,0.4943006000217229,0.7388493024029806,0.218067596818748,0.4806897334557302
-hist_gradient_boosting_v2,2022,14589,2649,0.1815751593666461,0.4184842639701873,0.796459205553374,0.1996344666945389,0.4135152875244976
-hist_gradient_boosting_v2,2023,7378,706,0.0956898888587693,0.3445968141030262,0.8577794987805789,0.1307166727352439,0.2690956384383633
-hist_gradient_boosting_v2,2024,7033,586,0.0833214844305417,0.2893927172599794,0.850534365006133,0.1244020673359512,0.2507788363738982
-hist_gradient_boosting_v2,2025,8886,650,0.0731487733513391,0.2522818688880946,0.8410329883812155,0.1255241194688116,0.2482319183711748
-hist_gradient_boosting_v2,2026,5380,299,0.0555762081784386,0.2119003176841704,0.8509362376326258,0.1052529543301546,0.2096730807908884
-logistica_C1_v2,2019,1333,160,0.1200300075018754,0.2694926891465062,0.7737825021312872,0.1345924610796534,0.2727041047650496
-logistica_C1_v2,2020,30032,8402,0.2797682472029835,0.5046763341300456,0.752653755798407,0.2296091787461704,0.5158554414250798
-logistica_C1_v2,2021,45369,12790,0.2819105556657629,0.4811648256749729,0.7295302132128889,0.2173486218992117,0.4761036043482677
-logistica_C1_v2,2022,14589,2649,0.1815751593666461,0.3890711402032777,0.7849080876889797,0.2065051520175628,0.4289261896671037
-logistica_C1_v2,2023,7378,706,0.0956898888587693,0.3343534722267585,0.850611154136181,0.1364489119711729,0.2946068564659346
-logistica_C1_v2,2024,7033,586,0.0833214844305417,0.2680860050649927,0.8359572486819544,0.1312028661322752,0.2765370087371456
-logistica_C1_v2,2025,8886,650,0.0731487733513391,0.2491635062380489,0.8357842679418688,0.1322666992818211,0.2758266207485521
-logistica_C1_v2,2026,5380,299,0.0555762081784386,0.196244141248507,0.8382300379339648,0.1125659535260074,0.239499732835665
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T030209Z_transicao.csv`
-
-- Git: `ignored` · `742 B` · modified `2026-10-14 03:02 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
-Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
-Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
-Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
-Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
-Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T235131Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `239 B` · modified `2026-10-14 23:51 UTC` · 2 rows
-
-```csv
-modelo,n,prevalencia,probabilidade_media,diferenca_media
-hist_gradient_boosting_v2,120000,0.21869166666666667,0.42677842518300924,0.20808675851634256
-logistica_C1_v2,120000,0.21869166666666667,0.43240218481854953,0.21371051815188286
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T235131Z_manifesto.json`
-
-- Git: `ignored` · `2.9 KB` · modified `2026-10-14 23:51 UTC`
-
-```json
-{
-  "tipo_coorte": "provisional",
-  "fonte_coorte": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "dataset_supervisionado": {
-    "path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-    "sha256": "7653e525b944eef54d3b087e4ceb64fa9ba9d611c779325704716a38e95fcf40",
-    "rows": 3915132,
-    "columns": 36,
-    "partition_column": "particao",
-    "partition_counts": {
-      "treino": 2740587,
-      "teste": 587274,
-      "validacao": 587271
-    },
-    "seed": 42,
-    "test_opened": false
-  },
-  "status_execucao": "provisoria",
-  "shortlist_yaml": [
-    "hist_gradient_boosting",
-    "logistic"
-  ],
-  "shortlist_execucao": [
-    "hist_gradient_boosting_v2",
-    "logistica_C1_v2"
-  ],
-  "teste_consultado": false,
-  "tuning_realizado": false,
-  "calibracao_escolhida": false,
-  "limiar_escolhido": false,
-  "gate_g1": "pendente",
-  "gate_g6": "pendente",
-  "features_final_congelada": false,
-  "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261014T234809Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261014T234809Z_predicoes_validacao.parquet"
-  },
-  "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T235131Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T235131Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T235131Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261014T235131Z_transicao.csv"
-  }
-}
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T235131Z_shortlist.csv`
-
-- Git: `ignored` · `640 B` · modified `2026-10-14 23:51 UTC` · 2 rows
-
-```csv
-roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7837338025141412,0.4577975780425485,0.1971935555323786,0.5098122866894198,0.3699626769405411,0.8196471440003048,0.6553,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,13.10794989997521,1.6257725999457762
-0.7742724458341613,0.4385600450900628,0.1991005682486104,0.5055658052772997,0.3744634799515756,0.7779217315093548,0.6672416666666666,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.443985000019893,1.0642294000135737
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T235131Z_temporal.csv`
-
-- Git: `ignored` · `2.1 KB` · modified `2026-10-14 23:51 UTC` · 16 rows
-
-```csv
-modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
-hist_gradient_boosting_v2,2019,1355,163,0.1202952029520295,0.2874593001503639,0.7921367398196566,0.1340637550853806,0.261204075645717
-hist_gradient_boosting_v2,2020,29987,8388,0.2797212125254277,0.510874944902731,0.7539260116490583,0.2337380637317967,0.5212712594470571
-hist_gradient_boosting_v2,2021,45324,12785,0.2820801341452652,0.4880825143076391,0.7373332392813592,0.218992031972935,0.4826943399848201
-hist_gradient_boosting_v2,2022,14664,2659,0.1813284233496999,0.4150340682318508,0.7968962255447343,0.2010315670492757,0.4174924446493188
-hist_gradient_boosting_v2,2023,7363,724,0.0983294852641586,0.3679242282970099,0.8483983392959233,0.1351947036478361,0.2738261144768854
-hist_gradient_boosting_v2,2024,7015,585,0.0833927298645759,0.3117292798082803,0.8570197126184684,0.1279114513316084,0.2595455633776146
-hist_gradient_boosting_v2,2025,8900,651,0.0731460674157303,0.2506263293621174,0.8409368244421564,0.1260769126133062,0.2495485096608725
-hist_gradient_boosting_v2,2026,5392,288,0.0534124629080118,0.1973550557585567,0.8578361742424242,0.1083314625294507,0.2170799748968142
-logistica_C1_v2,2019,1355,163,0.1202952029520295,0.2788664842040202,0.777995944332359,0.1377989906035299,0.2805239075588887
-logistica_C1_v2,2020,29987,8388,0.2797212125254277,0.4962780644029129,0.7454688769060491,0.2331323256721497,0.518726405601904
-logistica_C1_v2,2021,45324,12785,0.2820801341452652,0.4782995207005368,0.7289671034390512,0.2180931847271191,0.4771601717117257
-logistica_C1_v2,2022,14664,2659,0.1813284233496999,0.4002593509577733,0.7912969226342478,0.2068711246693542,0.4328685933134279
-logistica_C1_v2,2023,7363,724,0.0983294852641586,0.3358602768626264,0.8418912936199038,0.1418608315891764,0.2993208602257584
-logistica_C1_v2,2024,7015,585,0.0833927298645759,0.2773719795919383,0.8435433531389985,0.1353022983446636,0.2859023462082121
-logistica_C1_v2,2025,8900,651,0.0731460674157303,0.2389680618999371,0.830904327834552,0.1327475443295916,0.2751367422542223
-logistica_C1_v2,2026,5392,288,0.0534124629080118,0.183018175442795,0.845789522378962,0.1151479526148129,0.2448978904179417
-```
-
-### `outputs/tables/04_handoff_provisional_20261014T235131Z_transicao.csv`
-
-- Git: `ignored` · `742 B` · modified `2026-10-14 23:51 UTC` · 6 rows
-
-```csv
-componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
-Loader da coorte,provisional,SRAG_COHORT_KIND=final e coorte_final.parquet disponivel,nenhuma,True,False
-Schema de features,piloto,features.final preenchida apos validacao do schema,nenhuma; somente YAML,True,False
-Definicao de alvo e features,pendente,G1_definicao_alvo_features aprovado,nenhuma; somente gate,True,False
-Particao fixa,"teste, treino, validacao","treino, validacao e teste persistidos no dataset supervisionado",nenhuma,True,False
-Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,True,False
-Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
-```
-
-### `outputs/tables/04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv`
-
-- Git: `ignored` · `236 B` · modified `2026-10-16 03:46 UTC` · 2 rows
+- Git: `ignored` · `236 B` · modified `2026-10-17 00:53 UTC` · 2 rows
 
 ```csv
 modelo,n,prevalencia,probabilidade_media,diferenca_media
@@ -9156,9 +9920,9 @@ hist_gradient_boosting_v2,120000,0.21868333333333334,0.4237390097158091,0.205055
 logistica_C1_v2,120000,0.21868333333333334,0.429519905144712,0.21083657181137866
 ```
 
-### `outputs/tables/04_handoff_provisional_20261016T034632Z_manifesto.json`
+### `outputs/tables/04_handoff_provisional_20261017T005359Z_manifesto.json`
 
-- Git: `ignored` · `2.9 KB` · modified `2026-10-16 03:46 UTC`
+- Git: `ignored` · `2.9 KB` · modified `2026-10-17 00:53 UTC`
 
 ```json
 {
@@ -9202,34 +9966,34 @@ logistica_C1_v2,120000,0.21868333333333334,0.429519905144712,0.21083657181137866
   "gate_g6": "pendente",
   "features_final_congelada": false,
   "artefatos_origem_notebook03": {
-    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas.csv",
-    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_metricas_por_ano.csv",
-    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_variacao_temporal.csv",
-    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261016T034235Z_manifesto.json",
-    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261016T034235Z_predicoes_validacao.parquet"
+    "metricas": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_metricas.csv",
+    "metricas_por_ano": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_metricas_por_ano.csv",
+    "variacao_temporal": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_variacao_temporal.csv",
+    "manifesto": "<REPO>\\outputs\\tables\\03_cinco_familias_provisoria_20261017T004540Z_manifesto.json",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\03_cinco_familias_provisoria_20261017T004540Z_predicoes_validacao.parquet"
   },
   "artefatos_handoff": {
-    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_shortlist.csv",
-    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_temporal.csv",
-    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_calibracao_bruta.csv",
-    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261016T034632Z_transicao.csv"
+    "shortlist": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261017T005359Z_shortlist.csv",
+    "temporal": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261017T005359Z_temporal.csv",
+    "calibracao_bruta": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261017T005359Z_calibracao_bruta.csv",
+    "transicao": "<REPO>\\outputs\\tables\\04_handoff_provisional_20261017T005359Z_transicao.csv"
   }
 }
 ```
 
-### `outputs/tables/04_handoff_provisional_20261016T034632Z_shortlist.csv`
+### `outputs/tables/04_handoff_provisional_20261017T005359Z_shortlist.csv`
 
-- Git: `ignored` · `650 B` · modified `2026-10-16 03:46 UTC` · 2 rows
+- Git: `ignored` · `650 B` · modified `2026-10-17 00:53 UTC` · 2 rows
 
 ```csv
 roc_auc,pr_auc,brier,f1,precision,recall,accuracy,limiar_diagnostico,n_validacao,modelo,status_coorte,versao_execucao,n_treino,duracao_fit_s,duracao_pred_s
-0.7833709454003838,0.4596864874551059,0.1963290307347667,0.5089796841341061,0.370069746110313,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,9.506548200035468,1.666931699961424
-0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,5.923188799992204,0.9672848999034612
+0.7833709454003838,0.4596864874551059,0.1963290307347667,0.5089796841341061,0.370069746110313,0.8148388080176816,0.6561916666666666,0.5,120000,hist_gradient_boosting_v2,provisoria,piloto_v2_cinco_familias,300000,11.14434540000002,1.424537799999598
+0.7733341014992019,0.4391946203259919,0.1981954562591791,0.5039143952353007,0.3747469682619273,0.7689581586769301,0.6689083333333333,0.5,120000,logistica_C1_v2,provisoria,piloto_v2_cinco_familias,300000,6.388927399999375,1.5536587000005966
 ```
 
-### `outputs/tables/04_handoff_provisional_20261016T034632Z_temporal.csv`
+### `outputs/tables/04_handoff_provisional_20261017T005359Z_temporal.csv`
 
-- Git: `ignored` · `2.1 KB` · modified `2026-10-16 03:46 UTC` · 16 rows
+- Git: `ignored` · `2.1 KB` · modified `2026-10-17 00:53 UTC` · 16 rows
 
 ```csv
 modelo,ano_internacao,n,positivos,prevalencia,pr_auc,roc_auc,brier,probabilidade_media
@@ -9251,9 +10015,9 @@ logistica_C1_v2,2025,8886,651,0.0732613099257258,0.2462244144676162,0.8324111147
 logistica_C1_v2,2026,5379,298,0.0554006320877486,0.2232719877618279,0.8452558485422068,0.1120473935587403,0.2393976573825986
 ```
 
-### `outputs/tables/04_handoff_provisional_20261016T034632Z_transicao.csv`
+### `outputs/tables/04_handoff_provisional_20261017T005359Z_transicao.csv`
 
-- Git: `ignored` · `742 B` · modified `2026-10-16 03:46 UTC` · 6 rows
+- Git: `ignored` · `742 B` · modified `2026-10-17 00:53 UTC` · 6 rows
 
 ```csv
 componente,estado_atual,condicao_para_final,troca_de_codigo,pronto_agora,pronto_para_final
@@ -9265,88 +10029,457 @@ Pilotos comparaveis,concluidos,rerodar Notebook 03 com a fonte final,nenhuma,Tru
 Tuning dos finalistas,pendente,confirmar o tuning apos G1 e repeticao dos pilotos,Notebook 05,True,False
 ```
 
-### `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv`
+### `outputs/tables/C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv`
 
-- Git: `ignored` · `772 B` · modified `2026-10-11 13:17 UTC` · 15 rows
+- Git: `ignored` · `290 B` · modified `2026-10-17 01:00 UTC` · 2 rows
 
 ```csv
-nu_notific_normalizado,quantidade_ocorrencias,quantidade_anos_internacao,quantidade_datas_internacao,quantidade_desfechos,quantidade_datas_sintomas,flag_ano_internacao_divergente,flag_dt_interna_divergente,flag_evolucao_divergente,flag_dt_sin_pri_divergente
-31736177754051,2,1,1,1,2,0,0,0,1
-31736866916969,2,2,2,1,2,1,1,0,1
-31738324913116,2,1,1,1,2,0,0,0,1
-31741716994694,2,1,1,1,2,0,0,0,1
-31743975908104,2,1,1,1,2,0,0,0,1
-31744118738694,2,1,1,1,2,0,0,0,1
-31744265580768,2,1,1,1,2,0,0,0,1
-31744397861067,2,1,1,1,2,0,0,0,1
-31745324608735,2,2,2,1,2,1,1,0,1
-31745519106567,2,1,1,1,2,0,0,0,1
-31746458224089,2,1,1,1,2,0,0,0,1
-31746459301774,2,1,1,1,2,0,0,0,1
-31746816257499,2,1,1,1,2,0,0,0,1
-31748044066509,2,1,1,1,2,0,0,0,1
-31750088488779,2,1,2,1,2,0,1,0,1
+modelo,auc,ap,brier,f1,precision,recall,accuracy
+logistica_C1,0.7752355926034296,0.44061592989801807,0.19806308229531083,0.5058891510814808,0.3758036700301045,0.7737115449002951,0.6694768352654307
+dummy_prior,0.5,0.21868742252312387,0.17086323376238108,0.0,0.0,0.0,0.7813125774768761
 ```
 
-### `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv`
+### `outputs/tables/C3_baseline_logistica_provisional_20261017T010044Z_manifesto.json`
 
-- Git: `ignored` · `448 B` · modified `2026-10-11 13:17 UTC` · 10 rows
+- Git: `ignored` · `1.6 KB` · modified `2026-10-17 01:00 UTC`
 
-```csv
-verificacao,quantidade,percentual_coorte
-dt_sin_pri_ausente,0,0.0
-dt_notific_ausente,0,0.0
-internacao_antes_sintomas,20918,0.5342853990257299
-intervalo_negativo_sem_nosocomial,0,0.0
-notificacao_apos_internacao,1951377,49.841870116389316
-notificacao_fora_periodo,0,0.0
-sintomas_fora_periodo,61,0.0015580557099421322
-nu_notific_repetido,30,0.0007662569065289175
-nu_notific_ausente,0,0.0
-periodo_incompleto_2026,175521,4.483139283028738
+```json
+{
+  "cohort_kind": "provisional",
+  "dataset_path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "feature_columns": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "target_column": "alvo_obito_srag",
+  "partition_column": "particao",
+  "n_treino": 2740584,
+  "n_validacao": 587272,
+  "n_teste_fechado": 587276,
+  "limiar_usado": 0.5,
+  "limiar_e_diagnostico": true,
+  "tuning_realizado": false,
+  "calibracao_aplicada": false,
+  "teste_aberto": false,
+  "modelos": [
+    "dummy_prior",
+    "logistica_C1"
+  ],
+  "artefatos": {
+    "comparacao": "<REPO>\\outputs\\tables\\C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\C3_baseline_logistica_provisional_20261017T010044Z_predicoes_validacao.parquet"
+  }
+}
 ```
 
-### `outputs/tables/coorte_provisoria_b_resumo.csv`
+### `outputs/tables/C4_boosting_provisional_20261017T010744Z_comparacao.csv`
 
-- Git: `ignored` · `512 B` · modified `2026-10-11 13:17 UTC` · 16 rows
+- Git: `ignored` · `398 B` · modified `2026-10-17 01:07 UTC` · 2 rows
 
 ```csv
-metrica,valor
-versao_dados,dados-v2
-status_coorte,provisoria_pessoa_b
-data_inicial_coorte,2019-01-01
-data_final_coorte,2026-09-28
-registros_originais,4666910
-colunas_originais_carregadas,93
-duplicidades_exatas_removidas,0
-registros_coorte_provisoria,3915136
-colunas_coorte_provisoria,125
-alvo_0_cura,3058951
-alvo_1_obito_srag,856185
-linhas_nu_notific_repetido,30
-identificadores_repetidos_distintos,15
-internacao_antes_sintomas,20918
-intervalo_negativo_sem_nosocomial,0
-registros_2026,175521
+modelo,ap,pr_auc,auc,brier,f1,precision,recall,accuracy
+boosting_base,0.46752119135143005,0.46752119135143005,0.7874327329924564,0.1959726068522269,0.5111828239611778,0.3718000913374565,0.8177436560278442,0.6579881213475187
+logistica_C1,0.44061592989801807,0.44061592989801807,0.7752355926034296,0.19806308229531083,0.5058891510814808,0.3758036700301045,0.7737115449002951,0.6694768352654307
 ```
 
-### `outputs/tables/coorte_provisoria_b_waterfall.csv`
+### `outputs/tables/C4_boosting_provisional_20261017T010744Z_manifesto.json`
 
-- Git: `ignored` · `773 B` · modified `2026-10-11 13:17 UTC` · 6 rows
+- Git: `ignored` · `1.8 KB` · modified `2026-10-17 01:07 UTC`
+
+```json
+{
+  "cohort_kind": "provisional",
+  "dataset_path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "feature_columns": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "target_column": "alvo_obito_srag",
+  "partition_column": "particao",
+  "n_treino": 2740584,
+  "n_validacao": 587272,
+  "n_teste_fechado": 587276,
+  "g6_status": "pendente",
+  "buscas_executadas": false,
+  "metrica_principal": "pr_auc",
+  "max_configs": 30,
+  "melhor_config_logistica": null,
+  "melhor_config_boosting": null,
+  "limiar_usado": 0.5,
+  "limiar_e_diagnostico": true,
+  "calibracao_aplicada": false,
+  "teste_aberto": false,
+  "features_final_congelada_no_yaml": false,
+  "artefatos": {
+    "comparacao": "<REPO>\\outputs\\tables\\C4_boosting_provisional_20261017T010744Z_comparacao.csv",
+    "predicoes_validacao": "<REPO>\\outputs\\predictions\\C4_boosting_provisional_20261017T010744Z_predicoes_validacao.parquet",
+    "busca_logistica": null,
+    "busca_boosting": null
+  }
+}
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv`
+
+- Git: `ignored` · `327 B` · modified `2026-10-17 02:10 UTC` · 2 rows
 
 ```csv
-etapa,registros_antes,registros_excluidos,registros_depois,percentual_excluido,motivo
-registros_originais,4666910,0,4666910,0.0,Total de registros carregados do dataset oficial.
-duplicidades_exatas,4666910,0,4666910,0.0,Remoção somente de linhas integralmente idênticas nos campos originais carregados.
-hospitalizacao_confirmada,4666910,232253,4434657,4.976590506352169,Manutenção somente de registros com hospital = 1.
-data_internacao_valida,4434657,72113,4362544,1.6261235085374133,Manutenção somente de registros com dt_interna válida.
-periodo_da_coorte,4362544,44,4362500,0.001008585815982601,Internação entre 01/01/2019 e 28/09/2026.
-desfecho_elegivel,4362500,447364,3915136,10.254762177650429,Manutenção somente de evolucao = 1 ou evolucao = 2.
+finalista,metodo_calibracao,brier_base,brier_calibrado,ganho_brier,limiar,metrica,valor_metrica
+hist_gradient_boosting,sigmoid,0.19588851055358997,0.14094344151171814,0.054945069041871825,0.255,f1,0.5159037889148097
+logistic,isotonic,0.1981048319609869,0.1438547651248468,0.054250066836140115,0.255,f1,0.5059127591117675
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_hist_gradient_boosting_curva.csv`
+
+- Git: `ignored` · `648 B` · modified `2026-10-17 02:10 UTC` · 10 rows
+
+```csv
+bin_centro,freq_positiva,n,gap
+0.027825986748290676,0.028480915009822777,97223.0,0.0006549282615321006
+0.15081382175876953,0.15179852985951026,45982.0,0.0009847081007407221
+0.2502368982378113,0.24860763423958393,51531.0,0.0016292639982273815
+0.3485098196979096,0.3484912607389225,47258.0,1.8558958987113794e-05
+0.44543437466864416,0.4412066985067408,33082.0,0.004227676161903338
+0.5411781595827138,0.5466728897186292,14998.0,0.005494730135915393
+0.6342307817883099,0.6602663363270362,3229.0,0.026035554538726302
+0.7290706600293554,0.7706422018348624,327.0,0.04157154180550704
+0.8173973776475069,1.0,6.0,0.18260262235249314
+0.95,,0.0,
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_hist_gradient_boosting_limiar.csv`
+
+- Git: `ignored` · `15.0 KB` · modified `2026-10-17 02:10 UTC` · 101 rows (first 60 shown)
+
+```csv
+limiar,tp,fp,tn,fn,f1,precision,recall,sensibilidade,especificidade,accuracy,youden_j
+0.01,63974,186669,42753,240,0.40636860543040176,0.25523952394441496,0.9962624972747376,0.9962624972747376,0.18635091665141093,0.36346701358144096,0.1826134139261486
+0.019799999999999998,63741,171677,57745,473,0.42546189993058153,0.2707566965992405,0.9926340050456287,0.9926340050456287,0.25169774476728474,0.41372992412374504,0.2443317498129134
+0.0296,63574,165224,64198,640,0.4339344463707971,0.27786082046171734,0.990033326065967,0.990033326065967,0.2798249513996042,0.4351373809750848,0.2698582774655711
+0.0394,63414,160720,68702,800,0.43984352241042074,0.2829289621387206,0.9875416575824586,0.9875416575824586,0.2994568960256645,0.4499312073451484,0.286998553608123
+0.0492,63225,156674,72748,989,0.44506939140412444,0.28751836070195863,0.9845983741863145,0.9845983741863145,0.3170925194619522,0.46306651772943375,0.30169089364826673
+0.059000000000000004,62967,152439,76983,1247,0.45037550962019884,0.292317762736414,0.9805805587566574,0.9805805587566574,0.3355519522975129,0.4766104973504611,0.3161325110541702
+0.0688,62673,148038,81384,1541,0.4559279803582795,0.2974358244230249,0.976002117918211,0.976002117918211,0.3547349425948688,0.4905972019779591,0.33073706051307994
+0.07859999999999999,62311,143841,85581,1903,0.46093813571233067,0.30225755753036593,0.9703647179742735,0.9703647179742735,0.37302874179459683,0.5036575896688417,0.34339345976887037
+0.08839999999999999,61944,139818,89604,2270,0.4657863867416609,0.3070151961221637,0.9646494533902265,0.9646494533902265,0.3905641132934069,0.516108379081584,0.35521356668363335
+0.0982,61518,135696,93726,2696,0.4706305368973484,0.3119352581459734,0.9580153860528856,0.9580153860528856,0.40853100400135994,0.5286953915732403,0.3665463900542456
+0.108,61038,131692,97730,3176,0.47510741640201753,0.31670212213978105,0.9505403806023609,0.9505403806023609,0.4259835586822537,0.5406966448255663,0.3765239392846147
+0.11779999999999999,60552,127885,101537,3662,0.47933315126399656,0.3213381660714191,0.9429719375837045,0.9429719375837045,0.4425774337247518,0.5520065659524036,0.3855493713084561
+0.1276,59999,124044,105378,4215,0.4833619998630452,0.3260053357095896,0.934360108387579,0.934360108387579,0.4593195072835212,0.5632041030391369,0.3936796156711002
+0.1374,59415,120232,109190,4799,0.4872857898556965,0.33073193540665863,0.9252655184227738,0.9252655184227738,0.475935176225471,0.574197305507499,0.4012006946482449
+0.1472,58813,116475,112947,5401,0.4911274227355095,0.33552211218109623,0.915890615753574,0.915890615753574,0.4923111122734524,0.5849419008568432,0.4082017280270265
+0.157,58109,112615,116807,6105,0.4946751909014293,0.34036807947330194,0.9049272744261376,0.9049272744261376,0.5091360026501381,0.5956899017831601,0.41406327707627577
+0.1668,57334,108922,120500,6880,0.4975398099535731,0.34485371956500815,0.8928582552091444,0.8928582552091444,0.5252329767851383,0.6056273753899386,0.41809123199428266
+0.1766,56600,105093,124329,7614,0.5010911569805274,0.3500460749692318,0.8814277260410502,0.8814277260410502,0.5419227449852237,0.6161676361209116,0.4233504710262741
+0.1864,55760,101398,128024,8454,0.5037674141264478,0.35480217360872496,0.8683464665026318,0.8683464665026318,0.5580284366800046,0.6258905583784005,0.42637490318263627
+0.1962,54828,97492,131930,9386,0.5064146969990856,0.359952731092437,0.8538324975861962,0.8538324975861962,0.5750538309316456,0.6360187442956585,0.4288863285178417
+0.20600000000000002,53860,93566,135856,10354,0.5089775089775089,0.36533582950090215,0.8387579032609711,0.8387579032609711,0.5921664007810934,0.6460924409813511,0.4309243040420645
+0.2158,52796,89649,139773,11418,0.5109479867801547,0.37064130015093544,0.8221883078456411,0.8221883078456411,0.609239741611528,0.6558085520848942,0.43142804945716917
+0.2256,51684,85734,143688,12530,0.5126567211553722,0.3761079334584989,0.8048712118852587,0.8048712118852587,0.6263043648821822,0.6653543843397949,0.431175576767441
+0.2354,50586,81890,147532,13628,0.5143728710153033,0.3818502974123615,0.7877721369171832,0.7877721369171832,0.6430595147806226,0.674706098707243,0.4308316516978059
+0.2452,49347,78066,151356,14867,0.5150318065825797,0.38729956911775093,0.768477279098016,0.768477279098016,0.6597274890812563,0.6835095151820622,0.4282047681792722
+0.255,48099,74152,155270,16115,0.5159037889148097,0.3934446343997186,0.7490422649266515,0.7490422649266515,0.6767877535720201,0.6925887833916822,0.42583001849867164
+0.2648,46744,70343,159079,17470,0.5156507686113149,0.3992245082716271,0.7279409474569408,0.7279409474569408,0.6933903461742988,0.7009460692830579,0.42133129363123967
+0.2746,45421,66638,162784,18793,0.5153483517044585,0.40533112021345896,0.7073379636839319,0.7073379636839319,0.709539625667983,0.7090581536323884,0.41687758935191477
+0.2844,43983,62946,166476,20231,0.5139912237135027,0.4113290127093679,0.6849440931884013,0.6849440931884013,0.7256322410230928,0.716734324129194,0.4105763342114941
+0.2942,42542,59320,170102,21672,0.5123196608781522,0.41764347843160354,0.662503503908805,0.662503503908805,0.7414371769054406,0.7241755098148729,0.4039406808142456
+0.304,41016,55811,173611,23198,0.5093858085829075,0.4236008551333822,0.6387392157473448,0.6387392157473448,0.7567321355406195,0.7309287689520358,0.3954713512879642
+0.3138,39505,52478,176944,24709,0.5058355794285422,0.42948153463139926,0.6152085215062136,0.6152085215062136,0.7712599489150996,0.7371337301965699,0.38646847042131327
+0.3236,37930,49278,180144,26284,0.5009840049662533,0.4349371617282818,0.590681159871679,0.590681159871679,0.7852080445641656,0.7426677927774523,0.3758892044358446
+0.3334,36333,45980,183442,27881,0.4959222532366049,0.44140050781772017,0.5658111938206621,0.5658111938206621,0.7995833006424842,0.7484606792082714,0.3653944944631462
+0.3432,34730,42807,186615,29484,0.4900141797941461,0.44791518887756815,0.5408477902015136,0.5408477902015136,0.8134137092345111,0.7538074350556472,0.3542614994360247
+0.353,33061,39690,189732,31153,0.4827656700616946,0.4544404887905321,0.514856573332918,0.514856573332918,0.8270000261526793,0.758738710512335,0.3418565994855973
+0.3628,31465,36675,192747,32749,0.47546730737265214,0.4617698855297916,0.4900021802099231,0.4900021802099231,0.8401417475220336,0.7635712242368102,0.33014392773195667
+0.3726,29797,33837,195585,34417,0.466131656341906,0.4682559637929409,0.46402653626934937,0.46402653626934937,0.8525119648507989,0.7675557492950456,0.31653850112014825
+0.3824,28105,31047,198375,36109,0.4556360747693854,0.47513186367324856,0.4376771420562494,0.4376771420562494,0.8646729607448284,0.7712950728112357,0.30235010280107777
+0.3922,26434,28437,200985,37780,0.4439517991350716,0.48174810008930036,0.41165477933160993,0.41165477933160993,0.8760493762585977,0.7744929095887425,0.28770415559020757
+0.402,24864,26004,203418,39350,0.4321092786013451,0.4887945270110875,0.38720528233718504,0.38720528233718504,0.8866542877317781,0.7774319225163128,0.2738595700689632
+0.4118,23299,23587,205835,40915,0.4194239423942394,0.49692872072686944,0.36283364998286977,0.36283364998286977,0.8971894587267132,0.7803334740971816,0.260023108709583
+0.4216,21771,21327,208095,42443,0.40575145370508425,0.5051510510928582,0.3390382159653658,0.3390382159653658,0.907040301278866,0.7828263564413083,0.2460785172442319
+0.4314,20177,19130,210292,44037,0.38981462698389696,0.5133182384816953,0.3142149686984147,0.3142149686984147,0.9166165406979279,0.7848799193559373,0.23083150939634267
+0.4412,18645,17148,212274,45569,0.3728738988270821,0.5209119101500294,0.290357242968823,0.290357242968823,0.925255642440568,0.7864124289937201,0.21561288540939105
+0.451,17150,15319,214103,47064,0.3547676427086458,0.5281961255351258,0.2670757155760426,0.2670757155760426,0.9332278508599873,0.7875498917026522,0.20030356643602998
+0.4608,15758,13576,215846,48456,0.33689656646855093,0.537192336537806,0.24539819976952065,0.24539819976952065,0.9408252042088379,0.7887452492201229,0.18622340397835857
+0.4706,14415,11968,217454,49799,0.31822245769727475,0.5463745593753554,0.22448375743607313,0.22448375743607313,0.9478341222724935,0.7896477271179283,0.1723178797085667
+0.4804,13035,10545,218877,51179,0.2969451215345012,0.5527989821882952,0.2029931167658143,0.2029931167658143,0.9540366660564374,0.7897941669277609,0.15702978282225177
+0.49019999999999997,11733,9196,220226,52481,0.2756069201226172,0.5606096803478428,0.18271716448126576,0.18271716448126576,0.9599166601284969,0.7899542290454848,0.1426338246097627
+0.5,10589,7971,221451,53625,0.25585328726411677,0.5705280172413794,0.16490173482418163,0.16490173482418163,0.9652561654941548,0.7902300807802858,0.1301579003183364
+0.5097999999999999,9448,6878,222544,54766,0.2346163397069779,0.5787088080362611,0.1471330239511633,0.1471330239511633,0.970020311914289,0.790066613085589,0.11715333586545218
+0.5196,8418,5918,223504,55796,0.21433481858688733,0.5871930803571429,0.13109290808857882,0.13109290808857882,0.9742047406090087,0.7898282226974894,0.10529764869758762
+0.5294,7398,5046,224376,56816,0.19301312322262518,0.59450337512054,0.1152085215062136,0.1152085215062136,0.9780055966733792,0.7893241973055075,0.09321411817959269
+0.5392,6478,4263,225159,57736,0.17285037689280236,0.6031095801135835,0.10088142772604106,0.10088142772604106,0.98141852132751,0.788857633260227,0.08229994905355098
+0.549,5634,3589,225833,58580,0.153437640426488,0.6108641439878565,0.08773787647553492,0.08773787647553492,0.9843563389735945,0.7882786851748423,0.07209421544912953
+0.5588,4882,2980,226442,59332,0.13546811698762418,0.6209615873823454,0.07602703460304606,0.07602703460304606,0.9870108359268074,0.7877916876677247,0.06303787052985355
+0.5686,4203,2435,226987,60011,0.1186416756054875,0.6331726423621573,0.06545301647615785,0.06545301647615785,0.9893863709670389,0.7873353403533626,0.05483938744319672
+0.5784,3533,1966,227456,60681,0.10135842669229556,0.6424804509910893,0.05501915470146697,0.05501915470146697,0.9914306387356051,0.7866508193818197,0.04644979343707201
+0.5882,2955,1593,227829,61259,0.08594863442017393,0.649736147757256,0.046018002304793346,0.046018002304793346,0.9930564636346993,0.7859526761023853,0.0390744659394926
+... [41 more rows omitted]
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_logistic_curva.csv`
+
+- Git: `ignored` · `627 B` · modified `2026-10-17 02:10 UTC` · 10 rows
+
+```csv
+bin_centro,freq_positiva,n,gap
+0.027438238397586693,0.028146896693633103,92337.0,0.0007086582960464105
+0.15322176658723152,0.15335909210446463,49433.0,0.00013732551723311115
+0.25488216507363265,0.25634227291801776,52426.0,0.0014601078443851057
+0.35484213135240433,0.35244871557937535,54110.0,0.002393415773028984
+0.4446337720929318,0.44450808196512664,31428.0,0.00012569012780516697
+0.534979850800845,0.5362044486512069,12678.0,0.001224597850361886
+0.6365978683019593,0.6183017312448474,1213.0,0.01829613705711186
+0.7254462025848847,0.5454545454545454,11.0,0.17999165713033927
+0.8500000000000001,,0.0,
+0.95,,0.0,
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_logistic_limiar.csv`
+
+- Git: `ignored` · `14.1 KB` · modified `2026-10-17 02:10 UTC` · 101 rows (first 60 shown)
+
+```csv
+limiar,tp,fp,tn,fn,f1,precision,recall,sensibilidade,especificidade,accuracy,youden_j
+0.01,64066,205400,24022,148,0.3839966434907696,0.23775170151336347,0.9976952066527548,0.9976952066527548,0.10470661052558168,0.299990464384476,0.10240181717833652
+0.019799999999999998,63664,174711,54711,550,0.4207952040556663,0.26707498689040376,0.9914348895879403,0.9914348895879403,0.2384732065800141,0.40313517416120637,0.2299080961679545
+0.0296,63389,163466,65956,825,0.4355599531382593,0.27942518348724954,0.9871523343819105,0.9871523343819105,0.28748768644680983,0.440494353553379,0.2746400208287203
+0.0394,63379,163139,66283,835,0.43599603758788164,0.2797967490442261,0.9869966051016912,0.9869966051016912,0.2889130074709487,0.4415739214537727,0.2759096125726399
+0.0492,63119,157439,71983,1095,0.44329498686668634,0.2861786922260811,0.9829476438159903,0.9829476438159903,0.3137580528458474,0.46010026018608075,0.29670569666183777
+0.059000000000000004,63025,155868,73554,1189,0.4452380195473796,0.2879260643328019,0.9814837885819292,0.9814837885819292,0.3206056960535607,0.4651302973749813,0.30208948463549
+0.0688,62712,151249,78173,1502,0.4508816392558641,0.2931001444188427,0.9766094621110661,0.9766094621110661,0.34073890036700927,0.47979471182007655,0.3173483624780755
+0.07859999999999999,62270,145731,83691,1944,0.45750601546571645,0.2993735607040351,0.9697262279253746,0.9697262279253746,0.3647906478018673,0.4970814205342669,0.33451687572724187
+0.08839999999999999,61691,140303,89119,2523,0.4634796850583003,0.30541006168500057,0.960709502600679,0.960709502600679,0.3884501050465954,0.5135950632756201,0.3491596076472745
+0.0982,61615,139684,89738,2599,0.4641204008843258,0.3060869651612775,0.9595259600710125,0.9595259600710125,0.3911481897987115,0.5154442915718781,0.3506741498697241
+0.108,61599,139560,89862,2615,0.4642446669404951,0.30622045247789065,0.9592767932226617,0.9592767932226617,0.39168867850511285,0.515812093884946,0.3509654717277746
+0.11779999999999999,60708,132335,97087,3506,0.4719638338315381,0.3144791574934082,0.9454013143551251,0.9454013143551251,0.4231808632127695,0.5373830184309826,0.3685821775678946
+0.1276,59729,125604,103818,4485,0.47869940331881367,0.32227935661754786,0.9301554178216588,0.9301554178216588,0.45251981065460156,0.55697189717882,0.38267522847626045
+0.1374,59729,125604,103818,4485,0.47869940331881367,0.32227935661754786,0.9301554178216588,0.9301554178216588,0.45251981065460156,0.55697189717882,0.38267522847626045
+0.1472,59447,123781,105641,4767,0.4804923982185724,0.3244427707555614,0.9257638521194755,0.9257638521194755,0.4604658663946788,0.562219891293983,0.38622971851415433
+0.157,58016,115340,114082,6198,0.488411836511344,0.3346639285631879,0.9034789921200984,0.9034789921200984,0.49725832744898046,0.5860929858736668,0.4007373195690789
+0.1668,57215,111336,118086,6999,0.4916117113827251,0.3394521539474699,0.8910050767745351,0.8910050767745351,0.5147108821298743,0.5970010489177077,0.4057159589044095
+0.1766,56628,108518,120904,7586,0.49379141960237183,0.34289658847322974,0.8818637680256642,0.8818637680256642,0.5269939238608329,0.6045988911441377,0.40885769188649723
+0.1864,55866,105138,124284,8348,0.49610599508032216,0.3469851680703585,0.8699971968729561,0.8699971968729561,0.5417265998901587,0.6135146916590609,0.4117237967631149
+0.1962,54236,98535,130887,9978,0.4999055234232781,0.35501502248463385,0.8446133241972156,0.8446133241972156,0.5705076235060282,0.6304506259450476,0.4151209477032438
+0.20600000000000002,53538,95911,133511,10676,0.5011443254096404,0.35823591994593473,0.8337434204379107,0.8337434204379107,0.5819450619382622,0.6370097671947581,0.41568848237617306
+0.2158,51838,89702,139720,12376,0.5038832780893688,0.3662427582308888,0.8072694428006354,0.8072694428006354,0.6090087262773405,0.6523655137653421,0.41627816907797577
+0.2256,51634,89048,140374,12580,0.5040020302982977,0.36702634310004123,0.8040925654841623,0.8040925654841623,0.6118593683256183,0.653898023403125,0.41595193380978057
+0.2354,50840,86346,143076,13374,0.5048659384309832,0.3705917513448894,0.7917276606347525,0.7917276606347525,0.6236367915892983,0.6603958642673242,0.41536445222405094
+0.2452,50430,85005,144417,13784,0.5051866024873654,0.3723557426071547,0.7853427601457627,0.7853427601457627,0.629481915422235,0.6635664564290482,0.4148246755679976
+0.255,47958,77418,152004,16256,0.5059127591117675,0.3825133996937213,0.7468464820755598,0.7468464820755598,0.6625519784501922,0.6809859826451797,0.40939846052575213
+0.2648,46894,74307,155115,17320,0.5058274681120729,0.386910999084166,0.7302768866602298,0.7302768866602298,0.6761121426890185,0.6879571987086052,0.40638902934924825
+0.2746,46260,72574,156848,17954,0.5054411957519339,0.3892825285692647,0.7204036502943283,0.7204036502943283,0.6836659082389658,0.6916999278017681,0.40406955853329407
+0.2844,44609,68407,161015,19605,0.5034023585171811,0.3947140227932328,0.6946927461301274,0.6946927461301274,0.7018289440419838,0.7002683594654606,0.39652169017211136
+0.2942,40595,58846,170576,23619,0.49610461030827047,0.40823201697488964,0.6321830130501137,0.6321830130501137,0.7435032385734586,0.7191590949338637,0.37568625162357216
+0.304,39481,56367,173055,24733,0.49332133798153216,0.4119126116350889,0.6148347712336873,0.6148347712336873,0.7543086539215943,0.723807707501805,0.36914342515528165
+0.3138,39481,56367,173055,24733,0.49332133798153216,0.4119126116350889,0.6148347712336873,0.6148347712336873,0.7543086539215943,0.723807707501805,0.36914342515528165
+0.3236,37905,52790,176632,26309,0.48938409001413735,0.4179392469265119,0.5902918366711309,0.5902918366711309,0.7699000095893157,0.7306222670244793,0.36019184626044654
+0.3334,36392,49535,179887,27822,0.48477098194363966,0.42352229217824433,0.5667299965739558,0.5667299965739558,0.78408783813235,0.7365547821111853,0.3508178347063058
+0.3432,34833,46476,182946,29381,0.47872844842396045,0.4284027598420839,0.5424518017877722,0.5424518017877722,0.797421345816879,0.7416631475704614,0.33987314760465104
+0.353,31259,39571,189851,32955,0.4629454103847635,0.4413242976140054,0.4867941570374062,0.4867941570374062,0.827518720959629,0.7530071244670272,0.3143128779970352
+0.3628,30504,38260,191162,33710,0.45878265577764743,0.4436042115060206,0.47503659638085155,0.47503659638085155,0.8332330813958557,0.7549006252639322,0.30826967777670733
+0.3726,29322,36241,193181,34892,0.45188284518828453,0.4472339581776307,0.45662939545893416,0.45662939545893416,0.8420334579944382,0.7577510931902083,0.2986628534533724
+0.3824,26567,31670,197752,37647,0.43392050697830153,0.4561876470285214,0.4137259787585262,0.4137259787585262,0.8619574408731507,0.7639356209729052,0.27568341963167686
+0.3922,25931,30727,198695,38283,0.4290654576742339,0.45767587984044616,0.4038215965365808,0.4038215965365808,0.8660677703097349,0.7649811331035704,0.2698893668463156
+0.402,21524,23806,205616,42690,0.39297451252464766,0.47482903154643724,0.33519170274394994,0.33519170274394994,0.8962348859307303,0.7735427536133171,0.23142658867468024
+0.4118,19485,20865,208557,44729,0.3726904097012356,0.4828996282527881,0.3034385025072414,0.3034385025072414,0.9090540575881999,0.7766145840428286,0.21249256009544126
+0.4216,19485,20865,208557,44729,0.3726904097012356,0.4828996282527881,0.3034385025072414,0.3034385025072414,0.9090540575881999,0.7766145840428286,0.21249256009544126
+0.4314,15340,15278,214144,48874,0.3235194870929644,0.5010124763211183,0.23888871585635532,0.23888871585635532,0.9334065608354909,0.7815254260376793,0.1722952766918462
+0.4412,14214,13822,215600,50000,0.3081626016260163,0.5069910115565701,0.22135359890366588,0.22135359890366588,0.9397529443558159,0.78264926643872,0.16110654325948182
+0.451,14142,13741,215681,50072,0.3071109808137073,0.5071907613958326,0.22023234808608716,0.22023234808608716,0.9401060055269329,0.7826799166314757,0.16033835361302007
+0.4608,12880,12229,217193,51334,0.2883915676813363,0.5129634792305547,0.20057931292241568,0.20057931292241568,0.9466964807211166,0.7835313108746884,0.14727579364353227
+0.4706,11719,10918,218504,52495,0.26986448054714396,0.5176922737111808,0.1824991434889588,0.1824991434889588,0.9524108411573432,0.784042147420616,0.134909984646302
+0.4804,8609,7517,221905,55605,0.2143141647996017,0.53385836537269,0.1340673373407668,0.1340673373407668,0.9672350515643661,0.7850331703197155,0.10130238890513299
+0.49019999999999997,7561,6351,223071,56653,0.19355912244323273,0.5434876365727429,0.11774690877378764,0.11774690877378764,0.9723173889164944,0.785435028402512,0.09006429769028212
+0.5,7561,6351,223071,56653,0.19355912244323273,0.5434876365727429,0.11774690877378764,0.11774690877378764,0.9723173889164944,0.785435028402512,0.09006429769028212
+0.5097999999999999,6988,5731,223691,57226,0.18166456527108002,0.5494142621275258,0.10882362101722366,0.10882362101722366,0.975019832448501,0.7855950905202359,0.08384345346572464
+0.5196,5048,3903,225519,59166,0.1379894758422743,0.5639593341526087,0.0786121406546859,0.0786121406546859,0.9829876820880299,0.7852136658992767,0.06159982274271569
+0.5294,3616,2649,226773,60598,0.10261212559769577,0.5771747805267359,0.056311707727286886,0.056311707727286886,0.9884535920705076,0.7846074731981092,0.04476529979779453
+0.5392,3615,2649,226773,60599,0.10258520389341355,0.5771072796934866,0.05629613479926496,0.05629613479926496,0.9884535920705076,0.7846040676211363,0.04474972686977252
+0.549,3614,2649,226773,60600,0.1025582814251458,0.5770397573048061,0.05628056187124303,0.05628056187124303,0.9884535920705076,0.7846006620441636,0.04473415394175073
+0.5588,2266,1583,227839,61948,0.06658536943713912,0.5887243439854508,0.03528825489768586,0.03528825489768586,0.9931000514336027,0.7836402893378196,0.028388306331288637
+0.5686,1699,1140,228282,62515,0.05067633066380326,0.5984501585065164,0.026458404709253435,0.026458404709253435,0.9950309909250202,0.7832179977931861,0.021489395634273656
+0.5784,756,468,228954,63458,0.023105840643051438,0.6176470588235294,0.011773133584576573,0.011773133584576573,0.9979600910113241,0.7822950864335436,0.009733224595900758
+0.5882,756,468,228954,63458,0.023105840643051438,0.6176470588235294,0.011773133584576573,0.011773133584576573,0.9979600910113241,0.7822950864335436,0.009733224595900758
+... [41 more rows omitted]
+```
+
+### `outputs/tables/C5_calibracao_limiar_provisional_20261017T021055Z_manifesto.json`
+
+- Git: `ignored` · `3.2 KB` · modified `2026-10-17 02:10 UTC`
+
+```json
+{
+  "cohort_kind": "provisional",
+  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
+  "feature_columns": [
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sexo_categoria",
+    "cs_gestant",
+    "cs_raca",
+    "cs_zona",
+    "ave_suino",
+    "febre",
+    "tosse",
+    "garganta",
+    "dispneia",
+    "diarreia",
+    "vomito",
+    "dor_abd",
+    "fadiga",
+    "perd_olft",
+    "perd_pala",
+    "outro_sin",
+    "puerpera",
+    "cardiopati",
+    "hematologi",
+    "sind_down",
+    "hepatica",
+    "asma",
+    "diabetes",
+    "neurologic",
+    "pneumopati",
+    "imunodepre",
+    "renal",
+    "obesidade",
+    "out_morbi"
+  ],
+  "target_column": "alvo_obito_srag",
+  "partition_column": "particao",
+  "n_treino": 2740584,
+  "n_validacao": 587272,
+  "n_val_cal": 293636,
+  "n_val_meas": 293636,
+  "n_teste_fechado": 587276,
+  "honest_calib_split": true,
+  "calib_split_frac": 0.5,
+  "calib_split_seed": 42,
+  "calib_split_hash": "c1a8f0dfddbf2b40",
+  "finalistas": [
+    "hist_gradient_boosting",
+    "logistic"
+  ],
+  "calibracao_ativa": true,
+  "metodos_candidatos": [
+    "sigmoid",
+    "isotonic"
+  ],
+  "escolhas": {
+    "hist_gradient_boosting": {
+      "metodo": "sigmoid",
+      "brier_base": 0.19588851055358997,
+      "brier_calibrado": 0.14094344151171814,
+      "limiar": 0.255,
+      "limiar_metrica": "f1"
+    },
+    "logistic": {
+      "metodo": "isotonic",
+      "brier_base": 0.1981048319609869,
+      "brier_calibrado": 0.1438547651248468,
+      "limiar": 0.255,
+      "limiar_metrica": "f1"
+    }
+  },
+  "diagnosticos": {
+    "hist_gradient_boosting": {
+      "curva": "<REPO>\\outputs\\tables\\C5_calibracao_limiar_provisional_20261017T021055Z_hist_gradient_boosting_curva.csv",
+      "ece": 0.0017532450432245082,
+      "mce": 0.18260262235249314,
+      "brier_decomp": {
+        "brier": 0.14094344151171817,
+        "reliability": 1.437547312466074e-05,
+        "resolution": 0.0291172104868383,
+        "uncertainty": 0.17086227571878104,
+        "n": 293636.0
+      }
+    },
+    "logistic": {
+      "curva": "<REPO>\\outputs\\tables\\C5_calibracao_limiar_provisional_20261017T021055Z_logistic_curva.csv",
+      "ece": 0.0010963502365718537,
+      "mce": 0.17999165713033927,
+      "brier_decomp": {
+        "brier": 0.1438547651248468,
+        "reliability": 4.260251277333118e-06,
+        "resolution": 0.02615998136454755,
+        "uncertainty": 0.17086227571878104,
+        "n": 293636.0
+      }
+    }
+  },
+  "g7_status": "pendente",
+  "g8_status": "pendente",
+  "teste_aberto": false,
+  "yaml_atualizado": false,
+  "artefatos": {
+    "tabela": "<REPO>\\outputs\\tables\\C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv",
+    "predicoes_val_meas": "<REPO>\\outputs\\predictions\\C5_calibracao_limiar_provisional_20261017T021055Z_predicoes_val_meas.parquet"
+  }
+}
 ```
 
 ### `outputs/tables/dicionario_variaveis_revisao.csv`
 
-- Git: `ignored` · `24.8 KB` · modified `2026-10-14 22:28 UTC` · 119 rows (first 60 shown)
+- Git: `ignored` · `24.8 KB` · modified `2026-10-17 00:33 UTC` · 119 rows (first 60 shown)
 
 ```csv
 coluna,nome_amigavel,grupo,uso_inicial_sugerido,aplicabilidade,transformacao_sugerida,risco_temporal,percentual_ausente,percentual_preenchido_aplicavel,valores_distintos_sem_ausente,amplitude_preenchimento_ano,ponto_de_decisao,decisao_final_usuario,justificativa_decisao_final
@@ -9415,7 +10548,7 @@ risco temporal. Preservado somente para auditoria ou exploração."
 
 ### `outputs/tables/eda_01_auditoria_datas_pos_corte.csv`
 
-- Git: `ignored` · `347 B` · modified `2026-10-14 22:27 UTC` · 5 rows
+- Git: `ignored` · `347 B` · modified `2026-10-17 00:33 UTC` · 5 rows
 
 ```csv
 coluna,data_corte_observada,quantidade_posterior_corte,menor_data_posterior_corte,maior_data_posterior_corte
@@ -9428,7 +10561,7 @@ dt_antivir,2026-09-28,3,2026-09-30,2026-12-03
 
 ### `outputs/tables/eda_01_auditoria_faixa_datas.csv`
 
-- Git: `ignored` · `408 B` · modified `2026-10-14 22:27 UTC` · 19 rows
+- Git: `ignored` · `408 B` · modified `2026-10-17 00:33 UTC` · 19 rows
 
 ```csv
 coluna,datas_antes_1900,datas_depois_2026,datas_fora_faixa
@@ -9455,7 +10588,7 @@ dt_digita,0,0,0
 
 ### `outputs/tables/eda_01_auditoria_vazamento.csv`
 
-- Git: `ignored` · `1.3 KB` · modified `2026-10-14 22:27 UTC` · 10 rows
+- Git: `ignored` · `1.3 KB` · modified `2026-10-17 00:33 UTC` · 10 rows
 
 ```csv
 coluna,uso_nesta_eda,candidata_feature_principal,risco_temporal,justificativa,existe_no_dataframe
@@ -9473,7 +10606,7 @@ dt_trt_cov,auditoria_temporal,False,tratamento,Somente tratamentos iniciados at�
 
 ### `outputs/tables/eda_01_ausencias.csv`
 
-- Git: `ignored` · `5.2 KB` · modified `2026-10-14 22:27 UTC` · 88 rows (first 60 shown)
+- Git: `ignored` · `5.2 KB` · modified `2026-10-17 00:33 UTC` · 88 rows (first 60 shown)
 
 ```csv
 coluna,quantidade_ausente,quantidade_preenchida,percentual_ausente,percentual_preenchido
@@ -9542,7 +10675,7 @@ saturacao,764451,3902459,16.380238744694026,83.61976125530597
 
 ### `outputs/tables/eda_01_cardinalidade.csv`
 
-- Git: `ignored` · `1.5 KB` · modified `2026-10-14 22:27 UTC` · 88 rows (first 60 shown)
+- Git: `ignored` · `1.5 KB` · modified `2026-10-17 00:33 UTC` · 88 rows (first 60 shown)
 
 ```csv
 coluna,valores_distintos_sem_na,valores_distintos_com_na
@@ -9611,7 +10744,7 @@ outro_sin,3,4
 
 ### `outputs/tables/eda_01_duplicidades_nu_notific.csv`
 
-- Git: `ignored` · `4.0 KB` · modified `2026-10-14 22:27 UTC` · 58 rows
+- Git: `ignored` · `4.0 KB` · modified `2026-10-17 00:33 UTC` · 58 rows
 
 ```csv
 nu_notific,dt_notific,dt_sin_pri,hospital,dt_interna,evolucao,dt_evoluca,dt_encerra
@@ -9677,7 +10810,7 @@ nu_notific,dt_notific,dt_sin_pri,hospital,dt_interna,evolucao,dt_evoluca,dt_ence
 
 ### `outputs/tables/eda_01_frequencias_categoricas.csv`
 
-- Git: `ignored` · `10.2 KB` · modified `2026-10-14 22:27 UTC` · 275 rows (first 60 shown)
+- Git: `ignored` · `10.2 KB` · modified `2026-10-17 00:33 UTC` · 275 rows (first 60 shown)
 
 ```csv
 coluna,valor,quantidade,percentual
@@ -9746,7 +10879,7 @@ sg_uf_inte,PR,364385,7.807842876764283
 
 ### `outputs/tables/eda_01_preenchimento_por_ano_internacao.csv`
 
-- Git: `ignored` · `12.2 KB` · modified `2026-10-14 22:27 UTC` · 8 rows
+- Git: `ignored` · `12.2 KB` · modified `2026-10-17 00:33 UTC` · 8 rows
 
 ```csv
 ano_internacao,nu_notific,dt_notific,dt_sin_pri,sem_pri,hospital,dt_interna,cs_sexo,nu_idade_n,tp_idade,cs_gestant,cs_raca,cs_etinia,cs_escol_n,cs_zona,ave_suino,out_anim,febre,tosse,garganta,dispneia,desc_resp,saturacao,diarreia,vomito,dor_abd,fadiga,perd_olft,perd_pala,puerpera,cardiopati,hematologi,sind_down,hepatica,asma,diabetes,neurologic,pneumopati,imunodepre,renal,obesidade,tabag,outro_sin,outro_des,obes_imc,out_morbi,morb_desc,out_antiv,out_trat,sg_uf_not,co_regiona,co_mun_not,co_pais,sg_uf,co_rg_resi,co_mun_res,sg_uf_inte,co_rg_inte,co_mu_inte,vacina,dt_ut_dose,mae_vac,dt_vac_mae,m_amamenta,dt_doseuni,dt_1_dose,dt_2_dose,vacina_cov,dose_1_cov,dose_2_cov,dose_ref,dose_2ref,dose_adic,dos_re_bi,pac_cocbo,pac_dscbo,pov_ct,tp_pov_ct,estrang,antiviral,tp_antivir,dt_antivir,trat_cov,tipo_trat,dt_trt_cov,evolucao,dt_evoluca,dt_encerra,dt_digita
@@ -9762,7 +10895,7 @@ ano_internacao,nu_notific,dt_notific,dt_sin_pri,sem_pri,hospital,dt_interna,cs_s
 
 ### `outputs/tables/eda_01_preenchimento_por_ano_notificacao.csv`
 
-- Git: `ignored` · `12.9 KB` · modified `2026-10-14 22:27 UTC` · 9 rows
+- Git: `ignored` · `12.9 KB` · modified `2026-10-17 00:33 UTC` · 9 rows
 
 ```csv
 ano_notificacao,nu_notific,dt_notific,dt_sin_pri,sem_pri,hospital,dt_interna,cs_sexo,nu_idade_n,tp_idade,cs_gestant,cs_raca,cs_etinia,cs_escol_n,cs_zona,ave_suino,out_anim,febre,tosse,garganta,dispneia,desc_resp,saturacao,diarreia,vomito,dor_abd,fadiga,perd_olft,perd_pala,puerpera,cardiopati,hematologi,sind_down,hepatica,asma,diabetes,neurologic,pneumopati,imunodepre,renal,obesidade,tabag,outro_sin,outro_des,obes_imc,out_morbi,morb_desc,out_antiv,out_trat,sg_uf_not,co_regiona,co_mun_not,co_pais,sg_uf,co_rg_resi,co_mun_res,sg_uf_inte,co_rg_inte,co_mu_inte,vacina,dt_ut_dose,mae_vac,dt_vac_mae,m_amamenta,dt_doseuni,dt_1_dose,dt_2_dose,vacina_cov,dose_1_cov,dose_2_cov,dose_ref,dose_2ref,dose_adic,dos_re_bi,pac_cocbo,pac_dscbo,pov_ct,tp_pov_ct,estrang,antiviral,tp_antivir,dt_antivir,trat_cov,tipo_trat,dt_trt_cov,evolucao,dt_evoluca,dt_encerra,dt_digita
@@ -9779,7 +10912,7 @@ ano_notificacao,nu_notific,dt_notific,dt_sin_pri,sem_pri,hospital,dt_interna,cs_
 
 ### `outputs/tables/eda_01_resumo_datas.csv`
 
-- Git: `ignored` · `1.8 KB` · modified `2026-10-14 22:27 UTC` · 19 rows
+- Git: `ignored` · `1.8 KB` · modified `2026-10-17 00:33 UTC` · 19 rows
 
 ```csv
 coluna,data_minima_convertida,data_maxima_convertida,quantidade_total,quantidade_original_preenchida,quantidade_ausente_original,quantidade_convertida,quantidade_formato_iso,quantidade_formato_br,quantidade_formato_nao_reconhecido,quantidade_data_calendario_invalida,datas_antes_1900,datas_depois_2026,datas_fora_faixa
@@ -9804,96 +10937,9 @@ dt_encerra,2019-01-05,2026-09-27,4666910,4338057,328853,4338057,4338057,0,0,0,0,
 dt_digita,2019-01-18,2026-09-28,4666910,4650091,16819,4650091,4650091,0,0,0,0,0,0
 ```
 
-### `outputs/tables/eda_01_resumo_primeira_passagem.csv`
-
-- Git: `ignored` · `288 B` · modified `2026-10-10 18:58 UTC` · 10 rows
-
-```csv
-metrica,valor
-versao_dados,dados-v2
-arquivo,srag.parquet
-linhas_parquet,4666910
-colunas_parquet,198
-linhas_carregadas,4666910
-colunas_carregadas,88
-memoria_mb,3847.05
-data_minima_notificacao,2018-12-30 00:00:00
-data_maxima_notificacao,2026-09-28 00:00:00
-colunas_ausentes,0
-```
-
-### `outputs/tables/eda_01_status_colunas.csv`
-
-- Git: `ignored` · `3.1 KB` · modified `2026-10-10 18:58 UTC` · 88 rows (first 60 shown)
-
-```csv
-coluna,grupo,existe_no_parquet
-nu_notific,estrutura,True
-dt_notific,estrutura,True
-dt_sin_pri,estrutura,True
-sem_pri,estrutura,True
-hospital,estrutura,True
-dt_interna,estrutura,True
-cs_sexo,candidatas_principais,True
-nu_idade_n,candidatas_principais,True
-tp_idade,candidatas_principais,True
-cs_gestant,candidatas_principais,True
-cs_raca,candidatas_principais,True
-cs_etinia,candidatas_principais,True
-cs_escol_n,candidatas_principais,True
-cs_zona,candidatas_principais,True
-ave_suino,candidatas_principais,True
-out_anim,candidatas_principais,True
-febre,candidatas_principais,True
-tosse,candidatas_principais,True
-garganta,candidatas_principais,True
-dispneia,candidatas_principais,True
-desc_resp,candidatas_principais,True
-saturacao,candidatas_principais,True
-diarreia,candidatas_principais,True
-vomito,candidatas_principais,True
-dor_abd,candidatas_principais,True
-fadiga,candidatas_principais,True
-perd_olft,candidatas_principais,True
-perd_pala,candidatas_principais,True
-puerpera,candidatas_principais,True
-cardiopati,candidatas_principais,True
-hematologi,candidatas_principais,True
-sind_down,candidatas_principais,True
-hepatica,candidatas_principais,True
-asma,candidatas_principais,True
-diabetes,candidatas_principais,True
-neurologic,candidatas_principais,True
-pneumopati,candidatas_principais,True
-imunodepre,candidatas_principais,True
-renal,candidatas_principais,True
-obesidade,candidatas_principais,True
-tabag,candidatas_principais,True
-outro_sin,complementares_texto,True
-outro_des,complementares_texto,True
-obes_imc,complementares_texto,True
-out_morbi,complementares_texto,True
-morb_desc,complementares_texto,True
-out_antiv,complementares_texto,True
-out_trat,complementares_texto,True
-sg_uf_not,geografia,True
-co_regiona,geografia,True
-co_mun_not,geografia,True
-co_pais,geografia,True
-sg_uf,geografia,True
-co_rg_resi,geografia,True
-co_mun_res,geografia,True
-sg_uf_inte,geografia,True
-co_rg_inte,geografia,True
-co_mu_inte,geografia,True
-vacina,condicionais_vacinacao,True
-dt_ut_dose,condicionais_vacinacao,True
-... [28 more rows omitted]
-```
-
 ### `outputs/tables/eda_01_status_periodos.csv`
 
-- Git: `ignored` · `1.4 KB` · modified `2026-10-14 22:27 UTC` · 18 rows
+- Git: `ignored` · `1.4 KB` · modified `2026-10-17 00:33 UTC` · 18 rows
 
 ```csv
 ano_internacao,quantidade_registros_int,percentual,status_periodo,dentro_periodo_coorte,observacao
@@ -9919,7 +10965,7 @@ ano_internacao,quantidade_registros_int,percentual,status_periodo,dentro_periodo
 
 ### `outputs/tables/eda_01_tipos_memoria.csv`
 
-- Git: `ignored` · `2.9 KB` · modified `2026-10-14 22:27 UTC` · 88 rows (first 60 shown)
+- Git: `ignored` · `2.9 KB` · modified `2026-10-17 00:33 UTC` · 88 rows (first 60 shown)
 
 ```csv
 coluna,tipo_pandas,memoria_mb
@@ -9988,7 +11034,7 @@ pneumopati,str,37.74447536468506
 
 ### `outputs/tables/eda_01_volume_por_ano_internacao.csv`
 
-- Git: `ignored` · `647 B` · modified `2026-10-14 22:27 UTC` · 18 rows
+- Git: `ignored` · `647 B` · modified `2026-10-17 00:33 UTC` · 18 rows
 
 ```csv
 ano_internacao,quantidade_registros_int,percentual
@@ -10014,7 +11060,7 @@ ano_internacao,quantidade_registros_int,percentual
 
 ### `outputs/tables/eda_01_volume_por_ano_notificacao.csv`
 
-- Git: `ignored` · `333 B` · modified `2026-10-14 22:27 UTC` · 9 rows
+- Git: `ignored` · `333 B` · modified `2026-10-17 00:33 UTC` · 9 rows
 
 ```csv
 ano_notificacao,quantidade_registros,percentual
@@ -10031,7 +11077,7 @@ ano_notificacao,quantidade_registros,percentual
 
 ### `outputs/tables/eda_02_alvo_por_ano.csv`
 
-- Git: `ignored` · `608 B` · modified `2026-10-14 23:22 UTC` · 8 rows
+- Git: `ignored` · `608 B` · modified `2026-10-17 00:34 UTC` · 8 rows
 
 ```csv
 ano_internacao,quantidade_cura,quantidade_obito_srag,quantidade_total,percentual_cura,percentual_obito_srag
@@ -10047,7 +11093,7 @@ ano_internacao,quantidade_cura,quantidade_obito_srag,quantidade_total,percentual
 
 ### `outputs/tables/eda_02_auditoria_idade.csv`
 
-- Git: `ignored` · `331 B` · modified `2026-10-14 23:22 UTC` · 3 rows
+- Git: `ignored` · `331 B` · modified `2026-10-17 00:34 UTC` · 3 rows
 
 ```csv
 tipo_idade,quantidade_registros,quantidade_valor_informado,quantidade_idade_convertida,quantidade_idade_ausente,quantidade_nao_convertida,quantidade_tipo_invalido,percentual_convertido
@@ -10058,7 +11104,7 @@ tipo_idade,quantidade_registros,quantidade_valor_informado,quantidade_idade_conv
 
 ### `outputs/tables/eda_02_ausencia_por_desfecho.csv`
 
-- Git: `ignored` · `4.2 KB` · modified `2026-10-14 23:28 UTC` · 32 rows
+- Git: `ignored` · `4.2 KB` · modified `2026-10-17 00:39 UTC` · 32 rows
 
 ```csv
 coluna,nome_amigavel,quantidade_cura,ausente_cura,percentual_ausente_cura,quantidade_obito,ausente_obito,percentual_ausente_obito,diferenca_pp_obito_menos_cura,diferenca_absoluta_pp
@@ -10098,7 +11144,7 @@ tp_idade,"Unidade da idade: dias, meses ou anos",3058951,0,0.0,856185,0,0.0,0.0,
 
 ### `outputs/tables/eda_02_cluster_ano_sensibilidade.csv`
 
-- Git: `ignored` · `1.6 KB` · modified `2026-10-14 23:29 UTC` · 32 rows
+- Git: `ignored` · `1.6 KB` · modified `2026-10-17 00:40 UTC` · 32 rows
 
 ```csv
 matriz,cluster_rotulo,ano_internacao,quantidade,percentual_dentro_cluster
@@ -10138,7 +11184,7 @@ ampliada,Cluster 2,2026,3008,7.30150253659247
 
 ### `outputs/tables/eda_02_cluster_desfecho_sensibilidade.csv`
 
-- Git: `ignored` · `365 B` · modified `2026-10-14 23:29 UTC` · 4 rows
+- Git: `ignored` · `365 B` · modified `2026-10-17 00:40 UTC` · 4 rows
 
 ```csv
 matriz,cluster_rotulo,quantidade_registros,quantidade_obitos,proporcao_obito,percentual_obito
@@ -10150,7 +11196,7 @@ ampliada,Cluster 2,41197,10837,0.26305313493701,26.305313493701
 
 ### `outputs/tables/eda_02_comorbidades_por_ano.csv`
 
-- Git: `ignored` · `14.8 KB` · modified `2026-10-14 23:26 UTC` · 104 rows (first 60 shown)
+- Git: `ignored` · `14.8 KB` · modified `2026-10-17 00:37 UTC` · 104 rows (first 60 shown)
 
 ```csv
 ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_sim,quantidade_nao,quantidade_ignorado,quantidade_ausente,quantidade_inesperado,quantidade_respostas_validas,percentual_sim_validos,percentual_nao_validos,percentual_sem_resposta_valida
@@ -10219,7 +11265,7 @@ ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_si
 
 ### `outputs/tables/eda_02_comparacao_original_sensibilidade.csv`
 
-- Git: `ignored` · `825 B` · modified `2026-10-14 23:29 UTC` · 2 rows
+- Git: `ignored` · `825 B` · modified `2026-10-17 00:40 UTC` · 2 rows
 
 ```csv
 matriz,k_original,silhouette_original,ari_estabilidade_original,menor_cluster_percentual_original,maior_cluster_percentual_original,k_sem_indicadores_ausencia,indicadores_ausencia_excluidos,features_sensibilidade,componentes_pca_90,silhouette_sem_indicadores_ausencia,menor_cluster_percentual_sem_ausencia,maior_cluster_percentual_sem_ausencia,ari_original_vs_sem_ausencia,queda_silhouette,queda_silhouette_percentual,rotulo_matriz
@@ -10229,7 +11275,7 @@ nucleo,2,0.36442187428474426,0.9999493687268458,33.28875,66.71125,2,26,31,15,0.2
 
 ### `outputs/tables/eda_02_contadores_clinicos_por_ano.csv`
 
-- Git: `ignored` · `1.2 KB` · modified `2026-10-14 23:26 UTC` · 8 rows
+- Git: `ignored` · `1.2 KB` · modified `2026-10-17 00:37 UTC` · 8 rows
 
 ```csv
 ano_internacao,quantidade_registros,sintomas_confirmados_media,sintomas_confirmados_mediana,sintomas_avaliados_media,comorbidades_confirmadas_media,comorbidades_confirmadas_mediana,comorbidades_avaliadas_media,quantidade_multimorbidade,percentual_multimorbidade
@@ -10245,18 +11291,18 @@ ano_internacao,quantidade_registros,sintomas_confirmados_media,sintomas_confirma
 
 ### `outputs/tables/eda_02_dbscan_varredura_minima.csv`
 
-- Git: `ignored` · `502 B` · modified `2026-10-14 23:30 UTC` · 3 rows
+- Git: `ignored` · `502 B` · modified `2026-10-17 00:40 UTC` · 3 rows
 
 ```csv
 metodo,eps,min_samples,quantidade_registros,quantidade_clusters_sem_ruido,quantidade_ruido,percentual_ruido,silhouette_sem_ruido,calinski_harabasz_sem_ruido,davies_bouldin_sem_ruido,menor_cluster_percentual_sem_ruido,ari_dbscan_vs_kmeans,tempo_segundos
-DBSCAN,1.401609,10,8000,1,220,2.75,,,,,0.0006927723173552484,0.7283188999863341
-DBSCAN,1.479287,10,8000,1,100,1.25,,,,,2.9349417913744897e-05,2.0070788000011817
-DBSCAN,1.656968,10,8000,1,54,0.675,,,,,-8.569456750579377e-06,1.4081339000258595
+DBSCAN,1.401609,10,8000,1,220,2.75,,,,,0.0006927723173552484,1.9340924999996787
+DBSCAN,1.479287,10,8000,1,100,1.25,,,,,2.9349417913744897e-05,1.8540164000005461
+DBSCAN,1.656968,10,8000,1,54,0.675,,,,,-8.569456750579377e-06,2.1974824000008084
 ```
 
 ### `outputs/tables/eda_02_decisao_clustering.csv`
 
-- Git: `ignored` · `706 B` · modified `2026-10-14 23:29 UTC` · 1 rows
+- Git: `ignored` · `706 B` · modified `2026-10-17 00:40 UTC` · 1 rows
 
 ```csv
 status,matriz_principal_documentada,quantidade_clusters_documentada,usar_cluster_como_preditor_supervisionado,aplicar_clusters_na_coorte_completa,justificativa,encaminhamento,ari_nucleo_vs_ampliada_sem_ausencia
@@ -10265,7 +11311,7 @@ encerrar_como_exploratorio,nucleo,2,False,False,"A solução original foi domina
 
 ### `outputs/tables/eda_02_decisao_clustering.json`
 
-- Git: `ignored` · `766 B` · modified `2026-10-14 23:29 UTC`
+- Git: `ignored` · `766 B` · modified `2026-10-17 00:40 UTC`
 
 ```json
 {
@@ -10282,7 +11328,7 @@ encerrar_como_exploratorio,nucleo,2,False,False,"A solução original foi domina
 
 ### `outputs/tables/eda_02_diagnostico_final_clustering.csv`
 
-- Git: `ignored` · `534 B` · modified `2026-10-14 23:29 UTC` · 2 rows
+- Git: `ignored` · `534 B` · modified `2026-10-17 00:40 UTC` · 2 rows
 
 ```csv
 matriz,silhouette_sem_indicadores_ausencia,ari_original_vs_sem_indicadores_ausencia,menor_cluster_percentual,nmi_cluster_ano,interpretacao
@@ -10292,7 +11338,7 @@ ampliada,0.16932816803455353,0.08798891737376612,48.503750000000004,0.0690484337
 
 ### `outputs/tables/eda_02_escolaridade_por_ano.csv`
 
-- Git: `ignored` · `2.5 KB` · modified `2026-10-14 23:26 UTC` · 64 rows (first 60 shown)
+- Git: `ignored` · `2.5 KB` · modified `2026-10-17 00:37 UTC` · 64 rows (first 60 shown)
 
 ```csv
 ano_internacao,categoria_escolaridade,quantidade,percentual_ano,flag_ausente
@@ -10361,7 +11407,7 @@ ano_internacao,categoria_escolaridade,quantidade,percentual_ano,flag_ausente
 
 ### `outputs/tables/eda_02_faixa_etaria_por_ano.csv`
 
-- Git: `ignored` · `3.1 KB` · modified `2026-10-14 23:22 UTC` · 70 rows (first 60 shown)
+- Git: `ignored` · `3.1 KB` · modified `2026-10-17 00:34 UTC` · 70 rows (first 60 shown)
 
 ```csv
 ano_internacao,faixa_etaria,quantidade,percentual_ano
@@ -10430,17 +11476,17 @@ ano_internacao,faixa_etaria,quantidade,percentual_ano
 
 ### `outputs/tables/eda_02_hca_dbscan_resumo_minimo.csv`
 
-- Git: `ignored` · `627 B` · modified `2026-10-14 23:30 UTC` · 2 rows
+- Git: `ignored` · `627 B` · modified `2026-10-17 00:40 UTC` · 2 rows
 
 ```csv
 metodo,matriz,quantidade_registros,quantidade_clusters,percentual_ruido,silhouette,calinski_harabasz,davies_bouldin,menor_cluster_percentual,ari_vs_kmeans,tempo_segundos,parametros,decisao
-HCA_Ward,nucleo_sem_indicadores_ausencia,5000,2,0.0,0.2103562355041504,1400.8716617335656,1.7601060730978162,46.160000000000004,0.7842444162553112,0.9755442999303341,linkage=ward; k=2,nao aprofundar: comparacao minima registrada; K-Means permanece como referencia
+HCA_Ward,nucleo_sem_indicadores_ausencia,5000,2,0.0,0.2103562355041504,1400.8716617335656,1.7601060730978162,46.160000000000004,0.7842444162553112,0.5938283000014053,linkage=ward; k=2,nao aprofundar: comparacao minima registrada; K-Means permanece como referencia
 DBSCAN,nucleo_sem_indicadores_ausencia,8000,0,100.0,,,,,,,eps=nan; min_samples=10,descartar: a varredura curta nao produziu ao menos dois clusters avaliaveis sem ruido
 ```
 
 ### `outputs/tables/eda_02_idade_por_ano.csv`
 
-- Git: `ignored` · `951 B` · modified `2026-10-14 23:22 UTC` · 8 rows
+- Git: `ignored` · `951 B` · modified `2026-10-17 00:34 UTC` · 8 rows
 
 ```csv
 ano_internacao,quantidade_registros,quantidade_idade_valida,quantidade_idade_ausente,percentual_idade_ausente,idade_media,idade_mediana,idade_q1,idade_q3,idade_iqr,idade_minima,idade_maxima
@@ -10456,7 +11502,7 @@ ano_internacao,quantidade_registros,quantidade_idade_valida,quantidade_idade_aus
 
 ### `outputs/tables/eda_02_obito_comorbidades.csv`
 
-- Git: `ignored` · `3.8 KB` · modified `2026-10-14 23:28 UTC` · 13 rows
+- Git: `ignored` · `3.8 KB` · modified `2026-10-17 00:39 UTC` · 13 rows
 
 ```csv
 grupo_indicador,coluna,nome_amigavel,quantidade_sim,obito_sim,cura_sim,percentual_obito_sim,ic95_obito_sim_inferior,ic95_obito_sim_superior,quantidade_nao,obito_nao,cura_nao,percentual_obito_nao,ic95_obito_nao_inferior,ic95_obito_nao_superior,odds_ratio_bruta,ic95_or_inferior,ic95_or_superior,quantidade_ignorado,quantidade_ausente,quantidade_inesperado
@@ -10477,7 +11523,7 @@ comorbidades,asma,Asma,178130,20249,157881,11.367540560264976,11.220968923614333
 
 ### `outputs/tables/eda_02_obito_faixa_etaria.csv`
 
-- Git: `ignored` · `925 B` · modified `2026-10-14 23:28 UTC` · 9 rows
+- Git: `ignored` · `925 B` · modified `2026-10-17 00:39 UTC` · 9 rows
 
 ```csv
 faixa_etaria,quantidade_total,quantidade_obito_srag,quantidade_cura,percentual_obito_srag,ic95_inferior,ic95_superior
@@ -10494,7 +11540,7 @@ Idade ausente ou inválida,24,2,22,8.333333333333332,2.315881529704331,25.848802
 
 ### `outputs/tables/eda_02_obito_numero_comorbidades.csv`
 
-- Git: `ignored` · `576 B` · modified `2026-10-14 23:28 UTC` · 4 rows
+- Git: `ignored` · `576 B` · modified `2026-10-17 00:39 UTC` · 4 rows
 
 ```csv
 grupo_numero_comorbidades,quantidade_total,quantidade_obito_srag,quantidade_cura,percentual_obito_srag,ic95_inferior,ic95_superior
@@ -10506,7 +11552,7 @@ Três ou mais comorbidades confirmadas,364215,142895,221320,39.23369438381176,39
 
 ### `outputs/tables/eda_02_obito_sintomas.csv`
 
-- Git: `ignored` · `3.7 KB` · modified `2026-10-14 23:28 UTC` · 13 rows
+- Git: `ignored` · `3.7 KB` · modified `2026-10-17 00:39 UTC` · 13 rows
 
 ```csv
 grupo_indicador,coluna,nome_amigavel,quantidade_sim,obito_sim,cura_sim,percentual_obito_sim,ic95_obito_sim_inferior,ic95_obito_sim_superior,quantidade_nao,obito_nao,cura_nao,percentual_obito_nao,ic95_obito_nao_inferior,ic95_obito_nao_superior,odds_ratio_bruta,ic95_or_inferior,ic95_or_superior,quantidade_ignorado,quantidade_ausente,quantidade_inesperado
@@ -10527,7 +11573,7 @@ sintomas,tosse,Tosse,2790984,527269,2263715,18.89186752772499,18.845986424063263
 
 ### `outputs/tables/eda_02_perfis_binarios_clusters_sensibilidade.csv`
 
-- Git: `ignored` · `11.9 KB` · modified `2026-10-14 23:30 UTC` · 104 rows (first 60 shown)
+- Git: `ignored` · `11.9 KB` · modified `2026-10-17 00:40 UTC` · 104 rows (first 60 shown)
 
 ```csv
 cluster_rotulo,quantidade_registros,quantidade_respostas_validas,quantidade_sim,quantidade_sem_resposta_valida,percentual_preenchido_valido,percentual_sem_resposta_valida,percentual_sim_entre_validos,variavel,grupo_clinico,matriz
@@ -10596,7 +11642,7 @@ Cluster 2,41197,37080,29763,4117,90.00655387528218,9.99344612471782,80.266990291
 
 ### `outputs/tables/eda_02_perfis_numericos_clusters_sensibilidade.csv`
 
-- Git: `ignored` · `2.7 KB` · modified `2026-10-14 23:30 UTC` · 24 rows
+- Git: `ignored` · `2.7 KB` · modified `2026-10-17 00:40 UTC` · 24 rows
 
 ```csv
 cluster_rotulo,quantidade_registros,quantidade_preenchida,media,desvio_padrao,mediana,p25,p75,variavel,matriz,percentual_preenchido
@@ -10628,7 +11674,7 @@ Cluster 2,41197,41197,6.572517416316722,6.092517054557381,3.0,0.0,13.0,n_comorbi
 
 ### `outputs/tables/eda_02_perfis_sexo_clusters_sensibilidade.csv`
 
-- Git: `ignored` · `696 B` · modified `2026-10-14 23:30 UTC` · 12 rows
+- Git: `ignored` · `696 B` · modified `2026-10-17 00:40 UTC` · 12 rows
 
 ```csv
 matriz,cluster_rotulo,sexo_categoria,quantidade,percentual_cluster
@@ -10648,7 +11694,7 @@ ampliada,Cluster 2,Masculino,20512,49.79003325484865
 
 ### `outputs/tables/eda_02_preenchimento_por_variavel_ano.csv`
 
-- Git: `ignored` · `88.1 KB` · modified `2026-10-14 23:23 UTC` · 704 rows (first 60 shown)
+- Git: `ignored` · `88.1 KB` · modified `2026-10-17 00:34 UTC` · 704 rows (first 60 shown)
 
 ```csv
 ano_internacao,coluna,nome_amigavel,grupo,uso_inicial_sugerido,quantidade_registros_ano,quantidade_preenchida,quantidade_ausente,percentual_preenchido,percentual_ausente
@@ -10717,7 +11763,7 @@ ano_internacao,coluna,nome_amigavel,grupo,uso_inicial_sugerido,quantidade_regist
 
 ### `outputs/tables/eda_02_resumo_analise_desfecho.csv`
 
-- Git: `ignored` · `367 B` · modified `2026-10-14 23:28 UTC` · 10 rows
+- Git: `ignored` · `367 B` · modified `2026-10-17 00:39 UTC` · 10 rows
 
 ```csv
 metrica,valor
@@ -10735,32 +11781,19 @@ quantidade_variaveis_ausencia,32
 
 ### `outputs/tables/eda_02_resumo_fonte.csv`
 
-- Git: `ignored` · `237 B` · modified `2026-10-14 23:22 UTC` · 4 rows
+- Git: `ignored` · `237 B` · modified `2026-10-17 00:34 UTC` · 4 rows
 
 ```csv
 metrica,valor
 nome_coorte,coorte_desenvolvimento
 caminho_coorte,<REPO>\data\analytical\coorte_provisoria_b.parquet
-quantidade_linhas,3915136
-quantidade_colunas,125
-```
-
-### `outputs/tables/eda_02_resumo_fonte_provisorio.csv`
-
-- Git: `ignored` · `261 B` · modified `2026-10-11 13:27 UTC` · 5 rows
-
-```csv
-metrica,valor
-nome_coorte,coorte_desenvolvimento
-caminho_coorte,<REPO>\data\analytical\coorte_provisoria_b.parquet
-coorte_provisoria,True
 quantidade_linhas,3915136
 quantidade_colunas,125
 ```
 
 ### `outputs/tables/eda_02_resumo_preenchimento_variaveis.csv`
 
-- Git: `ignored` · `11.1 KB` · modified `2026-10-14 23:23 UTC` · 88 rows (first 60 shown)
+- Git: `ignored` · `11.1 KB` · modified `2026-10-17 00:34 UTC` · 88 rows (first 60 shown)
 
 ```csv
 coluna,nome_amigavel,grupo,uso_inicial_sugerido,quantidade_registros,quantidade_preenchida,quantidade_ausente,percentual_preenchido,percentual_ausente
@@ -10829,7 +11862,7 @@ antiviral,Usou antiviral contra influenza?,tratamentos,exploracao_eda,3915136,33
 
 ### `outputs/tables/eda_02_resumo_rupturas_temporais.csv`
 
-- Git: `ignored` · `771 B` · modified `2026-10-14 23:26 UTC` · 9 rows
+- Git: `ignored` · `771 B` · modified `2026-10-17 00:37 UTC` · 9 rows
 
 ```csv
 tipo_indicador,grupo_indicador,quantidade_indicadores,quantidade_destaques,maior_amplitude,amplitude_mediana,percentual_indicadores_destacados
@@ -10846,7 +11879,7 @@ desfecho,desfecho,1,1,20.869390760490116,20.869390760490116,100.0
 
 ### `outputs/tables/eda_02_resumo_temporal.csv`
 
-- Git: `ignored` · `836 B` · modified `2026-10-14 23:22 UTC` · 8 rows
+- Git: `ignored` · `836 B` · modified `2026-10-17 00:34 UTC` · 8 rows
 
 ```csv
 ano_internacao,quantidade_registros,percentual_coorte,quantidade_cura,quantidade_obito_srag,percentual_cura,percentual_obito_srag,periodo_completo
@@ -10862,7 +11895,7 @@ ano_internacao,quantidade_registros,percentual_coorte,quantidade_cura,quantidade
 
 ### `outputs/tables/eda_02_resumo_uf_residencia.csv`
 
-- Git: `ignored` · `981 B` · modified `2026-10-14 23:26 UTC` · 28 rows
+- Git: `ignored` · `981 B` · modified `2026-10-17 00:37 UTC` · 28 rows
 
 ```csv
 uf_residencia_categoria,quantidade,percentual_coorte,ordem_frequencia
@@ -10898,7 +11931,7 @@ Ausente ou inesperada,757,0.01933521594141302,28
 
 ### `outputs/tables/eda_02_rupturas_temporais.csv`
 
-- Git: `ignored` · `21.6 KB` · modified `2026-10-14 23:26 UTC` · 130 rows (first 60 shown)
+- Git: `ignored` · `21.6 KB` · modified `2026-10-17 00:37 UTC` · 130 rows (first 60 shown)
 
 ```csv
 tipo_indicador,grupo_indicador,indicador,unidade,periodo_avaliado,ano_minimo,valor_minimo,ano_maximo,valor_maximo,amplitude,limite_destaque,flag_destaque,ordem_destaque,quantidade_anos
@@ -10967,7 +12000,7 @@ clinico,sintomas,Dor abdominal,pontos_percentuais,2019-2025,2019,2.2900763358778
 
 ### `outputs/tables/eda_02_sexo_por_ano.csv`
 
-- Git: `ignored` · `1014 B` · modified `2026-10-14 23:22 UTC` · 24 rows
+- Git: `ignored` · `1014 B` · modified `2026-10-17 00:34 UTC` · 24 rows
 
 ```csv
 ano_internacao,sexo_categoria,quantidade,percentual_ano
@@ -10999,7 +12032,7 @@ ano_internacao,sexo_categoria,quantidade,percentual_ano
 
 ### `outputs/tables/eda_02_sintomas_por_ano.csv`
 
-- Git: `ignored` · `13.8 KB` · modified `2026-10-14 23:26 UTC` · 104 rows (first 60 shown)
+- Git: `ignored` · `13.8 KB` · modified `2026-10-17 00:37 UTC` · 104 rows (first 60 shown)
 
 ```csv
 ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_sim,quantidade_nao,quantidade_ignorado,quantidade_ausente,quantidade_inesperado,quantidade_respostas_validas,percentual_sim_validos,percentual_nao_validos,percentual_sem_resposta_valida
@@ -11068,7 +12101,7 @@ ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_si
 
 ### `outputs/tables/eda_02_uf_residencia_por_ano.csv`
 
-- Git: `ignored` · `7.4 KB` · modified `2026-10-14 23:26 UTC` · 224 rows (first 60 shown)
+- Git: `ignored` · `7.4 KB` · modified `2026-10-17 00:37 UTC` · 224 rows (first 60 shown)
 
 ```csv
 ano_internacao,uf_residencia_categoria,quantidade,percentual_ano
@@ -11137,7 +12170,7 @@ ano_internacao,uf_residencia_categoria,quantidade,percentual_ano
 
 ### `outputs/tables/eda_02_vacinacao_por_ano.csv`
 
-- Git: `ignored` · `2.6 KB` · modified `2026-10-14 23:26 UTC` · 16 rows
+- Git: `ignored` · `2.6 KB` · modified `2026-10-17 00:37 UTC` · 16 rows
 
 ```csv
 ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_sim,quantidade_nao,quantidade_ignorado,quantidade_ausente,quantidade_inesperado,quantidade_respostas_validas,percentual_sim_validos,percentual_nao_validos,percentual_sem_resposta_valida
@@ -11161,7 +12194,7 @@ ano_internacao,grupo_clinico,coluna,nome_amigavel,quantidade_total,quantidade_si
 
 ### `outputs/tables/eda_02_variacao_comorbidades.csv`
 
-- Git: `ignored` · `2.0 KB` · modified `2026-10-14 23:26 UTC` · 13 rows
+- Git: `ignored` · `2.0 KB` · modified `2026-10-17 00:37 UTC` · 13 rows
 
 ```csv
 grupo_clinico,coluna,nome_amigavel,percentual_sim_minimo,percentual_sim_maximo,percentual_sim_medio,percentual_sem_resposta_valida_maximo,quantidade_anos_observados,amplitude_percentual_sim,flag_variacao_10_pp
@@ -11182,7 +12215,7 @@ comorbidades,puerpera,Puerpera ou parturiente,0.7066460796357448,1.5632603406326
 
 ### `outputs/tables/eda_02_variacao_preenchimento.csv`
 
-- Git: `ignored` · `12.6 KB` · modified `2026-10-14 23:23 UTC` · 88 rows (first 60 shown)
+- Git: `ignored` · `12.6 KB` · modified `2026-10-17 00:34 UTC` · 88 rows (first 60 shown)
 
 ```csv
 coluna,nome_amigavel,grupo,uso_inicial_sugerido,preenchimento_minimo,preenchimento_maximo,preenchimento_medio,quantidade_anos_observados,amplitude_pontos_percentuais,flag_variacao_20_pp
@@ -11251,7 +12284,7 @@ pac_dscbo,Descricao da ocupacao,demografia_contexto_social,apoio_interpretacao,0
 
 ### `outputs/tables/eda_02_variacao_sintomas.csv`
 
-- Git: `ignored` · `1.9 KB` · modified `2026-10-14 23:26 UTC` · 13 rows
+- Git: `ignored` · `1.9 KB` · modified `2026-10-17 00:37 UTC` · 13 rows
 
 ```csv
 grupo_clinico,coluna,nome_amigavel,percentual_sim_minimo,percentual_sim_maximo,percentual_sim_medio,percentual_sem_resposta_valida_maximo,quantidade_anos_observados,amplitude_percentual_sim,flag_variacao_10_pp
@@ -11272,7 +12305,7 @@ sintomas,vomito,Vomito,12.228737980517804,16.03842412451362,14.638187728743688,3
 
 ### `outputs/tables/eda_02_volume_por_ano.csv`
 
-- Git: `ignored` · `368 B` · modified `2026-10-14 23:22 UTC` · 8 rows
+- Git: `ignored` · `368 B` · modified `2026-10-17 00:34 UTC` · 8 rows
 
 ```csv
 ano_internacao,quantidade_registros,percentual_coorte,periodo_completo
@@ -11288,7 +12321,7 @@ ano_internacao,quantidade_registros,percentual_coorte,periodo_completo
 
 ### `outputs/tables/supervisionado_registros_conflitantes_split_provisorio.csv`
 
-- Git: `ignored` · `376 B` · modified `2026-10-16 03:39 UTC` · 4 rows
+- Git: `ignored` · `376 B` · modified `2026-10-17 00:42 UTC` · 4 rows
 
 ```csv
 indice_original,grupo_split,estrato_split,nu_notific,ano_internacao,alvo_obito_srag,evolucao,dt_interna
@@ -11300,7 +12333,7 @@ indice_original,grupo_split,estrato_split,nu_notific,ano_internacao,alvo_obito_s
 
 ### `outputs/tables/supervisionado_resumo_conflitos_split_provisorio.csv`
 
-- Git: `ignored` · `154 B` · modified `2026-10-16 03:39 UTC` · 2 rows
+- Git: `ignored` · `154 B` · modified `2026-10-17 00:42 UTC` · 2 rows
 
 ```csv
 grupo_split,quantidade_linhas,quantidade_estratos,estratos_observados
@@ -11310,16 +12343,1731 @@ grupo_split,quantidade_linhas,quantidade_estratos,estratos_observados
 
 ### `outputs/tables/supervisionado_waterfall_conflitos_split_provisorio.csv`
 
-- Git: `ignored` · `181 B` · modified `2026-10-16 03:39 UTC` · 1 rows
+- Git: `ignored` · `181 B` · modified `2026-10-17 00:42 UTC` · 1 rows
 
 ```csv
 etapa,politica,grupos_conflitantes,linhas_excluidas,linhas_restantes,status
 quarentena_conflitos_split,quarentena_provisoria,2,4,3915132,provisoria_pendente_validacao_pessoa_a
 ```
 
+### `outputs/tables/pessoa_a/a1_alvo_por_ano.csv`
+
+- Git: `ignored` · `830 B` · modified `2026-10-17 00:23 UTC` · 32 rows
+
+```csv
+ano,1,2,3,9,<vazio>,total
+1917,1,0,0,0,3,4
+1918,0,0,0,0,1,1
+1941,1,0,0,1,2,4
+2009,1,0,0,0,0,1
+2011,1,0,0,0,0,1
+2012,2,0,0,0,0,2
+2016,0,1,0,0,0,1
+2017,2,0,0,0,0,2
+2018,10,0,0,0,1,11
+2019,38292,5221,8,1340,2682,47543
+2020,705699,274113,15414,20385,60753,1076364
+2021,1062924,417291,21305,38603,117266,1657389
+2022,389547,86433,13727,12552,33874,536133
+2023,217667,23037,7724,5528,11713,265669
+2024,210358,19120,7220,4212,12457,253367
+2025,268686,21227,8252,5561,11889,315615
+2026,165784,9743,5014,4454,25442,210437
+2027,6,0,0,1,0,7
+2028,4,0,0,0,0,4
+2029,3,0,0,3,3,9
+2031,2,0,0,0,0,2
+2032,1,0,0,0,0,1
+2033,0,0,0,0,3,3
+2034,0,0,0,1,0,1
+2050,0,0,0,0,1,1
+2052,1,0,0,0,0,1
+2055,0,0,0,0,1,1
+2056,0,0,0,0,1,1
+2092,1,0,0,0,0,1
+2098,1,0,0,1,0,2
+2099,1,0,0,0,0,1
+sem_data,38927,16729,1383,2610,12429,72078
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_01.csv`
+
+- Git: `ignored` · `3.5 KB` · modified `2026-10-17 00:22 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+,,,3,75,1950-11-02,2026-03-22,2026-03-23,,,31775652598724
+2,,1,3,4,2022-03-03,2026-03-23,2026-03-29,2026-03-31,2026-06-11,31781205405890
+,,1,2,8,2025-08-09,2026-04-18,2026-04-28,2026-04-19,2026-06-02,31780414044334
+2,,1,3,50,1975-04-08,2026-03-07,2026-03-07,,2026-03-20,31776951547485
+,,1,3,83,1942-12-21,2026-08-10,2026-08-13,,2026-08-13,31786648314248
+,,9,3,8,2017-09-29,2026-03-25,2026-03-26,,2026-03-30,31776114768213
+2,,,3,7,2019-02-21,2026-04-18,2026-04-22,,2026-04-26,31777485114556
+,,1,2,4,2026-03-22,2026-07-12,2026-07-13,2026-07-21,2026-07-21,31784037049124
+,,1,3,4,2021-09-27,2026-06-01,2026-06-15,,2026-07-23,31781782758352
+,,,3,75,1950-09-14,2026-06-07,2026-06-08,,,31780925222220
+,,,3,65,1960-07-08,2026-04-01,2026-04-14,,,31784125722808
+,,,3,9,2016-07-22,2026-01-13,2026-01-18,,,31768751302378
+2,,,2,7,2025-06-18,2026-01-04,2026-01-07,,,31767972796009
+,,,3,5,2020-10-10,2026-08-18,2026-08-20,,,31787317509231
+,,1,3,1,2025-01-15,2026-05-06,2026-05-06,,2026-05-08,31780258970676
+9,,1,3,4,2021-09-06,2026-05-03,2026-05-03,2026-05-05,2026-07-03,31783105365899
+2,,2,3,1,2025-03-11,2026-05-28,2026-06-09,2026-06-09,2026-06-16,31782311120470
+,,1,2,6,2025-11-02,2026-05-20,2026-05-21,2026-06-08,2026-06-23,31782218952764
+,,,2,7,2026-01-06,2026-08-02,2026-08-07,,,31786119085137
+,,,3,73,1952-08-22,2026-04-04,2026-04-13,,,31776078195609
+,,1,3,57,1968-08-22,2026-04-29,2026-04-30,,2026-05-12,31778069604877
+,,1,3,1,2025-04-14,2026-04-24,2026-04-27,,2026-05-05,31777322020581
+9,,1,3,40,1985-05-02,2026-01-30,2026-02-03,,2026-08-03,31772451218119
+2,,1,2,2,2026-04-13,2026-06-19,2026-06-22,2026-06-26,2026-06-26,31782249136338
+2,,1,3,6,2020-03-01,2026-05-03,2026-05-07,,2026-05-13,31778676513948
+,,,3,9,2017-02-18,2026-06-23,2026-06-24,,,31782997221458
+,,,2,2,2026-05-23,2026-07-06,2026-07-06,,,31783376982074
+,,,3,80,1945-10-02,2026-02-28,2026-03-06,,2026-03-18,31772828882255
+,,1,2,8,2025-11-28,2026-07-21,2026-07-24,,2026-07-24,31785406932822
+,,1,2,6,2026-02-17,2026-08-07,2026-08-11,2026-08-12,2026-08-31,31787766202549
+2,,2,3,12,2014-02-11,2026-03-19,2026-03-27,2026-03-27,2026-03-27,31774964608477
+,,1,3,1,2024-10-01,2026-02-09,2026-02-09,,2026-02-13,31779580487653
+2,,2,3,88,1937-10-25,2026-01-27,2026-01-31,2026-01-31,2026-02-12,31774289284081
+2,,,3,2,2023-10-15,2026-04-22,2026-04-24,,2026-04-28,31777486180757
+,,,3,66,1960-04-14,2026-08-08,2026-08-12,,,31786571794321
+,,,3,1,2024-10-13,2026-06-11,2026-06-17,,,31781707959452
+,,1,3,57,1969-05-11,2026-08-14,2026-08-17,2026-08-19,2026-08-19,31786973020085
+9,,,3,46,1979-11-27,2026-09-01,2026-09-02,,,31788371070901
+,,1,3,1,2024-12-23,2026-04-11,2026-04-16,,2026-06-08,31776357800729
+,,,3,1,2025-01-04,2026-04-05,2026-04-16,,,31776343591581
+2,,1,3,41,1984-05-03,2026-02-22,2026-03-02,2026-02-24,2026-03-02,31772423427061
+,,1,2,11,2025-08-30,2026-07-23,2026-07-24,,2026-08-03,31784914226565
+,,1,2,4,2025-09-06,2026-01-12,2026-01-12,2026-01-26,2026-02-06,31769008935928
+,,,3,35,1991-08-07,2026-08-15,2026-08-18,,,31787060140830
+,,,3,2,2024-05-29,2026-08-21,2026-08-28,,,31789074988249
+2,,1,3,90,1935-08-24,2026-01-07,2026-01-09,2026-01-09,2026-01-14,31768403627553
+,,1,3,67,1959-01-29,2026-06-15,2026-06-16,2026-06-19,2026-06-25,31781696854761
+2,,1,3,42,1983-12-15,2026-01-14,2026-02-08,,2026-02-08,31770572532065
+2,,2,3,64,1961-07-01,2026-02-21,2026-02-21,2026-02-21,2026-02-21,31773350909558
+,,,3,58,1968-06-08,2026-07-16,2026-07-21,,2026-08-10,31784646474693
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_02.csv`
+
+- Git: `ignored` · `3.6 KB` · modified `2026-10-17 00:22 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,,1,2,8,2025-08-10,2026-04-01,2026-04-15,,2026-04-21,31777549715837
+1,,1,3,77,1949-05-26,2026-07-12,2026-07-12,2026-07-15,2026-07-17,31788874096772
+1,,1,3,7,2018-08-31,2026-01-10,2026-01-12,2026-01-28,2026-02-09,31770647469632
+1,,,3,3,2023-04-20,2026-09-04,2026-09-09,,,31788975169679
+1,,1,2,3,2025-11-10,2026-02-06,2026-02-07,2026-02-20,2026-06-10,31773940312126
+1,,1,3,1,2024-09-24,2026-07-04,2026-08-26,2026-08-11,2026-08-26,31787751835649
+1,,1,3,43,1982-11-27,2026-02-21,2026-02-27,2026-03-02,2026-03-05,31772219564355
+1,,1,2,1,2025-12-04,2026-01-08,2026-01-12,2026-01-21,2026-01-26,31769453667829
+1,,1,2,11,2025-03-16,2026-02-20,2026-02-23,2026-02-24,2026-04-13,31771838270995
+1,,1,3,31,1994-11-08,2026-09-06,2026-09-09,2026-09-16,2026-09-17,31789563351861
+1,,1,3,62,1963-11-04,2026-02-11,2026-02-13,2026-02-20,2026-03-04,31771008239682
+1,,,1,7,2026-05-12,2026-05-19,2026-05-21,,,31779467820819
+1,,,3,3,2022-12-09,2026-09-03,2026-09-05,,,31788620734654
+1,,,3,4,2021-11-21,2026-07-30,2026-07-31,,,31786458971825
+1,,,3,2,2024-03-30,2026-08-01,2026-08-04,,,31785867861406
+1,,1,3,2,2023-09-24,2026-07-10,2026-07-20,2026-07-14,2026-07-22,31784748275602
+1,,1,3,2,2024-05-11,2026-09-03,2026-09-10,2026-09-15,2026-09-18,31789065947469
+1,,,3,2,2024-06-17,2026-09-01,2026-09-02,,,31788382629475
+1,,,3,2,2024-06-05,2026-08-14,2026-08-19,,,31787172228431
+1,,,3,2,2024-06-25,2026-06-26,2026-07-10,,,31783704794838
+1,,,3,1,2024-08-25,2026-06-20,2026-06-22,,,31782152025297
+1,,,3,1,2024-12-14,2026-05-03,2026-05-07,,,31778183597383
+1,,1,3,1,2025-06-09,2026-08-21,2026-08-24,2026-09-03,2026-09-22,31787583741919
+1,,,3,1,2025-07-27,2026-07-28,2026-07-29,,,31785360853298
+1,,,2,10,2025-08-16,2026-06-01,2026-06-04,,,31780575267248
+1,,1,2,8,2025-08-22,2026-04-25,2026-04-29,2026-05-01,2026-05-25,31777465516478
+1,,1,2,7,2025-08-18,2026-03-23,2026-03-28,,2026-04-01,31774888210371
+1,,1,3,73,1952-05-15,2026-04-25,2026-04-27,2026-04-30,2026-05-04,31778092086325
+1,,1,3,2,2023-11-03,2026-07-07,2026-07-09,2026-07-13,2026-07-14,31783942348556
+1,,,3,2,2023-10-10,2026-04-13,2026-04-13,,,31776091074476
+1,,1,3,2,2023-11-06,2026-08-25,2026-08-25,,2026-09-11,31787918509080
+1,,1,3,75,1950-11-05,2026-06-04,2026-06-11,,2026-06-16,31781178224317
+1,,1,3,1,2024-12-27,2026-03-12,2026-03-15,2026-03-16,2026-03-16,31773662225812
+1,,2,3,46,1980-03-30,2026-05-04,2026-05-07,2026-05-14,2026-05-15,31778770573608
+1,,1,3,2,2024-03-22,2026-04-22,2026-04-29,2026-05-02,2026-05-07,31781007905994
+1,,1,3,37,1989-08-03,2026-08-24,2026-08-25,2026-09-04,2026-09-25,31789485848987
+1,,,3,50,1975-05-26,2026-01-17,2026-01-18,,2026-01-22,31769099934860
+1,,1,3,74,1952-02-15,2026-07-20,2026-08-03,2026-08-03,2026-08-18,31786461727931
+1,,1,3,81,1944-05-31,2026-03-27,2026-04-09,2026-04-15,2026-04-20,31775740797449
+1,,1,3,2,2024-01-08,2026-09-01,2026-09-03,2026-09-05,2026-09-08,31789128973635
+1,,1,3,1,2024-10-17,2026-08-18,2026-08-24,,2026-09-10,31789062515336
+1,,1,3,2,2024-01-29,2026-03-17,2026-03-18,2026-03-26,2026-04-03,31775250713894
+1,,1,3,27,1998-11-17,2026-05-01,2026-05-09,,2026-05-18,31778336961281
+1,,1,3,57,1968-08-22,2026-01-19,2026-02-04,,2026-02-04,31770645711921
+1,,,3,2,2024-05-21,2026-08-04,2026-08-06,,2026-08-07,31786039467922
+1,,1,3,78,1947-11-07,2026-06-19,2026-06-26,,2026-07-08,31782494985225
+1,,1,3,1,2024-02-22,2026-01-06,2026-01-08,2026-01-13,2026-01-14,31768314692248
+1,,1,2,8,2025-12-25,2026-08-30,2026-09-02,2026-09-09,2026-09-11,31788527556568
+1,,1,3,1,2024-07-23,2026-01-30,2026-02-05,2026-02-13,2026-02-24,31770378778543
+1,,,2,7,2026-01-11,2026-09-07,2026-09-11,,,31789140997184
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_03.csv`
+
+- Git: `ignored` · `4.1 KB` · modified `2026-10-17 00:22 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2026-06-11,1,2,1,2026-05-02,2026-06-02,2026-06-11,2026-06-19,2026-06-19,31781201987679
+1,2026-06-15,,3,37,1989-04-04,2026-06-15,2026-06-17,,,31782407823707
+1,2026-03-10,1,3,4,2021-10-06,2026-03-09,2026-03-14,,,31773493207022
+1,2026-03-18,1,1,11,2026-03-07,2026-03-18,2026-03-23,2026-04-14,2026-04-15,31774542694487
+1,2026-08-18,,3,75,1950-09-09,2026-08-08,2026-08-18,,,31787085791388
+1,2026-03-10,1,3,78,1947-11-10,2026-03-10,2026-03-10,2026-03-16,2026-03-16,31773441569320
+1,2026-05-27,,3,1,2025-03-11,2026-05-19,2026-05-26,,,31780065930274
+1,2026-05-08,,2,0,2025-05-13,2026-05-05,2026-05-08,,,31779901434401
+1,2026-06-15,,3,66,1960-06-13,2026-06-14,2026-06-16,,,31781629359036
+1,2026-05-23,,3,15,2011-04-14,2026-05-23,2026-05-24,,,31780947295202
+1,2026-07-07,1,3,4,2021-07-14,2026-07-03,2026-07-09,2026-07-11,2026-07-17,31783622594901
+1,2026-04-04,,3,32,1993-09-15,2026-04-04,2026-04-04,,,31779149516127
+1,2026-05-13,1,2,6,2025-11-17,2026-05-12,2026-05-13,2026-05-15,2026-05-21,31779376399165
+1,2026-05-15,,3,74,1952-04-18,2026-05-15,2026-05-16,,,31779137099882
+1,2026-03-19,1,3,11,2014-09-18,2026-03-19,2026-03-20,2026-03-28,2026-04-06,31775493343412
+1,2026-05-19,,3,75,1950-12-19,2026-05-16,2026-05-22,,,31779804314537
+1,2026-09-08,,2,5,2026-03-21,2026-09-08,2026-09-09,,,31788967146868
+1,2026-06-02,1,2,1,2026-04-22,2026-05-27,2026-06-03,2026-06-16,2026-06-19,31780508092246
+1,2026-04-14,1,2,5,2025-11-23,2026-04-14,2026-05-04,2026-04-14,2026-05-04,31777902324367
+1,2026-04-22,1,3,31,1995-01-25,2026-04-19,2026-04-23,2026-05-04,2026-05-11,31777581635868
+1,2026-03-28,,3,1,2024-10-25,2026-03-08,2026-03-28,,,31774869565386
+1,2026-04-11,1,3,5,2020-06-26,2026-04-05,2026-04-11,2026-04-13,2026-04-17,31776433120192
+1,2026-05-26,1,3,12,2013-08-27,2026-05-26,2026-05-28,2026-05-29,2026-06-03,31780063755400
+1,2026-03-26,,3,78,1947-12-30,2026-03-26,2026-03-31,,,31775052422525
+1,2026-06-02,1,2,4,2026-02-04,2026-06-02,2026-06-03,2026-06-09,2026-07-29,31785339117793
+1,2026-08-25,2,3,65,1961-06-06,2026-08-25,2026-08-25,2026-08-27,2026-09-01,31790273405307
+1,2026-05-18,1,3,58,1967-11-07,2026-05-16,2026-05-18,2026-05-25,2026-05-25,31779716421577
+1,2026-06-20,1,3,25,2001-02-10,2026-06-18,2026-06-20,2026-07-01,2026-07-07,31783419856968
+1,2026-05-26,1,3,2,2023-10-10,2026-05-21,2026-05-26,2026-05-30,2026-05-30,31781122407541
+1,2026-05-09,1,3,64,1962-02-11,2026-05-08,2026-05-12,2026-05-20,2026-05-20,31778874675119
+1,2026-04-13,1,3,80,1946-03-11,2026-04-01,2026-04-16,2026-05-07,2026-05-08,31776340279767
+1,2026-03-24,1,3,25,2000-04-11,2026-03-24,2026-03-25,2026-04-03,2026-04-13,31774465391980
+1,2026-05-05,1,3,1,2024-12-13,2026-05-05,2026-05-05,2026-05-10,2026-05-11,31778065923802
+1,2026-07-27,1,2,3,2026-04-14,2026-07-15,2026-07-27,2026-08-07,2026-08-10,31785175448633
+1,2026-01-18,1,3,81,1945-01-17,2026-01-18,2026-01-19,2026-01-24,2026-03-25,31768838162860
+1,2026-05-17,1,3,11,2014-07-17,2026-05-10,2026-05-18,2026-05-25,2026-05-29,31779116223319
+1,2026-08-09,,3,3,2023-06-18,2026-08-07,2026-08-10,,,31786456692694
+1,2026-04-11,,3,15,2010-07-19,2026-04-11,2026-04-11,,,31777560339040
+1,2026-06-24,1,3,90,1935-11-19,2026-06-24,2026-06-24,2026-07-10,2026-07-11,31782483816212
+1,2026-03-29,1,3,12,2013-06-20,2026-03-26,2026-03-30,2026-04-02,2026-04-02,31776451468405
+1,2026-08-13,1,3,3,2023-01-23,2026-08-05,2026-08-13,2026-08-17,2026-09-02,31787326594739
+1,2026-06-03,1,3,35,1991-04-24,2026-06-01,2026-06-03,,2026-06-16,31781011168335
+1,2026-06-09,1,2,1,2026-05-26,2026-06-09,2026-06-10,2026-06-23,2026-07-24,31781096428357
+1,2026-09-19,,3,67,1959-04-27,2026-09-19,2026-09-23,,,31790263201573
+1,2026-05-06,,3,1,2024-09-30,2026-05-05,2026-05-06,,,31778163531908
+1,2026-03-09,,3,85,1940-10-17,2026-03-08,2026-03-10,,,31773322485191
+1,2026-03-12,1,3,1,2024-11-10,2026-03-07,2026-03-12,2026-03-20,2026-03-23,31773400244831
+1,2026-07-12,1,3,8,2018-03-13,2026-07-10,2026-07-12,,2026-08-05,31783901810343
+1,2026-05-23,1,2,3,2026-02-03,2026-05-22,2026-05-25,2026-05-31,2026-06-19,31779735858953
+1,2026-05-06,1,3,2,2023-08-06,2026-05-04,2026-05-06,2026-05-09,2026-05-25,31779714355076
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_04.csv`
+
+- Git: `ignored` · `3.8 KB` · modified `2026-10-17 00:22 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2025-12-24,9,2,4,2025-12-26,2026-04-09,2026-04-16,,2026-05-25,31776358797785
+1,2025-10-03,9,3,4,2021-09-04,2026-03-01,2026-03-04,,2026-06-03,31780500876680
+1,2025-12-16,9,2,6,2025-10-07,2026-04-08,2026-04-13,,2026-06-03,31780511592426
+1,2025-12-17,,3,48,1977-06-27,2026-01-10,2026-01-12,,2026-04-02,31768219829649
+1,2025-10-31,,3,67,1959-02-05,2026-03-16,2026-03-18,,,31773833215234
+1,2025-11-01,,3,1,2025-03-26,2026-06-10,2026-06-11,,,31781197871583
+1,2025-03-22,,3,75,1951-03-07,2026-03-24,2026-03-25,,,31774544007083
+1,2025-01-14,,1,8,2026-01-14,2026-01-22,2026-02-26,,,31772103567239
+1,2025-07-29,,2,6,2025-07-29,2026-01-19,2026-01-21,,,31769002628458
+1,2025-09-11,,2,9,2025-09-11,2026-06-29,2026-06-29,,,31782995283941
+1,2024-11-27,9,3,1,2024-11-11,2026-04-11,2026-04-19,,2026-05-26,31776623873074
+1,2025-06-25,,3,1,2025-04-04,2026-05-30,2026-06-30,,2026-07-02,31782913329965
+1,2025-12-27,,2,7,2025-12-26,2026-08-24,2026-08-31,,,31788210956301
+1,2025-12-27,9,2,3,2025-12-26,2026-03-29,2026-03-30,,2026-05-25,31779819988812
+1,2024-11-27,9,3,1,2024-11-11,2026-03-26,2026-03-31,,2026-05-26,31782076559440
+1,2025-09-06,9,3,1,2024-11-07,2026-02-12,2026-02-18,,2026-05-25,31771513748972
+1,2025-09-18,,3,12,2014-01-27,2026-06-29,2026-07-07,,2026-07-22,31783709799403
+1,2024-03-08,,3,3,2022-11-17,2026-03-01,2026-03-12,,,31773333151517
+1,2025-07-29,,2,9,2025-07-29,2026-04-18,2026-04-19,,,31776624396581
+1,2025-08-08,,2,2,2025-06-13,2025-08-08,2025-08-11,,,31754941893170
+1,2025-11-22,,3,63,1962-10-23,2025-11-20,2025-11-22,,,31774014430620
+1,2025-08-19,,2,11,2024-09-29,2025-08-19,2025-08-22,,,31756133743688
+1,2025-05-29,,2,3,2025-02-02,2025-05-27,2025-05-29,,2025-12-23,31748523312830
+1,2025-07-06,,1,20,2025-06-10,2025-06-30,2025-07-06,,,31751895447999
+1,2025-05-23,9,3,46,1978-12-12,2025-05-20,2025-05-24,,2025-05-25,31748089238562
+1,2025-11-17,,2,8,2025-03-13,2025-11-10,2025-11-19,,,31764859064552
+1,2025-05-31,9,3,1,2023-11-18,2025-05-28,2025-05-31,,2025-06-06,31749241564718
+1,2025-01-24,9,3,54,1970-08-22,2025-01-16,2025-02-06,,2025-02-06,31738852792527
+1,2025-03-29,,3,1,2023-06-23,2025-03-26,2025-03-31,,,31743606324329
+1,2025-09-20,,3,75,1950-03-01,2025-09-20,2025-09-27,,2025-10-01,31759177531632
+1,2025-08-26,,2,3,2025-05-07,2025-08-26,2025-08-27,,2025-09-01,31756299279917
+1,2025-06-25,9,2,7,2024-11-04,2025-06-21,2025-06-25,,2025-07-14,31751467374225
+1,2025-07-29,,3,2,2022-08-25,2025-07-28,2025-07-29,,,31754404310472
+1,2025-06-19,,3,1,2023-11-14,2025-06-19,2025-06-21,,2025-06-21,31750504750935
+1,2025-06-22,,3,3,2021-07-30,2025-06-22,2025-06-23,,,31750795034604
+1,2025-07-03,9,1,1,2025-06-28,2025-06-29,2025-07-03,,2025-07-07,31751634307198
+1,2025-07-23,,3,13,2011-12-11,2025-07-20,2025-08-08,,,31755001458106
+1,2025-05-09,9,2,8,2024-09-07,2025-05-09,2025-06-16,,2025-06-16,31747153986065
+1,2025-02-02,,3,1,2023-07-21,2025-01-31,2025-02-04,,,31738672439669
+1,2025-04-01,,3,8,2016-12-01,2025-03-31,2025-04-01,,,31743515421873
+1,2025-09-15,,2,1,2025-08-19,2025-09-12,2025-09-15,,,31760622681774
+1,2025-06-05,9,3,6,2018-09-30,2025-06-01,2025-06-05,,2025-06-18,31749648905665
+1,2025-10-23,,3,91,1934-06-23,2025-10-20,2025-10-29,,,31761741761758
+1,2025-05-21,9,1,9,2025-05-02,2025-05-11,2025-05-21,,2025-07-10,31747839435766
+1,2025-08-21,9,3,5,2019-08-29,2025-08-20,2025-08-26,,2025-09-08,31756211835539
+1,2025-06-01,9,3,4,2020-10-29,2025-05-31,2025-06-02,,2025-06-04,31748863954462
+1,2025-05-20,,3,75,1949-06-24,2025-05-19,2025-05-20,,,31747801163619
+1,2025-07-23,9,3,71,1953-12-10,2025-07-23,2025-07-26,,2025-07-26,31753555880402
+1,2025-10-22,9,3,1,2024-01-15,2025-10-22,2025-10-27,,,31761594784556
+1,2025-06-19,9,3,1,2023-10-08,2025-06-19,2025-06-21,,2025-06-21,31750509631746
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_05.csv`
+
+- Git: `ignored` · `4.5 KB` · modified `2026-10-17 00:22 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2025-09-24,3,2,8,2025-08-12,2026-04-11,2026-05-04,2026-04-16,2026-05-04,31777916441450
+1,2025-12-03,3,2,1,2025-12-03,2026-01-09,2026-01-30,2026-03-11,2026-03-12,31769792468795
+1,2025-12-18,3,3,77,1948-02-08,2026-01-05,2026-01-06,2026-01-06,2026-01-06,31768488161625
+1,2025-10-31,3,2,4,2025-10-31,2026-02-04,2026-05-01,2026-04-07,2026-05-01,31777634956473
+1,2025-12-30,3,3,50,1975-11-28,2026-01-09,2026-01-13,2026-01-21,2026-02-10,31770727069269
+1,2025-12-11,3,3,62,1963-10-16,2026-01-30,2026-02-03,2026-02-13,2026-02-19,31770125136508
+1,2025-02-10,3,3,52,1973-02-02,2025-02-09,2025-02-11,2025-02-18,2025-03-11,31739820410851
+1,2025-06-27,3,3,81,1944-05-26,2025-06-27,2025-06-30,2025-07-03,2025-07-04,31751305140132
+1,2025-08-16,3,2,4,2025-04-18,2025-08-09,2025-08-16,2025-10-11,2025-10-08,31755535974964
+1,2025-05-15,3,3,57,1967-10-16,2025-05-08,2025-05-15,2025-05-29,2025-06-13,31747425704642
+1,2025-04-10,3,3,68,1956-12-10,2025-04-10,2025-04-24,2025-04-10,2025-05-16,31747403476732
+1,2025-03-05,3,3,71,1953-04-23,2025-02-15,2025-03-28,2025-03-05,2025-04-03,31743690196040
+1,2025-03-08,3,3,9,2015-06-09,2025-03-07,2025-03-08,2025-03-08,2025-03-14,31741617511408
+1,2025-04-17,3,3,54,1971-02-10,2025-04-17,2025-04-17,2025-04-17,2025-04-23,31745430231436
+1,2025-07-24,3,3,98,1927-03-01,2025-07-22,2025-07-24,2025-07-31,2025-08-04,31753706945283
+1,2025-01-13,3,3,94,1930-09-16,2025-01-03,2025-01-09,2025-02-07,2025-02-23,31737987292722
+1,2025-08-06,3,3,37,1987-11-13,2025-08-06,2025-08-08,2025-08-11,2025-08-08,31754680600341
+1,2025-04-06,3,3,15,2009-08-26,2025-04-01,2025-04-10,2025-04-10,2025-04-10,31745600659334
+1,2025-12-23,3,2,1,2025-11-24,2025-12-20,2025-12-23,2025-12-26,2026-01-20,31766517607662
+1,2025-09-02,3,3,36,1988-10-29,2025-09-02,2025-09-12,2025-09-08,2025-09-12,31757676072748
+1,2025-07-01,3,3,66,1958-07-01,2025-06-30,2025-07-01,2025-09-04,2025-09-16,31751474441385
+1,2025-01-09,3,3,92,1932-09-05,2025-01-09,2025-02-03,2025-01-22,2025-02-03,31738613590398
+1,2025-01-20,3,2,5,2024-08-17,2025-01-17,2025-01-20,2025-01-27,2025-02-19,31737476808694
+1,2025-07-05,3,3,54,1971-01-20,2025-07-05,2025-07-05,2025-07-07,2025-07-08,31751959045074
+1,2025-06-05,3,3,86,1938-09-22,2025-06-04,2025-06-05,2025-06-12,2025-07-09,31752086047118
+1,2025-06-20,3,3,57,1967-11-05,2025-06-15,2025-06-27,2025-07-02,2025-07-02,31751046185463
+1,2025-05-20,3,3,73,1952-02-02,2025-05-20,2025-05-21,2025-05-22,2025-05-30,31747854379616
+1,2025-06-25,3,3,77,1948-05-01,2025-06-25,2025-06-25,2025-07-27,2025-08-22,31750947402157
+1,2025-07-18,3,3,78,1946-09-15,2025-07-16,2025-07-18,2025-08-13,2025-08-18,31752816212607
+1,2025-01-30,3,3,63,1961-09-30,2025-01-10,2025-01-30,2025-03-08,2025-03-08,31738669486415
+1,2025-05-07,3,3,56,1968-10-28,2025-05-07,2025-06-02,2025-06-09,2025-06-12,31748863298033
+1,2025-05-30,3,3,73,1951-12-15,2025-05-28,2025-06-02,2025-07-15,2025-07-18,31749474500518
+1,2025-04-22,3,2,8,2024-08-28,2025-04-10,2025-04-23,2025-04-23,2025-04-23,31745420160005
+1,2025-11-16,3,3,1,2024-01-05,2025-11-13,2025-11-17,2025-11-25,2025-12-11,31764096943902
+1,2025-04-11,3,3,65,1960-03-09,2025-04-09,2025-04-14,2025-05-05,2025-05-06,31744640890627
+1,2025-06-24,3,3,76,1948-11-18,2025-06-18,2025-06-26,2025-06-28,2025-07-02,31751387763386
+1,2025-10-20,3,3,60,1964-12-06,2025-10-17,2025-10-20,2025-10-23,2025-10-31,31761157628603
+1,2025-03-14,3,3,43,1981-12-04,2025-03-10,2025-03-17,2025-04-05,2025-06-09,31742315828370
+1,2025-04-08,3,3,38,1986-06-19,2025-04-05,2025-04-08,2025-04-08,2025-04-14,31745865241129
+1,2025-06-11,3,3,68,1957-05-30,2025-06-10,2025-06-11,2025-06-24,2025-07-01,31749629091064
+1,2025-12-03,3,3,54,1971-07-24,2025-11-28,2025-12-03,2025-12-07,2025-12-29,31765400192345
+1,2025-09-19,3,3,85,1939-12-14,2025-09-19,2025-09-19,2025-10-08,2025-10-18,31761743862779
+1,2025-05-07,3,3,1,2023-10-17,2025-05-05,2025-05-07,2025-05-28,2025-05-30,31747073511832
+1,2025-12-23,3,3,57,1968-05-20,2025-12-10,2025-12-24,2026-01-27,2026-01-27,31766574194275
+1,2025-08-21,3,3,73,1952-05-02,2025-08-18,2025-08-21,2025-09-17,2025-10-03,31755809317953
+1,2025-05-13,3,3,93,1932-02-23,2025-05-09,2025-05-15,2025-06-21,2025-06-24,31747331606130
+1,2025-01-22,3,3,87,1937-11-10,2025-01-22,2025-01-22,2025-02-01,2025-02-01,31739541405562
+1,2025-08-15,3,3,51,1974-03-22,2025-08-15,2025-08-16,2025-08-19,2025-08-19,31755863690526
+1,2025-07-04,3,3,32,1992-12-08,2025-06-27,2025-07-07,2025-07-07,2025-08-20,31755726935268
+1,2025-11-22,3,3,65,1960-01-04,2025-11-22,2025-11-25,2026-01-07,2026-01-08,31764096261188
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_01.csv`
+
+- Git: `ignored` · `3.5 KB` · modified `2026-10-17 00:51 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+,,,3,75,1950-11-02,2026-03-22,2026-03-23,,,31775652598724
+2,,1,3,4,2022-03-03,2026-03-23,2026-03-29,2026-03-31,2026-06-11,31781205405890
+,,1,2,8,2025-08-09,2026-04-18,2026-04-28,2026-04-19,2026-06-02,31780414044334
+2,,1,3,50,1975-04-08,2026-03-07,2026-03-07,,2026-03-20,31776951547485
+,,1,3,83,1942-12-21,2026-08-10,2026-08-13,,2026-08-13,31786648314248
+,,9,3,8,2017-09-29,2026-03-25,2026-03-26,,2026-03-30,31776114768213
+2,,,3,7,2019-02-21,2026-04-18,2026-04-22,,2026-04-26,31777485114556
+,,1,2,4,2026-03-22,2026-07-12,2026-07-13,2026-07-21,2026-07-21,31784037049124
+,,1,3,4,2021-09-27,2026-06-01,2026-06-15,,2026-07-23,31781782758352
+,,,3,75,1950-09-14,2026-06-07,2026-06-08,,,31780925222220
+,,,3,65,1960-07-08,2026-04-01,2026-04-14,,,31784125722808
+,,,3,9,2016-07-22,2026-01-13,2026-01-18,,,31768751302378
+2,,,2,7,2025-06-18,2026-01-04,2026-01-07,,,31767972796009
+,,,3,5,2020-10-10,2026-08-18,2026-08-20,,,31787317509231
+,,1,3,1,2025-01-15,2026-05-06,2026-05-06,,2026-05-08,31780258970676
+9,,1,3,4,2021-09-06,2026-05-03,2026-05-03,2026-05-05,2026-07-03,31783105365899
+2,,2,3,1,2025-03-11,2026-05-28,2026-06-09,2026-06-09,2026-06-16,31782311120470
+,,1,2,6,2025-11-02,2026-05-20,2026-05-21,2026-06-08,2026-06-23,31782218952764
+,,,2,7,2026-01-06,2026-08-02,2026-08-07,,,31786119085137
+,,,3,73,1952-08-22,2026-04-04,2026-04-13,,,31776078195609
+,,1,3,57,1968-08-22,2026-04-29,2026-04-30,,2026-05-12,31778069604877
+,,1,3,1,2025-04-14,2026-04-24,2026-04-27,,2026-05-05,31777322020581
+9,,1,3,40,1985-05-02,2026-01-30,2026-02-03,,2026-08-03,31772451218119
+2,,1,2,2,2026-04-13,2026-06-19,2026-06-22,2026-06-26,2026-06-26,31782249136338
+2,,1,3,6,2020-03-01,2026-05-03,2026-05-07,,2026-05-13,31778676513948
+,,,3,9,2017-02-18,2026-06-23,2026-06-24,,,31782997221458
+,,,2,2,2026-05-23,2026-07-06,2026-07-06,,,31783376982074
+,,,3,80,1945-10-02,2026-02-28,2026-03-06,,2026-03-18,31772828882255
+,,1,2,8,2025-11-28,2026-07-21,2026-07-24,,2026-07-24,31785406932822
+,,1,2,6,2026-02-17,2026-08-07,2026-08-11,2026-08-12,2026-08-31,31787766202549
+2,,2,3,12,2014-02-11,2026-03-19,2026-03-27,2026-03-27,2026-03-27,31774964608477
+,,1,3,1,2024-10-01,2026-02-09,2026-02-09,,2026-02-13,31779580487653
+2,,2,3,88,1937-10-25,2026-01-27,2026-01-31,2026-01-31,2026-02-12,31774289284081
+2,,,3,2,2023-10-15,2026-04-22,2026-04-24,,2026-04-28,31777486180757
+,,,3,66,1960-04-14,2026-08-08,2026-08-12,,,31786571794321
+,,,3,1,2024-10-13,2026-06-11,2026-06-17,,,31781707959452
+,,1,3,57,1969-05-11,2026-08-14,2026-08-17,2026-08-19,2026-08-19,31786973020085
+9,,,3,46,1979-11-27,2026-09-01,2026-09-02,,,31788371070901
+,,1,3,1,2024-12-23,2026-04-11,2026-04-16,,2026-06-08,31776357800729
+,,,3,1,2025-01-04,2026-04-05,2026-04-16,,,31776343591581
+2,,1,3,41,1984-05-03,2026-02-22,2026-03-02,2026-02-24,2026-03-02,31772423427061
+,,1,2,11,2025-08-30,2026-07-23,2026-07-24,,2026-08-03,31784914226565
+,,1,2,4,2025-09-06,2026-01-12,2026-01-12,2026-01-26,2026-02-06,31769008935928
+,,,3,35,1991-08-07,2026-08-15,2026-08-18,,,31787060140830
+,,,3,2,2024-05-29,2026-08-21,2026-08-28,,,31789074988249
+2,,1,3,90,1935-08-24,2026-01-07,2026-01-09,2026-01-09,2026-01-14,31768403627553
+,,1,3,67,1959-01-29,2026-06-15,2026-06-16,2026-06-19,2026-06-25,31781696854761
+2,,1,3,42,1983-12-15,2026-01-14,2026-02-08,,2026-02-08,31770572532065
+2,,2,3,64,1961-07-01,2026-02-21,2026-02-21,2026-02-21,2026-02-21,31773350909558
+,,,3,58,1968-06-08,2026-07-16,2026-07-21,,2026-08-10,31784646474693
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_02.csv`
+
+- Git: `ignored` · `3.6 KB` · modified `2026-10-17 00:51 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,,1,2,8,2025-08-10,2026-04-01,2026-04-15,,2026-04-21,31777549715837
+1,,1,3,77,1949-05-26,2026-07-12,2026-07-12,2026-07-15,2026-07-17,31788874096772
+1,,1,3,7,2018-08-31,2026-01-10,2026-01-12,2026-01-28,2026-02-09,31770647469632
+1,,,3,3,2023-04-20,2026-09-04,2026-09-09,,,31788975169679
+1,,1,2,3,2025-11-10,2026-02-06,2026-02-07,2026-02-20,2026-06-10,31773940312126
+1,,1,3,1,2024-09-24,2026-07-04,2026-08-26,2026-08-11,2026-08-26,31787751835649
+1,,1,3,43,1982-11-27,2026-02-21,2026-02-27,2026-03-02,2026-03-05,31772219564355
+1,,1,2,1,2025-12-04,2026-01-08,2026-01-12,2026-01-21,2026-01-26,31769453667829
+1,,1,2,11,2025-03-16,2026-02-20,2026-02-23,2026-02-24,2026-04-13,31771838270995
+1,,1,3,31,1994-11-08,2026-09-06,2026-09-09,2026-09-16,2026-09-17,31789563351861
+1,,1,3,62,1963-11-04,2026-02-11,2026-02-13,2026-02-20,2026-03-04,31771008239682
+1,,,1,7,2026-05-12,2026-05-19,2026-05-21,,,31779467820819
+1,,,3,3,2022-12-09,2026-09-03,2026-09-05,,,31788620734654
+1,,,3,4,2021-11-21,2026-07-30,2026-07-31,,,31786458971825
+1,,,3,2,2024-03-30,2026-08-01,2026-08-04,,,31785867861406
+1,,1,3,2,2023-09-24,2026-07-10,2026-07-20,2026-07-14,2026-07-22,31784748275602
+1,,1,3,2,2024-05-11,2026-09-03,2026-09-10,2026-09-15,2026-09-18,31789065947469
+1,,,3,2,2024-06-17,2026-09-01,2026-09-02,,,31788382629475
+1,,,3,2,2024-06-05,2026-08-14,2026-08-19,,,31787172228431
+1,,,3,2,2024-06-25,2026-06-26,2026-07-10,,,31783704794838
+1,,,3,1,2024-08-25,2026-06-20,2026-06-22,,,31782152025297
+1,,,3,1,2024-12-14,2026-05-03,2026-05-07,,,31778183597383
+1,,1,3,1,2025-06-09,2026-08-21,2026-08-24,2026-09-03,2026-09-22,31787583741919
+1,,,3,1,2025-07-27,2026-07-28,2026-07-29,,,31785360853298
+1,,,2,10,2025-08-16,2026-06-01,2026-06-04,,,31780575267248
+1,,1,2,8,2025-08-22,2026-04-25,2026-04-29,2026-05-01,2026-05-25,31777465516478
+1,,1,2,7,2025-08-18,2026-03-23,2026-03-28,,2026-04-01,31774888210371
+1,,1,3,73,1952-05-15,2026-04-25,2026-04-27,2026-04-30,2026-05-04,31778092086325
+1,,1,3,2,2023-11-03,2026-07-07,2026-07-09,2026-07-13,2026-07-14,31783942348556
+1,,,3,2,2023-10-10,2026-04-13,2026-04-13,,,31776091074476
+1,,1,3,2,2023-11-06,2026-08-25,2026-08-25,,2026-09-11,31787918509080
+1,,1,3,75,1950-11-05,2026-06-04,2026-06-11,,2026-06-16,31781178224317
+1,,1,3,1,2024-12-27,2026-03-12,2026-03-15,2026-03-16,2026-03-16,31773662225812
+1,,2,3,46,1980-03-30,2026-05-04,2026-05-07,2026-05-14,2026-05-15,31778770573608
+1,,1,3,2,2024-03-22,2026-04-22,2026-04-29,2026-05-02,2026-05-07,31781007905994
+1,,1,3,37,1989-08-03,2026-08-24,2026-08-25,2026-09-04,2026-09-25,31789485848987
+1,,,3,50,1975-05-26,2026-01-17,2026-01-18,,2026-01-22,31769099934860
+1,,1,3,74,1952-02-15,2026-07-20,2026-08-03,2026-08-03,2026-08-18,31786461727931
+1,,1,3,81,1944-05-31,2026-03-27,2026-04-09,2026-04-15,2026-04-20,31775740797449
+1,,1,3,2,2024-01-08,2026-09-01,2026-09-03,2026-09-05,2026-09-08,31789128973635
+1,,1,3,1,2024-10-17,2026-08-18,2026-08-24,,2026-09-10,31789062515336
+1,,1,3,2,2024-01-29,2026-03-17,2026-03-18,2026-03-26,2026-04-03,31775250713894
+1,,1,3,27,1998-11-17,2026-05-01,2026-05-09,,2026-05-18,31778336961281
+1,,1,3,57,1968-08-22,2026-01-19,2026-02-04,,2026-02-04,31770645711921
+1,,,3,2,2024-05-21,2026-08-04,2026-08-06,,2026-08-07,31786039467922
+1,,1,3,78,1947-11-07,2026-06-19,2026-06-26,,2026-07-08,31782494985225
+1,,1,3,1,2024-02-22,2026-01-06,2026-01-08,2026-01-13,2026-01-14,31768314692248
+1,,1,2,8,2025-12-25,2026-08-30,2026-09-02,2026-09-09,2026-09-11,31788527556568
+1,,1,3,1,2024-07-23,2026-01-30,2026-02-05,2026-02-13,2026-02-24,31770378778543
+1,,,2,7,2026-01-11,2026-09-07,2026-09-11,,,31789140997184
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_03.csv`
+
+- Git: `ignored` · `4.1 KB` · modified `2026-10-17 00:51 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2026-06-11,1,2,1,2026-05-02,2026-06-02,2026-06-11,2026-06-19,2026-06-19,31781201987679
+1,2026-06-15,,3,37,1989-04-04,2026-06-15,2026-06-17,,,31782407823707
+1,2026-03-10,1,3,4,2021-10-06,2026-03-09,2026-03-14,,,31773493207022
+1,2026-03-18,1,1,11,2026-03-07,2026-03-18,2026-03-23,2026-04-14,2026-04-15,31774542694487
+1,2026-08-18,,3,75,1950-09-09,2026-08-08,2026-08-18,,,31787085791388
+1,2026-03-10,1,3,78,1947-11-10,2026-03-10,2026-03-10,2026-03-16,2026-03-16,31773441569320
+1,2026-05-27,,3,1,2025-03-11,2026-05-19,2026-05-26,,,31780065930274
+1,2026-05-08,,2,0,2025-05-13,2026-05-05,2026-05-08,,,31779901434401
+1,2026-06-15,,3,66,1960-06-13,2026-06-14,2026-06-16,,,31781629359036
+1,2026-05-23,,3,15,2011-04-14,2026-05-23,2026-05-24,,,31780947295202
+1,2026-07-07,1,3,4,2021-07-14,2026-07-03,2026-07-09,2026-07-11,2026-07-17,31783622594901
+1,2026-04-04,,3,32,1993-09-15,2026-04-04,2026-04-04,,,31779149516127
+1,2026-05-13,1,2,6,2025-11-17,2026-05-12,2026-05-13,2026-05-15,2026-05-21,31779376399165
+1,2026-05-15,,3,74,1952-04-18,2026-05-15,2026-05-16,,,31779137099882
+1,2026-03-19,1,3,11,2014-09-18,2026-03-19,2026-03-20,2026-03-28,2026-04-06,31775493343412
+1,2026-05-19,,3,75,1950-12-19,2026-05-16,2026-05-22,,,31779804314537
+1,2026-09-08,,2,5,2026-03-21,2026-09-08,2026-09-09,,,31788967146868
+1,2026-06-02,1,2,1,2026-04-22,2026-05-27,2026-06-03,2026-06-16,2026-06-19,31780508092246
+1,2026-04-14,1,2,5,2025-11-23,2026-04-14,2026-05-04,2026-04-14,2026-05-04,31777902324367
+1,2026-04-22,1,3,31,1995-01-25,2026-04-19,2026-04-23,2026-05-04,2026-05-11,31777581635868
+1,2026-03-28,,3,1,2024-10-25,2026-03-08,2026-03-28,,,31774869565386
+1,2026-04-11,1,3,5,2020-06-26,2026-04-05,2026-04-11,2026-04-13,2026-04-17,31776433120192
+1,2026-05-26,1,3,12,2013-08-27,2026-05-26,2026-05-28,2026-05-29,2026-06-03,31780063755400
+1,2026-03-26,,3,78,1947-12-30,2026-03-26,2026-03-31,,,31775052422525
+1,2026-06-02,1,2,4,2026-02-04,2026-06-02,2026-06-03,2026-06-09,2026-07-29,31785339117793
+1,2026-08-25,2,3,65,1961-06-06,2026-08-25,2026-08-25,2026-08-27,2026-09-01,31790273405307
+1,2026-05-18,1,3,58,1967-11-07,2026-05-16,2026-05-18,2026-05-25,2026-05-25,31779716421577
+1,2026-06-20,1,3,25,2001-02-10,2026-06-18,2026-06-20,2026-07-01,2026-07-07,31783419856968
+1,2026-05-26,1,3,2,2023-10-10,2026-05-21,2026-05-26,2026-05-30,2026-05-30,31781122407541
+1,2026-05-09,1,3,64,1962-02-11,2026-05-08,2026-05-12,2026-05-20,2026-05-20,31778874675119
+1,2026-04-13,1,3,80,1946-03-11,2026-04-01,2026-04-16,2026-05-07,2026-05-08,31776340279767
+1,2026-03-24,1,3,25,2000-04-11,2026-03-24,2026-03-25,2026-04-03,2026-04-13,31774465391980
+1,2026-05-05,1,3,1,2024-12-13,2026-05-05,2026-05-05,2026-05-10,2026-05-11,31778065923802
+1,2026-07-27,1,2,3,2026-04-14,2026-07-15,2026-07-27,2026-08-07,2026-08-10,31785175448633
+1,2026-01-18,1,3,81,1945-01-17,2026-01-18,2026-01-19,2026-01-24,2026-03-25,31768838162860
+1,2026-05-17,1,3,11,2014-07-17,2026-05-10,2026-05-18,2026-05-25,2026-05-29,31779116223319
+1,2026-08-09,,3,3,2023-06-18,2026-08-07,2026-08-10,,,31786456692694
+1,2026-04-11,,3,15,2010-07-19,2026-04-11,2026-04-11,,,31777560339040
+1,2026-06-24,1,3,90,1935-11-19,2026-06-24,2026-06-24,2026-07-10,2026-07-11,31782483816212
+1,2026-03-29,1,3,12,2013-06-20,2026-03-26,2026-03-30,2026-04-02,2026-04-02,31776451468405
+1,2026-08-13,1,3,3,2023-01-23,2026-08-05,2026-08-13,2026-08-17,2026-09-02,31787326594739
+1,2026-06-03,1,3,35,1991-04-24,2026-06-01,2026-06-03,,2026-06-16,31781011168335
+1,2026-06-09,1,2,1,2026-05-26,2026-06-09,2026-06-10,2026-06-23,2026-07-24,31781096428357
+1,2026-09-19,,3,67,1959-04-27,2026-09-19,2026-09-23,,,31790263201573
+1,2026-05-06,,3,1,2024-09-30,2026-05-05,2026-05-06,,,31778163531908
+1,2026-03-09,,3,85,1940-10-17,2026-03-08,2026-03-10,,,31773322485191
+1,2026-03-12,1,3,1,2024-11-10,2026-03-07,2026-03-12,2026-03-20,2026-03-23,31773400244831
+1,2026-07-12,1,3,8,2018-03-13,2026-07-10,2026-07-12,,2026-08-05,31783901810343
+1,2026-05-23,1,2,3,2026-02-03,2026-05-22,2026-05-25,2026-05-31,2026-06-19,31779735858953
+1,2026-05-06,1,3,2,2023-08-06,2026-05-04,2026-05-06,2026-05-09,2026-05-25,31779714355076
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_04.csv`
+
+- Git: `ignored` · `3.8 KB` · modified `2026-10-17 00:51 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2025-12-24,9,2,4,2025-12-26,2026-04-09,2026-04-16,,2026-05-25,31776358797785
+1,2025-10-03,9,3,4,2021-09-04,2026-03-01,2026-03-04,,2026-06-03,31780500876680
+1,2025-12-16,9,2,6,2025-10-07,2026-04-08,2026-04-13,,2026-06-03,31780511592426
+1,2025-12-17,,3,48,1977-06-27,2026-01-10,2026-01-12,,2026-04-02,31768219829649
+1,2025-10-31,,3,67,1959-02-05,2026-03-16,2026-03-18,,,31773833215234
+1,2025-11-01,,3,1,2025-03-26,2026-06-10,2026-06-11,,,31781197871583
+1,2025-03-22,,3,75,1951-03-07,2026-03-24,2026-03-25,,,31774544007083
+1,2025-01-14,,1,8,2026-01-14,2026-01-22,2026-02-26,,,31772103567239
+1,2025-07-29,,2,6,2025-07-29,2026-01-19,2026-01-21,,,31769002628458
+1,2025-09-11,,2,9,2025-09-11,2026-06-29,2026-06-29,,,31782995283941
+1,2024-11-27,9,3,1,2024-11-11,2026-04-11,2026-04-19,,2026-05-26,31776623873074
+1,2025-06-25,,3,1,2025-04-04,2026-05-30,2026-06-30,,2026-07-02,31782913329965
+1,2025-12-27,,2,7,2025-12-26,2026-08-24,2026-08-31,,,31788210956301
+1,2025-12-27,9,2,3,2025-12-26,2026-03-29,2026-03-30,,2026-05-25,31779819988812
+1,2024-11-27,9,3,1,2024-11-11,2026-03-26,2026-03-31,,2026-05-26,31782076559440
+1,2025-09-06,9,3,1,2024-11-07,2026-02-12,2026-02-18,,2026-05-25,31771513748972
+1,2025-09-18,,3,12,2014-01-27,2026-06-29,2026-07-07,,2026-07-22,31783709799403
+1,2024-03-08,,3,3,2022-11-17,2026-03-01,2026-03-12,,,31773333151517
+1,2025-07-29,,2,9,2025-07-29,2026-04-18,2026-04-19,,,31776624396581
+1,2025-08-08,,2,2,2025-06-13,2025-08-08,2025-08-11,,,31754941893170
+1,2025-11-22,,3,63,1962-10-23,2025-11-20,2025-11-22,,,31774014430620
+1,2025-08-19,,2,11,2024-09-29,2025-08-19,2025-08-22,,,31756133743688
+1,2025-05-29,,2,3,2025-02-02,2025-05-27,2025-05-29,,2025-12-23,31748523312830
+1,2025-07-06,,1,20,2025-06-10,2025-06-30,2025-07-06,,,31751895447999
+1,2025-05-23,9,3,46,1978-12-12,2025-05-20,2025-05-24,,2025-05-25,31748089238562
+1,2025-11-17,,2,8,2025-03-13,2025-11-10,2025-11-19,,,31764859064552
+1,2025-05-31,9,3,1,2023-11-18,2025-05-28,2025-05-31,,2025-06-06,31749241564718
+1,2025-01-24,9,3,54,1970-08-22,2025-01-16,2025-02-06,,2025-02-06,31738852792527
+1,2025-03-29,,3,1,2023-06-23,2025-03-26,2025-03-31,,,31743606324329
+1,2025-09-20,,3,75,1950-03-01,2025-09-20,2025-09-27,,2025-10-01,31759177531632
+1,2025-08-26,,2,3,2025-05-07,2025-08-26,2025-08-27,,2025-09-01,31756299279917
+1,2025-06-25,9,2,7,2024-11-04,2025-06-21,2025-06-25,,2025-07-14,31751467374225
+1,2025-07-29,,3,2,2022-08-25,2025-07-28,2025-07-29,,,31754404310472
+1,2025-06-19,,3,1,2023-11-14,2025-06-19,2025-06-21,,2025-06-21,31750504750935
+1,2025-06-22,,3,3,2021-07-30,2025-06-22,2025-06-23,,,31750795034604
+1,2025-07-03,9,1,1,2025-06-28,2025-06-29,2025-07-03,,2025-07-07,31751634307198
+1,2025-07-23,,3,13,2011-12-11,2025-07-20,2025-08-08,,,31755001458106
+1,2025-05-09,9,2,8,2024-09-07,2025-05-09,2025-06-16,,2025-06-16,31747153986065
+1,2025-02-02,,3,1,2023-07-21,2025-01-31,2025-02-04,,,31738672439669
+1,2025-04-01,,3,8,2016-12-01,2025-03-31,2025-04-01,,,31743515421873
+1,2025-09-15,,2,1,2025-08-19,2025-09-12,2025-09-15,,,31760622681774
+1,2025-06-05,9,3,6,2018-09-30,2025-06-01,2025-06-05,,2025-06-18,31749648905665
+1,2025-10-23,,3,91,1934-06-23,2025-10-20,2025-10-29,,,31761741761758
+1,2025-05-21,9,1,9,2025-05-02,2025-05-11,2025-05-21,,2025-07-10,31747839435766
+1,2025-08-21,9,3,5,2019-08-29,2025-08-20,2025-08-26,,2025-09-08,31756211835539
+1,2025-06-01,9,3,4,2020-10-29,2025-05-31,2025-06-02,,2025-06-04,31748863954462
+1,2025-05-20,,3,75,1949-06-24,2025-05-19,2025-05-20,,,31747801163619
+1,2025-07-23,9,3,71,1953-12-10,2025-07-23,2025-07-26,,2025-07-26,31753555880402
+1,2025-10-22,9,3,1,2024-01-15,2025-10-22,2025-10-27,,,31761594784556
+1,2025-06-19,9,3,1,2023-10-08,2025-06-19,2025-06-21,,2025-06-21,31750509631746
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_sem_2020_2021_05.csv`
+
+- Git: `ignored` · `4.5 KB` · modified `2026-10-17 00:51 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2025-09-24,3,2,8,2025-08-12,2026-04-11,2026-05-04,2026-04-16,2026-05-04,31777916441450
+1,2025-12-03,3,2,1,2025-12-03,2026-01-09,2026-01-30,2026-03-11,2026-03-12,31769792468795
+1,2025-12-18,3,3,77,1948-02-08,2026-01-05,2026-01-06,2026-01-06,2026-01-06,31768488161625
+1,2025-10-31,3,2,4,2025-10-31,2026-02-04,2026-05-01,2026-04-07,2026-05-01,31777634956473
+1,2025-12-30,3,3,50,1975-11-28,2026-01-09,2026-01-13,2026-01-21,2026-02-10,31770727069269
+1,2025-12-11,3,3,62,1963-10-16,2026-01-30,2026-02-03,2026-02-13,2026-02-19,31770125136508
+1,2025-02-10,3,3,52,1973-02-02,2025-02-09,2025-02-11,2025-02-18,2025-03-11,31739820410851
+1,2025-06-27,3,3,81,1944-05-26,2025-06-27,2025-06-30,2025-07-03,2025-07-04,31751305140132
+1,2025-08-16,3,2,4,2025-04-18,2025-08-09,2025-08-16,2025-10-11,2025-10-08,31755535974964
+1,2025-05-15,3,3,57,1967-10-16,2025-05-08,2025-05-15,2025-05-29,2025-06-13,31747425704642
+1,2025-04-10,3,3,68,1956-12-10,2025-04-10,2025-04-24,2025-04-10,2025-05-16,31747403476732
+1,2025-03-05,3,3,71,1953-04-23,2025-02-15,2025-03-28,2025-03-05,2025-04-03,31743690196040
+1,2025-03-08,3,3,9,2015-06-09,2025-03-07,2025-03-08,2025-03-08,2025-03-14,31741617511408
+1,2025-04-17,3,3,54,1971-02-10,2025-04-17,2025-04-17,2025-04-17,2025-04-23,31745430231436
+1,2025-07-24,3,3,98,1927-03-01,2025-07-22,2025-07-24,2025-07-31,2025-08-04,31753706945283
+1,2025-01-13,3,3,94,1930-09-16,2025-01-03,2025-01-09,2025-02-07,2025-02-23,31737987292722
+1,2025-08-06,3,3,37,1987-11-13,2025-08-06,2025-08-08,2025-08-11,2025-08-08,31754680600341
+1,2025-04-06,3,3,15,2009-08-26,2025-04-01,2025-04-10,2025-04-10,2025-04-10,31745600659334
+1,2025-12-23,3,2,1,2025-11-24,2025-12-20,2025-12-23,2025-12-26,2026-01-20,31766517607662
+1,2025-09-02,3,3,36,1988-10-29,2025-09-02,2025-09-12,2025-09-08,2025-09-12,31757676072748
+1,2025-07-01,3,3,66,1958-07-01,2025-06-30,2025-07-01,2025-09-04,2025-09-16,31751474441385
+1,2025-01-09,3,3,92,1932-09-05,2025-01-09,2025-02-03,2025-01-22,2025-02-03,31738613590398
+1,2025-01-20,3,2,5,2024-08-17,2025-01-17,2025-01-20,2025-01-27,2025-02-19,31737476808694
+1,2025-07-05,3,3,54,1971-01-20,2025-07-05,2025-07-05,2025-07-07,2025-07-08,31751959045074
+1,2025-06-05,3,3,86,1938-09-22,2025-06-04,2025-06-05,2025-06-12,2025-07-09,31752086047118
+1,2025-06-20,3,3,57,1967-11-05,2025-06-15,2025-06-27,2025-07-02,2025-07-02,31751046185463
+1,2025-05-20,3,3,73,1952-02-02,2025-05-20,2025-05-21,2025-05-22,2025-05-30,31747854379616
+1,2025-06-25,3,3,77,1948-05-01,2025-06-25,2025-06-25,2025-07-27,2025-08-22,31750947402157
+1,2025-07-18,3,3,78,1946-09-15,2025-07-16,2025-07-18,2025-08-13,2025-08-18,31752816212607
+1,2025-01-30,3,3,63,1961-09-30,2025-01-10,2025-01-30,2025-03-08,2025-03-08,31738669486415
+1,2025-05-07,3,3,56,1968-10-28,2025-05-07,2025-06-02,2025-06-09,2025-06-12,31748863298033
+1,2025-05-30,3,3,73,1951-12-15,2025-05-28,2025-06-02,2025-07-15,2025-07-18,31749474500518
+1,2025-04-22,3,2,8,2024-08-28,2025-04-10,2025-04-23,2025-04-23,2025-04-23,31745420160005
+1,2025-11-16,3,3,1,2024-01-05,2025-11-13,2025-11-17,2025-11-25,2025-12-11,31764096943902
+1,2025-04-11,3,3,65,1960-03-09,2025-04-09,2025-04-14,2025-05-05,2025-05-06,31744640890627
+1,2025-06-24,3,3,76,1948-11-18,2025-06-18,2025-06-26,2025-06-28,2025-07-02,31751387763386
+1,2025-10-20,3,3,60,1964-12-06,2025-10-17,2025-10-20,2025-10-23,2025-10-31,31761157628603
+1,2025-03-14,3,3,43,1981-12-04,2025-03-10,2025-03-17,2025-04-05,2025-06-09,31742315828370
+1,2025-04-08,3,3,38,1986-06-19,2025-04-05,2025-04-08,2025-04-08,2025-04-14,31745865241129
+1,2025-06-11,3,3,68,1957-05-30,2025-06-10,2025-06-11,2025-06-24,2025-07-01,31749629091064
+1,2025-12-03,3,3,54,1971-07-24,2025-11-28,2025-12-03,2025-12-07,2025-12-29,31765400192345
+1,2025-09-19,3,3,85,1939-12-14,2025-09-19,2025-09-19,2025-10-08,2025-10-18,31761743862779
+1,2025-05-07,3,3,1,2023-10-17,2025-05-05,2025-05-07,2025-05-28,2025-05-30,31747073511832
+1,2025-12-23,3,3,57,1968-05-20,2025-12-10,2025-12-24,2026-01-27,2026-01-27,31766574194275
+1,2025-08-21,3,3,73,1952-05-02,2025-08-18,2025-08-21,2025-09-17,2025-10-03,31755809317953
+1,2025-05-13,3,3,93,1932-02-23,2025-05-09,2025-05-15,2025-06-21,2025-06-24,31747331606130
+1,2025-01-22,3,3,87,1937-11-10,2025-01-22,2025-01-22,2025-02-01,2025-02-01,31739541405562
+1,2025-08-15,3,3,51,1974-03-22,2025-08-15,2025-08-16,2025-08-19,2025-08-19,31755863690526
+1,2025-07-04,3,3,32,1992-12-08,2025-06-27,2025-07-07,2025-07-07,2025-08-20,31755726935268
+1,2025-11-22,3,3,65,1960-01-04,2025-11-22,2025-11-25,2026-01-07,2026-01-08,31764096261188
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_01.csv`
+
+- Git: `ignored` · `3.5 KB` · modified `2026-10-17 00:50 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+,,,3,75,1950-11-02,2026-03-22,2026-03-23,,,31775652598724
+2,,1,3,4,2022-03-03,2026-03-23,2026-03-29,2026-03-31,2026-06-11,31781205405890
+,,1,2,8,2025-08-09,2026-04-18,2026-04-28,2026-04-19,2026-06-02,31780414044334
+2,,1,3,50,1975-04-08,2026-03-07,2026-03-07,,2026-03-20,31776951547485
+,,1,3,83,1942-12-21,2026-08-10,2026-08-13,,2026-08-13,31786648314248
+,,9,3,8,2017-09-29,2026-03-25,2026-03-26,,2026-03-30,31776114768213
+2,,,3,7,2019-02-21,2026-04-18,2026-04-22,,2026-04-26,31777485114556
+,,1,2,4,2026-03-22,2026-07-12,2026-07-13,2026-07-21,2026-07-21,31784037049124
+,,1,3,4,2021-09-27,2026-06-01,2026-06-15,,2026-07-23,31781782758352
+,,,3,75,1950-09-14,2026-06-07,2026-06-08,,,31780925222220
+,,,3,65,1960-07-08,2026-04-01,2026-04-14,,,31784125722808
+,,,3,9,2016-07-22,2026-01-13,2026-01-18,,,31768751302378
+2,,,2,7,2025-06-18,2026-01-04,2026-01-07,,,31767972796009
+,,,3,5,2020-10-10,2026-08-18,2026-08-20,,,31787317509231
+,,1,3,1,2025-01-15,2026-05-06,2026-05-06,,2026-05-08,31780258970676
+9,,1,3,4,2021-09-06,2026-05-03,2026-05-03,2026-05-05,2026-07-03,31783105365899
+2,,2,3,1,2025-03-11,2026-05-28,2026-06-09,2026-06-09,2026-06-16,31782311120470
+,,1,2,6,2025-11-02,2026-05-20,2026-05-21,2026-06-08,2026-06-23,31782218952764
+,,,2,7,2026-01-06,2026-08-02,2026-08-07,,,31786119085137
+,,,3,73,1952-08-22,2026-04-04,2026-04-13,,,31776078195609
+,,1,3,57,1968-08-22,2026-04-29,2026-04-30,,2026-05-12,31778069604877
+,,1,3,1,2025-04-14,2026-04-24,2026-04-27,,2026-05-05,31777322020581
+9,,1,3,40,1985-05-02,2026-01-30,2026-02-03,,2026-08-03,31772451218119
+2,,1,2,2,2026-04-13,2026-06-19,2026-06-22,2026-06-26,2026-06-26,31782249136338
+2,,1,3,6,2020-03-01,2026-05-03,2026-05-07,,2026-05-13,31778676513948
+,,,3,9,2017-02-18,2026-06-23,2026-06-24,,,31782997221458
+,,,2,2,2026-05-23,2026-07-06,2026-07-06,,,31783376982074
+,,,3,80,1945-10-02,2026-02-28,2026-03-06,,2026-03-18,31772828882255
+,,1,2,8,2025-11-28,2026-07-21,2026-07-24,,2026-07-24,31785406932822
+,,1,2,6,2026-02-17,2026-08-07,2026-08-11,2026-08-12,2026-08-31,31787766202549
+2,,2,3,12,2014-02-11,2026-03-19,2026-03-27,2026-03-27,2026-03-27,31774964608477
+,,1,3,1,2024-10-01,2026-02-09,2026-02-09,,2026-02-13,31779580487653
+2,,2,3,88,1937-10-25,2026-01-27,2026-01-31,2026-01-31,2026-02-12,31774289284081
+2,,,3,2,2023-10-15,2026-04-22,2026-04-24,,2026-04-28,31777486180757
+,,,3,66,1960-04-14,2026-08-08,2026-08-12,,,31786571794321
+,,,3,1,2024-10-13,2026-06-11,2026-06-17,,,31781707959452
+,,1,3,57,1969-05-11,2026-08-14,2026-08-17,2026-08-19,2026-08-19,31786973020085
+9,,,3,46,1979-11-27,2026-09-01,2026-09-02,,,31788371070901
+,,1,3,1,2024-12-23,2026-04-11,2026-04-16,,2026-06-08,31776357800729
+,,,3,1,2025-01-04,2026-04-05,2026-04-16,,,31776343591581
+2,,1,3,41,1984-05-03,2026-02-22,2026-03-02,2026-02-24,2026-03-02,31772423427061
+,,1,2,11,2025-08-30,2026-07-23,2026-07-24,,2026-08-03,31784914226565
+,,1,2,4,2025-09-06,2026-01-12,2026-01-12,2026-01-26,2026-02-06,31769008935928
+,,,3,35,1991-08-07,2026-08-15,2026-08-18,,,31787060140830
+,,,3,2,2024-05-29,2026-08-21,2026-08-28,,,31789074988249
+2,,1,3,90,1935-08-24,2026-01-07,2026-01-09,2026-01-09,2026-01-14,31768403627553
+,,1,3,67,1959-01-29,2026-06-15,2026-06-16,2026-06-19,2026-06-25,31781696854761
+2,,1,3,42,1983-12-15,2026-01-14,2026-02-08,,2026-02-08,31770572532065
+2,,2,3,64,1961-07-01,2026-02-21,2026-02-21,2026-02-21,2026-02-21,31773350909558
+,,,3,58,1968-06-08,2026-07-16,2026-07-21,,2026-08-10,31784646474693
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_02.csv`
+
+- Git: `ignored` · `3.6 KB` · modified `2026-10-17 00:50 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,,1,2,8,2025-08-10,2026-04-01,2026-04-15,,2026-04-21,31777549715837
+1,,1,3,77,1949-05-26,2026-07-12,2026-07-12,2026-07-15,2026-07-17,31788874096772
+1,,1,3,7,2018-08-31,2026-01-10,2026-01-12,2026-01-28,2026-02-09,31770647469632
+1,,,3,3,2023-04-20,2026-09-04,2026-09-09,,,31788975169679
+1,,1,2,3,2025-11-10,2026-02-06,2026-02-07,2026-02-20,2026-06-10,31773940312126
+1,,1,3,1,2024-09-24,2026-07-04,2026-08-26,2026-08-11,2026-08-26,31787751835649
+1,,1,3,43,1982-11-27,2026-02-21,2026-02-27,2026-03-02,2026-03-05,31772219564355
+1,,1,2,1,2025-12-04,2026-01-08,2026-01-12,2026-01-21,2026-01-26,31769453667829
+1,,1,2,11,2025-03-16,2026-02-20,2026-02-23,2026-02-24,2026-04-13,31771838270995
+1,,1,3,31,1994-11-08,2026-09-06,2026-09-09,2026-09-16,2026-09-17,31789563351861
+1,,1,3,62,1963-11-04,2026-02-11,2026-02-13,2026-02-20,2026-03-04,31771008239682
+1,,,1,7,2026-05-12,2026-05-19,2026-05-21,,,31779467820819
+1,,,3,3,2022-12-09,2026-09-03,2026-09-05,,,31788620734654
+1,,,3,4,2021-11-21,2026-07-30,2026-07-31,,,31786458971825
+1,,,3,2,2024-03-30,2026-08-01,2026-08-04,,,31785867861406
+1,,1,3,2,2023-09-24,2026-07-10,2026-07-20,2026-07-14,2026-07-22,31784748275602
+1,,1,3,2,2024-05-11,2026-09-03,2026-09-10,2026-09-15,2026-09-18,31789065947469
+1,,,3,2,2024-06-17,2026-09-01,2026-09-02,,,31788382629475
+1,,,3,2,2024-06-05,2026-08-14,2026-08-19,,,31787172228431
+1,,,3,2,2024-06-25,2026-06-26,2026-07-10,,,31783704794838
+1,,,3,1,2024-08-25,2026-06-20,2026-06-22,,,31782152025297
+1,,,3,1,2024-12-14,2026-05-03,2026-05-07,,,31778183597383
+1,,1,3,1,2025-06-09,2026-08-21,2026-08-24,2026-09-03,2026-09-22,31787583741919
+1,,,3,1,2025-07-27,2026-07-28,2026-07-29,,,31785360853298
+1,,,2,10,2025-08-16,2026-06-01,2026-06-04,,,31780575267248
+1,,1,2,8,2025-08-22,2026-04-25,2026-04-29,2026-05-01,2026-05-25,31777465516478
+1,,1,2,7,2025-08-18,2026-03-23,2026-03-28,,2026-04-01,31774888210371
+1,,1,3,73,1952-05-15,2026-04-25,2026-04-27,2026-04-30,2026-05-04,31778092086325
+1,,1,3,2,2023-11-03,2026-07-07,2026-07-09,2026-07-13,2026-07-14,31783942348556
+1,,,3,2,2023-10-10,2026-04-13,2026-04-13,,,31776091074476
+1,,1,3,2,2023-11-06,2026-08-25,2026-08-25,,2026-09-11,31787918509080
+1,,1,3,75,1950-11-05,2026-06-04,2026-06-11,,2026-06-16,31781178224317
+1,,1,3,1,2024-12-27,2026-03-12,2026-03-15,2026-03-16,2026-03-16,31773662225812
+1,,2,3,46,1980-03-30,2026-05-04,2026-05-07,2026-05-14,2026-05-15,31778770573608
+1,,1,3,2,2024-03-22,2026-04-22,2026-04-29,2026-05-02,2026-05-07,31781007905994
+1,,1,3,37,1989-08-03,2026-08-24,2026-08-25,2026-09-04,2026-09-25,31789485848987
+1,,,3,50,1975-05-26,2026-01-17,2026-01-18,,2026-01-22,31769099934860
+1,,1,3,74,1952-02-15,2026-07-20,2026-08-03,2026-08-03,2026-08-18,31786461727931
+1,,1,3,81,1944-05-31,2026-03-27,2026-04-09,2026-04-15,2026-04-20,31775740797449
+1,,1,3,2,2024-01-08,2026-09-01,2026-09-03,2026-09-05,2026-09-08,31789128973635
+1,,1,3,1,2024-10-17,2026-08-18,2026-08-24,,2026-09-10,31789062515336
+1,,1,3,2,2024-01-29,2026-03-17,2026-03-18,2026-03-26,2026-04-03,31775250713894
+1,,1,3,27,1998-11-17,2026-05-01,2026-05-09,,2026-05-18,31778336961281
+1,,1,3,57,1968-08-22,2026-01-19,2026-02-04,,2026-02-04,31770645711921
+1,,,3,2,2024-05-21,2026-08-04,2026-08-06,,2026-08-07,31786039467922
+1,,1,3,78,1947-11-07,2026-06-19,2026-06-26,,2026-07-08,31782494985225
+1,,1,3,1,2024-02-22,2026-01-06,2026-01-08,2026-01-13,2026-01-14,31768314692248
+1,,1,2,8,2025-12-25,2026-08-30,2026-09-02,2026-09-09,2026-09-11,31788527556568
+1,,1,3,1,2024-07-23,2026-01-30,2026-02-05,2026-02-13,2026-02-24,31770378778543
+1,,,2,7,2026-01-11,2026-09-07,2026-09-11,,,31789140997184
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_03.csv`
+
+- Git: `ignored` · `4.1 KB` · modified `2026-10-17 00:50 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2026-06-11,1,2,1,2026-05-02,2026-06-02,2026-06-11,2026-06-19,2026-06-19,31781201987679
+1,2026-06-15,,3,37,1989-04-04,2026-06-15,2026-06-17,,,31782407823707
+1,2026-03-10,1,3,4,2021-10-06,2026-03-09,2026-03-14,,,31773493207022
+1,2026-03-18,1,1,11,2026-03-07,2026-03-18,2026-03-23,2026-04-14,2026-04-15,31774542694487
+1,2026-08-18,,3,75,1950-09-09,2026-08-08,2026-08-18,,,31787085791388
+1,2026-03-10,1,3,78,1947-11-10,2026-03-10,2026-03-10,2026-03-16,2026-03-16,31773441569320
+1,2026-05-27,,3,1,2025-03-11,2026-05-19,2026-05-26,,,31780065930274
+1,2026-05-08,,2,0,2025-05-13,2026-05-05,2026-05-08,,,31779901434401
+1,2026-06-15,,3,66,1960-06-13,2026-06-14,2026-06-16,,,31781629359036
+1,2026-05-23,,3,15,2011-04-14,2026-05-23,2026-05-24,,,31780947295202
+1,2026-07-07,1,3,4,2021-07-14,2026-07-03,2026-07-09,2026-07-11,2026-07-17,31783622594901
+1,2026-04-04,,3,32,1993-09-15,2026-04-04,2026-04-04,,,31779149516127
+1,2026-05-13,1,2,6,2025-11-17,2026-05-12,2026-05-13,2026-05-15,2026-05-21,31779376399165
+1,2026-05-15,,3,74,1952-04-18,2026-05-15,2026-05-16,,,31779137099882
+1,2026-03-19,1,3,11,2014-09-18,2026-03-19,2026-03-20,2026-03-28,2026-04-06,31775493343412
+1,2026-05-19,,3,75,1950-12-19,2026-05-16,2026-05-22,,,31779804314537
+1,2026-09-08,,2,5,2026-03-21,2026-09-08,2026-09-09,,,31788967146868
+1,2026-06-02,1,2,1,2026-04-22,2026-05-27,2026-06-03,2026-06-16,2026-06-19,31780508092246
+1,2026-04-14,1,2,5,2025-11-23,2026-04-14,2026-05-04,2026-04-14,2026-05-04,31777902324367
+1,2026-04-22,1,3,31,1995-01-25,2026-04-19,2026-04-23,2026-05-04,2026-05-11,31777581635868
+1,2026-03-28,,3,1,2024-10-25,2026-03-08,2026-03-28,,,31774869565386
+1,2026-04-11,1,3,5,2020-06-26,2026-04-05,2026-04-11,2026-04-13,2026-04-17,31776433120192
+1,2026-05-26,1,3,12,2013-08-27,2026-05-26,2026-05-28,2026-05-29,2026-06-03,31780063755400
+1,2026-03-26,,3,78,1947-12-30,2026-03-26,2026-03-31,,,31775052422525
+1,2026-06-02,1,2,4,2026-02-04,2026-06-02,2026-06-03,2026-06-09,2026-07-29,31785339117793
+1,2026-08-25,2,3,65,1961-06-06,2026-08-25,2026-08-25,2026-08-27,2026-09-01,31790273405307
+1,2026-05-18,1,3,58,1967-11-07,2026-05-16,2026-05-18,2026-05-25,2026-05-25,31779716421577
+1,2026-06-20,1,3,25,2001-02-10,2026-06-18,2026-06-20,2026-07-01,2026-07-07,31783419856968
+1,2026-05-26,1,3,2,2023-10-10,2026-05-21,2026-05-26,2026-05-30,2026-05-30,31781122407541
+1,2026-05-09,1,3,64,1962-02-11,2026-05-08,2026-05-12,2026-05-20,2026-05-20,31778874675119
+1,2026-04-13,1,3,80,1946-03-11,2026-04-01,2026-04-16,2026-05-07,2026-05-08,31776340279767
+1,2026-03-24,1,3,25,2000-04-11,2026-03-24,2026-03-25,2026-04-03,2026-04-13,31774465391980
+1,2026-05-05,1,3,1,2024-12-13,2026-05-05,2026-05-05,2026-05-10,2026-05-11,31778065923802
+1,2026-07-27,1,2,3,2026-04-14,2026-07-15,2026-07-27,2026-08-07,2026-08-10,31785175448633
+1,2026-01-18,1,3,81,1945-01-17,2026-01-18,2026-01-19,2026-01-24,2026-03-25,31768838162860
+1,2026-05-17,1,3,11,2014-07-17,2026-05-10,2026-05-18,2026-05-25,2026-05-29,31779116223319
+1,2026-08-09,,3,3,2023-06-18,2026-08-07,2026-08-10,,,31786456692694
+1,2026-04-11,,3,15,2010-07-19,2026-04-11,2026-04-11,,,31777560339040
+1,2026-06-24,1,3,90,1935-11-19,2026-06-24,2026-06-24,2026-07-10,2026-07-11,31782483816212
+1,2026-03-29,1,3,12,2013-06-20,2026-03-26,2026-03-30,2026-04-02,2026-04-02,31776451468405
+1,2026-08-13,1,3,3,2023-01-23,2026-08-05,2026-08-13,2026-08-17,2026-09-02,31787326594739
+1,2026-06-03,1,3,35,1991-04-24,2026-06-01,2026-06-03,,2026-06-16,31781011168335
+1,2026-06-09,1,2,1,2026-05-26,2026-06-09,2026-06-10,2026-06-23,2026-07-24,31781096428357
+1,2026-09-19,,3,67,1959-04-27,2026-09-19,2026-09-23,,,31790263201573
+1,2026-05-06,,3,1,2024-09-30,2026-05-05,2026-05-06,,,31778163531908
+1,2026-03-09,,3,85,1940-10-17,2026-03-08,2026-03-10,,,31773322485191
+1,2026-03-12,1,3,1,2024-11-10,2026-03-07,2026-03-12,2026-03-20,2026-03-23,31773400244831
+1,2026-07-12,1,3,8,2018-03-13,2026-07-10,2026-07-12,,2026-08-05,31783901810343
+1,2026-05-23,1,2,3,2026-02-03,2026-05-22,2026-05-25,2026-05-31,2026-06-19,31779735858953
+1,2026-05-06,1,3,2,2023-08-06,2026-05-04,2026-05-06,2026-05-09,2026-05-25,31779714355076
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_04.csv`
+
+- Git: `ignored` · `3.8 KB` · modified `2026-10-17 00:50 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2020-06-21,,2,7,2026-01-27,2026-08-08,2026-08-09,,,31787231962439
+1,2025-12-24,9,2,4,2025-12-26,2026-04-09,2026-04-16,,2026-05-25,31776358797785
+1,2025-10-03,9,3,4,2021-09-04,2026-03-01,2026-03-04,,2026-06-03,31780500876680
+1,2025-12-16,9,2,6,2025-10-07,2026-04-08,2026-04-13,,2026-06-03,31780511592426
+1,2025-12-17,,3,48,1977-06-27,2026-01-10,2026-01-12,,2026-04-02,31768219829649
+1,2025-10-31,,3,67,1959-02-05,2026-03-16,2026-03-18,,,31773833215234
+1,2025-11-01,,3,1,2025-03-26,2026-06-10,2026-06-11,,,31781197871583
+1,2025-03-22,,3,75,1951-03-07,2026-03-24,2026-03-25,,,31774544007083
+1,2025-01-14,,1,8,2026-01-14,2026-01-22,2026-02-26,,,31772103567239
+1,2025-07-29,,2,6,2025-07-29,2026-01-19,2026-01-21,,,31769002628458
+1,2025-09-11,,2,9,2025-09-11,2026-06-29,2026-06-29,,,31782995283941
+1,2024-11-27,9,3,1,2024-11-11,2026-04-11,2026-04-19,,2026-05-26,31776623873074
+1,2025-06-25,,3,1,2025-04-04,2026-05-30,2026-06-30,,2026-07-02,31782913329965
+1,2025-12-27,,2,7,2025-12-26,2026-08-24,2026-08-31,,,31788210956301
+1,2025-12-27,9,2,3,2025-12-26,2026-03-29,2026-03-30,,2026-05-25,31779819988812
+1,2024-11-27,9,3,1,2024-11-11,2026-03-26,2026-03-31,,2026-05-26,31782076559440
+1,2025-09-06,9,3,1,2024-11-07,2026-02-12,2026-02-18,,2026-05-25,31771513748972
+1,2025-09-18,,3,12,2014-01-27,2026-06-29,2026-07-07,,2026-07-22,31783709799403
+1,2024-03-08,,3,3,2022-11-17,2026-03-01,2026-03-12,,,31773333151517
+1,2025-07-29,,2,9,2025-07-29,2026-04-18,2026-04-19,,,31776624396581
+1,2025-08-08,,2,2,2025-06-13,2025-08-08,2025-08-11,,,31754941893170
+1,2025-11-22,,3,63,1962-10-23,2025-11-20,2025-11-22,,,31774014430620
+1,2025-08-19,,2,11,2024-09-29,2025-08-19,2025-08-22,,,31756133743688
+1,2025-05-29,,2,3,2025-02-02,2025-05-27,2025-05-29,,2025-12-23,31748523312830
+1,2025-07-06,,1,20,2025-06-10,2025-06-30,2025-07-06,,,31751895447999
+1,2025-05-23,9,3,46,1978-12-12,2025-05-20,2025-05-24,,2025-05-25,31748089238562
+1,2025-11-17,,2,8,2025-03-13,2025-11-10,2025-11-19,,,31764859064552
+1,2025-05-31,9,3,1,2023-11-18,2025-05-28,2025-05-31,,2025-06-06,31749241564718
+1,2025-01-24,9,3,54,1970-08-22,2025-01-16,2025-02-06,,2025-02-06,31738852792527
+1,2025-03-29,,3,1,2023-06-23,2025-03-26,2025-03-31,,,31743606324329
+1,2025-09-20,,3,75,1950-03-01,2025-09-20,2025-09-27,,2025-10-01,31759177531632
+1,2025-08-26,,2,3,2025-05-07,2025-08-26,2025-08-27,,2025-09-01,31756299279917
+1,2025-06-25,9,2,7,2024-11-04,2025-06-21,2025-06-25,,2025-07-14,31751467374225
+1,2025-07-29,,3,2,2022-08-25,2025-07-28,2025-07-29,,,31754404310472
+1,2025-06-19,,3,1,2023-11-14,2025-06-19,2025-06-21,,2025-06-21,31750504750935
+1,2025-06-22,,3,3,2021-07-30,2025-06-22,2025-06-23,,,31750795034604
+1,2025-07-03,9,1,1,2025-06-28,2025-06-29,2025-07-03,,2025-07-07,31751634307198
+1,2025-07-23,,3,13,2011-12-11,2025-07-20,2025-08-08,,,31755001458106
+1,2025-05-09,9,2,8,2024-09-07,2025-05-09,2025-06-16,,2025-06-16,31747153986065
+1,2025-02-02,,3,1,2023-07-21,2025-01-31,2025-02-04,,,31738672439669
+1,2025-04-01,,3,8,2016-12-01,2025-03-31,2025-04-01,,,31743515421873
+1,2025-09-15,,2,1,2025-08-19,2025-09-12,2025-09-15,,,31760622681774
+1,2025-06-05,9,3,6,2018-09-30,2025-06-01,2025-06-05,,2025-06-18,31749648905665
+1,2025-10-23,,3,91,1934-06-23,2025-10-20,2025-10-29,,,31761741761758
+1,2025-05-21,9,1,9,2025-05-02,2025-05-11,2025-05-21,,2025-07-10,31747839435766
+1,2025-08-21,9,3,5,2019-08-29,2025-08-20,2025-08-26,,2025-09-08,31756211835539
+1,2025-06-01,9,3,4,2020-10-29,2025-05-31,2025-06-02,,2025-06-04,31748863954462
+1,2025-05-20,,3,75,1949-06-24,2025-05-19,2025-05-20,,,31747801163619
+1,2025-07-23,9,3,71,1953-12-10,2025-07-23,2025-07-26,,2025-07-26,31753555880402
+1,2025-10-22,9,3,1,2024-01-15,2025-10-22,2025-10-27,,,31761594784556
+```
+
+### `outputs/tables/pessoa_a/a1_amostra_exclusoes_todos_2019_2025_05.csv`
+
+- Git: `ignored` · `4.5 KB` · modified `2026-10-17 00:50 UTC` · 50 rows
+
+```csv
+HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
+1,2025-09-24,3,2,8,2025-08-12,2026-04-11,2026-05-04,2026-04-16,2026-05-04,31777916441450
+1,2025-12-03,3,2,1,2025-12-03,2026-01-09,2026-01-30,2026-03-11,2026-03-12,31769792468795
+1,2025-12-18,3,3,77,1948-02-08,2026-01-05,2026-01-06,2026-01-06,2026-01-06,31768488161625
+1,2025-10-31,3,2,4,2025-10-31,2026-02-04,2026-05-01,2026-04-07,2026-05-01,31777634956473
+1,2025-12-30,3,3,50,1975-11-28,2026-01-09,2026-01-13,2026-01-21,2026-02-10,31770727069269
+1,2025-12-11,3,3,62,1963-10-16,2026-01-30,2026-02-03,2026-02-13,2026-02-19,31770125136508
+1,2025-02-10,3,3,52,1973-02-02,2025-02-09,2025-02-11,2025-02-18,2025-03-11,31739820410851
+1,2025-06-27,3,3,81,1944-05-26,2025-06-27,2025-06-30,2025-07-03,2025-07-04,31751305140132
+1,2025-08-16,3,2,4,2025-04-18,2025-08-09,2025-08-16,2025-10-11,2025-10-08,31755535974964
+1,2025-05-15,3,3,57,1967-10-16,2025-05-08,2025-05-15,2025-05-29,2025-06-13,31747425704642
+1,2025-04-10,3,3,68,1956-12-10,2025-04-10,2025-04-24,2025-04-10,2025-05-16,31747403476732
+1,2025-03-05,3,3,71,1953-04-23,2025-02-15,2025-03-28,2025-03-05,2025-04-03,31743690196040
+1,2025-03-08,3,3,9,2015-06-09,2025-03-07,2025-03-08,2025-03-08,2025-03-14,31741617511408
+1,2025-04-17,3,3,54,1971-02-10,2025-04-17,2025-04-17,2025-04-17,2025-04-23,31745430231436
+1,2025-07-24,3,3,98,1927-03-01,2025-07-22,2025-07-24,2025-07-31,2025-08-04,31753706945283
+1,2025-01-13,3,3,94,1930-09-16,2025-01-03,2025-01-09,2025-02-07,2025-02-23,31737987292722
+1,2025-08-06,3,3,37,1987-11-13,2025-08-06,2025-08-08,2025-08-11,2025-08-08,31754680600341
+1,2025-04-06,3,3,15,2009-08-26,2025-04-01,2025-04-10,2025-04-10,2025-04-10,31745600659334
+1,2025-12-23,3,2,1,2025-11-24,2025-12-20,2025-12-23,2025-12-26,2026-01-20,31766517607662
+1,2025-09-02,3,3,36,1988-10-29,2025-09-02,2025-09-12,2025-09-08,2025-09-12,31757676072748
+1,2025-07-01,3,3,66,1958-07-01,2025-06-30,2025-07-01,2025-09-04,2025-09-16,31751474441385
+1,2025-01-09,3,3,92,1932-09-05,2025-01-09,2025-02-03,2025-01-22,2025-02-03,31738613590398
+1,2025-01-20,3,2,5,2024-08-17,2025-01-17,2025-01-20,2025-01-27,2025-02-19,31737476808694
+1,2025-07-05,3,3,54,1971-01-20,2025-07-05,2025-07-05,2025-07-07,2025-07-08,31751959045074
+1,2025-06-05,3,3,86,1938-09-22,2025-06-04,2025-06-05,2025-06-12,2025-07-09,31752086047118
+1,2025-06-20,3,3,57,1967-11-05,2025-06-15,2025-06-27,2025-07-02,2025-07-02,31751046185463
+1,2025-05-20,3,3,73,1952-02-02,2025-05-20,2025-05-21,2025-05-22,2025-05-30,31747854379616
+1,2025-06-25,3,3,77,1948-05-01,2025-06-25,2025-06-25,2025-07-27,2025-08-22,31750947402157
+1,2025-07-18,3,3,78,1946-09-15,2025-07-16,2025-07-18,2025-08-13,2025-08-18,31752816212607
+1,2025-01-30,3,3,63,1961-09-30,2025-01-10,2025-01-30,2025-03-08,2025-03-08,31738669486415
+1,2025-05-07,3,3,56,1968-10-28,2025-05-07,2025-06-02,2025-06-09,2025-06-12,31748863298033
+1,2025-05-30,3,3,73,1951-12-15,2025-05-28,2025-06-02,2025-07-15,2025-07-18,31749474500518
+1,2025-04-22,3,2,8,2024-08-28,2025-04-10,2025-04-23,2025-04-23,2025-04-23,31745420160005
+1,2025-11-16,3,3,1,2024-01-05,2025-11-13,2025-11-17,2025-11-25,2025-12-11,31764096943902
+1,2025-04-11,3,3,65,1960-03-09,2025-04-09,2025-04-14,2025-05-05,2025-05-06,31744640890627
+1,2025-06-24,3,3,76,1948-11-18,2025-06-18,2025-06-26,2025-06-28,2025-07-02,31751387763386
+1,2025-10-20,3,3,60,1964-12-06,2025-10-17,2025-10-20,2025-10-23,2025-10-31,31761157628603
+1,2025-03-14,3,3,43,1981-12-04,2025-03-10,2025-03-17,2025-04-05,2025-06-09,31742315828370
+1,2025-04-08,3,3,38,1986-06-19,2025-04-05,2025-04-08,2025-04-08,2025-04-14,31745865241129
+1,2025-06-11,3,3,68,1957-05-30,2025-06-10,2025-06-11,2025-06-24,2025-07-01,31749629091064
+1,2025-12-03,3,3,54,1971-07-24,2025-11-28,2025-12-03,2025-12-07,2025-12-29,31765400192345
+1,2025-09-19,3,3,85,1939-12-14,2025-09-19,2025-09-19,2025-10-08,2025-10-18,31761743862779
+1,2025-05-07,3,3,1,2023-10-17,2025-05-05,2025-05-07,2025-05-28,2025-05-30,31747073511832
+1,2025-12-23,3,3,57,1968-05-20,2025-12-10,2025-12-24,2026-01-27,2026-01-27,31766574194275
+1,2025-08-21,3,3,73,1952-05-02,2025-08-18,2025-08-21,2025-09-17,2025-10-03,31755809317953
+1,2025-05-13,3,3,93,1932-02-23,2025-05-09,2025-05-15,2025-06-21,2025-06-24,31747331606130
+1,2025-01-22,3,3,87,1937-11-10,2025-01-22,2025-01-22,2025-02-01,2025-02-01,31739541405562
+1,2025-08-15,3,3,51,1974-03-22,2025-08-15,2025-08-16,2025-08-19,2025-08-19,31755863690526
+1,2025-07-04,3,3,32,1992-12-08,2025-06-27,2025-07-07,2025-07-07,2025-08-20,31755726935268
+1,2025-11-22,3,3,65,1960-01-04,2025-11-22,2025-11-25,2026-01-07,2026-01-08,31764096261188
+```
+
+### `outputs/tables/pessoa_a/a1_tabela_codigos.csv`
+
+- Git: `ignored` · `3.8 KB` · modified `2026-10-17 00:22 UTC` · 32 rows
+
+```csv
+codigo,campo,esperado,1917,1918,1941,2009,2011,2012,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2031,2032,2033,2034,2050,2052,2055,2056,2092,2098,2099,sem_data
+1,HOSPITAL,True,4,1,4,1,1,2,1,2,11,47543,1076364,1657389,536133,265669,253367,315615,210437,7,4,9,2,1,3,1,1,1,1,1,1,2,1,72078
+2,HOSPITAL,True,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,102956
+9,HOSPITAL,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10066
+<vazio>,HOSPITAL,False,0,0,0,0,0,0,0,0,0,2,11,4,2,2,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,119207
+1,EVOLUCAO,True,1,0,1,1,1,2,0,2,10,38294,705704,1062927,389548,217669,210358,268686,165785,6,4,3,2,1,0,0,0,1,0,0,1,1,1,141523
+2,EVOLUCAO,True,0,0,0,0,0,0,1,0,0,5221,274119,417293,86433,23037,19120,21227,9743,0,0,0,0,0,0,0,0,0,0,0,0,0,0,79814
+3,EVOLUCAO,True,0,0,0,0,0,0,0,0,0,8,15414,21305,13727,7724,7220,8253,5014,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7784
+9,EVOLUCAO,True,0,0,1,0,0,0,0,0,0,1340,20385,38603,12552,5528,4212,5561,4454,1,0,3,0,0,0,1,0,0,0,0,0,1,0,10928
+<vazio>,EVOLUCAO,False,3,1,2,0,0,0,0,0,1,2682,60753,117266,33875,11713,12457,11889,25442,0,0,3,0,0,3,0,1,0,1,1,0,0,0,64258
+1,TP_IDADE,True,0,0,0,0,0,0,0,0,0,1754,3866,5920,4181,3258,3638,4771,2724,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1695
+2,TP_IDADE,True,1,0,1,0,1,0,0,0,2,12580,18283,43407,54697,60504,60545,81218,57591,1,0,1,0,0,0,0,0,0,1,0,0,0,0,16103
+3,TP_IDADE,True,3,1,3,1,0,2,1,2,9,33211,1054226,1608067,477257,201909,189184,229627,150123,6,4,8,2,1,3,1,1,1,0,1,1,2,1,286509
+1,UTI,True,0,0,0,0,1,1,0,1,8,17130,332253,508784,147058,73955,73262,85580,53968,0,0,0,0,0,0,0,0,0,0,0,0,0,0,26453
+2,UTI,True,4,1,4,1,0,1,1,0,2,29183,629864,960616,325691,167145,160537,208066,141221,4,4,9,2,1,2,0,1,0,1,1,1,2,1,42265
+9,UTI,True,0,0,0,0,0,0,0,1,0,327,25070,34232,8046,2778,3241,3033,1930,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2650
+<vazio>,UTI,False,0,0,0,0,0,0,0,0,1,905,89188,153762,55340,21793,16327,18937,13319,3,0,0,0,0,1,1,0,1,0,0,0,0,0,232939
+1,FEBRE,True,1,0,4,0,0,1,1,1,7,41899,617699,877980,266070,152246,157260,195656,137085,5,3,7,1,1,0,0,0,0,0,1,1,2,1,145310
+2,FEBRE,True,3,0,0,1,1,1,0,1,4,5269,313591,483203,166184,76126,69569,94455,57941,2,1,2,1,0,2,0,1,1,1,0,0,0,0,66099
+9,FEBRE,True,0,0,0,0,0,0,0,0,0,213,15552,19160,5317,1574,987,981,670,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5986
+<vazio>,FEBRE,False,0,1,0,0,0,0,0,0,0,164,129533,277051,98564,35725,25551,24524,14742,0,0,0,0,0,1,1,0,0,0,0,0,0,0,86912
+1,TOSSE,True,2,1,3,0,0,2,0,1,7,44036,725450,1127588,366618,201006,198279,255199,172114,7,4,8,2,1,1,0,1,0,1,1,1,2,1,179090
+2,TOSSE,True,2,0,1,1,1,0,1,1,4,3131,229341,308468,97958,41498,38961,46422,29378,0,0,1,0,0,1,0,0,1,0,0,0,0,0,45857
+9,TOSSE,True,0,0,0,0,0,0,0,0,0,183,13179,15175,3874,1118,798,653,515,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5360
+<vazio>,TOSSE,False,0,0,0,0,0,0,0,0,0,195,108405,206163,67685,22049,15329,13342,8431,0,0,0,0,0,1,1,0,0,0,0,0,0,0,74000
+1,DISPNEIA,True,3,1,4,0,0,1,1,2,8,39368,745718,1170804,326207,174529,168783,215847,143136,5,3,6,1,0,1,0,1,1,1,1,1,0,1,145095
+2,DISPNEIA,True,0,0,0,1,1,1,0,0,3,7548,213596,280704,120980,56624,56905,75066,51206,2,1,2,1,1,1,0,0,0,0,0,0,1,0,64414
+9,DISPNEIA,True,0,0,0,0,0,0,0,0,0,260,11518,13196,4164,1506,1070,1141,721,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5483
+<vazio>,DISPNEIA,False,1,0,0,0,0,0,0,0,0,369,105543,192690,84784,33012,26609,23562,15375,0,0,1,0,0,1,1,0,0,0,0,0,1,0,89315
+1,SATURACAO,True,1,0,1,0,0,0,1,2,8,32213,605830,1068602,283505,143613,138419,173998,114940,5,3,6,1,0,1,1,1,1,1,1,0,0,0,101837
+2,SATURACAO,True,2,0,3,1,1,2,0,0,3,13811,298619,321592,140591,74378,76794,104460,71428,2,1,3,1,1,1,0,0,0,0,0,1,1,1,80891
+9,SATURACAO,True,0,0,0,0,0,0,0,0,0,713,18502,17516,4769,1715,1411,1626,1235,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9393
+<vazio>,SATURACAO,False,1,1,0,0,0,0,0,0,0,808,153424,249684,107270,45965,36743,35532,22835,0,0,0,0,0,1,0,0,0,0,0,0,1,0,112186
+```
+
+### `outputs/tables/pessoa_a/a1_waterfall.csv`
+
+- Git: `ignored` · `555 B` · modified `2026-10-17 00:22 UTC` · 6 rows
+
+```csv
+ordem,filtro,regra,n_excluido,n_restante,pct_restante
+0,Base completa,—,0,4666910,100.0
+1,Hospitalização confirmada,HOSPITAL = 1,232253,4434657,95.02
+2,Data de internação válida,"DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje",72133,4362524,93.48
+3,Período analítico,"ano(DT_INTERNA) em [2022, 2023, 2024, 2025]",2991740,1370784,29.37
+4,Evolução encerrada,"EVOLUCAO em ['1', '2', '3'] (9/ausente fora)",97786,1272998,27.28
+5,Alvo binário definido,"EVOLUCAO em {cura, óbito}; óbito por outras causas separado",36923,1236075,26.49
+```
+
+### `outputs/tables/pessoa_a/a1_waterfall_sem_2020_2021.csv`
+
+- Git: `ignored` · `562 B` · modified `2026-10-17 00:51 UTC` · 6 rows
+
+```csv
+ordem,filtro,regra,n_excluido,n_restante,pct_restante
+0,Base completa,—,0,4666910,100.0
+1,Hospitalização confirmada,HOSPITAL = 1,232253,4434657,95.02
+2,Data de internação válida,"DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje",72133,4362524,93.48
+3,Período analítico,"ano(DT_INTERNA) em [2019, 2022, 2023, 2024, 2025]",2944197,1418327,30.39
+4,Evolução encerrada,"EVOLUCAO em ['1', '2', '3'] (9/ausente fora)",101808,1316519,28.21
+5,Alvo binário definido,"EVOLUCAO em {cura, óbito}; óbito por outras causas separado",36931,1279588,27.42
+```
+
+### `outputs/tables/pessoa_a/a1_waterfall_todos_2019_2025.csv`
+
+- Git: `ignored` · `573 B` · modified `2026-10-17 00:50 UTC` · 6 rows
+
+```csv
+ordem,filtro,regra,n_excluido,n_restante,pct_restante
+0,Base completa,—,0,4666910,100.0
+1,Hospitalização confirmada,HOSPITAL = 1,232253,4434657,95.02
+2,Data de internação válida,"DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje",72133,4362524,93.48
+3,Período analítico,"ano(DT_INTERNA) em [2019, 2020, 2021, 2022, 2023, 2024, 2025]",210444,4152080,88.97
+4,Evolução encerrada,"EVOLUCAO em ['1', '2', '3'] (9/ausente fora)",338815,3813265,81.71
+5,Alvo binário definido,"EVOLUCAO em {cura, óbito}; óbito por outras causas separado",73650,3739615,80.13
+```
+
+### `outputs/tables/pessoa_a/a2_campos_inexistentes_por_ano.csv`
+
+- Git: `ignored` · `15.3 KB` · modified `2026-10-17 00:25 UTC` · 87 rows (first 60 shown)
+
+```csv
+coluna,1917,1918,1941,2009,2011,2012,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2031,2032,2033,2034,2050,2052,2055,2056,2092,2098,2099
+ANTIVIRAL,0.0,0.0,25.0,0.0,0.0,0.0,0.0,0.0,0.0,1.13,11.58,15.88,17.3,16.77,17.39,12.49,10.8,28.57,0.0,11.11,0.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ASMA,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,61.8,56.81,64.64,63.52,68.3,68.09,66.9,68.52,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+AVE_SUINO,50.0,100.0,25.0,0.0,0.0,0.0,0.0,0.0,27.27,3.36,15.97,16.85,14.98,14.34,14.19,11.6,10.22,28.57,0.0,22.22,0.0,0.0,66.67,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CARDIOPATI,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,61.4,46.36,54.71,55.61,64.95,65.16,65.26,67.42,85.71,75.0,77.78,50.0,100.0,33.33,0.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+CLASSI_FIN,25.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0,9.09,1.94,2.31,3.25,3.48,2.47,2.9,2.0,6.62,0.0,0.0,33.33,0.0,0.0,33.33,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0
+CLASSI_OUT,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.76,99.82,99.84,99.6,99.03,98.9,99.33,99.53,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+CO_REGIONA,25.0,0.0,0.0,0.0,0.0,100.0,0.0,0.0,9.09,10.01,13.69,11.49,10.46,12.93,12.62,13.13,12.63,14.29,0.0,0.0,0.0,0.0,33.33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CO_RG_INTE,25.0,0.0,0.0,0.0,0.0,100.0,0.0,0.0,9.09,13.79,18.31,18.3,14.94,15.88,15.73,17.14,16.27,42.86,25.0,11.11,0.0,0.0,66.67,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CO_RG_RESI,25.0,0.0,0.0,0.0,0.0,100.0,0.0,0.0,9.09,8.8,13.33,11.15,9.92,11.83,11.62,12.05,11.75,14.29,0.0,0.0,0.0,0.0,33.33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CRITERIO,50.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0,9.09,3.84,3.96,5.27,5.33,4.75,5.02,4.08,9.34,28.57,0.0,44.44,0.0,0.0,33.33,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0
+CS_ESCOL_N,25.0,100.0,25.0,0.0,0.0,50.0,0.0,50.0,27.27,7.66,28.58,34.06,36.73,35.11,37.29,35.07,34.84,42.86,50.0,44.44,0.0,0.0,66.67,100.0,0.0,0.0,0.0,0.0,0.0,50.0,100.0
+CS_ETINIA,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.46,99.84,99.91,99.82,99.64,99.55,99.39,99.1,85.71,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+CS_ZONA,0.0,100.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,2.43,9.78,10.36,9.3,7.32,7.96,6.17,5.98,0.0,0.0,22.22,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+DESC_RESP,25.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.87,14.79,18.65,21.22,15.35,11.54,8.07,7.4,0.0,25.0,0.0,0.0,0.0,33.33,100.0,0.0,0.0,0.0,0.0,0.0,50.0,0.0
+DIABETES,100.0,0.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,61.79,49.82,57.95,58.89,66.98,67.08,66.49,68.57,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+DIARREIA,25.0,100.0,25.0,0.0,0.0,0.0,0.0,0.0,0.0,2.83,24.17,30.89,32.64,27.82,23.69,18.42,17.57,0.0,25.0,11.11,0.0,0.0,33.33,100.0,0.0,0.0,0.0,0.0,0.0,50.0,0.0
+DISPNEIA,25.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.78,9.81,11.63,15.81,12.43,10.5,7.47,7.31,0.0,0.0,11.11,0.0,0.0,33.33,100.0,0.0,0.0,0.0,0.0,0.0,50.0,0.0
+DOR_ABD,50.0,100.0,50.0,0.0,0.0,0.0,0.0,0.0,81.82,99.7,54.31,33.21,33.47,28.62,24.57,19.12,18.18,0.0,25.0,22.22,0.0,0.0,33.33,100.0,0.0,100.0,0.0,0.0,0.0,50.0,0.0
+DOSE_1_COV,50.0,0.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.89,97.78,79.56,43.01,50.55,54.42,55.67,63.02,42.86,50.0,88.89,100.0,100.0,100.0,0.0,100.0,100.0,100.0,0.0,0.0,0.0,0.0
+DOSE_2REF,100.0,100.0,75.0,100.0,100.0,100.0,100.0,100.0,100.0,99.99,99.52,99.52,94.99,82.42,87.85,87.12,87.52,85.71,50.0,100.0,100.0,100.0,100.0,0.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DOSE_2_COV,75.0,0.0,75.0,100.0,100.0,100.0,100.0,100.0,100.0,99.92,97.91,86.31,46.74,54.9,58.57,59.72,66.26,71.43,50.0,88.89,100.0,100.0,100.0,0.0,100.0,100.0,100.0,0.0,0.0,0.0,0.0
+DOSE_ADIC,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.97,99.97,99.91,98.21,98.06,98.18,98.54,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DOSE_REF,100.0,0.0,75.0,100.0,100.0,100.0,100.0,100.0,100.0,99.97,98.77,98.02,71.67,69.69,79.42,78.04,78.28,100.0,50.0,88.89,100.0,100.0,100.0,0.0,100.0,100.0,100.0,100.0,0.0,50.0,0.0
+DOS_RE_BI,75.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.99,99.89,99.91,99.84,92.57,90.04,89.17,89.44,85.71,50.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_1_DOSE,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.39,99.99,99.99,99.98,99.88,99.44,98.1,95.55,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_2_DOSE,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.57,99.99,100.0,99.98,99.92,99.55,98.78,97.78,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_ANTIVIR,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,45.45,38.77,84.65,97.97,96.62,94.51,92.23,88.86,87.87,100.0,100.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_COLETA,0.0,0.0,0.0,0.0,0.0,0.0,100.0,0.0,9.09,12.71,5.91,8.19,5.69,5.31,5.17,5.97,5.5,28.57,25.0,11.11,0.0,0.0,33.33,0.0,100.0,0.0,0.0,0.0,100.0,50.0,0.0
+DT_DOSEUNI,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.5,99.99,99.99,99.98,99.88,99.42,98.18,95.96,71.43,100.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_ENCERRA,75.0,100.0,25.0,0.0,0.0,0.0,0.0,0.0,9.09,3.47,5.32,6.52,6.44,4.9,5.36,4.05,12.15,0.0,25.0,44.44,0.0,0.0,100.0,100.0,100.0,0.0,0.0,100.0,100.0,50.0,0.0
+DT_ENTUTI,100.0,100.0,100.0,100.0,0.0,50.0,100.0,50.0,27.27,64.31,69.69,70.12,73.3,72.71,71.62,73.29,74.83,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_EVOLUCA,100.0,100.0,100.0,0.0,0.0,0.0,0.0,50.0,9.09,15.39,11.17,12.71,12.27,10.43,10.92,11.81,20.52,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_PCR,50.0,100.0,25.0,0.0,0.0,0.0,100.0,50.0,36.36,20.05,17.8,31.98,39.23,32.98,29.92,27.66,28.31,28.57,50.0,55.56,0.0,0.0,66.67,0.0,100.0,100.0,100.0,0.0,100.0,50.0,100.0
+DT_RES,100.0,100.0,75.0,100.0,100.0,100.0,0.0,50.0,100.0,100.0,90.35,92.6,97.99,98.34,98.65,98.56,98.31,100.0,100.0,100.0,100.0,100.0,66.67,100.0,100.0,100.0,100.0,100.0,100.0,100.0,0.0
+DT_RES_AN,75.0,100.0,75.0,100.0,100.0,100.0,100.0,50.0,100.0,78.58,92.83,77.81,55.67,55.5,59.91,58.06,57.99,57.14,75.0,88.89,100.0,100.0,100.0,100.0,100.0,0.0,0.0,100.0,100.0,100.0,100.0
+DT_SAIDUTI,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,45.45,79.74,82.66,81.57,84.04,82.76,82.55,83.54,86.34,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_TRT_COV,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.84,99.67,99.67,99.75,99.85,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_UT_DOSE,100.0,100.0,100.0,100.0,100.0,100.0,0.0,100.0,90.91,83.52,90.98,95.61,96.51,96.3,86.58,73.03,78.51,71.43,50.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+DT_VAC_MAE,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,97.71,99.95,99.97,99.89,99.77,99.73,99.7,99.75,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+ESTRANG,50.0,100.0,25.0,100.0,0.0,50.0,100.0,100.0,90.91,99.53,93.86,27.38,8.66,7.7,6.11,4.7,4.13,0.0,0.0,22.22,0.0,0.0,100.0,0.0,100.0,100.0,0.0,0.0,0.0,0.0,0.0
+EVOLUCAO,75.0,100.0,50.0,0.0,0.0,0.0,0.0,0.0,9.09,5.64,5.64,7.08,6.32,4.41,4.92,3.77,12.09,0.0,0.0,33.33,0.0,0.0,100.0,0.0,100.0,0.0,100.0,100.0,0.0,0.0,0.0
+FADIGA,50.0,100.0,50.0,0.0,0.0,0.0,0.0,0.0,81.82,99.47,53.11,28.91,31.01,26.62,22.93,17.59,16.6,14.29,25.0,22.22,0.0,0.0,33.33,100.0,0.0,100.0,0.0,0.0,0.0,50.0,0.0
+FEBRE,0.0,100.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.34,12.03,16.72,18.38,13.45,10.08,7.77,7.01,0.0,0.0,0.0,0.0,0.0,33.33,100.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+GARGANTA,25.0,100.0,25.0,0.0,0.0,0.0,0.0,0.0,0.0,2.35,23.41,29.89,30.66,27.38,24.01,18.41,17.61,0.0,25.0,11.11,50.0,0.0,33.33,100.0,0.0,0.0,0.0,0.0,0.0,50.0,0.0
+HEMATOLOGI,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,62.24,57.57,65.38,64.72,70.05,69.57,68.4,70.08,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+HEPATICA,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,62.37,57.67,65.49,64.9,70.25,69.8,68.58,70.23,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+IMUNODEPRE,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,62.04,57.12,65.04,64.04,69.33,68.97,67.94,69.75,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+MAE_VAC,75.0,100.0,100.0,100.0,0.0,100.0,100.0,100.0,100.0,87.29,99.24,99.03,97.16,93.73,94.39,94.78,95.94,100.0,100.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+MORB_DESC,100.0,0.0,25.0,0.0,100.0,100.0,0.0,100.0,72.73,82.36,72.86,75.7,74.28,80.82,82.67,83.58,85.21,100.0,100.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+M_AMAMENTA,75.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,88.6,99.43,99.23,97.5,94.14,94.69,94.91,96.03,100.0,100.0,88.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+NEUROLOGIC,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,61.84,56.44,64.58,63.07,68.78,68.57,67.72,69.42,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+OBESIDADE,100.0,100.0,50.0,0.0,100.0,50.0,0.0,0.0,90.91,62.43,56.67,62.96,64.42,70.27,69.78,68.62,70.35,85.71,75.0,77.78,50.0,100.0,66.67,100.0,0.0,100.0,100.0,100.0,100.0,100.0,0.0
+OBES_IMC,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,98.5,97.62,98.67,99.57,99.76,99.78,99.75,99.79,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+OUTRO_DES,50.0,100.0,50.0,100.0,100.0,100.0,100.0,100.0,90.91,78.17,68.57,68.8,71.1,71.6,72.94,74.34,73.49,85.71,100.0,100.0,100.0,100.0,33.33,0.0,0.0,100.0,100.0,100.0,100.0,0.0,100.0
+OUTRO_SIN,0.0,100.0,0.0,100.0,100.0,50.0,0.0,0.0,18.18,7.95,24.47,29.5,30.99,28.23,26.36,23.82,22.44,28.57,50.0,55.56,0.0,0.0,33.33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+OUT_ANIM,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.96,99.91,99.91,99.68,99.77,99.77,99.77,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+OUT_ANTIV,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.73,99.3,99.66,99.77,99.7,99.81,99.81,99.86,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+OUT_MORBI,100.0,0.0,25.0,0.0,100.0,50.0,0.0,0.0,63.64,62.04,50.46,57.28,56.58,65.02,66.01,66.16,67.94,100.0,75.0,77.78,50.0,100.0,100.0,100.0,0.0,100.0,100.0,100.0,100.0,100.0,100.0
+OUT_TRAT,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.89,99.76,99.75,99.82,99.89,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+PAC_COCBO,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,99.98,98.21,97.61,98.54,99.26,99.3,99.26,99.14,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0
+... [27 more rows omitted]
+```
+
+### `outputs/tables/pessoa_a/a2_coerencia_datas.csv`
+
+- Git: `ignored` · `1.3 KB` · modified `2026-10-17 00:25 UTC` · 13 rows
+
+```csv
+regra,descricao,n_comparaveis,n_violacoes,pct,acao_sugerida
+DT_NASC <= DT_SIN_PRI,Nascimento posterior ao início dos sintomas,4662951,1,0.0,excluir
+DT_SIN_PRI <= DT_NOTIFIC,Início dos sintomas posterior à notificação,4666910,0,0.0,manter com flag
+DT_SIN_PRI <= DT_INTERNA,Início dos sintomas posterior à internação,4362603,24340,0.558,manter com flag
+DT_INTERNA <= DT_EVOLUCA,Evolução anterior à internação,3822766,0,0.0,excluir
+DT_EVOLUCA <= DT_ENCERRA,Encerramento anterior à evolução,3985787,107196,2.689,manter com flag
+DT_NASC válida,"Data futura, não interpretável ou fora de 1900–2100",4662964,13,0.0,transformar em ausente
+DT_SIN_PRI válida,"Data futura, não interpretável ou fora de 1900–2100",4666910,0,0.0,transformar em ausente
+DT_NOTIFIC válida,"Data futura, não interpretável ou fora de 1900–2100",4666910,0,0.0,transformar em ausente
+DT_INTERNA válida,"Data futura, não interpretável ou fora de 1900–2100",4362665,108,0.002,transformar em ausente
+DT_EVOLUCA válida,"Data futura, não interpretável ou fora de 1900–2100",4014740,0,0.0,transformar em ausente
+DT_ENCERRA válida,"Data futura, não interpretável ou fora de 1900–2100",4338057,0,0.0,transformar em ausente
+sintomas->internação,> 30 dias,4362603,40824,0.936,manter com flag
+idade em anos,< 0 ou > 120,4666910,38,0.001,transformar em ausente
+```
+
+### `outputs/tables/pessoa_a/a2_duplicidades.csv`
+
+- Git: `ignored` · `177 B` · modified `2026-10-17 00:26 UTC` · 3 rows
+
+```csv
+tipo,n_linhas,n_grupos
+linhas exatamente duplicadas,0,0
+NU_NOTIFIC repetido (não implica mesma pessoa),58,29
+"mesma chave ['NU_NOTIFIC', 'DT_NOTIFIC', 'DT_NASC']",50,25
+```
+
+### `outputs/tables/pessoa_a/a2_matriz_elegibilidade.csv`
+
+- Git: `ignored` · `21.0 KB` · modified `2026-10-17 00:27 UTC` · 198 rows (first 60 shown)
+
+```csv
+coluna,classe,justificativa,existe_na_admissao_sugerido,pct_vazio,n_distintos_amostra,quando_observada,quando_chegou_na_base,decisao_final,responsavel,data
+AMOSTRA,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ANO_ARQUIVO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_ADENO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_OUTRO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_PARA1,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_PARA2,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_PARA3,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_SARS2,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+AN_VSR,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ARQUIVO_ORIGEM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+COD_IDADE,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+CO_DETEC,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+CO_PS_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+CS_ETINIA,auditoria,"Permitida, mas quase toda vazia",Verificar,99.76,87.0,,,,,
+DATA_SNAPSHOT,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DS_AN_OUT,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DS_PCR_OUT,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DT_CO_SOR,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DT_NASC,auditoria,Não classificada: consultar dicionário,Verificar,0.08,31268.0,,,,,
+DT_RAIOX,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DT_RT_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DT_TOMO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+DT_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_ADIC,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_COVRF,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_COVRF2,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_COV_1,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_COV_2,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FAB_RE_BI,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FATOR_RISC,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FLUASU_OUT,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FLUBLI_OUT,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+FNT_IN_COV,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+HISTO_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_MN_INTE,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_MUNICIP,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_PAIS,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_REGIONA,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_REGISTRO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_RG_INTE,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+ID_RG_RESI,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOTE_1_COV,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOTE_2_COV,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOTE_ADIC,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOTE_REF,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOTE_REF2,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LOT_RE_BI,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+LO_PS_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+NM_UN_INTE,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+NOSOCOMIAL,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+NU_NOTIFIC,auditoria,Não classificada: consultar dicionário,Verificar,0.0,100000.0,,,,,
+OUT_AMOST,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+OUT_ANIM,auditoria,"Permitida, mas quase toda vazia",Verificar,99.89,35.0,,,,,
+OUT_SOR,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PAIS_VGM,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PCR_ADENO,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PCR_BOCA,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PCR_FLUASU,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PCR_FLUBLI,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+PCR_METAP,auditoria,"Existe no Parquet, mas não foi carregada (fora das listas classificadas)",Verificar,,,,,,,
+... [138 more rows omitted]
+```
+
+### `outputs/tables/pessoa_a/a2_maturidade_evolucao_por_mes.csv`
+
+- Git: `ignored` · `4.2 KB` · modified `2026-10-17 00:26 UTC` · 140 rows (first 60 shown)
+
+```csv
+mes,n,pct_evolucao_fechada,pct_com_dt_encerra,mediana_dias_ate_encerra
+1917-09,2,50.0,50.0,39695.0
+1917-10,2,0.0,0.0,
+1918-01,1,0.0,0.0,
+1941-01,1,0.0,100.0,29397.0
+1941-04,1,0.0,0.0,
+1941-08,1,100.0,100.0,29223.0
+1941-11,1,0.0,100.0,30231.0
+2009-09,1,100.0,100.0,4053.0
+2011-07,1,100.0,100.0,4025.0
+2012-02,1,100.0,100.0,3866.0
+2012-03,1,100.0,100.0,3295.0
+2016-06,1,100.0,100.0,1625.0
+2017-01,1,100.0,100.0,1476.0
+2017-12,1,100.0,100.0,983.0
+2018-09,2,50.0,50.0,1719.0
+2018-12,9,100.0,100.0,28.0
+2019-01,1175,91.4,98.04,29.0
+2019-02,1837,92.49,98.48,22.0
+2019-03,4102,92.37,97.49,19.0
+2019-04,6000,92.67,96.8,21.0
+2019-05,8172,92.03,96.11,18.0
+2019-06,7599,92.08,96.0,19.0
+2019-07,5366,92.3,96.55,17.0
+2019-08,3894,91.29,96.12,17.0
+2019-09,2970,90.51,96.5,15.0
+2019-10,2618,88.58,97.1,18.0
+2019-11,1967,87.65,95.73,20.0
+2019-12,1843,89.09,95.55,21.0
+2020-01,1755,94.42,97.32,22.0
+2020-02,2491,94.94,97.55,22.0
+2020-03,28459,95.43,96.95,24.0
+2020-04,84846,93.83,95.89,23.0
+2020-05,135936,93.12,94.89,22.0
+2020-06,134214,93.16,95.09,18.0
+2020-07,148007,93.21,94.94,16.0
+2020-08,127273,92.45,94.9,15.0
+2020-09,99912,92.07,94.51,14.0
+2020-10,85820,90.81,93.7,15.0
+2020-11,99653,91.15,94.0,16.0
+2020-12,127998,90.97,93.38,18.0
+2021-01,141017,93.08,95.11,17.0
+2021-02,145606,92.86,94.63,16.0
+2021-03,292192,92.1,93.86,17.0
+2021-04,224626,90.33,93.07,16.0
+2021-05,229563,89.4,92.49,16.0
+2021-06,200069,90.03,93.12,14.0
+2021-07,127986,90.08,93.55,13.0
+2021-08,90523,89.76,94.16,14.0
+2021-09,63285,89.42,93.64,14.0
+2021-10,49032,88.55,92.92,15.0
+2021-11,40664,87.81,92.38,14.0
+2021-12,52826,86.0,91.12,17.0
+2022-01,125385,92.51,94.8,17.0
+2022-02,67713,93.27,95.4,14.0
+2022-03,35116,92.75,94.75,13.0
+2022-04,29606,91.59,93.91,16.0
+2022-05,41428,91.9,94.46,14.0
+2022-06,57046,92.16,94.32,14.0
+2022-07,46178,91.05,93.35,13.0
+2022-08,27288,89.23,91.98,12.0
+... [80 more rows omitted]
+```
+
+### `outputs/tables/pessoa_a/a2_vazios_ignorados_por_ano.csv`
+
+- Git: `ignored` · `87.7 KB` · modified `2026-10-17 00:25 UTC` · 3520 rows (first 60 shown)
+
+```csv
+coluna,ano,n,pct_vazio,pct_ignorado
+NU_NOTIFIC,1917,4,0.0,
+NU_NOTIFIC,1918,1,0.0,
+NU_NOTIFIC,1941,4,0.0,
+NU_NOTIFIC,2009,1,0.0,
+NU_NOTIFIC,2011,1,0.0,
+NU_NOTIFIC,2012,2,0.0,
+NU_NOTIFIC,2016,1,0.0,
+NU_NOTIFIC,2017,2,0.0,
+NU_NOTIFIC,2018,11,0.0,
+NU_NOTIFIC,2019,47545,0.0,
+NU_NOTIFIC,2020,1076375,0.0,
+NU_NOTIFIC,2021,1657394,0.0,
+NU_NOTIFIC,2022,536135,0.0,
+NU_NOTIFIC,2023,265671,0.0,
+NU_NOTIFIC,2024,253367,0.0,
+NU_NOTIFIC,2025,315616,0.0,
+NU_NOTIFIC,2026,210438,0.0,
+NU_NOTIFIC,2027,7,0.0,
+NU_NOTIFIC,2028,4,0.0,
+NU_NOTIFIC,2029,9,0.0,
+NU_NOTIFIC,2031,2,0.0,
+NU_NOTIFIC,2032,1,0.0,
+NU_NOTIFIC,2033,3,0.0,
+NU_NOTIFIC,2034,1,0.0,
+NU_NOTIFIC,2050,1,0.0,
+NU_NOTIFIC,2052,1,0.0,
+NU_NOTIFIC,2055,1,0.0,
+NU_NOTIFIC,2056,1,0.0,
+NU_NOTIFIC,2092,1,0.0,
+NU_NOTIFIC,2098,2,0.0,
+NU_NOTIFIC,2099,1,0.0,
+NU_NOTIFIC,sem_data,304307,0.0,
+DT_NOTIFIC,1917,4,0.0,
+DT_NOTIFIC,1918,1,0.0,
+DT_NOTIFIC,1941,4,0.0,
+DT_NOTIFIC,2009,1,0.0,
+DT_NOTIFIC,2011,1,0.0,
+DT_NOTIFIC,2012,2,0.0,
+DT_NOTIFIC,2016,1,0.0,
+DT_NOTIFIC,2017,2,0.0,
+DT_NOTIFIC,2018,11,0.0,
+DT_NOTIFIC,2019,47545,0.0,
+DT_NOTIFIC,2020,1076375,0.0,
+DT_NOTIFIC,2021,1657394,0.0,
+DT_NOTIFIC,2022,536135,0.0,
+DT_NOTIFIC,2023,265671,0.0,
+DT_NOTIFIC,2024,253367,0.0,
+DT_NOTIFIC,2025,315616,0.0,
+DT_NOTIFIC,2026,210438,0.0,
+DT_NOTIFIC,2027,7,0.0,
+DT_NOTIFIC,2028,4,0.0,
+DT_NOTIFIC,2029,9,0.0,
+DT_NOTIFIC,2031,2,0.0,
+DT_NOTIFIC,2032,1,0.0,
+DT_NOTIFIC,2033,3,0.0,
+DT_NOTIFIC,2034,1,0.0,
+DT_NOTIFIC,2050,1,0.0,
+DT_NOTIFIC,2052,1,0.0,
+DT_NOTIFIC,2055,1,0.0,
+DT_NOTIFIC,2056,1,0.0,
+... [3460 more rows omitted]
+```
+
+### `outputs/tables/pessoa_a/a3_benchmark_split_sem_2020_2021.csv`
+
+- Git: `ignored` · `416 B` · modified `2026-10-17 00:52 UTC` · 4 rows
+
+```csv
+cenario,particao,n_treino,n_validacao,prevalencia_validacao,modelo,roc_auc,pr_auc,brier
+sem_2020_2021,aleatoria,139939,30227,0.1194,baseline_prior,0.5,0.1194,0.1051
+sem_2020_2021,aleatoria,139939,30227,0.1194,logistica,0.8371,0.367,0.1739
+sem_2020_2021,temporal_por_ordem,139890,29922,0.0766,baseline_prior,0.5,0.0766,0.0747
+sem_2020_2021,temporal_por_ordem,139890,29922,0.0766,logistica,0.8418,0.2763,0.139
+```
+
+### `outputs/tables/pessoa_a/a3_benchmark_split_todos_2019_2025.csv`
+
+- Git: `ignored` · `425 B` · modified `2026-10-17 00:52 UTC` · 4 rows
+
+```csv
+cenario,particao,n_treino,n_validacao,prevalencia_validacao,modelo,roc_auc,pr_auc,brier
+todos_2019_2025,aleatoria,139616,30329,0.2309,baseline_prior,0.5,0.2309,0.1776
+todos_2019_2025,aleatoria,139616,30329,0.2309,logistica,0.774,0.4517,0.1984
+todos_2019_2025,temporal_por_ordem,139803,30142,0.1377,baseline_prior,0.5,0.1377,0.1383
+todos_2019_2025,temporal_por_ordem,139803,30142,0.1377,logistica,0.8206,0.3642,0.1678
+```
+
+### `outputs/tables/pessoa_a/a3_split_aleatorio_sem_2020_2021.csv`
+
+- Git: `ignored` · `155 B` · modified `2026-10-17 00:51 UTC` · 3 rows
+
+```csv
+split,n,n_obitos,pct_linhas,prevalencia_obito_pct
+treino,895712,108527,70.0,12.12
+validacao,191938,23256,15.0,12.12
+holdout,191938,23255,15.0,12.12
+```
+
+### `outputs/tables/pessoa_a/a3_split_aleatorio_sem_2020_2021_por_ano.csv`
+
+- Git: `ignored` · `166 B` · modified `2026-10-17 00:51 UTC` · 5 rows
+
+```csv
+ano_internacao,treino,validacao,holdout
+2019,30412,6546,6555
+2022,333642,71094,71244
+2023,168213,36176,36315
+2024,160377,34741,34360
+2025,203068,43381,43464
+```
+
+### `outputs/tables/pessoa_a/a3_split_aleatorio_todos_2019_2025.csv`
+
+- Git: `ignored` · `158 B` · modified `2026-10-17 00:51 UTC` · 3 rows
+
+```csv
+split,n,n_obitos,pct_linhas,prevalencia_obito_pct
+treino,2617730,592509,70.0,22.63
+validacao,560942,126966,15.0,22.63
+holdout,560943,126967,15.0,22.63
+```
+
+### `outputs/tables/pessoa_a/a3_split_aleatorio_todos_2019_2025_por_ano.csv`
+
+- Git: `ignored` · `221 B` · modified `2026-10-17 00:51 UTC` · 7 rows
+
+```csv
+ano_internacao,treino,validacao,holdout
+2019,30393,6694,6426
+2020,686366,146395,147051
+2021,1036718,221925,221572
+2022,332754,71549,71677
+2023,168742,36006,35956
+2024,160515,34358,34605
+2025,202242,44015,43656
+```
+
+### `outputs/tables/pessoa_a/a3_split_temporal.csv`
+
+- Git: `ignored` · `197 B` · modified `2026-10-17 00:49 UTC` · 4 rows
+
+```csv
+split,_ano,n,n_obitos,prevalencia_obito
+desenvolvimento,2022,475980,86433,18.16
+desenvolvimento,2023,240704,23037,9.57
+desenvolvimento,2024,229478,19120,8.33
+holdout,2025,289913,21227,7.32
+```
+
+### `outputs/tables/pessoa_a/a3_varredura_vazamento.csv`
+
+- Git: `ignored` · `889 B` · modified `2026-10-17 00:49 UTC` · 36 rows
+
+```csv
+coluna,auc_univariada,forca
+SUPORT_VEN,0.7237,0.4473
+CARDIOPATI,0.6623,0.3246
+UTI,0.6571,0.3142
+OUT_MORBI,0.6455,0.2911
+DIABETES,0.6446,0.2893
+ASMA,0.6277,0.2553
+RENAL,0.6205,0.241
+PNEUMOPATI,0.6203,0.2406
+NEUROLOGIC,0.6198,0.2396
+IMUNODEPRE,0.616,0.232
+HEPATICA,0.6111,0.2221
+OBESIDADE,0.6109,0.2219
+TOSSE,0.6089,0.2179
+SIND_DOWN,0.6089,0.2178
+HEMATOLOGI,0.6088,0.2176
+PUERPERA,0.6082,0.2164
+SATURACAO,0.608,0.2159
+FEBRE,0.5917,0.1834
+TRAT_COV,0.5869,0.1738
+CS_GESTANT,0.5786,0.1572
+SG_UF,0.5769,0.1538
+DISPNEIA,0.5744,0.1489
+FADIGA,0.5503,0.1007
+ANTIVIRAL,0.5474,0.0949
+VOMITO,0.5387,0.0774
+CS_RACA,0.5357,0.0714
+GARGANTA,0.5277,0.0555
+AVE_SUINO,0.5275,0.055
+OUTRO_SIN,0.5263,0.0526
+DIARREIA,0.5227,0.0455
+DOR_ABD,0.5189,0.0377
+PERD_PALA,0.5181,0.0361
+PERD_OLFT,0.5178,0.0355
+TP_ANTIVIR,0.5138,0.0277
+CS_ZONA,0.5096,0.0192
+TIPO_TRAT,0.5004,0.0007
+```
+
+### `outputs/tables/pessoa_a/ata_17_10_fine_tuning.md`
+
+- Git: `ignored` · `526 B` · modified `2026-10-17 02:02 UTC`
+
+```markdown
+# Ata 17/10 — Fine Tuning
+
+**Data:** 2026-10-17
+
+## Decisões
+
+- Busca encerrada ou finalizando; sem novas famílias de modelo
+
+## Candidatos na shortlist
+
+- (preencher) clustering: solução principal + alternativa
+- (preencher) supervisionado: 1–2 modelos
+
+## Descartes e justificativas
+
+- (preencher) candidato — justificativa padronizada
+
+## Riscos
+
+- (preencher)
+
+## Pendências
+
+- Confirmação dos finalistas e congelamento em 18/10
+
+## Alertas das verificações automáticas
+
+- nenhum
+```
+
+### `outputs/tables/pessoa_a/ata_gate_2_11_10.md`
+
+- Git: `ignored` · `2.0 KB` · modified `2026-10-17 00:49 UTC`
+
+```markdown
+# Ata Gate 2 (11/10)
+
+**Data:** 2026-10-11
+
+## Decisões
+
+- (preencher) decisões do Gate 2 — desenho experimental
+
+## Candidatos na shortlist
+
+- (nenhum registrado)
+
+## Descartes e justificativas
+
+- (nenhum registrado)
+
+## Riscos
+
+- (nenhum registrado)
+
+## Pendências
+
+- (preencher)
+
+## Alertas das verificações automáticas
+
+- [ATENÇÃO] A3-cfg / Alvo: evolucao=3 e ausente: o YAML só tem `descartar_ignorado` (evolucao==9). O C2 descarta 3/9/nulos em `filtrar_rotulos_validos`; confirmar em src/models/pipeline.py que `criar_alvo_binario` trata 3 e ausente como inválidos (nunca como cura)
+- [ATENÇÃO] A3-cfg / C2 x split por datas: o C2 enviado cria `TemporalSplit(df, coluna_tempo, frac_treino, frac_validacao)` e não lê `temporal.modo`/`temporal.datas`: para holdout = 2025 o C precisa adaptar o split
+- [ATENÇÃO] A3-cfg / Split temporal: modo='aleatorio_estratificado' (fração). Plano: desenvolvimento [2022, 2023, 2024] / holdout [2025] -> usar modo 'datas' (G2)
+- [FALHA] A3-cfg / Features do YAML x Parquet: não existem no Parquet: dias_sintomas_ate_internacao, sexo_categoria — o C2 não conseguirá carregá-las
+- [ATENÇÃO] A3-cfg / `proibidas` do YAML x Parquet: não existem no Parquet: alvo_obito_srag, evolucao_normalizada, evolucao_covid19, utilizouvni, cluster, cluster_rotulo — test_leakage não protege as colunas reais
+- [ATENÇÃO] A3-cfg / Lista `proibidas` do YAML: 17 do plano não protegidas pelo test_leakage: CLASSI_FIN, CLASSI_OUT, CRITERIO, DT_COLETA, DT_PCR, DT_RES, DT_RES_AN, PCR, PCR_RESUL, POS_PCRFLU, POS_PCROUT, RES_AN
+- [ATENÇÃO] A3-cfg / Features condicionais: confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI
+- [ATENÇÃO] A3-cfg / Gates: 5 pendentes: G1_definicao_alvo_features, G6_finalistas_tuning, G7_calibracao, G8_limiar... (A aprova G1/G2 com as regras A1–A3)
+- [ATENÇÃO] A3 / Variáveis condicionais (supervisionado): confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI
+- [ATENÇÃO] A3 / Auditoria de logs: nenhum log encontrado em logs
+```
+
+### `outputs/tables/pessoa_a/ata_gate_3_14_10.md`
+
+- Git: `ignored` · `2.0 KB` · modified `2026-10-17 00:49 UTC`
+
+```markdown
+# Ata Gate 3 (14/10)
+
+**Data:** 2026-10-14
+
+## Decisões
+
+- (preencher) configurações inviáveis eliminadas
+
+## Candidatos na shortlist
+
+- (nenhum registrado)
+
+## Descartes e justificativas
+
+- (nenhum registrado)
+
+## Riscos
+
+- (nenhum registrado)
+
+## Pendências
+
+- (preencher)
+
+## Alertas das verificações automáticas
+
+- [ATENÇÃO] A3-cfg / Alvo: evolucao=3 e ausente: o YAML só tem `descartar_ignorado` (evolucao==9). O C2 descarta 3/9/nulos em `filtrar_rotulos_validos`; confirmar em src/models/pipeline.py que `criar_alvo_binario` trata 3 e ausente como inválidos (nunca como cura)
+- [ATENÇÃO] A3-cfg / C2 x split por datas: o C2 enviado cria `TemporalSplit(df, coluna_tempo, frac_treino, frac_validacao)` e não lê `temporal.modo`/`temporal.datas`: para holdout = 2025 o C precisa adaptar o split
+- [ATENÇÃO] A3-cfg / Split temporal: modo='aleatorio_estratificado' (fração). Plano: desenvolvimento [2022, 2023, 2024] / holdout [2025] -> usar modo 'datas' (G2)
+- [FALHA] A3-cfg / Features do YAML x Parquet: não existem no Parquet: dias_sintomas_ate_internacao, sexo_categoria — o C2 não conseguirá carregá-las
+- [ATENÇÃO] A3-cfg / `proibidas` do YAML x Parquet: não existem no Parquet: alvo_obito_srag, evolucao_normalizada, evolucao_covid19, utilizouvni, cluster, cluster_rotulo — test_leakage não protege as colunas reais
+- [ATENÇÃO] A3-cfg / Lista `proibidas` do YAML: 17 do plano não protegidas pelo test_leakage: CLASSI_FIN, CLASSI_OUT, CRITERIO, DT_COLETA, DT_PCR, DT_RES, DT_RES_AN, PCR, PCR_RESUL, POS_PCRFLU, POS_PCROUT, RES_AN
+- [ATENÇÃO] A3-cfg / Features condicionais: confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI
+- [ATENÇÃO] A3-cfg / Gates: 5 pendentes: G1_definicao_alvo_features, G6_finalistas_tuning, G7_calibracao, G8_limiar... (A aprova G1/G2 com as regras A1–A3)
+- [ATENÇÃO] A3 / Variáveis condicionais (supervisionado): confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI
+- [ATENÇÃO] A3 / Auditoria de logs: nenhum log encontrado em logs
+```
+
+### `outputs/tables/pessoa_a/comparacao_cenarios.csv`
+
+- Git: `ignored` · `337 B` · modified `2026-10-17 00:52 UTC` · 2 rows
+
+```csv
+cenario,anos,n_linhas,n_obitos,prevalencia_obito_pct,pr_auc_aleatoria,roc_auc_aleatoria,pr_auc_temporal_por_ordem,roc_auc_temporal_por_ordem
+todos_2019_2025,"2019,2020,2021,2022,2023,2024,2025",3739615,846442,22.63,0.4517,0.774,0.3642,0.8206
+sem_2020_2021,"2019,2022,2023,2024,2025",1279588,155038,12.12,0.367,0.8371,0.2763,0.8418
+```
+
+### `outputs/tables/pessoa_a/relatorio_A1.md`
+
+- Git: `ignored` · `1.1 KB` · modified `2026-10-17 00:23 UTC`
+
+```markdown
+# Relatório de verificações — relatorio_A1
+
+| Etapa | Verificação | Status | Detalhe |
+| --- | --- | --- | --- |
+| A1 | Colunas essenciais | OK | 11 colunas presentes |
+| A1 | Códigos inesperados | OK | todos os códigos dentro do esperado |
+| A1 | Waterfall da coorte | OK | 4,666,910 -> 1,236,075 registros (26.5%) |
+| A1 | Alvo: desconhecido ≠ cura | OK | 9/ausente/3 viram NA; só 1->0 e 2->1 |
+| A1 | Features derivadas | OK | criadas no dataset: idade_anos, faixa_etaria |
+| A1 | Dataset analítico | ATENÇÃO | 1,236,075 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA |
+| A1-C2 | Colunas exigidas pelo C2 | FALHA | ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria |
+| A1-C2 | Coluna de tempo | OK | datetime válido, ordenado: 2022-01-01 -> 2025-12-31 |
+| A1-C2 | Alvo | OK | apenas cura/óbito; positivos [2.0] presentes |
+| A1-C2 | check_leakage (C2) | OK | nenhuma feature está em `proibidas` |
+| A1-C2 | Tamanho | OK | 1,236,075 linhas |
+
+**Resumo:** 9 OK · 1 atenção · 1 falha(s).
+```
+
+### `outputs/tables/pessoa_a/relatorio_A2.md`
+
+- Git: `ignored` · `1.4 KB` · modified `2026-10-17 00:27 UTC`
+
+```markdown
+# Relatório de verificações — relatorio_A2
+
+| Etapa | Verificação | Status | Detalhe |
+| --- | --- | --- | --- |
+| A2 | Campo inexistente por ano | ATENÇÃO | 87 campos 100% vazios em algum ano (ex.: ANTIVIRAL, ASMA, AVE_SUINO, CARDIOPATI, CLASSI_FIN) |
+| A2 | Coerência de datas | ATENÇÃO | 2 regra(s) com violações relevantes: DT_NASC <= DT_SIN_PRI (1); DT_EVOLUCA <= DT_ENCERRA (107196) |
+| A2 | Duplicidades | OK | 0 linhas exatas duplicadas; demais tipos em a2_duplicidades.csv |
+| A2 | Maturidade de EVOLUCAO (holdout) | OK | todos os meses do holdout com evolução madura |
+| A2 | Matriz de elegibilidade | ATENÇÃO | {'auditoria': 93, 'incluir com condição': 39, 'incluir': 34, 'excluir': 32} — preencher colunas em branco e fechar 'auditoria' |
+| A1 | Features derivadas | OK | criadas no dataset: idade_anos, faixa_etaria |
+| A1 | Dataset analítico | ATENÇÃO | 1,236,075 linhas v1.0; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA |
+| A1-C2 | Colunas exigidas pelo C2 | FALHA | ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria |
+| A1-C2 | Coluna de tempo | OK | datetime válido, ordenado: 2022-01-01 -> 2025-12-31 |
+| A1-C2 | Alvo | OK | apenas cura/óbito; positivos [2.0] presentes |
+| A1-C2 | check_leakage (C2) | OK | nenhuma feature está em `proibidas` |
+| A1-C2 | Tamanho | OK | 1,236,075 linhas |
+
+**Resumo:** 7 OK · 4 atenção · 1 falha(s).
+```
+
+### `outputs/tables/pessoa_a/relatorio_A3.md`
+
+- Git: `ignored` · `2.4 KB` · modified `2026-10-17 00:49 UTC`
+
+```markdown
+# Relatório de verificações — relatorio_A3
+
+| Etapa | Verificação | Status | Detalhe |
+| --- | --- | --- | --- |
+| A3-cfg | Alvo: positivos | OK | óbito SRAG (evolucao=2) como positivo |
+| A3-cfg | Alvo: evolucao=3 e ausente | ATENÇÃO | o YAML só tem `descartar_ignorado` (evolucao==9). O C2 descarta 3/9/nulos em `filtrar_rotulos_validos`; confirmar em src/models/pipeline.py que `criar_alvo_binario` trata 3 e ausente como inválidos (nunca como cura) |
+| A3-cfg | Coluna temporal | OK | split por DT_INTERNA |
+| A3-cfg | C2 x split por datas | ATENÇÃO | o C2 enviado cria `TemporalSplit(df, coluna_tempo, frac_treino, frac_validacao)` e não lê `temporal.modo`/`temporal.datas`: para holdout = 2025 o C precisa adaptar o split |
+| A3-cfg | Split temporal | ATENÇÃO | modo='aleatorio_estratificado' (fração). Plano: desenvolvimento [2022, 2023, 2024] / holdout [2025] -> usar modo 'datas' (G2) |
+| A3-cfg | Features derivadas do YAML | OK | idade_anos não existem no Parquet: a Pessoa A as cria no dataset analítico |
+| A3-cfg | Features do YAML x Parquet | FALHA | não existem no Parquet: dias_sintomas_ate_internacao, sexo_categoria — o C2 não conseguirá carregá-las |
+| A3-cfg | `proibidas` do YAML x Parquet | ATENÇÃO | não existem no Parquet: alvo_obito_srag, evolucao_normalizada, evolucao_covid19, utilizouvni, cluster, cluster_rotulo — test_leakage não protege as colunas reais |
+| A3-cfg | Features x proibidas | OK | 31 features sem conflito |
+| A3-cfg | Lista `proibidas` do YAML | ATENÇÃO | 17 do plano não protegidas pelo test_leakage: CLASSI_FIN, CLASSI_OUT, CRITERIO, DT_COLETA, DT_PCR, DT_RES, DT_RES_AN, PCR, PCR_RESUL, POS_PCRFLU, POS_PCROUT, RES_AN |
+| A3-cfg | Features condicionais | ATENÇÃO | confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI |
+| A3-cfg | Gates | ATENÇÃO | 5 pendentes: G1_definicao_alvo_features, G6_finalistas_tuning, G7_calibracao, G8_limiar... (A aprova G1/G2 com as regras A1–A3) |
+| A3 | Variáveis proibidas (supervisionado) | OK | 31 variáveis, nenhuma proibida |
+| A3 | Variáveis condicionais (supervisionado) | ATENÇÃO | confirmar condição de uso: CS_ZONA, OUTRO_SIN, OUT_MORBI |
+| A3 | Split temporal | OK | dev [2022, 2023, 2024] < holdout [2025]; Δ prevalência 6.3 p.p. |
+| A3 | Varredura de vazamento | OK | nenhuma variável com AUC univariada ≥ 0.9 |
+| A3 | Auditoria de logs | ATENÇÃO | nenhum log encontrado em logs |
+
+**Resumo:** 7 OK · 9 atenção · 1 falha(s).
+```
+
+### `outputs/tables/pessoa_a/relatorio_A3b.md`
+
+- Git: `ignored` · `3.1 KB` · modified `2026-10-17 00:52 UTC`
+
+```markdown
+# Relatório de verificações — relatorio_A3b
+
+| Etapa | Verificação | Status | Detalhe |
+| --- | --- | --- | --- |
+| A1 | Waterfall da coorte [todos_2019_2025] | OK | 4,666,910 -> 3,739,615 registros (80.1%) |
+| A1 | Features derivadas [todos_2019_2025] | OK | criadas no dataset: idade_anos, faixa_etaria |
+| A1 | Dataset analítico [todos_2019_2025] | ATENÇÃO | 3,739,615 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA |
+| A3b | Proporções 70/15/15 [todos_2019_2025] | OK | desvio máximo 0.00 p.p. / treino=2,617,730, validacao=560,942, holdout=560,943 |
+| A3b | Estratificação do alvo [todos_2019_2025] | OK | prevalência de óbito por split: treino=22.63%, validacao=22.63%, holdout=22.63% (amplitude 0.00 p.p.) |
+| A3b | Anos em cada split [todos_2019_2025] | OK | todos os anos aparecem nos 3 splits (split aleatório mistura os períodos) |
+| A3b | NU_NOTIFIC entre splits [todos_2019_2025] | ATENÇÃO | 10 NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação) |
+| A1-C2 | Colunas exigidas pelo C2 | FALHA | ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria |
+| A1-C2 | Coluna de tempo | OK | datetime válido, ordenado: 2019-01-01 -> 2025-12-31 |
+| A1-C2 | Alvo | OK | apenas cura/óbito; positivos [2.0] presentes |
+| A1-C2 | check_leakage (C2) | OK | nenhuma feature está em `proibidas` |
+| A1-C2 | Tamanho | OK | 3,739,615 linhas |
+| A1 | Waterfall da coorte [sem_2020_2021] | OK | 4,666,910 -> 1,279,588 registros (27.4%) |
+| A1 | Features derivadas [sem_2020_2021] | OK | criadas no dataset: idade_anos, faixa_etaria |
+| A1 | Dataset analítico [sem_2020_2021] | ATENÇÃO | 1,279,588 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA |
+| A3b | Proporções 70/15/15 [sem_2020_2021] | OK | desvio máximo 0.00 p.p. / treino=895,712, validacao=191,938, holdout=191,938 |
+| A3b | Estratificação do alvo [sem_2020_2021] | OK | prevalência de óbito por split: treino=12.12%, validacao=12.12%, holdout=12.12% (amplitude 0.00 p.p.) |
+| A3b | Anos em cada split [sem_2020_2021] | OK | todos os anos aparecem nos 3 splits (split aleatório mistura os períodos) |
+| A3b | NU_NOTIFIC entre splits [sem_2020_2021] | ATENÇÃO | 9 NU_NOTIFIC aparecem em mais de um split (pode ser vazamento entre treino e validação) |
+| A1-C2 | Colunas exigidas pelo C2 | FALHA | ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria |
+| A1-C2 | Coluna de tempo | OK | datetime válido, ordenado: 2019-01-01 -> 2025-12-31 |
+| A1-C2 | Alvo | OK | apenas cura/óbito; positivos [2.0] presentes |
+| A1-C2 | check_leakage (C2) | OK | nenhuma feature está em `proibidas` |
+| A1-C2 | Tamanho | OK | 1,279,588 linhas |
+| A3b | Split aleatório x temporal [todos_2019_2025] | ATENÇÃO | PR-AUC (validação): aleatório 0.452 vs temporal 0.364 (Δ +0.087) — o aleatório está otimista; decidir pelo temporal |
+| A3b | Split aleatório x temporal [sem_2020_2021] | ATENÇÃO | PR-AUC (validação): aleatório 0.367 vs temporal 0.276 (Δ +0.091) — o aleatório está otimista; decidir pelo temporal |
+
+**Resumo:** 18 OK · 6 atenção · 2 falha(s).
+```
+
+### `outputs/tables/pessoa_a/relatorio_A4.md`
+
+- Git: `ignored` · `280 B` · modified `2026-10-17 02:02 UTC`
+
+```markdown
+# Relatório de verificações — relatorio_A4
+
+| Etapa | Verificação | Status | Detalhe |
+| --- | --- | --- | --- |
+| A4 | Dataset congelado | FALHA | dataset_supervisionado.parquet v1.0 FOI ALTERADO após a exportação |
+
+**Resumo:** 0 OK · 0 atenção · 1 falha(s).
+```
+
+### `outputs/tables/pessoa_a/tabela_decisoes.csv`
+
+- Git: `ignored` · `3.0 KB` · modified `2026-10-17 02:02 UTC` · 14 rows
+
+```csv
+id,etapa,tema,decisao,responsavel,data,status,impacto,evidencia
+D-01,A1,Ponto de previsão,DT_INTERNA (admissão); campos posteriores bloqueados,Pessoa A,2026-10-16,proposta,Define quais variáveis podem entrar,Dicionário SIVEP-Gripe (completar)
+D-02,A1,Coorte estrita,"HOSPITAL=1, DT_INTERNA válida, período analítico, evolução encerrada",Pessoa A,2026-10-16,proposta,Ver waterfall (a1_waterfall.csv),
+D-03,A1,Alvo principal,Óbito SRAG (EVOLUCAO=2) vs cura (EVOLUCAO=1),Pessoa A,2026-10-16,proposta,Alinhar target.positivos do supervised.yaml (G1),
+D-04,A1,Evolução desconhecida e óbito outras causas,EVOLUCAO=9/ausente e 3 saem do alvo binário; nunca viram cura,Pessoa A,2026-10-16,proposta,"Exigir filtro EVOLUCAO in {1,2} no loader do C",
+D-12,A1,Features derivadas (criadas no dataset analítico),"idade_anos (TP_IDADE), faixa_etaria, intervalo sintomas->internação (inválido se ausente/negativo/>30 dias) + flag, sin/cos da semana ISO da internação",Pessoa A,2026-10-16,proposta,Só informação da admissão; o C2 as encontra no dataset (supervised.yaml),
+D-05,A1,Período analítico,"Desenvolvimento [2022, 2023, 2024]; holdout [2025]",Pessoa A,2026-10-16,proposta,Exclui anos fora do período; alinhar G2,
+D-06,A2,Ação por tipo de inconsistência de datas,Nascimento posterior ao início dos sintomas -> excluir; Início dos sintomas posterior à notificação -> manter com flag; Início dos sintomas posterior à internação -> manter com flag; Evolução anterior à internação -> excluir; Encerramento anterior à evolução -> manter com flag,Pessoa A,2026-10-16,proposta,Ver a2_coerencia_datas.csv,
+D-07,A2,Duplicidades,Linhas exatas removidas; NU_NOTIFIC repetido apenas documentado,Pessoa A,2026-10-16,proposta,Ver a2_duplicidades.csv,
+D-08,A2,Maturidade de EVOLUCAO,Meses do holdout com < 90.0% de evolução fechada ficam fora ou sob sensibilidade,Pessoa A,2026-10-16,proposta,Ver a2_maturidade_evolucao_por_mes.csv,
+D-09,A2,Variáveis proibidas/condicionais,Matriz de elegibilidade v1.0 (classes incluir/condição/auditoria/excluir),Pessoa A,2026-10-16,proposta,C bloqueia automaticamente (test_leakage); B usa na matriz de clustering,
+D-10,A3,Split temporal,"Desenvolvimento [2022, 2023, 2024] / holdout [2025] por DT_INTERNA",Pessoa A,2026-10-16,proposta,supervised.yaml: modo 'datas' e coluna_tempo = dt_interna (G2),
+D-13,A3b,Experimento split aleatório 70/15/15 (2019–2025),"Split aleatório estratificado pelo alvo, seed 42; dataset_supervisionado_todos_2019_2025",Pessoa A,2026-10-16,proposta,Comparativo; o padrão do projeto segue a validação temporal (README),a3_benchmark_split_*.csv
+D-14,A3b,Cenário sem 2020 e 2021,Mesma análise removendo 2020–2021 (pandemia); dataset_supervisionado_sem_2020_2021,Pessoa A,2026-10-16,proposta,"Compara N, prevalência e desempenho com a base completa (comparacao_cenarios.csv)",
+D-11,A4,Seleção de candidatos,"Shortlist por validade, estabilidade, calibração e interpretação — não só maior métrica",Pessoa A,2026-10-16,proposta,Candidatos para confirmação em 18/10,
+```
+
 ## 19. Snapshot provenance
 
-- Generated UTC: `2026-10-16T22:09:12+00:00`
-- Branch / commit: `main` / `b1bad98768682c5f8ab4caf91a13486d44e2f956`
+- Generated UTC: `2026-10-17T16:15:24+00:00`
+- Branch / commit: `main` / `3590d686d20a1fbc6bb7b360d422e7d9d071e97f`
 - Origin: `https://github.com/Ivan-S-Oliveira/Projeto_Integrador.git`
 - Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': True, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 40, 'include_diff': True, 'max_diff_chars': 400000, 'run_tests': False, 'pytest_args': '', 'test_timeout': 1800, 'fail_on_high': False}`
