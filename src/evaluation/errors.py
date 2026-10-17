@@ -1,22 +1,14 @@
 """
 Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
 
-Ferramentas
------------
-- `matriz_confusao`           → TP/FP/FN/TN em DataFrame
-- `extrair_falsos_positivos`  → subconjunto do df com FP
-- `extrair_falsos_negativos`  → subconjunto do df com FN
-- `metricas_por_grupo`        → métricas por categoria de uma coluna
-- `top_erros`                 → os N piores erros por confiança
-
-A checagem de leakage vive em `src.evaluation.leakage` — importe de lá:
+A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
 
     from src.evaluation.leakage import LeakageError, check_leakage
 """
 
 from __future__ import annotations
 
-from typing import Literal, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -40,9 +32,14 @@ __all__ = [
     "top_erros",
 ]
 
-ArrayLike = Union[np.ndarray, pd.Series, list]
-
+ArrayLike   = np.ndarray | pd.Series | list
 CriterioTop = Literal["fp", "fn", "erro_absoluto"]
+
+
+def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
+    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
+    if len(df) != len(y):
+        raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
 
 
 def matriz_confusao(
@@ -52,19 +49,21 @@ def matriz_confusao(
     """
     Matriz de confusão 2×2 como DataFrame.
 
-    Colunas: ["pred_0", "pred_1"], índice: ["real_0", "real_1"].
-    Adiciona linha/coluna "total" para conveniência.
+    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
+    Adiciona linha/coluna ``"total"``.
     """
     y = _to_int_labels(y_true)
     p = _to_int_labels(y_pred)
 
-    tn = int(((y == 0) & (p == 0)).sum())
-    fp = int(((y == 0) & (p == 1)).sum())
-    fn = int(((y == 1) & (p == 0)).sum())
-    tp = int(((y == 1) & (p == 1)).sum())
+    contagens = {
+        (yv, pv): int(((y == yv) & (p == pv)).sum())
+        for yv in (0, 1)
+        for pv in (0, 1)
+    }
 
     df = pd.DataFrame(
-        [[tn, fp], [fn, tp]],
+        [[contagens[(0, 0)], contagens[(0, 1)]],
+         [contagens[(1, 0)], contagens[(1, 1)]]],
         index=["real_0", "real_1"],
         columns=["pred_0", "pred_1"],
     )
@@ -73,16 +72,27 @@ def matriz_confusao(
     return df
 
 
+def _extrair_por_mascara(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+    *,
+    yv: int,
+    pv: int,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``."""
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+    return df.loc[(y == yv) & (p == pv)].reset_index(drop=True)
+
+
 def extrair_falsos_positivos(
     df: pd.DataFrame,
     y_true: ArrayLike,
     y_pred: ArrayLike,
 ) -> pd.DataFrame:
-    """Retorna as linhas de `df` onde o modelo previu 1 mas o real é 0."""
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-    mascara = (y == 0) & (p == 1)
-    return df.loc[mascara].reset_index(drop=True)
+    """Linhas de ``df`` onde o modelo previu 1 mas o real é 0."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=0, pv=1)
 
 
 def extrair_falsos_negativos(
@@ -90,11 +100,8 @@ def extrair_falsos_negativos(
     y_true: ArrayLike,
     y_pred: ArrayLike,
 ) -> pd.DataFrame:
-    """Retorna as linhas de `df` onde o modelo previu 0 mas o real é 1."""
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-    mascara = (y == 1) & (p == 0)
-    return df.loc[mascara].reset_index(drop=True)
+    """Linhas de ``df`` onde o modelo previu 0 mas o real é 1."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=1, pv=0)
 
 
 def metricas_por_grupo(
@@ -107,24 +114,19 @@ def metricas_por_grupo(
     min_n: int = 30,
 ) -> pd.DataFrame:
     """
-    Métricas por categoria de `coluna_grupo` (ex.: "sg_uf", "cs_sexo").
+    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
 
-    Ignora grupos com menos de `min_n` amostras (evita métricas instáveis).
-
-    Colunas: grupo, n, taxa_positivos, auc, f1, precision, recall.
+    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
+    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
     """
     if coluna_grupo not in df.columns:
         raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
 
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
+    _validar_tamanhos(df, y)
 
-    if len(df) != len(y):
-        raise ValueError(
-            f"df tem {len(df)} linhas e y_true tem {len(y)}."
-        )
-
-    base = df.reset_index(drop=True)
+    base   = df.reset_index(drop=True)
     grupos = base[coluna_grupo].astype("string")
 
     linhas: list[dict[str, float | str]] = []
@@ -136,21 +138,15 @@ def metricas_por_grupo(
         if n < min_n:
             continue
 
-        y_g = y[m]
-        p_g = p[m]
+        y_g    = y[m]
+        p_g    = p[m]
         y_pred = (p_g >= limiar).astype(int)
-
-        auc_g = (
-            auc(y_g, p_g)
-            if len(np.unique(y_g)) >= 2
-            else float("nan")
-        )
 
         linhas.append({
             "grupo":          str(g),
             "n":              float(n),
             "taxa_positivos": float(y_g.mean()),
-            "auc":            auc_g,
+            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
             "f1":             f1(y_g, y_pred),
             "precision":      precision(y_g, y_pred),
             "recall":         recall(y_g, y_pred),
@@ -173,45 +169,33 @@ def top_erros(
     limiar: float = 0.5,
 ) -> pd.DataFrame:
     """
-    Retorna as N linhas de `df` com os piores erros.
+    Retorna as ``n`` linhas de ``df`` com os piores erros.
 
-    Parâmetros
-    ----------
-    criterio : {"fp", "fn", "erro_absoluto"}
-        - "fp"            → ordena por prob decrescente entre FP
-        - "fn"            → ordena por prob crescente entre FN
-        - "erro_absoluto" → ordena por |prob − y| decrescente (todos os erros)
+    ``criterio``:
+        - ``"fp"``            → prob decrescente entre FP
+        - ``"fn"``            → prob crescente entre FN
+        - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
 
-    Adiciona colunas: `y_true`, `y_prob`, `y_pred`, `erro_abs`.
+    Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
     """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
     y_pred = (p >= limiar).astype(int)
-
-    if len(df) != len(y):
-        raise ValueError(
-            f"df tem {len(df)} linhas e y_true tem {len(y)}."
-        )
+    _validar_tamanhos(df, y)
 
     out = df.reset_index(drop=True).copy()
-    out["y_true"] = y
-    out["y_prob"] = p
-    out["y_pred"] = y_pred
+    out["y_true"]   = y
+    out["y_prob"]   = p
+    out["y_pred"]   = y_pred
     out["erro_abs"] = np.abs(p - y)
 
     if criterio == "fp":
-        sel = out[(out["y_true"] == 0) & (out["y_pred"] == 1)]
-        sel = sel.sort_values("y_prob", ascending=False)
+        sel = out[(out.y_true == 0) & (out.y_pred == 1)].sort_values("y_prob", ascending=False)
     elif criterio == "fn":
-        sel = out[(out["y_true"] == 1) & (out["y_pred"] == 0)]
-        sel = sel.sort_values("y_prob", ascending=True)
+        sel = out[(out.y_true == 1) & (out.y_pred == 0)].sort_values("y_prob", ascending=True)
     elif criterio == "erro_absoluto":
-        sel = out[out["y_true"] != out["y_pred"]]
-        sel = sel.sort_values("erro_abs", ascending=False)
+        sel = out[out.y_true != out.y_pred].sort_values("erro_abs", ascending=False)
     else:
-        raise ValueError(
-            f"criterio inválido: {criterio!r}. "
-            f"Use 'fp', 'fn' ou 'erro_absoluto'."
-        )
+        raise ValueError(f"criterio inválido: {criterio!r}. Use 'fp', 'fn' ou 'erro_absoluto'.")
 
     return sel.head(n).reset_index(drop=True)

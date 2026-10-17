@@ -1,33 +1,7 @@
-# =============================================================================
-# Configuracao do pipeline supervisionado - Projeto Integrador SRAG
-# Atualizacao compativel com a estrutura atual do supervised.yaml
-# =============================================================================
-#
-# Decisoes alinhadas:
-# - periodo analitico: 2019 a 2026, inclusive;
-# - 2026 identificado como periodo parcial;
-# - split principal aleatorio 70% / 15% / 15%;
-# - estratificacao por alvo + ano de internacao;
-# - seed 42;
-# - teste aberto uma unica vez apos congelar modelo, calibracao e limiar;
-# - nenhuma informacao posterior a admissao entra em X;
-# - vazio, ignorado e nao aplicavel nao viram automaticamente "nao";
-# - clusters nao entram como features nem como alvo.
-#
-# A lista features.final permanece null ate a chegada e validacao da
-# coorte definitiva. Os nomes devem ser conferidos contra o schema final.
-# =============================================================================
-
 version: 2
 
-# -----------------------------------------------------------------------------
-# Reprodutibilidade
-# -----------------------------------------------------------------------------
 seed: 42
 
-# -----------------------------------------------------------------------------
-# Alvo
-# -----------------------------------------------------------------------------
 target:
   coluna: evolucao
   coluna_modelagem: alvo_obito_srag
@@ -44,9 +18,6 @@ target:
     negativos:
       - 1.0
 
-# -----------------------------------------------------------------------------
-# Periodo e ancora temporal
-# -----------------------------------------------------------------------------
 coluna_tempo: dt_interna
 
 periodo:
@@ -57,16 +28,11 @@ periodo:
   anos_parciais:
     - 2026
 
-# -----------------------------------------------------------------------------
-# Features
-# -----------------------------------------------------------------------------
 features:
-  # Base numerica do nucleo.
   numericas:
     - idade_anos
     - dias_sintomas_ate_internacao
 
-  # Categoricas e binarias do nucleo principal.
   categoricas:
     - sexo_categoria
     - cs_gestant
@@ -98,31 +64,14 @@ features:
     - obesidade
     - out_morbi
 
-  # Nao congelar antes da coorte definitiva.
   final: null
 
-  # Contexto avaliado somente como ganho incremental.
-  #
-  # `vacina` e `vacina_cov` sao historico de vacinacao (conhecido na
-  # admissao), mas sao contexto de saude publica, nao estado clinico
-  # individual. Mantidos fora do nucleo principal para que o modelo
-  # nao seja dominado por "vacinado vs nao" e preserve
-  # interpretabilidade clinica. Avaliados apenas como ganho
-  # incremental em sensibilidade. Decisao revisavel em G1.
   contexto_incremental:
     - cs_escol_n
     - sg_uf
     - vacina
     - vacina_cov
 
-  # Sensibilidades, fora do nucleo principal.
-  #
-  # `saturacao` e `desc_resp` sao proxies de gravidade no momento da
-  # admissao — informativos, mas fortemente correlacionados com o
-  # desfecho. Mantidos fora do nucleo para evitar que o modelo aprenda
-  # apenas "muito doente -> obito" e perca utilidade operacional.
-  # Avaliados como ganho incremental em sensibilidade. Decisao
-  # revisavel em G1.
   sensibilidade_gravidade_admissao:
     - saturacao
     - desc_resp
@@ -143,7 +92,6 @@ features:
       - n_comorbidades_confirmadas
       - n_comorbidades_avaliadas
 
-  # Colunas que nunca podem entrar em X.
   proibidas:
     - evolucao
     - alvo_obito_srag
@@ -165,26 +113,12 @@ features:
     - tipo_trat
     - dt_trt_cov
     - out_trat
-    - classificacao_final
-    - criterio_confirmacao
-    - sorologia
-    - pcr
     - cluster
     - cluster_rotulo
 
-  # Engenharia de atributos.
   engenharia:
-    # Limite (dias) para `dias_sintomas_ate_internacao`.
     intervalo_max_dias: 60
-
-    # Como tratar valores fora de [0, intervalo_max_dias]:
-    #   "sinalizar" (default) — mantem o valor bruto, marca nas flags.
-    #   "descartar"           — substitui o valor por NaN, mantendo flags.
-    # Alinhado com decisoes.md: sinalizar, nao corrigir em silencio.
     intervalo_politica: sinalizar
-
-    # Coluna usada para o par sin_semana / cos_semana.
-    # Reflete a sazonalidade viral melhor que a data de notificacao.
     coluna_sazonalidade: dt_sin_pri
 
     faixas_etarias:
@@ -197,25 +131,18 @@ features:
       - {nome: "60-79", min: 60, max: 80}
       - {nome: "80+", min: 80, max: null}
 
-    # Inventario exato das colunas produzidas por
-    # `src.features.engineering.montar_features`. Manter em sincronia
-    # com aquela funcao.
     derivadas:
-      # Numericas continuas
       - idade_anos
       - dias_sintomas_ate_internacao
       - sin_semana
       - cos_semana
       - ano_internacao
       - mes_internacao
-      # Flags binarias
       - flag_intervalo_invalido
       - flag_internacao_antes_sintomas
-      # Categoricas
       - faixa_etaria
       - sexo_categoria
 
-    # Colunas consumidas por `montar_features`.
     entradas:
       - nu_idade_n
       - tp_idade
@@ -223,10 +150,6 @@ features:
       - dt_sin_pri
       - dt_interna
 
-# -----------------------------------------------------------------------------
-# Split principal
-# -----------------------------------------------------------------------------
-# Mantem temporal.fracao por compatibilidade com consumidores atuais.
 temporal:
   modo: aleatorio_estratificado
   coluna_estratificacao_temporal: ano_internacao
@@ -235,15 +158,14 @@ temporal:
   gravar_particao_na_coorte: true
   coluna_particao: particao
   permitir_novo_sorteio: false
+  metodo_particao: hash_grupo_estratificado_v1
+  min_grupos_por_estrato: 3
   teste_aberto_uma_unica_vez: true
   fracao:
     treino: 0.70
     validacao: 0.15
     holdout: 0.15
 
-# -----------------------------------------------------------------------------
-# Tratamento de ausencia
-# -----------------------------------------------------------------------------
 missingness:
   vazio_nao_e_nao: true
   ignorado_nao_e_nao: true
@@ -258,9 +180,6 @@ missingness:
     pipeline_principal: false
     sensibilidade: true
 
-# -----------------------------------------------------------------------------
-# Modelos
-# -----------------------------------------------------------------------------
 models:
   baseline:
     strategy: prior
@@ -273,11 +192,6 @@ models:
       - 0.1
       - 1.0
       - 10.0
-    # Consumido por `src/models/logistic.py::_penalty_do_yaml`.
-    # Traduzido para `l1_ratio` (API nova do sklearn):
-    #   l2 -> l1_ratio=0.0 ; l1 -> l1_ratio=1.0 ;
-    #   elasticnet -> exige 0 < l1_ratio < 1 (o valor de `l1_ratio`
-    #   do YAML permanece).
     penalty: l2
     solver: lbfgs
     max_iter: 1000
@@ -313,7 +227,6 @@ models:
     class_weight: balanced
     n_jobs: -1
 
-  # Preserva a chave "boosting" esperada pelo YAML atual.
   boosting:
     learning_rate: null
     busca_learning_rate:
@@ -337,9 +250,6 @@ models:
     early_stopping: false
     class_weight: balanced
 
-# -----------------------------------------------------------------------------
-# Tuning
-# -----------------------------------------------------------------------------
 tuning:
   metrica_principal: pr_auc
   concentrar_nos_dois_melhores: true
@@ -347,9 +257,6 @@ tuning:
   teste_proibido_durante_tuning: true
   max_configuracoes_por_modelo: 30
 
-# -----------------------------------------------------------------------------
-# Calibracao
-# -----------------------------------------------------------------------------
 calibracao:
   ativa: true
   metodo: null
@@ -359,9 +266,6 @@ calibracao:
   fonte: validacao
   comparar_brier_antes_depois: true
 
-# -----------------------------------------------------------------------------
-# Limiar de decisao
-# -----------------------------------------------------------------------------
 limiar:
   default: 0.50
   otimo: null
@@ -373,9 +277,6 @@ limiar:
   min_precision: null
   selecionar_somente_na_validacao: true
 
-# -----------------------------------------------------------------------------
-# Metricas e avaliacao
-# -----------------------------------------------------------------------------
 avaliacao:
   metrica_principal: pr_auc
   metricas:
@@ -406,9 +307,6 @@ avaliacao:
     ativa: true
     priorizar_falsos_negativos: true
 
-# -----------------------------------------------------------------------------
-# Sensibilidades supervisionadas
-# -----------------------------------------------------------------------------
 sensibilidades:
   temporal:
     ativa: true
@@ -421,42 +319,12 @@ sensibilidades:
   alvo_qualquer_obito:
     ativa: true
 
-# -----------------------------------------------------------------------------
-# Clustering concluido como exploratorio
-# -----------------------------------------------------------------------------
-clustering:
-  status: encerrado_exploratorio
-  matriz_documentada: nucleo
-  quantidade_clusters_documentada: 2
-  aplicar_na_coorte_completa: false
-  usar_como_feature_supervisionada: false
-  usar_como_alvo: false
-  usar_como_fenotipo_clinico_definitivo: false
-  comparacoes_minimas_executadas:
-    - kmeans
-    - hca_ward
-    - dbscan
-
-# -----------------------------------------------------------------------------
-# Artefatos esperados da coorte final
-# -----------------------------------------------------------------------------
 artefatos_coorte:
   parquet: coorte_final.parquet
   waterfall: coorte_waterfall.csv
   variaveis: variaveis_finais.csv
   manifesto: manifesto_coorte.json
 
-# -----------------------------------------------------------------------------
-# Gates
-# -----------------------------------------------------------------------------
-#
-# Fluxo de estados:
-#   pendente  -> aprovado  -> (apenas G9_holdout) executado
-#
-# `aprovado` libera a etapa correspondente.
-# `executado` (terminal, irreversivel) registra que o holdout foi
-# efetivamente consultado. So existe para G9_holdout.
-# -----------------------------------------------------------------------------
 gates:
   G1_definicao_alvo_features:
     descricao: >
@@ -493,7 +361,7 @@ gates:
   G6_finalistas_tuning:
     descricao: >
       Selecionar no maximo dois finalistas e executar tuning limitado.
-      Ao final, preencher `selecao_modelos.finalista_escolhido`.
+      Ao final, preencher selecao_modelos.finalista_escolhido.
     status: pendente
     aprovado_por: null
     data: null
@@ -521,8 +389,6 @@ gates:
     status: pendente
     aprovado_por: null
     data: null
-    # Preenchidos automaticamente pelo C6 (célula de marcação de G9).
-    # NÃO remover: _marcar_g9_executado exige as duas chaves.
     executado_em: null
     n_acessos: 0
 
@@ -536,8 +402,6 @@ selecao_modelos:
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
-  # Preenchido ao final do C6 (gate G6). Valor deve constar em
-  # `finalistas`. `null` enquanto a escolha nao foi feita.
   finalista_escolhido: null
   familias_encerradas:
     - decision_tree

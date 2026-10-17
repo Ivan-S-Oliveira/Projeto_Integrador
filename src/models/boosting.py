@@ -1,7 +1,7 @@
 """
-Gradient boosting — `HistGradientBoostingClassifier` (nativo do sklearn).
+Gradient boosting — ``HistGradientBoostingClassifier`` (nativo do sklearn).
 
-Requer scikit-learn >= 1.2 (suporte a `class_weight` como str ou dict).
+Requer scikit-learn >= 1.2 (``class_weight`` como str ou dict).
 """
 from __future__ import annotations
 
@@ -25,37 +25,20 @@ def build_boosting_pipeline(
     class_weight: str | dict | None = "balanced",
     preprocessor=None,
 ) -> Pipeline:
-    """
-    Constrói um `Pipeline` com pré-processamento +
-    `HistGradientBoostingClassifier`.
+    """``Pipeline`` de pré-processamento + ``HistGradientBoostingClassifier``.
 
-    Parâmetros
-    ----------
-    learning_rate : float
-        Fator multiplicativo aplicado às folhas (shrinkage).
-    max_iter : int
-        Número máximo de iterações (árvores) do boosting.
-    max_depth : int | None
-        Profundidade máxima das árvores. None = sem limite explícito.
-    max_leaf_nodes : int
-        Número máximo de folhas por árvore.
-    min_samples_leaf : int
-        Mínimo de amostras por folha.
-    l2_regularization : float
-        Força da regularização L2.
-    early_stopping : bool
-        Default `False` (em vez do `'auto'` do sklearn) por decisão
-        metodológica do projeto: sem early stopping interno, `max_iter`
-        é escolhido na validação (gate G6).
-    validation_fraction : float
-        Fração do treino reservada para early stopping (ignorada se
-        `early_stopping=False`).
-    n_iter_no_change : int
-        Paciência do early stopping (ignorada se `early_stopping=False`).
-    class_weight : str | dict | None
-        Pesos das classes. `"balanced"` ajusta automaticamente.
-    preprocessor : ColumnTransformer | None
-        Se None, usa `build_preprocessor()`.
+    Parâmetros cujo default difere do sklearn por decisão do projeto:
+
+    - ``early_stopping=False`` (em vez de ``'auto'``): sem early stopping
+      interno, ``max_iter`` é escolhido na validação (gate G6);
+    - ``class_weight="balanced"``: ajusta pelo inverso da frequência.
+
+    Os restantes parâmetros seguem a semântica do sklearn
+    (``learning_rate``, ``max_depth``, ``max_leaf_nodes``,
+    ``min_samples_leaf``, ``l2_regularization``, ``validation_fraction``,
+    ``n_iter_no_change``).
+
+    ``preprocessor=None`` usa ``build_preprocessor()``.
     """
     pre = preprocessor if preprocessor is not None else build_preprocessor()
 

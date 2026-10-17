@@ -1,13 +1,14 @@
 """
-Testes para `src.data.split.criar_particoes_agrupadas`.
+Testes para ``src.data.split.criar_particoes_agrupadas``.
 
 Invariantes:
-    1. nenhum grupo em mais de uma partição;
-    2. proporções de linhas próximas de 70/15/15 (com tolerância);
-    3. mesma seed → mesma partição.
 
-Cobrem ainda: políticas de estratos pequenos, grupos com alvo
-heterogêneo (raise/warn) e validações de parâmetros/colunas.
+1. nenhum grupo em mais de uma partição;
+2. proporções de linhas próximas de 70/15/15 (com tolerância);
+3. mesma seed → mesma partição.
+
+Cobrem também políticas de estratos pequenos, grupos com alvo
+heterogéneo (raise/warn) e validações de parâmetros/colunas.
 """
 
 from __future__ import annotations
@@ -25,16 +26,17 @@ from src.data.split import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Fixtures sintéticas
+# ---------------------------------------------------------------------------
+
 def _df_estratificado(
     n_grupos_classe0: int = 30,
     n_grupos_classe1: int = 20,
     linhas_por_grupo: int = 3,
     seed: int = 0,
 ) -> pd.DataFrame:
-    """
-    DataFrame com grupos homogêneos (alvo constante por grupo)
-    e duas classes bem representadas.
-    """
+    """DataFrame com grupos homogéneos (alvo constante por grupo)."""
     rng = np.random.default_rng(seed)
     linhas = []
     gid = 0
@@ -44,14 +46,12 @@ def _df_estratificado(
             gid += 1
             n = int(rng.integers(1, linhas_por_grupo + 1))
             for i in range(n):
-                linhas.append(
-                    {
-                        "nu_notific": grupo,
-                        "alvo": classe,
-                        "valor": float(rng.normal()),
-                        "idx_linha": i,
-                    }
-                )
+                linhas.append({
+                    "nu_notific": grupo,
+                    "alvo": classe,
+                    "valor": float(rng.normal()),
+                    "idx_linha": i,
+                })
     return pd.DataFrame(linhas)
 
 
@@ -59,7 +59,7 @@ def _df_grande(
     n_grupos_classe0: int = 700,
     n_grupos_classe1: int = 300,
 ) -> pd.DataFrame:
-    """Base grande o bastante para checar proporções com folga."""
+    """Base grande o suficiente para checar proporções com folga."""
     return _df_estratificado(
         n_grupos_classe0=n_grupos_classe0,
         n_grupos_classe1=n_grupos_classe1,
@@ -68,8 +68,21 @@ def _df_grande(
     )
 
 
+def _df_com_estrato_pequeno() -> pd.DataFrame:
+    """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
+    return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
+
+
+def _df_com_grupo_heterogeneo() -> pd.DataFrame:
+    """``g0000`` (classe 0) recebe uma linha com alvo=1."""
+    df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
+    idx = df.index[df["nu_notific"] == "g0000"][0]
+    df.loc[idx, "alvo"] = 1
+    return df
+
+
 def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
-    """Chama `criar_particoes_agrupadas` com os defaults dos testes."""
+    """``criar_particoes_agrupadas`` com os defaults dos testes."""
     params: dict[str, Any] = {
         "target_column": "alvo",
         "group_column": "nu_notific",
@@ -79,48 +92,47 @@ def _split(df: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
     return criar_particoes_agrupadas(df, **params)
 
 
-def test_grupos_nao_cruzam_particoes() -> None:
-    out = _split(_df_estratificado(), seed=42)
+def _assert_proporcoes(contagem: pd.Series, tol: float = 0.05) -> None:
+    """Asserts de 70/15/15 sobre ``value_counts(normalize=True)``."""
+    assert abs(contagem["treino"] - 0.70) < tol, contagem
+    assert abs(contagem["validacao"] - 0.15) < tol, contagem
+    assert abs(contagem["teste"] - 0.15) < tol, contagem
 
-    grupos_por_particao = (
-        out.groupby("nu_notific", observed=True)["particao"].nunique()
-    )
+
+# ---------------------------------------------------------------------------
+# Invariantes de partição
+# ---------------------------------------------------------------------------
+
+def test_grupos_nao_cruzam_particoes() -> None:
+    """Nenhum ``nu_notific`` aparece em mais de uma partição."""
+    out = _split(_df_estratificado(), seed=42)
+    grupos_por_particao = out.groupby("nu_notific", observed=True)["particao"].nunique()
     assert (grupos_por_particao == 1).all(), (
-        "Algum grupo aparece em mais de uma partição:\n"
-        f"{grupos_por_particao[grupos_por_particao > 1]}"
+        f"Grupos em mais de uma partição:\n{grupos_por_particao[grupos_por_particao > 1]}"
     )
 
 
 def test_nenhuma_linha_perdida() -> None:
     df = _df_estratificado()
     out = _split(df, seed=42)
-
     assert len(out) == len(df)
     assert set(out["particao"].unique()) == set(PARTICOES_CANONICAS)
 
 
+# ---------------------------------------------------------------------------
+# Proporções 70/15/15
+# ---------------------------------------------------------------------------
+
 def test_proporcoes_linhas_proximas_de_70_15_15() -> None:
+    """Grupos são atómicos; a proporção real de linhas oscila em torno do alvo."""
     out = _split(_df_grande(), seed=42)
-
-    contagem = out["particao"].value_counts(normalize=True)
-    # Grupos são atômicos; a proporção real de linhas oscila em torno do alvo.
-    tol = 0.05
-
-    assert abs(contagem["treino"] - 0.70) < tol, contagem
-    assert abs(contagem["validacao"] - 0.15) < tol, contagem
-    assert abs(contagem["teste"] - 0.15) < tol, contagem
+    _assert_proporcoes(out["particao"].value_counts(normalize=True))
 
 
 def test_proporcoes_grupos_proximas_de_70_15_15() -> None:
     out = _split(_df_grande(), seed=42)
-
     por_grupo = out.groupby("nu_notific", observed=True)["particao"].first()
-    contagem = por_grupo.value_counts(normalize=True)
-    tol = 0.05
-
-    assert abs(contagem["treino"] - 0.70) < tol, contagem
-    assert abs(contagem["validacao"] - 0.15) < tol, contagem
-    assert abs(contagem["teste"] - 0.15) < tol, contagem
+    _assert_proporcoes(por_grupo.value_counts(normalize=True))
 
 
 def test_estratificacao_preserva_proporcao_aproximada() -> None:
@@ -133,7 +145,12 @@ def test_estratificacao_preserva_proporcao_aproximada() -> None:
         assert abs(sub["alvo"].mean() - prevalencia_global) < 0.10
 
 
+# ---------------------------------------------------------------------------
+# Reprodutibilidade por seed
+# ---------------------------------------------------------------------------
+
 def test_reprodutibilidade_mesma_seed() -> None:
+    """Mesma seed → mesmas partições."""
     df = _df_estratificado()
     a = _split(df, seed=7)
     b = _split(df, seed=7)
@@ -147,10 +164,9 @@ def test_seeds_diferentes_produzem_splits_diferentes() -> None:
     assert not a["particao"].equals(b["particao"])
 
 
-def _df_com_estrato_pequeno() -> pd.DataFrame:
-    """1 grupo na classe 1 (estrato pequeno) + 20 grupos na classe 0."""
-    return _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=1)
-
+# ---------------------------------------------------------------------------
+# Estratos pequenos — 4 políticas
+# ---------------------------------------------------------------------------
 
 def test_estrato_pequeno_raise_e_default() -> None:
     with pytest.raises(ValueError, match="Estrato"):
@@ -169,10 +185,7 @@ def test_estrato_pequeno_warn_teste_manda_para_teste() -> None:
 
 def test_estrato_pequeno_warn_treino_manda_para_treino() -> None:
     with pytest.warns(SplitWarning, match="Destinando ao treino"):
-        out = _split(
-            _df_com_estrato_pequeno(),
-            politica_estratos_pequenos="warn_treino",
-        )
+        out = _split(_df_com_estrato_pequeno(), politica_estratos_pequenos="warn_treino")
 
     linhas_classe1 = out[out["alvo"] == 1]
     assert (linhas_classe1["particao"] == "treino").all()
@@ -188,12 +201,9 @@ def test_estrato_pequeno_drop_remove_linhas() -> None:
     assert set(out["particao"].unique()).issubset(set(PARTICOES_CANONICAS))
 
 
-def _df_com_grupo_heterogeneo() -> pd.DataFrame:
-    df = _df_estratificado(n_grupos_classe0=20, n_grupos_classe1=10)
-    idx = df.index[df["nu_notific"] == "g0000"][0]
-    df.loc[idx, "alvo"] = 1
-    return df
-
+# ---------------------------------------------------------------------------
+# Grupos com alvo heterogéneo
+# ---------------------------------------------------------------------------
 
 def test_grupo_heterogeneo_raise() -> None:
     with pytest.raises(ValueError, match="mais de um valor distinto"):
@@ -202,11 +212,12 @@ def test_grupo_heterogeneo_raise() -> None:
 
 def test_grupo_heterogeneo_warn() -> None:
     with pytest.warns(SplitWarning, match="mais de um valor distinto"):
-        _split(
-            _df_com_grupo_heterogeneo(),
-            on_grupo_alvo_heterogeneo="warn",
-        )
+        _split(_df_com_grupo_heterogeneo(), on_grupo_alvo_heterogeneo="warn")
 
+
+# ---------------------------------------------------------------------------
+# Validação de parâmetros e colunas
+# ---------------------------------------------------------------------------
 
 def test_coluna_alvo_ausente() -> None:
     with pytest.raises(KeyError, match="alvo"):
@@ -233,17 +244,18 @@ def test_partition_column_ja_existente() -> None:
         _split(df)
 
 
-def test_frac_invalida() -> None:
-    df = _df_estratificado()
-
-    with pytest.raises(ValueError, match="frac_treino"):
-        _split(df, frac_treino=0.0)
-
-    with pytest.raises(ValueError, match="frac_validacao"):
-        _split(df, frac_validacao=1.5)
-
-    with pytest.raises(ValueError, match="< 1"):
-        _split(df, frac_treino=0.7, frac_validacao=0.4)
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"frac_treino": 0.0}, "frac_treino"),
+        ({"frac_validacao": 1.5}, "frac_validacao"),
+        ({"frac_treino": 0.7, "frac_validacao": 0.4}, "< 1"),
+    ],
+    ids=["frac_treino_zero", "frac_validacao_acima", "soma_maior_que_1"],
+)
+def test_frac_invalida(kwargs: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        _split(_df_estratificado(), **kwargs)
 
 
 def test_min_grupos_abaixo_de_3() -> None:
@@ -252,14 +264,11 @@ def test_min_grupos_abaixo_de_3() -> None:
 
 
 def test_politica_invalida() -> None:
+    # Valor viola intencionalmente o Literal PoliticaEstratosPequenos.
     with pytest.raises(ValueError, match="politica_estratos_pequenos"):
-        _split(
-            _df_estratificado(),
-            politica_estratos_pequenos="qualquer_coisa",  # type: ignore[arg-type]
-        )
+        _split(_df_estratificado(), politica_estratos_pequenos="qualquer_coisa")  # type: ignore[arg-type]
 
 
 def test_df_vazio() -> None:
-    df = pd.DataFrame({"alvo": [], "nu_notific": []})
     with pytest.raises(ValueError, match="vazio"):
-        _split(df)
+        _split(pd.DataFrame({"alvo": [], "nu_notific": []}))

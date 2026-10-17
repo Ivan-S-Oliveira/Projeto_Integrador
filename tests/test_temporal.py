@@ -1,16 +1,9 @@
 """
-Testes anti-vazamento de dados.
+Testes do split temporal em três blocos e da trava do holdout.
 
-Protegem contra:
-- inclusão do alvo nas features;
-- inclusão de colunas posteriores ao desfecho;
-- duplicação de identificadores quando houver chave adequada.
-
-Split temporal e trava do gate ``G9_holdout`` são testados em
-``tests/test_temporal.py`` — não duplicar aqui.
-
-Fonte única de verdade: `configs/supervised.yaml`, lido via
-`src.utils.config` (`features.proibidas`) — nada hard-coded aqui.
+Cobrem garantia de não sobreposição temporal, validação de frações e
+coluna temporal, tratamento de ``NaT`` e liberação do holdout apenas com
+``G9_holdout`` aprovado.
 """
 
 from __future__ import annotations
@@ -18,133 +11,165 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from src.evaluation.temporal import TemporalSplit, split_temporal_3way
 from src.utils import config as C
 
 
 @pytest.fixture
-def proibidas() -> set[str]:
-    """Colunas proibidas declaradas em `features.proibidas` do YAML."""
-    return set(C.cfg("features", "proibidas") or [])
+def df_temporal() -> pd.DataFrame:
+    """100 dias consecutivos a partir de 2020-01-01, coluna ``x`` = range(100)."""
+    return pd.DataFrame({
+        "data": pd.date_range("2020-01-01", periods=100, freq="D"),
+        "x":    range(100),
+    })
 
 
 @pytest.fixture
-def features_finais() -> set[str]:
-    """Lista final de features exposta por `src.models.pipeline`."""
-    from src.models import pipeline
-    return set(pipeline.FEATURES)
+def df_temporal_com_nat(df_temporal: pd.DataFrame) -> pd.DataFrame:
+    """``df_temporal`` com ``NaT`` na linha 5 da coluna ``data``."""
+    df = df_temporal.copy()
+    df.loc[5, "data"] = pd.NaT
+    return df
 
 
-def test_proibidas_nao_vazia(proibidas: set[str]) -> None:
-    assert proibidas, (
-        "features.proibidas está vazia no supervised.yaml — "
-        "ao menos o alvo e as colunas posteriores ao desfecho precisam "
-        "estar listadas."
+# ---------------------------------------------------------------------------
+# split_temporal_3way — ordem e proporções
+# ---------------------------------------------------------------------------
+
+def test_split_temporal_ordem_correta(df_temporal: pd.DataFrame) -> None:
+    """Sem sobreposição temporal entre blocos; proporções 70/15/15."""
+    treino, validacao, holdout = split_temporal_3way(df_temporal, "data")
+
+    assert treino["data"].max() <= validacao["data"].min()
+    assert validacao["data"].max() <= holdout["data"].min()
+    assert len(treino) == 70
+    assert len(validacao) == 15
+    assert len(holdout) == 15
+
+
+def test_split_temporal_preserva_ordem(df_temporal: pd.DataFrame) -> None:
+    treino, validacao, holdout = split_temporal_3way(df_temporal, "data")
+
+    assert treino["data"].is_monotonic_increasing
+    assert validacao["data"].is_monotonic_increasing
+    assert holdout["data"].is_monotonic_increasing
+
+
+# ---------------------------------------------------------------------------
+# split_temporal_3way — validações de parâmetros
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"frac_treino": 0},
+        {"frac_treino": 1},
+        {"frac_validacao": 0},
+        {"frac_validacao": 1},
+        {"frac_treino": 0.8, "frac_validacao": 0.3},
+    ],
+    ids=[
+        "frac_treino_zero",
+        "frac_treino_um",
+        "frac_validacao_zero",
+        "frac_validacao_um",
+        "soma_maior_que_1",
+    ],
+)
+def test_fracoes_invalidas(df_temporal: pd.DataFrame, kwargs: dict) -> None:
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal, "data", **kwargs)
+
+
+def test_coluna_tempo_ausente(df_temporal: pd.DataFrame) -> None:
+    with pytest.raises(KeyError):
+        split_temporal_3way(df_temporal, "coluna_inexistente")
+
+
+def test_coluna_tempo_nao_datetime(df_temporal: pd.DataFrame) -> None:
+    df = df_temporal.copy()
+    df["data"] = df["data"].astype(str)
+    with pytest.raises(TypeError):
+        split_temporal_3way(df, "data")
+
+
+# ---------------------------------------------------------------------------
+# split_temporal_3way — tratamento de NaT
+# ---------------------------------------------------------------------------
+
+def test_on_nat_raise(df_temporal_com_nat: pd.DataFrame) -> None:
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal_com_nat, "data", on_nat="raise")
+
+
+def test_on_nat_drop(df_temporal_com_nat: pd.DataFrame) -> None:
+    treino, validacao, holdout = split_temporal_3way(
+        df_temporal_com_nat, "data", on_nat="drop",
     )
+    assert len(treino) + len(validacao) + len(holdout) == 99
 
 
-def test_alvo_esta_entre_proibidas(proibidas: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo in proibidas, (
-        f"target.coluna ({alvo!r}) precisa estar em features.proibidas."
-    )
+def test_on_nat_invalido(df_temporal: pd.DataFrame) -> None:
+    # Valor viola intencionalmente o Literal OnNat.
+    with pytest.raises(ValueError):
+        split_temporal_3way(df_temporal, "data", on_nat="ignorar")  # type: ignore[arg-type]
 
 
-def test_features_finais_sem_proibidas(
-    features_finais: set[str],
-    proibidas: set[str],
+def test_dataset_pequeno() -> None:
+    df = pd.DataFrame({"data": pd.date_range("2020-01-01", periods=2)})
+    with pytest.raises(ValueError):
+        split_temporal_3way(df, "data")
+
+
+# ---------------------------------------------------------------------------
+# TemporalSplit — trava do holdout
+# ---------------------------------------------------------------------------
+
+def test_holdout_bloqueado_por_padrao(df_temporal: pd.DataFrame) -> None:
+    split = TemporalSplit(df_temporal, "data")
+    assert not split.holdout_liberado
+    with pytest.raises(RuntimeError):
+        split.holdout()
+
+
+def test_holdout_liberado_apos_gate(
+    df_temporal: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    vazamento = features_finais & proibidas
-    assert not vazamento, (
-        f"FEATURES contém colunas proibidas: {sorted(vazamento)}"
-    )
+    """Com ``G9_holdout`` aprovado, ``concluir_selecao()`` libera o holdout."""
+    monkeypatch.setattr(C, "cfg", lambda *a, **kw: {"status": "aprovado"})
+
+    split = TemporalSplit(df_temporal, "data")
+    split.concluir_selecao()
+
+    assert split.holdout_liberado
+    assert len(split.holdout()) == 15
 
 
-def test_features_finais_nao_inclui_alvo(features_finais: set[str]) -> None:
-    alvo = C.cfg("target", "coluna")
-    assert alvo not in features_finais
-
-
-def test_check_leakage_passa_quando_X_limpo() -> None:
-    from src.evaluation.leakage import check_leakage
-
-    X = pd.DataFrame({"feat_a": [1, 2, 3], "feat_b": [4, 5, 6]})
-    check_leakage(X)
-
-
-def test_check_leakage_levanta_para_proibida(proibidas: set[str]) -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    coluna = sorted(proibidas)[0]
-    X = pd.DataFrame({coluna: [1, 2, 3], "feat_ok": [4, 5, 6]})
-
-    with pytest.raises(LeakageError) as exc:
-        check_leakage(X)
-
-    assert coluna in str(exc.value), (
-        "A mensagem de erro precisa citar a coluna problemática."
-    )
-
-
-def test_check_leakage_levanta_para_alvo() -> None:
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    alvo = C.cfg("target", "coluna")
-    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
-
-    with pytest.raises(LeakageError):
-        check_leakage(X)
-
-
-def test_check_leakage_lista_vazia_ainda_verifica_alvo() -> None:
-    """Lista vazia desliga proibidas, mas o alvo continua sendo checado."""
-    from src.evaluation.leakage import LeakageError, check_leakage
-
-    alvo = C.cfg("target", "coluna")
-    X = pd.DataFrame({alvo: [0, 1, 0], "feat_ok": [1, 2, 3]})
-
-    with pytest.raises(LeakageError):
-        check_leakage(X, forbidden_columns=[])
-
-
-def test_dataset_sem_identificadores_duplicados(
-    parquet_disponivel,
+def test_holdout_bloqueado_sem_gate(
+    df_temporal: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """
-    Checa duplicidade apenas se houver coluna que sirva como
-    identificador da notificação. UF e data não formam chave única.
-    """
-    if parquet_disponivel is None:
-        pytest.skip("Parquet não disponível.")
+    """Com ``G9_holdout`` pendente, ``concluir_selecao()`` levanta ``RuntimeError``."""
+    monkeypatch.setattr(C, "cfg", lambda *a, **kw: {"status": "pendente"})
 
-    import pyarrow.parquet as pq
+    split = TemporalSplit(df_temporal, "data")
+    with pytest.raises(RuntimeError):
+        split.concluir_selecao()
 
-    colunas = set(pq.read_schema(parquet_disponivel).names)
 
-    candidatas = [
-        "nu_notific",
-        "numero_notificacao",
-        "id_notificacao",
-        "id",
-    ]
-    coluna_id = next((c for c in candidatas if c in colunas), None)
+def test_treino_validacao_nao_expoe_holdout(df_temporal: pd.DataFrame) -> None:
+    split = TemporalSplit(df_temporal, "data")
+    treino, validacao = split.treino_validacao()
 
-    if coluna_id is None:
-        pytest.skip(
-            "O Parquet não possui uma coluna identificadora adequada "
-            "para o teste de duplicidade."
-        )
+    assert treino is split.treino
+    assert validacao is split.validacao
 
-    df = pd.read_parquet(parquet_disponivel, columns=[coluna_id])
-    ids = df[coluna_id].dropna().astype("string").str.strip()
-    ids = ids[ids.ne("")]
 
-    if ids.empty:
-        pytest.skip(f"A coluna {coluna_id} não possui identificadores válidos.")
+def test_resumo_marca_holdout_bloqueado(df_temporal: pd.DataFrame) -> None:
+    resumo = TemporalSplit(df_temporal, "data").resumo()
 
-    quantidade_duplicada = int(ids.duplicated().sum())
-    taxa_duplicada = quantidade_duplicada / len(ids)
-
-    assert taxa_duplicada < 0.05, (
-        f"Alta taxa de identificadores duplicados em {coluna_id}: "
-        f"{quantidade_duplicada}/{len(ids)} ({taxa_duplicada:.1%})"
-    )
+    assert "treino" in resumo
+    assert "validacao" in resumo
+    assert "holdout" in resumo
+    assert "bloqueado" in resumo

@@ -1,8 +1,8 @@
 """
-Testes do pipeline de ingestão: read_srag, get_parquet e build_pipeline.
+Testes do pipeline de ingestão: ``read_srag``, ``get_parquet`` e
+``build_pipeline``.
 
-Testes que tocam arquivos grandes são marcados com `@pytest.mark.slow`.
-Os testes de diretório são rápidos e não recebem esse marcador.
+Testes que tocam no Parquet são marcados com ``@pytest.mark.slow``.
 """
 
 from __future__ import annotations
@@ -12,15 +12,19 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from src.models.pipeline import build_pipeline
 from src.utils import env
+from src.utils.storage import get_parquet, read_srag
 
+
+# ---------------------------------------------------------------------------
+# Ingestão do Parquet (slow)
+# ---------------------------------------------------------------------------
 
 @pytest.mark.slow
 def test_read_srag_retorna_dataframe(parquet_disponivel: Path | None) -> None:
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
-
-    from src.utils.storage import read_srag
 
     df = read_srag(columns=["sg_uf", "dt_notific"])
 
@@ -31,15 +35,12 @@ def test_read_srag_retorna_dataframe(parquet_disponivel: Path | None) -> None:
 
 @pytest.mark.slow
 def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> None:
-    """`force=False` reutiliza o arquivo existente (mesmo mtime e tamanho)."""
+    """``force=False`` reutiliza o arquivo existente (mesmo mtime e tamanho)."""
     if parquet_disponivel is None:
         pytest.skip("Parquet não disponível.")
 
-    from src.utils.storage import get_parquet
-
     caminho_1 = get_parquet(force=False)
     estado_1 = caminho_1.stat()
-
     caminho_2 = get_parquet(force=False)
     estado_2 = caminho_2.stat()
 
@@ -48,11 +49,12 @@ def test_get_parquet_reaproveita_arquivo(parquet_disponivel: Path | None) -> Non
     assert estado_1.st_size == estado_2.st_size
 
 
+# ---------------------------------------------------------------------------
+# build_pipeline
+# ---------------------------------------------------------------------------
+
 def test_build_pipeline_falha_feature_ausente() -> None:
-    from src.models.pipeline import build_pipeline
-
     X = pd.DataFrame({"nu_idade_n": [30.0, 40.0, 50.0]})
-
     with pytest.raises(KeyError, match="ausentes"):
         build_pipeline(X=X)
 
@@ -60,10 +62,7 @@ def test_build_pipeline_falha_feature_ausente() -> None:
 def test_build_pipeline_strict_false_avisa_mas_continua(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    from src.models.pipeline import build_pipeline
-
     X = pd.DataFrame({"nu_idade_n": [30.0, 40.0, 50.0]})
-
     with caplog.at_level("WARNING"):
         pipe = build_pipeline(X=X, strict=False)
 
@@ -71,13 +70,13 @@ def test_build_pipeline_strict_false_avisa_mas_continua(
     assert "ausentes" in caplog.text.lower()
 
 
-def test_raw_dir_foi_criado() -> None:
-    env.garantir_diretorios()
-    assert env.RAW.exists()
-    assert env.RAW.is_dir()
+# ---------------------------------------------------------------------------
+# Diretórios padrão
+# ---------------------------------------------------------------------------
 
-
-def test_processed_dir_foi_criado() -> None:
+@pytest.mark.parametrize("nome_dir", ["RAW", "PROCESSED"])
+def test_diretorio_padrao_foi_criado(nome_dir: str) -> None:
+    """``env.garantir_diretorios`` cria os diretórios esperados."""
     env.garantir_diretorios()
-    assert env.PROCESSED.exists()
-    assert env.PROCESSED.is_dir()
+    caminho = getattr(env, nome_dir)
+    assert caminho.is_dir(), f"{caminho} não é diretório"

@@ -1,4 +1,4 @@
-"""Fixtures e configuração de testes."""
+"""Fixtures partilhadas entre testes."""
 
 from __future__ import annotations
 
@@ -9,15 +9,13 @@ import pytest
 from src.utils import config as C
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        "markers",
-        "slow: testes que tocam arquivos grandes (Parquet de SRAG).",
-    )
-
-
 @pytest.fixture(scope="session")
 def parquet_disponivel() -> Path | None:
-    """Retorna o Parquet processado, ou None se ainda não foi gerado."""
+    """Parquet processado, ou ``None`` se ainda não foi gerado.
+
+    Fixture de sessão — o path é calculado uma vez por execução. Testes
+    que dependem dela devem fazer ``pytest.skip()`` quando o retorno é
+    ``None`` (o Parquet não vem versionado no Git).
+    """
     caminho = C.PROCESSED_DIR / C.DATA_VERSION / C.PARQUET_NAME
     return caminho if caminho.is_file() else None

@@ -1,4 +1,4 @@
-"""Testes de análise de erros em `src.evaluation.errors`."""
+"""Testes de análise de erros em ``src.evaluation.errors``."""
 
 from __future__ import annotations
 
@@ -16,14 +16,28 @@ from src.evaluation.errors import (
 
 
 @pytest.fixture
-def dados() -> tuple[np.ndarray, np.ndarray]:
+def y_true_y_pred() -> tuple[np.ndarray, np.ndarray]:
+    """8 amostras com falsos positivos e negativos plantados.
+
+    Labels (não probabilidades) — para ``top_erros``, cada teste constrói
+    os seus próprios dados.
+    """
     y_true = np.array([0, 0, 1, 1, 0, 1, 0, 1])
     y_pred = np.array([0, 1, 1, 0, 0, 1, 1, 1])
     return y_true, y_pred
 
 
-def test_matriz_confusao_shape_e_valores(dados) -> None:
-    y_true, y_pred = dados
+def _df_com_indice(n: int) -> pd.DataFrame:
+    """DataFrame ``{"x": range(n)}`` — índice rastreável nos testes de extração."""
+    return pd.DataFrame({"x": range(n)})
+
+
+# ---------------------------------------------------------------------------
+# matriz_confusao
+# ---------------------------------------------------------------------------
+
+def test_matriz_confusao_shape_e_valores(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
     m = matriz_confusao(y_true, y_pred)
     assert {"pred_0", "pred_1"}.issubset(m.columns)
     assert {"real_0", "real_1"}.issubset(m.index)
@@ -31,32 +45,38 @@ def test_matriz_confusao_shape_e_valores(dados) -> None:
     assert m.loc["real_1", "pred_0"] == 1
 
 
-def test_matriz_confusao_tem_totais(dados) -> None:
-    y_true, y_pred = dados
+def test_matriz_confusao_tem_totais(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
     m = matriz_confusao(y_true, y_pred)
     assert "total" in m.columns
     assert "total" in m.index
     assert m.loc["total", "total"] == len(y_true)
 
 
-def test_extrair_fp(dados) -> None:
-    y_true, y_pred = dados
-    df = pd.DataFrame({"x": range(len(y_true))})
-    fp = extrair_falsos_positivos(df, y_true, y_pred)
+# ---------------------------------------------------------------------------
+# extrair_falsos_*
+# ---------------------------------------------------------------------------
+
+def test_extrair_fp(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
+    fp = extrair_falsos_positivos(_df_com_indice(len(y_true)), y_true, y_pred)
     assert len(fp) == 2
     assert set(fp["x"]) == {1, 6}
 
 
-def test_extrair_fn(dados) -> None:
-    y_true, y_pred = dados
-    df = pd.DataFrame({"x": range(len(y_true))})
-    fn = extrair_falsos_negativos(df, y_true, y_pred)
+def test_extrair_fn(y_true_y_pred) -> None:
+    y_true, y_pred = y_true_y_pred
+    fn = extrair_falsos_negativos(_df_com_indice(len(y_true)), y_true, y_pred)
     assert len(fn) == 1
     assert fn["x"].iloc[0] == 3
 
 
+# ---------------------------------------------------------------------------
+# metricas_por_grupo
+# ---------------------------------------------------------------------------
+
 def test_metricas_por_grupo_coluna_renomeada() -> None:
-    """A coluna de prevalência chama-se `taxa_positivos`, não `positivos`."""
+    """A coluna de prevalência chama-se ``taxa_positivos``, não ``positivos``."""
     n = 300
     df = pd.DataFrame({"grupo": ["A"] * n + ["B"] * n})
     y = pd.Series(np.tile([0, 1], n))
@@ -68,6 +88,7 @@ def test_metricas_por_grupo_coluna_renomeada() -> None:
 
 
 def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
+    """Grupo com menos de ``min_n`` é excluído do resultado."""
     df = pd.DataFrame({"grupo": ["A"] * 5 + ["B"] * 300})
     y = pd.Series([0, 1] * 152 + [0])
     p = pd.Series([0.1, 0.9] * 152 + [0.5])
@@ -79,13 +100,12 @@ def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
 
 def test_metricas_por_grupo_coluna_ausente() -> None:
     df = pd.DataFrame({"outra": [1, 2]})
-    y = np.array([0, 1])
-    p = np.array([0.1, 0.9])
     with pytest.raises(KeyError):
-        metricas_por_grupo(df, y, p, "grupo")
+        metricas_por_grupo(df, np.array([0, 1]), np.array([0.1, 0.9]), "grupo")
 
 
 def test_metricas_por_grupo_tamanho_incompativel() -> None:
+    """``df`` (5 linhas) com ``y`` (6 linhas) deve falhar antes de agregar."""
     df = pd.DataFrame({"grupo": ["A"] * 5})
     y = np.array([0, 1, 0, 1, 0, 1])
     p = np.array([0.1, 0.9, 0.2, 0.8, 0.3, 0.7])
@@ -93,7 +113,12 @@ def test_metricas_por_grupo_tamanho_incompativel() -> None:
         metricas_por_grupo(df, y, p, "grupo")
 
 
+# ---------------------------------------------------------------------------
+# top_erros
+# ---------------------------------------------------------------------------
+
 def test_top_erros_erro_absoluto() -> None:
+    """Adiciona ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs`` ao DataFrame."""
     df = pd.DataFrame({"x": range(6)})
     y_true = np.array([0, 0, 1, 1, 0, 1])
     y_prob = np.array([0.1, 0.9, 0.1, 0.9, 0.5, 0.5])
@@ -128,7 +153,6 @@ def test_top_erros_fn_ordena_por_prob_crescente() -> None:
 
 def test_top_erros_criterio_invalido() -> None:
     df = pd.DataFrame({"x": [1, 2]})
-    y_true = np.array([0, 1])
-    y_prob = np.array([0.1, 0.9])
+    # Valor viola intencionalmente o Literal CriterioTop.
     with pytest.raises(ValueError, match="criterio inválido"):
-        top_erros(df, y_true, y_prob, criterio="xxx")  # type: ignore[arg-type]
+        top_erros(df, np.array([0, 1]), np.array([0.1, 0.9]), criterio="xxx")  # type: ignore[arg-type]

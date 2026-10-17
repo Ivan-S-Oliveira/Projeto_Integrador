@@ -1,89 +1,70 @@
-"""
-Verificação de vazamento de alvo (leakage).
+"""Verificação anti-vazamento de dados.
 
-Uma coluna proibida em `X` invalida qualquer avaliação posterior: o
-modelo aprende o alvo por um atalho e as métricas de validação/holdout
-viram ficção. Este módulo concentra a checagem em um único ponto.
+``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
+A lista efetiva é a união de:
 
-Uso típico
-----------
-    from src.evaluation.leakage import check_leakage
-
-    check_leakage(X_train)
-    check_leakage(X_val)
-
-Para inspeção manual (sem config), passe a lista explicitamente:
-
-    check_leakage(X, forbidden_columns=["evolucao", "dt_evoluca"])
+- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
+- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
+- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
 """
 
 from __future__ import annotations
 
+from typing import Iterable
+
 import pandas as pd
+
+from src.utils import config as C
+
+__all__ = ["LeakageError", "check_leakage"]
 
 
 class LeakageError(RuntimeError):
-    """Levantado quando uma coluna proibida aparece em X."""
+    """Erro lançado quando variáveis com vazamento são encontradas."""
 
 
-def _resolver_colunas_proibidas(
-    forbidden_columns: list[str] | None,
+DEFAULT_LEAKAGE_COLUMNS = frozenset({
+    "evolucao", "dt_evoluca", "dt_encerra",
+    "uti", "utilizouvni", "suport_ven",
+    "antiviral", "antivirais",
+    "classificacao_final",
+    "cluster", "cluster_rotulo",
+})
+
+
+def _resolve_forbidden_columns(
+    forbidden_columns: Iterable[str] | None,
     target_column: str | None,
 ) -> set[str]:
-    from src.utils import config as C
+    """Conjunto efetivo de colunas proibidas.
 
-    if forbidden_columns is None:
-        forbidden_columns = list(C.cfg("features", "proibidas") or [])
+    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
+    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
+    """
+    base = (
+        set(forbidden_columns)
+        if forbidden_columns is not None
+        else set(C.cfg("features", "proibidas") or [])
+    )
+    base |= DEFAULT_LEAKAGE_COLUMNS
 
-    if target_column is None:
-        target_column = C.cfg("target", "coluna")
-
-    proibidas = set(forbidden_columns)
-
-    if target_column:
-        proibidas.add(target_column)
-
-    return proibidas
+    target = target_column if target_column is not None else C.cfg("target", "coluna")
+    if target:
+        base.add(target)
+    return base
 
 
 def check_leakage(
     X: pd.DataFrame,
     *,
-    forbidden_columns: list[str] | None = None,
+    forbidden_columns: Iterable[str] | None = None,
     target_column: str | None = None,
 ) -> None:
+    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
+
+    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
+    ``target_column=None`` usa ``target.coluna`` do YAML.
     """
-    Garante que X não contém colunas que vazam o alvo.
-
-    Parâmetros
-    ----------
-    X : pd.DataFrame
-        Matriz de features a ser verificada.
-    forbidden_columns : list[str] | None
-        Colunas proibidas. Se None, lê `features.proibidas` do
-        `configs/supervised.yaml`. Lista vazia desliga a checagem de
-        proibidas (apenas o alvo é verificado).
-    target_column : str | None
-        Nome da coluna alvo. Se None, lê `target.coluna`. Sempre
-        adicionado ao conjunto de proibidas, se não vazio.
-
-    Levanta
-    ------
-    LeakageError
-        Se qualquer coluna proibida estiver presente em `X`.
-    """
-    proibidas = _resolver_colunas_proibidas(forbidden_columns, target_column)
-
-    encontradas = sorted(set(X.columns) & proibidas)
-
-    if encontradas:
-        raise LeakageError(
-            f"Leakage detectado: colunas proibidas em X → {encontradas}.\n"
-            f"Revise `features.proibidas` em supervised.yaml "
-            f"ou remova essas colunas antes de prosseguir."
-        )
-
-    print(
-        f"[check_leakage] OK — {X.shape[1]} colunas, "
-        f"nenhuma proibida presente."
-    )
+    forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
+    if detected := sorted(set(X.columns) & forbidden):
+        raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")

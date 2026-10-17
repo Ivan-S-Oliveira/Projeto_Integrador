@@ -1,12 +1,13 @@
 """
 Calibração de probabilidades e escolha de limiar de decisão.
 
-Concentra as operações na fronteira entre modelo e decisão operacional:
-envolver um `Pipeline` já ajustado em `CalibratedClassifierCV` com uma base
-de calibração dedicada, e escolher o limiar de decisão ótimo segundo uma
-métrica (opcionalmente sujeito a precisão/recall mínimos).
+``calibrar`` envolve um ``Pipeline`` já ajustado em
+``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
+não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
+devolve o ótimo segundo uma métrica, com restrições opcionais de
+precision/recall.
 
-Toda a agregação de métricas vive em `src.evaluation`.
+A agregação de métricas vive em ``src.evaluation.metrics``.
 """
 
 from __future__ import annotations
@@ -21,13 +22,17 @@ from sklearn.metrics import brier_score_loss, roc_auc_score
 from src.evaluation.metrics import metricas_por_limiar
 
 __all__ = [
+    "MetodoCalibracao",
     "Metrica",
     "calibrar",
     "escolher_limiar",
 ]
 
-Metrica = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
-_METRICAS_VALIDAS: tuple[str, ...] = get_args(Metrica)
+Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
+MetodoCalibracao = Literal["isotonic", "sigmoid"]
+
+_METRICAS_VALIDAS = frozenset(get_args(Metrica))
+_METODOS_VALIDOS  = frozenset(get_args(MetodoCalibracao))
 
 
 def calibrar(
@@ -35,39 +40,25 @@ def calibrar(
     X_cal: pd.DataFrame,
     y_cal: pd.Series,
     *,
-    method: str = "isotonic",
+    method: MetodoCalibracao = "isotonic",
 ):
+    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
+
+    Use uma base de calibração distinta do treino do ``pipeline``. O
+    pipeline não é re-treinado — o calibrador aprende só o mapeamento
+    probabilidade → probabilidade.
+
+    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
+    (Platt) é paramétrico e mais estável em amostras pequenas.
     """
-    Envolve um `Pipeline` já ajustado em `CalibratedClassifierCV`.
+    if method not in _METODOS_VALIDOS:
+        raise ValueError(
+            f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
+        )
 
-    O pipeline base é congelado com `FrozenEstimator`, de modo que o
-    calibrador aprende apenas o mapeamento probabilidade → probabilidade
-    calibrada, sem re-treinar o estimador subjacente. Use uma base de
-    calibração (`X_cal`, `y_cal`) distinta da base de treino do pipeline.
-
-    Parâmetros
-    ----------
-    pipeline :
-        Estimador já ajustado (p.ex. `Pipeline` de pré-processamento +
-        classificador). Não é re-treinado.
-    X_cal, y_cal :
-        Base de calibração. Não deve ser o mesmo conjunto usado no fit do
-        `pipeline`, sob pena de o calibrador herdar o overfit do modelo.
-    method : {"isotonic", "sigmoid"}
-        Método de calibração. `"isotonic"` é não-paramétrico e requer mais
-        dados; `"sigmoid"` (Platt) é paramétrico e mais estável em amostras
-        pequenas.
-
-    Retorno
-    -------
-    `CalibratedClassifierCV` já ajustado, pronto para `predict_proba`.
-
-    Requer scikit-learn >= 1.6 (`sklearn.frozen.FrozenEstimator`).
-    """
-    if method not in ("isotonic", "sigmoid"):
-        raise ValueError(f"method inválido: {method!r}")
-
-    from sklearn.frozen import FrozenEstimator  # sklearn >= 1.6
+    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
+    # importável em ambientes mais antigos (o erro surge só em calibrar()).
+    from sklearn.frozen import FrozenEstimator
 
     modelo = CalibratedClassifierCV(
         estimator=FrozenEstimator(pipeline),
@@ -86,44 +77,19 @@ def escolher_limiar(
     min_precision: float | None = None,
     min_recall: float | None = None,
 ) -> dict[str, Any]:
-    """
-    Varre uma grade de limiares e devolve o ótimo segundo `metrica`.
+    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
 
-    A tabela completa de métricas por limiar vem de
-    `src.evaluation.metrics.metricas_por_limiar`; este módulo apenas
-    filtra, ranqueia e devolve o resumo.
+    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
+    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
+    ``ValueError``.
 
-    Parâmetros
-    ----------
-    y_true, y_prob :
-        Rótulos verdadeiros (0/1) e probabilidades preditas em [0, 1].
-    metrica : {"f1", "precision", "recall", "accuracy", "youden_j"}
-        Métrica maximizada na escolha do limiar. `"youden_j"` corresponde a
-        `recall + especificidade − 1`, critério citado em `decisoes.md`.
-    n_limiares : int
-        Número de limiares avaliados, linearmente espaçados em (0.01, 0.99).
-    min_precision : float | None
-        Se informado, restringe os candidatos a limiares cuja precision
-        seja ≥ `min_precision` antes de maximizar `metrica`.
-    min_recall : float | None
-        Se informado, restringe os candidatos a limiares cujo recall seja
-        ≥ `min_recall` antes de maximizar `metrica`. Pode ser combinado com
-        `min_precision`; se nenhum candidato satisfizer o conjunto de
-        restrições, levanta `ValueError`.
-
-    Retorno
-    -------
-    dict com:
-        - `limiar`  : float — limiar ótimo.
-        - `valor`   : float — valor da métrica escolhida no ótimo.
-        - `metrica` : str   — métrica usada.
-        - `auc`     : float — ROC-AUC no conjunto avaliado.
-        - `brier`   : float — Brier score no conjunto avaliado.
-        - `tabela`  : `pd.DataFrame` — grade completa com todas as métricas.
+    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
+    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
+    ``metricas_por_limiar``).
     """
     if metrica not in _METRICAS_VALIDAS:
         raise ValueError(
-            f"metrica inválida: {metrica!r}. Use {list(_METRICAS_VALIDAS)}."
+            f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
         )
 
     y_true_arr = np.asarray(y_true).ravel().astype(int)
@@ -131,8 +97,8 @@ def escolher_limiar(
 
     tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
 
-    filtros: list[str] = []
     candidatos = tabela
+    filtros: list[str] = []
     if min_precision is not None:
         filtros.append(f"precision ≥ {min_precision}")
         candidatos = candidatos[candidatos["precision"] >= min_precision]
@@ -145,12 +111,11 @@ def escolher_limiar(
 
     if metrica not in candidatos.columns:
         raise ValueError(
-            f"A métrica {metrica!r} não foi produzida por "
-            f"metricas_por_limiar. Colunas disponíveis: "
-            f"{sorted(candidatos.columns)}"
+            f"A métrica {metrica!r} não foi produzida por metricas_por_limiar. "
+            f"Colunas disponíveis: {sorted(candidatos.columns)}"
         )
 
-    idx_melhor = candidatos[metrica].idxmax()
+    idx_melhor   = candidatos[metrica].idxmax()
     linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
 
     return {

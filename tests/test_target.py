@@ -1,4 +1,4 @@
-"""Contrato do alvo binário: `evolucao` → {0, 1, NaN}."""
+"""Contrato do alvo binário: ``evolucao`` → {0, 1, NaN}."""
 
 from __future__ import annotations
 
@@ -7,32 +7,40 @@ import pandas as pd
 import pytest
 
 from src.models.pipeline import criar_alvo_binario, filtrar_rotulos_validos
+from src.utils import config as C
 
 
-def _df(valores: list) -> pd.DataFrame:
+def _df(valores: list[float | None]) -> pd.DataFrame:
+    """DataFrame ``{"evolucao": valores, "feat": range(n)}``.
+
+    A coluna ``feat`` serve como índice rastreável nas asserts.
+    """
     return pd.DataFrame({"evolucao": valores, "feat": range(len(valores))})
 
 
-def test_positivo_e_um() -> None:
-    y = criar_alvo_binario(_df([2.0, 2.0]))
-    assert y.tolist() == [1.0, 1.0]
+# ---------------------------------------------------------------------------
+# Mapeamento evolucao → {0, 1, NaN}
+# ---------------------------------------------------------------------------
 
-
-def test_negativo_e_zero() -> None:
-    y = criar_alvo_binario(_df([1.0, 1.0]))
-    assert y.tolist() == [0.0, 0.0]
-
-
-def test_codigos_3_e_9_viram_nan() -> None:
-    y = criar_alvo_binario(_df([3.0, 9.0]))
-    assert y.isna().all()
-
-
-def test_nan_de_entrada_permanece_nan() -> None:
-    y = criar_alvo_binario(_df([np.nan, 1.0, 2.0]))
-    assert pd.isna(y.iloc[0])
-    assert y.iloc[1] == 0.0
-    assert y.iloc[2] == 1.0
+@pytest.mark.parametrize(
+    "entrada, esperado",
+    [
+        ([2.0],       [1.0]),
+        ([1.0],       [0.0]),
+        ([3.0],       [float("nan")]),
+        ([9.0],       [float("nan")]),
+        ([np.nan],    [float("nan")]),
+    ],
+    ids=["positivo", "negativo", "codigo_3", "codigo_9", "nan_entrada"],
+)
+def test_mapeamento_puro(entrada, esperado) -> None:
+    """``2.0``→1, ``1.0``→0, qualquer outro→NaN."""
+    y = criar_alvo_binario(_df(entrada))
+    for obtido, esperado_valor in zip(y, esperado):
+        if pd.isna(esperado_valor):
+            assert pd.isna(obtido)
+        else:
+            assert obtido == esperado_valor
 
 
 def test_mistura_completa() -> None:
@@ -42,11 +50,13 @@ def test_mistura_completa() -> None:
     assert y.iloc[2:].isna().all()
 
 
+# ---------------------------------------------------------------------------
+# filtrar_rotulos_validos
+# ---------------------------------------------------------------------------
+
 def test_filtrar_remove_nan() -> None:
     df = _df([1.0, 2.0, 3.0, 9.0, np.nan])
-    X = df[["feat"]]
-    y = criar_alvo_binario(df)
-    X_ok, y_ok = filtrar_rotulos_validos(X, y)
+    X_ok, y_ok = filtrar_rotulos_validos(df[["feat"]], criar_alvo_binario(df))
 
     assert len(y_ok) == 2
     assert y_ok.dtype == np.int8
@@ -60,6 +70,10 @@ def test_filtrar_exige_indice_alinhado() -> None:
     with pytest.raises(ValueError, match="mesmo índice"):
         filtrar_rotulos_validos(X, y)
 
+
+# ---------------------------------------------------------------------------
+# Validação de argumentos
+# ---------------------------------------------------------------------------
 
 def test_positivos_e_negativos_nao_se_sobrepoem() -> None:
     with pytest.raises(ValueError, match="sobrepor"):
@@ -76,15 +90,16 @@ def test_negativos_vazio_levanta() -> None:
         criar_alvo_binario(_df([1.0, 2.0]), positivos=[2.0], negativos=[])
 
 
-def test_default_vem_do_yaml() -> None:
-    """Sem argumentos, usa `target.positivos` e `target.negativos` do YAML."""
-    from src.utils import config as C
+# ---------------------------------------------------------------------------
+# Default vem do YAML
+# ---------------------------------------------------------------------------
 
+def test_default_vem_do_yaml() -> None:
+    """Sem argumentos, usa ``target.positivos`` e ``target.negativos`` do YAML."""
     pos = C.cfg("target", "positivos")
     neg = C.cfg("target", "negativos")
     assert pos, "target.positivos precisa estar definido no YAML"
     assert neg, "target.negativos precisa estar definido no YAML"
 
-    df = _df([float(pos[0]), float(neg[0])])
-    y = criar_alvo_binario(df)
+    y = criar_alvo_binario(_df([float(pos[0]), float(neg[0])]))
     assert y.tolist() == [1.0, 0.0]

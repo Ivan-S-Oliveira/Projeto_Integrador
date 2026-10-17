@@ -1,10 +1,8 @@
 """
-Baseline: `DummyClassifier` — referência mínima.
+Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
 
-Responde à pergunta: "o modelo aprendeu algo além da classe majoritária?"
-
-Se o AUC do baseline ≈ 0.5 e a acurácia ≈ frequência da classe majoritária,
-qualquer modelo com desempenho acima disso está efetivamente aprendendo.
+Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
+O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
 """
 from __future__ import annotations
 
@@ -31,18 +29,17 @@ def build_baseline_pipeline(
     strategy: DummyStrategy = "prior",
     preprocessor=None,
 ) -> Pipeline:
-    """
-    Retorna um `Pipeline` com `DummyClassifier`.
+    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
 
-    Parâmetros
-    ----------
-    strategy : DummyStrategy
-        Estratégia do DummyClassifier. Recomendadas:
-            - "prior"        : prediz a frequência das classes (baseline AUC)
-            - "most_frequent": prediz sempre a classe majoritária (baseline acc)
-            - "stratified"   : prediz aleatoriamente respeitando o prior
-    preprocessor : ColumnTransformer | None
-        Se None, usa `build_preprocessor()`.
+    Estratégias mais úteis como piso:
+
+    - ``"prior"``         → probabilidade constante = prevalência do treino
+      (AUC ≈ 0.5 por construção; Brier ainda informativo);
+    - ``"most_frequent"`` → sempre a classe majoritária
+      (F1/recall = 0 se a positiva for minoria);
+    - ``"stratified"``    → amostra respeitando o prior.
+
+    ``preprocessor=None`` usa ``build_preprocessor()``.
     """
     pre = preprocessor if preprocessor is not None else build_preprocessor()
 
@@ -63,22 +60,13 @@ def evaluate_baseline(
     *,
     strategy: DummyStrategy = "prior",
 ) -> dict[str, str | float]:
-    """
-    Treina um DummyClassifier em (X_train, y_train) e avalia em (X_eval, y_eval).
+    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
 
-    Retorna dict com AUC, AP, Brier, F1, precision, recall, accuracy.
-    Serve como piso: qualquer modelo real precisa superar isto.
-
-    Nota
-    ----
-    - strategy="prior"         → probabilidade constante = prevalência do treino
-                                 (AUC ≈ 0.5 por construção, mas Brier informativo)
-    - strategy="most_frequent" → prevê sempre a classe majoritária
-                                 (F1/recall = 0 se a positiva for minoria)
+    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
+    ``metricas_completas`` — ver esse módulo para a lista completa.
     """
     pipe = build_baseline_pipeline(strategy=strategy)
     pipe.fit(X_train, y_train)
-
     y_prob = pipe.predict_proba(X_eval)[:, 1]
 
     return {
