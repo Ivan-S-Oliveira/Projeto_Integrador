@@ -165,3 +165,9 @@ outputs/predictions/*
 /PROJECT_COMPLETE_REFERENCE.json
 /REPOSITORY_SNAPSHOT.md
 /REPOSITORY_SNAPSHOT.json
+# BEGIN LOCAL PENDENCIAS PANEL
+/.srag-status-local/
+/.project-status-local/
+/SRAG_status_discreto_single_markdown/
+# END LOCAL PENDENCIAS PANEL
+
