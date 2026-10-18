@@ -13,13 +13,19 @@ from __future__ import annotations
 
 import logging
 from typing import Iterable
+from typing import Iterable, Literal
 
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
+from sklearn.preprocessing import (
+    FunctionTransformer,
+    OneHotEncoder,
+    OrdinalEncoder,
+    StandardScaler,
+)
 from src.utils import config as C
 
 __all__ = [
@@ -66,40 +72,26 @@ def _alvo_cfg_negativos() -> list[float]:
     return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
 
-def build_preprocessor(
-    numericas: Iterable[str] | None = None,
-    categoricas: Iterable[str] | None = None,
-) -> ColumnTransformer:
-    """``ColumnTransformer`` de pré-processamento.
+# SUBSTITUA build_preprocessor EM src/models/pipeline.py.
+# Garanta também os imports: Literal, numpy as np, FunctionTransformer, OrdinalEncoder.
+SaidaPreprocessador = Literal["esparsa", "ordinal"]
 
-    - Numéricas: ``SimpleImputer(strategy="median")`` + ``StandardScaler``.
-    - Categóricas: ``SimpleImputer(strategy="constant", fill_value=AUSENTE)``
-      + ``OneHotEncoder(handle_unknown="ignore")``.
+def build_preprocessor(numericas=None,categoricas=None,*,saida: SaidaPreprocessador="esparsa"):
+    num=list(numericas) if numericas is not None else FEATURES_NUMERICAS
+    cat=list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
+    pipe_num=Pipeline([("imputer",SimpleImputer(strategy="median")),
+                       ("scaler",StandardScaler(with_mean=False) if saida=="esparsa" else StandardScaler())])
+    if saida=="esparsa":
+        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
+                           ("encoder",OneHotEncoder(handle_unknown="ignore",sparse_output=True,dtype=np.float32))])
+    elif saida=="ordinal":
+        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
+                           ("encoder",OrdinalEncoder(handle_unknown="use_encoded_value",unknown_value=np.nan,dtype=np.float32))])
+    else: raise ValueError("saida deve ser 'esparsa' ou 'ordinal'")
+    return ColumnTransformer([("num",pipe_num,num),("cat",pipe_cat,cat)],remainder="drop",
+                             sparse_threshold=1.0 if saida=="esparsa" else 0.0,
+                             verbose_feature_names_out=False)
 
-    ``AUSENTE`` vem de ``missingness.categoricas.valor_ausente`` no YAML,
-    mantendo o mesmo comportamento do Notebook 03. ``None`` em cada
-    parâmetro usa a lista correspondente do YAML.
-    """
-    num = list(numericas) if numericas is not None else FEATURES_NUMERICAS
-    cat = list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
-
-    pipe_num = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler",  StandardScaler()),
-    ])
-    pipe_cat = Pipeline([
-        ("imputer", SimpleImputer(strategy="constant", fill_value=AUSENTE)),
-        ("onehot",  OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
-
-    return ColumnTransformer(
-        transformers=[
-            ("num", pipe_num, num),
-            ("cat", pipe_cat, cat),
-        ],
-        remainder="drop",
-        verbose_feature_names_out=False,
-    )
 
 
 def criar_alvo_binario(

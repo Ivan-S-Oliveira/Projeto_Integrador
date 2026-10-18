@@ -1,48 +1,69 @@
-"""
-Gradient boosting — ``HistGradientBoostingClassifier`` (nativo do sklearn).
+"""Gradient boosting supervisionado do Projeto SRAG."""
 
-Requer scikit-learn >= 1.2 (``class_weight`` como str ou dict).
-"""
 from __future__ import annotations
 
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import Pipeline
 
-from src.models.pipeline import build_preprocessor, random_state
+from src.models.pipeline import (
+    FEATURES_CATEGORICAS,
+    FEATURES_NUMERICAS,
+    build_preprocessor,
+    random_state,
+)
+
+__all__ = ["build_boosting_pipeline"]
 
 
 def build_boosting_pipeline(
-    *,
-    learning_rate: float = 0.05,
-    max_iter: int = 500,
+    learning_rate: float = 0.08,
+    max_iter: int = 150,
     max_depth: int | None = None,
     max_leaf_nodes: int = 31,
-    min_samples_leaf: int = 20,
-    l2_regularization: float = 0.0,
-    early_stopping: bool = False,
+    min_samples_leaf: int = 100,
+    l2_regularization: float = 0.10,
+    early_stopping: bool = True,
     validation_fraction: float = 0.1,
     n_iter_no_change: int = 20,
     class_weight: str | dict | None = "balanced",
     preprocessor=None,
 ) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``HistGradientBoostingClassifier``.
+    """Constrói o pipeline ordinal do HistGradientBoostingClassifier."""
 
-    Parâmetros cujo default difere do sklearn por decisão do projeto:
+    categorical_features = None
 
-    - ``early_stopping=False`` (em vez de ``'auto'``): sem early stopping
-      interno, ``max_iter`` é escolhido na validação (gate G6);
-    - ``class_weight="balanced"``: ajusta pelo inverso da frequência.
+    if preprocessor is None:
+        preprocessor = build_preprocessor(
+            numericas=FEATURES_NUMERICAS,
+            categoricas=FEATURES_CATEGORICAS,
+            saida="ordinal",
+        )
 
-    Os restantes parâmetros seguem a semântica do sklearn
-    (``learning_rate``, ``max_depth``, ``max_leaf_nodes``,
-    ``min_samples_leaf``, ``l2_regularization``, ``validation_fraction``,
-    ``n_iter_no_change``).
+        categorical_features = [
+            False
+            for _ in FEATURES_NUMERICAS
+        ]
 
-    ``preprocessor=None`` usa ``build_preprocessor()``.
-    """
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
+        categorical_features.extend(
+            True
+            for _ in FEATURES_CATEGORICAS
+        )
 
-    clf = HistGradientBoostingClassifier(
+    if categorical_features is not None:
+        quantidade_features_esperada = sum(
+            (
+                len(FEATURES_NUMERICAS),
+                len(FEATURES_CATEGORICAS),
+            )
+        )
+
+        if len(categorical_features) != quantidade_features_esperada:
+            raise RuntimeError(
+                "A máscara categórica não possui o mesmo tamanho "
+                "do contrato de features."
+            )
+
+    classificador = HistGradientBoostingClassifier(
         learning_rate=learning_rate,
         max_iter=max_iter,
         max_depth=max_depth,
@@ -53,7 +74,13 @@ def build_boosting_pipeline(
         validation_fraction=validation_fraction,
         n_iter_no_change=n_iter_no_change,
         class_weight=class_weight,
+        categorical_features=categorical_features,
         random_state=random_state(),
     )
 
-    return Pipeline([("pre", pre), ("clf", clf)])
+    return Pipeline(
+        steps=[
+            ("pre", preprocessor),
+            ("clf", classificador),
+        ]
+    )
