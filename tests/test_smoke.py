@@ -34,10 +34,11 @@ def parquet(parquet_disponivel: Path | None) -> Path:
     return parquet_disponivel
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def schema_colunas(parquet: Path) -> set[str]:
-    """Nome das colunas do Parquet — lido uma vez por módulo."""
+    """Nome das colunas do Parquet para os testes de schema."""
     return set(pq.read_schema(parquet).names)
+
 
 
 # ---------------------------------------------------------------------------

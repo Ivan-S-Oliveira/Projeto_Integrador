@@ -12,7 +12,6 @@ reimplementar o pré-processamento.
 from __future__ import annotations
 
 import logging
-from typing import Iterable
 from typing import Iterable, Literal
 
 import numpy as np
@@ -72,27 +71,88 @@ def _alvo_cfg_negativos() -> list[float]:
     return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
 
-# SUBSTITUA build_preprocessor EM src/models/pipeline.py.
-# Garanta também os imports: Literal, numpy as np, FunctionTransformer, OrdinalEncoder.
 SaidaPreprocessador = Literal["esparsa", "ordinal"]
 
-def build_preprocessor(numericas=None,categoricas=None,*,saida: SaidaPreprocessador="esparsa"):
-    num=list(numericas) if numericas is not None else FEATURES_NUMERICAS
-    cat=list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
-    pipe_num=Pipeline([("imputer",SimpleImputer(strategy="median")),
-                       ("scaler",StandardScaler(with_mean=False) if saida=="esparsa" else StandardScaler())])
-    if saida=="esparsa":
-        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
-                           ("encoder",OneHotEncoder(handle_unknown="ignore",sparse_output=True,dtype=np.float32))])
-    elif saida=="ordinal":
-        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
-                           ("encoder",OrdinalEncoder(handle_unknown="use_encoded_value",unknown_value=np.nan,dtype=np.float32))])
-    else: raise ValueError("saida deve ser 'esparsa' ou 'ordinal'")
-    return ColumnTransformer([("num",pipe_num,num),("cat",pipe_cat,cat)],remainder="drop",
-                             sparse_threshold=1.0 if saida=="esparsa" else 0.0,
-                             verbose_feature_names_out=False)
+
+def _para_float32() -> FunctionTransformer:
+    """Converte as variáveis numéricas para float32."""
+    return FunctionTransformer(
+        np.asarray,
+        kw_args={"dtype": np.float32},
+        feature_names_out="one-to-one",
+    )
 
 
+def build_preprocessor(
+    numericas: Iterable[str] | None = None,
+    categoricas: Iterable[str] | None = None,
+    *,
+    saida: SaidaPreprocessador = "esparsa",
+) -> ColumnTransformer:
+    """Constrói o pré-processamento central dos modelos supervisionados."""
+    num = list(numericas) if numericas is not None else list(FEATURES_NUMERICAS)
+    cat = list(categoricas) if categoricas is not None else list(FEATURES_CATEGORICAS)
+
+    imputer_categorico = SimpleImputer(
+        strategy="constant",
+        fill_value=AUSENTE,
+    )
+
+    if saida == "esparsa":
+        pipe_num = Pipeline(
+            steps=[
+                ("float32", _para_float32()),
+                ("imputer", SimpleImputer(strategy="median")),
+                ("scaler", StandardScaler(with_mean=False)),
+            ]
+        )
+        pipe_cat = Pipeline(
+            steps=[
+                ("imputer", imputer_categorico),
+                (
+                    "encoder",
+                    OneHotEncoder(
+                        handle_unknown="ignore",
+                        sparse_output=True,
+                        dtype=np.float32,
+                    ),
+                ),
+            ]
+        )
+    elif saida == "ordinal":
+        pipe_num = Pipeline(
+            steps=[
+                ("float32", _para_float32()),
+                ("imputer", SimpleImputer(strategy="median")),
+            ]
+        )
+        pipe_cat = Pipeline(
+            steps=[
+                ("imputer", imputer_categorico),
+                (
+                    "encoder",
+                    OrdinalEncoder(
+                        handle_unknown="use_encoded_value",
+                        unknown_value=np.nan,
+                        dtype=np.float32,
+                    ),
+                ),
+            ]
+        )
+    else:
+        raise ValueError(
+            f"saida inválida: {saida!r}. Use 'esparsa' ou 'ordinal'."
+        )
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", pipe_num, num),
+            ("cat", pipe_cat, cat),
+        ],
+        remainder="drop",
+        sparse_threshold=1.0 if saida == "esparsa" else 0.0,
+        verbose_feature_names_out=False,
+    )
 
 def criar_alvo_binario(
     df: pd.DataFrame,
