@@ -18,16 +18,16 @@ Creates (default):
 What the snapshot contains
 --------------------------
 1.  Git state: branch, commit, remote, status, recent log, diff stat and the
-    full diff of uncommitted changes (capped).
+    optional uncommitted diff, disabled by default for speed.
 2.  Full path inventory of the working folder, including ignored and local
     folders (data/, outputs/, models/, reports/), with size, modification time
     and Git state. File contents of data are never copied.
-3.  Full source of every relevant text file: .py, .ipynb, .md, .yaml, .yml,
+3.  Full, untruncated source of every relevant text file: .py, .ipynb, .md, .yaml, .yml,
     .toml, .json, .csv (capped), .txt, .ini, .cfg, .ps1, .sh, .sql, etc.
 4.  Notebooks: every cell source, execution counts and, by default, the TEXT
     outputs (streams, text/plain results, errors and tracebacks). Images and
     HTML are replaced by placeholders. Execution order problems are reported.
-5.  Small text artifacts produced by the project (manifests, waterfalls,
+5.  Optional small text artifacts produced by the project (manifests, waterfalls,
     summary tables under outputs/, reports/, data/ manifests), capped by size
     and number of CSV rows. Prediction folders are never included.
 6.  Text extracted from .docx and .pptx documents (plans, reports).
@@ -91,7 +91,7 @@ try:
 except Exception:  # pragma: no cover
     tomllib = None
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 6
 
 OUTPUT_DIR = Path("docs")
 OUTPUT_MD_NAME = "PROJECT_COMPLETE_REFERENCE.md"
@@ -103,7 +103,7 @@ DEFAULT_MAX_OUTPUT_CHARS = 6_000
 DEFAULT_MAX_ARTIFACT_BYTES = 300_000
 DEFAULT_MAX_CSV_ROWS = 60
 DEFAULT_MAX_DIFF_CHARS = 400_000
-DEFAULT_GIT_LOG = 40
+DEFAULT_GIT_LOG = 10
 DEFAULT_SPLIT_MB = 1.0
 MAX_INVENTORY_ENTRIES = 30_000
 MAX_DOCSTRING_CHARS = 4_000
@@ -208,11 +208,11 @@ CONTEXT = """# Project Complete Reference
 
 ## 1. Purpose
 
-This reference lets a person or an AI diagnose the SRAG project without prior
-conversation context and without access to the machine. It contains the full
-source of code, notebooks (with text outputs), configuration and documentation,
-plus the Git state, the local path inventory, installed package versions,
-parsed configuration and static consistency checks.
+This reference lets a person or an AI continue the SRAG project without prior
+conversation context and without access to the machine. It prioritizes the full,
+untruncated source of Python files, notebooks, tests, configuration and project
+documentation, plus fast structural diagnostics that prevent duplicated functions,
+conflicting pipelines and patchwork implementations.
 
 ## 2. Methodological guardrails
 
@@ -1854,8 +1854,10 @@ def split_document(document: str, max_bytes: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
+    print("[reference] 1/7 Coletando estado Git básico...", flush=True)
     redactor = Redactor(root)
     entries, tracked, untracked = collect_git_entries(root)
+    print("[reference] 2/7 Inventariando arquivos locais...", flush=True)
     inventory, inventory_truncated = walk_inventory(root, tracked, untracked)
     inv_by_path = {row["path"]: row for row in inventory}
     existing_paths = set(inv_by_path)
@@ -1898,7 +1900,16 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
     pyproject_error: str | None = None
     requirements: dict[str, str] | None = None
 
-    for rel, is_tracked, status in selected:
+    print(
+        f"[reference] 3/7 Lendo {len(selected)} arquivos de código, notebooks e documentação em integridade...",
+        flush=True,
+    )
+    for indice_arquivo, (rel, is_tracked, status) in enumerate(selected, 1):
+        if indice_arquivo == 1 or indice_arquivo % 10 == 0 or indice_arquivo == len(selected):
+            print(
+                f"[reference] Arquivo {indice_arquivo}/{len(selected)}: {rel.as_posix()}",
+                flush=True,
+            )
         absolute = root / rel
         data = absolute.read_bytes()
         digest = sha256_bytes(data)
@@ -1945,7 +1956,7 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
             text, warnings = redactor(text)
             files_text[rel.as_posix()] = text
             header.append("- Content: plain text extracted (formatting, tables layout and images not preserved)")
-            source_sections.append("\n".join(header) + "\n\n" + code_block(truncate(text, args.max_inline_bytes), "text") + "\n")
+            source_sections.append("\n".join(header) + "\n\n" + code_block(text.rstrip(), "text") + "\n")
             file_records.append(record)
             continue
         if b"\x00" in data[:8192]:
@@ -1973,14 +1984,9 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
             pyproject_data, pyproject_error = parse_pyproject(decoded)
         elif rel.name == "requirements.txt" and len(rel.parts) == 1:
             requirements = parse_requirements(decoded)
-        if suffix in {".csv", ".tsv"} and len(data) > args.max_artifact_bytes:
-            preview, total = csv_preview(text, args.max_csv_rows)
-            header.append(f"- Content: first {args.max_csv_rows} of {total} rows")
-            body = code_block(preview, "csv")
-        elif len(data) > args.max_inline_bytes:
-            body = code_block(truncate(text, args.max_inline_bytes), LANG.get(suffix, "text"))
-        else:
-            body = code_block(text.rstrip(), LANG.get(suffix, "text"))
+        # Source and documentation are included in full. Limits apply only to
+        # notebook outputs and generated artifacts, never to code or project docs.
+        body = code_block(text.rstrip(), LANG.get(suffix, "text"))
         source_sections.append("\n".join(header) + "\n\n" + body + "\n")
         file_records.append(record)
 
@@ -2017,6 +2023,7 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
 
     # Indexes and diagnostics
     symbols = [s for f in python_files for s in f.symbols]
+    print("[reference] 4/7 Construindo catálogo de APIs, consumidores e testes...", flush=True)
     consumers = index_consumers(symbols, python_files, notebooks)
     tests = index_tests(symbols, python_files)
     import_map = top_level_import_map()
@@ -2067,11 +2074,17 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
                                    f"Path inventory stopped at {MAX_INVENTORY_ENTRIES} files.", [],
                                    "Exclude large generated folders or raise MAX_INVENTORY_ENTRIES."))
 
+    if args.run_tests:
+        print("[reference] 5/7 Executando pytest...", flush=True)
+    else:
+        print("[reference] 5/7 Pytest não solicitado; seguindo sem executar código...", flush=True)
     tests_result = run_tests(root, args.pytest_args, args.test_timeout) if args.run_tests else None
     if tests_result and tests_result["returncode"] not in (0, None):
         attention.append(Attention("high", "tests-failing", "pytest returned a non-zero exit code.",
                                    [tests_result["output"].splitlines()[-1] if tests_result["output"] else ""],
                                    "See Section 11."))
+
+    print("[reference] 6/7 Coletando contexto Git rápido e montando documentos...", flush=True)
 
     # Git details
     branch = git(root, "branch", "--show-current").strip() or "detached"
@@ -2313,14 +2326,15 @@ def parse_args() -> argparse.Namespace:
                         help="Omit notebook outputs (sources only).")
     parser.add_argument("--max-output-chars", type=int, default=DEFAULT_MAX_OUTPUT_CHARS,
                         help="Maximum characters per notebook output.")
-    parser.add_argument("--no-artifacts", dest="artifacts", action="store_false",
-                        help="Do not include small text artifacts from data/, outputs/, reports/, models/.")
+    parser.add_argument("--artifacts", dest="artifacts", action="store_true",
+                        help="Also include small generated text artifacts. Disabled by default for speed.")
     parser.add_argument("--max-artifact-bytes", type=int, default=DEFAULT_MAX_ARTIFACT_BYTES)
     parser.add_argument("--max-csv-rows", type=int, default=DEFAULT_MAX_CSV_ROWS)
     parser.add_argument("--max-inline-bytes", type=int, default=DEFAULT_MAX_INLINE_BYTES,
-                        help="Files above this size are truncated (notebooks use a reduced view).")
+                        help="Legacy compatibility option. Source and documentation are always included in full.")
     parser.add_argument("--git-log", type=int, default=DEFAULT_GIT_LOG, help="Number of recent commits to list.")
-    parser.add_argument("--no-diff", dest="include_diff", action="store_false", help="Omit the full uncommitted diff.")
+    parser.add_argument("--include-diff", dest="include_diff", action="store_true",
+                        help="Include the full uncommitted diff. Disabled by default for speed.")
     parser.add_argument("--max-diff-chars", type=int, default=DEFAULT_MAX_DIFF_CHARS)
     parser.add_argument("--run-tests", action="store_true", help="Run pytest and include the result (executes project code).")
     parser.add_argument("--pytest-args", default="", help="Extra pytest arguments, e.g. \"-m 'not slow'\".")
@@ -2338,6 +2352,7 @@ def main() -> int:
     args = parse_args()
     root = root_dir()
     document, machine = build_reference(root, args)
+    print("[reference] 7/7 Gravando Markdown, JSON e partes...", flush=True)
     out_dir = root / args.output_dir
     output_md = out_dir / OUTPUT_MD_NAME
     output_json = out_dir / OUTPUT_JSON_NAME
