@@ -56,11 +56,20 @@ def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
 
 
 def _resolve_kind(kind: CohortKind | None) -> str:
-    selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
+    selected = (
+        kind
+        or os.getenv(
+            _ENV_VAR,
+            _DEFAULT_KIND,
+        )
+    ).lower()
+
     if selected not in _VALID_KINDS:
         raise ValueError(
-            f"{_ENV_VAR} deve ser {sorted(_VALID_KINDS)}. Recebido: {selected!r}."
+            f"{_ENV_VAR} deve ser provisional, final ou auto. "
+            f"Recebido: {selected!r}."
         )
+
     return selected
 
 

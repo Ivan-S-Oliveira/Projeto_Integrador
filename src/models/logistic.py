@@ -87,21 +87,30 @@ def build_logistic_pipeline(
     combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
     com ``l1_ratio`` nos extremos.
     """
-    if penalty is None:
-        penalty = _penalty_do_yaml()
-
-    if penalty == "l2":
-        l1_ratio = 0.0
-    elif penalty == "l1":
-        l1_ratio = 1.0
-    elif penalty == "elasticnet" and not 0.0 < l1_ratio < 1.0:
+    if not 0.0 <= l1_ratio <= 1.0:
         raise ValueError(
-            f"penalty='elasticnet' requer 0 < l1_ratio < 1; "
-            f"recebido l1_ratio={l1_ratio!r}."
+            f"l1_ratio deve estar em [0, 1]; "
+            f"recebido {l1_ratio!r}."
         )
 
-    if not 0.0 <= l1_ratio <= 1.0:
-        raise ValueError(f"l1_ratio deve estar em [0, 1]; recebido {l1_ratio!r}.")
+    penalty_configurada = penalty
+
+    if penalty_configurada is None and l1_ratio == 0.0:
+        penalty_configurada = _penalty_do_yaml()
+
+    if penalty_configurada == "l2":
+        l1_ratio = 0.0
+
+    elif penalty_configurada == "l1":
+        l1_ratio = 1.0
+
+    elif penalty_configurada == "elasticnet":
+        if not 0.0 < l1_ratio < 1.0:
+            raise ValueError(
+                "penalty='elasticnet' requer "
+                "0 < l1_ratio < 1; "
+                f"recebido l1_ratio={l1_ratio!r}."
+            )
 
     tipo             = _tipo_penalidade(l1_ratio)
     solvers_validos  = _L1_RATIO_SOLVERS[tipo]
