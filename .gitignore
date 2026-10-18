@@ -188,21 +188,11 @@ docs/project_reference_parts/*
 /*status_isolado*.zip
 # END GENERATED LOCAL OUTPUTS
 
-# BEGIN SHARED PANEL
-!/.srag-status-local/
-!/.srag-status-local/**
-!/.project-status-local/
-!/.project-status-local/**
+
+
+# BEGIN LOCAL PENDENCIAS PANEL
+/.srag-status-local/
+/.project-status-local/
+/SRAG_status_discreto_single_markdown/
 !/PROJECT_STATUS.md
-# END SHARED PANEL
-.srag-status-local/ABRIR_STATUS.cmd
-.srag-status-local/baseline.json
-.srag-status-local/cache.json
-.srag-status-local/painel.html
-.srag-status-local/REMOVER.txt
-.srag-status-local/server.py
-docs/project_reference_parts/
-docs/project_reference_parts/
-docs/project_reference_parts/
-docs/project_reference_parts/part_03_of_03.md
-docs/project_reference_parts/part_01_of_03.md
+# END LOCAL PENDENCIAS PANEL

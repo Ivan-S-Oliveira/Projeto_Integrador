@@ -5,7 +5,7 @@ Execute na raiz do repositório:
     python tools/read_outputs.py
 
 Saída única:
-    .local-analysis/compiled_results/RESULTADOS_COMPLETOS.docx
+    docs/RESULTADOS_COMPLETOS.docx
 """
 from __future__ import annotations
 import argparse, hashlib, json, os, platform, re, subprocess, sys, tempfile
@@ -179,12 +179,11 @@ def setup(doc:Document):
  for n,z,c in [('Title',24,NAVY),('Heading 1',16,NAVY),('Heading 2',13,BLUE),('Heading 3',10,BLUE)]:st=doc.styles[n];st.font.name='Aptos Display';st.font.size=Pt(z);st.font.color.rgb=RGBColor.from_string(c);st.font.bold=True
  f=s.footer.paragraphs[0];f.alignment=WD_ALIGN_PARAGRAPH.CENTER;f.add_run('Compilação local de resultados - tools/read_outputs.py').font.size=Pt(7)
 def args():
- p=argparse.ArgumentParser(description='Gera um único DOCX autocontido com resultados do projeto.');p.add_argument('--root',type=Path,default=Path.cwd());p.add_argument('--output-dir',type=Path,default=Path('.local-analysis/compiled_results'));p.add_argument('--name',default='RESULTADOS_COMPLETOS');p.add_argument('--no-notebook-outputs',dest='notebooks',action='store_false');p.set_defaults(notebooks=True);p.add_argument('--max-text-chars',type=int,default=300000);p.add_argument('--max-cell-chars',type=int,default=40000);p.add_argument('--max-rows-read',type=int,default=500000);p.add_argument('--rows-docx',type=int,default=200);p.add_argument('--cols-docx',type=int,default=30);p.add_argument('--summary-cols',type=int,default=300);p.add_argument('--top-values',type=int,default=15);p.add_argument('--max-struct',type=int,default=12000);p.add_argument('--image-inches',type=float,default=6.7);p.add_argument('--image-pixels',type=int,default=2200);p.add_argument('--parquet-rows',type=int,default=30);return p.parse_args()
+ p=argparse.ArgumentParser(description='Gera um único DOCX autocontido com resultados do projeto.');p.add_argument('--root',type=Path,default=Path.cwd());p.add_argument('--output-dir',type=Path,default=Path('docs'));p.add_argument('--name',default='RESULTADOS_COMPLETOS');p.add_argument('--no-notebook-outputs',dest='notebooks',action='store_false');p.set_defaults(notebooks=True);p.add_argument('--max-text-chars',type=int,default=300000);p.add_argument('--max-cell-chars',type=int,default=40000);p.add_argument('--max-rows-read',type=int,default=500000);p.add_argument('--rows-docx',type=int,default=200);p.add_argument('--cols-docx',type=int,default=30);p.add_argument('--summary-cols',type=int,default=300);p.add_argument('--top-values',type=int,default=15);p.add_argument('--max-struct',type=int,default=12000);p.add_argument('--image-inches',type=float,default=6.7);p.add_argument('--image-pixels',type=int,default=2200);p.add_argument('--parquet-rows',type=int,default=30);return p.parse_args()
 def main():
  a=args();root=repo_root(a.root);a.root_resolved=root;out=(a.output_dir if a.output_dir.is_absolute() else root/a.output_dir).resolve();out.mkdir(parents=True,exist_ok=True)
- for x in out.iterdir():
-  if x.is_file():x.unlink()
-  elif x.is_dir():import shutil;shutil.rmtree(x)
+ target=out/(a.name+'.docx')
+ if target.exists():target.unlink()
  files=scan(root,a.notebooks);doc=Document();setup(doc);p=doc.add_paragraph(style='Title');p.alignment=WD_ALIGN_PARAGRAPH.CENTER;p.add_run('Resultados completos do projeto');q=doc.add_paragraph();q.alignment=WD_ALIGN_PARAGRAPH.CENTER;q.add_run('Arquivo único para análise por IA: textos, tabelas, imagens, manifestos, modelos catalogados e outputs de notebooks').italic=True
  meta=[('Gerado em',datetime.now(timezone.utc).replace(microsecond=0).isoformat()),('Repositório',root.name),('Branch',git(root,'branch','--show-current')),('Commit',git(root,'rev-parse','HEAD')),('Árvore Git','limpa' if not git(root,'status','--porcelain') else 'com alterações locais'),('Python',sys.version.split()[0]),('Plataforma',platform.platform())];table(doc,['Campo','Valor'],meta);callout(doc,'COMO USAR','Envie somente este DOCX à IA. Todos os materiais encontrados estão incorporados. A compilação não recalcula resultados e pode reunir evidências provisórias; sempre cruzar caminho, SHA-256, commit, manifesto e configuração.',AMBER)
  c=Counter(kind(x) for x in files);doc.add_heading('1. Inventário',1);doc.add_paragraph(f'Arquivos encontrados: {len(files)}. '+'; '.join(f'{k}: {v}' for k,v in sorted(c.items()))+'.');table(doc,['#','Caminho','Tipo','Tamanho','SHA-256'],[(i,x.relative_to(root).as_posix(),kind(x),size(x.stat().st_size),sha(x)[:16]+'…') for i,x in enumerate(files,1)],font=6.5);doc.add_page_break();doc.add_heading('2. Conteúdo compilado',1);errors=[]
@@ -201,6 +200,6 @@ def main():
     elif k=='modelo':callout(doc,'ARTEFATO DE MODELO',f'Binário não desserializado. Tamanho: {size(x.stat().st_size)}. SHA-256: {sha(x)}.')
    except Exception as e:errors.append((rel,repr(e)));callout(doc,'ERRO AO COMPILAR',repr(e),RED)
   if errors:doc.add_heading('3. Erros',1);[doc.add_paragraph(f'{r}: {e}',style='List Bullet') for r,e in errors]
-  target=out/(a.name+'.docx');doc.save(target)
+  doc.save(target)
  print(f'[read_outputs] Arquivo único: {target}');print(f'[read_outputs] Arquivos: {len(files)}; erros: {len(errors)}');return 1 if errors else 0
 if __name__=='__main__':raise SystemExit(main())
