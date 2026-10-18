@@ -1,9854 +1,8 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 2/3 -->
-## `notebooks/B/___provisorio_construcao_coorte_b.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `95.4 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `0298d6d9aaa532f55cc9c51f98dd5659d64ca8083f19ce06d21600cce7304bc4`
-
-- Cells: `15` (`14` code, `1` markdown)
-- Code cells executed: `14` of `14`
-- Kernel: `Projeto_Integrador (3.13.16)`; Python `3.13.16`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# Construção provisória da coorte para a EDA 02
-
-## Objetivo
-
-Construir uma coorte provisória com dados reais do dataset `dados-v2`
-para permitir o desenvolvimento paralelo da EDA temporal e do pipeline
-de clustering.
-
-Este notebook é um artefato temporário. Ele não substitui a coorte
-oficial do projeto e poderá ser removido ou absorvido quando a construção
-definitiva da coorte for entregue.
-
-## Critérios de elegibilidade aplicados
-
-- hospitalização confirmada, com `hospital = 1`;
-- `dt_interna` válida;
-- internação entre 01/01/2019 e 28/09/2026;
-- evolução elegível, com `evolucao` igual a 1 ou 2;
-- remoção de linhas integralmente duplicadas.
-
-## Tratamentos que não serão realizados arbitrariamente
-
-- registros diferentes com o mesmo `nu_notific` não serão eliminados;
-- intervalos negativos entre sintomas e internação serão sinalizados,
-  mas não excluídos automaticamente;
-- ausência em variáveis preditoras não causará exclusão;
-- `dt_notific` ou `dt_sin_pri` fora do período da coorte serão
-  sinalizadas, mas não excluirão o registro quando `dt_interna` for
-  elegível;
-- ausência não será convertida automaticamente em resposta negativa.
-
-## Saídas
-
-- `data/analytical/coorte_provisoria_b.parquet`;
-- `outputs/tables/coorte_provisoria_b_waterfall.csv`;
-- `outputs/tables/coorte_provisoria_b_auditoria_duplicidades.csv`;
-- `outputs/tables/coorte_provisoria_b_auditoria_temporal.csv`;
-- `outputs/tables/coorte_provisoria_b_resumo.csv`.
-```
-
-### Cell 2 [code] · In [1]
-
-```python
-from pathlib import Path
-import gc
-import sys
-
-import numpy as np
-import pandas as pd
-import pyarrow.parquet as pq
-
-from IPython.display import display
-
-
-def encontrar_raiz_projeto() -> Path:
-    """
-    Localiza a raiz do projeto procurando pelas pastas src e configs.
-    """
-
-    pasta_atual = Path.cwd().resolve()
-
-    pastas_candidatas = [
-        pasta_atual
-    ] + list(
-        pasta_atual.parents
-    )
-
-    for pasta in pastas_candidatas:
-        possui_src = (
-            pasta
-            / "src"
-        ).is_dir()
-
-        possui_configs = (
-            pasta
-            / "configs"
-        ).is_dir()
-
-        if possui_src and possui_configs:
-            return pasta
-
-    raise FileNotFoundError(
-        "Não foi possível localizar a raiz do projeto."
-    )
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(
-        0,
-        str(ROOT_DIR),
-    )
-
-from src.utils import config as C
-from src.utils import env
-from src.utils import storage
-
-env.carregar_dotenv()
-env.garantir_diretorios()
-
-DATA_INICIAL_COORTE = pd.Timestamp(
-    "2019-01-01"
-)
-
-DATA_FINAL_COORTE = pd.Timestamp(
-    "2026-09-28"
-)
-
-ANO_MINIMO_CONVERSAO = 1900
-ANO_MAXIMO_CONVERSAO = 2026
-
-CAMINHO_DICIONARIO = (
-    C.CONFIGS_DIR
-    / "dicionario_variaveis_v1.csv"
-)
-
-CAMINHO_COORTE_PROVISORIA = (
-    C.ANALYTICAL_DIR
-    / "coorte_provisoria_b.parquet"
-)
-
-CAMINHO_WATERFALL = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_waterfall.csv"
-)
-
-CAMINHO_AUDITORIA_DUPLICIDADES = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_auditoria_duplicidades.csv"
-)
-
-CAMINHO_AUDITORIA_TEMPORAL = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_auditoria_temporal.csv"
-)
-
-CAMINHO_RESUMO = (
-    C.TABLES_DIR
-    / "coorte_provisoria_b_resumo.csv"
-)
-
-print(
-    "Raiz do projeto:",
-    ROOT_DIR,
-)
-
-print(
-    "Versão dos dados:",
-    C.DATA_VERSION,
-)
-
-print(
-    "Arquivo oficial:",
-    C.PARQUET_NAME,
-)
-
-print(
-    "Período provisório:",
-    DATA_INICIAL_COORTE.date(),
-    "a",
-    DATA_FINAL_COORTE.date(),
-)
-
-print(
-    "Saída da coorte:",
-    CAMINHO_COORTE_PROVISORIA,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Raiz do projeto: <HOME>\Documents\GitHub\Projeto_Integrador
-Versão dos dados: dados-v2
-Arquivo oficial: srag.parquet
-Período provisório: 2019-01-01 a 2026-09-28
-Saída da coorte: <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
-```
-
-### Cell 3 [code] · In [2]
-
-```python
-if not CAMINHO_DICIONARIO.exists():
-    raise FileNotFoundError(
-        "O dicionário operacional não foi encontrado em: "
-        f"{CAMINHO_DICIONARIO}"
-    )
-
-dicionario_variaveis = pd.read_csv(
-    CAMINHO_DICIONARIO,
-    encoding="utf-8-sig",
-    dtype="string",
-    keep_default_na=False,
-)
-
-if "coluna" not in dicionario_variaveis.columns:
-    raise KeyError(
-        "O dicionário operacional não contém a coluna 'coluna'."
-    )
-
-colunas_dicionario = (
-    dicionario_variaveis[
-        "coluna"
-    ]
-    .astype("string")
-    .str.strip()
-)
-
-colunas_dicionario = (
-    colunas_dicionario.loc[
-        colunas_dicionario.ne("")
-    ]
-    .drop_duplicates()
-    .tolist()
-)
-
-COLUNAS_ADICIONAIS = [
-    "id_registro",
-    "ano_arquivo",
-    "data_snapshot",
-    "arquivo_origem",
-    "nosocomial",
-]
-
-COLUNAS_SOLICITADAS = list(
-    dict.fromkeys(
-        COLUNAS_ADICIONAIS
-        + colunas_dicionario
-    )
-)
-
-caminho_parquet = storage.get_parquet(
-    force=False
-)
-
-if not caminho_parquet.exists():
-    raise FileNotFoundError(
-        "O Parquet oficial não foi encontrado em: "
-        f"{caminho_parquet}"
-    )
-
-arquivo_parquet = pq.ParquetFile(
-    caminho_parquet
-)
-
-colunas_disponiveis = set(
-    arquivo_parquet.schema_arrow.names
-)
-
-COLUNAS_EXISTENTES = [
-    coluna
-    for coluna in COLUNAS_SOLICITADAS
-    if coluna in colunas_disponiveis
-]
-
-COLUNAS_AUSENTES = [
-    coluna
-    for coluna in COLUNAS_SOLICITADAS
-    if coluna not in colunas_disponiveis
-]
-
-COLUNAS_MINIMAS = {
-    "nu_notific",
-    "hospital",
-    "dt_notific",
-    "dt_sin_pri",
-    "dt_interna",
-    "evolucao",
-}
-
-colunas_minimas_ausentes = (
-    COLUNAS_MINIMAS
-    - set(
-        COLUNAS_EXISTENTES
-    )
-)
-
-if colunas_minimas_ausentes:
-    raise KeyError(
-        "O Parquet não contém as colunas mínimas: "
-        f"{sorted(colunas_minimas_ausentes)}"
-    )
-
-print(
-    "Colunas solicitadas:",
-    len(
-        COLUNAS_SOLICITADAS
-    ),
-)
-
-print(
-    "Colunas encontradas:",
-    len(
-        COLUNAS_EXISTENTES
-    ),
-)
-
-print(
-    "Colunas opcionais ausentes:",
-    len(
-        COLUNAS_AUSENTES
-    ),
-)
-
-if COLUNAS_AUSENTES:
-    display(
-        pd.DataFrame(
-            {
-                "coluna_opcional_ausente": (
-                    COLUNAS_AUSENTES
-                ),
-            }
-        )
-    )
-
-print(
-    "nosocomial disponível:",
-    "nosocomial" in COLUNAS_EXISTENTES,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Colunas solicitadas: 93
-Colunas encontradas: 93
-Colunas opcionais ausentes: 0
-nosocomial disponível: True
-```
-
-### Cell 4 [code] · In [3]
-
-```python
-def normalizar_codigo(
-    serie: pd.Series,
-) -> pd.Series:
-    """
-    Normaliza códigos textuais sem interpretar ausência como resposta.
-    """
-
-    resultado = (
-        serie.astype("string")
-        .str.strip()
-        .str.replace(
-            r"\.0$",
-            "",
-            regex=True,
-        )
-        .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-    )
-
-    return resultado
-
-
-def converter_data_mista_segura(
-    serie: pd.Series,
-    ano_minimo: int = ANO_MINIMO_CONVERSAO,
-    ano_maximo: int = ANO_MAXIMO_CONVERSAO,
-) -> pd.Series:
-    """
-    Converte datas nos formatos AAAA-MM-DD e DD/MM/AAAA.
-
-    Datas não reconhecidas, calendários inválidos e anos fora da
-    faixa configurada tornam-se NaT.
-    """
-
-    texto = (
-        serie.astype("string")
-        .str.strip()
-        .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-    )
-
-    resultado = pd.Series(
-        pd.NaT,
-        index=serie.index,
-        dtype="datetime64[ns]",
-    )
-
-    mascara_iso = texto.str.match(
-        r"^\d{4}-\d{2}-\d{2}$",
-        na=False,
-    )
-
-    mascara_br = texto.str.match(
-        r"^\d{2}/\d{2}/\d{4}$",
-        na=False,
-    )
-
-    ano_iso = pd.to_numeric(
-        texto.str.slice(
-            0,
-            4,
-        ),
-        errors="coerce",
-    )
-
-    ano_br = pd.to_numeric(
-        texto.str.slice(
-            6,
-            10,
-        ),
-        errors="coerce",
-    )
-
-    mascara_iso_valida = (
-        mascara_iso
-        & ano_iso.between(
-            ano_minimo,
-            ano_maximo,
-        )
-    )
-
-    mascara_br_valida = (
-        mascara_br
-        & ano_br.between(
-            ano_minimo,
-            ano_maximo,
-        )
-    )
-
-    resultado.loc[
-        mascara_iso_valida
-    ] = pd.to_datetime(
-        texto.loc[
-            mascara_iso_valida
-        ],
-        format="%Y-%m-%d",
-        errors="coerce",
-    )
-
-    resultado.loc[
-        mascara_br_valida
-    ] = pd.to_datetime(
-        texto.loc[
-            mascara_br_valida
-        ],
-        format="%d/%m/%Y",
-        errors="coerce",
-    )
-
-    return resultado
-
-
-def adicionar_etapa_waterfall(
-    etapas: list,
-    etapa: str,
-    registros_antes: int,
-    registros_depois: int,
-    motivo: str,
-) -> None:
-    """
-    Registra uma etapa do fluxo de seleção.
-    """
-
-    registros_excluidos = (
-        registros_antes
-        - registros_depois
-    )
-
-    if registros_antes == 0:
-        percentual_excluido = 0.0
-    else:
-        percentual_excluido = (
-            registros_excluidos
-            / registros_antes
-        )
-
-        percentual_excluido = (
-            percentual_excluido
-            * 100
-        )
-
-    etapas.append(
-        {
-            "etapa": etapa,
-            "registros_antes": int(
-                registros_antes
-            ),
-            "registros_excluidos": int(
-                registros_excluidos
-            ),
-            "registros_depois": int(
-                registros_depois
-            ),
-            "percentual_excluido": float(
-                percentual_excluido
-            ),
-            "motivo": motivo,
-        }
-    )
-```
-
-### Cell 5 [code] · In [4]
-
-```python
-base_original = storage.read_srag(
-    columns=COLUNAS_EXISTENTES
-)
-
-if base_original.empty:
-    raise ValueError(
-        "A base oficial foi carregada sem registros."
-    )
-
-quantidade_registros_originais = len(
-    base_original
-)
-
-quantidade_colunas_originais = (
-    base_original.shape[1]
-)
-
-memoria_base_original_bytes = (
-    base_original
-    .memory_usage(
-        deep=True
-    )
-    .sum()
-)
-
-memoria_base_original_mb = (
-    memoria_base_original_bytes
-    / 1_048_576
-)
-
-print(
-    "Dimensão carregada:",
-    base_original.shape,
-)
-
-print(
-    "Memória aproximada em MB:",
-    round(
-        memoria_base_original_mb,
-        2,
-    ),
-)
-
-display(
-    base_original.head()
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Dimensão carregada: (4666910, 93)
-Memória aproximada em MB: 15967.21
-```
-
-**Output 2 (display_data)**
-
-```text
-   id_registro  ano_arquivo data_snapshot               arquivo_origem  \
-0            0         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
-1            1         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
-2            2         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
-3            3         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
-4            4         2026    2026-09-28  INFLUD26-28-09-2026.parquet   
-
-  nosocomial      nu_notific  dt_notific  dt_sin_pri sem_pri hospital  ...  \
-0          2  31781201987679  2026-06-11  2026-06-02      23        1  ...   
-1          2  31775652598724  2026-03-23  2026-03-22      13     None  ...   
-2          2  31781205405890  2026-03-29  2026-03-23      13        2  ...   
-3          2  31782407823707  2026-06-17  2026-06-15      25        1  ...   
-4          2  31773493207022  2026-03-14  2026-03-09      11        1  ...   
-
-  antiviral tp_antivir dt_antivir trat_cov tipo_trat dt_trt_cov evolucao  \
-0         2       None       None        2      None       None        1   
-1      None       None       None     None      None       None     None   
-2         2       None       None        2      None       None        1   
-3         2       None       None        2      None       None     None   
-4      None       None       None     None      None       None        1   
-
-   dt_evoluca  dt_encerra   dt_digita  
-0  2026-06-19  2026-06-19  2026-06-11  
-1        None        None  2026-04-08  
-2  2026-03-31  2026-06-11  2026-06-11  
-3        None        None  2026-06-25  
-4        None        None  2026-03-14  
-
-[5 rows x 93 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 6 [code] · In [5]
-
-```python
-waterfall = [
-    {
-        "etapa": "registros_originais",
-        "registros_antes": (
-            quantidade_registros_originais
-        ),
-        "registros_excluidos": 0,
-        "registros_depois": (
-            quantidade_registros_originais
-        ),
-        "percentual_excluido": 0.0,
-        "motivo": (
-            "Total de registros carregados do dataset oficial."
-        ),
-    }
-]
-
-n_antes_duplicidades = len(
-    base_original
-)
-
-mascara_duplicidade_exata = (
-    base_original.duplicated(
-        keep="first"
-    )
-)
-
-quantidade_duplicidades_exatas = int(
-    mascara_duplicidade_exata.sum()
-)
-
-base_trabalho = (
-    base_original.loc[
-        ~mascara_duplicidade_exata
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="duplicidades_exatas",
-    registros_antes=n_antes_duplicidades,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Remoção somente de linhas integralmente idênticas "
-        "nos campos originais carregados."
-    ),
-)
-
-print(
-    "Duplicidades exatas removidas:",
-    quantidade_duplicidades_exatas,
-)
-
-print(
-    "Registros restantes:",
-    len(
-        base_trabalho
-    ),
-)
-
-del base_original
-del mascara_duplicidade_exata
-
-gc.collect()
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Duplicidades exatas removidas: 0
-Registros restantes: 4666910
-```
-
-**Output 2 (execute_result)**
-
-```text
-0
-```
-
-### Cell 7 [code] · In [6]
-
-```python
-base_trabalho[
-    "hospital_normalizado"
-] = normalizar_codigo(
-    base_trabalho[
-        "hospital"
-    ]
-)
-
-base_trabalho[
-    "evolucao_normalizada"
-] = normalizar_codigo(
-    base_trabalho[
-        "evolucao"
-    ]
-)
-
-base_trabalho[
-    "nu_notific_normalizado"
-] = normalizar_codigo(
-    base_trabalho[
-        "nu_notific"
-    ]
-)
-
-if "nosocomial" in base_trabalho.columns:
-    base_trabalho[
-        "nosocomial_normalizado"
-    ] = normalizar_codigo(
-        base_trabalho[
-            "nosocomial"
-        ]
-    )
-else:
-    base_trabalho[
-        "nosocomial_normalizado"
-    ] = pd.Series(
-        pd.NA,
-        index=base_trabalho.index,
-        dtype="string",
-    )
-
-COLUNAS_DATA_ESSENCIAIS = [
-    "dt_notific",
-    "dt_sin_pri",
-    "dt_interna",
-    "dt_evoluca",
-    "dt_encerra",
-    "dt_digita",
-]
-
-for coluna in COLUNAS_DATA_ESSENCIAIS:
-    if coluna in base_trabalho.columns:
-        nome_convertido = (
-            f"{coluna}_convertida"
-        )
-
-        base_trabalho[
-            nome_convertido
-        ] = converter_data_mista_segura(
-            base_trabalho[
-                coluna
-            ]
-        )
-
-COLUNAS_CONVERTIDAS_OBRIGATORIAS = [
-    "dt_notific_convertida",
-    "dt_sin_pri_convertida",
-    "dt_interna_convertida",
-]
-
-colunas_convertidas_ausentes = [
-    coluna
-    for coluna in COLUNAS_CONVERTIDAS_OBRIGATORIAS
-    if coluna not in base_trabalho.columns
-]
-
-if colunas_convertidas_ausentes:
-    raise KeyError(
-        "As datas obrigatórias não foram convertidas: "
-        f"{colunas_convertidas_ausentes}"
-    )
-
-print(
-    "Códigos e datas essenciais normalizados."
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Códigos e datas essenciais normalizados.
-```
-
-### Cell 8 [code] · In [7]
-
-```python
-n_antes_hospitalizacao = len(
-    base_trabalho
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        base_trabalho[
-            "hospital_normalizado"
-        ].eq("1")
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="hospitalizacao_confirmada",
-    registros_antes=n_antes_hospitalizacao,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de registros com hospital = 1."
-    ),
-)
-
-
-n_antes_data_internacao = len(
-    base_trabalho
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        base_trabalho[
-            "dt_interna_convertida"
-        ].notna()
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="data_internacao_valida",
-    registros_antes=n_antes_data_internacao,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de registros com dt_interna válida."
-    ),
-)
-
-
-n_antes_periodo = len(
-    base_trabalho
-)
-
-mascara_periodo = (
-    base_trabalho[
-        "dt_interna_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        mascara_periodo
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="periodo_da_coorte",
-    registros_antes=n_antes_periodo,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Internação entre 01/01/2019 e 28/09/2026."
-    ),
-)
-
-
-n_antes_desfecho = len(
-    base_trabalho
-)
-
-mascara_desfecho = (
-    base_trabalho[
-        "evolucao_normalizada"
-    ]
-    .isin(
-        [
-            "1",
-            "2",
-        ]
-    )
-)
-
-base_trabalho = (
-    base_trabalho.loc[
-        mascara_desfecho
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-adicionar_etapa_waterfall(
-    etapas=waterfall,
-    etapa="desfecho_elegivel",
-    registros_antes=n_antes_desfecho,
-    registros_depois=len(
-        base_trabalho
-    ),
-    motivo=(
-        "Manutenção somente de evolucao = 1 ou evolucao = 2."
-    ),
-)
-
-waterfall_df = pd.DataFrame(
-    waterfall
-)
-
-display(
-    waterfall_df
-)
-
-gc.collect()
-```
-
-**Output 1 (display_data)**
-
-```text
-                       etapa  registros_antes  registros_excluidos  \
-0        registros_originais          4666910                    0   
-1        duplicidades_exatas          4666910                    0   
-2  hospitalizacao_confirmada          4666910               232253   
-3     data_internacao_valida          4434657                72113   
-4          periodo_da_coorte          4362544                   44   
-5          desfecho_elegivel          4362500               447364   
-
-   registros_depois  percentual_excluido  \
-0           4666910             0.000000   
-1           4666910             0.000000   
-2           4434657             4.976591   
-3           4362544             1.626124   
-4           4362500             0.001009   
-5           3915136            10.254762   
-
-                                              motivo  
-0  Total de registros carregados do dataset oficial.  
-1  Remoção somente de linhas integralmente idênti...  
-2  Manutenção somente de registros com hospital = 1.  
-3  Manutenção somente de registros com dt_interna...  
-4          Internação entre 01/01/2019 e 28/09/2026.  
-5  Manutenção somente de evolucao = 1 ou evolucao...  
-[non-text output omitted: text/html]
-```
-
-**Output 2 (execute_result)**
-
-```text
-0
-```
-
-### Cell 9 [code] · In [8]
-
-```python
-coorte_provisoria = base_trabalho
-
-coorte_provisoria[
-    "alvo_obito_srag"
-] = (
-    coorte_provisoria[
-        "evolucao_normalizada"
-    ]
-    .eq("2")
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "ano_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "mes_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    .dt.month
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "ano_notificacao"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "ano_sintomas"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .dt.year
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "dias_sintomas_ate_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    - coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-).dt.days.astype("Int64")
-
-coorte_provisoria[
-    "dias_notificacao_ate_internacao"
-] = (
-    coorte_provisoria[
-        "dt_interna_convertida"
-    ]
-    - coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-).dt.days.astype("Int64")
-
-coorte_provisoria[
-    "flag_internacao_antes_sintomas"
-] = (
-    coorte_provisoria[
-        "dias_sintomas_ate_internacao"
-    ]
-    .lt(0)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_notificacao_apos_internacao"
-] = (
-    coorte_provisoria[
-        "dias_notificacao_ate_internacao"
-    ]
-    .lt(0)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_notificacao_fora_periodo"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .notna()
-    & ~coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-).astype("int8")
-
-coorte_provisoria[
-    "flag_sintomas_fora_periodo"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .notna()
-    & ~coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .between(
-        DATA_INICIAL_COORTE,
-        DATA_FINAL_COORTE,
-    )
-).astype("int8")
-
-coorte_provisoria[
-    "flag_dt_sin_pri_ausente"
-] = (
-    coorte_provisoria[
-        "dt_sin_pri_convertida"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_dt_notific_ausente"
-] = (
-    coorte_provisoria[
-        "dt_notific_convertida"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_nosocomial"
-] = (
-    coorte_provisoria[
-        "nosocomial_normalizado"
-    ]
-    .eq("1")
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_intervalo_negativo_sem_nosocomial"
-] = (
-    coorte_provisoria[
-        "flag_internacao_antes_sintomas"
-    ]
-    .eq(1)
-    & coorte_provisoria[
-        "flag_nosocomial"
-    ]
-    .ne(1)
-).astype("int8")
-
-coorte_provisoria[
-    "periodo_incompleto"
-] = (
-    coorte_provisoria[
-        "ano_internacao"
-    ]
-    .eq(2026)
-    .astype("int8")
-)
-
-print(
-    "Alvo, intervalos e flags temporais criados."
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Alvo, intervalos e flags temporais criados.
-```
-
-### Cell 10 [code] · In [9]
-
-```python
-intervalo = (
-    coorte_provisoria[
-        "dias_sintomas_ate_internacao"
-    ]
-)
-
-condicoes_intervalo = [
-    intervalo.isna(),
-    intervalo.lt(-30),
-    intervalo.between(
-        -30,
-        -8,
-        inclusive="both",
-    ),
-    intervalo.between(
-        -7,
-        -1,
-        inclusive="both",
-    ),
-    intervalo.eq(0),
-    intervalo.between(
-        1,
-        7,
-        inclusive="both",
-    ),
-    intervalo.between(
-        8,
-        14,
-        inclusive="both",
-    ),
-    intervalo.between(
-        15,
-        30,
-        inclusive="both",
-    ),
-    intervalo.gt(30),
-]
-
-rotulos_intervalo = [
-    "ausente",
-    "menor_que_menos_30",
-    "menos_30_a_menos_8",
-    "menos_7_a_menos_1",
-    "zero",
-    "1_a_7",
-    "8_a_14",
-    "15_a_30",
-    "maior_que_30",
-]
-
-classificacao_intervalo = np.select(
-    condicoes_intervalo,
-    rotulos_intervalo,
-    default="nao_classificado",
-)
-
-coorte_provisoria[
-    "faixa_dias_sintomas_ate_internacao"
-] = pd.Series(
-    classificacao_intervalo,
-    index=coorte_provisoria.index,
-    dtype="string",
-)
-
-tabela_intervalos = (
-    coorte_provisoria[
-        "faixa_dias_sintomas_ate_internacao"
-    ]
-    .value_counts(
-        dropna=False
-    )
-    .rename_axis(
-        "faixa"
-    )
-    .reset_index(
-        name="quantidade"
-    )
-)
-
-display(
-    tabela_intervalos
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-                faixa  quantidade
-0               1_a_7     2307778
-1              8_a_14      880020
-2                zero      512125
-3             15_a_30      159565
-4        maior_que_30       34730
-5  menos_30_a_menos_8       10033
-6   menos_7_a_menos_1        7694
-7  menor_que_menos_30        3191
-[non-text output omitted: text/html]
-```
-
-### Cell 11 [code] · In [10]
-
-```python
-contagem_nu_notific = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .dropna()
-    .value_counts()
-)
-
-coorte_provisoria[
-    "quantidade_ocorrencias_nu_notific"
-] = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .map(
-        contagem_nu_notific
-    )
-    .astype("Int64")
-)
-
-coorte_provisoria[
-    "flag_nu_notific_repetido"
-] = (
-    coorte_provisoria[
-        "quantidade_ocorrencias_nu_notific"
-    ]
-    .gt(1)
-    .fillna(False)
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "flag_nu_notific_ausente"
-] = (
-    coorte_provisoria[
-        "nu_notific_normalizado"
-    ]
-    .isna()
-    .astype("int8")
-)
-
-coorte_provisoria[
-    "status_coorte"
-] = "provisoria_pessoa_b"
-
-coorte_provisoria[
-    "data_corte_coorte"
-] = DATA_FINAL_COORTE
-
-print(
-    "Linhas com nu_notific repetido:",
-    int(
-        coorte_provisoria[
-            "flag_nu_notific_repetido"
-        ].sum()
-    ),
-)
-
-print(
-    "Linhas com nu_notific ausente:",
-    int(
-        coorte_provisoria[
-            "flag_nu_notific_ausente"
-        ].sum()
-    ),
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Linhas com nu_notific repetido: 30
-Linhas com nu_notific ausente: 0
-```
-
-### Cell 12 [code] · In [11]
-
-```python
-auditoria_duplicidades = (
-    coorte_provisoria.loc[
-        coorte_provisoria[
-            "flag_nu_notific_repetido"
-        ].eq(1)
-    ]
-    .groupby(
-        "nu_notific_normalizado",
-        dropna=False,
-    )
-    .agg(
-        quantidade_ocorrencias=(
-            "nu_notific_normalizado",
-            "size",
-        ),
-        quantidade_anos_internacao=(
-            "ano_internacao",
-            "nunique",
-        ),
-        quantidade_datas_internacao=(
-            "dt_interna_convertida",
-            "nunique",
-        ),
-        quantidade_desfechos=(
-            "evolucao_normalizada",
-            "nunique",
-        ),
-        quantidade_datas_sintomas=(
-            "dt_sin_pri_convertida",
-            "nunique",
-        ),
-    )
-    .reset_index()
-)
-
-auditoria_duplicidades[
-    "flag_ano_internacao_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_anos_internacao"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_dt_interna_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_datas_internacao"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_evolucao_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_desfechos"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades[
-    "flag_dt_sin_pri_divergente"
-] = (
-    auditoria_duplicidades[
-        "quantidade_datas_sintomas"
-    ]
-    .gt(1)
-    .astype("int8")
-)
-
-auditoria_duplicidades = (
-    auditoria_duplicidades
-    .sort_values(
-        [
-            "quantidade_ocorrencias",
-            "nu_notific_normalizado",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-auditoria_temporal = pd.DataFrame(
-    {
-        "verificacao": [
-            "dt_sin_pri_ausente",
-            "dt_notific_ausente",
-            "internacao_antes_sintomas",
-            "intervalo_negativo_sem_nosocomial",
-            "notificacao_apos_internacao",
-            "notificacao_fora_periodo",
-            "sintomas_fora_periodo",
-            "nu_notific_repetido",
-            "nu_notific_ausente",
-            "periodo_incompleto_2026",
-        ],
-        "quantidade": [
-            int(
-                coorte_provisoria[
-                    "flag_dt_sin_pri_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_dt_notific_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_internacao_antes_sintomas"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_intervalo_negativo_sem_nosocomial"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_notificacao_apos_internacao"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_notificacao_fora_periodo"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_sintomas_fora_periodo"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_repetido"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_ausente"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "periodo_incompleto"
-                ].sum()
-            ),
-        ],
-    }
-)
-
-auditoria_temporal[
-    "percentual_coorte"
-] = (
-    auditoria_temporal[
-        "quantidade"
-    ]
-    .div(
-        len(
-            coorte_provisoria
-        )
-    )
-    .mul(100)
-)
-
-display(
-    auditoria_temporal
-)
-
-display(
-    auditoria_duplicidades.head(20)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-                         verificacao  quantidade  percentual_coorte
-0                 dt_sin_pri_ausente           0           0.000000
-1                 dt_notific_ausente           0           0.000000
-2          internacao_antes_sintomas       20918           0.534285
-3  intervalo_negativo_sem_nosocomial           0           0.000000
-4        notificacao_apos_internacao     1951377          49.841870
-5           notificacao_fora_periodo           0           0.000000
-6              sintomas_fora_periodo          61           0.001558
-7                nu_notific_repetido          30           0.000766
-8                 nu_notific_ausente           0           0.000000
-9            periodo_incompleto_2026      175521           4.483139
-[non-text output omitted: text/html]
-```
-
-**Output 2 (display_data)**
-
-```text
-   nu_notific_normalizado  quantidade_ocorrencias  quantidade_anos_internacao  \
-0          31736177754051                       2                           1   
-1          31736866916969                       2                           2   
-2          31738324913116                       2                           1   
-3          31741716994694                       2                           1   
-4          31743975908104                       2                           1   
-5          31744118738694                       2                           1   
-6          31744265580768                       2                           1   
-7          31744397861067                       2                           1   
-8          31745324608735                       2                           2   
-9          31745519106567                       2                           1   
-10         31746458224089                       2                           1   
-11         31746459301774                       2                           1   
-12         31746816257499                       2                           1   
-13         31748044066509                       2                           1   
-14         31750088488779                       2                           1   
-
-    quantidade_datas_internacao  quantidade_desfechos  \
-0                             1                     1   
-1                             2                     1   
-2                             1                     1   
-3                             1                     1   
-4                             1                     1   
-5                             1                     1   
-6                             1                     1   
-7                             1                     1   
-8                             2                     1   
-9                             1                     1   
-10                            1                     1   
-11                            1                     1   
-12                            1                     1   
-13                            1                     1   
-14                            2                     1   
-
-    quantidade_datas_sintomas  flag_ano_internacao_divergente  \
-0                           2                               0   
-1                           2                               1   
-2                           2                               0   
-3                           2                               0   
-4                           2                               0   
-5                           2                               0   
-6                           2                               0   
-7                           2                               0   
-8                           2                               1   
-9                           2                               0   
-10                          2                               0   
-11                          2                               0   
-12                          2                               0   
-13                          2                               0   
-14                          2                               0   
-
-    flag_dt_interna_divergente  flag_evolucao_divergente  \
-0                            0                         0   
-1                            1                         0   
-2                            0                         0   
-3                            0                         0   
-4                            0                         0   
-5                            0                         0   
-6                            0                         0   
-7                            0                         0   
-8                            1                         0   
-9                            0                         0   
-10                           0                         0   
-11                           0                         0   
-12                           0                         0   
-13                           0                         0   
-14                           1                         0   
-
-    flag_dt_sin_pri_divergente  
-0                            1  
-1                            1  
-2                            1  
-3                            1  
-4                            1  
-5                            1  
-6                            1  
-7                            1  
-8                            1  
-9                            1  
-10                           1  
-11                           1  
-12                           1  
-13                           1  
-14                           1  
-[non-text output omitted: text/html]
-```
-
-### Cell 13 [code] · In [12]
-
-```python
-distribuicao_alvo = (
-    coorte_provisoria[
-        "alvo_obito_srag"
-    ]
-    .value_counts(
-        dropna=False
-    )
-    .sort_index()
-)
-
-resumo_coorte = pd.DataFrame(
-    {
-        "metrica": [
-            "versao_dados",
-            "status_coorte",
-            "data_inicial_coorte",
-            "data_final_coorte",
-            "registros_originais",
-            "colunas_originais_carregadas",
-            "duplicidades_exatas_removidas",
-            "registros_coorte_provisoria",
-            "colunas_coorte_provisoria",
-            "alvo_0_cura",
-            "alvo_1_obito_srag",
-            "linhas_nu_notific_repetido",
-            "identificadores_repetidos_distintos",
-            "internacao_antes_sintomas",
-            "intervalo_negativo_sem_nosocomial",
-            "registros_2026",
-        ],
-        "valor": [
-            C.DATA_VERSION,
-            "provisoria_pessoa_b",
-            str(
-                DATA_INICIAL_COORTE.date()
-            ),
-            str(
-                DATA_FINAL_COORTE.date()
-            ),
-            quantidade_registros_originais,
-            quantidade_colunas_originais,
-            quantidade_duplicidades_exatas,
-            len(
-                coorte_provisoria
-            ),
-            coorte_provisoria.shape[1],
-            int(
-                distribuicao_alvo.get(
-                    0,
-                    0,
-                )
-            ),
-            int(
-                distribuicao_alvo.get(
-                    1,
-                    0,
-                )
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_nu_notific_repetido"
-                ].sum()
-            ),
-            len(
-                auditoria_duplicidades
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_internacao_antes_sintomas"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "flag_intervalo_negativo_sem_nosocomial"
-                ].sum()
-            ),
-            int(
-                coorte_provisoria[
-                    "periodo_incompleto"
-                ].sum()
-            ),
-        ],
-    }
-)
-
-display(
-    resumo_coorte
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-                                metrica                valor
-0                          versao_dados             dados-v2
-1                         status_coorte  provisoria_pessoa_b
-2                   data_inicial_coorte           2019-01-01
-3                     data_final_coorte           2026-09-28
-4                   registros_originais              4666910
-5          colunas_originais_carregadas                   93
-6         duplicidades_exatas_removidas                    0
-7           registros_coorte_provisoria              3915136
-8             colunas_coorte_provisoria                  125
-9                           alvo_0_cura              3058951
-10                    alvo_1_obito_srag               856185
-11           linhas_nu_notific_repetido                   30
-12  identificadores_repetidos_distintos                   15
-13            internacao_antes_sintomas                20918
-14    intervalo_negativo_sem_nosocomial                    0
-15                       registros_2026               175521
-[non-text output omitted: text/html]
-```
-
-### Cell 14 [code] · In [13]
-
-```python
-existem_duplicidades_exatas_restantes = (
-    coorte_provisoria[
-        COLUNAS_EXISTENTES
-    ]
-    .duplicated()
-    .any()
-)
-
-verificacoes_pre_salvamento = {
-    "coorte_nao_vazia": (
-        not coorte_provisoria.empty
-    ),
-    "hospitalizacao_confirmada": (
-        coorte_provisoria[
-            "hospital_normalizado"
-        ]
-        .eq("1")
-        .all()
-    ),
-    "dt_interna_valida": (
-        coorte_provisoria[
-            "dt_interna_convertida"
-        ]
-        .notna()
-        .all()
-    ),
-    "periodo_correto": (
-        coorte_provisoria[
-            "dt_interna_convertida"
-        ]
-        .between(
-            DATA_INICIAL_COORTE,
-            DATA_FINAL_COORTE,
-        )
-        .all()
-    ),
-    "desfecho_elegivel": (
-        coorte_provisoria[
-            "evolucao_normalizada"
-        ]
-        .isin(
-            [
-                "1",
-                "2",
-            ]
-        )
-        .all()
-    ),
-    "alvo_binario": (
-        set(
-            coorte_provisoria[
-                "alvo_obito_srag"
-            ]
-            .dropna()
-            .unique()
-        )
-        .issubset(
-            {
-                0,
-                1,
-            }
-        )
-    ),
-    "sem_duplicidades_exatas_restantes": (
-        not existem_duplicidades_exatas_restantes
-    ),
-    "flag_repeticao_identificador_criada": (
-        "flag_nu_notific_repetido"
-        in coorte_provisoria.columns
-    ),
-    "waterfall_criado": (
-        not waterfall_df.empty
-    ),
-    "auditoria_temporal_criada": (
-        not auditoria_temporal.empty
-    ),
-}
-
-verificacoes_pre_salvamento_df = pd.DataFrame(
-    {
-        "verificacao": list(
-            verificacoes_pre_salvamento.keys()
-        ),
-        "resultado": list(
-            verificacoes_pre_salvamento.values()
-        ),
-    }
-)
-
-display(
-    verificacoes_pre_salvamento_df
-)
-
-if not all(
-    verificacoes_pre_salvamento.values()
-):
-    falhas = [
-        verificacao
-        for verificacao, resultado
-        in verificacoes_pre_salvamento.items()
-        if not resultado
-    ]
-
-    raise RuntimeError(
-        "A coorte provisória não pode ser salva. "
-        f"Verificações com falha: {falhas}"
-    )
-
-print(
-    "Validações anteriores ao salvamento concluídas."
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-                           verificacao  resultado
-0                     coorte_nao_vazia       True
-1            hospitalizacao_confirmada       True
-2                    dt_interna_valida       True
-3                      periodo_correto       True
-4                    desfecho_elegivel       True
-5                         alvo_binario       True
-6    sem_duplicidades_exatas_restantes       True
-7  flag_repeticao_identificador_criada       True
-8                     waterfall_criado       True
-9            auditoria_temporal_criada       True
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Validações anteriores ao salvamento concluídas.
-```
-
-### Cell 15 [code] · In [14]
-
-```python
-C.ANALYTICAL_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-C.TABLES_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-coorte_provisoria.to_parquet(
-    CAMINHO_COORTE_PROVISORIA,
-    index=False,
-    compression="zstd",
-)
-
-waterfall_df.to_csv(
-    CAMINHO_WATERFALL,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-auditoria_duplicidades.to_csv(
-    CAMINHO_AUDITORIA_DUPLICIDADES,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-auditoria_temporal.to_csv(
-    CAMINHO_AUDITORIA_TEMPORAL,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-resumo_coorte.to_csv(
-    CAMINHO_RESUMO,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-coorte_reaberta = pd.read_parquet(
-    CAMINHO_COORTE_PROVISORIA
-)
-
-verificacoes_finais = {
-    "arquivo_parquet_criado": (
-        CAMINHO_COORTE_PROVISORIA.exists()
-    ),
-    "arquivo_waterfall_criado": (
-        CAMINHO_WATERFALL.exists()
-    ),
-    "arquivo_auditoria_duplicidades_criado": (
-        CAMINHO_AUDITORIA_DUPLICIDADES.exists()
-    ),
-    "arquivo_auditoria_temporal_criado": (
-        CAMINHO_AUDITORIA_TEMPORAL.exists()
-    ),
-    "arquivo_resumo_criado": (
-        CAMINHO_RESUMO.exists()
-    ),
-    "parquet_reaberto_nao_vazio": (
-        not coorte_reaberta.empty
-    ),
-    "mesmo_numero_de_linhas": (
-        len(
-            coorte_reaberta
-        )
-        == len(
-            coorte_provisoria
-        )
-    ),
-    "mesmo_numero_de_colunas": (
-        coorte_reaberta.shape[1]
-        == coorte_provisoria.shape[1]
-    ),
-    "status_provisorio_preservado": (
-        coorte_reaberta[
-            "status_coorte"
-        ]
-        .eq(
-            "provisoria_pessoa_b"
-        )
-        .all()
-    ),
-    "alvo_preservado": (
-        coorte_reaberta[
-            "alvo_obito_srag"
-        ]
-        .isin(
-            [
-                0,
-                1,
-            ]
-        )
-        .all()
-    ),
-}
-
-verificacoes_finais_df = pd.DataFrame(
-    {
-        "verificacao": list(
-            verificacoes_finais.keys()
-        ),
-        "resultado": list(
-            verificacoes_finais.values()
-        ),
-    }
-)
-
-display(
-    verificacoes_finais_df
-)
-
-if not all(
-    verificacoes_finais.values()
-):
-    falhas = [
-        verificacao
-        for verificacao, resultado
-        in verificacoes_finais.items()
-        if not resultado
-    ]
-
-    raise RuntimeError(
-        "A construção provisória terminou com falhas: "
-        f"{falhas}"
-    )
-
-tamanho_parquet_mb = (
-    CAMINHO_COORTE_PROVISORIA
-    .stat()
-    .st_size
-    / 1_048_576
-)
-
-print(
-    "Coorte provisória construída e validada com sucesso."
-)
-
-print(
-    "Arquivo:",
-    CAMINHO_COORTE_PROVISORIA,
-)
-
-print(
-    "Linhas:",
-    len(
-        coorte_reaberta
-    ),
-)
-
-print(
-    "Colunas:",
-    coorte_reaberta.shape[1],
-)
-
-print(
-    "Tamanho em MB:",
-    round(
-        tamanho_parquet_mb,
-        2,
-    ),
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-                             verificacao  resultado
-0                 arquivo_parquet_criado       True
-1               arquivo_waterfall_criado       True
-2  arquivo_auditoria_duplicidades_criado       True
-3      arquivo_auditoria_temporal_criado       True
-4                  arquivo_resumo_criado       True
-5             parquet_reaberto_nao_vazio       True
-6                 mesmo_numero_de_linhas       True
-7                mesmo_numero_de_colunas       True
-8           status_provisorio_preservado       True
-9                        alvo_preservado       True
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Coorte provisória construída e validada com sucesso.
-Arquivo: <HOME>\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
-Linhas: 3915136
-Colunas: 125
-Tamanho em MB: 196.63
-```
-
-## `notebooks/B/B_05_eda_primeira_passagem.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `1.8 MB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `7e575a7c6f6eb951a95eec7e97688e8d5b91359f2313d50675c2f80596dfd074`
-
-- Cells: `50` (`42` code, `8` markdown)
-- Code cells executed: `41` of `42`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# EDA 01 — Primeira passagem pelo dataset SRAG
-
-## Objetivo
-
-Realizar a primeira inspeção reproduzível do Parquet oficial do projeto, carregando somente as colunas necessárias.
-
-Esta etapa verifica:
-
-- acesso ao Parquet distribuído pela GitHub Release;
-- versão e localização do arquivo;
-- schema e colunas disponíveis;
-- compatibilidade da lista de colunas da EDA;
-- dimensões e consumo de memória;
-- tipos de dados;
-- período temporal;
-- valores ausentes;
-- cardinalidade;
-- categorias observadas;
-- possíveis duplicidades;
-- possíveis variáveis posteriores à admissão hospitalar.
-
-## Limites desta etapa
-
-Este notebook não:
-
-- remove registros;
-- imputa valores;
-- converte ausência em “não”;
-- define a lista final de features;
-- cria o alvo definitivo;
-- realiza split de treino, validação e holdout;
-- treina modelos;
-- altera configurações ou gates.
-
-As conclusões desta EDA são descritivas e não causais.
-```
-
-### Cell 2 [code] · In [1]
-
-```python
-from pathlib import Path
-import platform
-import sys
-
-import numpy as np
-import pandas as pd
-import pyarrow.parquet as pq
-
-from IPython.display import display
-
-
-def encontrar_raiz_projeto() -> Path:
-    """
-    Localiza a raiz do projeto procurando pelas pastas src e configs.
-    """
-    pasta_atual = Path.cwd().resolve()
-
-    for pasta in [pasta_atual, *pasta_atual.parents]:
-        possui_src = (pasta / "src").is_dir()
-        possui_configs = (pasta / "configs").is_dir()
-
-        if possui_src and possui_configs:
-            return pasta
-
-    raise FileNotFoundError(
-        "Não foi possível localizar a raiz do projeto."
-    )
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-
-from src.utils import config as C
-from src.utils import env
-from src.utils import storage
-
-
-env.carregar_dotenv()
-
-print(f"Raiz do projeto: {ROOT_DIR}")
-print(f"Python: {sys.version.split()[0]}")
-print(f"Sistema: {platform.system()} {platform.release()}")
-print(f"pandas: {pd.__version__}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Raiz do projeto: <REPO>
-Python: 3.14.7
-Sistema: Windows 11
-pandas: 3.0.6
-```
-
-### Cell 3 [code] · In [2]
-
-```python
-print(C.resumo())
-
-print(f"Release configurada: {C.DATA_VERSION}")
-print(f"Nome do arquivo: {C.PARQUET_NAME}")
-print(f"Diretório de tabelas: {C.TABLES_DIR}")
-print(f"Diretório de figuras: {C.FIGURES_DIR}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
-PARQUET_NAME      = srag.parquet
-DATA_VERSION      = dados-v2
-GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
-HTTP_TIMEOUT      = 180
-HTTP_TENTATIVAS   = 3
-SEED              = 42
-GITHUB_TOKEN?     = False
-SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
-SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
-Release configurada: dados-v2
-Nome do arquivo: srag.parquet
-Diretório de tabelas: <REPO>\outputs\tables
-Diretório de figuras: <REPO>\reports\figures
-```
-
-### Cell 4 [code] · In [3]
-
-```python
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-
-COR_PADRAO = "tab:blue"
-COR_VALIDA = "tab:green"
-COR_ATENCAO = "tab:orange"
-COR_PROBLEMA = "tab:red"
-COR_AUSENTE = "tab:gray"
-
-CORES_GRUPOS_EDA = {
-    "Estrutura": "tab:blue",
-    "Candidatas principais": "tab:green",
-    "Textos complementares": "tab:gray",
-    "Geografia": "tab:purple",
-    "Vacinação condicional": "tab:orange",
-    "Contexto social": "tab:brown",
-    "Tratamento e auditoria": "tab:cyan",
-    "Desfecho e auditoria": "tab:red",
-}
-
-plt.rcParams[
-    "figure.dpi"
-] = 100
-
-plt.rcParams[
-    "axes.titlesize"
-] = 13
-
-plt.rcParams[
-    "axes.labelsize"
-] = 10
-
-plt.rcParams[
-    "legend.fontsize"
-] = 9
-
-plt.rcParams[
-    "xtick.labelsize"
-] = 9
-
-plt.rcParams[
-    "ytick.labelsize"
-] = 9
-
-print(
-    "Configuração visual do Notebook 01 carregada."
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Configuração visual do Notebook 01 carregada.
-```
-
-### Cell 5 [code] · In [4]
-
-```python
-COLUNAS_ESTRUTURA = [
-    "nu_notific",
-    "dt_notific",
-    "dt_sin_pri",
-    "sem_pri",
-    "hospital",
-    "dt_interna",
-]
-
-COLUNAS_CANDIDATAS_PRINCIPAIS = [
-    "cs_sexo",
-    "nu_idade_n",
-    "tp_idade",
-    "cs_gestant",
-    "cs_raca",
-    "cs_etinia",
-    "cs_escol_n",
-    "cs_zona",
-    "ave_suino",
-    "out_anim",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "desc_resp",
-    "saturacao",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "tabag",
-]
-
-COLUNAS_COMPLEMENTARES_TEXTO = [
-    "outro_sin",
-    "outro_des",
-    "obes_imc",
-    "out_morbi",
-    "morb_desc",
-    "out_antiv",
-    "out_trat",
-]
-
-COLUNAS_GEOGRAFIA = [
-    "sg_uf_not",
-    "co_regiona",
-    "co_mun_not",
-    "co_pais",
-    "sg_uf",
-    "co_rg_resi",
-    "co_mun_res",
-    "sg_uf_inte",
-    "co_rg_inte",
-    "co_mu_inte",
-]
-
-COLUNAS_CONDICIONAIS_VACINACAO = [
-    "vacina",
-    "dt_ut_dose",
-    "mae_vac",
-    "dt_vac_mae",
-    "m_amamenta",
-    "dt_doseuni",
-    "dt_1_dose",
-    "dt_2_dose",
-    "vacina_cov",
-    "dose_1_cov",
-    "dose_2_cov",
-    "dose_ref",
-    "dose_2ref",
-    "dose_adic",
-    "dos_re_bi",
-]
-
-COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL = [
-    "pac_cocbo",
-    "pac_dscbo",
-    "pov_ct",
-    "tp_pov_ct",
-    "estrang",
-]
-
-COLUNAS_TRATAMENTO_AUDITORIA = [
-    "antiviral",
-    "tp_antivir",
-    "dt_antivir",
-    "trat_cov",
-    "tipo_trat",
-    "dt_trt_cov",
-]
-
-COLUNAS_DESFECHO_AUDITORIA = [
-    "evolucao",
-    "dt_evoluca",
-    "dt_encerra",
-    "dt_digita",
-]
-
-COLUNAS_EDA = list(
-    dict.fromkeys(
-        COLUNAS_ESTRUTURA
-        + COLUNAS_CANDIDATAS_PRINCIPAIS
-        + COLUNAS_COMPLEMENTARES_TEXTO
-        + COLUNAS_GEOGRAFIA
-        + COLUNAS_CONDICIONAIS_VACINACAO
-        + COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL
-        + COLUNAS_TRATAMENTO_AUDITORIA
-        + COLUNAS_DESFECHO_AUDITORIA
-    )
-)
-
-ANO_INICIAL_COORTE = 2019
-ANO_FINAL_COORTE = 2026
-
-ANOS_COORTE = list(
-    range(
-        ANO_INICIAL_COORTE,
-        ANO_FINAL_COORTE + 1,
-    )
-)
-
-print(
-    "Período definido para a coorte:",
-    f"{ANO_INICIAL_COORTE}-{ANO_FINAL_COORTE}",
-)
-
-print(f"Total de colunas da EDA: {len(COLUNAS_EDA)}")
-print(f"Colunas de estrutura: {len(COLUNAS_ESTRUTURA)}")
-print(f"Colunas candidatas: {len(COLUNAS_CANDIDATAS_PRINCIPAIS)}")
-print(f"Colunas complementares de texto: {len(COLUNAS_COMPLEMENTARES_TEXTO)}")
-print(f"Colunas geográficas: {len(COLUNAS_GEOGRAFIA)}")
-print(f"Colunas Condicionais de Vacinação: {len(COLUNAS_CONDICIONAIS_VACINACAO)}")
-print(f"Colunas Contexto Social: {len(COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL)}")
-print(f"Colunas de auditoria: {len(COLUNAS_TRATAMENTO_AUDITORIA)}")
-print(f"Colunas de Desfecho: {len(COLUNAS_DESFECHO_AUDITORIA)}")
-print(f"Total sem duplicidades: {len(COLUNAS_EDA)}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Período definido para a coorte: 2019-2026
-Total de colunas da EDA: 88
-Colunas de estrutura: 6
-Colunas candidatas: 35
-Colunas complementares de texto: 7
-Colunas geográficas: 10
-Colunas Condicionais de Vacinação: 15
-Colunas Contexto Social: 5
-Colunas de auditoria: 6
-Colunas de Desfecho: 4
-Total sem duplicidades: 88
-```
-
-### Cell 6 [code] · In [5]
-
-```python
-quantidade_colunas_por_grupo = pd.DataFrame(
-    {
-        "grupo": [
-            "Estrutura",
-            "Candidatas principais",
-            "Textos complementares",
-            "Geografia",
-            "Vacinação condicional",
-            "Contexto social",
-            "Tratamento e auditoria",
-            "Desfecho e auditoria",
-        ],
-        "quantidade_colunas": [
-            len(
-                COLUNAS_ESTRUTURA
-            ),
-            len(
-                COLUNAS_CANDIDATAS_PRINCIPAIS
-            ),
-            len(
-                COLUNAS_COMPLEMENTARES_TEXTO
-            ),
-            len(
-                COLUNAS_GEOGRAFIA
-            ),
-            len(
-                COLUNAS_CONDICIONAIS_VACINACAO
-            ),
-            len(
-                COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL
-            ),
-            len(
-                COLUNAS_TRATAMENTO_AUDITORIA
-            ),
-            len(
-                COLUNAS_DESFECHO_AUDITORIA
-            ),
-        ],
-    }
-)
-
-quantidade_colunas_por_grupo = (
-    quantidade_colunas_por_grupo
-    .sort_values(
-        "quantidade_colunas",
-        ascending=True,
-    )
-    .reset_index(drop=True)
-)
-
-total_colunas_grupos = int(
-    quantidade_colunas_por_grupo[
-        "quantidade_colunas"
-    ]
-    .sum()
-)
-
-if total_colunas_grupos != len(
-    COLUNAS_EDA
-):
-    raise RuntimeError(
-        "A soma das colunas por grupo não corresponde "
-        "ao total de colunas da EDA."
-    )
-
-cores_colunas_grupo = [
-    CORES_GRUPOS_EDA[
-        grupo
-    ]
-    for grupo in quantidade_colunas_por_grupo[
-        "grupo"
-    ]
-]
-
-figura_colunas_grupo, eixo_colunas_grupo = plt.subplots(
-    figsize=(
-        11,
-        6,
-    )
-)
-
-barras_colunas_grupo = eixo_colunas_grupo.barh(
-    quantidade_colunas_por_grupo[
-        "grupo"
-    ],
-    quantidade_colunas_por_grupo[
-        "quantidade_colunas"
-    ],
-    color=cores_colunas_grupo,
-)
-
-eixo_colunas_grupo.set_title(
-    "Colunas selecionadas para a EDA por grupo"
-)
-
-eixo_colunas_grupo.set_xlabel(
-    "Quantidade de colunas"
-)
-
-eixo_colunas_grupo.set_ylabel(
-    "Grupo"
-)
-
-eixo_colunas_grupo.set_xlim(
-    left=0
-)
-
-eixo_colunas_grupo.grid(
-    axis="x",
-    alpha=0.20,
-)
-
-for barra, quantidade in zip(
-    barras_colunas_grupo,
-    quantidade_colunas_por_grupo[
-        "quantidade_colunas"
-    ],
-):
-    eixo_colunas_grupo.text(
-        barra.get_width(),
-        barra.get_y()
-        + barra.get_height()
-        / 2,
-        f" {int(quantidade)}",
-        ha="left",
-        va="center",
-        fontsize=9,
-    )
-
-figura_colunas_grupo.text(
-    0.01,
-    0.01,
-    (
-        "O recorte inicial reúne "
-        f"{len(COLUNAS_EDA)} colunas do Parquet."
-    ),
-    fontsize=8,
-)
-
-figura_colunas_grupo.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_colunas_grupo
-)
-
-display(
-    quantidade_colunas_por_grupo.sort_values(
-        "quantidade_colunas",
-        ascending=False,
-    )
-    .reset_index(drop=True)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1100x600 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-                    grupo  quantidade_colunas
-0   Candidatas principais                  35
-1   Vacinação condicional                  15
-2               Geografia                  10
-3   Textos complementares                   7
-4               Estrutura                   6
-5  Tratamento e auditoria                   6
-6         Contexto social                   5
-7    Desfecho e auditoria                   4
-[non-text output omitted: text/html]
-```
-
-### Cell 7 [code] · In [6]
-
-```python
-caminho_parquet = storage.get_parquet(force=False)
-
-print(f"Arquivo: {caminho_parquet}")
-print(f"Existe: {caminho_parquet.exists()}")
-print(
-    "Tamanho do arquivo: "
-    f"{caminho_parquet.stat().st_size / 1024**2:,.2f} MB, {caminho_parquet.stat().st_size :,.2f} bytes"
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Arquivo: <REPO>\data\processed\dados-v2\srag.parquet
-Existe: True
-Tamanho do arquivo: 289.51 MB, 303,573,013.00 bytes
-```
-
-### Cell 8 [code] · In [7]
-
-```python
-arquivo_parquet = pq.ParquetFile(caminho_parquet)
-
-schema = arquivo_parquet.schema_arrow
-colunas_disponiveis = schema.names
-
-metadados_parquet = {
-    "arquivo": caminho_parquet.name,
-    "versao_dados": C.DATA_VERSION,
-    "numero_linhas": arquivo_parquet.metadata.num_rows,
-    "numero_colunas": arquivo_parquet.metadata.num_columns,
-    "numero_row_groups": arquivo_parquet.metadata.num_row_groups,
-}
-
-display(
-    pd.DataFrame(
-        [metadados_parquet]
-    )
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-        arquivo versao_dados  numero_linhas  numero_colunas  numero_row_groups
-0  srag.parquet     dados-v2        4666910             198                 28
-[non-text output omitted: text/html]
-```
-
-### Cell 9 [code] · In [8]
-
-```python
-schema_df = pd.DataFrame(
-    {
-        "coluna": schema.names,
-        "tipo_arrow": [
-            str(campo.type)
-            for campo in schema
-        ],
-    }
-)
-
-display(schema_df.head(20))
-print(f"Total de campos no schema: {len(schema_df)}")
-```
-
-**Output 1 (display_data)**
-
-```text
-            coluna   tipo_arrow
-0      id_registro        int64
-1      ano_arquivo        int16
-2    data_snapshot  date32[day]
-3   arquivo_origem       string
-4       nu_notific       string
-5       dt_notific       string
-6          sem_not       string
-7       dt_sin_pri       string
-8          sem_pri       string
-9        sg_uf_not       string
-10      id_regiona       string
-11      co_regiona       string
-12      id_municip       string
-13      co_mun_not       string
-14         cs_sexo       string
-15         dt_nasc       string
-16      nu_idade_n       string
-17        tp_idade       string
-18       cod_idade       string
-19      cs_gestant       string
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Total de campos no schema: 198
-```
-
-### Cell 10 [code] · In [9]
-
-```python
-conjunto_colunas_disponiveis = set(colunas_disponiveis)
-
-status_colunas = pd.DataFrame(
-    {
-        "coluna": COLUNAS_EDA,
-        "grupo": (
-            ["estrutura"] * len(COLUNAS_ESTRUTURA)
-            + ["candidatas_principais"] * len(COLUNAS_CANDIDATAS_PRINCIPAIS)
-            + ["complementares_texto"] * len(COLUNAS_COMPLEMENTARES_TEXTO)
-            + ["geografia"] * len(COLUNAS_GEOGRAFIA)
-            + ["condicionais_vacinacao"] * len(COLUNAS_CONDICIONAIS_VACINACAO)
-            + ["contexto_social_condicional"] * len(COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL)
-            + ["tratamento_auditoria"] * len(COLUNAS_TRATAMENTO_AUDITORIA)
-            + ["desfecho_auditoria"] * len(COLUNAS_DESFECHO_AUDITORIA)
-        ),
-    }
-)
-
-status_colunas["existe_no_parquet"] = (
-    status_colunas["coluna"]
-    .isin(conjunto_colunas_disponiveis)
-)
-
-display(status_colunas)
-
-colunas_ausentes = status_colunas.loc[
-    ~status_colunas["existe_no_parquet"],
-    "coluna",
-].tolist()
-
-if colunas_ausentes:
-    print("Colunas ausentes:")
-    for coluna in colunas_ausentes:
-        print(f"- {coluna}")
-else:
-    print("Todas as colunas solicitadas existem no Parquet.")
-```
-
-**Output 1 (display_data)**
-
-```text
-        coluna                 grupo  existe_no_parquet
-0   nu_notific             estrutura               True
-1   dt_notific             estrutura               True
-2   dt_sin_pri             estrutura               True
-3      sem_pri             estrutura               True
-4     hospital             estrutura               True
-..         ...                   ...                ...
-83  dt_trt_cov  tratamento_auditoria               True
-84    evolucao    desfecho_auditoria               True
-85  dt_evoluca    desfecho_auditoria               True
-86  dt_encerra    desfecho_auditoria               True
-87   dt_digita    desfecho_auditoria               True
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Todas as colunas solicitadas existem no Parquet.
-```
-
-### Cell 11 [code] · In [10]
-
-```python
-if colunas_ausentes:
-    raise ValueError(
-        "A leitura foi interrompida porque existem "
-        "colunas ausentes no Parquet: "
-        f"{colunas_ausentes}"
-    )
-
-print("Validação concluída. A leitura pode continuar.")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Validação concluída. A leitura pode continuar.
-```
-
-### Cell 12 [code] · In [11]
-
-```python
-df = storage.read_srag(
-    columns=COLUNAS_EDA,
-)
-
-print(f"Linhas carregadas: {df.shape[0]:,}")
-print(f"Colunas carregadas: {df.shape[1]:,}")
-
-display(df.head())
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Linhas carregadas: 4,666,910
-Colunas carregadas: 88
-```
-
-**Output 2 (display_data)**
-
-```text
-       nu_notific  dt_notific  dt_sin_pri sem_pri hospital  dt_interna  \
-0  31781201987679  2026-06-11  2026-06-02      23        1  2026-06-11   
-1  31775652598724  2026-03-23  2026-03-22      13      NaN         NaN   
-2  31781205405890  2026-03-29  2026-03-23      13        2         NaN   
-3  31782407823707  2026-06-17  2026-06-15      25        1  2026-06-15   
-4  31773493207022  2026-03-14  2026-03-09      11        1  2026-03-10   
-
-  cs_sexo nu_idade_n tp_idade cs_gestant  ... antiviral tp_antivir dt_antivir  \
-0       F          1        2          6  ...         2        NaN        NaN   
-1       F         75        3          5  ...       NaN        NaN        NaN   
-2       F          4        3          6  ...         2        NaN        NaN   
-3       F         37        3          5  ...         2        NaN        NaN   
-4       F          4        3          6  ...       NaN        NaN        NaN   
-
-  trat_cov tipo_trat dt_trt_cov evolucao  dt_evoluca  dt_encerra   dt_digita  
-0        2       NaN        NaN        1  2026-06-19  2026-06-19  2026-06-11  
-1      NaN       NaN        NaN      NaN         NaN         NaN  2026-04-08  
-2        2       NaN        NaN        1  2026-03-31  2026-06-11  2026-06-11  
-3        2       NaN        NaN      NaN         NaN         NaN  2026-06-25  
-4      NaN       NaN        NaN        1         NaN         NaN  2026-03-14  
-
-[5 rows x 88 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 13 [code] · In [12]
-
-```python
-if df.empty:
-    raise ValueError(
-        "O DataFrame foi carregado sem registros."
-    )
-
-if list(df.columns) != COLUNAS_EDA:
-    print(
-        "Atenção: a ordem das colunas carregadas "
-        "difere da lista solicitada."
-    )
-
-print(f"Dimensão: {df.shape}")
-print(f"Índice único: {df.index.is_unique}")
-print(f"Quantidade de linhas: {len(df):,}")
-print(f"Quantidade de colunas: {df.shape[1]:,}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Dimensão: (4666910, 88)
-Índice único: True
-Quantidade de linhas: 4,666,910
-Quantidade de colunas: 88
-```
-
-### Cell 14 [code] · In [13]
-
-```python
-tipos_memoria = pd.DataFrame(
-    {
-        "coluna": df.columns,
-        "tipo_pandas": [
-            str(df[coluna].dtype)
-            for coluna in df.columns
-        ],
-        "memoria_mb": [
-            df[coluna].memory_usage(deep=True) / 1024**2
-            for coluna in df.columns
-        ],
-    }
-)
-
-tipos_memoria = tipos_memoria.sort_values(
-    "memoria_mb",
-    ascending=False,
-).reset_index(drop=True)
-
-memoria_total_mb = (
-    df.memory_usage(deep=True).sum()
-    / 1024**2
-)
-
-print(f"Memória total: {memoria_total_mb:,.2f} MB")
-display(tipos_memoria)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Memória total: 3,847.05 MB
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna tipo_pandas  memoria_mb
-0   nu_notific         str   92.276205
-1   dt_notific         str   80.112946
-2   dt_sin_pri         str   80.112946
-3    dt_digita         str   79.958382
-4   dt_interna         str   77.767781
-..         ...         ...         ...
-83    out_anim         str   36.205858
-84  dt_trt_cov         str   36.198720
-85    out_trat         str   36.197567
-86   tipo_trat         str   36.166728
-87       tabag         str   36.162166
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 15 [code] · In [14]
-
-```python
-# ============================================================
-# DEFINIÇÃO, CONVERSÃO E AUDITORIA DAS COLUNAS DE DATA
-# ============================================================
-
-# Datas que definem ou contextualizam o episódio de SRAG
-COLUNAS_DATA_EPISODIO = [
-    "dt_notific",
-    "dt_sin_pri",
-    "dt_interna",
-]
-
-# Datas de vacinação, históricas ou anteriores à admissão.
-# A validade para modelagem dependerá da relação com dt_interna
-# e da população em que cada campo é aplicável.
-COLUNAS_DATA_VACINACAO = [
-    # Influenza e condições maternas ou pediátricas
-    "dt_ut_dose",
-    "dt_vac_mae",
-    "dt_doseuni",
-    "dt_1_dose",
-    "dt_2_dose",
-
-    # Vacinação contra COVID-19
-    "dose_1_cov",
-    "dose_2_cov",
-    "dose_ref",
-    "dose_2ref",
-    "dose_adic",
-    "dos_re_bi",
-]
-
-# Datas de tratamento com temporalidade a confirmar
-COLUNAS_DATA_TRATAMENTO = [
-    "dt_antivir",
-    "dt_trt_cov",
-]
-
-# Datas posteriores ao episódio ou de caráter administrativo
-COLUNAS_DATA_AUDITORIA = [
-    "dt_evoluca",
-    "dt_encerra",
-    "dt_digita",
-]
-
-# Lista consolidada, sem duplicidades
-COLUNAS_DATA = list(
-    dict.fromkeys(
-        COLUNAS_DATA_EPISODIO
-        + COLUNAS_DATA_VACINACAO
-        + COLUNAS_DATA_TRATAMENTO
-        + COLUNAS_DATA_AUDITORIA
-    )
-)
-
-print(
-    "Datas do episódio:",
-    len(COLUNAS_DATA_EPISODIO),
-)
-
-print(
-    "Datas de vacinação:",
-    len(COLUNAS_DATA_VACINACAO),
-)
-
-print(
-    "Datas de tratamento:",
-    len(COLUNAS_DATA_TRATAMENTO),
-)
-
-print(
-    "Datas de auditoria:",
-    len(COLUNAS_DATA_AUDITORIA),
-)
-
-print(
-    "Total de datas:",
-    len(COLUNAS_DATA),
-)
-
-
-# ============================================================
-# VALIDAÇÃO DA EXISTÊNCIA DAS COLUNAS
-# ============================================================
-
-COLUNAS_DATA_EXISTENTES = [
-    coluna
-    for coluna in COLUNAS_DATA
-    if coluna in df.columns
-]
-
-COLUNAS_DATA_AUSENTES = [
-    coluna
-    for coluna in COLUNAS_DATA
-    if coluna not in df.columns
-]
-
-if COLUNAS_DATA_AUSENTES:
-    print(
-        "Colunas de data ausentes no DataFrame:"
-    )
-
-    for coluna in COLUNAS_DATA_AUSENTES:
-        print(f"- {coluna}")
-else:
-    print(
-        "Todas as colunas de data existem "
-        "no DataFrame."
-    )
-
-
-# ============================================================
-# LIMITES UTILIZADOS NA CONVERSÃO
-# ============================================================
-
-LIMITE_INFERIOR_DATA = 1900
-LIMITE_SUPERIOR_DATA = 2026
-
-
-# ============================================================
-# FUNÇÃO DE CONVERSÃO SEGURA
-# ============================================================
-
-def converter_data_mista(
-    serie,
-    ano_minimo=LIMITE_INFERIOR_DATA,
-    ano_maximo=LIMITE_SUPERIOR_DATA,
-):
-    """
-    Converte datas AAAA-MM-DD e DD/MM/AAAA com menor pico de memória.
-
-    A função evita criar dois DataFrames de extração com três colunas
-    para todos os registros e materializa a tabela de problemas somente
-    nas linhas efetivamente problemáticas.
-    """
-
-    texto = (
-        serie.astype("string")
-        .str.strip()
-        .replace(
-            {
-                "": pd.NA,
-                "nan": pd.NA,
-                "NaN": pd.NA,
-                "None": pd.NA,
-                "<NA>": pd.NA,
-            }
-        )
-    )
-
-    mascara_iso = texto.str.match(
-        r"^\d{4}-\d{2}-\d{2}$",
-        na=False,
-    )
-
-    mascara_br = texto.str.match(
-        r"^\d{2}/\d{2}/\d{4}$",
-        na=False,
-    )
-
-    mascara_formato_reconhecido = (
-        mascara_iso | mascara_br
-    )
-
-    mascara_formato_nao_reconhecido = (
-        texto.notna()
-        & ~mascara_formato_reconhecido
-    )
-
-    ano_texto = pd.Series(
-        pd.NA,
-        index=serie.index,
-        dtype="string",
-    )
-
-    mes_texto = pd.Series(
-        pd.NA,
-        index=serie.index,
-        dtype="string",
-    )
-
-    dia_texto = pd.Series(
-        pd.NA,
-        index=serie.index,
-        dtype="string",
-    )
-
-    ano_texto.loc[mascara_iso] = (
-        texto.loc[mascara_iso].str.slice(0, 4)
-    )
-    mes_texto.loc[mascara_iso] = (
-        texto.loc[mascara_iso].str.slice(5, 7)
-    )
-    dia_texto.loc[mascara_iso] = (
-        texto.loc[mascara_iso].str.slice(8, 10)
-    )
-
-    ano_texto.loc[mascara_br] = (
-        texto.loc[mascara_br].str.slice(6, 10)
-    )
-    mes_texto.loc[mascara_br] = (
-        texto.loc[mascara_br].str.slice(3, 5)
-    )
-    dia_texto.loc[mascara_br] = (
-        texto.loc[mascara_br].str.slice(0, 2)
-    )
-
-    ano = pd.to_numeric(
-        ano_texto,
-        errors="coerce",
-    ).astype("Int16")
-
-    mes = pd.to_numeric(
-        mes_texto,
-        errors="coerce",
-    ).astype("Int8")
-
-    dia = pd.to_numeric(
-        dia_texto,
-        errors="coerce",
-    ).astype("Int8")
-
-    del ano_texto
-    del mes_texto
-    del dia_texto
-
-    mascara_ano_antes_limite = (
-        ano.notna()
-        & ano.lt(ano_minimo)
-    )
-
-    mascara_ano_depois_limite = (
-        ano.notna()
-        & ano.gt(ano_maximo)
-    )
-
-    mascara_ano_fora_faixa = (
-        mascara_ano_antes_limite
-        | mascara_ano_depois_limite
-    )
-
-    mascara_componentes_basicos_validos = (
-        ano.between(
-            ano_minimo,
-            ano_maximo,
-        )
-        & mes.between(1, 12)
-        & dia.between(1, 31)
-    ).fillna(False)
-
-    resultado = pd.Series(
-        pd.NaT,
-        index=serie.index,
-        dtype="datetime64[ns]",
-    )
-
-    mascara_iso_valida = (
-        mascara_iso
-        & mascara_componentes_basicos_validos
-    )
-
-    mascara_br_valida = (
-        mascara_br
-        & mascara_componentes_basicos_validos
-    )
-
-    if mascara_iso_valida.any():
-        resultado.loc[mascara_iso_valida] = pd.to_datetime(
-            texto.loc[mascara_iso_valida],
-            format="%Y-%m-%d",
-            errors="coerce",
-        )
-
-    if mascara_br_valida.any():
-        resultado.loc[mascara_br_valida] = pd.to_datetime(
-            texto.loc[mascara_br_valida],
-            format="%d/%m/%Y",
-            errors="coerce",
-        )
-
-    mascara_data_calendario_invalida = (
-        mascara_componentes_basicos_validos
-        & resultado.isna()
-    )
-
-    diagnostico = {
-        "quantidade_total": int(len(serie)),
-        "quantidade_original_preenchida": int(
-            texto.notna().sum()
-        ),
-        "quantidade_formato_iso": int(
-            mascara_iso.sum()
-        ),
-        "quantidade_formato_br": int(
-            mascara_br.sum()
-        ),
-        "quantidade_formato_nao_reconhecido": int(
-            mascara_formato_nao_reconhecido.sum()
-        ),
-        "quantidade_ano_antes_limite": int(
-            mascara_ano_antes_limite.sum()
-        ),
-        "quantidade_ano_depois_limite": int(
-            mascara_ano_depois_limite.sum()
-        ),
-        "quantidade_ano_fora_faixa": int(
-            mascara_ano_fora_faixa.sum()
-        ),
-        "quantidade_data_calendario_invalida": int(
-            mascara_data_calendario_invalida.sum()
-        ),
-        "quantidade_convertida": int(
-            resultado.notna().sum()
-        ),
-        "quantidade_ausente_original": int(
-            texto.isna().sum()
-        ),
-    }
-
-    mascara_problema = (
-        mascara_formato_nao_reconhecido
-        | mascara_ano_antes_limite
-        | mascara_ano_depois_limite
-        | mascara_data_calendario_invalida
-    )
-
-    indices_problema = serie.index[
-        mascara_problema
-    ]
-
-    problemas = pd.DataFrame(
-        {
-            "valor_original": texto.loc[indices_problema],
-            "ano_extraido": ano.loc[indices_problema],
-            "mes_extraido": mes.loc[indices_problema],
-            "dia_extraido": dia.loc[indices_problema],
-            "formato_nao_reconhecido": (
-                mascara_formato_nao_reconhecido.loc[
-                    indices_problema
-                ]
-            ),
-            "ano_antes_limite": (
-                mascara_ano_antes_limite.loc[
-                    indices_problema
-                ]
-            ),
-            "ano_depois_limite": (
-                mascara_ano_depois_limite.loc[
-                    indices_problema
-                ]
-            ),
-            "data_calendario_invalida": (
-                mascara_data_calendario_invalida.loc[
-                    indices_problema
-                ]
-            ),
-        },
-        index=indices_problema,
-    )
-
-    return (
-        resultado,
-        diagnostico,
-        problemas,
-    )
-
-
-# ============================================================
-# CONVERSÃO DAS DATAS
-# ============================================================
-
-import gc
-
-series_datas_convertidas = {}
-diagnosticos_conversao = []
-problemas_conversao = []
-
-for indice_coluna, coluna in enumerate(
-    COLUNAS_DATA_EXISTENTES,
-    start=1,
-):
-    print(
-        f"Convertendo {indice_coluna}/"
-        f"{len(COLUNAS_DATA_EXISTENTES)}:",
-        coluna,
-    )
-
-    (
-        serie_convertida,
-        diagnostico_coluna,
-        problemas_coluna,
-    ) = converter_data_mista(
-        df[coluna]
-    )
-
-    series_datas_convertidas[coluna] = (
-        serie_convertida
-    )
-
-    diagnosticos_conversao.append(
-        {
-            "coluna": coluna,
-            **diagnostico_coluna,
-        }
-    )
-
-    if not problemas_coluna.empty:
-        problemas_coluna = (
-            problemas_coluna
-            .reset_index()
-            .rename(
-                columns={
-                    "index": "indice_original",
-                }
-            )
-        )
-
-        problemas_coluna.insert(
-            0,
-            "coluna",
-            coluna,
-        )
-
-        problemas_conversao.append(
-            problemas_coluna
-        )
-
-    del serie_convertida
-    del diagnostico_coluna
-    del problemas_coluna
-
-    gc.collect()
-
-
-datas_convertidas = pd.DataFrame(
-    series_datas_convertidas,
-    index=df.index,
-)
-
-diagnostico_conversao_datas_df = pd.DataFrame(
-    diagnosticos_conversao
-)
-
-
-# ============================================================
-# TABELA COMPATIVEL COM AS EXPORTACOES E VALIDACOES POSTERIORES
-# ============================================================
-
-auditoria_faixa_datas_df = (
-    diagnostico_conversao_datas_df[
-        [
-            "coluna",
-            "quantidade_ano_antes_limite",
-            "quantidade_ano_depois_limite",
-            "quantidade_ano_fora_faixa",
-        ]
-    ]
-    .rename(
-        columns={
-            "quantidade_ano_antes_limite": (
-                "datas_antes_1900"
-            ),
-            "quantidade_ano_depois_limite": (
-                "datas_depois_2026"
-            ),
-            "quantidade_ano_fora_faixa": (
-                "datas_fora_faixa"
-            ),
-        }
-    )
-    .copy()
-)
-
-if len(
-    auditoria_faixa_datas_df
-) != len(
-    COLUNAS_DATA_EXISTENTES
-):
-    raise RuntimeError(
-        "A auditoria de faixa não cobre "
-        "todas as colunas de data."
-    )
-
-display(
-    auditoria_faixa_datas_df.loc[
-        auditoria_faixa_datas_df[
-            "datas_fora_faixa"
-        ].gt(0)
-    ]
-)
-
-if problemas_conversao:
-    problemas_conversao_datas_df = pd.concat(
-        problemas_conversao,
-        axis=0,
-        ignore_index=False,
-    )
-else:
-    problemas_conversao_datas_df = pd.DataFrame(
-        columns=[
-            "coluna",
-            "valor_original",
-            "ano_extraido",
-            "mes_extraido",
-            "dia_extraido",
-            "formato_nao_reconhecido",
-            "ano_antes_limite",
-            "ano_depois_limite",
-            "data_calendario_invalida",
-        ]
-    )
-
-display(
-    diagnostico_conversao_datas_df
-)
-
-
-# ============================================================
-# AUDITORIA DE PROBLEMAS
-# ============================================================
-
-colunas_com_problemas_df = (
-    diagnostico_conversao_datas_df.loc[
-        (
-            diagnostico_conversao_datas_df[
-                "quantidade_formato_nao_reconhecido"
-            ].gt(0)
-            | diagnostico_conversao_datas_df[
-                "quantidade_ano_fora_faixa"
-            ].gt(0)
-            | diagnostico_conversao_datas_df[
-                "quantidade_data_calendario_invalida"
-            ].gt(0)
-        )
-    ]
-    .copy()
-    .reset_index(drop=True)
-)
-
-if colunas_com_problemas_df.empty:
-    print(
-        "Nenhuma coluna apresentou problema "
-        "de formato, faixa ou calendário."
-    )
-else:
-    print(
-        "Colunas com problemas de formato, "
-        "faixa ou calendário:"
-    )
-
-    display(
-        colunas_com_problemas_df
-    )
-
-    print(
-        "Amostra dos valores problemáticos:"
-    )
-
-    display(
-        problemas_conversao_datas_df.head(100)
-    )
-
-
-# ============================================================
-# RESUMO DAS DATAS CONVERTIDAS
-# ============================================================
-
-resumo_datas = (
-    diagnostico_conversao_datas_df
-    .merge(
-        auditoria_faixa_datas_df,
-        on="coluna",
-        how="left",
-    )
-)
-
-resumo_datas.insert(
-    1,
-    "data_minima_convertida",
-    [
-        datas_convertidas[coluna].min()
-        for coluna in resumo_datas["coluna"]
-    ],
-)
-
-resumo_datas.insert(
-    2,
-    "data_maxima_convertida",
-    [
-        datas_convertidas[coluna].max()
-        for coluna in resumo_datas["coluna"]
-    ],
-)
-
-COLUNAS_RESUMO_DATAS = [
-    "coluna",
-    "data_minima_convertida",
-    "data_maxima_convertida",
-    "quantidade_total",
-    "quantidade_original_preenchida",
-    "quantidade_ausente_original",
-    "quantidade_convertida",
-    "quantidade_formato_iso",
-    "quantidade_formato_br",
-    "quantidade_formato_nao_reconhecido",
-    "quantidade_data_calendario_invalida",
-    "datas_antes_1900",
-    "datas_depois_2026",
-    "datas_fora_faixa",
-]
-
-resumo_datas = (
-    resumo_datas[
-        COLUNAS_RESUMO_DATAS
-    ]
-    .copy()
-)
-
-display(
-    resumo_datas
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Datas do episódio: 3
-Datas de vacinação: 11
-Datas de tratamento: 2
-Datas de auditoria: 3
-Total de datas: 19
-Todas as colunas de data existem no DataFrame.
-Convertendo 1/19: dt_notific
-Convertendo 2/19: dt_sin_pri
-Convertendo 3/19: dt_interna
-Convertendo 4/19: dt_ut_dose
-Convertendo 5/19: dt_vac_mae
-Convertendo 6/19: dt_doseuni
-Convertendo 7/19: dt_1_dose
-Convertendo 8/19: dt_2_dose
-Convertendo 9/19: dose_1_cov
-Convertendo 10/19: dose_2_cov
-Convertendo 11/19: dose_ref
-Convertendo 12/19: dose_2ref
-Convertendo 13/19: dose_adic
-Convertendo 14/19: dos_re_bi
-Convertendo 15/19: dt_antivir
-Convertendo 16/19: dt_trt_cov
-Convertendo 17/19: dt_evoluca
-Convertendo 18/19: dt_encerra
-Convertendo 19/19: dt_digita
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  datas_antes_1900  datas_depois_2026  datas_fora_faixa
-2   dt_interna                21                 76                97
-8   dose_1_cov                13                 52                65
-9   dose_2_cov                25                 43                68
-10    dose_ref                 0                  4                 4
-11   dose_2ref                 0                  1                 1
-14  dt_antivir                 6                 19                25
-[non-text output omitted: text/html]
-```
-
-**Output 3 (display_data)**
-
-```text
-        coluna  quantidade_total  quantidade_original_preenchida  \
-0   dt_notific           4666910                         4666910   
-1   dt_sin_pri           4666910                         4666910   
-2   dt_interna           4666910                         4362665   
-3   dt_ut_dose           4666910                          390041   
-4   dt_vac_mae           4666910                            5645   
-5   dt_doseuni           4666910                           17601   
-6    dt_1_dose           4666910                           18626   
-7    dt_2_dose           4666910                           10895   
-8   dose_1_cov           4666910                         1211162   
-9   dose_2_cov           4666910                         1024809   
-10    dose_ref           4666910                          473540   
-11   dose_2ref           4666910                          195149   
-12   dose_adic           4666910                           21152   
-13   dos_re_bi           4666910                          110916   
-14  dt_antivir           4666910                          347712   
-15  dt_trt_cov           4666910                            3833   
-16  dt_evoluca           4666910                         4014740   
-17  dt_encerra           4666910                         4338057   
-18   dt_digita           4666910                         4650091   
-
-    quantidade_formato_iso  quantidade_formato_br  \
-0                  4666910                      0   
-1                  4666910                      0   
-2                  4362665                      0   
-3                   390041                      0   
-4                     5645                      0   
-5                    17601                      0   
-6                    18626                      0   
-7                    10895                      0   
-8                        0                1211162   
-9                        0                1024809   
-10                       0                 473540   
-11                       0                 195149   
-12                       0                  21152   
-13                       0                 110916   
-14                  347712                      0   
-15                    3833                      0   
-16                 4014740                      0   
-17                 4338057                      0   
-18                 4650091                      0   
-
-    quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
-0                                    0                            0   
-1                                    0                            0   
-2                                    0                           21   
-3                                    0                            0   
-4                                    0                            0   
-5                                    0                            0   
-6                                    0                            0   
-7                                    0                            0   
-8                                    0                           13   
-9                                    0                           25   
-10                                   0                            0   
-11                                   0                            0   
-12                                   0                            0   
-13                                   0                            0   
-14                                   0                            6   
-15                                   0                            0   
-16                                   0                            0   
-17                                   0                            0   
-18                                   0                            0   
-
-    quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
-0                              0                          0   
-1                              0                          0   
-2                             76                         97   
-3                              0                          0   
-4                              0          
-... [1141 characters omitted] ...
-                4362568   
-3                                     0                 390041   
-4                                     0                   5645   
-5                                     0                  17601   
-6                                     0                  18626   
-7                                     0                  10895   
-8                                     0                1211097   
-9                                     0                1024741   
-10                                    0                 473536   
-11                                    0                 195148   
-12                                    0                  21152   
-13                                    0                 110916   
-14                                    0                 347687   
-15                                    0                   3833   
-16                                    0                4014740   
-17                                    0                4338057   
-18                                    0                4650091   
-
-    quantidade_ausente_original  
-0                             0  
-1                             0  
-2                        304245  
-3                       4276869  
-4                       4661265  
-5                       4649309  
-6                       4648284  
-7                       4656015  
-8                       3455748  
-9                       3642101  
-10                      4193370  
-11                      4471761  
-12                      4645758  
-13                      4555994  
-14                      4319198  
-15                      4663077  
-16                       652170  
-17                       328853  
-18                        16819  
-[non-text output omitted: text/html]
-```
-
-**Output 4 (stream:stdout)**
-
-```text
-Colunas com problemas de formato, faixa ou calendário:
-```
-
-**Output 5 (display_data)**
-
-```text
-       coluna  quantidade_total  quantidade_original_preenchida  \
-0  dt_interna           4666910                         4362665   
-1  dose_1_cov           4666910                         1211162   
-2  dose_2_cov           4666910                         1024809   
-3    dose_ref           4666910                          473540   
-4   dose_2ref           4666910                          195149   
-5  dt_antivir           4666910                          347712   
-
-   quantidade_formato_iso  quantidade_formato_br  \
-0                 4362665                      0   
-1                       0                1211162   
-2                       0                1024809   
-3                       0                 473540   
-4                       0                 195149   
-5                  347712                      0   
-
-   quantidade_formato_nao_reconhecido  quantidade_ano_antes_limite  \
-0                                   0                           21   
-1                                   0                           13   
-2                                   0                           25   
-3                                   0                            0   
-4                                   0                            0   
-5                                   0                            6   
-
-   quantidade_ano_depois_limite  quantidade_ano_fora_faixa  \
-0                            76                         97   
-1                            52                         65   
-2                            43                         68   
-3                             4                          4   
-4                             1                          1   
-5                            19                         25   
-
-   quantidade_data_calendario_invalida  quantidade_convertida  \
-0                                    0                4362568   
-1                                    0                1211097   
-2                                    0                1024741   
-3                                    0                 473536   
-4                                    0                 195148   
-5                                    0                 347687   
-
-   quantidade_ausente_original  
-0                       304245  
-1                      3455748  
-2                      3642101  
-3                      4193370  
-4                      4471761  
-5                      4319198  
-[non-text output omitted: text/html]
-```
-
-**Output 6 (stream:stdout)**
-
-```text
-Amostra dos valores problemáticos:
-```
-
-**Output 7 (display_data)**
-
-```text
-        coluna  indice_original valor_original  ano_extraido  mes_extraido  \
-0   dt_interna            14859     2029-09-12          2029             9   
-1   dt_interna            35781     1772-04-01          1772             4   
-2   dt_interna            41220     2202-05-12          2202             5   
-3   dt_interna            42292     1695-01-29          1695             1   
-4   dt_interna            52957     2027-07-14          2027             7   
-..         ...              ...            ...           ...           ...   
-95  dt_interna          4475345     1695-08-27          1695             8   
-96  dt_interna          4628164     2109-07-10          2109             7   
-0   dose_1_cov           987131     04/03/3202          3202             3   
-1   dose_1_cov          1360847     03/03/3021          3021             3   
-2   dose_1_cov          1387928     26/10/3121          3121            10   
-
-    dia_extraido  formato_nao_reconhecido  ano_antes_limite  \
-0             12                    False             False   
-1              1                    False              True   
-2             12                    False             False   
-3             29                    False              True   
-4             14                    False             False   
-..           ...                      ...               ...   
-95            27                    False              True   
-96            10                    False             False   
-0              4                    False             False   
-1              3                    False             False   
-2             26                    False             False   
-
-    ano_depois_limite  data_calendario_invalida  
-0                True                     False  
-1               False                     False  
-2                True                     False  
-3               False                     False  
-4                True                     False  
-..                ...                       ...  
-95              False                     False  
-96               True                     False  
-0                True                     False  
-1                True                     False  
-2                True                     False  
-
-[100 rows x 10 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 8 (display_data)**
-
-```text
-        coluna data_minima_convertida data_maxima_convertida  \
-0   dt_notific             2018-12-30             2026-09-28   
-1   dt_sin_pri             2018-12-30             2026-09-26   
-2   dt_interna             1917-09-01             2026-12-29   
-3   dt_ut_dose             2009-03-02             2026-09-23   
-4   dt_vac_mae             1955-11-16             2026-09-21   
-5   dt_doseuni             2013-04-25             2026-09-18   
-6    dt_1_dose             2012-08-06             2026-09-22   
-7    dt_2_dose             2012-09-14             2026-09-22   
-8   dose_1_cov             1900-01-01             2026-12-23   
-9   dose_2_cov             1900-04-20             2026-10-30   
-10    dose_ref             1982-02-09             2026-12-19   
-11   dose_2ref             2020-04-12             2025-11-28   
-12   dose_adic             2021-01-19             2026-05-24   
-13   dos_re_bi             2021-03-27             2026-02-04   
-14  dt_antivir             2018-12-30             2026-12-03   
-15  dt_trt_cov             2020-03-15             2026-09-27   
-16  dt_evoluca             2019-01-01             2026-09-27   
-17  dt_encerra             2019-01-05             2026-09-27   
-18   dt_digita             2019-01-18             2026-09-28   
-
-    quantidade_total  quantidade_original_preenchida  \
-0            4666910                         4666910   
-1            4666910                         4666910   
-2            4666910                         4362665   
-3            4666910                          390041   
-4            4666910                            5645   
-5            4666910                           17601   
-6            4666910                           18626   
-7            4666910                           10895   
-8            4666910                         1211162   
-9            4666910                         1024809   
-10           4666910                          473540   
-11           4666910                          195149   
-12           4666910                           21152   
-13           4666910                          110916   
-14           4666910                          347712   
-15           4666910                            3833   
-16           4666910                         4014740   
-17           4666910                         4338057   
-18           4666910                         4650091   
-
-    quantidade_ausente_original  quantidade_convertida  \
-0                             0                4666910   
-1                             0                4666910   
-2                        304245                4362568   
-3                       4276869                 390041   
-4                       4661265                   5645   
-5                       4649309                  17601   
-6                       4648284                  18626   
-7                       4656015                  10895   
-8                       3455748                1211097   
-9                       3642101                1024741   
-10                      4193370                 473536   
-11                      4471761                 195148   
-12                      4645758                  21152   
-13                      4555994                 110916   
-14                      4319198                 347687   
-15                      4663077                   3833   
-16                       652170                4014740   
-17                       328853                4338057   
-18                        16819                4650091   
-
-    quantidade_formato_iso  quantidade_formato_br  \
-0                  4666910                      0   
-1                  4666910                      0   
-2                  4362665                      0   
-3                   390041                      0   
-4                     5645                      0   
-5                    17601                      0   
-6                    18626                      0   
-7                    10895                      0   
-8                        0                1211162   
-9                        0                1024809   
-10                       0                 473540   
-1
-... [1441 characters omitted] ...
-     0   
-12                                   0                                    0   
-13                                   0                                    0   
-14                                   0                                    0   
-15                                   0                                    0   
-16                                   0                                    0   
-17                                   0                                    0   
-18                                   0                                    0   
-
-    datas_antes_1900  datas_depois_2026  datas_fora_faixa  
-0                  0                  0                 0  
-1                  0                  0                 0  
-2                 21                 76                97  
-3                  0                  0                 0  
-4                  0                  0                 0  
-5                  0                  0                 0  
-6                  0                  0                 0  
-7                  0                  0                 0  
-8                 13                 52                65  
-9                 25                 43                68  
-10                 0                  4                 4  
-11                 0                  1                 1  
-12                 0                  0                 0  
-13                 0                  0                 0  
-14                 6                 19                25  
-15                 0                  0                 0  
-16                 0                  0                 0  
-17                 0                  0                 0  
-18                 0                  0                 0  
-[non-text output omitted: text/html]
-```
-
-### Cell 16 [code] · In [15]
-
-```python
-import gc
-
-OBJETOS_TEMPORARIOS_DATAS = [
-    "series_datas_convertidas",
-    "diagnosticos_conversao",
-    "problemas_conversao",
-    "serie_convertida",
-    "diagnostico_coluna",
-    "problemas_coluna",
-    "colunas_com_problemas_df",
-]
-
-objetos_removidos = []
-
-for nome_objeto in OBJETOS_TEMPORARIOS_DATAS:
-    if nome_objeto in globals():
-        del globals()[nome_objeto]
-        objetos_removidos.append(
-            nome_objeto
-        )
-
-quantidade_coletada = gc.collect()
-
-print(
-    "Objetos temporários removidos:",
-    objetos_removidos,
-)
-
-print(
-    "Objetos coletados:",
-    quantidade_coletada,
-)
-
-print(
-    "datas_convertidas preservado:",
-    "datas_convertidas" in globals(),
-)
-
-print(
-    "resumo_datas preservado:",
-    "resumo_datas" in globals(),
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Objetos temporários removidos: ['series_datas_convertidas', 'diagnosticos_conversao', 'problemas_conversao', 'colunas_com_problemas_df']
-Objetos coletados: 0
-datas_convertidas preservado: True
-resumo_datas preservado: True
-```
-
-### Cell 17 [markdown]
-
-```markdown
-### Concentração dos problemas nas colunas de data
-
-A conversão das datas distingue três tipos principais de problema:
-
-- formato não reconhecido;
-- ano fora da faixa aceita;
-- data de calendário inválida.
-
-O gráfico apresenta somente as colunas com pelo menos uma ocorrência
-problemática.
-
-As contagens devem ser interpretadas em conjunto com o volume preenchido
-de cada campo. Uma quantidade absoluta maior não implica necessariamente
-uma proporção maior de erro.
-```
-
-### Cell 18 [code] · In [16]
-
-```python
-COLUNAS_DIAGNOSTICO_DATA = [
-    "coluna",
-    "quantidade_original_preenchida",
-    "quantidade_formato_nao_reconhecido",
-    "quantidade_ano_fora_faixa",
-    "quantidade_data_calendario_invalida",
-]
-
-colunas_diagnostico_data_ausentes = [
-    coluna
-    for coluna in COLUNAS_DIAGNOSTICO_DATA
-    if coluna not in diagnostico_conversao_datas_df.columns
-]
-
-if colunas_diagnostico_data_ausentes:
-    raise KeyError(
-        "O diagnóstico de datas não contém as colunas necessárias: "
-        f"{colunas_diagnostico_data_ausentes}"
-    )
-
-problemas_data_grafico = (
-    diagnostico_conversao_datas_df[
-        COLUNAS_DIAGNOSTICO_DATA
-    ]
-    .copy()
-)
-
-COLUNAS_TIPOS_PROBLEMA = [
-    "quantidade_formato_nao_reconhecido",
-    "quantidade_ano_fora_faixa",
-    "quantidade_data_calendario_invalida",
-]
-
-for coluna in COLUNAS_TIPOS_PROBLEMA:
-    problemas_data_grafico[
-        coluna
-    ] = (
-        pd.to_numeric(
-            problemas_data_grafico[
-                coluna
-            ],
-            errors="coerce",
-        )
-        .fillna(0)
-        .astype("int64")
-    )
-
-problemas_data_grafico[
-    "quantidade_original_preenchida"
-] = (
-    pd.to_numeric(
-        problemas_data_grafico[
-            "quantidade_original_preenchida"
-        ],
-        errors="coerce",
-    )
-    .fillna(0)
-    .astype("int64")
-)
-
-problemas_data_grafico[
-    "quantidade_problemas"
-] = (
-    problemas_data_grafico[
-        COLUNAS_TIPOS_PROBLEMA
-    ]
-    .sum(
-        axis=1
-    )
-    .astype("int64")
-)
-
-problemas_data_grafico = (
-    problemas_data_grafico.loc[
-        problemas_data_grafico[
-            "quantidade_problemas"
-        ].gt(0)
-    ]
-    .copy()
-)
-
-problemas_data_grafico[
-    "percentual_problemas_entre_preenchidos"
-] = (
-    problemas_data_grafico[
-        "quantidade_problemas"
-    ]
-    .div(
-        problemas_data_grafico[
-            "quantidade_original_preenchida"
-        ]
-        .replace(
-            0,
-            np.nan,
-        )
-    )
-    .mul(100)
-)
-
-problemas_data_grafico = (
-    problemas_data_grafico
-    .sort_values(
-        [
-            "quantidade_problemas",
-            "coluna",
-        ],
-        ascending=[
-            True,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-if problemas_data_grafico.empty:
-    print(
-        "Nenhuma coluna de data apresentou problema "
-        "de formato, faixa ou calendário."
-    )
-else:
-    inicio_ano_fora_faixa = (
-        problemas_data_grafico[
-            "quantidade_formato_nao_reconhecido"
-        ]
-    )
-
-    inicio_calendario_invalido = (
-        problemas_data_grafico[
-            "quantidade_formato_nao_reconhecido"
-        ]
-        .add(
-            problemas_data_grafico[
-                "quantidade_ano_fora_faixa"
-            ]
-        )
-    )
-
-    altura_figura = max(
-        5,
-        len(
-            problemas_data_grafico
-        )
-        * 0.65,
-    )
-
-    figura_problemas_data, eixo_problemas_data = plt.subplots(
-        figsize=(
-            13,
-            altura_figura,
-        )
-    )
-
-    eixo_problemas_data.barh(
-        problemas_data_grafico[
-            "coluna"
-        ],
-        problemas_data_grafico[
-            "quantidade_formato_nao_reconhecido"
-        ],
-        color="tab:orange",
-        label="Formato não reconhecido",
-    )
-
-    eixo_problemas_data.barh(
-        problemas_data_grafico[
-            "coluna"
-        ],
-        problemas_data_grafico[
-            "quantidade_ano_fora_faixa"
-        ],
-        left=inicio_ano_fora_faixa,
-        color="tab:red",
-        label="Ano fora da faixa",
-    )
-
-    eixo_problemas_data.barh(
-        problemas_data_grafico[
-            "coluna"
-        ],
-        problemas_data_grafico[
-            "quantidade_data_calendario_invalida"
-        ],
-        left=inicio_calendario_invalido,
-        color="tab:purple",
-        label="Calendário inválido",
-    )
-
-    eixo_problemas_data.set_title(
-        "Problemas identificados nas colunas de data"
-    )
-
-    eixo_problemas_data.set_xlabel(
-        "Quantidade de registros problemáticos"
-    )
-
-    eixo_problemas_data.set_ylabel(
-        "Coluna de data"
-    )
-
-    eixo_problemas_data.set_xlim(
-        left=0
-    )
-
-    eixo_problemas_data.ticklabel_format(
-        style="plain",
-        axis="x",
-    )
-
-    eixo_problemas_data.grid(
-        axis="x",
-        alpha=0.20,
-    )
-
-    eixo_problemas_data.legend(
-        title="Tipo de problema"
-    )
-
-    for posicao, linha in problemas_data_grafico.iterrows():
-        quantidade_problemas = int(
-            linha[
-                "quantidade_problemas"
-            ]
-        )
-
-        percentual_problemas = linha[
-            "percentual_problemas_entre_preenchidos"
-        ]
-
-        quantidade_formatada = (
-            f"{quantidade_problemas:,}"
-            .replace(
-                ",",
-                ".",
-            )
-        )
-
-        if pd.isna(
-            percentual_problemas
-        ):
-            rotulo = quantidade_formatada
-        else:
-            rotulo = (
-                f"{quantidade_formatada} "
-                f"({float(percentual_problemas):.4f}%)"
-            )
-
-        eixo_problemas_data.text(
-            quantidade_problemas,
-            posicao,
-            f" {rotulo}",
-            ha="left",
-            va="center",
-            fontsize=8,
-        )
-
-    figura_problemas_data.text(
-        0.01,
-        0.01,
-        (
-            "As barras representam contagens absolutas. "
-            "O rótulo mostra o total problemático e o percentual "
-            "entre os valores originalmente preenchidos."
-        ),
-        fontsize=8,
-    )
-
-    figura_problemas_data.tight_layout(
-        rect=[
-            0,
-            0.05,
-            1,
-            1,
-        ]
-    )
-
-    plt.show()
-
-    plt.close(
-        figura_problemas_data
-    )
-
-    display(
-        problemas_data_grafico
-        .sort_values(
-            [
-                "quantidade_problemas",
-                "coluna",
-            ],
-            ascending=[
-                False,
-                True,
-            ],
-        )
-        .reset_index(drop=True)
-    )
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x500 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-       coluna  quantidade_original_preenchida  \
-0  dt_interna                         4362665   
-1  dose_2_cov                         1024809   
-2  dose_1_cov                         1211162   
-3  dt_antivir                          347712   
-4    dose_ref                          473540   
-5   dose_2ref                          195149   
-
-   quantidade_formato_nao_reconhecido  quantidade_ano_fora_faixa  \
-0                                   0                         97   
-1                                   0                         68   
-2                                   0                         65   
-3                                   0                         25   
-4                                   0                          4   
-5                                   0                          1   
-
-   quantidade_data_calendario_invalida  quantidade_problemas  \
-0                                    0                    97   
-1                                    0                    68   
-2                                    0                    65   
-3                                    0                    25   
-4                                    0                     4   
-5                                    0                     1   
-
-   percentual_problemas_entre_preenchidos  
-0                                0.002223  
-1                                0.006635  
-2                                0.005367  
-3                                0.007190  
-4                                0.000845  
-5                                0.000512  
-[non-text output omitted: text/html]
-```
-
-### Cell 19 [code] · In [17]
-
-```python
-# ============================================================
-# AUDITORIA DE DATAS POSTERIORES AO FECHAMENTO OBSERVADO
-# ============================================================
-
-DATA_CORTE_OBSERVADA = pd.Timestamp(
-    "2026-09-28"
-)
-
-auditoria_datas_pos_corte = []
-
-for coluna in COLUNAS_DATA_EXISTENTES:
-    serie_convertida = datas_convertidas[
-        coluna
-    ]
-
-    mascara_posterior_corte = (
-        serie_convertida.notna()
-        & serie_convertida.gt(
-            DATA_CORTE_OBSERVADA
-        )
-    )
-
-    quantidade_posterior_corte = int(
-        mascara_posterior_corte.sum()
-    )
-
-    if quantidade_posterior_corte > 0:
-        auditoria_datas_pos_corte.append(
-            {
-                "coluna": coluna,
-                "data_corte_observada": (
-                    DATA_CORTE_OBSERVADA
-                ),
-                "quantidade_posterior_corte": (
-                    quantidade_posterior_corte
-                ),
-                "menor_data_posterior_corte": (
-                    serie_convertida.loc[
-                        mascara_posterior_corte
-                    ].min()
-                ),
-                "maior_data_posterior_corte": (
-                    serie_convertida.loc[
-                        mascara_posterior_corte
-                    ].max()
-                ),
-            }
-        )
-
-auditoria_datas_pos_corte_df = pd.DataFrame(
-    auditoria_datas_pos_corte
-)
-
-if auditoria_datas_pos_corte_df.empty:
-    print(
-        "Nenhuma data posterior ao fechamento "
-        "observado foi identificada."
-    )
-else:
-    print(
-        "Foram identificadas datas posteriores "
-        "ao fechamento observado da base."
-    )
-
-    display(
-        auditoria_datas_pos_corte_df
-    )
-
-dt_interna_posterior_corte = int(
-    (
-        datas_convertidas[
-            "dt_interna"
-        ].notna()
-        & datas_convertidas[
-            "dt_interna"
-        ].gt(
-            DATA_CORTE_OBSERVADA
-        )
-    ).sum()
-)
-
-print(
-    "Internações posteriores ao corte observado:",
-    dt_interna_posterior_corte,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Foram identificadas datas posteriores ao fechamento observado da base.
-```
-
-**Output 2 (display_data)**
-
-```text
-       coluna data_corte_observada  quantidade_posterior_corte  \
-0  dt_interna           2026-09-28                          17   
-1  dose_1_cov           2026-09-28                           3   
-2  dose_2_cov           2026-09-28                           1   
-3    dose_ref           2026-09-28                           1   
-4  dt_antivir           2026-09-28                           3   
-
-  menor_data_posterior_corte maior_data_posterior_corte  
-0                 2026-09-29                 2026-12-29  
-1                 2026-11-17                 2026-12-23  
-2                 2026-10-30                 2026-10-30  
-3                 2026-12-19                 2026-12-19  
-4                 2026-09-30                 2026-12-03  
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Internações posteriores ao corte observado: 17
-```
-
-### Cell 20 [code] · In [18]
-
-```python
-
-# ============================================================
-# VALIDAÇÕES DA CONVERSÃO
-# ============================================================
-
-if list(
-    datas_convertidas.columns
-) != COLUNAS_DATA_EXISTENTES:
-    raise RuntimeError(
-        "A ordem das colunas convertidas difere "
-        "da ordem esperada."
-    )
-
-if len(
-    diagnostico_conversao_datas_df
-) != len(
-    COLUNAS_DATA_EXISTENTES
-):
-    raise RuntimeError(
-        "O diagnóstico de conversão não cobre "
-        "todas as colunas de data."
-    )
-
-anos_convertidos_fora_faixa = []
-
-for coluna in COLUNAS_DATA_EXISTENTES:
-    serie_convertida = (
-        datas_convertidas[coluna]
-    )
-
-    mascara_ano_convertido_fora_faixa = (
-        serie_convertida.notna()
-        & (
-            serie_convertida.dt.year.lt(
-                LIMITE_INFERIOR_DATA
-            )
-            | serie_convertida.dt.year.gt(
-                LIMITE_SUPERIOR_DATA
-            )
-        )
-    )
-
-    if (
-        mascara_ano_convertido_fora_faixa.any()
-    ):
-        anos_convertidos_fora_faixa.append(
-            coluna
-        )
-
-if anos_convertidos_fora_faixa:
-    raise RuntimeError(
-        "Existem datas convertidas fora da faixa "
-        f"permitida: {anos_convertidos_fora_faixa}"
-    )
-
-print(
-    "Conversão e auditoria das datas "
-    "concluídas sem OutOfBoundsDatetime."
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Conversão e auditoria das datas concluídas sem OutOfBoundsDatetime.
-```
-
-### Cell 21 [code] · In [19]
-
-```python
-if "dt_notific" not in datas_convertidas.columns:
-    raise KeyError(
-        "A coluna dt_notific não está disponível "
-        "para avaliar o período temporal."
-    )
-
-ano_notificacao = (
-    datas_convertidas["dt_notific"]
-    .dt.year
-    .rename("ano_notificacao")
-)
-
-volume_por_ano = (
-    ano_notificacao
-    .value_counts(dropna=False)
-    .sort_index()
-    .rename_axis("ano_notificacao")
-    .reset_index(name="quantidade_registros")
-)
-
-volume_por_ano["percentual"] = (
-    volume_por_ano["quantidade_registros"]
-    / len(df)
-    * 100
-)
-
-display(volume_por_ano)
-```
-
-**Output 1 (display_data)**
-
-```text
-   ano_notificacao  quantidade_registros  percentual
-0             2018                     3    0.000064
-1             2019                 48634    1.042103
-2             2020               1148787   24.615581
-3             2021               1773875   38.009625
-4             2022                582656   12.484835
-5             2023                284383    6.093604
-6             2024                268519    5.753679
-7             2025                334610    7.169840
-8             2026                225443    4.830670
-[non-text output omitted: text/html]
-```
-
-### Cell 22 [code] · In [20]
-
-```python
-if "dt_interna" not in datas_convertidas.columns:
-    raise KeyError(
-        "A coluna dt_interna não está disponível "
-        "para avaliar o período de internação."
-    )
-
-ano_internacao = (
-    datas_convertidas["dt_interna"]
-    .dt.year
-    .rename("ano_internacao")
-)
-
-volume_por_ano_int = (
-    ano_internacao
-    .value_counts(dropna=False)
-    .sort_index()
-    .rename_axis("ano_internacao")
-    .reset_index(name="quantidade_registros_int")
-)
-
-volume_por_ano_int["percentual"] = (
-    volume_por_ano_int["quantidade_registros_int"]
-    / len(df)
-    * 100
-)
-
-display(volume_por_ano_int)
-```
-
-**Output 1 (display_data)**
-
-```text
-    ano_internacao  quantidade_registros_int  percentual
-0           1917.0                         4    0.000086
-1           1918.0                         1    0.000021
-2           1941.0                         4    0.000086
-3           2009.0                         1    0.000021
-4           2011.0                         1    0.000021
-5           2012.0                         2    0.000043
-6           2016.0                         1    0.000021
-7           2017.0                         2    0.000043
-8           2018.0                        11    0.000236
-9           2019.0                     47545    1.018768
-10          2020.0                   1076375   23.063976
-11          2021.0                   1657394   35.513734
-12          2022.0                    536135   11.488008
-13          2023.0                    265671    5.692653
-14          2024.0                    253367    5.429010
-15          2025.0                    315616    6.762847
-16          2026.0                    210438    4.509151
-17             NaN                    304342    6.521274
-[non-text output omitted: text/html]
-```
-
-### Cell 23 [code] · In [21]
-
-```python
-ANO_INCOMPLETO = 2026
-
-status_periodos = (
-    volume_por_ano_int
-    .copy()
-)
-
-status_periodos["status_periodo"] = (
-    "fora_periodo"
-)
-
-status_periodos.loc[
-    status_periodos[
-        "ano_internacao"
-    ].between(
-        ANO_INICIAL_COORTE,
-        ANO_FINAL_COORTE - 1,
-    ),
-    "status_periodo",
-] = "completo"
-
-status_periodos.loc[
-    status_periodos[
-        "ano_internacao"
-    ].eq(ANO_INCOMPLETO),
-    "status_periodo",
-] = "incompleto"
-
-status_periodos.loc[
-    status_periodos[
-        "ano_internacao"
-    ].isna(),
-    "status_periodo",
-] = "sem_data_valida"
-
-status_periodos[
-    "dentro_periodo_coorte"
-] = (
-    status_periodos[
-        "ano_internacao"
-    ]
-    .between(
-        ANO_INICIAL_COORTE,
-        ANO_FINAL_COORTE,
-    )
-)
-
-status_periodos["observacao"] = ""
-
-status_periodos.loc[
-    status_periodos[
-        "status_periodo"
-    ].eq("incompleto"),
-    "observacao",
-] = (
-    "Ano incompleto na versão atual "
-    "dos dados"
-)
-
-status_periodos.loc[
-    status_periodos[
-        "status_periodo"
-    ].eq("fora_periodo"),
-    "observacao",
-] = (
-    "Ano fora do período definido "
-    "para a coorte"
-)
-
-status_periodos.loc[
-    status_periodos[
-        "status_periodo"
-    ].eq("sem_data_valida"),
-    "observacao",
-] = (
-    "Registro sem dt_interna válida"
-)
-
-display(status_periodos)
-```
-
-**Output 1 (display_data)**
-
-```text
-    ano_internacao  quantidade_registros_int  percentual   status_periodo  \
-0           1917.0                         4    0.000086     fora_periodo   
-1           1918.0                         1    0.000021     fora_periodo   
-2           1941.0                         4    0.000086     fora_periodo   
-3           2009.0                         1    0.000021     fora_periodo   
-4           2011.0                         1    0.000021     fora_periodo   
-5           2012.0                         2    0.000043     fora_periodo   
-6           2016.0                         1    0.000021     fora_periodo   
-7           2017.0                         2    0.000043     fora_periodo   
-8           2018.0                        11    0.000236     fora_periodo   
-9           2019.0                     47545    1.018768         completo   
-10          2020.0                   1076375   23.063976         completo   
-11          2021.0                   1657394   35.513734         completo   
-12          2022.0                    536135   11.488008         completo   
-13          2023.0                    265671    5.692653         completo   
-14          2024.0                    253367    5.429010         completo   
-15          2025.0                    315616    6.762847         completo   
-16          2026.0                    210438    4.509151       incompleto   
-17             NaN                    304342    6.521274  sem_data_valida   
-
-    dentro_periodo_coorte                                  observacao  
-0                   False  Ano fora do período definido para a coorte  
-1                   False  Ano fora do período definido para a coorte  
-2                   False  Ano fora do período definido para a coorte  
-3                   False  Ano fora do período definido para a coorte  
-4                   False  Ano fora do período definido para a coorte  
-5                   False  Ano fora do período definido para a coorte  
-6                   False  Ano fora do período definido para a coorte  
-7                   False  Ano fora do período definido para a coorte  
-8                   False  Ano fora do período definido para a coorte  
-9                    True                                              
-10                   True                                              
-11                   True                                              
-12                   True                                              
-13                   True                                              
-14                   True                                              
-15                   True                                              
-16                   True    Ano incompleto na versão atual dos dados  
-17                  False              Registro sem dt_interna válida  
-[non-text output omitted: text/html]
-```
-
-### Cell 24 [code] · In [22]
-
-```python
-import matplotlib.pyplot as plt
-
-volume_visualizacao = (
-    volume_por_ano_int.loc[
-        volume_por_ano_int[
-            "ano_internacao"
-        ].between(
-            ANO_INICIAL_COORTE,
-            ANO_FINAL_COORTE,
-        )
-    ]
-    .copy()
-)
-
-fig, ax = plt.subplots(
-    figsize=(10, 5)
-)
-
-ax.bar(
-    volume_visualizacao[
-        "ano_internacao"
-    ].astype(int).astype(str),
-    volume_visualizacao[
-        "quantidade_registros_int"
-    ],
-)
-
-ax.set_title(
-    "Volume de registros por ano de internação"
-)
-
-ax.set_xlabel(
-    "Ano da internação"
-)
-
-ax.set_ylabel(
-    "Quantidade de registros"
-)
-
-fig.tight_layout()
-
-caminho_figura_volume = (
-    C.FIGURES_DIR
-    / "eda_01_volume_por_ano_internacao.png"
-)
-
-C.FIGURES_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-fig.savefig(
-    caminho_figura_volume,
-    dpi=150,
-    bbox_inches="tight",
-)
-
-plt.show()
-
-print(
-    "Figura salva em:",
-    caminho_figura_volume,
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1000x500 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Figura salva em: <REPO>\reports\figures\eda_01_volume_por_ano_internacao.png
-```
-
-### Cell 25 [code] · In [23]
-
-```python
-memoria_mb = (
-    df.memory_usage(deep=True).sum()
-    / 1024**2
-)
-
-print(f"Memória total utilizada: {memoria_mb:,.2f} MB")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Memória total utilizada: 3,847.05 MB
-```
-
-### Cell 26 [code] · In [24]
-
-```python
-memoria_colunas = (
-    df.memory_usage(deep=True)
-    .div(1024**2)
-    .rename("memoria_mb")
-    .sort_values(ascending=False)
-    .reset_index()
-    .rename(columns={"index": "coluna"})
-)
-
-display(memoria_colunas)
-```
-
-**Output 1 (display_data)**
-
-```text
-        coluna  memoria_mb
-0   nu_notific   92.276079
-1   dt_sin_pri   80.112820
-2   dt_notific   80.112820
-3    dt_digita   79.958256
-4   dt_interna   77.767655
-..         ...         ...
-84  dt_trt_cov   36.198594
-85    out_trat   36.197441
-86   tipo_trat   36.166602
-87       tabag   36.162040
-88       Index    0.000126
-
-[89 rows x 2 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 27 [code] · In [25]
-
-```python
-ausencias = pd.DataFrame(
-    {
-        "coluna": df.columns,
-        "quantidade_ausente": [
-            df[coluna].isna().sum()
-            for coluna in df.columns
-        ],
-        "quantidade_preenchida": [
-            df[coluna].notna().sum()
-            for coluna in df.columns
-        ],
-    }
-)
-
-ausencias["percentual_ausente"] = (
-    ausencias["quantidade_ausente"]
-    / len(df)
-    * 100
-)
-
-ausencias["percentual_preenchido"] = (
-    ausencias["quantidade_preenchida"]
-    / len(df)
-    * 100
-)
-
-ausencias = ausencias.sort_values(
-    "percentual_ausente",
-    ascending=False,
-).reset_index(drop=True)
-
-display(ausencias)
-```
-
-**Output 1 (display_data)**
-
-```text
-        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
-0        tabag             4666910                      0          100.000000   
-1     out_trat             4664116                   2794           99.940132   
-2   dt_trt_cov             4663077                   3833           99.917869   
-3    tipo_trat             4662126                   4784           99.897491   
-4     out_anim             4661634                   5276           99.886949   
-..         ...                 ...                    ...                 ...   
-83  dt_notific                   0                4666910            0.000000   
-84     sem_pri                   0                4666910            0.000000   
-85  dt_sin_pri                   0                4666910            0.000000   
-86     cs_sexo                   0                4666910            0.000000   
-87  nu_idade_n                   0                4666910            0.000000   
-
-    percentual_preenchido  
-0                0.000000  
-1                0.059868  
-2                0.082131  
-3                0.102509  
-4                0.113051  
-..                    ...  
-83             100.000000  
-84             100.000000  
-85             100.000000  
-86             100.000000  
-87             100.000000  
-
-[88 rows x 5 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 28 [markdown]
-
-```markdown
-### Visualização da ausência global
-
-O gráfico apresenta as 25 variáveis com maior percentual de ausência
-na base carregada.
-
-A ausência exibida utiliza a população completa como denominador.
-Portanto, campos condicionais podem apresentar percentuais elevados
-mesmo quando estão adequadamente preenchidos na população à qual se
-aplicam.
-
-O ranking é uma ferramenta de triagem e não determina automaticamente
-a exclusão de variáveis.
-```
-
-### Cell 29 [code] · In [26]
-
-```python
-import matplotlib.pyplot as plt
-
-
-QUANTIDADE_VARIAVEIS_AUSENCIA_GRAFICO = 100
-
-COLUNAS_AUSENCIA_NECESSARIAS = [
-    "coluna",
-    "quantidade_ausente",
-    "quantidade_preenchida",
-    "percentual_ausente",
-    "percentual_preenchido",
-]
-
-colunas_ausencia_ausentes = [
-    coluna
-    for coluna in COLUNAS_AUSENCIA_NECESSARIAS
-    if coluna not in ausencias.columns
-]
-
-if colunas_ausencia_ausentes:
-    raise KeyError(
-        "A tabela de ausências não contém as colunas necessárias: "
-        f"{colunas_ausencia_ausentes}"
-    )
-
-if ausencias.empty:
-    raise ValueError(
-        "A tabela de ausências está vazia."
-    )
-
-ranking_ausencia = (
-    ausencias[
-        COLUNAS_AUSENCIA_NECESSARIAS
-    ]
-    .copy()
-)
-
-if "status_colunas" in globals():
-    if {
-        "coluna",
-        "grupo",
-    }.issubset(
-        status_colunas.columns
-    ):
-        ranking_ausencia = (
-            ranking_ausencia.merge(
-                status_colunas[
-                    [
-                        "coluna",
-                        "grupo",
-                    ]
-                ],
-                on="coluna",
-                how="left",
-                validate="one_to_one",
-            )
-        )
-
-if "grupo" not in ranking_ausencia.columns:
-    ranking_ausencia[
-        "grupo"
-    ] = "grupo_nao_informado"
-
-ranking_ausencia[
-    "percentual_ausente"
-] = pd.to_numeric(
-    ranking_ausencia[
-        "percentual_ausente"
-    ],
-    errors="coerce",
-)
-
-ranking_ausencia = (
-    ranking_ausencia.dropna(
-        subset=[
-            "percentual_ausente",
-        ]
-    )
-    .sort_values(
-        [
-            "percentual_ausente",
-            "coluna",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .head(
-        QUANTIDADE_VARIAVEIS_AUSENCIA_GRAFICO
-    )
-    .sort_values(
-        "percentual_ausente",
-        ascending=True,
-    )
-    .reset_index(drop=True)
-)
-
-if ranking_ausencia.empty:
-    raise ValueError(
-        "Nenhuma variável válida foi selecionada "
-        "para o gráfico de ausência."
-    )
-
-percentuais_validos = (
-    ranking_ausencia[
-        "percentual_ausente"
-    ]
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
-
-if not percentuais_validos:
-    raise RuntimeError(
-        "O ranking contém percentuais de ausência "
-        "fora do intervalo de 0% a 100%."
-    )
-
-
-def definir_cor_ausencia(
-    percentual: float,
-) -> str:
-    if percentual >= 95:
-        return "tab:red"
-
-    if percentual >= 80:
-        return "tab:orange"
-
-    if percentual >= 50:
-        return "goldenrod"
-
-    return "tab:blue"
-
-
-cores_ausencia = [
-    definir_cor_ausencia(
-        percentual
-    )
-    for percentual in ranking_ausencia[
-        "percentual_ausente"
-    ]
-]
-
-altura_figura = max(
-    8,
-    len(
-        ranking_ausencia
-    )
-    / 2,
-)
-
-figura_ausencia, eixo_ausencia = plt.subplots(
-    figsize=(
-        13,
-        altura_figura,
-    )
-)
-
-barras_ausencia = eixo_ausencia.barh(
-    ranking_ausencia[
-        "coluna"
-    ],
-    ranking_ausencia[
-        "percentual_ausente"
-    ],
-    color=cores_ausencia,
-)
-
-eixo_ausencia.set_title(
-    "Variáveis com maior percentual de ausência global"
-)
-
-eixo_ausencia.set_xlabel(
-    "Percentual de registros ausentes"
-)
-
-eixo_ausencia.set_ylabel(
-    "Variável"
-)
-
-eixo_ausencia.set_xlim(
-    0,
-    105,
-)
-
-eixo_ausencia.xaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
-
-eixo_ausencia.axvline(
-    x=50,
-    color="tab:gray",
-    linestyle=":",
-    linewidth=1,
-)
-
-eixo_ausencia.axvline(
-    x=80,
-    color="tab:orange",
-    linestyle=":",
-    linewidth=1,
-)
-
-eixo_ausencia.axvline(
-    x=95,
-    color="tab:red",
-    linestyle=":",
-    linewidth=1,
-)
-
-eixo_ausencia.grid(
-    axis="x",
-    alpha=0.15,
-)
-
-for barra, percentual in zip(
-    barras_ausencia,
-    ranking_ausencia[
-        "percentual_ausente"
-    ],
-):
-    eixo_ausencia.text(
-        barra.get_width(),
-        barra.get_y()
-        + barra.get_height()
-        / 2,
-        f" {percentual:.1f}%",
-        ha="left",
-        va="center",
-        fontsize=8,
-    )
-
-figura_ausencia.text(
-    0.01,
-    0.01,
-    (
-        "Percentual calculado sobre a base completa. "
-        "Campos condicionais devem ser reavaliados "
-        "na população aplicável antes de qualquer exclusão."
-    ),
-    fontsize=8,
-)
-
-figura_ausencia.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_ausencia
-)
-
-display(
-    ranking_ausencia.sort_values(
-        [
-            "percentual_ausente",
-            "coluna",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x4400 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  quantidade_ausente  quantidade_preenchida  percentual_ausente  \
-0        tabag             4666910                      0          100.000000   
-1     out_trat             4664116                   2794           99.940132   
-2   dt_trt_cov             4663077                   3833           99.917869   
-3    tipo_trat             4662126                   4784           99.897491   
-4     out_anim             4661634                   5276           99.886949   
-..         ...                 ...                    ...                 ...   
-83  dt_sin_pri                   0                4666910            0.000000   
-84  nu_idade_n                   0                4666910            0.000000   
-85  nu_notific                   0                4666910            0.000000   
-86     sem_pri                   0                4666910            0.000000   
-87    tp_idade                   0                4666910            0.000000   
-
-    percentual_preenchido                  grupo  
-0                0.000000  candidatas_principais  
-1                0.059868   complementares_texto  
-2                0.082131   tratamento_auditoria  
-3                0.102509   tratamento_auditoria  
-4                0.113051  candidatas_principais  
-..                    ...                    ...  
-83             100.000000              estrutura  
-84             100.000000  candidatas_principais  
-85             100.000000              estrutura  
-86             100.000000              estrutura  
-87             100.000000  candidatas_principais  
-
-[88 rows x 6 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 30 [code] · In [27]
-
-```python
-import gc
-
-TAMANHO_LOTE_COLUNAS_PREENCHIMENTO = 5
-
-
-def calcular_preenchimento_por_grupo(
-    dados,
-    serie_grupo,
-    colunas,
-    nome_grupo,
-    tamanho_lote=5,
-):
-    if len(dados) != len(serie_grupo):
-        raise ValueError(
-            "A base e a série de agrupamento possuem "
-            "quantidades diferentes de registros."
-        )
-
-    if tamanho_lote <= 0:
-        raise ValueError(
-            "O tamanho do lote precisa ser maior que zero."
-        )
-
-    colunas_disponiveis = [
-        coluna
-        for coluna in colunas
-        if coluna in dados.columns
-    ]
-
-    if not colunas_disponiveis:
-        raise ValueError(
-            "Nenhuma coluna de COLUNAS_EDA está disponível."
-        )
-
-    serie_grupo_alinhada = pd.Series(
-        serie_grupo,
-        index=dados.index,
-        name=nome_grupo,
-    )
-
-    quantidade_por_grupo = (
-        serie_grupo_alinhada
-        .groupby(
-            serie_grupo_alinhada,
-            dropna=True,
-            observed=True,
-            sort=True,
-        )
-        .size()
-        .rename("quantidade_registros")
-    )
-
-    resultados_lotes = []
-
-    for inicio in range(
-        0,
-        len(colunas_disponiveis),
-        tamanho_lote,
-    ):
-        fim = min(
-            inicio + tamanho_lote,
-            len(colunas_disponiveis),
-        )
-
-        colunas_lote = (
-            colunas_disponiveis[inicio:fim]
-        )
-
-        print(
-            "Processando colunas",
-            inicio + 1,
-            "até",
-            fim,
-            "de",
-            len(colunas_disponiveis),
-        )
-
-        contagem_preenchida = (
-            dados[colunas_lote]
-            .groupby(
-                serie_grupo_alinhada,
-                dropna=True,
-                observed=True,
-                sort=True,
-            )
-            .count()
-        )
-
-        percentual_preenchido = (
-            contagem_preenchida
-            .div(
-                quantidade_por_grupo,
-                axis=0,
-            )
-            .mul(100)
-        )
-
-        resultados_lotes.append(
-            percentual_preenchido
-        )
-
-        del contagem_preenchida
-        del percentual_preenchido
-        gc.collect()
-
-    resultado = (
-        pd.concat(
-            resultados_lotes,
-            axis=1,
-        )
-        .reindex(
-            columns=colunas_disponiveis
-        )
-        .rename_axis(nome_grupo)
-        .reset_index()
-    )
-
-    if not (
-        resultado[colunas_disponiveis]
-        .stack()
-        .between(
-            0,
-            100,
-            inclusive="both",
-        )
-        .all()
-    ):
-        raise RuntimeError(
-            "Foram encontrados percentuais fora "
-            "do intervalo de 0% a 100%."
-        )
-
-    del resultados_lotes
-    del quantidade_por_grupo
-    del serie_grupo_alinhada
-    gc.collect()
-
-    return resultado
-
-
-ano_notificacao_calculo = pd.to_numeric(
-    ano_notificacao,
-    errors="coerce",
-).astype("Int16")
-
-preenchimento_por_ano_notificacao = (
-    calcular_preenchimento_por_grupo(
-        dados=df,
-        serie_grupo=ano_notificacao_calculo,
-        colunas=COLUNAS_EDA,
-        nome_grupo="ano_notificacao",
-        tamanho_lote=(
-            TAMANHO_LOTE_COLUNAS_PREENCHIMENTO
-        ),
-    )
-)
-
-display(
-    preenchimento_por_ano_notificacao.head(20)
-)
-
-ano_internacao_calculo = pd.to_numeric(
-    ano_internacao,
-    errors="coerce",
-).astype("Int16")
-
-ano_internacao_estudo = (
-    ano_internacao_calculo.where(
-        ano_internacao_calculo.between(
-            ANO_INICIAL_COORTE,
-            ANO_FINAL_COORTE,
-            inclusive="both",
-        )
-    )
-)
-
-preenchimento_por_ano_internacao = (
-    calcular_preenchimento_por_grupo(
-        dados=df,
-        serie_grupo=ano_internacao_estudo,
-        colunas=COLUNAS_EDA,
-        nome_grupo="ano_internacao",
-        tamanho_lote=(
-            TAMANHO_LOTE_COLUNAS_PREENCHIMENTO
-        ),
-    )
-)
-
-display(
-    preenchimento_por_ano_internacao.head(20)
-)
-
-del ano_notificacao_calculo
-del ano_internacao_calculo
-del ano_internacao_estudo
-
-gc.collect()
-
-print(
-    "Cálculo temporal concluído."
-)
-
-print(
-    "Objetos coletados:",
-    quantidade_coletada,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Processando colunas 1 até 5 de 88
-Processando colunas 6 até 10 de 88
-Processando colunas 11 até 15 de 88
-Processando colunas 16 até 20 de 88
-Processando colunas 21 até 25 de 88
-Processando colunas 26 até 30 de 88
-Processando colunas 31 até 35 de 88
-Processando colunas 36 até 40 de 88
-Processando colunas 41 até 45 de 88
-Processando colunas 46 até 50 de 88
-Processando colunas 51 até 55 de 88
-Processando colunas 56 até 60 de 88
-Processando colunas 61 até 65 de 88
-Processando colunas 66 até 70 de 88
-Processando colunas 71 até 75 de 88
-Processando colunas 76 até 80 de 88
-Processando colunas 81 até 85 de 88
-Processando colunas 86 até 88 de 88
-```
-
-**Output 2 (display_data)**
-
-```text
-   ano_notificacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
-0             2018       100.0       100.0       100.0    100.0      100.0   
-1             2019       100.0       100.0       100.0    100.0   99.44072   
-2             2020       100.0       100.0       100.0    100.0  97.624625   
-3             2021       100.0       100.0       100.0    100.0  97.372476   
-4             2022       100.0       100.0       100.0    100.0  96.706461   
-5             2023       100.0       100.0       100.0    100.0  97.215023   
-6             2024       100.0       100.0       100.0    100.0  97.840749   
-7             2025       100.0       100.0       100.0    100.0   97.96091   
-8             2026       100.0       100.0       100.0    100.0  97.635766   
-
-   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
-0       100.0    100.0       100.0     100.0  ...      100.0   66.666667   
-1   97.318748    100.0       100.0     100.0  ...  98.603857   60.762018   
-2   92.570772    100.0       100.0     100.0  ...  86.346381   14.819022   
-3   93.659249    100.0       100.0     100.0  ...  81.779043    2.246043   
-4   92.862856    100.0       100.0     100.0  ...  79.995915    3.612766   
-5   94.232778    100.0       100.0     100.0  ...  81.149365    5.872714   
-6   94.319955    100.0       100.0     100.0  ...   81.12871    8.117861   
-7   94.575476    100.0       100.0     100.0  ...  86.048833   11.776098   
-8   93.910212    100.0       100.0     100.0  ...   87.33915   12.552175   
-
-   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
-0   66.666667        0.0        0.0         0.0      100.0       100.0   
-1   60.759962    0.19328        0.0         0.0   94.18925   84.081096   
-2   14.513047   1.013939   0.016278    0.000783  93.641206   87.272401   
-3    1.929223   1.078881   0.007329    0.002988  91.929025   85.798999   
-4    3.271742  16.454821   0.171456    0.140735  91.922335   85.642815   
-5    5.345256  74.884223   0.420208    0.318584  94.987745     88.1533   
-6    7.524235  75.597258   0.359379    0.320275    94.4179   87.878325   
-7   10.798542  79.988643   0.273453    0.249544   95.45172   86.436747   
-8   11.804758  81.069716   0.174323     0.15525  86.790453   77.364123   
-
-   dt_encerra  dt_digita  
-0       100.0  66.666667  
-1   96.418144  65.419254  
-2   94.055643      100.0  
-3   92.465534      100.0  
-4   91.871018      100.0  
-5   94.461694      100.0  
-6   93.960949      100.0  
-7   95.267326      100.0  
-8   86.690649      100.0  
-
-[9 rows x 89 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Processando colunas 1 até 5 de 88
-Processando colunas 6 até 10 de 88
-Processando colunas 11 até 15 de 88
-Processando colunas 16 até 20 de 88
-Processando colunas 21 até 25 de 88
-Processando colunas 26 até 30 de 88
-Processando colunas 31 até 35 de 88
-Processando colunas 36 até 40 de 88
-Processando colunas 41 até 45 de 88
-Processando colunas 46 até 50 de 88
-Processando colunas 51 até 55 de 88
-Processando colunas 56 até 60 de 88
-Processando colunas 61 até 65 de 88
-Processando colunas 66 até 70 de 88
-Processando colunas 71 até 75 de 88
-Processando colunas 76 até 80 de 88
-Processando colunas 81 até 85 de 88
-Processando colunas 86 até 88 de 88
-```
-
-**Output 4 (display_data)**
-
-```text
-   ano_internacao  nu_notific  dt_notific  dt_sin_pri  sem_pri   hospital  \
-0            2019       100.0       100.0       100.0    100.0  99.995793   
-1            2020       100.0       100.0       100.0    100.0  99.998978   
-2            2021       100.0       100.0       100.0    100.0  99.999759   
-3            2022       100.0       100.0       100.0    100.0  99.999627   
-4            2023       100.0       100.0       100.0    100.0  99.999247   
-5            2024       100.0       100.0       100.0    100.0      100.0   
-6            2025       100.0       100.0       100.0    100.0  99.999683   
-7            2026       100.0       100.0       100.0    100.0  99.999525   
-
-   dt_interna  cs_sexo  nu_idade_n  tp_idade  ...  antiviral  tp_antivir  \
-0       100.0    100.0       100.0     100.0  ...  98.870544   61.236723   
-1       100.0    100.0       100.0     100.0  ...  88.417234   15.679015   
-2       100.0    100.0       100.0     100.0  ...  84.119165    2.359789   
-3       100.0    100.0       100.0     100.0  ...  82.695963     3.71455   
-4       100.0    100.0       100.0     100.0  ...  83.231892    5.961885   
-5       100.0    100.0       100.0     100.0  ...  82.613363    8.373624   
-6       100.0    100.0       100.0     100.0  ...  87.510456   12.115039   
-7       100.0    100.0       100.0     100.0  ...  89.203471   12.875526   
-
-   dt_antivir   trat_cov  tipo_trat  dt_trt_cov   evolucao  dt_evoluca  \
-0    61.23462   0.201914        0.0         0.0  94.359028   84.612472   
-1   15.354779   1.060039    0.02592    0.000836  94.355777   88.829544   
-2    2.031382   1.122847   0.007421    0.003137  92.924676   87.289504   
-3     3.38273  17.762877   0.188199    0.156117  93.681629   87.734246   
-4     5.49326  77.100624   0.392967    0.327849  95.591164   89.567548   
-5    7.773309  77.156852   0.362715     0.32522  95.083417   89.083819   
-6   11.144872  81.539909   0.276602    0.254423  96.233081   88.193247   
-7   12.130414  83.009723   0.170597    0.153965  87.909978   79.482318   
-
-   dt_encerra  dt_digita  
-0   96.529604  65.518982  
-1   94.676298      100.0  
-2   93.480971      100.0  
-3   93.562069      100.0  
-4   95.104471      100.0  
-5   94.635055      100.0  
-6   95.954895      100.0  
-7    87.85438      100.0  
-
-[8 rows x 89 columns]
-[non-text output omitted: text/html]
-```
-
-**Output 5 (stream:stdout)**
-
-```text
-Cálculo temporal concluído.
-Objetos coletados: 0
-```
-
-### Cell 31 [code] · In [28]
-
-```python
-OBJETOS_RESTAURADOS_ESPERADOS = [
-    "datas_convertidas",
-    "diagnostico_conversao_datas_df",
-    "auditoria_faixa_datas_df",
-    "problemas_conversao_datas_df",
-    "resumo_datas",
-    "preenchimento_por_ano_notificacao",
-    "preenchimento_por_ano_internacao",
-]
-
-objetos_ausentes = [
-    nome
-    for nome in OBJETOS_RESTAURADOS_ESPERADOS
-    if nome not in globals()
-]
-
-if objetos_ausentes:
-    raise NameError(
-        "A restauração do Notebook 01 está incompleta. "
-        "Objetos ausentes: "
-        f"{objetos_ausentes}"
-    )
-
-if datas_convertidas.empty:
-    raise ValueError(
-        "datas_convertidas está vazio."
-    )
-
-if resumo_datas.empty:
-    raise ValueError(
-        "resumo_datas está vazio."
-    )
-
-if preenchimento_por_ano_notificacao.empty:
-    raise ValueError(
-        "preenchimento_por_ano_notificacao está vazio."
-    )
-
-if preenchimento_por_ano_internacao.empty:
-    raise ValueError(
-        "preenchimento_por_ano_internacao está vazio."
-    )
-
-anos_internacao_observados = (
-    preenchimento_por_ano_internacao[
-        "ano_internacao"
-    ]
-    .dropna()
-    .astype(int)
-    .tolist()
-)
-
-anos_internacao_esperados = list(
-    range(
-        ANO_INICIAL_COORTE,
-        ANO_FINAL_COORTE + 1,
-    )
-)
-
-if anos_internacao_observados != anos_internacao_esperados:
-    raise RuntimeError(
-        "Os anos do preenchimento por internação não correspondem "
-        "ao período esperado. Observados: "
-        f"{anos_internacao_observados}. "
-        "Esperados: "
-        f"{anos_internacao_esperados}."
-    )
-
-print(
-    "Restauração do Notebook 01 validada com sucesso."
-)
-
-print(
-    "Datas convertidas:",
-    datas_convertidas.shape,
-)
-
-print(
-    "Preenchimento por notificação:",
-    preenchimento_por_ano_notificacao.shape,
-)
-
-print(
-    "Preenchimento por internação:",
-    preenchimento_por_ano_internacao.shape,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Restauração do Notebook 01 validada com sucesso.
-Datas convertidas: (4666910, 19)
-Preenchimento por notificação: (9, 89)
-Preenchimento por internação: (8, 89)
-```
-
-### Cell 32 [markdown]
-
-```markdown
-### Mudanças anuais no preenchimento
-
-O heatmap apresenta as variáveis com maior diferença entre o menor e o
-maior percentual anual de preenchimento.
-
-A visualização permite identificar campos introduzidos, descontinuados
-ou preenchidos de maneira diferente ao longo do período.
-
-A amplitude representa uma triagem de estabilidade temporal. Uma mudança
-no preenchimento não significa necessariamente mudança clínica e pode
-refletir alteração de formulário, regra de coleta ou composição dos
-registros.
-
-O ano de 2026 possui cobertura parcial e deve ser interpretado
-separadamente.
-```
-
-### Cell 33 [code] · In [29]
-
-```python
-QUANTIDADE_VARIAVEIS_HEATMAP = 20
-COLUNA_ANO_PREENCHIMENTO = "ano_internacao"
-
-if "preenchimento_por_ano_internacao" not in globals():
-    raise NameError(
-        "Execute primeiro a célula que cria "
-        "preenchimento_por_ano_internacao."
-    )
-
-if COLUNA_ANO_PREENCHIMENTO not in (
-    preenchimento_por_ano_internacao.columns
-):
-    raise KeyError(
-        "A tabela de preenchimento anual não contém "
-        "a coluna ano_internacao."
-    )
-
-colunas_percentuais_preenchimento = [
-    coluna
-    for coluna in preenchimento_por_ano_internacao.columns
-    if coluna != COLUNA_ANO_PREENCHIMENTO
-]
-
-if not colunas_percentuais_preenchimento:
-    raise ValueError(
-        "Nenhuma variável de preenchimento foi encontrada."
-    )
-
-preenchimento_anual_matriz = (
-    preenchimento_por_ano_internacao
-    .set_index(COLUNA_ANO_PREENCHIMENTO)[
-        colunas_percentuais_preenchimento
-    ]
-    .apply(
-        pd.to_numeric,
-        errors="coerce",
-    )
-    .sort_index()
-)
-
-preenchimento_anual_matriz.index = (
-    preenchimento_anual_matriz.index.astype(int)
-)
-
-amplitude_preenchimento = (
-    preenchimento_anual_matriz
-    .max(
-        axis=0,
-        skipna=True,
-    )
-    .sub(
-        preenchimento_anual_matriz.min(
-            axis=0,
-            skipna=True,
-        )
-    )
-    .rename("amplitude_pontos_percentuais")
-    .reset_index()
-    .rename(
-        columns={
-            "index": "coluna",
-        }
-    )
-)
-
-amplitude_preenchimento[
-    "quantidade_anos_observados"
-] = (
-    amplitude_preenchimento["coluna"]
-    .map(
-        preenchimento_anual_matriz
-        .notna()
-        .sum(axis=0)
-    )
-    .astype("int64")
-)
-
-amplitude_preenchimento = (
-    amplitude_preenchimento
-    .sort_values(
-        [
-            "amplitude_pontos_percentuais",
-            "coluna",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-variaveis_maior_variacao = (
-    amplitude_preenchimento.loc[
-        amplitude_preenchimento[
-            "quantidade_anos_observados"
-        ].ge(2)
-    ]
-    .head(QUANTIDADE_VARIAVEIS_HEATMAP)
-    .copy()
-)
-
-if variaveis_maior_variacao.empty:
-    raise ValueError(
-        "Nenhuma variável possui pelo menos dois "
-        "anos válidos para comparação."
-    )
-
-colunas_heatmap_preenchimento = (
-    variaveis_maior_variacao["coluna"].tolist()
-)
-
-matriz_heatmap_preenchimento = (
-    preenchimento_anual_matriz[
-        colunas_heatmap_preenchimento
-    ]
-    .transpose()
-    .reindex(
-        index=colunas_heatmap_preenchimento
-    )
-    .astype(
-        "float64"
-    )
-)
-
-if not all(
-    np.issubdtype(dtype, np.number)
-    for dtype in matriz_heatmap_preenchimento.dtypes
-):
-    raise TypeError(
-        "A matriz do heatmap ainda contém colunas não numéricas."
-    )
-
-valores_heatmap_preenchimento = (
-    matriz_heatmap_preenchimento
-    .stack()
-    .dropna()
-)
-
-if valores_heatmap_preenchimento.empty:
-    raise ValueError(
-        "A matriz do heatmap não contém valores válidos."
-    )
-
-if not valores_heatmap_preenchimento.between(
-    0,
-    100,
-    inclusive="both",
-).all():
-    raise RuntimeError(
-        "A matriz contém percentuais de preenchimento "
-        "fora do intervalo de 0% a 100%."
-    )
-
-figura_heatmap_preenchimento, eixo_heatmap_preenchimento = (
-    plt.subplots(
-        figsize=(13, 10)
-    )
-)
-
-sns.heatmap(
-    matriz_heatmap_preenchimento,
-    annot=True,
-    fmt=".1f",
-    cmap="Blues",
-    vmin=0,
-    vmax=100,
-    linewidths=0.5,
-    linecolor="white",
-    cbar_kws={
-        "label": "Preenchimento (%)",
-    },
-    annot_kws={
-        "fontsize": 7,
-    },
-    ax=eixo_heatmap_preenchimento,
-)
-
-eixo_heatmap_preenchimento.set_title(
-    "Variáveis com maior mudança anual de preenchimento"
-)
-
-eixo_heatmap_preenchimento.set_xlabel(
-    "Ano da internação"
-)
-
-eixo_heatmap_preenchimento.set_ylabel(
-    "Variável"
-)
-
-eixo_heatmap_preenchimento.set_xticklabels(
-    eixo_heatmap_preenchimento.get_xticklabels(),
-    rotation=0,
-)
-
-eixo_heatmap_preenchimento.set_yticklabels(
-    eixo_heatmap_preenchimento.get_yticklabels(),
-    rotation=0,
-)
-
-figura_heatmap_preenchimento.text(
-    0.01,
-    0.01,
-    (
-        "Seleção automática das 20 maiores amplitudes anuais. "
-        "Percentuais calculados sobre os registros de cada ano. "
-        "O ano de 2026 possui cobertura parcial."
-    ),
-    fontsize=8,
-)
-
-figura_heatmap_preenchimento.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-plt.close(figura_heatmap_preenchimento)
-
-display(
-    variaveis_maior_variacao[
-        [
-            "coluna",
-            "amplitude_pontos_percentuais",
-            "quantidade_anos_observados",
-        ]
-    ]
-    .reset_index(drop=True)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x1000 with 2 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  amplitude_pontos_percentuais  quantidade_anos_observados
-0   vacina_cov                     98.677852                           8
-1       pov_ct                     98.283731                           8
-2      estrang                     95.397484                           8
-3       fadiga                     82.867461                           8
-4     trat_cov                     82.807809                           8
-5      dor_abd                     81.518308                           8
-6    perd_olft                      81.09531                           8
-7    perd_pala                     80.911408                           8
-8   dt_antivir                     59.203238                           8
-9   tp_antivir                     58.876934                           8
-10  dose_1_cov                     56.889064                           8
-11  dose_2_cov                      53.18307                           8
-12      vacina                     39.893952                           8
-13   dt_digita                     34.481018                           8
-14    dose_ref                     30.288194                           8
-15    diarreia                     29.808114                           8
-16  cs_escol_n                     29.625463                           8
-17      vomito                     29.275268                           8
-18    garganta                     28.304763                           8
-19  dt_ut_dose                     23.475831                           8
-[non-text output omitted: text/html]
-```
-
-### Cell 34 [code] · In [30]
-
-```python
-cardinalidade_variaveis = pd.DataFrame(
-    {
-        "coluna": df.columns,
-        "valores_distintos_sem_na": [
-            df[
-                coluna
-            ].nunique(
-                dropna=True
-            )
-            for coluna in df.columns
-        ],
-        "valores_distintos_com_na": [
-            df[
-                coluna
-            ].nunique(
-                dropna=False
-            )
-            for coluna in df.columns
-        ],
-    }
-)
-
-cardinalidade_variaveis = (
-    cardinalidade_variaveis
-    .sort_values(
-        "valores_distintos_com_na",
-        ascending=False,
-    )
-    .reset_index(drop=True)
-)
-
-display(
-    cardinalidade_variaveis
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-        coluna  valores_distintos_sem_na  valores_distintos_com_na
-0   nu_notific                   4666881                   4666881
-1    outro_des                    251506                    251507
-2    morb_desc                    232631                    232632
-3   co_mun_res                      5604                      5605
-4   co_mun_not                      3661                      3662
-..         ...                       ...                       ...
-83     cs_sexo                         3                         3
-84    tp_idade                         3                         3
-85     estrang                         2                         3
-86      pov_ct                         2                         3
-87       tabag                         0                         1
-
-[88 rows x 3 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 35 [markdown]
-
-```markdown
-### Variáveis com maior cardinalidade
-
-A cardinalidade corresponde à quantidade de valores distintos observados
-em cada variável.
-
-Variáveis com cardinalidade elevada podem representar:
-
-- identificadores;
-- códigos territoriais;
-- textos livres;
-- descrições abertas;
-- categorias com granularidade excessiva para uso direto.
-
-O gráfico utiliza escala logarítmica porque a quantidade de valores
-distintos varia de poucas unidades até milhões.
-
-Alta cardinalidade não determina exclusão automática, mas indica a
-necessidade de transformação, agrupamento ou uso somente para auditoria.
-```
-
-### Cell 36 [code] · In [31]
-
-```python
-QUANTIDADE_VARIAVEIS_CARDINALIDADE_GRAFICO = 40
-
-COLUNAS_CARDINALIDADE_NECESSARIAS = [
-    "coluna",
-    "valores_distintos_sem_na",
-    "valores_distintos_com_na",
-]
-
-colunas_cardinalidade_ausentes = [
-    coluna
-    for coluna in COLUNAS_CARDINALIDADE_NECESSARIAS
-    if coluna not in cardinalidade_variaveis.columns
-]
-
-if colunas_cardinalidade_ausentes:
-    raise KeyError(
-        "A tabela de cardinalidade não contém "
-        "as colunas necessárias: "
-        f"{colunas_cardinalidade_ausentes}"
-    )
-
-if cardinalidade_variaveis.empty:
-    raise ValueError(
-        "A tabela de cardinalidade está vazia."
-    )
-
-ranking_cardinalidade = (
-    cardinalidade_variaveis[
-        COLUNAS_CARDINALIDADE_NECESSARIAS
-    ]
-    .copy()
-)
-
-ranking_cardinalidade[
-    "valores_distintos_sem_na"
-] = pd.to_numeric(
-    ranking_cardinalidade[
-        "valores_distintos_sem_na"
-    ],
-    errors="coerce",
-)
-
-ranking_cardinalidade[
-    "valores_distintos_com_na"
-] = pd.to_numeric(
-    ranking_cardinalidade[
-        "valores_distintos_com_na"
-    ],
-    errors="coerce",
-)
-
-ranking_cardinalidade = (
-    ranking_cardinalidade
-    .dropna(
-        subset=[
-            "valores_distintos_sem_na",
-        ]
-    )
-)
-
-ranking_cardinalidade = (
-    ranking_cardinalidade.loc[
-        ranking_cardinalidade[
-            "valores_distintos_sem_na"
-        ].gt(0)
-    ]
-    .sort_values(
-        [
-            "valores_distintos_sem_na",
-            "coluna",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .head(
-        QUANTIDADE_VARIAVEIS_CARDINALIDADE_GRAFICO
-    )
-    .sort_values(
-        "valores_distintos_sem_na",
-        ascending=True,
-    )
-    .reset_index(drop=True)
-)
-
-if ranking_cardinalidade.empty:
-    raise ValueError(
-        "Nenhuma variável com cardinalidade positiva "
-        "foi encontrada para o gráfico."
-    )
-
-if not ranking_cardinalidade[
-    "valores_distintos_sem_na"
-].gt(0).all():
-    raise RuntimeError(
-        "O gráfico em escala logarítmica recebeu "
-        "cardinalidade igual ou inferior a zero."
-    )
-
-IDENTIFICADORES_CONHECIDOS = {
-    "nu_notific",
-}
-
-COLUNAS_TEXTO_LIVRE = set(
-    COLUNAS_COMPLEMENTARES_TEXTO
-)
-
-COLUNAS_GEOGRAFICAS = set(
-    COLUNAS_GEOGRAFIA
-)
-
-
-def definir_cor_cardinalidade(
-    coluna: str,
-) -> str:
-    if coluna in IDENTIFICADORES_CONHECIDOS:
-        return "tab:red"
-
-    if coluna in COLUNAS_TEXTO_LIVRE:
-        return "tab:orange"
-
-    if coluna in COLUNAS_GEOGRAFICAS:
-        return "tab:purple"
-
-    return "tab:blue"
-
-
-cores_cardinalidade = [
-    definir_cor_cardinalidade(
-        coluna
-    )
-    for coluna in ranking_cardinalidade[
-        "coluna"
-    ]
-]
-
-figura_cardinalidade, eixo_cardinalidade = plt.subplots(
-    figsize=(
-        13,
-        9,
-    )
-)
-
-barras_cardinalidade = eixo_cardinalidade.barh(
-    ranking_cardinalidade[
-        "coluna"
-    ],
-    ranking_cardinalidade[
-        "valores_distintos_sem_na"
-    ],
-    color=cores_cardinalidade,
-)
-
-eixo_cardinalidade.set_title(
-    "Variáveis com maior quantidade de valores distintos"
-)
-
-eixo_cardinalidade.set_xlabel(
-    "Valores distintos sem ausência, em escala logarítmica"
-)
-
-eixo_cardinalidade.set_ylabel(
-    "Variável"
-)
-
-eixo_cardinalidade.set_xscale(
-    "log"
-)
-
-eixo_cardinalidade.set_xlim(
-    left=1
-)
-
-eixo_cardinalidade.grid(
-    axis="x",
-    which="both",
-    alpha=0.15,
-)
-
-for barra, quantidade in zip(
-    barras_cardinalidade,
-    ranking_cardinalidade[
-        "valores_distintos_sem_na"
-    ],
-):
-    quantidade_inteira = int(
-        quantidade
-    )
-
-    quantidade_formatada = (
-        f"{quantidade_inteira:,}"
-        .replace(
-            ",",
-            ".",
-        )
-    )
-
-    eixo_cardinalidade.text(
-        barra.get_width(),
-        barra.get_y()
-        + barra.get_height()
-        / 2,
-        f" {quantidade_formatada}",
-        ha="left",
-        va="center",
-        fontsize=8,
-    )
-
-from matplotlib.patches import Patch
-
-legenda_cardinalidade = [
-    Patch(
-        facecolor="tab:red",
-        label="Identificador",
-    ),
-    Patch(
-        facecolor="tab:orange",
-        label="Texto complementar",
-    ),
-    Patch(
-        facecolor="tab:purple",
-        label="Geografia",
-    ),
-    Patch(
-        facecolor="tab:blue",
-        label="Outras variáveis",
-    ),
-]
-
-eixo_cardinalidade.legend(
-    handles=legenda_cardinalidade,
-    title="Tipo de variável",
-    loc="lower right",
-)
-
-figura_cardinalidade.text(
-    0.01,
-    0.01,
-    (
-        "A escala logarítmica permite comparar variáveis "
-        "com cardinalidades de ordens de grandeza diferentes. "
-        "Alta cardinalidade indica necessidade de tratamento "
-        "específico e não exclusão automática."
-    ),
-    fontsize=8,
-)
-
-figura_cardinalidade.tight_layout(
-    rect=[
-        0,
-        0.04,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_cardinalidade
-)
-
-display(
-    ranking_cardinalidade
-    .sort_values(
-        [
-            "valores_distintos_sem_na",
-            "coluna",
-        ],
-        ascending=[
-            False,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x900 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna  valores_distintos_sem_na  valores_distintos_com_na
-0   nu_notific                   4666881                   4666881
-1    outro_des                    251506                    251507
-2    morb_desc                    232631                    232632
-3   co_mun_res                      5604                      5605
-4   co_mun_not                      3661                      3662
-5    out_antiv                      3273                      3274
-6   dt_ut_dose                      3072                      3073
-7   co_mu_inte                      3028                      3029
-8   dt_interna                      2953                      2954
-9   dt_antivir                      2856                      2857
-10  dt_notific                      2829                      2829
-11  dt_sin_pri                      2828                      2828
-12  dt_evoluca                      2827                      2828
-13  dt_encerra                      2820                      2821
-14   dt_digita                      2764                      2765
-15  dose_1_cov                      2060                      2061
-16  dose_2_cov                      1960                      1961
-17   dt_1_dose                      1820                      1821
-18  dt_vac_mae                      1767                      1768
-19   dt_2_dose                      1732                      1733
-20   pac_cocbo                      1628                      1629
-21   pac_dscbo                      1628                      1629
-22  dt_doseuni                      1561                      1562
-23  dt_trt_cov                      1378                      1379
-24    dose_ref                      1205                      1206
-25    obes_imc                      1011                      1012
-26   dos_re_bi                       773                       774
-27   dose_adic                       773                       774
-28   dose_2ref                       757                       758
-29    out_anim                       575                       576
-30    out_trat                       555                       556
-31  co_rg_resi                       320                       321
-32  co_regiona                       312                       313
-33  co_rg_inte                       312                       313
-34   cs_etinia                       310                       311
-35  nu_idade_n                       139                       139
-36     co_pais                        57                        58
-37     sem_pri                        53                        53
-38   tp_pov_ct                        46                        47
-39       sg_uf                        27                        28
-[non-text output omitted: text/html]
-```
-
-### Cell 37 [code] · In [32]
-
-```python
-LIMITE_CARDINALIDADE = 30
-
-colunas_categoricas_baixas = (
-    cardinalidade_variaveis.loc[
-        cardinalidade_variaveis[
-            "valores_distintos_com_na"
-        ]
-        <= LIMITE_CARDINALIDADE,
-        "coluna",
-    ]
-    .tolist()
-)
-
-frequencias_categoricas = []
-
-for coluna in colunas_categoricas_baixas:
-    frequencia = (
-        df[coluna]
-        .value_counts(dropna=False)
-        .rename_axis("valor")
-        .reset_index(name="quantidade")
-    )
-
-    frequencia.insert(0, "coluna", coluna)
-
-    frequencia["percentual"] = (
-        frequencia["quantidade"]
-        / len(df)
-        * 100
-    )
-
-    frequencias_categoricas.append(frequencia)
-
-frequencias_categoricas_df = pd.concat(
-    frequencias_categoricas,
-    ignore_index=True,
-)
-
-display(frequencias_categoricas_df.head(100))
-```
-
-**Output 1 (display_data)**
-
-```text
-        coluna valor  quantidade  percentual
-0    sg_uf_not    SP     1306611   27.997347
-1    sg_uf_not    MG      521998   11.185088
-2    sg_uf_not    RJ      385820    8.267140
-3    sg_uf_not    PR      380639    8.156125
-4    sg_uf_not    RS      256895    5.504606
-..         ...   ...         ...         ...
-95  cs_escol_n     3      382584    8.197801
-96  cs_escol_n     5      337951    7.241430
-97  cs_escol_n     2      250435    5.366184
-98  cs_escol_n     0      213463    4.573969
-99  cs_escol_n     4      163584    3.505189
-
-[100 rows x 4 columns]
-[non-text output omitted: text/html]
-```
-
-### Cell 38 [code] · In [33]
-
-```python
-if "nu_notific" in df.columns:
-    identificadores_preenchidos = df["nu_notific"].notna().sum()
-
-    identificadores_duplicados = (
-        df.loc[
-            df["nu_notific"].notna(),
-            "nu_notific",
-        ]
-        .duplicated(keep=False)
-        .sum()
-    )
-
-    resumo_identificador = pd.DataFrame(
-        {
-            "metrica": [
-                "linhas_totais",
-                "identificadores_preenchidos",
-                "linhas_com_identificador_duplicado",
-            ],
-            "valor": [
-                len(df),
-                identificadores_preenchidos,
-                identificadores_duplicados,
-            ],
-        }
-    )
-
-    display(resumo_identificador)
-else:
-    print(
-        "nu_notific não foi carregada. "
-        "A auditoria de identificador não será executada."
-    )
-```
-
-**Output 1 (display_data)**
-
-```text
-                              metrica    valor
-0                       linhas_totais  4666910
-1         identificadores_preenchidos  4666910
-2  linhas_com_identificador_duplicado       58
-[non-text output omitted: text/html]
-```
-
-### Cell 39 [code] · In [34]
-
-```python
-REGRAS_AUDITORIA_TEMPORAL = [
-    {
-        "coluna": "evolucao",
-        "uso_nesta_eda": "rotulo",
-        "candidata_feature_principal": False,
-        "risco_temporal": "desfecho",
-        "justificativa": (
-            "Fonte utilizada para construir o alvo. "
-            "Não pode ser utilizada como preditora."
-        ),
-    },
-    {
-        "coluna": "dt_evoluca",
-        "uso_nesta_eda": "auditoria",
-        "candidata_feature_principal": False,
-        "risco_temporal": "posterior_admissao",
-        "justificativa": (
-            "Data de alta ou óbito, posterior ao ponto "
-            "de previsão."
-        ),
-    },
-    {
-        "coluna": "dt_encerra",
-        "uso_nesta_eda": "auditoria",
-        "candidata_feature_principal": False,
-        "risco_temporal": "posterior_admissao",
-        "justificativa": (
-            "Data de encerramento do caso, posterior "
-            "ao ponto de previsão."
-        ),
-    },
-    {
-        "coluna": "dt_digita",
-        "uso_nesta_eda": "auditoria",
-        "candidata_feature_principal": False,
-        "risco_temporal": "administrativo",
-        "justificativa": (
-            "Data administrativa de inclusão do registro."
-        ),
-    },
-    {
-        "coluna": "antiviral",
-        "uso_nesta_eda": "eda_sensibilidade",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "A disponibilidade até a admissão precisa "
-            "ser confirmada."
-        ),
-    },
-    {
-        "coluna": "tp_antivir",
-        "uso_nesta_eda": "eda_sensibilidade",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "Tipo de tratamento condicionado ao uso "
-            "de antiviral."
-        ),
-    },
-    {
-        "coluna": "dt_antivir",
-        "uso_nesta_eda": "auditoria_temporal",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "Somente tratamentos iniciados até a admissão "
-            "poderão ser avaliados em sensibilidade."
-        ),
-    },
-    {
-        "coluna": "trat_cov",
-        "uso_nesta_eda": "eda_sensibilidade",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "Pode representar decisão assistencial posterior "
-            "ao ponto de previsão."
-        ),
-    },
-    {
-        "coluna": "tipo_trat",
-        "uso_nesta_eda": "eda_sensibilidade",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "Tipo de tratamento condicionado ao registro "
-            "de tratamento para COVID-19."
-        ),
-    },
-    {
-        "coluna": "dt_trt_cov",
-        "uso_nesta_eda": "auditoria_temporal",
-        "candidata_feature_principal": False,
-        "risco_temporal": "tratamento",
-        "justificativa": (
-            "Somente tratamentos iniciados até a admissão "
-            "poderão ser avaliados em sensibilidade."
-        ),
-    },
-]
-
-auditoria_vazamento = pd.DataFrame(
-    REGRAS_AUDITORIA_TEMPORAL
-)
-
-auditoria_vazamento["existe_no_dataframe"] = (
-    auditoria_vazamento["coluna"]
-    .isin(df.columns)
-)
-
-display(auditoria_vazamento)
-```
-
-**Output 1 (display_data)**
-
-```text
-       coluna       uso_nesta_eda  candidata_feature_principal  \
-0    evolucao              rotulo                        False   
-1  dt_evoluca           auditoria                        False   
-2  dt_encerra           auditoria                        False   
-3   dt_digita           auditoria                        False   
-4   antiviral   eda_sensibilidade                        False   
-5  tp_antivir   eda_sensibilidade                        False   
-6  dt_antivir  auditoria_temporal                        False   
-7    trat_cov   eda_sensibilidade                        False   
-8   tipo_trat   eda_sensibilidade                        False   
-9  dt_trt_cov  auditoria_temporal                        False   
-
-       risco_temporal                                      justificativa  \
-0            desfecho  Fonte utilizada para construir o alvo. Não pod...   
-1  posterior_admissao  Data de alta ou óbito, posterior ao ponto de p...   
-2  posterior_admissao  Data de encerramento do caso, posterior ao pon...   
-3      administrativo       Data administrativa de inclusão do registro.   
-4          tratamento  A disponibilidade até a admissão precisa ser c...   
-5          tratamento  Tipo de tratamento condicionado ao uso de anti...   
-6          tratamento  Somente tratamentos iniciados até a admissão p...   
-7          tratamento  Pode representar decisão assistencial posterio...   
-8          tratamento  Tipo de tratamento condicionado ao registro de...   
-9          tratamento  Somente tratamentos iniciados até a admissão p...   
-
-   existe_no_dataframe  
-0                 True  
-1                 True  
-2                 True  
-3                 True  
-4                 True  
-5                 True  
-6                 True  
-7                 True  
-8                 True  
-9                 True  
-[non-text output omitted: text/html]
-```
-
-### Cell 40 [code] · In [35]
-
-```python
-resumo_primeira_passagem = pd.DataFrame(
-    {
-        "metrica": [
-            "versao_dados",
-            "arquivo",
-            "linhas_parquet",
-            "colunas_parquet",
-            "linhas_carregadas",
-            "colunas_carregadas",
-            "memoria_mb",
-            "data_minima_notificacao",
-            "data_maxima_notificacao",
-            "colunas_ausentes",
-        ],
-        "valor": [
-            C.DATA_VERSION,
-            caminho_parquet.name,
-            arquivo_parquet.metadata.num_rows,
-            arquivo_parquet.metadata.num_columns,
-            df.shape[0],
-            df.shape[1],
-            round(memoria_total_mb, 2),
-            datas_convertidas["dt_notific"].min(),
-            datas_convertidas["dt_notific"].max(),
-            len(colunas_ausentes),
-        ],
-    }
-)
-
-display(resumo_primeira_passagem)
-```
-
-**Output 1 (display_data)**
-
-```text
-                   metrica                valor
-0             versao_dados             dados-v2
-1                  arquivo         srag.parquet
-2           linhas_parquet              4666910
-3          colunas_parquet                  198
-4        linhas_carregadas              4666910
-5       colunas_carregadas                   88
-6               memoria_mb              3847.05
-7  data_minima_notificacao  2018-12-30 00:00:00
-8  data_maxima_notificacao  2026-09-28 00:00:00
-9         colunas_ausentes                    0
-[non-text output omitted: text/html]
-```
-
-### Cell 41 [code] · In [36]
-
-```python
-C.TABLES_DIR.mkdir(
-parents=True,
-exist_ok=True,
-)
-
-print(f"Tabelas serão salvas em: {C.TABLES_DIR}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Tabelas serão salvas em: <REPO>\outputs\tables
-```
-
-### Cell 42 [code] · In [37]
-
-```python
-duplicidades_nu_notific = (
-    df.loc[
-        df["nu_notific"].duplicated(keep=False),
-        [
-            "nu_notific",
-            "dt_notific",
-            "dt_sin_pri",
-            "hospital",
-            "dt_interna",
-            "evolucao",
-            "dt_evoluca",
-            "dt_encerra",
-        ],
-    ]
-    .sort_values(
-        ["nu_notific", "dt_notific", "dt_interna"]
-    )
-    .reset_index(drop=True)
-)
-```
-
-### Cell 43 [code] · In [38]
-
-```python
-tabelas_exportacao = {
-    "eda_01_auditoria_faixa_datas.csv": (
-        auditoria_faixa_datas_df
-    ),
-    "eda_01_auditoria_datas_pos_corte.csv": (
-        auditoria_datas_pos_corte_df
-    ),
-    "eda_01_volume_por_ano_notificacao.csv": (
-        volume_por_ano
-    ),
-    "eda_01_volume_por_ano_internacao.csv": (
-        volume_por_ano_int
-    ),
-    "eda_01_status_periodos.csv": (
-        status_periodos
-    ),
-    "eda_01_tipos_memoria.csv": (
-        tipos_memoria
-    ),
-    "eda_01_resumo_datas.csv": (
-        resumo_datas
-    ),
-    "eda_01_ausencias.csv": (
-        ausencias
-    ),
-    "eda_01_preenchimento_por_ano_notificacao.csv": (
-        preenchimento_por_ano_notificacao
-    ),
-    "eda_01_preenchimento_por_ano_internacao.csv": (
-        preenchimento_por_ano_internacao
-    ),
-    "eda_01_cardinalidade.csv": (
-        cardinalidade_variaveis
-    ),
-    "eda_01_frequencias_categoricas.csv": (
-        frequencias_categoricas_df
-    ),
-    "eda_01_auditoria_vazamento.csv": (
-        auditoria_vazamento
-    ),
-    "eda_01_duplicidades_nu_notific.csv": (
-        duplicidades_nu_notific
-    ),
-}
-
-tabelas_exportacao_invalidas = [
-    nome_arquivo
-    for nome_arquivo, tabela
-    in tabelas_exportacao.items()
-    if not isinstance(
-        tabela,
-        pd.DataFrame,
-    )
-]
-
-if tabelas_exportacao_invalidas:
-    raise TypeError(
-        "Existem objetos de exportação que não são DataFrames: "
-        f"{tabelas_exportacao_invalidas}"
-    )
-
-for nome_arquivo, tabela in tabelas_exportacao.items():
-    caminho_saida = (
-        C.TABLES_DIR
-        / nome_arquivo
-    )
-
-    tabela.to_csv(
-        caminho_saida,
-        index=False,
-        encoding="utf-8-sig",
-    )
-
-    print(
-        "Salvo:",
-        caminho_saida,
-    )
-
-print(
-    "Exportação das tabelas da EDA 01 concluída."
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_faixa_datas.csv
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_datas_pos_corte.csv
-Salvo: <REPO>\outputs\tables\eda_01_volume_por_ano_notificacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_volume_por_ano_internacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_status_periodos.csv
-Salvo: <REPO>\outputs\tables\eda_01_tipos_memoria.csv
-Salvo: <REPO>\outputs\tables\eda_01_resumo_datas.csv
-Salvo: <REPO>\outputs\tables\eda_01_ausencias.csv
-Salvo: <REPO>\outputs\tables\eda_01_preenchimento_por_ano_notificacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_preenchimento_por_ano_internacao.csv
-Salvo: <REPO>\outputs\tables\eda_01_cardinalidade.csv
-Salvo: <REPO>\outputs\tables\eda_01_frequencias_categoricas.csv
-Salvo: <REPO>\outputs\tables\eda_01_auditoria_vazamento.csv
-Salvo: <REPO>\outputs\tables\eda_01_duplicidades_nu_notific.csv
-Exportação das tabelas da EDA 01 concluída.
-```
-
-### Cell 44 [code] · In [39]
-
-```python
-colunas_desfecho_fora_das_candidatas = all(
-    coluna not in COLUNAS_CANDIDATAS_PRINCIPAIS
-    for coluna in COLUNAS_DESFECHO_AUDITORIA
-)
-
-tratamentos_fora_das_candidatas_principais = all(
-    coluna not in COLUNAS_CANDIDATAS_PRINCIPAIS
-    for coluna in COLUNAS_TRATAMENTO_AUDITORIA
-)
-
-datas_covid_auditadas = all(
-    coluna in COLUNAS_DATA
-    for coluna in [
-        "dose_1_cov",
-        "dose_2_cov",
-        "dose_ref",
-        "dose_2ref",
-        "dose_adic",
-        "dos_re_bi",
-    ]
-)
-
-datas_fora_faixa_total = int(
-    auditoria_faixa_datas_df[
-        "datas_fora_faixa"
-    ].sum()
-)
-
-COLUNAS_DATA_COVID = [
-    "dose_1_cov",
-    "dose_2_cov",
-    "dose_ref",
-    "dose_2ref",
-    "dose_adic",
-    "dos_re_bi",
-]
-
-datas_covid_fora_faixa_identificadas = int(
-    auditoria_faixa_datas_df.loc[
-        auditoria_faixa_datas_df[
-            "coluna"
-        ].isin(
-            COLUNAS_DATA_COVID
-        ),
-        "datas_fora_faixa",
-    ].sum()
-)
-
-datas_convertidas_com_ano_fora_faixa = []
-
-for coluna in COLUNAS_DATA_EXISTENTES:
-    serie_convertida = datas_convertidas[
-        coluna
-    ]
-
-    mascara_convertida_fora_faixa = (
-        serie_convertida.notna()
-        & (
-            serie_convertida.dt.year.lt(
-                LIMITE_INFERIOR_DATA
-            )
-            | serie_convertida.dt.year.gt(
-                LIMITE_SUPERIOR_DATA
-            )
-        )
-    )
-
-    if mascara_convertida_fora_faixa.any():
-        datas_convertidas_com_ano_fora_faixa.append(
-            coluna
-        )
-
-datas_problematicas_bloqueadas = (
-    len(
-        datas_convertidas_com_ano_fora_faixa
-    )
-    == 0
-)
-
-ano_2026_identificado_como_incompleto = (
-    status_periodos.loc[
-        status_periodos[
-            "ano_internacao"
-        ].eq(2026),
-        "status_periodo",
-    ]
-    .eq("incompleto")
-    .all()
-    and status_periodos[
-        "ano_internacao"
-    ].eq(2026).any()
-)
-
-anos_fora_periodo_nao_marcados_completos = (
-    ~status_periodos.loc[
-        ~status_periodos[
-            "dentro_periodo_coorte"
-        ]
-        & status_periodos[
-            "ano_internacao"
-        ].notna(),
-        "status_periodo",
-    ]
-    .eq("completo")
-    .any()
-)
-
-print(
-    "Datas fora da faixa identificadas na fonte:",
-    datas_fora_faixa_total,
-)
-
-print(
-    "Datas COVID fora da faixa identificadas:",
-    datas_covid_fora_faixa_identificadas,
-)
-
-print(
-    "Colunas ainda contendo datas convertidas "
-    "fora da faixa:",
-    datas_convertidas_com_ano_fora_faixa,
-)
-
-verificacoes_finais = {
-    "dataframe_nao_vazio": (
-        not df.empty
-    ),
-    "colunas_solicitadas_presentes": (
-        not colunas_ausentes
-    ),
-    "dt_notific_disponivel": (
-        "dt_notific" in df.columns
-    ),
-    "dt_interna_disponivel": (
-        "dt_interna" in df.columns
-    ),
-    "desfecho_fora_das_candidatas": (
-        colunas_desfecho_fora_das_candidatas
-    ),
-    "tratamentos_fora_das_candidatas_principais": (
-        tratamentos_fora_das_candidatas_principais
-    ),
-    "datas_covid_incluidas_na_auditoria": (
-        datas_covid_auditadas
-    ),
-    "auditoria_faixa_datas_criada": (
-        not auditoria_faixa_datas_df.empty
-    ),
-    "todas_colunas_data_auditadas": (
-        len(
-            auditoria_faixa_datas_df
-        )
-        == len(
-            COLUNAS_DATA_EXISTENTES
-        )
-    ),
-    "datas_problematicas_bloqueadas": (
-        datas_problematicas_bloqueadas
-    ),
-    "ano_2026_identificado_como_incompleto": (
-        ano_2026_identificado_como_incompleto
-    ),
-    "anos_fora_periodo_nao_marcados_completos": (
-        anos_fora_periodo_nao_marcados_completos
-    ),
-    "volume_por_ano_internacao_criado": (
-        not volume_por_ano_int.empty
-    ),
-    "preenchimento_por_ano_internacao_criado": (
-        not preenchimento_por_ano_internacao.empty
-    ),
-    "diretorio_tabelas_existe": (
-        C.TABLES_DIR.exists()
-    ),
-}
-
-verificacoes_finais_df = pd.DataFrame(
-    {
-        "verificacao": verificacoes_finais.keys(),
-        "resultado": verificacoes_finais.values(),
-    }
-)
-
-display(verificacoes_finais_df)
-
-if not all(verificacoes_finais.values()):
-    falhas = [
-        nome
-        for nome, resultado in verificacoes_finais.items()
-        if not resultado
-    ]
-
-    raise RuntimeError(
-        "Verificações finais com falha: "
-        f"{falhas}"
-    )
-
-print("Primeira passagem concluída com sucesso.")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Datas fora da faixa identificadas na fonte: 260
-Datas COVID fora da faixa identificadas: 138
-Colunas ainda contendo datas convertidas fora da faixa: []
-```
-
-**Output 2 (display_data)**
-
-```text
-                                   verificacao  resultado
-0                          dataframe_nao_vazio       True
-1                colunas_solicitadas_presentes       True
-2                        dt_notific_disponivel       True
-3                        dt_interna_disponivel       True
-4                 desfecho_fora_das_candidatas       True
-5   tratamentos_fora_das_candidatas_principais       True
-6           datas_covid_incluidas_na_auditoria       True
-7                 auditoria_faixa_datas_criada       True
-8                 todas_colunas_data_auditadas       True
-9               datas_problematicas_bloqueadas       True
-10       ano_2026_identificado_como_incompleto       True
-11    anos_fora_periodo_nao_marcados_completos       True
-12            volume_por_ano_internacao_criado       True
-13     preenchimento_por_ano_internacao_criado       True
-14                    diretorio_tabelas_existe       True
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-Primeira passagem concluída com sucesso.
-```
-
-### Cell 45 [markdown]
-
-```markdown
-### Base utilizada
-
-- Versão dos dados: dados-v2
-- Nome do Parquet: `srag.parquet`
-- Número de linhas: 4666910
-- Número de colunas do Parquet: 198
-- Número de colunas carregadas: 88
-- Período observado em `dt_notific`: 2018 - 2026
-- Memória utilizada: 3.847,05 MB
-
-### Achados principais
-
-- Colunas não encontradas: 0
-- Colunas com maior ausência global incluem campos condicionais de
-  vacinação, contexto social, tratamentos, textos e IMC. O percentual
-  global não será utilizado isoladamente para decidir exclusão; campos
-  condicionais serão avaliados também na população em que são
-  aplicáveis.
-
-- `tabag` (Tabagismo) está completamente vazia na versão atual e
-  permanecerá somente documentada.
-
-- Alguns campos apresentam mudança de preenchimento entre os anos,
-  especialmente vacinação e tratamentos, exigindo análise por ano
-  de internação antes do uso nos modelos.
-- Colunas com mudança aparente entre anos: cs_escol_n, diarreia, vomito, vacina_cov, dose_1_cov, dose_2_cov, estrang
-- Foram identificadas 260 datas com anos fora da faixa definida para
-conversão, distribuídas entre `dt_interna`, `dose_1_cov`,
-`dose_2_cov`, `dose_ref`, `dose_2ref` e `dt_antivir`.
-- Esses valores foram preservados nas tabelas de auditoria, mas não
-foram mantidos nas séries de datas convertidas.
-- Também foram identificadas datas de 2026 posteriores ao fechamento
-observado da base, que deverão ficar fora da coorte principal.
-- Os três registros com `dt_notific` em 2018 permanecem somente em
-  auditoria, pois a elegibilidade temporal utilizará `dt_interna`.
-- Foram identificadas 58 linhas associadas a identificadores repetidos,
-  que serão investigadas durante a construção da coorte.
-
-#### Interpretação e encaminhamento
-
-**Estrutura e construção da coorte**
-
-- `nu_notific` será mantida para identificação técnica e investigação
-  de duplicidades, não como preditora.
-- `dt_notific`, `dt_sin_pri`, `hospital` e `dt_interna` serão utilizadas
-  na definição temporal e na construção da coorte.
-- `nu_idade_n` deve ser interpretada em conjunto com `tp_idade`.
-
-**Variáveis candidatas**
-
-- Permanecem candidatas as variáveis demográficas, sintomas,
-  comorbidades, vacinação e contexto geográfico disponíveis na base.
-- O preenchimento isoladamente não determinará a exclusão de uma
-  variável.
-- Variáveis com forte mudança entre anos serão avaliadas na EDA
-  descritiva e nos experimentos de modelagem.
-
-**Campos condicionais ou de uso secundário**
-
-- Datas detalhadas de vacinação, ocupação, povos tradicionais,
-  tratamentos e campos textuais exigem transformação ou análise
-  específica antes do uso.
-- Campos com preenchimento muito baixo poderão ser explorados, mas não
-  entrarão automaticamente na primeira versão dos modelos.
-
-**Auditoria e prevenção de vazamento**
-
-- `evolucao` será utilizada como fonte para construção do alvo.
-- `dt_evoluca`, `dt_encerra` e `dt_digita` serão mantidas apenas para
-  auditoria.
-- Tratamentos e respectivas datas serão excluídos da primeira versão
-  dos preditores enquanto sua disponibilidade até a admissão não estiver
-  demonstrada.
-
-**Problemas encontrados**
-
-- Foram identificadas datas de internação e antiviral fora de faixas
-  plausíveis.
-- Foram encontradas 58 linhas pertencentes a identificadores duplicados,
-  que serão investigadas durante a construção da coorte.
-- `tabag` está completamente vazio na versão atual.
-- Algumas variáveis apresentam alta ausência ou mudança relevante de
-  preenchimento entre anos.
-
-**Próxima etapa**
-
-- Construir a coorte principal com internações entre 01/01/2019 e
-  28/09/2026, utilizando `dt_interna` como referência temporal.
-- Produzir visualizações descritivas por ano e por períodos antes de
-considerar qualquer exclusão relacionada à pandemia.
-- Identificar explicitamente 2026 como período incompleto.
-- Preparar idade padronizada, recodificações categóricas e indicadores
-  temporais.
-- Definir a coorte analítica e o alvo binário.
-- Iniciar baselines assim que o dataset analítico mínimo estiver pronto.
-- Utilizar o dicionário operacional de variáveis para separar
-  estrutura, rótulo, auditoria, candidatas do Modelo A, candidatas
-  do Modelo B, sensibilidades do Modelo C e exploração do Modelo D.
-
-- Preservar o conjunto ampliado de variáveis na futura coorte
-  auditável, sem interpretar permanência na coorte como inclusão
-  automática nos modelos.
-```
-
-### Cell 46 [markdown]
-
-```markdown
-### Classificação inicial das variáveis
-
-O conjunto ampliado de variáveis investigadas nesta EDA será
-preservado para a etapa de construção da coorte auditável.
-
-A coorte analítica ainda não é criada neste notebook. A permanência
-de uma coluna neste conjunto indica que ela continuará disponível
-para avaliação, auditoria ou transformação, e não que será utilizada
-automaticamente como preditora.
-
-A permanência de uma coluna na base analítica não significa que ela
-será utilizada no modelo principal. As variáveis serão organizadas
-em camadas de uso, considerando sua disponibilidade no momento da
-admissão, aplicabilidade, risco de vazamento, cardinalidade, estabilidade
-entre anos, percentual de preenchimento e contribuição para os modelos.
-
-##### 1. Estrutura, futura construção da coorte e auditoria temporal
-
-- `nu_notific` (Número da notificação)
-- `dt_notific` (Data da notificação)
-- `dt_sin_pri` (Data dos primeiros sintomas)
-- `sem_pri` (Semana epidemiológica dos primeiros sintomas)
-- `hospital` (Houve internação?)
-- `dt_interna` (Data da internação por SRAG)
-
-Essas colunas serão utilizadas para identificar os registros, definir
-o período do estudo, construir a coorte hospitalizada, auditar
-duplicidades e derivar atributos temporais.
-
-- `nu_notific` (Número da notificação): identificação técnica do
-registro e investigação de possíveis duplicidades. Não será
-utilizada como preditora.
- 
-- `dt_notific` (Data da notificação): utilizada para auditoria
-temporal e qualidade do registro. Não será utilizada diretamente
-como preditora.
- 
-- `dt_sin_pri` (Data dos primeiros sintomas): fonte principal para
-calcular o intervalo entre sintomas e internação e para derivar
-atributos sazonais.
- 
-- `sem_pri` (Semana epidemiológica dos primeiros sintomas): campo
-interno derivado da data dos primeiros sintomas. Será mantido na
-coorte auditável para conferência e descrição epidemiológica, mas
-não entrará diretamente nas matrizes de modelagem.
- 
-- `hospital` (Houve internação?): utilizada na definição da
-população elegível.
- 
-- `dt_interna` (Data da internação por SRAG): referência temporal
-do ponto de previsão e do período da coorte.
-
-#### 2. Rótulo e auditoria do desfecho
-
-- `evolucao` (Evolução do caso)
-- `dt_evoluca` (Data da alta ou do óbito)
-- `dt_encerra` (Data do encerramento do caso)
-- `dt_digita` (Data de inclusão do registro no sistema)
-
-`evolucao` será utilizada para construir o alvo. As demais colunas
-serão preservadas para auditoria, verificação da maturidade do
-desfecho e análise de qualidade, mas não serão utilizadas como
-preditoras.
-
-#### 3. Demografia e características sociais
-
-- `cs_sexo` (Sexo)
-- `nu_idade_n` (Idade informada)
-- `tp_idade` (Unidade da idade: dias, meses ou anos)
-- `cs_gestant` (Situação gestacional)
-- `cs_raca` (Raça ou cor)
-- `cs_etinia` (Etnia indígena)
-- `cs_escol_n` (Escolaridade)
-- `cs_zona` (Zona de residência)
-- `estrang` (Paciente estrangeiro?)
-- `pov_ct` (Pertence a povo ou comunidade tradicional?)
-- `tp_pov_ct` (Povo ou comunidade tradicional)
-- `pac_cocbo` (Código da ocupação)
-- `pac_dscbo` (Descrição da ocupação)
-
-`nu_idade_n` e `tp_idade` serão combinadas para produzir
-`idade_anos` (Idade padronizada em anos).
-
-Variáveis condicionais, como `cs_etinia`, `tp_pov_ct` e informações
-de ocupação, serão avaliadas considerando apenas a população em que
-o campo é aplicável. O percentual de ausência na base inteira não
-será utilizado isoladamente para excluir essas variáveis.
-
-#### 4. Contato com animais
-
-- `ave_suino` (Contato direto com aves, suínos ou outro animal?)
-- `out_anim` (Especificação do outro animal)
-
-`ave_suino` permanecerá como candidata. `out_anim` será preservada
-para exploração e possível categorização, mas não entrará como texto
-livre bruto na primeira versão dos modelos.
-
-#### 5. Sinais e sintomas
-
-- `febre` (Febre)
-- `tosse` (Tosse)
-- `garganta` (Dor de garganta)
-- `dispneia` (Dispneia)
-- `desc_resp` (Desconforto respiratório)
-- `saturacao` (Saturação de oxigênio abaixo de 95%)
-- `diarreia` (Diarreia)
-- `vomito` (Vômito)
-- `dor_abd` (Dor abdominal)
-- `fadiga` (Fadiga)
-- `perd_olft` (Perda do olfato)
-- `perd_pala` (Perda do paladar)
-- `outro_sin` (Apresentou outros sintomas?)
-- `outro_des` (Descrição dos outros sintomas)
-
-`saturacao` será inicialmente avaliada no Modelo A.
-
-`desc_resp` será inicialmente avaliada no Modelo B, por depender de
-registro clínico mais subjetivo e por ainda existir incerteza sobre o
-momento exato de sua documentação.
-
-Será realizada uma comparação posterior do Modelo A com e sem
-`saturacao`. Se a auditoria indicar que alguma dessas informações
-representa evolução durante a internação, e não a avaliação inicial,
-a variável será mantida somente em EDA ou sensibilidade.
-
-`outro_des` será preservada para exploração textual ou criação
-posterior de indicadores, mas não entrará como texto bruto no
-primeiro modelo.
-
-Também poderão ser derivados:
-
-- `n_sintomas` (Quantidade de sintomas registrados)
-- `flag_sintoma_ignorado` (Presença de respostas ignoradas)
-- `flag_outro_sintoma` (Registro de outro sintoma)
-
-#### 6. Comorbidades e fatores de risco
-
-- `puerpera` (Puérpera ou parturiente)
-- `cardiopati` (Doença cardiovascular crônica)
-- `hematologi` (Doença hematológica crônica)
-- `sind_down` (Síndrome de Down)
-- `hepatica` (Doença hepática crônica)
-- `asma` (Asma)
-- `diabetes` (Diabetes mellitus)
-- `neurologic` (Doença neurológica crônica)
-- `pneumopati` (Outra pneumopatia crônica)
-- `imunodepre` (Imunodeficiência ou imunodepressão)
-- `renal` (Doença renal crônica)
-- `obesidade` (Obesidade)
-- `obes_imc` (IMC registrado)
-- `tabag` (Tabagismo)
-- `out_morbi` (Outro fator de risco?)
-- `morb_desc` (Descrição de outro fator de risco)
-
-Os indicadores estruturados serão mantidos como candidatos iniciais.
-
-`obes_imc` será preservada para EDA e auditoria de plausibilidade.
-Não entrará inicialmente nos modelos. Uma utilização futura dependerá
-da qualidade observada após conversão numérica, validação de faixas e
-análise no denominador aplicável.
-
-`tabag` permanecerá documentada, mas ficará fora dos modelos enquanto
-estiver completamente vazia na versão atual dos dados.
-
-`morb_desc` será preservada para exploração textual ou criação de
-indicadores, mas não entrará como texto bruto no primeiro modelo.
-
-Também poderão ser derivados:
-
-- `n_comorbidades` (Quantidade de comorbidades registradas)
-- `flag_multimorbidade` (Presença de duas ou mais comorbidades)
-- `flag_outro_fator_risco` (Registro de outro fator de risco)
-
-#### 7. Vacinação contra COVID-19
-
-- `vacina_cov` (Recebeu vacina contra COVID-19?)
-- `dose_1_cov` (Data da primeira dose contra COVID-19)
-- `dose_2_cov` (Data da segunda dose contra COVID-19)
-- `dose_ref` (Data da dose de reforço)
-- `dose_2ref` (Data da segunda dose de reforço)
-- `dose_adic` (Data da dose adicional)
-- `dos_re_bi` (Data do reforço bivalente)
-
-As datas brutas serão preservadas para auditoria e transformação.
-Somente doses anteriores ou iguais à data de internação poderão
-contribuir para os modelos.
-
-Poderão ser derivados:
-
-- `vacinado_covid` (Vacinação contra COVID-19 registrada)
-- `n_doses_covid_antes_admissao` (Número de doses antes da admissão)
-- `dias_ultima_dose_covid` (Dias entre a última dose e a admissão)
-- `reforco_covid_antes_admissao` (Reforço anterior à admissão)
-- `flag_dose_covid_pos_admissao` (Dose posterior à admissão)
-
-#### 8. Vacinação contra influenza e condições pediátricas
-
-- `vacina` (Recebeu vacina contra influenza?)
-- `dt_ut_dose` (Data da última dose contra influenza)
-- `mae_vac` (Mãe vacinada contra influenza?)
-- `dt_vac_mae` (Data da vacinação materna)
-- `m_amamenta` (Mãe amamenta a criança?)
-- `dt_doseuni` (Data da dose única infantil)
-- `dt_1_dose` (Data da primeira dose infantil)
-- `dt_2_dose` (Data da segunda dose infantil)
-
-Essas informações serão mantidas na base analítica.
-
-Os campos maternos e pediátricos serão avaliados somente na população
-em que são aplicáveis. A ausência fora dessa população não será
-interpretada como problema de qualidade nem como resposta negativa.
-
-Poderão ser derivados:
-
-- `vacina_gripe_antes_admissao` (Vacinação contra influenza anterior à admissão)
-- `dias_vacina_gripe` (Dias entre vacinação e admissão)
-- `flag_vacinacao_materna_aplicavel` (Registro aplicável a menor de seis meses)
-- `flag_vacinacao_infantil_aplicavel` (Registro aplicável à faixa etária infantil)
-
-#### 9. Localização e contexto geográfico
-
-##### Local de notificação
-
-- `sg_uf_not` (UF da unidade notificadora)
-- `co_regiona` (Regional de saúde da notificação)
-- `co_mun_not` (Município da notificação)
-
-##### Local de residência
-
-- `co_pais` (País de residência)
-- `sg_uf` (UF de residência)
-- `co_rg_resi` (Regional de saúde de residência)
-- `co_mun_res` (Município de residência)
-
-##### Local de internação
-
-- `sg_uf_inte` (UF de internação)
-- `co_rg_inte` (Regional de saúde de internação)
-- `co_mu_inte` (Município de internação)
-
-As variáveis geográficas serão preservadas na coorte e utilizadas na
-EDA.
-
-A primeira versão do Modelo B utilizará `sg_uf`, correspondente à UF
-de residência.
-
-UF de notificação, UF de internação, regionais e municípios serão
-preservados para EDA, auditoria e criação de atributos derivados.
-
-`sg_uf_inte` poderá ser utilizada para construir
-`uf_residencia_igual_internacao`.
-
-`co_mun_res`, correspondente ao município de residência, será
-preservada para uma comparação futura, depois da conclusão do modelo
-principal. A granularidade municipal somente será incorporada se
-demonstrar ganho suficiente para justificar a alta cardinalidade e o
-maior risco de sobreajuste.
-
-Poderão ser derivados:
-
-- `regiao_residencia` (Região do país de residência)
-- `regiao_internacao` (Região do país de internação)
-- `uf_residencia_igual_internacao` (Residência e internação na mesma UF)
-- `uf_notificacao_igual_internacao` (Notificação e internação na mesma UF)
-- `residente_brasil` (Residência informada no Brasil)
-
-#### 10. Tratamentos e decisões assistenciais
-
-- `antiviral` (Usou antiviral contra influenza?)
-- `tp_antivir` (Tipo de antiviral utilizado)
-- `dt_antivir` (Data de início do antiviral)
-- `out_antiv` (Outro antiviral utilizado)
-- `trat_cov` (Recebeu tratamento antiviral para COVID-19?)
-- `tipo_trat` (Tipo de tratamento para COVID-19)
-- `dt_trt_cov` (Data de início do tratamento para COVID-19)
-- `out_trat` (Outro tratamento para COVID-19)
-
-Essas colunas permanecerão na coorte auditável para EDA e auditoria.
-
-Elas não entrarão nos Modelos A ou B.
-
-Um Modelo C de sensibilidade poderá ser criado somente depois da
-conclusão do modelo principal, se houver tempo, cobertura suficiente
-e comprovação de que o tratamento foi iniciado até `dt_interna`.
-
-Tratamentos não fazem parte do caminho crítico até o Fine Tuning.
-
-Não serão utilizadas no modelo principal enquanto não houver evidência
-de que o tratamento foi iniciado antes ou no momento da admissão.
-
-Poderão ser derivados:
-
-- `antiviral_antes_admissao` (Antiviral iniciado até a admissão)
-- `trat_cov_antes_admissao` (Tratamento para COVID-19 iniciado até a admissão)
-- `dias_antiviral_ate_admissao` (Intervalo entre antiviral e admissão)
-- `flag_tratamento_pos_admissao` (Tratamento iniciado após admissão)
-
-#### 11. Atributos temporais derivados
-
-A partir das datas válidas poderão ser criados:
-
-- `ano_internacao` (Ano da internação)
-- `mes_internacao` (Mês da internação)
-- `semana_internacao` (Semana epidemiológica da internação)
-- `semana_sen` (Componente cíclico seno da semana)
-- `semana_cos` (Componente cíclico cosseno da semana)
-- `dias_sintomas_ate_internacao` (Dias entre sintomas e internação)
-- `flag_internacao_antes_sintomas` (Internação anterior aos sintomas)
-- `flag_intervalo_sintomas_internacao_longo` (Intervalo temporal elevado)
-
-O ano da internação será mantido para auditoria, estratificação da
-divisão aleatória, avaliação por período e identificação de 2026 como
-ano incompleto.
-
-A utilização do ano como preditor será avaliada separadamente. O ano não
-será incluído automaticamente apenas por ser utilizado na estratificação
-e nas análises temporais.
-
-#### 12. Camadas propostas de modelagem
-
-- **Modelo A — núcleo clínico de admissão:** idade, sexo, situação
-  gestacional, sintomas, comorbidades, vacinação resumida e atributos
-  temporais.
-
-- **Modelo B — ampliado epidemiológico e social:** Modelo A acrescido
-  de raça/cor, escolaridade, zona, ocupação, povos e comunidades
-  tradicionais, contato com animais e contexto geográfico.
-
-- **Modelo C — sensibilidade:** Modelo B acrescido de variáveis
-  condicionais com temporalidade adequada. Tratamentos somente
-  poderão ser avaliados nesta camada se houver comprovação de que
-  foram iniciados até a admissão; caso contrário, permanecerão
-  exclusivamente na EDA e na auditoria.
-
-- **Modelo D — exploração:** textos, códigos territoriais de alta
-  cardinalidade e campos muito esparsos. Essa camada poderá ser
-  testada sem passar necessariamente pelo processo completo de
-  Fine Tuning.
-
-A seleção final das variáveis não será definida somente pelo percentual
-de ausência. Serão considerados o momento em que cada informação estava
-disponível, a população em que o campo era aplicável, o risco de
-vazamento, a cardinalidade, a estabilidade entre anos e a contribuição
-incremental nos experimentos.
-```
-
-### Cell 47 [code] · In [40]
-
-```python
-# ============================================================
-# DICIONARIO OPERACIONAL DE VARIAVEIS SRAG - V1
-# ============================================================
-
-from pathlib import Path
-import json
-import numpy as np
-import pandas as pd
-
-# ------------------------------------------------------------
-# 1. VALIDACAO DOS PRE-REQUISITOS
-# ------------------------------------------------------------
-
-PRE_REQUISITOS = [
-    "df",
-    "COLUNAS_ESTRUTURA",
-    "COLUNAS_CANDIDATAS_PRINCIPAIS",
-    "COLUNAS_COMPLEMENTARES_TEXTO",
-    "COLUNAS_GEOGRAFIA",
-    "COLUNAS_CONDICIONAIS_VACINACAO",
-    "COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL",
-    "COLUNAS_TRATAMENTO_AUDITORIA",
-    "COLUNAS_DESFECHO_AUDITORIA",
-]
-
-faltantes = [nome for nome in PRE_REQUISITOS if nome not in globals()]
-if faltantes:
-    raise NameError(
-        "Execute primeiro as celulas que criam: " + ", ".join(faltantes)
-    )
-
-COLUNAS_DICIONARIO = list(
-    dict.fromkeys(
-        COLUNAS_ESTRUTURA
-        + COLUNAS_CANDIDATAS_PRINCIPAIS
-        + COLUNAS_COMPLEMENTARES_TEXTO
-        + COLUNAS_GEOGRAFIA
-        + COLUNAS_CONDICIONAIS_VACINACAO
-        + COLUNAS_CONTEXTO_SOCIAL_CONDICIONAL
-        + COLUNAS_TRATAMENTO_AUDITORIA
-        + COLUNAS_DESFECHO_AUDITORIA
-    )
-)
-
-# ------------------------------------------------------------
-# 2. NOMES AMIGAVEIS
-# ------------------------------------------------------------
-
-NOMES_AMIGAVEIS = {
-    "nu_notific": "Numero da notificacao",
-    "dt_notific": "Data da notificacao",
-    "dt_sin_pri": "Data dos primeiros sintomas",
-    "sem_pri": "Semana epidemiologica dos primeiros sintomas",
-    "hospital": "Houve internacao?",
-    "dt_interna": "Data da internacao por SRAG",
-    "cs_sexo": "Sexo",
-    "nu_idade_n": "Idade informada",
-    "tp_idade": "Unidade da idade: dias, meses ou anos",
-    "cs_gestant": "Situacao gestacional",
-    "cs_raca": "Raca ou cor",
-    "cs_etinia": "Etnia indigena",
-    "cs_escol_n": "Escolaridade",
-    "cs_zona": "Zona de residencia",
-    "estrang": "Paciente estrangeiro?",
-    "pov_ct": "Pertence a povo ou comunidade tradicional?",
-    "tp_pov_ct": "Povo ou comunidade tradicional",
-    "pac_cocbo": "Codigo da ocupacao",
-    "pac_dscbo": "Descricao da ocupacao",
-    "ave_suino": "Contato direto com aves, suinos ou outro animal?",
-    "out_anim": "Especificacao do outro animal",
-    "febre": "Febre",
-    "tosse": "Tosse",
-    "garganta": "Dor de garganta",
-    "dispneia": "Dispneia",
-    "desc_resp": "Desconforto respiratorio",
-    "saturacao": "Saturacao de oxigenio abaixo de 95%?",
-    "diarreia": "Diarreia",
-    "vomito": "Vomito",
-    "dor_abd": "Dor abdominal",
-    "fadiga": "Fadiga",
-    "perd_olft": "Perda do olfato",
-    "perd_pala": "Perda do paladar",
-    "outro_sin": "Apresentou outros sintomas?",
-    "outro_des": "Descricao dos outros sintomas",
-    "puerpera": "Puerpera ou parturiente",
-    "cardiopati": "Doenca cardiovascular cronica",
-    "hematologi": "Doenca hematologica cronica",
-    "sind_down": "Sindrome de Down",
-    "hepatica": "Doenca hepatica cronica",
-    "asma": "Asma",
-    "diabetes": "Diabetes mellitus",
-    "neurologic": "Doenca neurologica cronica",
-    "pneumopati": "Outra pneumopatia cronica",
-    "imunodepre": "Imunodeficiencia ou imunodepressao",
-    "renal": "Doenca renal cronica",
-    "obesidade": "Obesidade",
-    "obes_imc": "IMC registrado",
-    "tabag": "Tabagismo",
-    "out_morbi": "Outro fator de risco?",
-    "morb_desc": "Descricao de outro fator de risco",
-    "vacina": "Recebeu vacina contra influenza?",
-    "dt_ut_dose": "Data da ultima dose contra influenza",
-    "mae_vac": "Mae vacinada contra influenza?",
-    "dt_vac_mae": "Data da vacinacao materna",
-    "m_amamenta": "Mae amamenta a crianca?",
-    "dt_doseuni": "Data da dose unica infantil",
-    "dt_1_dose": "Data da primeira dose infantil",
-    "dt_2_dose": "Data da segunda dose infantil",
-    "vacina_cov": "Recebeu vacina contra COVID-19?",
-    "dose_1_cov": "Data da primeira dose contra COVID-19",
-    "dose_2_cov": "Data da segunda dose contra COVID-19",
-    "dose_ref": "Data da dose de reforco",
-    "dose_2ref": "Data da segunda dose de reforco",
-    "dose_adic": "Data da dose adicional",
-    "dos_re_bi": "Data do reforco bivalente",
-    "sg_uf_not": "UF da unidade notificadora",
-    "co_regiona": "Regional de saude da notificacao",
-    "co_mun_not": "Municipio da notificacao",
-    "co_pais": "Pais de residencia",
-    "sg_uf": "UF de residencia",
-    "co_rg_resi": "Regional de saude de residencia",
-    "co_mun_res": "Municipio de residencia",
-    "sg_uf_inte": "UF de internacao",
-    "co_rg_inte": "Regional de saude de internacao",
-    "co_mu_inte": "Municipio de internacao",
-    "antiviral": "Usou antiviral contra influenza?",
-    "tp_antivir": "Tipo de antiviral utilizado",
-    "dt_antivir": "Data de inicio do antiviral",
-    "out_antiv": "Outro antiviral utilizado",
-    "trat_cov": "Recebeu tratamento antiviral para COVID-19?",
-    "tipo_trat": "Tipo de tratamento para COVID-19",
-    "dt_trt_cov": "Data de inicio do tratamento para COVID-19",
-    "out_trat": "Outro tratamento para COVID-19",
-    "evolucao": "Evolucao do caso",
-    "dt_evoluca": "Data da alta ou do obito",
-    "dt_encerra": "Data do encerramento do caso",
-    "dt_digita": "Data de inclusao do registro no sistema",
-}
-
-# ------------------------------------------------------------
-# 3. GRUPOS OPERACIONAIS
-# ------------------------------------------------------------
-
-GRUPOS = {
-    "estrutura_coorte": [
-        "nu_notific", "dt_notific", "dt_sin_pri", "sem_pri",
-        "hospital", "dt_interna",
-    ],
-    "demografia_contexto_social": [
-        "cs_sexo", "nu_idade_n", "tp_idade", "cs_gestant",
-        "cs_raca", "cs_etinia", "cs_escol_n", "cs_zona",
-        "estrang", "pov_ct", "tp_pov_ct", "pac_cocbo",
-        "pac_dscbo",
-    ],
-    "exposicao_animal": ["ave_suino", "out_anim"],
-    "sintomas": [
-        "febre", "tosse", "garganta", "dispneia", "desc_resp",
-        "saturacao", "diarreia", "vomito", "dor_abd", "fadiga",
-        "perd_olft", "perd_pala", "outro_sin", "outro_des",
-    ],
-    "comorbidades_fatores_risco": [
-        "puerpera", "cardiopati", "hematologi", "sind_down",
-        "hepatica", "asma", "diabetes", "neurologic",
-        "pneumopati", "imunodepre", "renal", "obesidade",
-        "obes_imc", "tabag", "out_morbi", "morb_desc",
-    ],
-    "vacinacao_influenza": [
-        "vacina", "dt_ut_dose", "mae_vac", "dt_vac_mae",
-        "m_amamenta", "dt_doseuni", "dt_1_dose", "dt_2_dose",
-    ],
-    "vacinacao_covid": [
-        "vacina_cov", "dose_1_cov", "dose_2_cov", "dose_ref",
-        "dose_2ref", "dose_adic", "dos_re_bi",
-    ],
-    "geografia_notificacao": [
-        "sg_uf_not", "co_regiona", "co_mun_not",
-    ],
-    "geografia_residencia": [
-        "co_pais", "sg_uf", "co_rg_resi", "co_mun_res",
-    ],
-    "geografia_internacao": [
-        "sg_uf_inte", "co_rg_inte", "co_mu_inte",
-    ],
-    "tratamentos": [
-        "antiviral", "tp_antivir", "dt_antivir", "out_antiv",
-        "trat_cov", "tipo_trat", "dt_trt_cov", "out_trat",
-    ],
-    "desfecho_auditoria": [
-        "evolucao", "dt_evoluca", "dt_encerra", "dt_digita",
-    ],
-}
-
-GRUPO_POR_COLUNA = {
-    coluna: grupo
-    for grupo, colunas in GRUPOS.items()
-    for coluna in colunas
-}
-
-# ------------------------------------------------------------
-# 4. REGRAS CONDICIONAIS
-# ------------------------------------------------------------
-# Os codigos abaixo sao propostas baseadas no dicionario.
-# As decisoes ficam explicitamente sinalizadas no CSV.
-
-REGRAS_CONDICIONAIS = {
-    "cs_etinia": {
-        "condicionante": "cs_raca",
-        "valores": {"5"},
-        "aplicabilidade": "Registros com raca ou cor indigena",
-        "decisao": "Confirmar se cs_raca = 5 em todos os anos",
-    },
-    "tp_pov_ct": {
-        "condicionante": "pov_ct",
-        "valores": {"1"},
-        "aplicabilidade": "Registros pertencentes a povo ou comunidade tradicional",
-        "decisao": "Confirmar se pov_ct = 1 em todos os anos",
-    },
-    "out_anim": {
-        "condicionante": "ave_suino",
-        "valores": {"3"},
-        "aplicabilidade": "Registros com contato com outro animal",
-        "decisao": "Confirmar se ave_suino = 3 significa outro animal",
-    },
-    "obes_imc": {
-        "condicionante": "obesidade",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com obesidade informada",
-        "decisao": "Decidir se IMC entra no Modelo C ou somente na EDA",
-    },
-    "outro_des": {
-        "condicionante": "outro_sin",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com outro sintoma informado",
-        "decisao": "Decidir se os textos frequentes serao categorizados",
-    },
-    "morb_desc": {
-        "condicionante": "out_morbi",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com outro fator de risco informado",
-        "decisao": "Decidir se os textos frequentes serao categorizados",
-    },
-    "dt_ut_dose": {
-        "condicionante": "vacina",
-        "valores": {"1"},
-        "aplicabilidade": "Registros vacinados contra influenza",
-        "decisao": "Usar somente doses anteriores ou iguais a internacao",
-    },
-    "tp_antivir": {
-        "condicionante": "antiviral",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com uso de antiviral",
-        "decisao": "Manter fora do modelo principal ate validar temporalidade",
-    },
-    "dt_antivir": {
-        "condicionante": "antiviral",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com uso de antiviral",
-        "decisao": "Testar somente tratamento iniciado ate a admissao",
-    },
-    "tipo_trat": {
-        "condicionante": "trat_cov",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com tratamento para COVID-19",
-        "decisao": "Manter fora do modelo principal ate validar temporalidade",
-    },
-    "dt_trt_cov": {
-        "condicionante": "trat_cov",
-        "valores": {"1"},
-        "aplicabilidade": "Registros com tratamento para COVID-19",
-        "decisao": "Testar somente tratamento iniciado ate a admissao",
-    },
-}
-
-# ------------------------------------------------------------
-# 5. USO INICIAL SUGERIDO
-# ------------------------------------------------------------
-
-USO_INICIAL = {
-    coluna: "avaliar"
-    for coluna in COLUNAS_DICIONARIO
-}
-
-
-# ============================================================
-# ESTRUTURA, ROTULO E AUDITORIA
-# ============================================================
-
-for coluna in GRUPOS["estrutura_coorte"]:
-    USO_INICIAL[coluna] = "estrutura_coorte"
-
-USO_INICIAL["evolucao"] = "rotulo"
-
-for coluna in [
-    "dt_evoluca",
-    "dt_encerra",
-    "dt_digita",
-]:
-    USO_INICIAL[coluna] = "auditoria"
-
-
-# ============================================================
-# MODELO A
-# NUCLEO CLINICO DE ADMISSAO
-# ============================================================
-
-MODELO_A = [
-    "cs_sexo",
-    "nu_idade_n",
-    "tp_idade",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "saturacao",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi",
-    "vacina",
-    "vacina_cov",
-]
-
-for coluna in MODELO_A:
-    USO_INICIAL[coluna] = "modelo_a_nucleo"
-
-
-# ============================================================
-# MODELO B
-# CONTEXTO EPIDEMIOLOGICO, SOCIAL E GEOGRAFICO
-# ============================================================
-
-MODELO_B = [
-    "cs_escol_n",
-    "desc_resp",
-    "estrang",
-    "pov_ct",
-    "sg_uf",
-]
-
-for coluna in MODELO_B:
-    USO_INICIAL[coluna] = "modelo_b_ampliado"
-
-
-# ============================================================
-# MODELO C
-# VARIAVEIS CONDICIONAIS PARA SENSIBILIDADE
-# ============================================================
-
-MODELO_C = [
-    "dt_ut_dose",
-    "mae_vac",
-    "dt_vac_mae",
-    "m_amamenta",
-    "dt_doseuni",
-    "dt_1_dose",
-    "dt_2_dose",
-    "dose_1_cov",
-    "dose_2_cov",
-    "dose_ref",
-    "dose_2ref",
-    "dose_adic",
-    "dos_re_bi",
-]
-
-for coluna in MODELO_C:
-    USO_INICIAL[coluna] = "modelo_c_sensibilidade"
-
-
-# ============================================================
-# TEXTOS PRESERVADOS SOMENTE PARA EDA
-# ============================================================
-
-TEXTOS_EDA = [
-    "outro_sin",
-    "outro_des",
-    "morb_desc",
-    "out_anim",
-]
-
-for coluna in TEXTOS_EDA:
-    USO_INICIAL[coluna] = "exploracao_texto"
-
-
-# ============================================================
-# TRATAMENTOS PRESERVADOS SOMENTE PARA EDA E AUDITORIA
-# ============================================================
-
-TRATAMENTOS_EDA = [
-    "antiviral",
-    "tp_antivir",
-    "dt_antivir",
-    "trat_cov",
-    "tipo_trat",
-    "dt_trt_cov",
-]
-
-for coluna in TRATAMENTOS_EDA:
-    USO_INICIAL[coluna] = "exploracao_eda"
-
-
-# ============================================================
-# DECISOES ESPECIFICAS
-# Estas atribuicoes ficam por ultimo para prevalecerem sobre
-# todas as classificacoes gerais anteriores.
-# ============================================================
-
-USO_INICIAL["sem_pri"] = "auditoria_temporal"
-
-
-# ------------------------------------------------------------
-# Variaveis sociais e de subgrupo
-# ------------------------------------------------------------
-
-USO_INICIAL["cs_etinia"] = "exploracao_subgrupo"
-
-USO_INICIAL["tp_pov_ct"] = "exploracao_subgrupo"
-
-USO_INICIAL["pac_cocbo"] = (
-    "reavaliar_apos_modelo_principal"
-)
-
-USO_INICIAL["pac_dscbo"] = (
-    "apoio_interpretacao"
-)
-
-
-# ------------------------------------------------------------
-# IMC
-# ------------------------------------------------------------
-
-USO_INICIAL["obes_imc"] = "reavaliar_apos_eda"
-
-
-# ------------------------------------------------------------
-# Geografia
-# ------------------------------------------------------------
-
-USO_INICIAL["sg_uf"] = "modelo_b_ampliado"
-
-USO_INICIAL["sg_uf_not"] = "exploracao_eda"
-
-USO_INICIAL["co_regiona"] = "exploracao_eda"
-
-USO_INICIAL["co_mun_not"] = "exploracao_eda"
-
-USO_INICIAL["co_pais"] = "derivar_atributo"
-
-USO_INICIAL["co_rg_resi"] = "exploracao_eda"
-
-USO_INICIAL["co_mun_res"] = (
-    "reavaliar_apos_modelo_principal"
-)
-
-USO_INICIAL["sg_uf_inte"] = "derivar_atributo"
-
-USO_INICIAL["co_rg_inte"] = "exploracao_eda"
-
-USO_INICIAL["co_mu_inte"] = "exploracao_eda"
-
-
-# ------------------------------------------------------------
-# Textos de tratamento
-# ------------------------------------------------------------
-
-USO_INICIAL["out_antiv"] = "excluir_modelagem"
-
-USO_INICIAL["out_trat"] = "excluir_modelagem"
-
-
-# ------------------------------------------------------------
-# Coluna completamente vazia na versao atual
-# ------------------------------------------------------------
-
-USO_INICIAL["tabag"] = (
-    "indisponivel_se_100pct_vazio"
-)
-
-
-# ============================================================
-# VALIDACOES DA CLASSIFICACAO
-# ============================================================
-
-USOS_ESPERADOS = {
-    "sem_pri": "auditoria_temporal",
-    "saturacao": "modelo_a_nucleo",
-    "desc_resp": "modelo_b_ampliado",
-    "cs_escol_n": "modelo_b_ampliado",
-    "sg_uf": "modelo_b_ampliado",
-    "sg_uf_not": "exploracao_eda",
-    "co_regiona": "exploracao_eda",
-    "co_mun_not": "exploracao_eda",
-    "co_pais": "derivar_atributo",
-    "co_rg_resi": "exploracao_eda",
-    "co_mun_res": (
-        "reavaliar_apos_modelo_principal"
-    ),
-    "sg_uf_inte": "derivar_atributo",
-    "co_rg_inte": "exploracao_eda",
-    "co_mu_inte": "exploracao_eda",
-    "obes_imc": "reavaliar_apos_eda",
-    "out_antiv": "excluir_modelagem",
-    "out_trat": "excluir_modelagem",
-    "tabag": (
-        "indisponivel_se_100pct_vazio"
-    ),
-}
-
-divergencias_uso_inicial = []
-
-for coluna, uso_esperado in (
-    USOS_ESPERADOS.items()
-):
-    uso_observado = USO_INICIAL.get(
-        coluna
-    )
-
-    if uso_observado != uso_esperado:
-        divergencias_uso_inicial.append(
-            {
-                "coluna": coluna,
-                "uso_esperado": uso_esperado,
-                "uso_observado": uso_observado,
-            }
-        )
-
-divergencias_uso_inicial_df = pd.DataFrame(
-    divergencias_uso_inicial
-)
-
-if not divergencias_uso_inicial_df.empty:
-    display(
-        divergencias_uso_inicial_df
-    )
-
-    raise RuntimeError(
-        "Existem divergencias na classificacao "
-        "de USO_INICIAL."
-    )
-
-print(
-    "Classificacao de USO_INICIAL "
-    "validada com sucesso."
-)
-
-# ------------------------------------------------------------
-# 6. TRANSFORMACOES E RISCO TEMPORAL
-# ------------------------------------------------------------
-
-TRANSFORMACAO = {
-    "nu_notific": "Identificador tecnico; nao usar como preditor",
-    "dt_notific": "Auditoria temporal; nao usar data bruta",
-    "dt_sin_pri": "Derivar intervalo entre sintomas e internacao",
-    "sem_pri": (     "Auditar contra a semana derivada de dt_sin_pri; "     "não utilizar diretamente como preditora" ),
-    "hospital": "Filtro de elegibilidade",
-    "dt_interna": "Ancora temporal; derivar ano, mes, semana e intervalos",
-    "nu_idade_n": "Combinar com tp_idade para criar idade_anos",
-    "tp_idade": "Combinar com nu_idade_n",
-    "pac_cocbo": "Agrupar ocupacoes; evitar codigo bruto no piloto",
-    "pac_dscbo": "Usar para apoiar agrupamento; nao usar texto bruto",
-    "out_anim": "Categorizar respostas frequentes; nao usar texto bruto",
-    "outro_des": "Categorizar respostas frequentes; nao usar texto bruto",
-    "morb_desc": "Categorizar respostas frequentes; nao usar texto bruto",
-    "obes_imc": "Converter para numero e validar faixa plausivel",
-    "out_antiv": "Exploracao de texto",
-    "out_trat": "Exploracao de texto",
-    "evolucao": "Mapear cura = 0 e obito por SRAG = 1",
-    "dt_evoluca": "Auditoria; excluir dos preditores",
-    "dt_encerra": "Auditoria; excluir dos preditores",
-    "dt_digita": "Auditoria; excluir dos preditores",
-}
-
-COLUNAS_DATA_VACINA = [
-    "dt_ut_dose", "dt_vac_mae", "dt_doseuni", "dt_1_dose",
-    "dt_2_dose", "dose_1_cov", "dose_2_cov", "dose_ref",
-    "dose_2ref", "dose_adic", "dos_re_bi",
-]
-for coluna in COLUNAS_DATA_VACINA:
-    TRANSFORMACAO[coluna] = (
-        "Converter para data; usar apenas se anterior ou igual a dt_interna; "
-        "derivar intervalo"
-    )
-
-for coluna in ["dt_antivir", "dt_trt_cov"]:
-    TRANSFORMACAO[coluna] = (
-        "Converter para data; criar indicador de tratamento ate a admissao"
-    )
-
-for coluna in ["co_mun_not", "co_mun_res", "co_mu_inte"]:
-    TRANSFORMACAO[coluna] = "Alta cardinalidade; usar na EDA ou agregar"
-for coluna in ["co_regiona", "co_rg_resi", "co_rg_inte"]:
-    TRANSFORMACAO[coluna] = "Avaliar uso agregado por regional"
-for coluna in ["sg_uf_not", "sg_uf", "sg_uf_inte"]:
-    TRANSFORMACAO[coluna] = "Categorica; comparar modelo com e sem geografia"
-
-RISCO_TEMPORAL = {coluna: "baixo" for coluna in COLUNAS_DICIONARIO}
-for coluna in ["dt_interna", "desc_resp", "saturacao"]:
-    RISCO_TEMPORAL[coluna] = "confirmar_momento_medicao"
-for coluna in GRUPOS["tratamentos"]:
-    RISCO_TEMPORAL[coluna] = "alto_tratamento"
-for coluna in ["evolucao", "dt_evoluca", "dt_encerra", "dt_digita"]:
-    RISCO_TEMPORAL[coluna] = "proibido_como_preditor"
-for coluna in COLUNAS_DATA_VACINA:
-    RISCO_TEMPORAL[coluna] = "validar_data_antes_admissao"
-
-# ------------------------------------------------------------
-# 7. DECISOES QUE DEVEM FICAR COM VOCE
-# ------------------------------------------------------------
-
-DECISOES_USUARIO = {
-    "cs_etinia": (
-        "Reavaliar o uso detalhado depois da EDA "
-        "no denominador indígena."
-    ),
-    "obes_imc": (
-        "Reavaliar somente depois da auditoria "
-        "de valores e faixas plausíveis."
-    ),
-    "pac_cocbo": (
-        "Reavaliar agrupamento por grandes grupos "
-        "da CBO depois do modelo principal."
-    ),
-    "pac_dscbo": (
-        "Utilizar inicialmente somente para apoiar "
-        "a interpretação da CBO."
-    ),
-    "pov_ct": (
-        "Confirmar inclusão no Modelo B depois da EDA "
-        "descritiva do campo."
-    ),
-    "tp_pov_ct": (
-        "Manter inicialmente em EDA e subgrupos."
-    ),
-    "co_pais": (
-        "Confirmar o código do Brasil antes de derivar "
-        "residente_brasil."
-    ),
-}
-
-# ------------------------------------------------------------
-# 8. FUNCOES AUXILIARES
-# ------------------------------------------------------------
-
-def texto_normalizado(serie):
-    return (
-        serie.astype("string")
-        .str.strip()
-        .str.replace(
-            r"\.0$",
-            "",
-            regex=True,
-        )
-    )
-
-
-def valores_frequentes(serie, limite=10):
-    contagem = (
-        serie.value_counts(
-            dropna=False
-        )
-        .head(limite)
-    )
-
-    return " | ".join(
-        f"{str(valor)}: {int(quantidade)}"
-        for valor, quantidade in contagem.items()
-    )
-
-
-def missing_condicional(
-    dataframe,
-    coluna,
-    total_geral=None,
-    preenchido_geral=None,
-):
-    regra = REGRAS_CONDICIONAIS.get(
-        coluna
-    )
-
-    if regra is None:
-        total = (
-            int(total_geral)
-            if total_geral is not None
-            else len(dataframe)
-        )
-
-        preenchido = (
-            int(preenchido_geral)
-            if preenchido_geral is not None
-            else int(
-                dataframe[coluna].notna().sum()
-            )
-        )
-
-        percentual = (
-            preenchido / total * 100
-            if total
-            else np.nan
-        )
-
-        return (
-            total,
-            preenchido,
-            percentual,
-            "Populacao geral",
-            "",
-        )
-
-    condicionante = regra[
-        "condicionante"
-    ]
-
-    if condicionante not in dataframe.columns:
-        return (
-            np.nan,
-            np.nan,
-            np.nan,
-            regra["aplicabilidade"],
-            regra["decisao"],
-        )
-
-    mascara = texto_normalizado(
-        dataframe[condicionante]
-    ).isin(
-        regra["valores"]
-    )
-
-    total = int(
-        mascara.sum()
-    )
-
-    preenchido = int(
-        dataframe.loc[
-            mascara,
-            coluna,
-        ]
-        .notna()
-        .sum()
-    )
-
-    percentual = (
-        preenchido / total * 100
-        if total
-        else np.nan
-    )
-
-    return (
-        total,
-        preenchido,
-        percentual,
-        regra["aplicabilidade"],
-        regra["decisao"],
-    )
-
-
-def variacao_preenchimento_por_ano(
-    dataframe,
-    coluna,
-    ano_internacao_convertido,
-):
-    del dataframe
-    del ano_internacao_convertido
-
-    if coluna not in (
-        preenchimento_por_ano_internacao.columns
-    ):
-        return (
-            np.nan,
-            np.nan,
-            np.nan,
-            "",
-        )
-
-    tabela_coluna = (
-        preenchimento_por_ano_internacao[
-            [
-                "ano_internacao",
-                coluna,
-            ]
-        ]
-        .dropna(
-            subset=[
-                "ano_internacao",
-            ]
-        )
-        .copy()
-    )
-
-    tabela_coluna[coluna] = pd.to_numeric(
-        tabela_coluna[coluna],
-        errors="coerce",
-    )
-
-    tabela_coluna = tabela_coluna.dropna(
-        subset=[coluna]
-    )
-
-    if tabela_coluna.empty:
-        return (
-            np.nan,
-            np.nan,
-            np.nan,
-            "",
-        )
-
-    minimo = float(
-        tabela_coluna[coluna].min()
-    )
-
-    maximo = float(
-        tabela_coluna[coluna].max()
-    )
-
-    amplitude = maximo - minimo
-
-    anos = ",".join(
-        str(int(ano_valor))
-        for ano_valor in tabela_coluna[
-            "ano_internacao"
-        ]
-        .sort_values()
-        .tolist()
-    )
-
-    return (
-        minimo,
-        maximo,
-        amplitude,
-        anos,
-    )
-
-
-def tipo_analitico(coluna, serie):
-    if coluna.startswith("dt_") or coluna.startswith("dose_") or coluna == "dos_re_bi":
-        return "data"
-    if coluna in {"nu_idade_n", "obes_imc"}:
-        return "numerica_a_validar"
-    if coluna in {"out_anim", "outro_des", "morb_desc", "out_antiv", "out_trat", "pac_dscbo"}:
-        return "texto_livre"
-    if coluna in {"nu_notific", "pac_cocbo", "co_mun_not", "co_mun_res", "co_mu_inte", "co_regiona", "co_rg_resi", "co_rg_inte"}:
-        return "codigo_identificador"
-    cardinalidade = int(serie.nunique(dropna=True))
-    return "categorica" if cardinalidade <= 30 else "categorica_alta_cardinalidade"
-
-# ------------------------------------------------------------
-# 9. MONTAGEM DO DICIONARIO
-# ------------------------------------------------------------
-
-
-caminho_dicionario_existente = (
-    C.CONFIGS_DIR
-    / "dicionario_variaveis_v1.csv"
-)
-
-decisoes_existentes = {}
-
-if caminho_dicionario_existente.exists():
-    dicionario_anterior = pd.read_csv(
-        caminho_dicionario_existente,
-        encoding="utf-8-sig",
-        dtype="string",
-        keep_default_na=False,
-    )
-
-    for _, linha_anterior in (
-        dicionario_anterior.iterrows()
-    ):
-        coluna_anterior = str(
-            linha_anterior["coluna"]
-        ).strip()
-
-        decisoes_existentes[
-            coluna_anterior
-        ] = {
-            "decisao_final_usuario": str(
-                linha_anterior.get(
-                    "decisao_final_usuario",
-                    "",
-                )
-            ).strip(),
-            "justificativa_decisao_final": str(
-                linha_anterior.get(
-                    "justificativa_decisao_final",
-                    "",
-                )
-            ).strip(),
-        }
-
-# ============================================================
-# PREPARAÇÃO ÚNICA DA REFERÊNCIA TEMPORAL
-# ============================================================
-
-if (
-    "datas_convertidas" in globals()
-    and "dt_interna" in datas_convertidas.columns
-):
-    dt_interna_dicionario = (
-        datas_convertidas[
-            "dt_interna"
-        ]
-        .copy()
-    )
-else:
-    (
-        dt_interna_dicionario,
-        _,
-        _,
-    ) = converter_data_mista(
-        df["dt_interna"]
-    )
-
-ano_internacao_dicionario = (
-    dt_interna_dicionario
-    .dt.year
-)
-
-if len(
-    ano_internacao_dicionario
-) != len(
-    df
-):
-    raise RuntimeError(
-        "O ano da internação e o DataFrame "
-        "possuem quantidades diferentes de linhas."
-    )
-
-print(
-    "Referência temporal preparada uma única vez "
-    "para o dicionário."
-)
-
-
-# ============================================================
-# MONTAGEM DO DICIONÁRIO
-# ============================================================
-
-linhas = []
-
-total_colunas_dicionario = len(
-    COLUNAS_DICIONARIO
-)
-
-for indice_coluna, coluna in enumerate(
-    COLUNAS_DICIONARIO,
-    start=1,
-):
-    print(
-        f"[{indice_coluna:02d}/"
-        f"{total_colunas_dicionario:02d}] "
-        f"Processando {coluna}"
-    )
-
-    nome_amigavel = NOMES_AMIGAVEIS.get(
-        coluna,
-        "REVISAR NOME AMIGAVEL",
-    )
-
-    grupo = GRUPO_POR_COLUNA.get(
-        coluna,
-        "revisar_grupo",
-    )
-
-    decisao_existente = (
-        decisoes_existentes.get(
-            coluna,
-            {},
-        )
-    )
-
-    if coluna not in df.columns:
-        linhas.append(
-            {
-                "coluna": coluna,
-                "nome_amigavel": nome_amigavel,
-                "grupo": grupo,
-                "existe_no_dataframe": False,
-                "ponto_de_decisao": (
-                    "Coluna nao encontrada no "
-                    "DataFrame atual"
-                ),
-                "decisao_final_usuario": (
-                    decisao_existente.get(
-                        "decisao_final_usuario",
-                        "",
-                    )
-                ),
-                "justificativa_decisao_final": (
-                    decisao_existente.get(
-                        "justificativa_decisao_final",
-                        "",
-                    )
-                ),
-            }
-        )
-
-        continue
-
-    serie = df[coluna]
-
-    total = len(serie)
-
-    preenchido = int(
-        serie.notna().sum()
-    )
-
-    ausente = (
-        total
-        - preenchido
-    )
-
-    pct_preenchido = (
-        preenchido
-        / total
-        * 100
-        if total
-        else np.nan
-    )
-
-    pct_ausente = (
-        ausente
-        / total
-        * 100
-        if total
-        else np.nan
-    )
-
-    quantidade_valores_distintos = int(
-        serie.nunique(
-            dropna=True
-        )
-    )
-
-    (
-    n_aplicavel,
-    n_preenchido_aplicavel,
-    pct_aplicavel,
-    aplicabilidade,
-    decisao_regra,
-) = missing_condicional(
-    dataframe=df,
-    coluna=coluna,
-    total_geral=total,
-    preenchido_geral=preenchido,
-)
-
-    (
-        minimo_ano,
-        maximo_ano,
-        amplitude_ano,
-        anos,
-    ) = variacao_preenchimento_por_ano(
-        dataframe=df,
-        coluna=coluna,
-        ano_internacao_convertido=(
-            ano_internacao_dicionario
-        ),
-    )
-
-    decisoes = []
-
-    if coluna in DECISOES_USUARIO:
-        decisoes.append(
-            DECISOES_USUARIO[
-                coluna
-            ]
-        )
-
-    if decisao_regra:
-        decisoes.append(
-            decisao_regra
-        )
-
-    if pct_ausente == 100:
-        decisoes.append(
-            "Coluna 100% vazia na versao atual; "
-            "manter documentada e fora dos modelos"
-        )
-
-    elif pct_ausente >= 90:
-        decisoes.append(
-            "Avaliar apenas no denominador "
-            "aplicavel ou em sensibilidade"
-        )
-
-    if (
-        pd.notna(
-            amplitude_ano
-        )
-        and amplitude_ano >= 20
-    ):
-        decisoes.append(
-            "Preenchimento varia pelo menos "
-            "20 pontos percentuais entre "
-            f"{ANO_INICIAL_COORTE} e "
-            f"{ANO_FINAL_COORTE}"
-        )
-
-    USOS_NAO_PREDITORES = {
-        "estrutura_coorte",
-        "auditoria",
-        "auditoria_temporal",
-        "rotulo",
-        "exploracao_eda",
-        "exploracao_texto",
-        "exploracao_subgrupo",
-        "apoio_interpretacao",
-        "derivar_atributo",
-        "excluir_modelagem",
-        "reavaliar_apos_modelo_principal",
-        "reavaliar_apos_eda",
-        "indisponivel_se_100pct_vazio",
-    }
-
-    uso_inicial_coluna = (
-        USO_INICIAL.get(
-            coluna,
-            "avaliar",
-        )
-    )
-
-    if (
-    quantidade_valores_distintos > 100
-    and uso_inicial_coluna
-    not in USOS_NAO_PREDITORES
-    ):
-        decisoes.append(
-            "Alta cardinalidade; evitar uso bruto "
-            "no primeiro piloto"
-        )
-
-    linhas.append(
-        {
-            "coluna": coluna,
-            "nome_amigavel": nome_amigavel,
-            "grupo": grupo,
-            "existe_no_dataframe": True,
-            "dtype_atual": str(
-                serie.dtype
-            ),
-            "tipo_analitico_inferido": (
-                tipo_analitico(
-                    coluna,
-                    serie,
-                )
-            ),
-            "uso_inicial_sugerido": (
-                uso_inicial_coluna
-            ),
-            "aplicabilidade": aplicabilidade,
-            "transformacao_sugerida": (
-                TRANSFORMACAO.get(
-                    coluna,
-                    (
-                        "Categorica; preservar sim, "
-                        "nao, ignorado e vazio"
-                    ),
-                )
-            ),
-            "risco_temporal": (
-                RISCO_TEMPORAL.get(
-                    coluna,
-                    "revisar",
-                )
-            ),
-            "quantidade_total": total,
-            "quantidade_preenchida": preenchido,
-            "quantidade_ausente": ausente,
-            "percentual_preenchido": round(
-                pct_preenchido,
-                6,
-            ),
-            "percentual_ausente": round(
-                pct_ausente,
-                6,
-            ),
-            "valores_distintos_sem_ausente": (
-                quantidade_valores_distintos
-            ),
-            "valores_frequentes_amostra": (
-                valores_frequentes(
-                    serie
-                )
-            ),
-            "n_populacao_aplicavel": (
-                n_aplicavel
-            ),
-            "n_preenchido_aplicavel": (
-                n_preenchido_aplicavel
-            ),
-            "percentual_preenchido_aplicavel": (
-                round(
-                    pct_aplicavel,
-                    6,
-                )
-                if pd.notna(
-                    pct_aplicavel
-                )
-                else np.nan
-            ),
-            "preenchimento_min_ano": (
-                round(
-                    minimo_ano,
-                    6,
-                )
-                if pd.notna(
-                    minimo_ano
-                )
-                else np.nan
-            ),
-            "preenchimento_max_ano": (
-                round(
-                    maximo_ano,
-                    6,
-                )
-                if pd.notna(
-                    maximo_ano
-                )
-                else np.nan
-            ),
-            "amplitude_preenchimento_ano": (
-                round(
-                    amplitude_ano,
-                    6,
-                )
-                if pd.notna(
-                    amplitude_ano
-                )
-                else np.nan
-            ),
-            "anos_observados": anos,
-            "ponto_de_decisao": (
-                " | ".join(
-                    dict.fromkeys(
-                        decisoes
-                    )
-                )
-            ),
-            "decisao_final_usuario": (
-                decisao_existente.get(
-                    "decisao_final_usuario",
-                    "",
-                )
-            ),
-            "justificativa_decisao_final": (
-                decisao_existente.get(
-                    "justificativa_decisao_final",
-                    "",
-                )
-            ),
-        }
-    )
-
-dicionario_variaveis = pd.DataFrame(
-    linhas
-)
-
-print(
-    "Montagem do dicionário concluída:",
-    len(
-        dicionario_variaveis
-    ),
-    "variáveis.",
-)
-
-# ------------------------------------------------------------
-# 10. VALIDACOES DO RESULTADO
-# ------------------------------------------------------------
-
-assert len(dicionario_variaveis) == len(COLUNAS_DICIONARIO)
-assert dicionario_variaveis["coluna"].duplicated().sum() == 0
-
-colunas_nao_encontradas = dicionario_variaveis.loc[
-    ~dicionario_variaveis["existe_no_dataframe"].fillna(False),
-    "coluna",
-].tolist()
-
-colunas_sem_nome = dicionario_variaveis.loc[
-    dicionario_variaveis["nome_amigavel"].eq("REVISAR NOME AMIGAVEL"),
-    "coluna",
-].tolist()
-
-colunas_sem_grupo = dicionario_variaveis.loc[
-    dicionario_variaveis["grupo"].eq("revisar_grupo"),
-    "coluna",
-].tolist()
-
-# ------------------------------------------------------------
-# 11. SALVAMENTO
-# ------------------------------------------------------------
-
-if "C" in globals() and hasattr(C, "CONFIGS_DIR"):
-    diretorio_saida = Path(C.CONFIGS_DIR)
-elif "C" in globals() and hasattr(C, "TABLES_DIR"):
-    diretorio_saida = Path(C.TABLES_DIR)
-else:
-    diretorio_saida = Path.cwd() / "outputs" / "tables"
-
-diretorio_saida.mkdir(parents=True, exist_ok=True)
-
-caminho_completo = (
-C.CONFIGS_DIR
-/ "dicionario_variaveis_v1.csv"
-)
-caminho_revisao = (
-    C.TABLES_DIR
-    / "dicionario_variaveis_revisao.csv"
-)
-
-COLUNAS_REVISAO = [
-    "coluna",
-    "nome_amigavel",
-    "grupo",
-    "uso_inicial_sugerido",
-    "aplicabilidade",
-    "transformacao_sugerida",
-    "risco_temporal",
-    "percentual_ausente",
-    "percentual_preenchido_aplicavel",
-    "valores_distintos_sem_ausente",
-    "amplitude_preenchimento_ano",
-    "ponto_de_decisao",
-    "decisao_final_usuario",
-    "justificativa_decisao_final",
-]
-
-dicionario_revisao = dicionario_variaveis[COLUNAS_REVISAO].copy()
-
-dicionario_revisao.to_csv(
-    caminho_revisao,
-    index=False,
-    encoding="utf-8-sig",
-)
-
-dicionario_variaveis.to_csv(
-caminho_completo,
-index=False,
-encoding="utf-8-sig",
-)
-
-
-# ------------------------------------------------------------
-# 12. DEFINIÇÕES, RESUMO, DECISOES PENDENTES
-# ------------------------------------------------------------
-
-resumo = {
-    "total_colunas_solicitadas": len(COLUNAS_DICIONARIO),
-    "total_colunas_geradas": len(dicionario_variaveis),
-    "colunas_nao_encontradas": colunas_nao_encontradas,
-    "colunas_sem_nome_amigavel": colunas_sem_nome,
-    "colunas_sem_grupo": colunas_sem_grupo,
-    "arquivo_completo": str(caminho_completo),
-    "arquivo_revisao": str(caminho_revisao),
-}
-
-mascara_tem_ponto_decisao = (
-    dicionario_revisao[
-        "ponto_de_decisao"
-    ]
-    .fillna("")
-    .str.strip()
-    .ne("")
-)
-
-mascara_sem_decisao_final = (
-    dicionario_revisao[
-        "decisao_final_usuario"
-    ]
-    .fillna("")
-    .str.strip()
-    .eq("")
-)
-
-decisoes_pendentes = (
-    dicionario_revisao.loc[
-        (
-            mascara_tem_ponto_decisao
-            & mascara_sem_decisao_final
-        ),
-        [
-            "coluna",
-            "nome_amigavel",
-            "grupo",
-            "uso_inicial_sugerido",
-            "percentual_ausente",
-            "percentual_preenchido_aplicavel",
-            "amplitude_preenchimento_ano",
-            "ponto_de_decisao",
-        ],
-    ]
-    .sort_values(
-        [
-            "grupo",
-            "coluna",
-        ]
-    )
-    .reset_index(drop=True)
-)
-
-print()
-print("=" * 80)
-print("RESUMO DA GERAÇÃO DO DICIONÁRIO")
-print("=" * 80)
-
-print(
-    json.dumps(
-        resumo,
-        ensure_ascii=False,
-        indent=2,
-        default=str,
-    )
-)
-
-print()
-print(
-    "Quantidade de pontos de revisão:",
-    len(decisoes_pendentes),
-)
-
-print(
-    "Dicionário operacional salvo em:",
-    caminho_completo,
-)
-
-print(
-    "Visão reduzida salva em:",
-    caminho_revisao,
-)
-
-display(
-    dicionario_revisao.head(20)
-)
-
-print()
-print(
-    "Arquivo completo salvo em:",
-    caminho_completo,
-)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Classificacao de USO_INICIAL validada com sucesso.
-Referência temporal preparada uma única vez para o dicionário.
-[01/88] Processando nu_notific
-[02/88] Processando dt_notific
-[03/88] Processando dt_sin_pri
-[04/88] Processando sem_pri
-[05/88] Processando hospital
-[06/88] Processando dt_interna
-[07/88] Processando cs_sexo
-[08/88] Processando nu_idade_n
-[09/88] Processando tp_idade
-[10/88] Processando cs_gestant
-[11/88] Processando cs_raca
-[12/88] Processando cs_etinia
-[13/88] Processando cs_escol_n
-[14/88] Processando cs_zona
-[15/88] Processando ave_suino
-[16/88] Processando out_anim
-[17/88] Processando febre
-[18/88] Processando tosse
-[19/88] Processando garganta
-[20/88] Processando dispneia
-[21/88] Processando desc_resp
-[22/88] Processando saturacao
-[23/88] Processando diarreia
-[24/88] Processando vomito
-[25/88] Processando dor_abd
-[26/88] Processando fadiga
-[27/88] Processando perd_olft
-[28/88] Processando perd_pala
-[29/88] Processando puerpera
-[30/88] Processando cardiopati
-[31/88] Processando hematologi
-[32/88] Processando sind_down
-[33/88] Processando hepatica
-[34/88] Processando asma
-[35/88] Processando diabetes
-[36/88] Processando neurologic
-[37/88] Processando pneumopati
-[38/88] Processando imunodepre
-[39/88] Processando renal
-[40/88] Processando obesidade
-[41/88] Processando tabag
-[42/88] Processando outro_sin
-[43/88] Processando outro_des
-[44/88] Processando obes_imc
-[45/88] Processando out_morbi
-[46/88] Processando morb_desc
-[47/88] Processando out_antiv
-[48/88] Processando out_trat
-[49/88] Processando sg_uf_not
-[50/88] Processando co_regiona
-[51/88] Processando co_mun_not
-[52/88] Processando co_pais
-[53/88] Processando sg_uf
-[54/88] Processando co_rg_resi
-[55/88] Processando co_mun_res
-[56/88] Processando sg_uf_inte
-[57/88] Processando co_rg_inte
-[58/88] Processando co_mu_inte
-[59/88] Processando vacina
-[60/88] Processando dt_ut_dose
-[61/88] Processando mae_vac
-[62/88] Processando dt_vac_mae
-[63/88] Processando m_amamenta
-[64/88] Processando dt_doseuni
-[65/88] Processando dt_1_dose
-[66/88] Processando dt_2_dose
-[67/88] Processando vacina_cov
-[68/88] Processando dose_1_cov
-[69/88] Processando dose_2_cov
-[70/88] Processando dose_ref
-[71/88] Processando dose_2ref
-[72/88] Processando dose_adic
-[73/88] Processando dos_re_bi
-[74/88] Processando pac_cocbo
-[75/88] Processando pac_dscbo
-[76/88] Processando pov_ct
-[77/88] Processando tp_pov_ct
-[78/88] Processando estrang
-[79/88] Processando antiviral
-[80/88] Processando tp_antivir
-[81/88] Processando dt_antivir
-[82/88] Processando trat_cov
-[83/88] Processando tipo_trat
-[84/88] Processando dt_trt_cov
-[85/88] Processando evolucao
-[86/88] Processando dt_evoluca
-[87/88] Processando dt_encerra
-[88/88] Processando dt_digita
-Montagem do dicionário concluída: 88 variáveis.
-
-================================================================================
-RESUMO DA GERAÇÃO DO DICIONÁRIO
-================================================================================
-{
-  "total_colunas_solicitadas": 88,
-  "total_colunas_geradas": 88,
-  "colunas_nao_encontradas": [],
-  "colunas_sem_nome_amigavel": [],
-  "colunas_sem_grupo": [],
-  "arquivo_completo": "<REPO>\\configs\\dicionario_variaveis_v1.csv",
-  "arquivo_revisao": "<REPO>\\outputs\\tables\\dicionario_variaveis_revisao.csv"
-}
-
-Quantidade de pontos de revisão: 36
-Dicionário operacional salvo em: <REPO>\configs\dicionario_variaveis_v1.csv
-Visão reduzida salva em: <REPO>\outputs\tables\dicionario_variaveis_revisao.csv
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna                                     nome_amigavel  \
-0   nu_notific                             Numero da notificacao   
-1   dt_notific                               Data da notificacao   
-2   dt_sin_pri                       Data dos primeiros sintomas   
-3      sem_pri      Semana epidemiologica dos primeiros sintomas   
-4     hospital                                 Houve internacao?   
-5   dt_interna                       Data da internacao por SRAG   
-6      cs_sexo                                              Sexo   
-7   nu_idade_n                                   Idade informada   
-8     tp_idade             Unidade da idade: dias, meses ou anos   
-9   cs_gestant                              Situacao gestacional   
-10     cs_raca                                       Raca ou cor   
-11   cs_etinia                                    Etnia indigena   
-12  cs_escol_n                                      Escolaridade   
-13     cs_zona                                Zona de residencia   
-14   ave_suino  Contato direto com aves, suinos ou outro animal?   
-15    out_anim                     Especificacao do outro animal   
-16       febre                                             Febre   
-17       tosse                                             Tosse   
-18    garganta                                   Dor de garganta   
-19    dispneia                                          Dispneia   
-
-                         grupo uso_inicial_sugerido  \
-0             estrutura_coorte     estrutura_coorte   
-1             estrutura_coorte     estrutura_coorte   
-2             estrutura_coorte     estrutura_coorte   
-3             estrutura_coorte   auditoria_temporal   
-4             estrutura_coorte     estrutura_coorte   
-5             estrutura_coorte     estrutura_coorte   
-6   demografia_contexto_social      modelo_a_nucleo   
-7   demografia_contexto_social      modelo_a_nucleo   
-8   demografia_contexto_social      modelo_a_nucleo   
-9   demografia_contexto_social      modelo_a_nucleo   
-10  demografia_contexto_social      modelo_a_nucleo   
-11  demografia_contexto_social  exploracao_subgrupo   
-12  demografia_contexto_social    modelo_b_ampliado   
-13  demografia_contexto_social      modelo_a_nucleo   
-14            exposicao_animal      modelo_a_nucleo   
-15            exposicao_animal     exploracao_texto   
-16                    sintomas      modelo_a_nucleo   
-17                    sintomas      modelo_a_nucleo   
-18                    sintomas      modelo_a_nucleo   
-19                    sintomas      modelo_a_nucleo   
-
-                            aplicabilidade  \
-0                          Populacao geral   
-1                          Populacao geral   
-2                          Populacao geral   
-3                          Populacao geral   
-4                          Populacao geral   
-5                          Populacao geral   
-6                          Populacao geral   
-7                          Populacao geral   
-8                          Populacao geral   
-9                          Populacao geral   
-10                         Populacao geral   
-11      Registros com raca ou cor indigena   
-12                         Populacao geral   
-13                         Populacao geral   
-14                         Populacao geral   
-15  Registros com contato com outro animal   
-16                         Populacao geral   
-17                         Populacao geral   
-18                         Populacao geral   
-19                         Populacao geral   
-
-                               transformacao_sugerida  \
-0       Identificador tecnico; nao usar como preditor   
-1             Auditoria temporal; nao usar data bruta   
-2       Derivar intervalo entre sintomas e internacao   
-3   Auditar contra a semana derivada de dt_sin_pri...   
-4                             Filtro de elegibilidade   
-5   Ancora temporal; derivar ano, mes, semana e in...   
-6    Categorica; preservar sim, nao, ignorado e vazio   
-7         Combinar com tp_idade para criar idade_anos   
-8                             Combinar com nu_idade_n   
-9    Categorica; preservar sim, nao, ignorado e vazio   
-10   Categorica; pres
-... [4964 characters omitted] ...
-                          
-13                                                                             
-14                                                                             
-15  Confirmar se ave_suino = 3 significa outro ani...  decidir_depois_da_eda   
-16                                                                             
-17                                                                             
-18  Preenchimento varia pelo menos 20 pontos perce...                          
-19                                                                             
-
-                          justificativa_decisao_final  
-0                                                      
-1                                                      
-2   Fonte para o intervalo entre sintomas e intern...  
-3                                                      
-4                                                      
-5   Âncora temporal da coorte. Intervalos negativo...  
-6                                                      
-7                                                      
-8                                                      
-9                                                      
-10                                                     
-11                                                     
-12                                                     
-13                                                     
-14                                                     
-15  Preservar para EDA e possível categorização si...  
-16                                                     
-17                                                     
-18                                                     
-19                                                     
-[non-text output omitted: text/html]
-```
-
-**Output 3 (stream:stdout)**
-
-```text
-
-Arquivo completo salvo em: <REPO>\configs\dicionario_variaveis_v1.csv
-```
-
-### Cell 48 [markdown]
-
-```markdown
-## Comparação do preenchimento global com a população aplicável
-
-Campos condicionais podem apresentar ausência elevada quando o
-denominador utiliza toda a base.
-
-A comparação abaixo distingue:
-
-- preenchimento global, calculado sobre todos os registros;
-- preenchimento aplicável, calculado somente entre registros que atendem
-  à condição definida para o campo.
-
-Essa diferença é importante para evitar a exclusão de variáveis apenas
-com base na ausência global.
-
-As regras de aplicabilidade permanecem sujeitas à validação do
-dicionário e não representam decisões definitivas de modelagem.
-```
-
-### Cell 49 [code] · In [ ]
-
-```python
-
-```
-
-### Cell 50 [code] · In [41]
-
-```python
-COLUNAS_PREENCHIMENTO_APLICAVEL = [
-    "coluna",
-    "nome_amigavel",
-    "aplicabilidade",
-    "quantidade_total",
-    "quantidade_preenchida",
-    "n_populacao_aplicavel",
-    "n_preenchido_aplicavel",
-    "percentual_preenchido",
-    "percentual_preenchido_aplicavel",
-]
-
-colunas_preenchimento_aplicavel_ausentes = [
-    coluna
-    for coluna in COLUNAS_PREENCHIMENTO_APLICAVEL
-    if coluna not in dicionario_variaveis.columns
-]
-
-if colunas_preenchimento_aplicavel_ausentes:
-    raise KeyError(
-        "O dicionário de variáveis não contém as colunas necessárias: "
-        f"{colunas_preenchimento_aplicavel_ausentes}"
-    )
-
-preenchimento_aplicavel_grafico = (
-    dicionario_variaveis[
-        COLUNAS_PREENCHIMENTO_APLICAVEL
-    ]
-    .copy()
-)
-
-COLUNAS_NUMERICAS_PREENCHIMENTO = [
-    "quantidade_total",
-    "quantidade_preenchida",
-    "n_populacao_aplicavel",
-    "n_preenchido_aplicavel",
-    "percentual_preenchido",
-    "percentual_preenchido_aplicavel",
-]
-
-for coluna in COLUNAS_NUMERICAS_PREENCHIMENTO:
-    preenchimento_aplicavel_grafico[
-        coluna
-    ] = pd.to_numeric(
-        preenchimento_aplicavel_grafico[
-            coluna
-        ],
-        errors="coerce",
-    )
-
-preenchimento_aplicavel_grafico = (
-    preenchimento_aplicavel_grafico.loc[
-        preenchimento_aplicavel_grafico[
-            "percentual_preenchido_aplicavel"
-        ].notna()
-        & preenchimento_aplicavel_grafico[
-            "n_populacao_aplicavel"
-        ].gt(0)
-    ]
-    .copy()
-)
-
-if preenchimento_aplicavel_grafico.empty:
-    raise ValueError(
-        "Nenhuma variável possui população aplicável "
-        "calculada para a comparação."
-    )
-
-preenchimento_aplicavel_grafico[
-    "diferenca_pontos_percentuais"
-] = (
-    preenchimento_aplicavel_grafico[
-        "percentual_preenchido_aplicavel"
-    ]
-    .sub(
-        preenchimento_aplicavel_grafico[
-            "percentual_preenchido"
-        ]
-    )
-)
-
-percentuais_globais_validos = (
-    preenchimento_aplicavel_grafico[
-        "percentual_preenchido"
-    ]
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
-
-percentuais_aplicaveis_validos = (
-    preenchimento_aplicavel_grafico[
-        "percentual_preenchido_aplicavel"
-    ]
-    .between(
-        0,
-        100,
-        inclusive="both",
-    )
-    .all()
-)
-
-if not percentuais_globais_validos:
-    raise RuntimeError(
-        "Existem percentuais globais fora do intervalo "
-        "de 0% a 100%."
-    )
-
-if not percentuais_aplicaveis_validos:
-    raise RuntimeError(
-        "Existem percentuais aplicáveis fora do intervalo "
-        "de 0% a 100%."
-    )
-
-preenchimento_aplicavel_grafico[
-    "rotulo"
-] = (
-    preenchimento_aplicavel_grafico[
-        "nome_amigavel"
-    ]
-    .astype("string")
-    .str.strip()
-)
-
-mascara_rotulo_invalido = (
-    preenchimento_aplicavel_grafico[
-        "rotulo"
-    ]
-    .isna()
-    | preenchimento_aplicavel_grafico[
-        "rotulo"
-    ]
-    .eq("")
-    | preenchimento_aplicavel_grafico[
-        "rotulo"
-    ]
-    .eq(
-        "REVISAR NOME AMIGAVEL"
-    )
-)
-
-preenchimento_aplicavel_grafico.loc[
-    mascara_rotulo_invalido,
-    "rotulo",
-] = (
-    preenchimento_aplicavel_grafico.loc[
-        mascara_rotulo_invalido,
-        "coluna",
-    ]
-)
-
-preenchimento_aplicavel_grafico[
-    "rotulo"
-] = (
-    preenchimento_aplicavel_grafico[
-        "rotulo"
-    ]
-    .astype("string")
-    + " ("
-    + preenchimento_aplicavel_grafico[
-        "coluna"
-    ]
-    .astype("string")
-    + ")"
-)
-
-preenchimento_aplicavel_grafico = (
-    preenchimento_aplicavel_grafico
-    .sort_values(
-        [
-            "diferenca_pontos_percentuais",
-            "coluna",
-        ],
-        ascending=[
-            True,
-            True,
-        ],
-    )
-    .reset_index(drop=True)
-)
-
-posicoes = np.arange(
-    len(
-        preenchimento_aplicavel_grafico
-    )
-)
-
-largura_barra = 0.36
-
-altura_figura = max(
-    6,
-    len(
-        preenchimento_aplicavel_grafico
-    )
-    * 0.65,
-)
-
-figura_preenchimento_aplicavel, eixo_preenchimento_aplicavel = (
-    plt.subplots(
-        figsize=(
-            13,
-            altura_figura,
-        )
-    )
-)
-
-barras_globais = eixo_preenchimento_aplicavel.barh(
-    posicoes
-    - largura_barra
-    / 2,
-    preenchimento_aplicavel_grafico[
-        "percentual_preenchido"
-    ],
-    height=largura_barra,
-    color="tab:gray",
-    label="Base completa",
-)
-
-barras_aplicaveis = eixo_preenchimento_aplicavel.barh(
-    posicoes
-    + largura_barra
-    / 2,
-    preenchimento_aplicavel_grafico[
-        "percentual_preenchido_aplicavel"
-    ],
-    height=largura_barra,
-    color="tab:blue",
-    label="População aplicável",
-)
-
-eixo_preenchimento_aplicavel.set_yticks(
-    posicoes
-)
-
-eixo_preenchimento_aplicavel.set_yticklabels(
-    preenchimento_aplicavel_grafico[
-        "rotulo"
-    ]
-)
-
-eixo_preenchimento_aplicavel.set_title(
-    "Preenchimento global e na população aplicável"
-)
-
-eixo_preenchimento_aplicavel.set_xlabel(
-    "Percentual preenchido"
-)
-
-eixo_preenchimento_aplicavel.set_ylabel(
-    "Variável condicional"
-)
-
-eixo_preenchimento_aplicavel.set_xlim(
-    0,
-    105,
-)
-
-eixo_preenchimento_aplicavel.xaxis.set_major_formatter(
-    plt.FuncFormatter(
-        lambda valor, posicao: (
-            f"{valor:.0f}%"
-        )
-    )
-)
-
-eixo_preenchimento_aplicavel.grid(
-    axis="x",
-    alpha=0.20,
-)
-
-eixo_preenchimento_aplicavel.legend(
-    title="Denominador"
-)
-
-for barras in [
-    barras_globais,
-    barras_aplicaveis,
-]:
-    for barra in barras:
-        valor = float(
-            barra.get_width()
-        )
-
-        eixo_preenchimento_aplicavel.text(
-            valor,
-            barra.get_y()
-            + barra.get_height()
-            / 2,
-            f" {valor:.1f}%",
-            ha="left",
-            va="center",
-            fontsize=8,
-        )
-
-figura_preenchimento_aplicavel.text(
-    0.01,
-    0.01,
-    (
-        "A população aplicável é definida pelas regras condicionais "
-        "do dicionário operacional. Diferenças entre os percentuais "
-        "não determinam inclusão automática nos modelos."
-    ),
-    fontsize=8,
-)
-
-figura_preenchimento_aplicavel.tight_layout(
-    rect=[
-        0,
-        0.05,
-        1,
-        1,
-    ]
-)
-
-plt.show()
-
-plt.close(
-    figura_preenchimento_aplicavel
-)
-
-display(
-    preenchimento_aplicavel_grafico[
-        [
-            "coluna",
-            "aplicabilidade",
-            "quantidade_total",
-            "quantidade_preenchida",
-            "n_populacao_aplicavel",
-            "n_preenchido_aplicavel",
-            "percentual_preenchido",
-            "percentual_preenchido_aplicavel",
-            "diferenca_pontos_percentuais",
-        ]
-    ]
-    .sort_values(
-        "diferenca_pontos_percentuais",
-        ascending=False,
-    )
-    .reset_index(drop=True)
-)
-```
-
-**Output 1 (display_data)**
-
-```text
-<Figure size 1300x5720 with 1 Axes>
-[non-text output omitted: image/png]
-```
-
-**Output 2 (display_data)**
-
-```text
-        coluna                                     aplicabilidade  \
-0    tp_pov_ct  Registros pertencentes a povo ou comunidade tr...   
-1   tp_antivir                     Registros com uso de antiviral   
-2   dt_antivir                     Registros com uso de antiviral   
-3    morb_desc       Registros com outro fator de risco informado   
-4     out_anim             Registros com contato com outro animal   
-..         ...                                                ...   
-83      vomito                                    Populacao geral   
-84    tp_idade                                    Populacao geral   
-85    trat_cov                                    Populacao geral   
-86      vacina                                    Populacao geral   
-87  vacina_cov                                    Populacao geral   
-
-    quantidade_total  quantidade_preenchida  n_populacao_aplicavel  \
-0            4666910                  12557                  12516   
-1            4666910                 366885                 393559   
-2            4666910                 347712                 393559   
-3            4666910                1063125                1075640   
-4            4666910                   5276                   7042   
-..               ...                    ...                    ...   
-83           4666910                3328265                4666910   
-84           4666910                4666910                4666910   
-85           4666910                 993122                4666910   
-86           4666910                3472523                4666910   
-87           4666910                3135685                4666910   
-
-    n_preenchido_aplicavel  percentual_preenchido  \
-0                    12516               0.269065   
-1                   366875               7.861412   
-2                   347702               7.450583   
-3                  1063125              22.780062   
-4                     5276               0.113051   
-..                     ...                    ...   
-83                 3328265              71.316246   
-84                 4666910             100.000000   
-85                  993122              21.280076   
-86                 3472523              74.407327   
-87                 3135685              67.189747   
-
-    percentual_preenchido_aplicavel  diferenca_pontos_percentuais  
-0                        100.000000                     99.730935  
-1                         93.219822                     85.358410  
-2                         88.348126                     80.897543  
-3                         98.836507                     76.056445  
-4                         74.921897                     74.808846  
-..                              ...                           ...  
-83                        71.316246                      0.000000  
-84                       100.000000                      0.000000  
-85                        21.280076                      0.000000  
-86                        74.407327                      0.000000  
-87                        67.189747                      0.000000  
-
-[88 rows x 9 columns]
-[non-text output omitted: text/html]
-```
-
 ## `notebooks/B/B_06_eda_temporal_clustering.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `6.8 MB` · modified `2026-10-17 19:30 UTC`
+- Size: `6.8 MB` · modified `2026-10-18 15:51 UTC`
 - SHA-256: `2f0e06d523807ac2b8d03ef3dc4ad67589f0c5de8f5df6678854db3d4f05b73a`
 
 - Cells: `147` (`119` code, `28` markdown)
@@ -10100,7 +254,7 @@ Colunas solicitadas pelo B_06: 55
 Colunas que serão carregadas: 44
 Colunas opcionais ausentes, que poderão ser derivadas: ['sexo_categoria', 'idade_anos', 'faixa_etaria', 'flag_intervalo_invalido', 'n_sintomas_confirmados', 'n_sintomas_avaliados', 'n_comorbidades_confirmadas', 'n_comorbidades_avaliadas', 'flag_multimorbidade', 'sin_semana', 'cos_semana']
 Coorte utilizada: coorte_desenvolvimento
-Caminho: <REPO>\data\analytical\coorte_provisoria_b.parquet
+Caminho: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
 Backend: pyarrow
 Dimensão carregada: (3915136, 44)
 Memória após leitura: 1,455.58 MB
@@ -10459,8 +613,8 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Figura de volume: <REPO>\reports\figures\eda_02_volume_por_ano.png
-Figura do desfecho: <REPO>\reports\figures\eda_02_proporcao_obito_por_ano.png
+Figura de volume: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_volume_por_ano.png
+Figura do desfecho: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
 ```
 
 ### Cell 7 [code] · In [363]
@@ -10908,7 +1062,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_volume_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_volume_por_ano.png
 ```
 
 ### Cell 11 [code] · In [367]
@@ -11052,7 +1206,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_proporcao_obito_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
 ```
 
 ### Cell 12 [code] · In [368]
@@ -11100,9 +1254,9 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Volume por ano salvo em: <REPO>\outputs\tables\eda_02_volume_por_ano.csv
-Distribuição do alvo salva em: <REPO>\outputs\tables\eda_02_alvo_por_ano.csv
-Resumo temporal salvo em: <REPO>\outputs\tables\eda_02_resumo_temporal.csv
+Volume por ano salvo em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_volume_por_ano.csv
+Distribuição do alvo salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_alvo_por_ano.csv
+Resumo temporal salvo em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_temporal.csv
 ```
 
 ### Cell 13 [code] · In [369]
@@ -11319,9 +1473,9 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Tabela de idade: <REPO>\outputs\tables\eda_02_idade_por_ano.csv
-Tabela de faixa etária: <REPO>\outputs\tables\eda_02_faixa_etaria_por_ano.csv
-Tabela de sexo: <REPO>\outputs\tables\eda_02_sexo_por_ano.csv
+Tabela de idade: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_idade_por_ano.csv
+Tabela de faixa etária: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_faixa_etaria_por_ano.csv
+Tabela de sexo: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_sexo_por_ano.csv
 ```
 
 ### Cell 16 [code] · In [371]
@@ -12214,7 +2368,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_idade_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_idade_por_ano.png
 ```
 
 ### Cell 22 [code] · In [377]
@@ -12326,7 +2480,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_faixa_etaria_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_faixa_etaria_por_ano.png
 ```
 
 ### Cell 23 [code] · In [378]
@@ -12722,9 +2876,9 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Tabela anual de preenchimento: <REPO>\outputs\tables\eda_02_preenchimento_por_variavel_ano.csv
-Resumo de preenchimento: <REPO>\outputs\tables\eda_02_resumo_preenchimento_variaveis.csv
-Figura de variação: <REPO>\reports\figures\eda_02_variacao_preenchimento.png
+Tabela anual de preenchimento: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_preenchimento_por_variavel_ano.csv
+Resumo de preenchimento: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_preenchimento_variaveis.csv
+Figura de variação: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
 ```
 
 ### Cell 27 [code] · In [381]
@@ -13630,7 +3784,7 @@ print(
 **Output 3 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_variacao_preenchimento.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
 ```
 
 ### Cell 31 [code] · In [385]
@@ -13984,9 +4138,9 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Tabela de sintomas: <REPO>\outputs\tables\eda_02_sintomas_por_ano.csv
-Tabela de comorbidades: <REPO>\outputs\tables\eda_02_comorbidades_por_ano.csv
-Tabela de contadores clínicos: <REPO>\outputs\tables\eda_02_contadores_clinicos_por_ano.csv
+Tabela de sintomas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_sintomas_por_ano.csv
+Tabela de comorbidades: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_comorbidades_por_ano.csv
+Tabela de contadores clínicos: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_contadores_clinicos_por_ano.csv
 ```
 
 ### Cell 35 [code] · In [388]
@@ -15397,7 +5551,7 @@ criar_grafico_clinico_temporal(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_sintomas_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_sintomas_por_ano.png
 ```
 
 **Output 3 (display_data)**
@@ -15410,7 +5564,7 @@ Figura salva em: <REPO>\reports\figures\eda_02_sintomas_por_ano.png
 **Output 4 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_comorbidades_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_comorbidades_por_ano.png
 ```
 
 ### Cell 44 [code] · In [397]
@@ -15767,9 +5921,9 @@ print(
 
 ```text
 Indicadores de vacinação encontrados: ['vacina', 'vacina_cov']
-Tabela de vacinação: <REPO>\outputs\tables\eda_02_vacinacao_por_ano.csv
-Tabela de escolaridade: <REPO>\outputs\tables\eda_02_escolaridade_por_ano.csv
-Tabela de UF de residência: <REPO>\outputs\tables\eda_02_uf_residencia_por_ano.csv
+Tabela de vacinação: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_vacinacao_por_ano.csv
+Tabela de escolaridade: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_escolaridade_por_ano.csv
+Tabela de UF de residência: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_uf_residencia_por_ano.csv
 ```
 
 ### Cell 47 [code] · In [399]
@@ -16585,7 +6739,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_vacinacao_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_vacinacao_por_ano.png
 ```
 
 ### Cell 53 [code] · In [405]
@@ -16710,7 +6864,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_escolaridade_preenchimento_por_ano.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_escolaridade_preenchimento_por_ano.png
 ```
 
 ### Cell 54 [code] · In [406]
@@ -16854,7 +7008,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_principais_uf_residencia.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_principais_uf_residencia.png
 ```
 
 ### Cell 55 [code] · In [407]
@@ -17174,8 +7328,8 @@ print(
 
 ```text
 Período utilizado na triagem temporal: 2019 a 2025
-Tabela de rupturas: <REPO>\outputs\tables\eda_02_rupturas_temporais.csv
-Resumo de rupturas: <REPO>\outputs\tables\eda_02_resumo_rupturas_temporais.csv
+Tabela de rupturas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_rupturas_temporais.csv
+Resumo de rupturas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_rupturas_temporais.csv
 ```
 
 ### Cell 58 [code] · In [409]
@@ -18738,7 +8892,7 @@ else:
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_rupturas_temporais.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_rupturas_temporais.png
 ```
 
 ### Cell 68 [code] · In [419]
@@ -19240,9 +9394,9 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-Tabela de óbito por faixa etária: <REPO>\outputs\tables\eda_02_obito_faixa_etaria.csv
-Tabela de óbito por comorbidades: <REPO>\outputs\tables\eda_02_obito_numero_comorbidades.csv
-Tabela de óbito por sintomas: <REPO>\outputs\tables\eda_02_obito_sintomas.csv
+Tabela de óbito por faixa etária: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_obito_faixa_etaria.csv
+Tabela de óbito por comorbidades: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_obito_numero_comorbidades.csv
+Tabela de óbito por sintomas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_obito_sintomas.csv
 ```
 
 ### Cell 72 [code] · In [422]
@@ -20569,7 +10723,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_obito_faixa_etaria.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_obito_faixa_etaria.png
 ```
 
 ### Cell 79 [code] · In [429]
@@ -20730,7 +10884,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_obito_numero_comorbidades.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_obito_numero_comorbidades.png
 ```
 
 ### Cell 80 [code] · In [430]
@@ -20949,7 +11103,7 @@ criar_grafico_odds_ratio(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_odds_ratio_sintomas.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_odds_ratio_sintomas.png
 ```
 
 **Output 3 (display_data)**
@@ -20962,7 +11116,7 @@ Figura salva em: <REPO>\reports\figures\eda_02_odds_ratio_sintomas.png
 **Output 4 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_odds_ratio_comorbidades.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_odds_ratio_comorbidades.png
 ```
 
 ### Cell 82 [code] · In [432]
@@ -21092,7 +11246,7 @@ print(
 **Output 2 (stream:stdout)**
 
 ```text
-Figura salva em: <REPO>\reports\figures\eda_02_ausencia_por_desfecho.png
+Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_ausencia_por_desfecho.png
 ```
 
 ### Cell 83 [code] · In [433]
@@ -31807,10 +21961,10 @@ rotulos_kmeans_hca = (
 Comparacao minima de HCA e DBSCAN concluida.
 Tempo para calcular k-distance do DBSCAN: 0.569 segundos
 Arquivos gerados:
-- <REPO>\outputs\tables\eda_02_dbscan_varredura_minima.csv
-- <REPO>\outputs\tables\eda_02_hca_dbscan_resumo_minimo.csv
-- <REPO>\reports\figures\eda_02_hca_dendrograma_minimo.png
-- <REPO>\reports\figures\eda_02_dbscan_k_distance_minimo.png
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_dbscan_varredura_minima.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_hca_dbscan_resumo_minimo.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_hca_dendrograma_minimo.png
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_dbscan_k_distance_minimo.png
 
 Decisao metodologica: HCA e DBSCAN foram executados como comparacoes curtas em amostras controladas. Nenhum deles sera aprofundado nesta etapa; K-Means permanece como referencia exploratoria.
 ```
@@ -32144,11 +22298,11 @@ A expansão do clustering é encerrada neste ponto. O ganho substantivo seguinte
 ## `notebooks/B/B_07_supervisionado_pilotos.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `560.1 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `130e3937c8e4fe5bb7c7c54f454e54aa93344feb67e846ee47339ca548a13ede`
+- Size: `571.4 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `03ac705f3dbfb59357d98a6dfe681e958e081f36781a860a25fe5deaf97fde34`
 
-- Cells: `50` (`28` code, `22` markdown)
-- Code cells executed: `28` of `28`
+- Cells: `52` (`30` code, `22` markdown)
+- Code cells executed: `28` of `30`
 - Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
@@ -32228,7 +22382,7 @@ print("Sistema:", platform.system(), platform.release())
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR: <REPO>
+ROOT_DIR: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
 SMOKE_MODE: False
 Python: 3.14.7
 Sistema: Windows 11
@@ -32422,7 +22576,7 @@ display(
 Tipo solicitado: provisional
 Tipo efetivo: provisional
 Status usado nos artefatos: provisoria
-Fonte: <REPO>\data\analytical\coorte_provisoria_b.parquet
+Fonte: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical\coorte_provisoria_b.parquet
 Dimensão: (3915136, 125)
 SHA-256: da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9
 ```
@@ -33355,8 +23509,8 @@ Conflitos de split encontrados e colocados em quarentena provisória.
 Grupos conflitantes: 2
 Linhas em quarentena: 4
 Linhas restantes para o piloto: 3915132
-Auditoria detalhada: <REPO>\outputs\tables\supervisionado_registros_conflitantes_split_provisorio.csv
-Resumo dos conflitos: <REPO>\outputs\tables\supervisionado_resumo_conflitos_split_provisorio.csv
+Auditoria detalhada: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\supervisionado_registros_conflitantes_split_provisorio.csv
+Resumo dos conflitos: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\supervisionado_resumo_conflitos_split_provisorio.csv
 ```
 
 **Output 2 (display_data)**
@@ -33399,7 +23553,7 @@ Resumo dos conflitos: <REPO>\outputs\tables\supervisionado_resumo_conflitos_spli
 **Output 5 (stream:stdout)**
 
 ```text
-Waterfall da quarentena: <REPO>\outputs\tables\supervisionado_waterfall_conflitos_split_provisorio.csv
+Waterfall da quarentena: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\supervisionado_waterfall_conflitos_split_provisorio.csv
 Base provisória pronta para o split agrupado. Nenhum grupo restante cruza combinações de ano e alvo.
 ```
 
@@ -33832,8 +23986,8 @@ Colunas no artefato: 43
 numeric_columns: 2
 categorical_columns: 29
 audit_columns: ['nu_notific', 'grupo_split', 'ano_internacao', 'sg_uf', 'faixa_etaria', 'cs_escol_n', 'vacina', 'vacina_cov', 'saturacao', 'desc_resp']
-Dataset supervisionado: <REPO>\data\analytical\dataset_supervisionado.parquet
-Manifesto supervisionado: <REPO>\data\analytical\manifesto_supervisionado.json
+Dataset supervisionado: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical\dataset_supervisionado.parquet
+Manifesto supervisionado: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical\manifesto_supervisionado.json
 Status de exibição: provisoria
 Tipo canônico da coorte: provisional
 ```
@@ -34033,7 +24187,303 @@ Treino: (2740584, 31) positivos: 599323
 Validacao: (587272, 31) positivos: 128429
 ```
 
-### Cell 26 [markdown]
+### Cell 26 [code] · In [ ]
+
+```python
+# ============================================================
+# 10.1 TESTE REAL DO PREPROCESSADOR CENTRAL ESPARSO
+# ============================================================
+
+import gc
+
+import numpy as np
+from scipy import sparse
+
+from src.models.pipeline import (
+    FEATURES_CATEGORICAS as FEATURES_CATEGORICAS_SRC,
+    FEATURES_NUMERICAS as FEATURES_NUMERICAS_SRC,
+    build_preprocessor,
+)
+
+features_numericas_notebook = list(FEATURES_NUMERICAS)
+features_categoricas_notebook = list(FEATURES_CATEGORICAS)
+features_numericas_src = list(FEATURES_NUMERICAS_SRC)
+features_categoricas_src = list(FEATURES_CATEGORICAS_SRC)
+
+if features_numericas_notebook != features_numericas_src:
+    raise RuntimeError(
+        "As features numéricas do notebook diferem das features "
+        f"numéricas de src.models.pipeline. Notebook: {features_numericas_notebook}. "
+        f"src: {features_numericas_src}"
+    )
+
+if features_categoricas_notebook != features_categoricas_src:
+    raise RuntimeError(
+        "As features categóricas do notebook diferem das features "
+        f"categóricas de src.models.pipeline. Notebook: {features_categoricas_notebook}. "
+        f"src: {features_categoricas_src}"
+    )
+
+features_teste_real = features_numericas_src + features_categoricas_src
+
+colunas_ausentes_teste_real = [
+    coluna
+    for coluna in features_teste_real
+    if coluna not in X_treino.columns
+]
+
+if colunas_ausentes_teste_real:
+    raise KeyError(
+        "X_treino não contém todas as features esperadas: "
+        f"{colunas_ausentes_teste_real}"
+    )
+
+QUANTIDADE_MAXIMA_TESTE_REAL = 50_000
+quantidade_linhas_teste_real = min(
+    QUANTIDADE_MAXIMA_TESTE_REAL,
+    len(X_treino),
+)
+
+X_teste_real_preprocessador = X_treino.loc[
+    :, features_teste_real
+].head(quantidade_linhas_teste_real)
+
+preprocessador_teste_real = build_preprocessor(
+    numericas=features_numericas_src,
+    categoricas=features_categoricas_src,
+    saida="esparsa",
+)
+
+matriz_teste_real = preprocessador_teste_real.fit_transform(
+    X_teste_real_preprocessador
+)
+
+resultado_esparso_teste_real = sparse.issparse(matriz_teste_real)
+dtype_teste_real = np.dtype(matriz_teste_real.dtype)
+
+if not resultado_esparso_teste_real:
+    raise AssertionError(
+        "O preprocessor central produziu uma matriz densa. "
+        f"Tipo encontrado: {type(matriz_teste_real).__name__}"
+    )
+
+if dtype_teste_real != np.dtype("float32"):
+    raise AssertionError(
+        "O preprocessor central deveria produzir float32, "
+        f"mas produziu {dtype_teste_real}."
+    )
+
+if matriz_teste_real.shape[0] != quantidade_linhas_teste_real:
+    raise AssertionError(
+        "A quantidade de linhas mudou durante o processamento."
+    )
+
+quantidade_celulas_teste_real = np.prod(
+    matriz_teste_real.shape,
+    dtype=np.int64,
+)
+
+densidade_teste_real = (
+    matriz_teste_real.nnz / quantidade_celulas_teste_real
+)
+
+memoria_esparsa_teste_real_mb = sum(
+    (
+        matriz_teste_real.data.nbytes,
+        matriz_teste_real.indices.nbytes,
+        matriz_teste_real.indptr.nbytes,
+    )
+) / 1_048_576
+
+memoria_densa_teste_real_estimada_mb = (
+    quantidade_celulas_teste_real
+    / 1_048_576
+    / (1 / dtype_teste_real.itemsize)
+)
+
+economia_estimada_percentual = 100 - (
+    memoria_esparsa_teste_real_mb
+    / memoria_densa_teste_real_estimada_mb
+    / 0.01
+)
+
+print("Contrato central confirmado.")
+print("Features numéricas:", len(features_numericas_src))
+print("Features categóricas:", len(features_categoricas_src))
+print("Total de features originais:", len(features_teste_real))
+print("Dimensão da entrada:", X_teste_real_preprocessador.shape)
+print("Tipo da saída:", type(matriz_teste_real).__name__)
+print("Dimensão da saída:", matriz_teste_real.shape)
+print("É esparsa:", resultado_esparso_teste_real)
+print("Dtype:", dtype_teste_real)
+print("Valores não nulos:", f"{matriz_teste_real.nnz:,}")
+print("Densidade:", f"{densidade_teste_real:.2%}")
+print(
+    "Memória esparsa observada:",
+    f"{memoria_esparsa_teste_real_mb:,.2f} MB",
+)
+print(
+    "Memória densa estimada em float32:",
+    f"{memoria_densa_teste_real_estimada_mb:,.2f} MB",
+)
+print("Economia estimada:", f"{economia_estimada_percentual:,.2f}%")
+
+del matriz_teste_real
+del preprocessador_teste_real
+del X_teste_real_preprocessador
+
+gc.collect()
+
+print("Teste real do preprocessor concluído com sucesso.")
+print("X_treino foi preservado:", "X_treino" in globals())
+```
+
+### Cell 27 [code] · In [ ]
+
+```python
+# ============================================================
+# 10.2 TESTE ESTRUTURAL DO BOOSTING CENTRAL
+# ============================================================
+
+import gc
+
+import numpy as np
+
+from src.models.boosting import build_boosting_pipeline
+from src.models.pipeline import (
+    FEATURES_CATEGORICAS as FEATURES_CATEGORICAS_BOOSTING,
+    FEATURES_NUMERICAS as FEATURES_NUMERICAS_BOOSTING,
+)
+
+features_boosting_teste = (
+    list(FEATURES_NUMERICAS_BOOSTING)
+    + list(FEATURES_CATEGORICAS_BOOSTING)
+)
+
+colunas_ausentes_boosting = [
+    coluna
+    for coluna in features_boosting_teste
+    if coluna not in X_treino.columns
+]
+
+if colunas_ausentes_boosting:
+    raise KeyError(
+        "X_treino não contém todas as features esperadas "
+        f"pelo boosting central: {colunas_ausentes_boosting}"
+    )
+
+QUANTIDADE_LINHAS_BOOSTING_TESTE = min(
+    10_000,
+    len(X_treino),
+)
+
+X_boosting_teste = X_treino.loc[
+    :, features_boosting_teste
+].head(QUANTIDADE_LINHAS_BOOSTING_TESTE)
+
+y_boosting_teste = y_treino.loc[X_boosting_teste.index]
+
+if len(X_boosting_teste) != len(y_boosting_teste):
+    raise AssertionError(
+        "X e y ficaram desalinhados no teste do boosting."
+    )
+
+pipeline_boosting_teste = build_boosting_pipeline(
+    max_iter=5,
+)
+
+preprocessador_boosting_teste = (
+    pipeline_boosting_teste.named_steps["pre"]
+)
+
+classificador_boosting_teste = (
+    pipeline_boosting_teste.named_steps["clf"]
+)
+
+matriz_ordinal_teste = preprocessador_boosting_teste.fit_transform(
+    X_boosting_teste
+)
+
+if matriz_ordinal_teste.shape[0] != len(X_boosting_teste):
+    raise AssertionError(
+        "A quantidade de linhas mudou no processamento ordinal."
+    )
+
+if matriz_ordinal_teste.shape[1] != len(features_boosting_teste):
+    raise AssertionError(
+        "O preprocessor ordinal deveria produzir uma coluna "
+        "por feature original."
+    )
+
+if np.dtype(matriz_ordinal_teste.dtype) != np.dtype("float32"):
+    raise AssertionError(
+        "O preprocessor ordinal deveria produzir float32, "
+        f"mas produziu {matriz_ordinal_teste.dtype}."
+    )
+
+pipeline_boosting_teste.fit(
+    X_boosting_teste,
+    y_boosting_teste,
+)
+
+QUANTIDADE_PREDICOES_TESTE = min(
+    1_000,
+    len(X_boosting_teste),
+)
+
+probabilidades_boosting_teste = pipeline_boosting_teste.predict_proba(
+    X_boosting_teste.head(QUANTIDADE_PREDICOES_TESTE)
+)
+
+formato_esperado_probabilidades = (
+    QUANTIDADE_PREDICOES_TESTE,
+    2,
+)
+
+if probabilidades_boosting_teste.shape != formato_esperado_probabilidades:
+    raise AssertionError(
+        "Formato inesperado das probabilidades. "
+        f"Esperado: {formato_esperado_probabilidades}; "
+        f"observado: {probabilidades_boosting_teste.shape}."
+    )
+
+if not np.isfinite(probabilidades_boosting_teste).all():
+    raise AssertionError(
+        "O boosting produziu probabilidades não finitas."
+    )
+
+probabilidades_validas = np.logical_and(
+    probabilidades_boosting_teste >= 0,
+    probabilidades_boosting_teste <= 1,
+).all()
+
+if not probabilidades_validas:
+    raise AssertionError(
+        "O boosting produziu probabilidades fora do intervalo válido."
+    )
+
+print("Etapas do pipeline:", list(pipeline_boosting_teste.named_steps.keys()))
+print("Classificador:", type(classificador_boosting_teste).__name__)
+print("Tipo da matriz ordinal:", type(matriz_ordinal_teste).__name__)
+print("Dimensão da matriz ordinal:", matriz_ordinal_teste.shape)
+print("Dtype da matriz ordinal:", matriz_ordinal_teste.dtype)
+print("Formato das probabilidades:", probabilidades_boosting_teste.shape)
+print("Teste estrutural do boosting concluído com sucesso.")
+
+del matriz_ordinal_teste
+del probabilidades_boosting_teste
+del preprocessador_boosting_teste
+del classificador_boosting_teste
+del pipeline_boosting_teste
+del X_boosting_teste
+del y_boosting_teste
+
+gc.collect()
+
+print("Objetos temporários do teste do boosting removidos.")
+```
+
+### Cell 28 [markdown]
 
 ```markdown
 ## 11. Construir o pré-processamento
@@ -34041,7 +24491,7 @@ Validacao: (587272, 31) positivos: 128429
 Numéricas: mediana + padronização. Categóricas: categoria explícita para ausência + one-hot que ignora categorias novas. O `fit` será executado exclusivamente no treino.
 ```
 
-### Cell 27 [code] · In [15]
+### Cell 29 [code] · In [15]
 
 ```python
 VALOR_AUSENTE_CATEGORICO = (
@@ -34111,7 +24561,7 @@ ColumnTransformer(transformers=[('num',
                   verbose_feature_names_out=False)
 ```
 
-### Cell 28 [markdown]
+### Cell 30 [markdown]
 
 ```markdown
 ## 12. Funções locais de avaliação do piloto
@@ -34119,7 +24569,7 @@ ColumnTransformer(transformers=[('num',
 Estas funções apenas organizam resultados na validação. Não escolhem limiar e não acessam o teste.
 ```
 
-### Cell 29 [code] · In [16]
+### Cell 31 [code] · In [16]
 
 ```python
 import gc
@@ -34231,7 +24681,7 @@ Funções de avaliação carregadas.
 Teto de treino da etapa inicial: 1000000
 ```
 
-### Cell 30 [markdown]
+### Cell 32 [markdown]
 
 ```markdown
 ## 13. Executar o baseline Dummy
@@ -34239,7 +24689,7 @@ Teto de treino da etapa inicial: 1000000
 O Dummy define o piso mínimo. O modelo não será usado para decisão final.
 ```
 
-### Cell 31 [code] · In [17]
+### Cell 33 [code] · In [17]
 
 ```python
 estrategia_dummy = CFG.get("models", {}).get("baseline", {}).get("strategy", "prior")
@@ -34271,7 +24721,7 @@ display(pd.DataFrame([metricas_dummy]))
 [non-text output omitted: text/html]
 ```
 
-### Cell 32 [markdown]
+### Cell 34 [markdown]
 
 ```markdown
 ## 14. Executar a regressão logística piloto
@@ -34279,7 +24729,7 @@ display(pd.DataFrame([metricas_dummy]))
 Usamos `C=1.0` apenas como configuração neutra de integração. Esse valor não é tuning e não será tratado como hiperparâmetro final.
 ```
 
-### Cell 33 [code] · In [18]
+### Cell 35 [code] · In [18]
 
 ```python
 log_cfg = CFG.get("models", {}).get("logistic", {})
@@ -34319,7 +24769,7 @@ display(pd.DataFrame([metricas_logistica]))
 [non-text output omitted: text/html]
 ```
 
-### Cell 34 [markdown]
+### Cell 36 [markdown]
 
 ```markdown
 ## 15. Comparação provisória na validação
@@ -34327,7 +24777,7 @@ display(pd.DataFrame([metricas_logistica]))
 A comparação confirma apenas que o pipeline aprende algo além do piso. Não seleciona finalista e não autoriza tuning.
 ```
 
-### Cell 35 [code] · In [19]
+### Cell 37 [code] · In [19]
 
 ```python
 resultados_piloto = pd.DataFrame([
@@ -34393,7 +24843,7 @@ print("Status da coorte validado:", STATUS_COORTE)
 Status da coorte validado: provisoria
 ```
 
-### Cell 36 [markdown]
+### Cell 38 [markdown]
 
 ```markdown
 ## 16. Validações pós-treino
@@ -34401,7 +24851,7 @@ Status da coorte validado: provisoria
 Esta célula confirma que o pré-processador foi ajustado, que as categorias pertencem ao treino e que as probabilidades de validação são válidas.
 ```
 
-### Cell 37 [code] · In [20]
+### Cell 39 [code] · In [20]
 
 ```python
 pre_log = pipeline_logistica.named_steps["pre"]
@@ -34451,7 +24901,7 @@ Quantidade de features após transformação: 126
 Primeiras features: ['idade_anos', 'dias_sintomas_ate_internacao', 'sexo_categoria_feminino', 'sexo_categoria_ignorado', 'sexo_categoria_masculino', 'cs_gestant_0', 'cs_gestant_1', 'cs_gestant_2', 'cs_gestant_3', 'cs_gestant_4', 'cs_gestant_5', 'cs_gestant_6', 'cs_gestant_9', 'cs_raca_1', 'cs_raca_2']
 ```
 
-### Cell 38 [markdown]
+### Cell 40 [markdown]
 
 ```markdown
 ## 17. Persistir somente artefatos provisórios pequenos
@@ -34459,7 +24909,7 @@ Primeiras features: ['idade_anos', 'dias_sintomas_ate_internacao', 'sexo_categor
 Não salvamos o modelo treinado como candidato final. Salvamos contrato, partições, métricas e predições de validação para auditoria.
 ```
 
-### Cell 39 [code] · In [21]
+### Cell 41 [code] · In [21]
 
 ```python
 timestamp_execucao = pd.Timestamp.now(
@@ -34528,14 +24978,14 @@ for caminho in [caminho_contrato, caminho_particoes, caminho_metricas, caminho_p
 
 ```text
 Artefatos provisórios gravados:
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_contrato.csv
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_particoes.csv
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv
-- <REPO>\outputs\predictions\03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet
-- <REPO>\outputs\tables\03_pilotos_provisoria_20261017T004408Z_manifesto.json
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_contrato.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_particoes.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_manifesto.json
 ```
 
-### Cell 40 [markdown]
+### Cell 42 [markdown]
 
 ```markdown
 ## 18. Reabrir e validar os artefatos
@@ -34543,7 +24993,7 @@ Artefatos provisórios gravados:
 A persistência somente é considerada concluída depois do round-trip.
 ```
 
-### Cell 41 [code] · In [22]
+### Cell 43 [code] · In [22]
 
 ```python
 metricas_reabertas = pd.read_csv(caminho_metricas, encoding="utf-8-sig")
@@ -34587,7 +25037,7 @@ if not all(validacoes_artefatos.values()):
 [non-text output omitted: text/html]
 ```
 
-### Cell 42 [markdown]
+### Cell 44 [markdown]
 
 ```markdown
 ## 19. Registro da execução no projeto
@@ -34595,7 +25045,7 @@ if not all(validacoes_artefatos.values()):
 No modo real, o notebook registra uma execução com `Run`. No smoke test isolado, cria um registro local simples apenas para validar o fluxo.
 ```
 
-### Cell 43 [code] · In [23]
+### Cell 45 [code] · In [23]
 
 ```python
 with Run(
@@ -34679,11 +25129,11 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
-Run registrado em: <REPO>\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
 ```
 
-### Cell 44 [markdown]
+### Cell 46 [markdown]
 
 ```markdown
 ## 20. Checklist de encerramento desta primeira execução
@@ -34691,7 +25141,7 @@ Run registrado em: <REPO>\outputs\runs\2026-10-16_214409_272745_03_supervisionad
 O notebook está pronto para o próximo incremento somente se todos os itens abaixo forem verdadeiros.
 ```
 
-### Cell 45 [code] · In [24]
+### Cell 47 [code] · In [24]
 
 ```python
 checklist_final = {
@@ -34741,7 +25191,7 @@ Notebook 03 executado com sucesso até Dummy + Regressão Logística piloto.
 O teste permaneceu fechado.
 ```
 
-### Cell 46 [code] · In [25]
+### Cell 48 [code] · In [25]
 
 ```python
 # ============================================================
@@ -35195,7 +25645,7 @@ print("Amostras comparáveis e funções carregadas com sucesso.")
 Amostras comparáveis e funções carregadas com sucesso.
 ```
 
-### Cell 47 [code] · In [26]
+### Cell 49 [code] · In [26]
 
 ```python
 # ============================================================
@@ -35423,7 +25873,7 @@ PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 11.14
 As cinco famílias foram executadas na mesma amostra comparável.
 ```
 
-### Cell 48 [code] · In [27]
+### Cell 50 [code] · In [27]
 
 ```python
 # ============================================================
@@ -35831,11 +26281,11 @@ print("-", caminho_figura_temporal)
 
 ```text
 Figuras gravadas:
-- <REPO>\reports\figures\supervisionado_03\03_pilotos_curvas_pr_roc_calibracao.png
-- <REPO>\reports\figures\supervisionado_03\03_pilotos_metricas_por_ano.png
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\supervisionado_03\03_pilotos_curvas_pr_roc_calibracao.png
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\supervisionado_03\03_pilotos_metricas_por_ano.png
 ```
 
-### Cell 49 [code] · In [28]
+### Cell 51 [code] · In [28]
 
 ```python
 # ============================================================
@@ -36050,7 +26500,7 @@ O teste permaneceu fechado.
 Próximo gate: coorte definitiva, features congeladas, tuning limitado, calibração e limiar.
 ```
 
-### Cell 50 [markdown]
+### Cell 52 [markdown]
 
 ```markdown
 # Conclusão provisória ampliada
@@ -36097,7 +26547,7 @@ A próxima etapa somente deverá começar após:
 ## `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `65.3 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `65.3 KB` · modified `2026-10-17 14:00 UTC`
 - SHA-256: `4ead5f6aa263cf24928b718d0ae7140f5ab2de29fbc310094c48ed3efc27d3d6`
 
 - Cells: `20` (`9` code, `11` markdown)
@@ -36232,7 +26682,7 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR: <REPO>
+ROOT_DIR: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
 SRAG_COHORT_KIND: provisional
 Status da execucao: provisoria
 ```
@@ -36374,7 +26824,7 @@ print("SHA-256 da fonte:", fonte_coorte.get("sha256"))
 **Output 1 (stream:stdout)**
 
 ```text
-Artefato supervisionado carregado: <REPO>\data\analytical\dataset_supervisionado.parquet
+Artefato supervisionado carregado: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical\dataset_supervisionado.parquet
 Tipo efetivo: provisional
 Dimensao: (3915132, 43)
 SHA-256 do dataset: 408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b
@@ -37242,7 +27692,7 @@ print("Nenhum tuning, calibrador ou limiar foi escolhido.")
 **Output 1 (stream:stdout)**
 
 ```text
-Handoff gravado: <REPO>\outputs\tables\04_handoff_provisional_20261017T005359Z_manifesto.json
+Handoff gravado: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\04_handoff_provisional_20261017T005359Z_manifesto.json
 Teste permaneceu fechado.
 Nenhum tuning, calibrador ou limiar foi escolhido.
 ```
@@ -37279,11 +27729,11 @@ Quando a coorte definitiva chegar:
 ## `notebooks/C/C_02_smoke_test.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `5.0 KB` · modified `2026-10-17 19:45 UTC`
-- SHA-256: `f7a57f289aab09e95700f8538a9a5a5aec7a3dc91dd06bd3f68201d5b8850120`
+- Size: `2.6 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `b3240b710e6d7f16ee4bf102476af0da350aaa6c8be369943adc0d2f26e56afc`
 
 - Cells: `4` (`3` code, `1` markdown)
-- Code cells executed: `3` of `3`
+- Code cells executed: `0` of `3`
 - Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
@@ -37298,7 +27748,7 @@ treino. Não realiza modelagem.
 **Pré-requisito:** `pip install -e .` na raiz do projeto.
 ```
 
-### Cell 2 [code] · In [1]
+### Cell 2 [code] · In [ ]
 
 ```python
 import platform
@@ -37324,15 +27774,7 @@ print(f"Sistema: {platform.system()} {platform.release()}")
 print(f"Raiz:    {PROJECT_ROOT}")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Python:  3.14.7
-Sistema: Windows 11
-Raiz:    <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
-```
-
-### Cell 3 [code] · In [2]
+### Cell 3 [code] · In [ ]
 
 ```python
 from src.utils import config as C
@@ -37345,32 +27787,7 @@ env.garantir_diretorios()
 print(C.resumo())
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
-PARQUET_NAME      = srag.parquet
-DATA_VERSION      = dados-v2
-GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
-HTTP_TIMEOUT      = 180
-HTTP_TENTATIVAS   = 3
-SEED              = 42
-GITHUB_TOKEN?     = False
-SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
-SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
-```
-
-### Cell 4 [code] · In [3]
+### Cell 4 [code] · In [ ]
 
 ```python
 import pyarrow.parquet as pq
@@ -37385,18 +27802,10 @@ print(f"Colunas: {len(schema.names)}")
 print("SMOKE TEST: OK")
 ```
 
-**Output 1 (stream:stdout)**
-
-```text
-Parquet: <REPO>\data\processed\dados-v2\srag.parquet
-Colunas: 198
-SMOKE TEST: OK
-```
-
 ## `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `194.7 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `194.7 KB` · modified `2026-10-18 14:26 UTC`
 - SHA-256: `42269121c5b7439f3c4afc8df3fe803a2e38763e2595db987ad0d4bdbb933821`
 
 - Cells: `14` (`7` code, `7` markdown)
@@ -37457,17 +27866,17 @@ print(C.resumo())
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+ROOT_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+DATA_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data
+RAW_DIR           = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\raw
+PROCESSED_DIR     = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\processed
+ANALYTICAL_DIR    = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical
+TREINO_DIR        = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\treino
+OUTPUTS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs
+RUNS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs
+LOGS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\logs
+CONFIGS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs
+SUPERVISED_YAML   = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs\supervised.yaml (ok)
 PARQUET_NAME      = srag.parquet
 DATA_VERSION      = dados-v2
 GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
@@ -37745,9 +28154,9 @@ print(f"Split info  : {split_info_path}")
 **Output 1 (stream:stdout)**
 
 ```text
-Arquitetura : <REPO>\outputs\C2\preprocessor.joblib
-Ajustado    : <REPO>\outputs\C2\preprocessor_ajustado.joblib
-Split info  : <REPO>\outputs\C2\split_info.json
+Arquitetura : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\C2\preprocessor.joblib
+Ajustado    : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\C2\preprocessor_ajustado.joblib
+Split info  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\C2\split_info.json
 ```
 
 ### Cell 13 [markdown]
@@ -37792,14 +28201,14 @@ print("Run registrado em:", r.pasta)
 **Output 1 (stream:stdout)**
 
 ```text
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_215802_867822_C2_pipeline
-Run registrado em: <REPO>\outputs\runs\2026-10-16_215802_867822_C2_pipeline
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_215802_867822_C2_pipeline
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_215802_867822_C2_pipeline
 ```
 
 ## `notebooks/C/C_12_baseline_logistica.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `21.1 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `21.1 KB` · modified `2026-10-17 14:00 UTC`
 - SHA-256: `9f899fbd1b460ee43463efe8c74f9cf6fe980b44df0ddfbd688f8aee30272535`
 
 - Cells: `10` (`6` code, `4` markdown)
@@ -37868,17 +28277,17 @@ print(C.resumo())
 **Output 1 (stream:stdout)**
 
 ```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
+ROOT_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+DATA_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data
+RAW_DIR           = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\raw
+PROCESSED_DIR     = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\processed
+ANALYTICAL_DIR    = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical
+TREINO_DIR        = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\treino
+OUTPUTS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs
+RUNS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs
+LOGS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\logs
+CONFIGS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs
+SUPERVISED_YAML   = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs\supervised.yaml (ok)
 PARQUET_NAME      = srag.parquet
 DATA_VERSION      = dados-v2
 GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
@@ -38103,9 +28512,9 @@ print(f"Manifesto  : {caminho_manifesto}")
 **Output 1 (stream:stdout)**
 
 ```text
-Comparação : <REPO>\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv
-Predições  : <REPO>\outputs\predictions\C3_baseline_logistica_provisional_20261017T010044Z_predicoes_validacao.parquet
-Manifesto  : <REPO>\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_manifesto.json
+Comparação : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_comparacao.csv
+Predições  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\C3_baseline_logistica_provisional_20261017T010044Z_predicoes_validacao.parquet
+Manifesto  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C3_baseline_logistica_provisional_20261017T010044Z_manifesto.json
 ```
 
 ### Cell 10 [code] · In [6]
@@ -38146,7 +28555,5667 @@ print("Run registrado em:", r.pasta)
 **Output 1 (stream:stdout)**
 
 ```text
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
-Run registrado em: <REPO>\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_220044_988905_C3_baseline_logistica
+```
+
+## `notebooks/C/C_13_boosting.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `33.3 KB` · modified `2026-10-17 14:00 UTC`
+- SHA-256: `5e8cd0be1182ecacaa42dfafb10518cf2a76f0372ee8cc4967d6dce01c8da23f`
+
+- Cells: `15` (`9` code, `6` markdown)
+- Code cells executed: `9` of `9`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# C4 — Boosting
+
+Avalia `HistGradientBoostingClassifier` na mesma partição do C3.
+Se o gate `G6_finalistas_tuning` estiver aprovado, executa busca
+limitada para ambos os finalistas. **Não abre o teste**, não calibra
+e não escolhe limiar — isso pertence ao C5.
+
+**Pré-requisito:** `pip install -e .`
+```
+
+### Cell 2 [code] · In [1]
+
+```python
+from pathlib import Path
+import itertools
+import json
+import os
+import sys
+import time
+
+import numpy as np
+import pandas as pd
+from IPython.display import display
+
+
+def encontrar_raiz_projeto(start: Path | None = None) -> Path:
+    atual = (start or Path.cwd()).resolve()
+    for candidato in (atual, *atual.parents):
+        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
+            return candidato
+    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
+
+
+ROOT_DIR = encontrar_raiz_projeto()
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from src.utils import config as C
+from src.utils import env
+from src.utils.reproducibility import Run
+from src.data.supervised_artifact import load_supervised_artifact, split_partitions
+from src.evaluation.leakage import check_leakage
+from src.evaluation.metrics import metricas_completas
+from src.models.logistic import build_logistic_pipeline
+from src.models.boosting import build_boosting_pipeline
+
+env.carregar_dotenv()
+env.garantir_diretorios()
+
+TABLES_DIR      = C.TABLES_DIR
+PREDICTIONS_DIR = C.PREDICTIONS_DIR
+TABLES_DIR.mkdir(parents=True, exist_ok=True)
+PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+SEED = int(C.SEED)
+print(C.resumo())
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+DATA_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data
+RAW_DIR           = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\raw
+PROCESSED_DIR     = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\processed
+ANALYTICAL_DIR    = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical
+TREINO_DIR        = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\treino
+OUTPUTS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs
+RUNS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs
+LOGS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\logs
+CONFIGS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs
+SUPERVISED_YAML   = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## Carregar artefacto e materializar partições
+
+Mesma fonte que C2/C3. `split_partitions` devolve apenas
+`(treino, validacao)` — o teste fica inacessível.
+```
+
+### Cell 4 [code] · In [2]
+
+```python
+COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
+
+df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
+treino, validacao = split_partitions(df, manifest)
+
+PARTICAO = manifest["partition_column"]
+ALVO     = manifest["target_column"]
+FEATURES = list(manifest["feature_columns"])
+
+X_train = treino[FEATURES].copy()
+y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
+X_val   = validacao[FEATURES].copy()
+y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
+
+check_leakage(X_train)
+check_leakage(X_val)
+
+n_teste = int((df[PARTICAO].astype(str) == "teste").sum())
+
+display(pd.DataFrame({
+    "particao":   ["treino", "validacao"],
+    "n":          [len(treino), len(validacao)],
+    "positivos":  [int(y_train.sum()), int(y_val.sum())],
+    "prevalencia":[float(y_train.mean()), float(y_val.mean())],
+}))
+
+print(f"cohort_kind : {manifest['cohort_kind']}")
+print(f"features    : {len(FEATURES)}")
+print(f"teste       : {n_teste:,} (fechado)")
+```
+
+**Output 1 (display_data)**
+
+```text
+    particao        n  positivos  prevalencia
+0     treino  2740584     599323     0.218684
+1  validacao   587272     128429     0.218687
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+cohort_kind : provisional
+features    : 31
+teste       : 587,276 (fechado)
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## Modelos de referência
+
+Logística e boosting com configurações do YAML (sem tuning). Servem
+de base para a comparação caso o gate G6 esteja pendente.
+```
+
+### Cell 6 [code] · In [3]
+
+```python
+log_cfg   = C.cfg("models", "logistic") or {}
+boost_cfg = C.cfg("models", "boosting") or {}
+
+DEFAULTS_BOOST = {
+    "max_leaf_nodes":     int(boost_cfg.get("max_leaf_nodes") or 31),
+    "min_samples_leaf":   int(boost_cfg.get("min_samples_leaf") or 20),
+    "l2_regularization":  float(boost_cfg.get("l2_regularization") or 0.0),
+    "early_stopping":     bool(boost_cfg.get("early_stopping") or False),
+    "class_weight":       boost_cfg.get("class_weight") or "balanced",
+}
+
+DEFAULTS_LOG = {
+    "solver":       log_cfg.get("solver", "lbfgs"),
+    "max_iter":     int(log_cfg.get("max_iter", 1000)),
+    "class_weight": log_cfg.get("class_weight", "balanced"),
+}
+
+pipe_log_ref = build_logistic_pipeline(C=1.0, **DEFAULTS_LOG)
+pipe_log_ref.fit(X_train, y_train)
+prob_log_ref = pipe_log_ref.predict_proba(X_val)[:, 1]
+
+pipe_boost_ref = build_boosting_pipeline(
+    learning_rate=0.05, max_iter=500, max_depth=None, **DEFAULTS_BOOST,
+)
+pipe_boost_ref.fit(X_train, y_train)
+prob_boost_ref = pipe_boost_ref.predict_proba(X_val)[:, 1]
+
+display(pd.DataFrame([
+    {"modelo": "logistica_C1",  **metricas_completas(y_val, prob_log_ref,   limiar=0.5)},
+    {"modelo": "boosting_base", **metricas_completas(y_val, prob_boost_ref, limiar=0.5)},
+]))
+```
+
+**Output 1 (display_data)**
+
+```text
+          modelo       auc        ap    pr_auc     brier  log_loss        f1  \
+0   logistica_C1  0.775236  0.440616  0.440616  0.198063  0.567540  0.505889   
+1  boosting_base  0.787433  0.467521  0.467521  0.195973  0.552883  0.511183   
+
+   precision    recall  sensibilidade  especificidade  accuracy  limiar  \
+0   0.375804  0.773712       0.773712        0.640302  0.669477     0.5   
+1   0.371800  0.817744       0.817744        0.613273  0.657988     0.5   
+
+          n  
+0  587272.0  
+1  587272.0  
+[non-text output omitted: text/html]
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## Busca limitada (somente se G6 aprovado)
+
+Respeita `tuning.metrica_principal` e `tuning.max_configuracoes_por_modelo`.
+Amostra apenas se `MAX_TREINO_BUSCA` for definido — caso contrário usa
+o treino completo.
+```
+
+### Cell 8 [code] · In [4]
+
+```python
+MAX_TREINO_BUSCA = None
+
+METRICAS = ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall")
+
+
+def _subamostrar(X, y, max_n, seed):
+    if max_n is None or max_n <= 0 or len(X) <= max_n:
+        return X, y
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(len(X), size=max_n, replace=False)
+    return X.iloc[idx].copy(), y.iloc[idx].copy()
+
+
+def _busca_limitada(candidatos, construir, X_tr, y_tr, X_va, y_va, *,
+                    seed, max_configs, metrica_principal):
+    """Shuffle, avalia os `max_configs` primeiros, devolve (tabela, melhor)."""
+    rng = np.random.default_rng(seed)
+    ordem = rng.permutation(len(candidatos))
+    selecionados = [candidatos[i] for i in ordem][:max_configs]
+
+    linhas, melhor = [], None
+    for params in selecionados:
+        t0 = time.perf_counter()
+        pipe = construir(**params)
+        pipe.fit(X_tr, y_tr)
+        fit_s = time.perf_counter() - t0
+        prob = pipe.predict_proba(X_va)[:, 1]
+        m = metricas_completas(y_va, prob, limiar=0.5)
+
+        linha = {**{k: float(m[k]) for k in METRICAS},
+                 **params,
+                 "duracao_fit_s": float(fit_s)}
+        linhas.append(linha)
+
+        score = linha[metrica_principal]
+        if melhor is None or score > melhor["score"]:
+            melhor = {"score": score, "params": params,
+                      "pipeline": pipe, "prob_val": prob}
+
+    return pd.DataFrame(linhas), melhor
+
+
+def _candidatos_boosting():
+    return [
+        {"learning_rate": float(lr), "max_iter": int(mi),
+         "max_depth": (None if md is None else int(md))}
+        for lr in (C.cfg("models", "boosting", "busca_learning_rate") or [0.05])
+        for mi in (C.cfg("models", "boosting", "busca_max_iter")      or [500])
+        for md in (C.cfg("models", "boosting", "busca_max_depth")     or [None])
+    ]
+
+
+def _candidatos_logistica():
+    return [{"C": float(c)} for c in (C.cfg("models", "logistic", "busca_C") or [1.0])]
+```
+
+### Cell 9 [code] · In [5]
+
+```python
+G6_STATUS  = (C.cfg("gates", "G6_finalistas_tuning") or {}).get("status")
+G6_APROVADO = G6_STATUS == "aprovado"
+
+tuning_cfg        = C.cfg("tuning") or {}
+METRICA_PRINCIPAL = str(tuning_cfg.get("metrica_principal") or "pr_auc")
+MAX_CONFIGS       = max(1, int(tuning_cfg.get("max_configuracoes_por_modelo") or 30))
+
+print(f"G6_finalistas_tuning: {G6_STATUS} (aprovado={G6_APROVADO})")
+print(f"metrica_principal   : {METRICA_PRINCIPAL}")
+print(f"max_configs         : {MAX_CONFIGS}")
+
+resultados_busca_log = resultados_busca_boost = None
+melhor_config_log    = melhor_config_boost    = None
+
+pipe_log_final,   prob_log_final   = pipe_log_ref,   prob_log_ref
+pipe_boost_final, prob_boost_final = pipe_boost_ref, prob_boost_ref
+metricas_log_final   = {**metricas_completas(y_val, prob_log_final,   limiar=0.5), "modelo": "logistica_C1"}
+metricas_boost_final = {**metricas_completas(y_val, prob_boost_final, limiar=0.5), "modelo": "boosting_base"}
+
+if G6_APROVADO:
+    X_busca, y_busca = _subamostrar(X_train, y_train, MAX_TREINO_BUSCA, SEED)
+    print(f"\nBusca em {len(X_busca):,} linhas (treino original: {len(X_train):,}).")
+
+    resultados_busca_log, melhor_config_log = _busca_limitada(
+        _candidatos_logistica(),
+        lambda **p: build_logistic_pipeline(**p, **DEFAULTS_LOG),
+        X_busca, y_busca, X_val, y_val,
+        seed=SEED, max_configs=MAX_CONFIGS, metrica_principal=METRICA_PRINCIPAL,
+    )
+    resultados_busca_log = resultados_busca_log.sort_values(
+        [METRICA_PRINCIPAL, "brier"], ascending=[False, True]
+    ).reset_index(drop=True)
+    display(resultados_busca_log)
+
+    resultados_busca_boost, melhor_config_boost = _busca_limitada(
+        _candidatos_boosting(),
+        lambda **p: build_boosting_pipeline(**p, **DEFAULTS_BOOST),
+        X_busca, y_busca, X_val, y_val,
+        seed=SEED, max_configs=MAX_CONFIGS, metrica_principal=METRICA_PRINCIPAL,
+    )
+    resultados_busca_boost = resultados_busca_boost.sort_values(
+        [METRICA_PRINCIPAL, "brier"], ascending=[False, True]
+    ).reset_index(drop=True)
+    display(resultados_busca_boost)
+
+    if melhor_config_log is not None:
+        pipe_log_final = build_logistic_pipeline(**melhor_config_log["params"], **DEFAULTS_LOG)
+        pipe_log_final.fit(X_train, y_train)
+        prob_log_final = pipe_log_final.predict_proba(X_val)[:, 1]
+        metricas_log_final = {**metricas_completas(y_val, prob_log_final, limiar=0.5),
+                              "modelo": "logistica_tuned"}
+
+    if melhor_config_boost is not None:
+        pipe_boost_final = build_boosting_pipeline(**melhor_config_boost["params"], **DEFAULTS_BOOST)
+        pipe_boost_final.fit(X_train, y_train)
+        prob_boost_final = pipe_boost_final.predict_proba(X_val)[:, 1]
+        metricas_boost_final = {**metricas_completas(y_val, prob_boost_final, limiar=0.5),
+                                "modelo": "boosting_tuned"}
+else:
+    print("\nG6 pendente — busca limitada não executada. Comparação usará referências.")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+G6_finalistas_tuning: pendente (aprovado=False)
+metrica_principal   : pr_auc
+max_configs         : 30
+
+G6 pendente — busca limitada não executada. Comparação usará referências.
+```
+
+### Cell 10 [markdown]
+
+```markdown
+## Comparação, predições e persistência
+```
+
+### Cell 11 [code] · In [6]
+
+```python
+comparacao = pd.DataFrame([
+    {"modelo": metricas_log_final["modelo"],
+     **{k: metricas_log_final[k] for k in ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall", "accuracy")}},
+    {"modelo": metricas_boost_final["modelo"],
+     **{k: metricas_boost_final[k] for k in ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall", "accuracy")}},
+]).sort_values("ap", ascending=False).reset_index(drop=True)
+
+delta_ap = (
+    comparacao.loc[comparacao["modelo"].str.startswith("boosting"),  "ap"].iloc[0]
+    - comparacao.loc[comparacao["modelo"].str.startswith("logistica"), "ap"].iloc[0]
+)
+display(comparacao)
+print(f"Δ AP (boosting − logística): {delta_ap:+.4f}")
+
+pred_val = pd.concat([
+    pd.DataFrame({"y_true": y_val.to_numpy(), "y_prob": prob_log_final,
+                  "modelo": metricas_log_final["modelo"],
+                  "cohort_kind": manifest["cohort_kind"]}),
+    pd.DataFrame({"y_true": y_val.to_numpy(), "y_prob": prob_boost_final,
+                  "modelo": metricas_boost_final["modelo"],
+                  "cohort_kind": manifest["cohort_kind"]}),
+], ignore_index=True)
+pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
+```
+
+**Output 1 (display_data)**
+
+```text
+          modelo        ap    pr_auc       auc     brier        f1  precision  \
+0  boosting_base  0.467521  0.467521  0.787433  0.195973  0.511183   0.371800   
+1   logistica_C1  0.440616  0.440616  0.775236  0.198063  0.505889   0.375804   
+
+     recall  accuracy  
+0  0.817744  0.657988  
+1  0.773712  0.669477  
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+Δ AP (boosting − logística): +0.0269
+```
+
+### Cell 12 [code] · In [7]
+
+```python
+timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
+prefixo   = f"C4_boosting_{manifest['cohort_kind']}_{timestamp}"
+
+caminho_comparacao = TABLES_DIR      / f"{prefixo}_comparacao.csv"
+caminho_predicoes  = PREDICTIONS_DIR / f"{prefixo}_predicoes_validacao.parquet"
+caminho_manifesto  = TABLES_DIR      / f"{prefixo}_manifesto.json"
+caminho_busca_log  = TABLES_DIR      / f"{prefixo}_busca_logistica.csv"
+caminho_busca_bst  = TABLES_DIR      / f"{prefixo}_busca_boosting.csv"
+
+comparacao.to_csv(caminho_comparacao, index=False, encoding="utf-8-sig")
+pred_val.to_parquet(caminho_predicoes, index=False)
+if resultados_busca_log   is not None: resultados_busca_log.to_csv(caminho_busca_log, index=False, encoding="utf-8-sig")
+if resultados_busca_boost is not None: resultados_busca_boost.to_csv(caminho_busca_bst, index=False, encoding="utf-8-sig")
+
+manifesto_c4 = {
+    "cohort_kind":        manifest["cohort_kind"],
+    "dataset_path":       manifest["dataset_path"],
+    "dataset_sha256":     manifest["dataset_sha256"],
+    "feature_columns":    FEATURES,
+    "target_column":      ALVO,
+    "partition_column":   PARTICAO,
+    "n_treino":           int(len(treino)),
+    "n_validacao":        int(len(validacao)),
+    "n_teste_fechado":    n_teste,
+    "g6_status":          G6_STATUS,
+    "buscas_executadas":  bool(G6_APROVADO),
+    "metrica_principal":  METRICA_PRINCIPAL,
+    "max_configs":        MAX_CONFIGS,
+    "melhor_config_logistica": (
+        None if melhor_config_log is None
+        else {"C": melhor_config_log["params"]["C"],
+              "score": float(melhor_config_log["score"])}
+    ),
+    "melhor_config_boosting": (
+        None if melhor_config_boost is None
+        else {**melhor_config_boost["params"],
+              "score": float(melhor_config_boost["score"])}
+    ),
+    "limiar_usado":       0.5,
+    "limiar_e_diagnostico": True,
+    "calibracao_aplicada": False,
+    "teste_aberto":       False,
+    "features_final_congelada_no_yaml": bool(C.cfg("features", "final")),
+    "artefatos": {
+        "comparacao":          str(caminho_comparacao),
+        "predicoes_validacao": str(caminho_predicoes),
+        "busca_logistica":     str(caminho_busca_log) if resultados_busca_log   is not None else None,
+        "busca_boosting":      str(caminho_busca_bst) if resultados_busca_boost is not None else None,
+    },
+}
+caminho_manifesto.write_text(
+    json.dumps(manifesto_c4, ensure_ascii=False, indent=2, default=str),
+    encoding="utf-8",
+)
+
+assert len(pd.read_csv(caminho_comparacao, encoding="utf-8-sig")) == len(comparacao)
+assert len(pd.read_parquet(caminho_predicoes)) == len(pred_val)
+
+print(f"Comparação : {caminho_comparacao}")
+print(f"Predições  : {caminho_predicoes}")
+print(f"Manifesto  : {caminho_manifesto}")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Comparação : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C4_boosting_provisional_20261017T010744Z_comparacao.csv
+Predições  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\C4_boosting_provisional_20261017T010744Z_predicoes_validacao.parquet
+Manifesto  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C4_boosting_provisional_20261017T010744Z_manifesto.json
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## Proposta de atualização do YAML
+
+Consolida os hiperparâmetros vencedores num bloco pronto para colar em
+`supervised.yaml`. **Não é aplicada automaticamente** — o C5 lê o YAML
+que existir em disco.
+```
+
+### Cell 14 [code] · In [8]
+
+```python
+def _fmt(v):
+    if v is None: return "null"
+    if isinstance(v, bool): return "true" if v else "false"
+    return repr(v) if isinstance(v, str) else str(v)
+
+
+def _montar_proposta_yaml():
+    linhas = [
+        "# Proposta de atualização do YAML — gerada pelo C4.",
+        "# NÃO aplicada automaticamente; revise e cole em configs/supervised.yaml.",
+        f"# cohort_kind: {manifest['cohort_kind']}",
+        f"# g6_status: {G6_STATUS}",
+        f"# metrica_principal: {METRICA_PRINCIPAL}",
+        "models:",
+    ]
+    if melhor_config_log is not None:
+        linhas += ["  logistic:", f"    C: {_fmt(melhor_config_log['params']['C'])}"]
+    if melhor_config_boost is not None:
+        p = melhor_config_boost["params"]
+        linhas += [
+            "  boosting:",
+            f"    learning_rate: {_fmt(p['learning_rate'])}",
+            f"    max_iter: {_fmt(p['max_iter'])}",
+            f"    max_depth: {_fmt(p['max_depth'])}",
+        ]
+    return "\n".join(linhas) + "\n"
+
+
+if G6_APROVADO and (melhor_config_log or melhor_config_boost):
+    proposta = _montar_proposta_yaml()
+    caminho_proposta = TABLES_DIR / f"{prefixo}_proposta_yaml.yaml"
+    caminho_proposta.write_text(proposta, encoding="utf-8")
+    print(proposta)
+    print(f"Salvo: {caminho_proposta}")
+else:
+    caminho_proposta = None
+    print("Sem proposta de atualização do YAML (G6 pendente ou busca vazia).")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Sem proposta de atualização do YAML (G6 pendente ou busca vazia).
+```
+
+### Cell 15 [code] · In [9]
+
+```python
+with Run(
+    modelo="C4_boosting",
+    parametros={
+        "cohort_kind":       manifest["cohort_kind"],
+        "g6_status":         G6_STATUS,
+        "buscas_executadas": bool(G6_APROVADO),
+        "metrica_principal": METRICA_PRINCIPAL,
+        "max_configs":       MAX_CONFIGS,
+        "limiar_diagnostico": 0.5,
+        "calibracao_aplicada": False,
+        "teste_aberto":      False,
+    },
+    dataset={
+        "n_treino":        int(len(treino)),
+        "n_validacao":     int(len(validacao)),
+        "n_teste_fechado": n_teste,
+    },
+    features={"n_features": len(FEATURES), "usadas": FEATURES},
+    notas="C4 — boosting na partição do C3. Buscas condicionadas ao G6. Teste não consultado.",
+    dataset_path=Path(manifest["dataset_path"]),
+    dataset_sha256=manifest["dataset_sha256"],
+) as r:
+    r.metrica(
+        logistica_ap=metricas_log_final["ap"],
+        logistica_auc=metricas_log_final["auc"],
+        boosting_ap=metricas_boost_final["ap"],
+        boosting_auc=metricas_boost_final["auc"],
+        boosting_brier=metricas_boost_final["brier"],
+        delta_ap=delta_ap,
+    )
+
+print("Run registrado em:", r.pasta)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_220744_784223_C4_boosting
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_220744_784223_C4_boosting
+```
+
+## `notebooks/C/C_15_calibracao_limiar.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `29.3 KB` · modified `2026-10-17 14:00 UTC`
+- SHA-256: `4e02d65b69000c9e9347fcd32bc8cd12dcff67e2e5360c628d1f8eec9d608272`
+
+- Cells: `10` (`6` code, `4` markdown)
+- Code cells executed: `6` of `6`
+- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# C5 — Calibração e Escolha de Limiar
+
+Calibra os finalistas e escolhe o limiar operacional usando **somente
+treino e validação**. Se `HONEST_CALIB_SPLIT = True`, a validação é
+dividida em `val_cal` (ajusta calibrador) e `val_meas` (mede Brier,
+escolhe limiar). Não abre o teste e não escreve no YAML.
+
+**Pré-requisito:** `pip install -e .` com scikit-learn ≥ 1.6.
+```
+
+### Cell 2 [code] · In [1]
+
+```python
+from pathlib import Path
+import hashlib
+import json
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+from IPython.display import display
+from sklearn.model_selection import train_test_split
+
+
+def encontrar_raiz_projeto(start: Path | None = None) -> Path:
+    atual = (start or Path.cwd()).resolve()
+    for candidato in (atual, *atual.parents):
+        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
+            return candidato
+    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
+
+
+ROOT_DIR = encontrar_raiz_projeto()
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+try:
+    import sklearn.frozen  # noqa: F401
+except ImportError as exc:
+    raise RuntimeError(
+        "Este notebook requer scikit-learn >= 1.6 (FrozenEstimator)."
+    ) from exc
+
+from src.utils import config as C
+from src.utils import env
+from src.utils.reproducibility import Run
+from src.data.supervised_artifact import load_supervised_artifact, split_partitions
+from src.evaluation.leakage import check_leakage
+from src.evaluation.metrics import metricas_completas, brier
+from src.evaluation.calibration import curva_confiabilidade, ece, mce, brier_decomposicao
+from src.models.factory import build_finalista
+from src.models.calibration import calibrar, escolher_limiar
+
+env.carregar_dotenv()
+env.garantir_diretorios()
+
+TABLES_DIR      = C.TABLES_DIR
+PREDICTIONS_DIR = C.PREDICTIONS_DIR
+TABLES_DIR.mkdir(parents=True, exist_ok=True)
+PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+SEED      = int(C.SEED)
+G7_STATUS = str(C.cfg("gates", "G7_calibracao", "status") or "pendente")
+G8_STATUS = str(C.cfg("gates", "G8_limiar", "status") or "pendente")
+
+print(C.resumo())
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+ROOT_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
+DATA_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data
+RAW_DIR           = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\raw
+PROCESSED_DIR     = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\processed
+ANALYTICAL_DIR    = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\analytical
+TREINO_DIR        = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\data\treino
+OUTPUTS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs
+RUNS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs
+LOGS_DIR          = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\logs
+CONFIGS_DIR       = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs
+SUPERVISED_YAML   = <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\configs\supervised.yaml (ok)
+PARQUET_NAME      = srag.parquet
+DATA_VERSION      = dados-v2
+GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
+HTTP_TIMEOUT      = 180
+HTTP_TENTATIVAS   = 3
+SEED              = 42
+GITHUB_TOKEN?     = False
+SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
+SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## Carregar artefacto e preparar validação
+
+Se `HONEST_CALIB_SPLIT = True`, `val_cal` ajusta o calibrador e
+`val_meas` mede — evita o viés otimista de calibrar e medir no mesmo
+conjunto. Caso contrário, ambos são a validação inteira.
+```
+
+### Cell 4 [code] · In [2]
+
+```python
+COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
+
+df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
+treino, validacao = split_partitions(df, manifest)
+
+PARTICAO = manifest["partition_column"]
+ALVO     = manifest["target_column"]
+FEATURES = list(manifest["feature_columns"])
+
+X_train = treino[FEATURES].copy()
+y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
+X_val   = validacao[FEATURES].copy()
+y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
+
+check_leakage(X_train)
+check_leakage(X_val)
+
+HONEST_CALIB_SPLIT = True
+CALIB_SPLIT_FRAC   = 0.5
+CALIB_SPLIT_SEED   = SEED
+
+if HONEST_CALIB_SPLIT:
+    idx_cal, idx_meas = train_test_split(
+        np.arange(len(y_val)),
+        test_size=1.0 - CALIB_SPLIT_FRAC,
+        random_state=CALIB_SPLIT_SEED,
+        stratify=y_val.to_numpy(),
+    )
+    X_val_cal  = X_val.iloc[idx_cal].reset_index(drop=True)
+    y_val_cal  = y_val.iloc[idx_cal].reset_index(drop=True)
+    X_val_meas = X_val.iloc[idx_meas].reset_index(drop=True)
+    y_val_meas = y_val.iloc[idx_meas].reset_index(drop=True)
+    CALIB_SPLIT_HASH = hashlib.sha256(
+        np.asarray(idx_cal, dtype=np.int64).tobytes()
+    ).hexdigest()[:16]
+else:
+    X_val_cal, y_val_cal = X_val, y_val
+    X_val_meas, y_val_meas = X_val, y_val
+    CALIB_SPLIT_HASH = None
+
+n_teste = int((df[PARTICAO].astype(str) == "teste").sum())
+
+display(pd.DataFrame({
+    "bloco":      ["treino", "val_cal", "val_meas"],
+    "n":          [len(X_train), len(X_val_cal), len(X_val_meas)],
+    "positivos":  [int(y_train.sum()), int(y_val_cal.sum()), int(y_val_meas.sum())],
+}))
+
+print(f"cohort_kind : {manifest['cohort_kind']}")
+print(f"features    : {len(FEATURES)}")
+print(f"teste       : {n_teste:,} (fechado)")
+if CALIB_SPLIT_HASH:
+    print(f"split_hash  : {CALIB_SPLIT_HASH}")
+```
+
+**Output 1 (display_data)**
+
+```text
+      bloco        n  positivos
+0    treino  2740584     599323
+1   val_cal   293636      64215
+2  val_meas   293636      64214
+[non-text output omitted: text/html]
+```
+
+**Output 2 (stream:stdout)**
+
+```text
+cohort_kind : provisional
+features    : 31
+teste       : 587,276 (fechado)
+split_hash  : c1a8f0dfddbf2b40
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## Calibrar finalistas e escolher limiar
+
+Para cada finalista da `selecao_modelos.finalistas`, treina no
+treino, calibra cada método candidato em `val_cal`, mede Brier em
+`val_meas` e escolhe o melhor. Depois escolhe o limiar no mesmo
+`val_meas`.
+
+O YAML usa `hist_gradient_boosting`; a fábrica usa `boosting` —
+mapeamento abaixo, sem duplicar lógica de construção.
+```
+
+### Cell 6 [code] · In [3]
+
+```python
+ALIASES_FINALISTA = {
+    "logistic":               "logistic",
+    "boosting":               "boosting",
+    "hist_gradient_boosting": "boosting",
+}
+
+selecao_cfg = C.cfg("selecao_modelos") or {}
+FINALISTAS  = list(selecao_cfg.get("finalistas") or [])
+if not FINALISTAS:
+    raise RuntimeError("selecao_modelos.finalistas está vazio no YAML.")
+
+desconhecidos = [n for n in FINALISTAS if n not in ALIASES_FINALISTA]
+if desconhecidos:
+    raise ValueError(f"Finalistas desconhecidos: {desconhecidos}")
+
+calibracao_cfg      = C.cfg("calibracao") or {}
+CALIBRACAO_ATIVA    = bool(calibracao_cfg.get("ativa", True))
+METODOS_CANDIDATOS  = list(calibracao_cfg.get("metodos_candidatos") or ["sigmoid", "isotonic"])
+
+limiar_cfg            = C.cfg("limiar") or {}
+LIMIAR_METRICA        = limiar_cfg.get("metrica") or "f1"
+LIMIAR_MIN_PRECISION  = limiar_cfg.get("min_precision")
+
+print(f"finalistas          : {FINALISTAS}")
+print(f"calibracao ativa    : {CALIBRACAO_ATIVA} ({METODOS_CANDIDATOS})")
+print(f"limiar metrica      : {LIMIAR_METRICA} (min_precision={LIMIAR_MIN_PRECISION})")
+
+resultados = {}
+
+for nome_yaml in FINALISTAS:
+    pipe = build_finalista(ALIASES_FINALISTA[nome_yaml])
+    pipe.fit(X_train, y_train)
+    prob_base = pipe.predict_proba(X_val_meas)[:, 1]
+    brier_base = float(brier(y_val_meas, prob_base))
+
+    calibracoes = {}
+    if CALIBRACAO_ATIVA:
+        for metodo in METODOS_CANDIDATOS:
+            try:
+                cal = calibrar(pipe, X_val_cal, y_val_cal, method=metodo)
+                prob = cal.predict_proba(X_val_meas)[:, 1]
+                calibracoes[metodo] = {
+                    "pipeline":  cal,
+                    "prob_meas": prob,
+                    "brier":     float(brier(y_val_meas, prob)),
+                }
+            except Exception as exc:
+                print(f"  {nome_yaml}/{metodo}: falhou ({exc!r})")
+
+    if calibracoes:
+        metodo = min(calibracoes, key=lambda m: calibracoes[m]["brier"])
+        escolha = {"metodo": metodo, **calibracoes[metodo]}
+    else:
+        escolha = {"metodo": None, "pipeline": pipe,
+                   "prob_meas": prob_base, "brier": brier_base}
+
+    resultados[nome_yaml] = {
+        "brier_base":    brier_base,
+        "prob_base_meas": prob_base,
+        "calibracoes":   calibracoes,
+        "escolha":       escolha,
+    }
+
+    res = escolher_limiar(
+        y_val_meas,
+        escolha["prob_meas"],
+        metrica=LIMIAR_METRICA,
+        min_precision=LIMIAR_MIN_PRECISION,
+    )
+    resultados[nome_yaml]["limiar"] = res
+
+tabela = pd.DataFrame([
+    {"finalista": n,
+     "metodo_calibracao": r["escolha"]["metodo"],
+     "brier_base": r["brier_base"],
+     "brier_calibrado": r["escolha"]["brier"],
+     "ganho_brier": r["brier_base"] - r["escolha"]["brier"],
+     "limiar": r["limiar"]["limiar"],
+     "metrica": r["limiar"]["metrica"],
+     "valor_metrica": r["limiar"]["valor"]}
+    for n, r in resultados.items()
+])
+display(tabela)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+finalistas          : ['hist_gradient_boosting', 'logistic']
+calibracao ativa    : True (['sigmoid', 'isotonic'])
+limiar metrica      : f1 (min_precision=None)
+```
+
+**Output 2 (display_data)**
+
+```text
+                finalista metodo_calibracao  brier_base  brier_calibrado  \
+0  hist_gradient_boosting           sigmoid    0.195889         0.140943   
+1                logistic          isotonic    0.198105         0.143855   
+
+   ganho_brier  limiar metrica  valor_metrica  
+0     0.054945   0.255      f1       0.515904  
+1     0.054250   0.255      f1       0.505913  
+[non-text output omitted: text/html]
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## Diagnósticos e persistência
+
+Curva de confiabilidade, decomposição de Brier, ECE e MCE em
+`val_meas` com o método escolhido. Persistimos tudo em `outputs/`.
+```
+
+### Cell 8 [code] · In [4]
+
+```python
+diagnosticos = {}
+linhas_diag  = []
+
+for nome, r in resultados.items():
+    prob = r["escolha"]["prob_meas"]
+    d = {
+        "curva":  curva_confiabilidade(y_val_meas, prob, n_bins=10),
+        "decomp": brier_decomposicao(y_val_meas, prob, n_bins=10),
+        "ece":    float(ece(y_val_meas, prob, n_bins=10)),
+        "mce":    float(mce(y_val_meas, prob, n_bins=10)),
+    }
+    diagnosticos[nome] = d
+    linhas_diag.append({
+        "finalista":   nome,
+        "metodo":      r["escolha"]["metodo"] or "sem_calibracao",
+        "ece":         d["ece"],
+        "mce":         d["mce"],
+        "brier":       d["decomp"]["brier"],
+        "reliability": d["decomp"]["reliability"],
+        "resolution":  d["decomp"]["resolution"],
+    })
+
+display(pd.DataFrame(linhas_diag))
+```
+
+**Output 1 (display_data)**
+
+```text
+                finalista    metodo       ece       mce     brier  \
+0  hist_gradient_boosting   sigmoid  0.001753  0.182603  0.140943   
+1                logistic  isotonic  0.001096  0.179992  0.143855   
+
+   reliability  resolution  
+0     0.000014    0.029117  
+1     0.000004    0.026160  
+[non-text output omitted: text/html]
+```
+
+### Cell 9 [code] · In [5]
+
+```python
+timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
+prefixo   = f"C5_calibracao_limiar_{manifest['cohort_kind']}_{timestamp}"
+
+caminho_tabela       = TABLES_DIR      / f"{prefixo}_escolhas.csv"
+caminho_predicoes    = PREDICTIONS_DIR / f"{prefixo}_predicoes_val_meas.parquet"
+caminho_manifesto    = TABLES_DIR      / f"{prefixo}_manifesto.json"
+
+tabela.to_csv(caminho_tabela, index=False, encoding="utf-8-sig")
+
+artefatos_diag = {}
+for nome, d in diagnosticos.items():
+    c_curva = TABLES_DIR / f"{prefixo}_{nome}_curva.csv"
+    d["curva"].to_csv(c_curva, index=False, encoding="utf-8-sig")
+    resultados[nome]["limiar"]["tabela"].to_csv(
+        TABLES_DIR / f"{prefixo}_{nome}_limiar.csv", index=False, encoding="utf-8-sig",
+    )
+    artefatos_diag[nome] = {
+        "curva":         str(c_curva),
+        "ece":           d["ece"],
+        "mce":           d["mce"],
+        "brier_decomp":  {k: float(v) for k, v in d["decomp"].items()},
+    }
+
+predicoes = []
+for nome, r in resultados.items():
+    predicoes.append(pd.DataFrame({
+        "y_true": y_val_meas.to_numpy(), "y_prob": r["prob_base_meas"],
+        "modelo": f"{nome}_base", "cohort_kind": manifest["cohort_kind"],
+    }))
+    if r["escolha"]["metodo"]:
+        predicoes.append(pd.DataFrame({
+            "y_true": y_val_meas.to_numpy(), "y_prob": r["escolha"]["prob_meas"],
+            "modelo": f"{nome}_{r['escolha']['metodo']}", "cohort_kind": manifest["cohort_kind"],
+        }))
+
+pred_val = pd.concat(predicoes, ignore_index=True)
+pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
+pred_val.to_parquet(caminho_predicoes, index=False)
+
+manifesto_c5 = {
+    "cohort_kind":        manifest["cohort_kind"],
+    "dataset_sha256":     manifest["dataset_sha256"],
+    "feature_columns":    FEATURES,
+    "target_column":      ALVO,
+    "partition_column":   PARTICAO,
+    "n_treino":           int(len(treino)),
+    "n_validacao":        int(len(validacao)),
+    "n_val_cal":          int(len(X_val_cal)),
+    "n_val_meas":         int(len(X_val_meas)),
+    "n_teste_fechado":    n_teste,
+    "honest_calib_split": bool(HONEST_CALIB_SPLIT),
+    "calib_split_frac":   float(CALIB_SPLIT_FRAC),
+    "calib_split_seed":   int(CALIB_SPLIT_SEED),
+    "calib_split_hash":   CALIB_SPLIT_HASH,
+    "finalistas":         FINALISTAS,
+    "calibracao_ativa":   CALIBRACAO_ATIVA,
+    "metodos_candidatos": METODOS_CANDIDATOS,
+    "escolhas": {
+        n: {"metodo": r["escolha"]["metodo"],
+            "brier_base":      r["brier_base"],
+            "brier_calibrado": r["escolha"]["brier"],
+            "limiar":          r["limiar"]["limiar"],
+            "limiar_metrica":  r["limiar"]["metrica"]}
+        for n, r in resultados.items()
+    },
+    "diagnosticos":       artefatos_diag,
+    "g7_status":          G7_STATUS,
+    "g8_status":          G8_STATUS,
+    "teste_aberto":       False,
+    "yaml_atualizado":    False,
+    "artefatos": {
+        "tabela":              str(caminho_tabela),
+        "predicoes_val_meas":  str(caminho_predicoes),
+    },
+}
+caminho_manifesto.write_text(
+    json.dumps(manifesto_c5, ensure_ascii=False, indent=2, default=str),
+    encoding="utf-8",
+)
+
+print(f"Tabela     : {caminho_tabela}")
+print(f"Predições  : {caminho_predicoes}")
+print(f"Manifesto  : {caminho_manifesto}")
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+Tabela     : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv
+Predições  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\C5_calibracao_limiar_provisional_20261017T021055Z_predicoes_val_meas.parquet
+Manifesto  : <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_manifesto.json
+```
+
+### Cell 10 [code] · In [6]
+
+```python
+melhor_nome      = max(resultados, key=lambda n: resultados[n]["limiar"]["auc"])
+metodo_escolhido = resultados[melhor_nome]["escolha"]["metodo"]
+limiar_escolhido = resultados[melhor_nome]["limiar"]
+
+proposta_yaml = "\n".join([
+    "# Proposta de atualização do YAML — C5 (não aplicada automaticamente).",
+    f"# cohort_kind: {manifest['cohort_kind']}",
+    f"# G7/G8 no momento: {G7_STATUS}/{G8_STATUS}",
+    f"# finalista sugerido (maior AUC em val_meas): {melhor_nome}",
+    "calibracao:",
+    f"  metodo: {metodo_escolhido}",
+    "limiar:",
+    f"  otimo: {limiar_escolhido['limiar']}",
+    f"  metrica: {limiar_escolhido['metrica']}",
+])
+print(proposta_yaml)
+
+with Run(
+    modelo="C5_calibracao_limiar",
+    parametros={
+        "cohort_kind":        manifest["cohort_kind"],
+        "finalistas":         FINALISTAS,
+        "calibracao_ativa":   CALIBRACAO_ATIVA,
+        "metodos_candidatos": METODOS_CANDIDATOS,
+        "honest_calib_split": HONEST_CALIB_SPLIT,
+        "limiar_metrica":     LIMIAR_METRICA,
+        "min_precision":      LIMIAR_MIN_PRECISION,
+        "teste_aberto":       False,
+        "yaml_atualizado":    False,
+    },
+    dataset={
+        "n_treino":        int(len(treino)),
+        "n_val_cal":       int(len(X_val_cal)),
+        "n_val_meas":      int(len(X_val_meas)),
+        "n_teste_fechado": n_teste,
+    },
+    features={"n_features": len(FEATURES), "usadas": FEATURES},
+    notas="C5 — calibração e limiar escolhidos na validação. Teste não consultado.",
+    dataset_path=Path(manifest["dataset_path"]),
+    dataset_sha256=manifest["dataset_sha256"],
+) as r:
+    r.metrica(**{
+        f"{n}_{sufixo}": float(valor)
+        for n, res in resultados.items()
+        for sufixo, valor in [
+            ("brier_base", res["brier_base"]),
+            ("brier_calibrado", res["escolha"]["brier"]),
+            ("limiar", res["limiar"]["limiar"]),
+            ("auc", res["limiar"]["auc"]),
+        ]
+    })
+
+print("Run registrado em:", r.pasta)
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+# Proposta de atualização do YAML — C5 (não aplicada automaticamente).
+# cohort_kind: provisional
+# G7/G8 no momento: pendente/pendente
+# finalista sugerido (maior AUC em val_meas): hist_gradient_boosting
+calibracao:
+  metodo: sigmoid
+limiar:
+  otimo: 0.255
+  metrica: f1
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
+```
+
+## `notebooks/C/C_16_validacao_final.ipynb`
+
+- Git: `tracked` · status `clean`
+- Size: `34.2 KB` · modified `2026-10-18 16:22 UTC`
+- SHA-256: `d362b04edc2c7ed49e88c2316ad6911987350864def6114730a57ae635df5f9f`
+
+- Cells: `20` (`11` code, `9` markdown)
+- Code cells executed: `0` of `11`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
+- Outputs: `text outputs included`
+
+### Cell 1 [markdown]
+
+```markdown
+# C6 — Validação Final
+
+Abre a partição de teste **uma única vez**, após `G7`, `G8` e `G9`
+estarem aprovados, e produz a avaliação final do modelo congelado.
+
+Reconstrói o pipeline deterministicamente do YAML, calibra em `val_cal`
+(mesmo split do C5) e avalia no teste: métricas agregadas, IC por
+bootstrap, erros (FN primeiro), por ano, por grupo e calibração por ano.
+No final, marca `G9_holdout` como `executado` no YAML.
+
+**Pré-requisito:** `pip install -e .` com scikit-learn ≥ 1.6.
+```
+
+### Cell 2 [code] · In [ ]
+
+```python
+from pathlib import Path
+import hashlib
+import json
+import os
+import re
+import sys
+
+import numpy as np
+import pandas as pd
+from IPython.display import display
+from sklearn.model_selection import train_test_split
+
+
+def encontrar_raiz_projeto(start: Path | None = None) -> Path:
+    atual = (start or Path.cwd()).resolve()
+    for candidato in (atual, *atual.parents):
+        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
+            return candidato
+    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
+
+
+ROOT_DIR = encontrar_raiz_projeto()
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+try:
+    import sklearn.frozen  # noqa: F401
+except ImportError as exc:
+    raise RuntimeError(
+        "Este notebook requer scikit-learn >= 1.6 (FrozenEstimator)."
+    ) from exc
+
+from src.utils import config as C
+from src.utils import env
+from src.utils.reproducibility import Run
+from src.data.supervised_artifact import (
+    GatePendenteError,
+    load_supervised_artifact,
+)
+from src.evaluation.metrics import (
+    metricas_completas, ic_bootstrap,
+    auc, average_precision, brier as brier_metric,
+)
+from src.evaluation.errors import matriz_confusao, metricas_por_grupo
+from src.evaluation.calibration import curva_confiabilidade, ece, mce, brier_decomposicao
+from src.features.engineering import faixa_etaria as _faixa_etaria
+from src.models.factory import build_finalista
+from src.models.calibration import calibrar
+
+
+# Constantes do notebook (evitam números mágicos espalhados).
+HASH_LEN                 = 16
+CALIB_SPLIT_FRAC_PADRAO  = 0.5
+N_BINS_CALIB             = 10
+MIN_N_CALIB_ANO          = 20
+N_FN_AMOSTRA             = 20
+
+env.carregar_dotenv()
+env.garantir_diretorios()
+
+TABLES_DIR      = C.TABLES_DIR
+PREDICTIONS_DIR = C.PREDICTIONS_DIR
+TABLES_DIR.mkdir(parents=True, exist_ok=True)
+PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+print(C.resumo())
+```
+
+### Cell 3 [markdown]
+
+```markdown
+## Verificar gates
+
+`G7`, `G8` e `G9` precisam estar `aprovado` antes de qualquer leitura
+do teste. O load (próxima célula) reforça `G9` via
+`exigir_gate('G9_holdout')` — defesa em profundidade, mesmo que esta
+célula seja removida ou alterada.
+```
+
+### Cell 4 [code] · In [ ]
+
+```python
+GATES_EXIGIDOS = ["G7_calibracao", "G8_limiar", "G9_holdout"]
+status_gates   = {g: (C.cfg("gates", g) or {}).get("status") for g in GATES_EXIGIDOS}
+
+display(pd.DataFrame({"gate": list(status_gates), "status": list(status_gates.values())}))
+
+if faltando := [g for g, s in status_gates.items() if s != "aprovado"]:
+    raise RuntimeError(
+        f"Gates não aprovados: {faltando}. Edite configs/supervised.yaml."
+    )
+
+n_acessos_antes = int((C.cfg("gates", "G9_holdout") or {}).get("n_acessos") or 0)
+print(f"Gates aprovados. n_acessos_antes (G9) = {n_acessos_antes}.")
+```
+
+### Cell 5 [markdown]
+
+```markdown
+## Carregar artefato e configuração congelada
+
+A partição `teste` só é materializada porque `partitions` inclui
+`"teste"` **e** o gate `G9_holdout` está aprovado. Configuração do
+modelo (finalista, calibração, limiar, features) tem de estar
+congelada no YAML — qualquer ausência falha antes de tocar no teste.
+```
+
+### Cell 6 [code] · In [ ]
+
+```python
+# --- Carregar artefato com as três partições (gate G9 revalidado no loader) ---
+COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
+try:
+    df, manifest = load_supervised_artifact(
+        ROOT_DIR,
+        expected_kind=COHORT_KIND,
+        partitions=("treino", "validacao", "teste"),
+    )
+except GatePendenteError as exc:
+    raise RuntimeError(
+        "G9_holdout ficou pendente entre a checagem e o carregamento. "
+        "Verifique configs/supervised.yaml antes de rodar novamente."
+    ) from exc
+
+PARTICAO = manifest["partition_column"]
+ALVO     = manifest["target_column"]
+
+# --- Finalista ---
+selecao_cfg = C.cfg("selecao_modelos") or {}
+finalista_escolhido = selecao_cfg.get("finalista_escolhido")
+if finalista_escolhido is None:
+    candidatos = list(selecao_cfg.get("finalistas") or [])
+    if len(candidatos) != 1:
+        raise RuntimeError(
+            "selecao_modelos.finalista_escolhido não definido e "
+            f"finalistas={candidatos}. Congele o finalista no YAML."
+        )
+    finalista_escolhido = candidatos[0]
+
+# --- Calibração ---
+calib_cfg    = C.cfg("calibracao") or {}
+calib_ativa  = bool(calib_cfg.get("ativa", True))
+calib_metodo = calib_cfg.get("metodo")
+calib_fonte  = str(calib_cfg.get("fonte") or "validacao")
+
+if calib_ativa and calib_metodo is None:
+    raise RuntimeError("calibracao.ativa=true mas calibracao.metodo vazio no YAML.")
+if calib_fonte != "validacao":
+    raise RuntimeError(f"calibracao.fonte deve ser 'validacao', não {calib_fonte!r}.")
+
+# --- Limiar ---
+limiar_cfg     = C.cfg("limiar") or {}
+limiar_final   = limiar_cfg.get("otimo")
+limiar_metrica = limiar_cfg.get("metrica")
+if limiar_final is None:
+    raise RuntimeError("limiar.otimo vazio no YAML.")
+limiar_final_val = float(limiar_final)
+
+# --- Features ---
+FEATURES = list(C.cfg("features", "final") or [])
+if not FEATURES:
+    raise RuntimeError("features.final vazio — congele as features antes do C6.")
+
+proibidas = set(C.cfg("features", "proibidas") or [])
+if conflito := set(FEATURES) & proibidas:
+    raise RuntimeError(f"features.final contém colunas proibidas: {sorted(conflito)}")
+
+display(pd.DataFrame([
+    {"chave": "finalista",         "valor": finalista_escolhido},
+    {"chave": "calibracao.metodo", "valor": calib_metodo if calib_ativa else "desativada"},
+    {"chave": "limiar.otimo",      "valor": limiar_final_val},
+    {"chave": "limiar.metrica",    "valor": limiar_metrica},
+    {"chave": "features.final",    "valor": len(FEATURES)},
+    {"chave": "n_acessos_G9",      "valor": n_acessos_antes},
+]))
+```
+
+### Cell 7 [markdown]
+
+```markdown
+## Guarda contra reabertura
+
+Se já existe um manifesto C6 para o mesmo `dataset_sha256`, o teste
+foi aberto antes. Reabrir exige `SRAG_ALLOW_TEST_REOPEN=1` **e**
+justificativa em `docs/decisoes.md`.
+```
+
+### Cell 8 [code] · In [ ]
+
+```python
+ALLOW_REOPEN = os.getenv("SRAG_ALLOW_TEST_REOPEN", "0") == "1"
+
+reaberturas = []
+for caminho in TABLES_DIR.glob("C6_validacao_final_*_manifesto.json"):
+    try:
+        dados = json.loads(caminho.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        continue
+    if dados.get("dataset_sha256") == manifest["dataset_sha256"]:
+        reaberturas.append({"arquivo": caminho.name, "em_utc": dados.get("teste_aberto_em_utc")})
+
+if reaberturas and not ALLOW_REOPEN:
+    display(pd.DataFrame(reaberturas))
+    raise RuntimeError(
+        "Teste já aberto para este dataset_sha256. Defina "
+        "SRAG_ALLOW_TEST_REOPEN=1 para reabrir e registe o motivo em docs/decisoes.md."
+    )
+
+print("Guarda OK." if not reaberturas else f"Reabertura autorizada ({len(reaberturas)} anterior(es)).")
+```
+
+### Cell 9 [markdown]
+
+```markdown
+## Reproduzir split do C5 e calibrar
+
+O limiar congelado foi escolhido em `val_meas` com calibrador ajustado em
+`val_cal`. Recalibrar em `val` inteira mudaria a escala e o limiar
+deixaria de ser o ótimo. Localizamos o manifesto do C5 compatível e
+reproduzimos o split (hash de índice confirma que é o mesmo).
+```
+
+### Cell 10 [code] · In [ ]
+
+```python
+def _reproduzir_split_val_cal(y_val, frac_cal, seed):
+    idx_cal, idx_meas = train_test_split(
+        np.arange(len(y_val)),
+        test_size=1.0 - frac_cal,
+        random_state=seed,
+        stratify=y_val.to_numpy(),
+    )
+    return np.asarray(idx_cal, dtype=np.int64), np.asarray(idx_meas, dtype=np.int64)
+
+
+def _localizar_manifesto_c5(dataset_sha256, finalista, metodo, calib_ativa):
+    for caminho in sorted(
+        TABLES_DIR.glob("C5_calibracao_limiar_*_manifesto.json"),
+        key=lambda p: p.stat().st_mtime, reverse=True,
+    ):
+        try:
+            dados = json.loads(caminho.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if dados.get("dataset_sha256") != dataset_sha256:
+            continue
+        if calib_ativa:
+            escolha = (dados.get("escolhas") or {}).get(finalista) or {}
+            if escolha.get("metodo") != metodo:
+                continue
+        return dados, caminho
+    return None, None
+
+
+treino    = df.loc[df[PARTICAO] == "treino"].reset_index(drop=True)
+validacao = df.loc[df[PARTICAO] == "validacao"].reset_index(drop=True)
+teste     = df.loc[df[PARTICAO] == "teste"].reset_index(drop=True)
+
+X_train = treino[FEATURES]
+y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
+X_val   = validacao[FEATURES]
+y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
+X_test  = teste[FEATURES]
+y_test  = pd.to_numeric(teste[ALVO], errors="coerce").astype("int8")
+
+manifesto_c5, manifesto_c5_path = _localizar_manifesto_c5(
+    manifest["dataset_sha256"], finalista_escolhido,
+    calib_metodo if calib_ativa else None, calib_ativa,
+)
+
+if calib_ativa and manifesto_c5 is None:
+    raise RuntimeError(
+        "Nenhum manifesto C5 compatível (dataset_sha256 + metodo). "
+        "Rode o C5 com a configuração atual do YAML antes do C6."
+    )
+
+HONEST_CALIB_SPLIT = bool(manifesto_c5.get("honest_calib_split", False)) if manifesto_c5 else False
+CALIB_SPLIT_FRAC   = float(manifesto_c5.get("calib_split_frac", CALIB_SPLIT_FRAC_PADRAO)) if manifesto_c5 else CALIB_SPLIT_FRAC_PADRAO
+CALIB_SPLIT_SEED   = int(manifesto_c5.get("calib_split_seed", C.SEED)) if manifesto_c5 else int(C.SEED)
+
+# Reprodução do split honesto de validação (default: validação inteira).
+X_val_cal, y_val_cal = X_val, y_val
+if HONEST_CALIB_SPLIT:
+    if manifesto_c5 is None:
+        raise RuntimeError("HONEST_CALIB_SPLIT=True mas manifesto C5 não encontrado.")
+    idx_cal, _ = _reproduzir_split_val_cal(y_val, CALIB_SPLIT_FRAC, CALIB_SPLIT_SEED)
+    hash_local = hashlib.sha256(idx_cal.tobytes()).hexdigest()[:HASH_LEN]
+    hash_c5    = manifesto_c5.get("calib_split_hash")
+    if hash_c5 and hash_local != hash_c5:
+        raise RuntimeError(f"Split divergente do C5 (local={hash_local}, C5={hash_c5}).")
+    X_val_cal = X_val.iloc[idx_cal].reset_index(drop=True)
+    y_val_cal = y_val.iloc[idx_cal].reset_index(drop=True)
+
+ALIASES_FINALISTA = {
+    "logistic":               "logistic",
+    "boosting":               "boosting",
+    "hist_gradient_boosting": "boosting",
+}
+if finalista_escolhido not in ALIASES_FINALISTA:
+    raise ValueError(f"Finalista desconhecido: {finalista_escolhido!r}")
+
+pipe_base = build_finalista(ALIASES_FINALISTA[finalista_escolhido])
+pipe_base.fit(X_train, y_train)
+
+if calib_ativa:
+    if calib_metodo is None:
+        raise ValueError("calib_metodo deve ser definido quando a calibração está ativa.")
+    calibrador = calibrar(pipe_base, X_val_cal, y_val_cal, method=calib_metodo)
+else:
+    calibrador = None
+
+preditor = calibrador if calibrador is not None else pipe_base
+
+display(pd.DataFrame({
+    "bloco":       ["treino", "val_cal", "teste"],
+    "n":           [len(treino), len(X_val_cal), len(teste)],
+    "positivos":   [int(y_train.sum()), int(y_val_cal.sum()), int(y_test.sum())],
+    "prevalencia": [float(y_train.mean()), float(y_val_cal.mean()), float(y_test.mean())],
+}))
+print(f"finalista   : {finalista_escolhido} (fábrica: {ALIASES_FINALISTA[finalista_escolhido]})")
+print(f"calibração  : {calib_metodo if calib_ativa else 'desativada'}")
+print(f"split C5    : {'honesto' if HONEST_CALIB_SPLIT else 'validação inteira'}")
+```
+
+### Cell 11 [markdown]
+
+```markdown
+## Abrir o teste — predição única
+
+Esta é a **única** execução do C6 que toca no teste. Nada aqui é usado
+para reajustar modelo, calibração ou limiar.
+```
+
+### Cell 12 [code] · In [ ]
+
+```python
+abertura_teste_utc = pd.Timestamp.now(tz="UTC").isoformat()
+
+prob_test   = preditor.predict_proba(X_test)[:, 1]
+y_test_arr  = y_test.to_numpy()
+y_pred_test = (prob_test >= limiar_final_val).astype(int)
+
+if not np.isfinite(prob_test).all() or not ((prob_test >= 0) & (prob_test <= 1)).all():
+    raise RuntimeError("Probabilidades inválidas no teste.")
+
+metricas_test = metricas_completas(y_test_arr, prob_test, limiar=limiar_final_val)
+matriz_test   = matriz_confusao(y_test_arr, y_pred_test)
+
+display(pd.DataFrame([{
+    "finalista":  finalista_escolhido,
+    "calibracao": calib_metodo if calib_ativa else "nenhuma",
+    "limiar":     limiar_final_val,
+    **{k: float(v) for k, v in metricas_test.items()},
+}]))
+display(matriz_test)
+
+print(f"Teste aberto em UTC: {abertura_teste_utc}")
+print(f"n teste: {len(prob_test):,}  óbitos reais: {int(y_test_arr.sum()):,}")
+```
+
+### Cell 13 [markdown]
+
+```markdown
+## IC bootstrap, erros e avaliação estratificada
+
+- IC percentil para AP, AUC e Brier, conforme `avaliacao.bootstrap`.
+- Falsos negativos primeiro (`analise_erros.priorizar_falsos_negativos`).
+- Métricas por ano e por grupo (`avaliacao.grupos`).
+- Calibração por ano.
+```
+
+### Cell 14 [code] · In [ ]
+
+```python
+boot_cfg   = C.cfg("avaliacao", "bootstrap") or {}
+BOOT_ATIVO = bool(boot_cfg.get("ativo", True))
+BOOT_REPS  = int(boot_cfg.get("repeticoes") or 1000)
+BOOT_NIVEL = float(boot_cfg.get("nivel") or 0.95)
+BOOT_SEED  = int(boot_cfg.get("seed") or C.SEED)
+
+ic_resultados = {}
+if BOOT_ATIVO:
+    for nome, fn in [("ap", average_precision), ("auc", auc), ("brier", brier_metric)]:
+        est, inf, sup = ic_bootstrap(
+            y_test_arr, prob_test, metrica=fn,
+            n_boot=BOOT_REPS, alpha=1.0 - BOOT_NIVEL, seed=BOOT_SEED,
+        )
+        ic_resultados[nome] = {
+            "estimativa": est, "ic_inferior": inf, "ic_superior": sup, "nivel": BOOT_NIVEL,
+        }
+
+ic_df = pd.DataFrame([{"metrica": k, **v} for k, v in ic_resultados.items()])
+display(ic_df)
+```
+
+### Cell 15 [code] · In [ ]
+
+```python
+erros_cfg   = C.cfg("avaliacao", "analise_erros") or {}
+ERROS_ATIVA = bool(erros_cfg.get("ativa", True))
+
+df_err = teste.copy()
+df_err["y_true"] = y_test_arr
+df_err["y_pred"] = y_pred_test
+df_err["y_prob"] = prob_test
+
+fn = df_err[(df_err.y_true == 1) & (df_err.y_pred == 0)]
+tp = df_err[(df_err.y_true == 1) & (df_err.y_pred == 1)]
+fp = df_err[(df_err.y_true == 0) & (df_err.y_pred == 1)]
+tn = df_err[(df_err.y_true == 0) & (df_err.y_pred == 0)]
+
+display(pd.DataFrame([
+    {"classe": "FN (óbito→cura)",  "n": len(fn), "frac": len(fn) / len(df_err)},
+    {"classe": "TP (óbito→óbito)", "n": len(tp), "frac": len(tp) / len(df_err)},
+    {"classe": "FP (cura→óbito)",  "n": len(fp), "frac": len(fp) / len(df_err)},
+    {"classe": "TN (cura→cura)",   "n": len(tn), "frac": len(tn) / len(df_err)},
+]))
+
+comparacao_fn_tp = pd.DataFrame()
+amostra_fn       = pd.DataFrame()
+
+if ERROS_ATIVA and len(fn) > 0 and len(tp) > 0:
+    feats_num = [c for c in FEATURES if pd.api.types.is_numeric_dtype(df_err[c])]
+    comparacao_fn_tp = pd.DataFrame([
+        {"feature":    c,
+         "fn_media":   float(fn[c].mean()),
+         "tp_media":   float(tp[c].mean()),
+         "delta_media": float(fn[c].mean() - tp[c].mean())}
+        for c in feats_num
+    ])
+    comparacao_fn_tp["abs_delta"] = comparacao_fn_tp.delta_media.abs()
+    comparacao_fn_tp = comparacao_fn_tp.sort_values("abs_delta", ascending=False).reset_index(drop=True)
+    print("Features numéricas com maior diferença FN vs TP:")
+    display(comparacao_fn_tp)
+
+if len(fn) > 0:
+    amostra_fn = fn.sort_values("y_prob", ascending=False).head(N_FN_AMOSTRA)[FEATURES + ["y_prob"]]
+    print(f"Top {N_FN_AMOSTRA} falsos negativos por probabilidade predita:")
+    display(amostra_fn)
+```
+
+### Cell 16 [code] · In [ ]
+
+```python
+COLUNA_ANO = str(C.cfg("periodo", "coluna_ano") or "ano_internacao")
+
+metricas_por_ano_df = pd.DataFrame()
+curvas_por_ano      = {}
+calib_por_ano_df    = pd.DataFrame()
+
+if COLUNA_ANO in teste.columns:
+    anos = sorted(teste[COLUNA_ANO].dropna().astype(int).unique().tolist())
+    linhas_ano, linhas_calib = [], []
+
+    for ano in anos:
+        m = (teste[COLUNA_ANO].astype("Int64") == ano).to_numpy()
+        y_a, p_a = y_test_arr[m], prob_test[m]
+        if len(y_a) == 0:
+            continue
+        duas_classes = len(np.unique(y_a)) >= 2
+        linhas_ano.append({
+            "ano":        int(ano),
+            "n":          int(len(y_a)),
+            "positivos":  int(y_a.sum()),
+            "prevalencia": float(y_a.mean()),
+            "ap":   float(average_precision(y_a, p_a)) if duas_classes else float("nan"),
+            "auc":  float(auc(y_a, p_a))               if duas_classes else float("nan"),
+            "brier": float(brier_metric(y_a, p_a)),
+            "ece":  float(ece(y_a, p_a, n_bins=N_BINS_CALIB)) if len(y_a) >= MIN_N_CALIB_ANO else float("nan"),
+        })
+        if len(y_a) >= MIN_N_CALIB_ANO and duas_classes:
+            curvas_por_ano[int(ano)] = curva_confiabilidade(y_a, p_a, n_bins=N_BINS_CALIB)
+            d = brier_decomposicao(y_a, p_a, n_bins=N_BINS_CALIB)
+            linhas_calib.append({
+                "ano": int(ano),
+                "n":   int(len(y_a)),
+                "ece": float(ece(y_a, p_a, n_bins=N_BINS_CALIB)),
+                "mce": float(mce(y_a, p_a, n_bins=N_BINS_CALIB)),
+                **{k: float(v) for k, v in d.items()},
+            })
+
+    metricas_por_ano_df = pd.DataFrame(linhas_ano)
+    calib_por_ano_df    = pd.DataFrame(linhas_calib)
+
+display(metricas_por_ano_df)
+
+grupos_cfg  = list(C.cfg("avaliacao", "grupos") or [])
+min_n_grupo = int(C.cfg("avaliacao", "min_n_grupo") or 100)
+
+df_grupos = teste.copy()
+if (
+    "faixa_etaria" in grupos_cfg
+    and "faixa_etaria" not in df_grupos.columns
+    and "idade_anos" in df_grupos.columns
+):
+    df_grupos["faixa_etaria"] = _faixa_etaria(df_grupos["idade_anos"])
+
+metricas_por_grupo_dict = {}
+grupos_pulados = []
+for grupo in grupos_cfg:
+    if grupo not in df_grupos.columns:
+        grupos_pulados.append(grupo)
+        continue
+    metricas_por_grupo_dict[grupo] = metricas_por_grupo(
+        df_grupos, y_test_arr, prob_test, grupo,
+        limiar=limiar_final_val, min_n=min_n_grupo,
+    )
+    print(f"\n=== {grupo} ===")
+    display(metricas_por_grupo_dict[grupo])
+
+if grupos_pulados:
+    print(f"\nGrupos pulados (ausentes no teste): {grupos_pulados}")
+
+display(calib_por_ano_df)
+```
+
+### Cell 17 [markdown]
+
+```markdown
+## Persistir artefatos e registar a execução
+```
+
+### Cell 18 [code] · In [ ]
+
+```python
+timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
+prefixo   = f"C6_validacao_final_{manifest['cohort_kind']}_{timestamp}"
+
+caminho_metricas  = TABLES_DIR      / f"{prefixo}_metricas.csv"
+caminho_matriz    = TABLES_DIR      / f"{prefixo}_matriz_confusao.csv"
+caminho_por_ano   = TABLES_DIR      / f"{prefixo}_metricas_por_ano.csv"
+caminho_calib_ano = TABLES_DIR      / f"{prefixo}_calibracao_por_ano.csv"
+caminho_ic        = TABLES_DIR      / f"{prefixo}_ic_bootstrap.csv"
+caminho_erros     = TABLES_DIR      / f"{prefixo}_analise_erros.csv"
+caminho_fn        = TABLES_DIR      / f"{prefixo}_fn_amostra.csv"
+caminho_predicoes = PREDICTIONS_DIR / f"{prefixo}_predicoes_teste.parquet"
+caminho_manifesto = TABLES_DIR      / f"{prefixo}_manifesto.json"
+
+pd.DataFrame([{
+    "finalista": finalista_escolhido,
+    "limiar":    limiar_final_val,
+    **{k: float(v) for k, v in metricas_test.items()},
+}]).to_csv(caminho_metricas, index=False, encoding="utf-8-sig")
+matriz_test.to_csv(caminho_matriz, encoding="utf-8-sig")
+metricas_por_ano_df.to_csv(caminho_por_ano, index=False, encoding="utf-8-sig")
+calib_por_ano_df.to_csv(caminho_calib_ano, index=False, encoding="utf-8-sig")
+if not ic_df.empty:            ic_df.to_csv(caminho_ic, index=False, encoding="utf-8-sig")
+if not comparacao_fn_tp.empty: comparacao_fn_tp.to_csv(caminho_erros, index=False, encoding="utf-8-sig")
+if not amostra_fn.empty:       amostra_fn.to_csv(caminho_fn, index=False, encoding="utf-8-sig")
+
+for grupo, tab in metricas_por_grupo_dict.items():
+    tab.to_csv(TABLES_DIR / f"{prefixo}_por_grupo_{grupo}.csv", index=False, encoding="utf-8-sig")
+for ano, curva in curvas_por_ano.items():
+    curva.to_csv(TABLES_DIR / f"{prefixo}_curva_{ano}.csv", index=False, encoding="utf-8-sig")
+
+pred_test = pd.DataFrame({
+    "y_true":      y_test_arr,
+    "y_prob":      prob_test,
+    "y_pred":      y_pred_test,
+    "limiar":      limiar_final_val,
+    "modelo":      finalista_escolhido,
+    "cohort_kind": manifest["cohort_kind"],
+})
+if COLUNA_ANO in teste.columns:
+    pred_test[COLUNA_ANO] = teste[COLUNA_ANO].to_numpy()
+pred_test.to_parquet(caminho_predicoes, index=False)
+
+manifesto_c6 = {
+    "cohort_kind":         manifest["cohort_kind"],
+    "dataset_path":        manifest["dataset_path"],
+    "dataset_sha256":      manifest["dataset_sha256"],
+    "feature_columns":     FEATURES,
+    "target_column":       ALVO,
+    "partition_column":    PARTICAO,
+    "n_treino":            int(len(treino)),
+    "n_validacao":         int(len(validacao)),
+    "n_teste":             int(len(teste)),
+    "finalista_escolhido": finalista_escolhido,
+    "calibracao_ativa":    calib_ativa,
+    "calibracao_metodo":   calib_metodo,
+    "calibracao_fonte":    calib_fonte,
+    "honest_calib_split":  HONEST_CALIB_SPLIT,
+    "manifesto_c5_usado":  str(manifesto_c5_path) if manifesto_c5_path else None,
+    "limiar_final":        limiar_final_val,
+    "limiar_metrica":      limiar_metrica,
+    "teste_aberto_em_utc": abertura_teste_utc,
+    "metricas_agregadas":  {k: float(v) for k, v in metricas_test.items()},
+    "ic_bootstrap":        ic_resultados,
+    "erros":               {"fn": len(fn), "tp": len(tp), "fp": len(fp), "tn": len(tn)},
+    "grupos_avaliados":    list(metricas_por_grupo_dict),
+    "grupos_pulados":      grupos_pulados,
+    "artefatos": {
+        "metricas":           str(caminho_metricas),
+        "matriz_confusao":    str(caminho_matriz),
+        "metricas_por_ano":   str(caminho_por_ano),
+        "calibracao_por_ano": str(caminho_calib_ano),
+        "ic_bootstrap":       str(caminho_ic),
+        "analise_erros":      str(caminho_erros) if not comparacao_fn_tp.empty else None,
+        "fn_amostra":         str(caminho_fn)    if not amostra_fn.empty else None,
+        "predicoes_teste":    str(caminho_predicoes),
+    },
+}
+caminho_manifesto.write_text(
+    json.dumps(manifesto_c6, ensure_ascii=False, indent=2, default=str),
+    encoding="utf-8",
+)
+
+with Run(
+    modelo="C6_validacao_final",
+    parametros={
+        "cohort_kind":       manifest["cohort_kind"],
+        "finalista":         finalista_escolhido,
+        "calibracao_metodo": calib_metodo,
+        "limiar_final":      limiar_final_val,
+        "limiar_metrica":    limiar_metrica,
+        "teste_aberto_em_utc": abertura_teste_utc,
+        "n_acessos_antes":   n_acessos_antes,
+    },
+    dataset={"n_treino": len(treino), "n_validacao": len(validacao), "n_teste": len(teste)},
+    features={"n_features": len(FEATURES), "usadas": FEATURES},
+    notas="C6 — abertura única do teste. Pipeline reconstruído via build_finalista.",
+    dataset_path=Path(manifest["dataset_path"]),
+    dataset_sha256=manifest["dataset_sha256"],
+) as r:
+    r.metrica(**{k: float(v) for k, v in metricas_test.items()})
+
+print(f"Run registrado em: {r.pasta}")
+```
+
+### Cell 19 [markdown]
+
+```markdown
+## Marcar `G9_holdout` como executado
+
+Edição cirúrgica do YAML: só o bloco `G9_holdout` é tocado (preserva
+comentários). Na próxima execução, a verificação de gates falha — é a
+disciplina de abertura única imposta pelo código.
+```
+
+### Cell 20 [code] · In [ ]
+
+```python
+def _marcar_g9_executado(root_dir: Path, timestamp_utc: str, n_antes: int) -> Path:
+    """Atualiza o bloco G9_holdout no YAML preservando comentários e indentação."""
+    yaml_path = root_dir / "configs" / "supervised.yaml"
+    linhas    = yaml_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    i_ini = next(
+        (i for i, ln in enumerate(linhas) if ln.rstrip() == "  G9_holdout:"),
+        None,
+    )
+    if i_ini is None:
+        raise RuntimeError("Bloco `G9_holdout:` não encontrado em supervised.yaml.")
+
+    indent = len(linhas[i_ini]) - len(linhas[i_ini].lstrip(" "))
+    i_fim  = len(linhas)
+    for i in range(i_ini + 1, len(linhas)):
+        ln = linhas[i]
+        if ln.strip() and (len(ln) - len(ln.lstrip(" "))) < indent:
+            i_fim = i
+            break
+
+    novos = {
+        "status":       "executado",
+        "executado_em": f'"{timestamp_utc}"',
+        "n_acessos":    str(n_antes + 1),
+    }
+    padrao = re.compile(r"^(\s+)(\w+):\s*.*$")
+    encontrados = set()
+    bloco = linhas[i_ini:i_fim]
+    for j, ln in enumerate(bloco):
+        if (m := padrao.match(ln)) and m.group(2) in novos:
+            bloco[j] = f"{m.group(1)}{m.group(2)}: {novos[m.group(2)]}\n"
+            encontrados.add(m.group(2))
+
+    if faltando := set(novos) - encontrados:
+        raise RuntimeError(
+            f"Campos ausentes em G9_holdout: {sorted(faltando)}. "
+            "O teste JÁ FOI ABERTO — corrija o YAML e defina SRAG_ALLOW_TEST_REOPEN=1 para reexecutar."
+        )
+
+    linhas[i_ini:i_fim] = bloco
+    yaml_path.write_text("".join(linhas), encoding="utf-8")
+    return yaml_path
+
+
+caminho_yaml = _marcar_g9_executado(ROOT_DIR, abertura_teste_utc, n_acessos_antes)
+
+print()
+print("=" * 60)
+print(f"C6 concluído. AP={metricas_test['ap']:.4f}  AUC={metricas_test['auc']:.4f}  Brier={metricas_test['brier']:.4f}")
+print(f"Falsos negativos: {len(fn)} de {int(y_test_arr.sum())} óbitos")
+print(f"G9 marcado em {caminho_yaml}")
+print("=" * 60)
+```
+
+## `PROJECT_STATUS.md`
+
+- Git: `tracked` · status `M`
+- Size: `36.9 KB` · modified `2026-10-18 16:34 UTC`
+- SHA-256: `54a2d89af55c637ade3ba5e284b7820e60c5819e9e847ff6e0d8a430a4def670`
+
+```markdown
+# Status do projeto
+
+> Atualizado em 2026-10-18T16:34:05Z.
+
+- Concluídas: **15**
+- Implementadas a confirmar: **0**
+- Precisam revisão: **7**
+- Em andamento: **0**
+- Abertas: **100**
+
+## Itens em acompanhamento
+
+- ⬜ **#96** Atualizar os guias e a base de conhecimento do agente — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 01/11
+- ⬜ **#112** Atualizar a revisão bibliográfica com busca científica dirigida — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 01/11
+- ⬜ **#53** Exploração opcional: validar o modelo congelado em 2026 — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
+- ⬜ **#130** Regerar a referência do projeto ao fim de cada marco — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
+- ⬜ **#10** Regra definitiva para números de notificação repetidos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#59** Documentar 2026 como período parcial e exclusivamente exploratório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#72** Quem é responsável pelos próximos passos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#73** decisoes.md parado em 10/10 — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#82** Decidir o que fazer com intervalos impossíveis entre sintomas e internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#83** Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- 🟨 **#16** Nada no código impede abrir o teste antes do G9 — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- 🟨 **#18** Carregar só algumas colunas do artefato pula a validação — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#61** pyproject aceita scikit-learn 1.4, mas o código precisa de 1.8+ — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#63** Dependências sem versão e espalhadas em dois arquivos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#86** Levar a partição por hash do notebook para src/data/split.py — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
+- 🟨 **#123** Ler o artefato por partição, para o teste nunca chegar à memória por engano — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#14** A variável SRAG_PARQUET_URL não tem efeito — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#19** O YAML aceita chaves duplicadas em silêncio e fica em cache — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#20** Nome do finalista diferente no YAML e no código — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#29** Itens desatualizados ou sem uso no YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#34** O C_13 manda colar os hiperparâmetros em config.yaml (o certo é supervised.yaml) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#38** Sobras no B_07: modo de teste sintético e imports sem uso — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#40** A construção da coorte provisória não gera os arquivos de rastreio esperados — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#66** Teste lento roda junto com os rápidos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#76** Nenhum notebook confere a versão do scikit-learn no início — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#122** read_srag sem opção de leitura compacta — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#98** Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 21/10
+- ⬜ **#15** Pré-processador e manifesto podem usar listas de variáveis diferentes — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#27** O manifesto "mais recente" é escolhido pela data do arquivo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#58** A mesma validação escolhe hiperparâmetros e mede o resultado — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- 🟨 **#64** Testes que faltam — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#118** Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#119** Executar o modelo congelado nas duas janelas de teste (E_02) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 23/10
+- ⬜ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 24/10
+- ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#57** Associações "protetoras" que são efeito da idade — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#89** Revisar a conclusão do A_09 de que o sorteio é "otimista" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#110** Estado como variável: comparar sem geografia, com região e com UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 26/10
+- ⬜ **#111** Recorte só de São Paulo como entrega mínima — ABERTA · Equipe · 26/10
+- ⬜ **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#3** Garantir que a busca de hiperparâmetros termine a tempo — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#9** Saturação, desconforto respiratório e vacina: cada documento diz uma coisa — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#13** A sazonalidade é criada, mas não entra no modelo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#54** Rodar as sensibilidades de gravidade, contexto e "qualquer óbito" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#52** Fichas de óbito têm as doenças prévias mais preenchidas — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
+- ⬜ **#109** UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
+- ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#28** O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#37** O B_10 vai falhar de propósito quando a lista final de variáveis existir — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#77** Aprovar o G1 com a seleção de features da coorte provisória congelada — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#79** Aprovar o G7: escolher o método de calibração (proposta do C_15: sigmoid) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#80** Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#81** Aprovar o G9 e liberar as duas janelas de teste uma única vez — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#126** Rodar a cadeia final em processos isolados e registrar tempo e pico de memória — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- 🟨 **#26** O manifesto nunca registra que o teste foi aberto — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 30/10
+- ⬜ **#12** Intervalos impossíveis entram no modelo como se fossem válidos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#45** Vacina contra COVID marcada como "sim" antes de existir a vacina — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#46** 58 linhas repetem 29 números de notificação na base bruta — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#47** Idades, datas e anos impossíveis — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#56** Mostrar por que a data de internação é a âncora, e quem ficou de fora — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#69** Plano v2 e orientação de TCC descrevem outro período e outra divisão — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#71** Cuidados de redação no relatório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#11** A sensibilidade de indicadores de ausência não existe no código — ABERTA · C · Após 03/11
+- ⬜ **#24** Curvas de calibração calculadas de dois jeitos — ABERTA · C · Após 03/11
+- ⬜ **#25** A checagem de vazamento só olha o nome das colunas — ABERTA · C · Após 03/11
+- ⬜ **#31** configs/paths.local.json aponta para uma pasta que ninguém usa — ABERTA · C · Após 03/11
+- 🟨 **#32** Textos antigos no código (dt_notific, nomes de gates) — PRECISA REVISÃO · C · Após 03/11
+- ⬜ **#33** normalization.py está vazio — ABERTA · C · Após 03/11
+- ⬜ **#35** Notebooks B recalculam com código próprio o que já existe em src/ — ABERTA · B · Após 03/11
+- ⬜ **#39** Matriz de transição do B_10 com status escritos à mão — ABERTA · B · Após 03/11
+- ⬜ **#41** "provisoria", "provisorio" e "provisional" misturados — ABERTA · B + C · Após 03/11
+- 🟨 **#42** Cada notebook encontra a pasta do projeto de um jeito — PRECISA REVISÃO · B + C · Após 03/11
+- ⬜ **#43** Arquivos e listas que ninguém usa (preprocessor.joblib, lista de coortes no B_06) — ABERTA · B + C · Após 03/11
+- ⬜ **#48** 41 fichas com povo tradicional preenchido sem a pessoa ser de povo tradicional — ABERTA · A · Após 03/11
+- ⬜ **#49** Códigos a confirmar no dicionário — ABERTA · A · Após 03/11
+- ⬜ **#50** Em que ano cada campo entrou na ficha — ABERTA · A · Após 03/11
+- ⬜ **#68** Texto com codificação corrompida — ABERTA · C · Após 03/11
+- ⬜ **#74** Faltam os números do clustering sem saturação e desconforto — ABERTA · B · Após 03/11
+- ⬜ **#88** A exportação da Pessoa A não tem duas variáveis que o modelo exige — ABERTA · A · Após 03/11
+- ⬜ **#90** O A_09 sorteia linhas, e não grupos: a mesma ficha cai em duas partições — ABERTA · A · Após 03/11
+- ⬜ **#93** O A_14 não tem a tabela de candidatos para comparar — ABERTA · A + C · Após 03/11
+- ⬜ **#94** Alertas falsos no relatório automático do projeto — ABERTA · C · Após 03/11
+- ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
+- ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
+- ✅ **#4** O boosting do código central não é o mesmo do piloto — CONCLUÍDA · C · Concluído
+- ✅ **#7** Artefato supervisionado com colunas de auditoria (sg_uf, vacina, saturação…) — CONCLUÍDA · B · Concluído
+- ✅ **#8** Partição estratificada por ano × desfecho — CONCLUÍDA · B · Concluído
+- ✅ **#17** One-hot denso no código central: risco de faltar memória — CONCLUÍDA · C · Concluído
+- ✅ **#44** Coorte definitiva inicial: congelar a seleção de features da coorte provisória — CONCLUÍDA · A (validação técnica: C) · Concluído
+- ✅ **#62** pyproject.toml inválido — CONCLUÍDA · C · Concluído
+- ✅ **#65** test_temporal.py era cópia de test_leakage.py — CONCLUÍDA · C · Concluído
+- ✅ **#67** Rodar a suíte de testes depois das correções — CONCLUÍDA · C · Concluído
+- ✅ **#75** A descrição do G2 não batia com o que foi executado — CONCLUÍDA · A + C · Concluído
+- ✅ **#85** Períodos de treino e teste definidos — CONCLUÍDA · Equipe (conduz: A) · Concluído
+- ✅ **#92** Repositório local sincronizado com o GitHub — CONCLUÍDA · B · Concluído
+- ✅ **#113** O 01_extracao lia o Parquet inteiro (processo de ~13 GB) — CONCLUÍDA · B · Concluído
+- ✅ **#114** Precedência errada entre penalty do YAML e l1_ratio explícito na logística — CONCLUÍDA · C · Concluído
+- ✅ **#115** Mensagem de erro de SRAG_COHORT_KIND fora do contrato do teste — CONCLUÍDA · C · Concluído
+- ✅ **#116** Referência do projeto lenta e incompleta para outra IA (schema v6) — CONCLUÍDA · B · Concluído
+
+<!-- PROJECT_STATUS_DATA
+{"schema_version":1,"generated_at":"2026-10-18T16:34:05Z","last_scanned_commit":"9fa6e694d08430d3fcb9d94c00fbec8a775080e1","items":{"120":{"id":"120","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"10":{"id":"10","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"72":{"id":"72","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"82":{"id":"82","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"83":{"id":"83","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"84":{"id":"84","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"97":{"id":"97","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"102":{"id":"102","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"30":{"id":"30","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"59":{"id":"59","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"73":{"id":"73","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"6":{"id":"6","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"86":{"id":"86","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"87":{"id":"87","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"123":{"id":"123","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"16":{"id":"16","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"18":{"id":"18","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"61":{"id":"61","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"63":{"id":"63","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"125":{"id":"125","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"101":{"id":"101","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"14":{"id":"14","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"19":{"id":"19","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"36":{"id":"36","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"99":{"id":"99","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"121":{"id":"121","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"124":{"id":"124","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"20":{"id":"20","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"21":{"id":"21","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"29":{"id":"29","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"38":{"id":"38","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"40":{"id":"40","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"66":{"id":"66","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"122":{"id":"122","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"34":{"id":"34","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"76":{"id":"76","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"98":{"id":"98","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"118":{"id":"118","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"127":{"id":"127","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"15":{"id":"15","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"64":{"id":"64","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"22":{"id":"22","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"23":{"id":"23","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"27":{"id":"27","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"58":{"id":"58","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"119":{"id":"119","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"95":{"id":"95","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"51":{"id":"51","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"91":{"id":"91","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"55":{"id":"55","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"57":{"id":"57","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"89":{"id":"89","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"110":{"id":"110","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"111":{"id":"111","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"1":{"id":"1","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"5":{"id":"5","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"78":{"id":"78","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"9":{"id":"9","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"13":{"id":"13","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"54":{"id":"54","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"52":{"id":"52","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"109":{"id":"109","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"77":{"id":"77","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"79":{"id":"79","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"80":{"id":"80","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"81":{"id":"81","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"37":{"id":"37","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"126":{"id":"126","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"28":{"id":"28","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"26":{"id":"26","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"12":{"id":"12","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"45":{"id":"45","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"46":{"id":"46","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"47":{"id":"47","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"56":{"id":"56","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"69":{"id":"69","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"70":{"id":"70","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"71":{"id":"71","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"60":{"id":"60","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"112":{"id":"112","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"96":{"id":"96","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"130":{"id":"130","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"53":{"id":"53","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"11":{"id":"11","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"24":{"id":"24","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"25":{"id":"25","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"31":{"id":"31","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"32":{"id":"32","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"33":{"id":"33","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"35":{"id":"35","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"39":{"id":"39","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"41":{"id":"41","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"42":{"id":"42","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/C/C_16_validacao_final.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"43":{"id":"43","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"48":{"id":"48","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"49":{"id":"49","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"50":{"id":"50","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"68":{"id":"68","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"74":{"id":"74","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"88":{"id":"88","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"90":{"id":"90","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"93":{"id":"93","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"94":{"id":"94","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"128":{"id":"128","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"129":{"id":"129","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"4":{"id":"4","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"7":{"id":"7","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"8":{"id":"8","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"44":{"id":"44","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"85":{"id":"85","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"92":{"id":"92","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"113":{"id":"113","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"17":{"id":"17","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"62":{"id":"62","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"114":{"id":"114","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"65":{"id":"65","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"67":{"id":"67","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"75":{"id":"75","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"115":{"id":"115","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"116":{"id":"116","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]}}}
+PROJECT_STATUS_DATA -->
+```
+
+## `pyproject.toml`
+
+- Git: `tracked` · status `clean`
+- Size: `1.9 KB` · modified `2026-10-18 14:49 UTC`
+- SHA-256: `abadb0fb73a06e3a342f03ce049a7f74fede307ad1bf38aa39b4ce3d517d433c`
+
+```toml
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "projeto-integrador"
+version = "0.0.1"
+description = "Análise retrospectiva de risco de óbito por SRAG (SIVEP-Gripe)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Time do Projeto Integrador SRAG" },
+]
+keywords = ["srag", "sivep-gripe", "supervisionado", "saude-publica"]
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=15.0",
+    "scikit-learn>=1.4",
+    "PyYAML>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
+
+[project.urls]
+Repository = "https://github.com/SEU_USUARIO/SEU_REPO"
+
+# ---------------------------------------------------------------------------
+# Empacotamento — src/ é o pacote de topo, para que `import src.*` funcione
+# ---------------------------------------------------------------------------
+[tool.setuptools.packages.find]
+where      = ["."]
+include    = ["src*"]
+namespaces = false
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion   = "7.0"
+testpaths    = ["tests"]
+python_files = ["test_*.py"]
+pythonpath   = ["."]
+addopts      = "-ra -q"
+markers = [
+    "slow: testes que fazem I/O pesado (Parquet, downloads)",
+    "net:  testes que exigem acesso à internet",
+]
+```
+
+## `README.md`
+
+- Git: `tracked` · status `clean`
+- Size: `19.9 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `c227016dabad9f197ff4507945ee8b5e69a42eedbcbf9ad884dc7cea334a3ada`
+
+````markdown
+# Projeto Integrador --- SRAG e Machine Learning
+
+Projeto acadêmico desenvolvido no âmbito do **Projeto Integrador I da
+Pós-Graduação em Inteligência Artificial**. Investiga o uso de técnicas
+de aprendizado de máquina sobre dados públicos de Síndrome Respiratória
+Aguda Grave (SRAG), com foco em preparação de dados, avaliação de
+modelos e reprodutibilidade.
+
+> **Status:** em desenvolvimento. A seleção final do modelo, a
+> calibração, a definição do limiar e a avaliação final ainda dependem
+> da conclusão dos gates metodológicos configurados no projeto.
+
+## Objetivo
+
+Construir um fluxo reproduzível para estudar a previsão retrospectiva de
+óbito por SRAG a partir de informações disponíveis **no momento da
+internação hospitalar**. O trabalho envolve:
+
+-   acesso, organização e preparação dos dados;
+-   definição e rastreabilidade da coorte analítica;
+-   análise exploratória e experimentos não supervisionados;
+-   engenharia e validação de atributos;
+-   comparação de modelos supervisionados;
+-   calibração das probabilidades e escolha de limiar;
+-   avaliação de erros e análise de desempenho por grupos;
+-   documentação dos experimentos e das limitações.
+
+O projeto tem finalidade **acadêmica e exploratória**. Não é um sistema
+clinicamente validado, não deve ser usado para diagnóstico ou decisão
+clínica e não permite inferir causalidade a partir de associações
+preditivas.
+
+## Fonte dos dados
+
+Os dados são provenientes da base pública **SRAG 2019--2026**,
+disponibilizada pelo Ministério da Saúde por meio da API de Dados
+Abertos.
+
+-   **Fonte:** Ministério da Saúde --- Dados Abertos
+-   **Endpoint:**
+    <https://apidadosabertos.saude.gov.br/vigilancia-e-meio-ambiente/srag-2019-2026>
+
+O projeto utiliza arquivos Parquet e rotinas de acesso/armazenamento. Os
+dados originais, arquivos Parquet, modelos treinados e resultados
+volumosos não devem ser versionados diretamente no Git.
+
+## Arquitetura e organização
+
+A lógica reutilizável deve ficar em `src/`; notebooks devem orquestrar
+experimentos, explicar decisões e apresentar tabelas e gráficos.
+Parâmetros e decisões metodológicas devem permanecer centralizados em
+`configs/` e `docs/`.
+
+``` text
+Projeto_Integrador/
+├── configs/
+│   ├── dicionario_variaveis_v1.csv
+│   └── supervised.yaml
+├── docs/
+│   └── decisoes.md
+├── notebooks/
+│   ├── 00_acesso_dados_parquet.ipynb
+│   ├── 01_extracao.ipynb
+│   ├── 02_eda/
+│   │   ├── 01_eda_primeira_passagem.ipynb
+│   │   ├── 02_eda_temporal_clustering.ipynb
+│   │   ├── 03_supervisionado_pilotos.ipynb
+│   │   ├── 04_consolidacao_shortlist_transicao_coorte.ipynb
+│   │   └── _provisorio_construcao_coorte_b.ipynb
+│   └── C/
+│       ├── C1_smoke_test.ipynb
+│       ├── C2_pipeline_supervisionado.ipynb
+│       ├── C3_baseline_logistica.ipynb
+│       ├── C4_boosting.ipynb
+│       ├── C5_calibracao_limiar.ipynb
+│       └── C6_validacao_final.ipynb
+├── src/
+│   ├── data/
+│   │   ├── cohort_source.py
+│   │   ├── split.py
+│   │   └── supervised_artifact.py
+│   ├── evaluation/
+│   │   ├── calibration.py
+│   │   ├── errors.py
+│   │   ├── leakage.py
+│   │   ├── metrics.py
+│   │   └── temporal.py
+│   ├── features/
+│   │   ├── engineering.py
+│   │   └── normalization.py
+│   ├── models/
+│   │   ├── baseline.py
+│   │   ├── boosting.py
+│   │   ├── calibration.py
+│   │   ├── factory.py
+│   │   ├── logistic.py
+│   │   └── pipeline.py
+│   └── utils/
+│       ├── config.py
+│       ├── env.py
+│       ├── reproducibility.py
+│       └── storage.py
+├── tests/
+├── tools/
+│   └── update_project_reference.py
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── requirements.txt
+└── README.md
+```
+
+A árvore acima destaca os principais componentes identificados na
+referência do projeto; `tests/` contém testes automatizados para
+configuração, coorte, atributos, partições, pipeline, métricas,
+calibração, leakage e reprodutibilidade. Consulte os arquivos do
+repositório para a lista completa.
+
+### Responsabilidades principais
+
+  ---------------------------------------------------------------------------
+  Componente                              Responsabilidade
+  --------------------------------------- -----------------------------------
+  `configs/supervised.yaml`               Configura alvo, período, atributos,
+                                          partições, modelos, métricas e
+                                          gates metodológicos.
+
+  `configs/dicionario_variaveis_v1.csv`   Dicionário de variáveis.
+
+  `docs/decisoes.md`                      Registro das decisões
+                                          metodológicas.
+
+  `src/data/`                             Resolução/carregamento da coorte,
+                                          partições e artefatos
+                                          supervisionados.
+
+  `src/features/`                         Engenharia e normalização de
+                                          atributos.
+
+  `src/models/`                           Construção de pipelines, modelos e
+                                          calibração.
+
+  `src/evaluation/`                       Métricas, avaliação temporal,
+                                          calibração, erros e verificações de
+                                          leakage.
+
+  `src/utils/`                            Configuração, ambiente,
+                                          armazenamento e reprodutibilidade.
+
+  `tests/`                                Verificações automatizadas dos
+                                          contratos do projeto.
+
+  `notebooks/`                            Exploração, experimentos,
+                                          orquestração e comunicação dos
+                                          resultados.
+  ---------------------------------------------------------------------------
+
+## Notebooks
+
+  -----------------------------------------------------------------------------------------------
+  Notebook                                                    Finalidade
+  ----------------------------------------------------------- -----------------------------------
+  `00_acesso_dados_parquet.ipynb`                             Verificar o acesso aos dados
+                                                              Parquet.
+
+  `01_extracao.ipynb`                                         Documentar a etapa de extração.
+
+  `02_eda/01_eda_primeira_passagem.ipynb`                     Primeira exploração e diagnóstico
+                                                              dos dados.
+
+  `02_eda/02_eda_temporal_clustering.ipynb`                   Análises temporais e experimentos
+                                                              de agrupamento.
+
+  `02_eda/03_supervisionado_pilotos.ipynb`                    Experimentos supervisionados
+                                                              preliminares.
+
+  `02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`   Consolidar a shortlist e a
+                                                              transição da coorte.
+
+  `02_eda/_provisorio_construcao_coorte_b.ipynb`              Notebook provisório de construção
+                                                              de coorte; confirmar sua
+                                                              necessidade antes de tratá-lo como
+                                                              fluxo oficial.
+
+  `C/C1_smoke_test.ipynb`                                     Verificar componentes essenciais do
+                                                              ambiente e do projeto.
+
+  `C/C2_pipeline_supervisionado.ipynb`                        Orquestrar e validar o pipeline
+                                                              supervisionado.
+
+  `C/C3_baseline_logistica.ipynb`                             Executar referências e experimentos
+                                                              com regressão logística.
+
+  `C/C4_boosting.ipynb`                                       Executar a busca limitada e avaliar
+                                                              boosting.
+
+  `C/C5_calibracao_limiar.ipynb`                              Escolher calibração e limiar usando
+                                                              dados permitidos.
+
+  `C/C6_validacao_final.ipynb`                                Executar o protocolo de validação
+                                                              final, condicionado à liberação do
+                                                              gate correspondente.
+  -----------------------------------------------------------------------------------------------
+
+Os notebooks devem evitar implementações duplicadas de funções
+reutilizáveis. Uma função deve migrar para `src/` quando representar uma
+responsabilidade compartilhada ou uma regra que precise de testes;
+código exclusivo de apresentação e orquestração pode permanecer no
+notebook.
+
+## Metodologia supervisionada
+
+### Alvo e momento da previsão
+
+A configuração ativa define:
+
+-   coluna de origem do alvo: `evolucao`;
+-   coluna de modelagem: `alvo_obito_srag`;
+-   classe positiva: valor `2.0`;
+-   classe negativa: valor `1.0`;
+-   descarte de outros valores para o alvo principal: habilitado;
+-   análise de sensibilidade para qualquer óbito: configurada
+    separadamente.
+
+O momento de previsão definido metodologicamente é a **internação
+hospitalar**. Informações registradas depois desse momento não devem ser
+usadas como atributos de entrada.
+
+### Período e partições
+
+A configuração abrange 2019--2026, incluindo 2026 como ano parcial. A
+partição primária atualmente configurada é **aleatória estratificada por
+alvo e ano de internação**, com seed `42` e proporções:
+
+-   treino: 70%;
+-   validação: 15%;
+-   teste/holdout: 15%.
+
+**Importante:** apesar do interesse em comportamento temporal, essa
+configuração não corresponde a uma separação estritamente cronológica
+entre passado e futuro. Análises temporais adicionais podem ser usadas
+como análises de robustez, mas não devem substituir silenciosamente a
+partição primária definida na configuração. A documentação e os
+resultados devem explicitar essa escolha.
+
+### Atributos e prevenção de leakage
+
+A configuração inclui atributos numéricos e categóricos, além de regras
+para engenharia de atributos. A lista final de atributos ainda depende
+da confirmação do gate `G1_definicao_alvo_features`.
+
+Variáveis relacionadas ao desfecho ou a informações posteriores à
+internação estão listadas entre as proibidas em
+`configs/supervised.yaml`. Antes de treinar, verificar:
+
+1.  se cada atributo estava disponível no momento da internação;
+2.  se o alvo não aparece entre as entradas;
+3.  se transformações e imputações são ajustadas somente nos dados de
+    treino;
+4.  se treino, validação e teste respeitam os contratos de partição;
+5.  se a coorte e a lista de atributos estão documentadas e versionadas
+    por metadados.
+
+Não use o holdout final para escolher modelo, hiperparâmetros,
+calibração ou limiar.
+
+### Modelos e seleção
+
+A configuração prevê baseline, regressão logística, árvore de decisão,
+random forest e boosting. A shortlist provisória registrada aponta
+`hist_gradient_boosting` e `logistic` como finalistas candidatos; isso
+não equivale a uma escolha final de modelo. A métrica principal
+configurada para comparação é `PR-AUC`.
+
+### Calibração, limiar e avaliação
+
+A configuração prevê comparar métodos de calibração (`sigmoid` e
+`isotonic`) e avaliar o Brier Score antes e depois da calibração. O
+limiar deve ser escolhido apenas com dados de validação, de acordo com
+os critérios registrados na configuração.
+
+As métricas configuradas incluem:
+
+-   PR-AUC e ROC-AUC;
+-   Brier Score e log loss;
+-   precisão, recall/sensibilidade, F1 e especificidade;
+-   matriz de confusão;
+-   avaliação por grupos e por ano;
+-   análise de erros, com prioridade para falsos negativos;
+-   bootstrap para estimativa de incerteza, conforme os parâmetros
+    ativos.
+
+As métricas finais devem ser publicadas somente após a execução válida
+do protocolo de avaliação e acompanhadas do contexto, tamanho da amostra
+e limitações.
+
+## Gates metodológicos e status
+
+Os gates em `configs/supervised.yaml` registram decisões que precisam
+ser concluídas antes de avançar. No snapshot documentado:
+
+  -----------------------------------------------------------------------
+  Gate                    Situação registrada     Significado
+  ----------------------- ----------------------- -----------------------
+  G1 --- alvo e atributos Pendente                Confirmar coorte
+                                                  definitiva, alvo e
+                                                  lista final de
+                                                  atributos.
+
+  G2 --- janela e         Aprovado                Período e estratégia de
+  partições                                       partição registrados.
+
+  G4 --- baseline         Aprovado                Execução do modelo de
+                                                  referência registrada.
+
+  G5 --- pilotos          Aprovado                Pilotos supervisionados
+                                                  registrados.
+
+  G6 --- finalistas e     Pendente                Selecionar finalista e
+  tuning                                          concluir busca
+                                                  limitada.
+
+  G7 --- calibração       Pendente                Escolher método com
+                                                  dados permitidos.
+
+  G8 --- limiar           Pendente                Definir limiar usando
+                                                  validação.
+
+  G9 --- holdout final    Pendente                Liberar e executar o
+                                                  teste final uma única
+                                                  vez, após congelar as
+                                                  decisões.
+  -----------------------------------------------------------------------
+
+Esses estados são os registrados no snapshot de referência e podem
+mudar. Consulte sempre `configs/supervised.yaml` e os testes antes de
+executar ou descrever uma etapa como concluída.
+
+## Configuração do ambiente
+
+Recomenda-se executar o projeto em ambiente virtual, na raiz do
+repositório.
+
+### Windows PowerShell
+
+``` powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Se a política do PowerShell impedir a ativação, use o terminal Command
+Prompt:
+
+``` bat
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Configure o interpretador do ambiente `.venv` no VS Code. Não é
+necessário remover a instalação global do Python para usar esse
+ambiente.
+
+### Segredos e dados privados
+
+O projeto inclui `.env.example` como referência de configuração. Nunca
+comite tokens, arquivos `.env` com valores reais, senhas ou credenciais.
+Se o acesso aos dados exigir `GITHUB_TOKEN`, configure-o como variável
+de ambiente ou pelo mecanismo de segredos suportado pelo ambiente de
+execução.
+
+## Testes
+
+Execute os testes a partir da raiz do repositório, com o ambiente
+virtual ativado:
+
+``` powershell
+python -m pytest
+```
+
+Se o comando não estiver disponível, confira se as dependências de
+desenvolvimento estão instaladas no ambiente selecionado. Após mudanças,
+execute os testes pertinentes, revise o diff e verifique se a
+documentação continua coerente com código e configuração.
+
+## Reprodutibilidade e artefatos
+
+Para permitir a rastreabilidade dos experimentos:
+
+-   mantenha parâmetros e decisões em `configs/` e `docs/`;
+-   registre seeds, versões, origem e identificação da coorte;
+-   mantenha transformações reutilizáveis em `src/`;
+-   registre resultados e metadados sem expor dados sensíveis;
+-   preserve a separação entre desenvolvimento e holdout;
+-   use `.gitignore` para impedir o versionamento de dados grandes,
+    modelos, saídas geradas, segredos e caminhos locais.
+
+Os artefatos e resultados devem seguir as convenções já utilizadas no
+projeto. Não crie diretórios alternativos para a mesma finalidade sem
+antes verificar a organização existente.
+
+## Pontos de atenção conhecidos
+
+A referência estática do repositório identificou itens que precisam ser
+conferidos; eles não significam automaticamente que toda a
+funcionalidade esteja quebrada:
+
+1.  **Importação de `csv_to_parquet`:** `tests/test_pipeline.py`
+    referencia `src.data.extracao.csv_to_parquet`, mas o módulo
+    correspondente não aparece entre os arquivos rastreados no snapshot.
+    Verifique histórico de renomeação e atualize o teste ou a
+    implementação canônica, sem recriar o módulo às cegas.
+2.  **Engenharia de atributos:** nomes derivados configurados --- como
+    `sin_semana`, `cos_semana`, `ano_internacao` e
+    `dias_sintomas_ate_internacao` --- não foram todos encontrados como
+    nomes estáticos nos módulos de `src/data/` e `src/features/`.
+    Confirme sua geração real e cubra o contrato com testes.
+3.  **Documentação de decisões:** `docs/decisoes.md` cita
+    `configs/dicionario_variaveis_v1_revisao.csv`, que não aparece na
+    lista de arquivos rastreados do snapshot. Atualize a referência ou
+    restaure o arquivo se ele for realmente necessário.
+4.  **Lógica nos notebooks:** há funções auxiliares locais nos notebooks
+    de EDA e modelagem. Avalie caso a caso se são exclusivas de um
+    experimento ou se devem ser promovidas a módulos testados em `src/`.
+5.  **Caminhos e estrutura:** mantenha este README sincronizado com os
+    arquivos reais; a referência do projeto é um snapshot estático, não
+    uma verificação de execução ponta a ponta.
+
+## Limitações
+
+Os dados públicos podem conter ausências, inconsistências, duplicidades,
+diferenças de preenchimento e mudanças ao longo do tempo. A definição da
+coorte, do alvo e das variáveis disponíveis influencia os resultados. O
+ano de 2026 está configurado como parcial e exige interpretação
+cuidadosa.
+
+Os resultados descrevem desempenho preditivo na população e nas
+condições avaliadas. Não demonstram causalidade, não garantem
+generalização para outros períodos ou populações e não constituem
+validação clínica.
+
+## Autores
+
+-   **Ivan Schincariol Oliveira** ---
+    [LinkedIn](https://www.linkedin.com/in/ivan-s-oliveira-3608a92aa/)
+-   **Eduardo Hudson de Almeida Leite** ---
+    [LinkedIn](https://www.linkedin.com/in/eduardo-hudson-de-almeida-leite-71ab5a7b/)
+-   **Pedro Henrique Silva dos Santos** ---
+    [LinkedIn](https://www.linkedin.com/in/pedro-h-s-santos/)
+-   **Mateus da Silva Oliveira** ---
+    [LinkedIn](https://www.linkedin.com/in/mateusso)
+
+## Contexto acadêmico
+
+**Projeto Integrador I --- Pós-Graduação em Inteligência Artificial.**
+
+O projeto reúne práticas de engenharia de dados, análise exploratória,
+aprendizado supervisionado e não supervisionado, engenharia de
+atributos, avaliação de modelos, prevenção de vazamento de informação e
+reprodutibilidade.
+````
+
+## `requirements.txt`
+
+- Git: `tracked` · status `clean`
+- Size: `129 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `73ee76a39fe6c52069d4b78b0e09ef10b77d0fa8d9d6c26bcce043cef18f6ac8`
+
+```text
+python-dotenv
+PyYAML
+pandas
+requests
+ipykernel
+numpy
+matplotlib
+seaborn
+scikit-learn
+pyarrow
+jupyterlab
+pytest
+joblib
+```
+
+## `src/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `0 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+```python
+
+```
+
+## `src/data/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `0 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+```python
+
+```
+
+## `src/data/cohort_source.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.2 KB` · modified `2026-10-18 15:59 UTC`
+- SHA-256: `963f6c97eb21ed4bd98f7e29540d74d57ddacf3d2a886d043299f952478ee07f`
+
+```python
+"""Resolve a fonte de coorte sem acoplar notebooks ao nome do arquivo.
+
+A troca entre coorte provisória e definitiva acontece por parâmetro ou
+pela variável de ambiente ``SRAG_COHORT_KIND``.
+
+Contrato:
+- ``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``provisional``).
+- ``auto`` prefere a definitiva quando existir.
+- ``explicit_path`` exige nome canônico; se ``kind`` também for informado
+  e divergir da classificação pelo nome, a chamada falha em vez de
+  prosseguir com o tipo errado.
+
+Não transforma a coorte, não cria partições e não altera o alvo.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Literal, get_args
+
+import pandas as pd
+
+from src.utils.hashing import sha256_file
+
+
+# ---------------------------------------------------------------------------
+# Tipo e constantes
+# ---------------------------------------------------------------------------
+
+CohortKind = Literal["provisional", "final", "auto"]
+
+_ENV_VAR: str = "SRAG_COHORT_KIND"
+_DEFAULT_KIND: str = "provisional"
+_VALID_KINDS: frozenset[str] = frozenset(get_args(CohortKind))
+
+_ANALYTICAL_DIR = Path("data") / "analytical"
+
+# Nomes canônicos por tipo. Só estes são aceitos em `explicit_path` e na
+# descoberta automática. Nomes ambíguos (ex.: "coorte.parquet") foram
+# deliberadamente removidos para impedir que uma coorte definitiva salva
+# com nome errado seja carregada como provisória.
+_FILENAMES_BY_KIND: dict[str, tuple[str, ...]] = {
+    "final":       ("coorte_final.parquet",),
+    "provisional": ("coorte_provisoria.parquet", "coorte_provisoria_b.parquet"),
+}
+
+# Índice reverso (nome em minúsculas → tipo), preenchido uma única vez.
+_KIND_BY_FILENAME: dict[str, str] = {
+    name.lower(): kind
+    for kind, names in _FILENAMES_BY_KIND.items()
+    for name in names
+}
+
+
+# ---------------------------------------------------------------------------
+# Modelo de metadados
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class CohortSource:
+    """Metadados imutáveis da coorte selecionada."""
+
+    kind: str
+    path: str
+    sha256: str
+    size_bytes: int
+    rows: int
+    columns: int
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
+# ---------------------------------------------------------------------------
+# API pública
+# ---------------------------------------------------------------------------
+
+def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
+    """Candidatos de coorte por tipo, na ordem de preferência."""
+    analytical = root / _ANALYTICAL_DIR
+    return {
+        kind: tuple(analytical / name for name in names)
+        for kind, names in _FILENAMES_BY_KIND.items()
+    }
+
+
+def resolve_cohort_path(
+    root: Path,
+    *,
+    kind: CohortKind | None = None,
+    explicit_path: Path | None = None,
+) -> tuple[str, Path]:
+    """Resolve a coorte sem alternar silenciosamente de provisória para final.
+
+    Parâmetros
+    ----------
+    root:
+        Raiz do projeto (contém ``data/analytical``).
+    kind:
+        ``provisional``, ``final`` ou ``auto``. ``None`` consulta a
+        variável de ambiente ``SRAG_COHORT_KIND``.
+    explicit_path:
+        Caminho explícito para uma coorte. Quando informado, o nome do
+        arquivo precisa estar na lista canônica do tipo; se ``kind`` for
+        ``provisional`` ou ``final`` e divergir do nome, a chamada falha.
+    """
+    if explicit_path is not None:
+        return _resolve_explicit_path(explicit_path, requested_kind=kind)
+
+    selected = _resolve_kind(kind)
+    candidates = cohort_candidates(root)
+    preference = ("final", "provisional") if selected == "auto" else (selected,)
+
+    for effective_kind in preference:
+        for path in candidates[effective_kind]:
+            if path.is_file():
+                return effective_kind, path.resolve()
+
+    raise FileNotFoundError(_not_found_message(selected, preference, candidates))
+
+
+def load_cohort(
+    root: Path,
+    *,
+    kind: CohortKind | None = None,
+    explicit_path: Path | None = None,
+    columns: list[str] | None = None,
+) -> tuple[pd.DataFrame, CohortSource]:
+    """Carrega a coorte selecionada e devolve dados + metadados da fonte."""
+    effective_kind, path = resolve_cohort_path(
+        root, kind=kind, explicit_path=explicit_path,
+    )
+    frame = pd.read_parquet(path, columns=columns)
+    source = CohortSource(
+        kind=effective_kind,
+        path=str(path),
+        sha256=sha256_file(path),
+        size_bytes=path.stat().st_size,
+        rows=int(len(frame)),
+        columns=int(frame.shape[1]),
+    )
+    return frame, source
+
+
+# ---------------------------------------------------------------------------
+# Helpers privados
+# ---------------------------------------------------------------------------
+
+def _resolve_kind(kind: CohortKind | None) -> str:
+    """Normaliza o tipo solicitado (parâmetro ou env var)."""
+    selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
+    if selected not in _VALID_KINDS:
+        raise ValueError(
+            f"{_ENV_VAR} deve ser provisional, final ou auto. "
+            f"Recebido: {selected!r}."
+        )
+    return selected
+
+
+def _kind_from_path(path: Path) -> str:
+    """Classifica uma coorte pelo nome canônico. Nome desconhecido → ``ValueError``."""
+    kind = _KIND_BY_FILENAME.get(path.name.lower())
+    if kind is not None:
+        return kind
+    raise ValueError(_unknown_filename_message(path))
+
+
+def _resolve_explicit_path(
+    explicit_path: Path,
+    *,
+    requested_kind: CohortKind | None,
+) -> tuple[str, Path]:
+    """Valida existência, nome canônico e coerência com ``kind`` explícito."""
+    path = Path(explicit_path).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"Coorte explícita não encontrada: {path}")
+
+    declared = _kind_from_path(path)
+
+    if (
+        requested_kind is not None
+        and requested_kind != "auto"
+        and declared != requested_kind
+    ):
+        raise ValueError(
+            f"Coorte em {path.name!r} classificada como {declared!r} pelo "
+            f"nome, mas kind={requested_kind!r} foi solicitado. "
+            "Renomeie o arquivo para um nome canônico do tipo desejado "
+            "ou remova `kind` para aceitar a classificação pelo nome."
+        )
+
+    return declared, path
+
+
+def _unknown_filename_message(path: Path) -> str:
+    known = ", ".join(
+        f"{name} ({kind})"
+        for kind, names in _FILENAMES_BY_KIND.items()
+        for name in names
+    )
+    return (
+        f"Nome de coorte não reconhecido: {path.name!r}. "
+        f"Esperado um de: {known}. "
+        "Renomeie o arquivo ou passe `kind` explicitamente."
+    )
+
+
+def _not_found_message(
+    selected: str,
+    preference: tuple[str, ...],
+    candidates: dict[str, tuple[Path, ...]],
+) -> str:
+    paths = "\n".join(
+        f"- {path}" for kind in preference for path in candidates[kind]
+    )
+    return f"Nenhuma coorte do tipo {selected!r} encontrada. Candidatos:\n{paths}"
+```
+
+## `src/data/split.py`
+
+- Git: `tracked` · status `clean`
+- Size: `10.0 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `cb423ad56c5931511e575cb3bf1b6f9a3c4c03e661a1f42d62cc8930875b2e3e`
+
+```python
+"""Partições agrupadas e estratificadas (treino / validação / teste).
+
+Garante simultaneamente:
+
+- **Estratificação**: cada partição preserva a proporção do alvo (0/1),
+  importante porque a prevalência de óbito é baixa.
+- **Agrupamento**: todas as linhas de um mesmo grupo caem numa única
+  partição, evitando vazamento entre treino e avaliação.
+
+Estratos pequenos demais para as três partições são tratados por
+``politica_estratos_pequenos``. Uso::
+
+    from src.data.split import criar_particoes_agrupadas
+
+    df_part = criar_particoes_agrupadas(
+        df, target_column="alvo", group_column="nu_notific",
+    )
+"""
+
+from __future__ import annotations
+
+import warnings
+from typing import Any, Literal, get_args
+
+import numpy as np
+import pandas as pd
+
+__all__ = [
+    "PARTICOES_CANONICAS",
+    "SplitWarning",
+    "criar_particoes_agrupadas",
+]
+
+PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
+
+PoliticaEstratosPequenos = Literal["raise", "warn_teste", "warn_treino", "drop"]
+PoliticaGrupoHeterogeneo = Literal["raise", "warn"]
+
+_POLITICAS_ESTRATOS_PEQUENOS = frozenset(get_args(PoliticaEstratosPequenos))
+_POLITICAS_GRUPO_HETEROGENEO = frozenset(get_args(PoliticaGrupoHeterogeneo))
+
+
+class SplitWarning(UserWarning):
+    """Decisão não-trivial do split (estrato pequeno, grupo com alvo misto).
+
+    Filtre com ``warnings.filterwarnings("ignore", category=SplitWarning)``
+    se a decisão já foi tomada pelo grupo.
+    """
+
+
+def _validar_parametros(
+    df: pd.DataFrame,
+    *,
+    target_column: str,
+    group_column: str,
+    partition_column: str,
+    frac_treino: float,
+    frac_validacao: float,
+    min_grupos_por_estrato: int,
+    politica_estratos_pequenos: str,
+    on_grupo_alvo_heterogeneo: str,
+) -> None:
+    if df.empty:
+        raise ValueError("DataFrame vazio — não há como criar partições.")
+    if target_column not in df.columns:
+        raise KeyError(f"Coluna de alvo ausente: {target_column!r}")
+    if group_column not in df.columns:
+        raise KeyError(f"Coluna de grupo ausente: {group_column!r}")
+    if partition_column in df.columns:
+        raise ValueError(
+            f"DataFrame já contém a coluna {partition_column!r}. "
+            "Remova-a ou escolha outro nome — o split não sobrescreve partições."
+        )
+
+    if not 0.0 < frac_treino < 1.0:
+        raise ValueError(f"frac_treino deve estar em (0, 1); recebido {frac_treino!r}.")
+    if not 0.0 < frac_validacao < 1.0:
+        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {frac_validacao!r}.")
+    if frac_treino + frac_validacao >= 1.0:
+        raise ValueError("frac_treino + frac_validacao deve ser < 1 (resto vira `teste`).")
+
+    if min_grupos_por_estrato < len(PARTICOES_CANONICAS):
+        raise ValueError(
+            f"min_grupos_por_estrato deve ser >= {len(PARTICOES_CANONICAS)}; "
+            f"recebido {min_grupos_por_estrato!r}."
+        )
+    if politica_estratos_pequenos not in _POLITICAS_ESTRATOS_PEQUENOS:
+        raise ValueError(
+            f"politica_estratos_pequenos inválida: {politica_estratos_pequenos!r}. "
+            f"Use uma de {sorted(_POLITICAS_ESTRATOS_PEQUENOS)}."
+        )
+    if on_grupo_alvo_heterogeneo not in _POLITICAS_GRUPO_HETEROGENEO:
+        raise ValueError(
+            f"on_grupo_alvo_heterogeneo inválido: {on_grupo_alvo_heterogeneo!r}. "
+            f"Use uma de {sorted(_POLITICAS_GRUPO_HETEROGENEO)}."
+        )
+
+
+def _estrato_por_grupo(
+    df: pd.DataFrame,
+    *,
+    target_column: str,
+    group_column: str,
+    on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo,
+) -> pd.Series:
+    """Estrato (valor do alvo) por grupo.
+
+    Grupos com mais de um valor distinto de alvo são tratados por
+    ``on_grupo_alvo_heterogeneo``: ``"raise"`` levanta ``ValueError``;
+    ``"warn"`` emite ``SplitWarning`` e usa a moda. Grupos com alvo todo
+    nulo são descartados com ``SplitWarning``.
+    """
+    agrupado = df.groupby(group_column, observed=True)[target_column]
+
+    heterogeneos = agrupado.nunique(dropna=True)
+    heterogeneos = heterogeneos[heterogeneos > 1]
+    if not heterogeneos.empty:
+        amostra = heterogeneos.index.tolist()[:5]
+        msg = (
+            f"{len(heterogeneos)} grupo(s) com mais de um valor distinto "
+            f"de alvo em {target_column!r}. Exemplos: {amostra}"
+        )
+        if on_grupo_alvo_heterogeneo == "raise":
+            raise ValueError(
+                msg + ". Resolva as inconsistências ou use "
+                "on_grupo_alvo_heterogeneo='warn'."
+            )
+        warnings.warn(msg + ". Usando a moda por grupo.", SplitWarning, stacklevel=3)
+
+    estrato = agrupado.agg(
+        lambda s: s.dropna().mode().iloc[0] if s.notna().any() else None
+    )
+
+    if estrato.isna().any():
+        n = int(estrato.isna().sum())
+        warnings.warn(
+            f"{n} grupo(s) com alvo todo nulo em {target_column!r}. "
+            "Serão descartados do split.",
+            SplitWarning,
+            stacklevel=3,
+        )
+        estrato = estrato.dropna()
+
+    if estrato.empty:
+        raise ValueError("Nenhum grupo com alvo não nulo — impossível estratificar.")
+
+    return estrato
+
+
+def _distribuir_tamanhos(
+    n: int,
+    frac_treino: float,
+    frac_validacao: float,
+) -> tuple[int, int, int]:
+    """Distribui ``n >= 3`` grupos em (treino, validação, teste), ≥1 por partição."""
+    if n < 3:
+        raise ValueError(f"_distribuir_tamanhos requer n >= 3; recebido {n}.")
+
+    n_valid  = max(1, int(n * frac_validacao))
+    n_teste  = max(1, n - max(1, int(n * frac_treino)) - n_valid)
+    n_treino = n - n_valid - n_teste
+    return n_treino, n_valid, n_teste
+
+
+def _aplicar_politica_estrato_pequeno(
+    grupos: list[Any],
+    *,
+    estrato: Any,
+    min_grupos_por_estrato: int,
+    politica: PoliticaEstratosPequenos,
+    atribuicao: dict[Any, str],
+    descartar: set[Any],
+) -> None:
+    n = len(grupos)
+    msg = (
+        f"Estrato {estrato!r} tem apenas {n} grupo(s) "
+        f"(< min_grupos_por_estrato={min_grupos_por_estrato}). "
+        f"Política: {politica!r}."
+    )
+
+    if politica == "raise":
+        raise ValueError(
+            msg + " Ajuste min_grupos_por_estrato ou use "
+            "politica_estratos_pequenos='warn_teste'|'warn_treino'|'drop'."
+        )
+
+    if politica == "drop":
+        warnings.warn(f"{msg} Descartando do resultado.", SplitWarning, stacklevel=2)
+        descartar.update(grupos)
+        return
+
+    destino = "teste" if politica == "warn_teste" else "treino"
+    warnings.warn(f"{msg} Destinando ao {destino}.", SplitWarning, stacklevel=2)
+    atribuicao.update({g: destino for g in grupos})
+
+
+def criar_particoes_agrupadas(
+    df: pd.DataFrame,
+    *,
+    target_column: str,
+    group_column: str,
+    partition_column: str = "particao",
+    frac_treino: float = 0.7,
+    frac_validacao: float = 0.15,
+    seed: int = 42,
+    min_grupos_por_estrato: int = 3,
+    politica_estratos_pequenos: PoliticaEstratosPequenos = "raise",
+    on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo = "raise",
+) -> pd.DataFrame:
+    """Partições treino/validação/teste agrupadas e estratificadas.
+
+    Não muta ``df``: devolve cópia com ``partition_column`` adicionada.
+    Grupos com alvo nulo e estratos descartados por ``"drop"`` não aparecem.
+
+    Levanta ``KeyError`` se ``target_column`` ou ``group_column`` não
+    existirem em ``df``, e ``ValueError`` para parâmetros inválidos,
+    DataFrame vazio, coluna de partição já presente, ou estrato pequeno
+    com política ``"raise"``.
+    """
+    _validar_parametros(
+        df,
+        target_column=target_column,
+        group_column=group_column,
+        partition_column=partition_column,
+        frac_treino=frac_treino,
+        frac_validacao=frac_validacao,
+        min_grupos_por_estrato=min_grupos_por_estrato,
+        politica_estratos_pequenos=politica_estratos_pequenos,
+        on_grupo_alvo_heterogeneo=on_grupo_alvo_heterogeneo,
+    )
+
+    estrato_por_grupo = _estrato_por_grupo(
+        df,
+        target_column=target_column,
+        group_column=group_column,
+        on_grupo_alvo_heterogeneo=on_grupo_alvo_heterogeneo,
+    )
+
+    rng       = np.random.default_rng(seed)
+    atribuicao: dict[Any, str] = {}
+    descartar: set[Any] = set()
+
+    for estrato, sub in estrato_por_grupo.groupby(estrato_por_grupo):
+        grupos = sub.index.tolist()
+        rng.shuffle(grupos)
+
+        if len(grupos) < min_grupos_por_estrato:
+            _aplicar_politica_estrato_pequeno(
+                grupos,
+                estrato=estrato,
+                min_grupos_por_estrato=min_grupos_por_estrato,
+                politica=politica_estratos_pequenos,
+                atribuicao=atribuicao,
+                descartar=descartar,
+            )
+            continue
+
+        n_treino, n_valid, n_teste = _distribuir_tamanhos(
+            len(grupos), frac_treino, frac_validacao,
+        )
+        fatias = {
+            "treino":    grupos[:n_treino],
+            "validacao": grupos[n_treino:n_treino + n_valid],
+            "teste":     grupos[n_treino + n_valid:],
+        }
+        for particao, membros in fatias.items():
+            atribuicao.update({g: particao for g in membros})
+
+    out = df.copy()
+    out[partition_column] = out[group_column].map(atribuicao)
+
+    invalidos = out[partition_column].isna() | out[group_column].isin(descartar)
+    if invalidos.any():
+        out = out.loc[~invalidos].reset_index(drop=True)
+
+    out[partition_column] = out[partition_column].astype("object")
+
+    faltando = set(PARTICOES_CANONICAS) - set(out[partition_column].unique())
+    if faltando:
+        warnings.warn(
+            f"Partição(ões) sem nenhuma linha após o split: {sorted(faltando)}. "
+            "Verifique a distribuição dos estratos antes de prosseguir.",
+            SplitWarning,
+            stacklevel=2,
+        )
+
+    return out
+```
+
+## `src/data/supervised_artifact.py`
+
+- Git: `tracked` · status `clean`
+- Size: `11.8 KB` · modified `2026-10-18 16:18 UTC`
+- SHA-256: `8f8cd29b325a26185dcfb66f24c9585b5ffcb44f27e13aa958ed0345c243c4d7`
+
+```python
+"""Persistencia e leitura do dataset supervisionado canonico.
+
+O manifesto registra features, divisao por tipo, colunas de auditoria e
+particoes. As particoes canonicas sao ``treino``, ``validacao`` e ``teste``.
+
+O bloco ``teste`` exige o gate ``G9_holdout`` aprovado: tanto
+``load_supervised_artifact(partitions=(..., "teste"))`` quanto
+``holdout_partition`` levantam ``GatePendenteError`` caso contrario.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+import pandas as pd
+
+from src.utils.config import GatePendenteError, exigir_gate
+from src.utils.hashing import sha256_file
+
+__all__ = [
+    "ALLOWED_PARTITIONS",
+    "DATASET_NAME",
+    "MANIFEST_NAME",
+    "SCHEMA_VERSION",
+    "GatePendenteError",
+    "holdout_partition",
+    "load_supervised_artifact",
+    "persist_supervised_artifact",
+    "split_partitions",
+    "validate_supervised_frame",
+]
+
+DATASET_NAME = "dataset_supervisionado.parquet"
+MANIFEST_NAME = "manifesto_supervisionado.json"
+SCHEMA_VERSION = 2
+
+_PARTITION_TREINO = "treino"
+_PARTITION_VALIDACAO = "validacao"
+_PARTITION_TESTE = "teste"
+
+ALLOWED_PARTITIONS = frozenset({_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE})
+
+
+def _paths(root: Path) -> tuple[Path, Path]:
+    output_dir = Path(root).resolve() / "data" / "analytical"
+    return output_dir / DATASET_NAME, output_dir / MANIFEST_NAME
+
+
+def _validar_grupos(num_set: set[str], cat_set: set[str], feats_set: set[str]) -> None:
+    if overlap := num_set & cat_set:
+        raise ValueError(
+            f"Colunas presentes em numeric_columns E categorical_columns: {sorted(overlap)}"
+        )
+    if fora := (num_set | cat_set) - feats_set:
+        raise ValueError(
+            f"numeric_columns/categorical_columns contem colunas fora de "
+            f"feature_columns: {sorted(fora)}"
+        )
+    if faltando := feats_set - (num_set | cat_set):
+        raise ValueError(
+            f"Cada feature precisa estar em numeric_columns ou categorical_columns. "
+            f"Faltando: {sorted(faltando)}"
+        )
+
+
+def _resolver_grupos(
+    feature_columns: Sequence[str],
+    numeric_columns: Sequence[str] | None,
+    categorical_columns: Sequence[str] | None,
+) -> tuple[list[str] | None, list[str] | None]:
+    """Resolve o par (numericas, categoricas).
+
+    - ambas None → (None, None)
+    - apenas uma → o complemento é inferido dentro de feature_columns
+    - ambas → valida disjunção e cobertura exata
+    """
+    if numeric_columns is None and categorical_columns is None:
+        return None, None
+
+    num = list(numeric_columns) if numeric_columns is not None else None
+    cat = list(categorical_columns) if categorical_columns is not None else None
+
+    if num is None:
+        assert cat is not None
+        cat_set = set(cat)
+        num = [c for c in feature_columns if c not in cat_set]
+    if cat is None:
+        num_set = set(num)
+        cat = [c for c in feature_columns if c not in num_set]
+
+    _validar_grupos(set(num), set(cat), set(feature_columns))
+    return num, cat
+
+
+def validate_supervised_frame(
+    frame: pd.DataFrame,
+    *,
+    feature_columns: Sequence[str],
+    target_column: str,
+    partition_column: str,
+    audit_columns: Sequence[str] | None = None,
+    required_partitions: Sequence[str] | None = None,
+) -> None:
+    """Valida schema minimo, alvo binario e particoes do dataset.
+
+    ``required_partitions=None`` exige as tres particoes canonicas; um
+    subconjunto permite validar leituras parciais (ex.: treino+validacao).
+    """
+    required = set(feature_columns) | {target_column, partition_column}
+    if audit_columns:
+        required |= set(audit_columns)
+
+    if missing := sorted(required - set(frame.columns)):
+        raise KeyError(f"Colunas ausentes no dataset supervisionado: {missing}")
+
+    if frame.empty:
+        raise ValueError("O dataset supervisionado nao pode ser vazio.")
+
+    target_values = set(
+        pd.to_numeric(frame[target_column], errors="coerce")
+        .dropna().astype(int).unique()
+    )
+    if not target_values or not target_values.issubset({0, 1}):
+        raise ValueError(f"Alvo deve ser binario 0/1. Observado: {sorted(target_values)}")
+
+    expected = (
+        frozenset(required_partitions) if required_partitions is not None
+        else ALLOWED_PARTITIONS
+    )
+    if unknown := expected - ALLOWED_PARTITIONS:
+        raise ValueError(f"Particoes desconhecidas: {sorted(unknown)}")
+
+    observed = set(frame[partition_column].dropna().astype(str).unique())
+    if observed != expected:
+        raise ValueError(
+            f"Particoes esperadas {sorted(expected)}. Observado: {sorted(observed)}"
+        )
+
+
+def _build_manifest(
+    *,
+    frame: pd.DataFrame,
+    dataset_path: Path,
+    source: Mapping[str, Any],
+    feature_columns: Sequence[str],
+    numeric_columns: list[str] | None,
+    categorical_columns: list[str] | None,
+    audit_columns: Sequence[str] | None,
+    target_column: str,
+    partition_column: str,
+    cohort_kind: str,
+    seed: int,
+) -> dict[str, Any]:
+    partition_counts = {
+        str(key): int(value)
+        for key, value in frame[partition_column].value_counts(dropna=False).items()
+    }
+    return {
+        "schema_version":      SCHEMA_VERSION,
+        "generated_utc":       datetime.now(timezone.utc).isoformat(),
+        "cohort_kind":         str(cohort_kind),
+        "source":              dict(source),
+        "dataset_path":        str(dataset_path),
+        "dataset_sha256":      sha256_file(dataset_path),
+        "rows":                int(len(frame)),
+        "columns":             int(frame.shape[1]),
+        "feature_columns":     list(feature_columns),
+        "numeric_columns":     numeric_columns,
+        "categorical_columns": categorical_columns,
+        "audit_columns":       list(audit_columns) if audit_columns else [],
+        "target_column":       target_column,
+        "partition_column":    partition_column,
+        "partition_counts":    partition_counts,
+        "seed":                int(seed),
+        "test_opened":         False,
+    }
+
+
+def persist_supervised_artifact(
+    frame: pd.DataFrame,
+    *,
+    root: Path,
+    source: Mapping[str, Any],
+    feature_columns: Sequence[str],
+    target_column: str,
+    partition_column: str,
+    cohort_kind: str,
+    seed: int,
+    numeric_columns: Sequence[str] | None = None,
+    categorical_columns: Sequence[str] | None = None,
+    audit_columns: Sequence[str] | None = None,
+    overwrite: bool = False,
+) -> tuple[Path, Path]:
+    """Grava dataset e manifesto, exigindo as tres particoes canonicas."""
+    num, cat = _resolver_grupos(feature_columns, numeric_columns, categorical_columns)
+
+    validate_supervised_frame(
+        frame,
+        feature_columns=feature_columns,
+        target_column=target_column,
+        partition_column=partition_column,
+        audit_columns=audit_columns,
+    )
+
+    dataset_path, manifest_path = _paths(root)
+    dataset_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not overwrite and (dataset_path.exists() or manifest_path.exists()):
+        raise FileExistsError(
+            "Artefato supervisionado ja existe. Use overwrite=True somente em uma "
+            "reconstrucao deliberada da mesma etapa."
+        )
+
+    frame.to_parquet(dataset_path, index=False)
+
+    manifest = _build_manifest(
+        frame=frame,
+        dataset_path=dataset_path,
+        source=source,
+        feature_columns=feature_columns,
+        numeric_columns=num,
+        categorical_columns=cat,
+        audit_columns=audit_columns,
+        target_column=target_column,
+        partition_column=partition_column,
+        cohort_kind=cohort_kind,
+        seed=seed,
+    )
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, default=str),
+        encoding="utf-8",
+    )
+    return dataset_path, manifest_path
+
+
+def load_supervised_artifact(
+    root: Path,
+    *,
+    expected_kind: str | None = None,
+    columns: Sequence[str] | None = None,
+    partitions: Sequence[str] | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Carrega o artefato canonico e valida hash, tipo de coorte e schema.
+
+    ``partitions`` restringe o subconjunto carregado (pushdown no Parquet);
+    o default e ``("treino", "validacao")``. Incluir ``"teste"`` exige o
+    gate ``G9_holdout`` aprovado — caso contrario levanta
+    ``GatePendenteError`` antes de tocar no arquivo.
+    """
+    dataset_path, manifest_path = _paths(root)
+
+    if not dataset_path.is_file() or not manifest_path.is_file():
+        raise FileNotFoundError(
+            f"Execute o Notebook 03 adaptado para gerar {DATASET_NAME} e {MANIFEST_NAME}."
+        )
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    if expected_kind and manifest.get("cohort_kind") != expected_kind:
+        raise RuntimeError(
+            f"Artefato de coorte {manifest.get('cohort_kind')!r}, mas "
+            f"SRAG_COHORT_KIND={expected_kind!r}. Reconstrua no Notebook 03."
+        )
+
+    if sha256_file(dataset_path) != manifest.get("dataset_sha256"):
+        raise RuntimeError("Hash do dataset supervisionado difere do manifesto.")
+
+    selected = (
+        tuple(partitions) if partitions is not None
+        else (_PARTITION_TREINO, _PARTITION_VALIDACAO)
+    )
+    if not selected:
+        raise ValueError("``partitions`` nao pode ser vazio.")
+
+    if unknown := set(selected) - ALLOWED_PARTITIONS:
+        raise ValueError(
+            f"Particoes desconhecidas: {sorted(unknown)}. "
+            f"Use subconjunto de {sorted(ALLOWED_PARTITIONS)}."
+        )
+
+    if _PARTITION_TESTE in selected:
+        exigir_gate("G9_holdout")
+
+    frame = pd.read_parquet(
+        dataset_path,
+        columns=list(columns) if columns else None,
+        filters=[(manifest["partition_column"], "in", list(selected))],
+    )
+
+    if columns is None:
+        validate_supervised_frame(
+            frame,
+            feature_columns=manifest["feature_columns"],
+            target_column=manifest["target_column"],
+            partition_column=manifest["partition_column"],
+            audit_columns=manifest.get("audit_columns") or None,
+            required_partitions=selected,
+        )
+
+    manifest["dataset_path"] = str(dataset_path)
+    return frame, manifest
+
+
+def _select_partition(
+    frame: pd.DataFrame,
+    manifest: Mapping[str, Any],
+    partition: str,
+) -> pd.DataFrame:
+    col = manifest["partition_column"]
+    if col not in frame.columns:
+        raise KeyError(f"Coluna de particao ausente no DataFrame: {col!r}")
+    return frame.loc[frame[col].astype(str) == partition].reset_index(drop=True)
+
+
+def split_partitions(
+    frame: pd.DataFrame,
+    manifest: Mapping[str, Any],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Devolve ``(treino, validacao)`` para a fase de selecao (C2..C6).
+
+    O bloco ``teste`` nao e exposto — use ``holdout_partition`` apos
+    aprovar ``G9_holdout``.
+    """
+    treino = _select_partition(frame, manifest, _PARTITION_TREINO)
+    validacao = _select_partition(frame, manifest, _PARTITION_VALIDACAO)
+
+    if treino.empty:
+        raise ValueError("Particao 'treino' vazia no dataset supervisionado.")
+    if validacao.empty:
+        raise ValueError("Particao 'validacao' vazia no dataset supervisionado.")
+
+    return treino, validacao
+
+
+def holdout_partition(
+    frame: pd.DataFrame,
+    manifest: Mapping[str, Any],
+) -> pd.DataFrame:
+    """Devolve o bloco ``teste``. Exige ``G9_holdout`` aprovado."""
+    exigir_gate("G9_holdout")
+    teste = _select_partition(frame, manifest, _PARTITION_TESTE)
+    if teste.empty:
+        raise ValueError("Particao 'teste' vazia no dataset supervisionado.")
+    return teste
+```
+
+## `src/evaluation/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `641a3e6e599d6b8e24f989bf5323b6168d045aa268aa170c18144dafc9bee5e2`
+
+```python
+"""Avaliação: splits temporais, métricas, calibração e análise de erros."""
+
+from src.evaluation.calibration import (
+    brier_decomposicao,
+    curva_confiabilidade,
+    ece,
+    mce,
+)
+from src.evaluation.errors import (
+    CriterioTop,
+    extrair_falsos_negativos,
+    extrair_falsos_positivos,
+    matriz_confusao,
+    metricas_por_grupo,
+    top_erros,
+)
+from src.evaluation.leakage import (
+    LeakageError,
+    check_leakage,
+)
+from src.evaluation.metrics import (
+    ArrayLike,
+    accuracy,
+    auc,
+    average_precision,
+    brier,
+    especificidade,
+    f1,
+    ic_bootstrap,
+    log_loss,
+    metricas_completas,
+    metricas_por_limiar,
+    precision,
+    recall,
+    sensibilidade,
+)
+from src.evaluation.temporal import (
+    TemporalSplit,
+    split_temporal_3way,
+)
+
+__all__ = [
+    # metrics
+    "ArrayLike",
+    "accuracy",
+    "auc",
+    "average_precision",
+    "brier",
+    "especificidade",
+    "f1",
+    "ic_bootstrap",
+    "log_loss",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "precision",
+    "recall",
+    "sensibilidade",
+    # calibration
+    "brier_decomposicao",
+    "curva_confiabilidade",
+    "ece",
+    "mce",
+    # errors
+    "CriterioTop",
+    "extrair_falsos_negativos",
+    "extrair_falsos_positivos",
+    "matriz_confusao",
+    "metricas_por_grupo",
+    "top_erros",
+    # leakage
+    "LeakageError",
+    "check_leakage",
+    # temporal
+    "TemporalSplit",
+    "split_temporal_3way",
+]
+```
+
+## `src/evaluation/calibration.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.6 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `b76e7a28efe53ad9566eb664b60c4f931d78107b539d3c8f6fa903f162b6da94`
+
+```python
+"""
+Avaliação de calibração de probabilidades.
+
+Complementa ``src/models/calibration.py``:
+
+    src/models/calibration.py      → AJUSTA a calibração
+    src/evaluation/calibration.py  → MEDE a qualidade da calibração
+
+Métricas implementadas
+----------------------
+- Curva de confiabilidade (reliability diagram)
+- ECE  (Expected Calibration Error)
+- MCE  (Maximum Calibration Error)
+- Decomposição de Brier em Reliability + Resolution − Uncertainty
+  (Murphy, 1973)
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from src.evaluation.metrics import _to_int_labels, _to_np
+
+ArrayLike = np.ndarray | pd.Series | list
+
+
+def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
+    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
+
+
+def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]:
+    return {
+        "bin_centro":    float((edges[b] + edges[b + 1]) / 2),
+        "freq_positiva": float("nan"),
+        "n":             0.0,
+        "gap":           float("nan"),
+    }
+
+
+def curva_confiabilidade(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> pd.DataFrame:
+    """
+    Dados para o reliability diagram.
+
+    Colunas:
+        bin_centro    — probabilidade média prevista no bin
+        freq_positiva — fração real de positivos no bin
+        n             — número de amostras no bin
+        gap           — |freq_positiva - bin_centro|
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    edges  = np.linspace(0.0, 1.0, n_bins + 1)
+    idx    = _bins_digitize(p, n_bins)
+
+    linhas: list[dict[str, float]] = []
+    for b in range(n_bins):
+        m = idx == b
+        n = int(m.sum())
+
+        if n == 0:
+            linhas.append(_linha_vazia(b, edges))
+            continue
+
+        centro = float(p[m].mean())
+        freq   = float(y[m].mean())
+        linhas.append({
+            "bin_centro":    centro,
+            "freq_positiva": freq,
+            "n":             float(n),
+            "gap":           abs(freq - centro),
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def ece(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Expected Calibration Error — média ponderada dos gaps por bin."""
+    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
+    total  = float(tabela["n"].sum())
+
+    if total == 0:
+        return float("nan")
+
+    pesos = tabela["n"] / total
+    gaps  = tabela["gap"].fillna(0.0)
+    return float((pesos * gaps).sum())
+
+
+def mce(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Maximum Calibration Error — o pior gap entre os bins."""
+    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
+    gaps   = tabela["gap"].dropna()
+
+    if gaps.empty:
+        return float("nan")
+
+    return float(gaps.max())
+
+
+def brier_decomposicao(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> dict[str, float]:
+    """
+    Decompõe o Brier score (Murphy, 1973):
+
+        Brier = Reliability − Resolution + Uncertainty
+
+    Retorna
+    -------
+    dict com:
+        brier         — Brier score observado
+        reliability   — quanto menor, melhor (penaliza desvios locais)
+        resolution    — quanto maior, melhor (capacidade de separar)
+        uncertainty   — entropia binária da base (fixa para o dataset)
+        n             — número de amostras
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    n = len(y)
+
+    if n == 0:
+        raise ValueError("y_true vazio — não há como decompor o Brier.")
+
+    base_rate   = float(y.mean())
+    uncertainty = base_rate * (1.0 - base_rate)
+    brier_obs   = float(np.mean((p - y) ** 2))
+    idx         = _bins_digitize(p, n_bins)
+
+    reliability = 0.0
+    resolution  = 0.0
+
+    for b in range(n_bins):
+        m   = idx == b
+        n_b = int(m.sum())
+
+        if n_b == 0:
+            continue
+
+        freq_obs  = float(y[m].mean())
+        freq_pred = float(p[m].mean())
+        peso      = n_b / n
+
+        reliability += peso * (freq_obs - freq_pred) ** 2
+        resolution  += peso * (freq_obs - base_rate) ** 2
+
+    return {
+        "brier":       brier_obs,
+        "reliability": float(reliability),
+        "resolution":  float(resolution),
+        "uncertainty": float(uncertainty),
+        "n":           float(n),
+    }
+```
+
+## `src/evaluation/errors.py`
+
+- Git: `tracked` · status `clean`
+- Size: `5.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `7a6e18f4d634a243771a6d0408cef798c3acc96c9b14fbbc559cd50477334dad`
+
+```python
+"""
+Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
+
+A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
+
+    from src.evaluation.leakage import LeakageError, check_leakage
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+import numpy as np
+import pandas as pd
+
+from src.evaluation.metrics import (
+    _to_int_labels,
+    _to_np,
+    auc,
+    f1,
+    precision,
+    recall,
+)
+
+__all__ = [
+    "ArrayLike",
+    "CriterioTop",
+    "matriz_confusao",
+    "extrair_falsos_positivos",
+    "extrair_falsos_negativos",
+    "metricas_por_grupo",
+    "top_erros",
+]
+
+ArrayLike   = np.ndarray | pd.Series | list
+CriterioTop = Literal["fp", "fn", "erro_absoluto"]
+
+
+def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
+    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
+    if len(df) != len(y):
+        raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
+
+
+def matriz_confusao(
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """
+    Matriz de confusão 2×2 como DataFrame.
+
+    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
+    Adiciona linha/coluna ``"total"``.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+
+    contagens = {
+        (yv, pv): int(((y == yv) & (p == pv)).sum())
+        for yv in (0, 1)
+        for pv in (0, 1)
+    }
+
+    df = pd.DataFrame(
+        [[contagens[(0, 0)], contagens[(0, 1)]],
+         [contagens[(1, 0)], contagens[(1, 1)]]],
+        index=["real_0", "real_1"],
+        columns=["pred_0", "pred_1"],
+    )
+    df["total"] = df.sum(axis=1)
+    df.loc["total"] = df.sum(axis=0)
+    return df
+
+
+def _extrair_por_mascara(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+    *,
+    yv: int,
+    pv: int,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``."""
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+    return df.loc[(y == yv) & (p == pv)].reset_index(drop=True)
+
+
+def extrair_falsos_positivos(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde o modelo previu 1 mas o real é 0."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=0, pv=1)
+
+
+def extrair_falsos_negativos(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde o modelo previu 0 mas o real é 1."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=1, pv=0)
+
+
+def metricas_por_grupo(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    coluna_grupo: str,
+    *,
+    limiar: float = 0.5,
+    min_n: int = 30,
+) -> pd.DataFrame:
+    """
+    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
+
+    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
+    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
+    """
+    if coluna_grupo not in df.columns:
+        raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
+
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    _validar_tamanhos(df, y)
+
+    base   = df.reset_index(drop=True)
+    grupos = base[coluna_grupo].astype("string")
+
+    linhas: list[dict[str, float | str]] = []
+
+    for g in grupos.dropna().unique():
+        m = (grupos == g).to_numpy()
+        n = int(m.sum())
+
+        if n < min_n:
+            continue
+
+        y_g    = y[m]
+        p_g    = p[m]
+        y_pred = (p_g >= limiar).astype(int)
+
+        linhas.append({
+            "grupo":          str(g),
+            "n":              float(n),
+            "taxa_positivos": float(y_g.mean()),
+            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
+            "f1":             f1(y_g, y_pred),
+            "precision":      precision(y_g, y_pred),
+            "recall":         recall(y_g, y_pred),
+        })
+
+    return (
+        pd.DataFrame(linhas)
+        .sort_values("n", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+def top_erros(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    *,
+    n: int = 20,
+    criterio: CriterioTop = "erro_absoluto",
+    limiar: float = 0.5,
+) -> pd.DataFrame:
+    """
+    Retorna as ``n`` linhas de ``df`` com os piores erros.
+
+    ``criterio``:
+        - ``"fp"``            → prob decrescente entre FP
+        - ``"fn"``            → prob crescente entre FN
+        - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
+
+    Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    y_pred = (p >= limiar).astype(int)
+    _validar_tamanhos(df, y)
+
+    out = df.reset_index(drop=True).copy()
+    out["y_true"]   = y
+    out["y_prob"]   = p
+    out["y_pred"]   = y_pred
+    out["erro_abs"] = np.abs(p - y)
+
+    if criterio == "fp":
+        sel = out[(out.y_true == 0) & (out.y_pred == 1)].sort_values("y_prob", ascending=False)
+    elif criterio == "fn":
+        sel = out[(out.y_true == 1) & (out.y_pred == 0)].sort_values("y_prob", ascending=True)
+    elif criterio == "erro_absoluto":
+        sel = out[out.y_true != out.y_pred].sort_values("erro_abs", ascending=False)
+    else:
+        raise ValueError(f"criterio inválido: {criterio!r}. Use 'fp', 'fn' ou 'erro_absoluto'.")
+
+    return sel.head(n).reset_index(drop=True)
+```
+
+## `src/evaluation/leakage.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.1 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e504ad9142e598ef1d3e6ee4ecc2c63804f5569c5370eaa0ce132cafd9b1bde4`
+
+```python
+"""Verificação anti-vazamento de dados.
+
+``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
+A lista efetiva é a união de:
+
+- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
+- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
+- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
+"""
+
+from __future__ import annotations
+
+from typing import Iterable
+
+import pandas as pd
+
+from src.utils import config as C
+
+__all__ = ["LeakageError", "check_leakage"]
+
+
+class LeakageError(RuntimeError):
+    """Erro lançado quando variáveis com vazamento são encontradas."""
+
+
+DEFAULT_LEAKAGE_COLUMNS = frozenset({
+    "evolucao", "dt_evoluca", "dt_encerra",
+    "uti", "utilizouvni", "suport_ven",
+    "antiviral", "antivirais",
+    "classificacao_final",
+    "cluster", "cluster_rotulo",
+})
+
+
+def _resolve_forbidden_columns(
+    forbidden_columns: Iterable[str] | None,
+    target_column: str | None,
+) -> set[str]:
+    """Conjunto efetivo de colunas proibidas.
+
+    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
+    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
+    """
+    base = (
+        set(forbidden_columns)
+        if forbidden_columns is not None
+        else set(C.cfg("features", "proibidas") or [])
+    )
+    base |= DEFAULT_LEAKAGE_COLUMNS
+
+    target = target_column if target_column is not None else C.cfg("target", "coluna")
+    if target:
+        base.add(target)
+    return base
+
+
+def check_leakage(
+    X: pd.DataFrame,
+    *,
+    forbidden_columns: Iterable[str] | None = None,
+    target_column: str | None = None,
+) -> None:
+    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
+
+    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
+    ``target_column=None`` usa ``target.coluna`` do YAML.
+    """
+    forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
+    if detected := sorted(set(X.columns) & forbidden):
+        raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
+```
+
+## `src/evaluation/metrics.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `a2536cd3cc53d9a5e7ebe6320a4e0011043d1dccf51803d84abe85eaf5184c14`
+
+```python
+"""
+Métricas de classificação binária — todas retornam ``float``.
+
+Encapsula o scikit-learn para garantir ``float``: em várias funções ele
+retorna ``Float | ndarray``, o que polui o type-checker.
+
+Oferece ainda:
+    - ``metricas_por_limiar`` → tabela varrendo limiares
+    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
+
+``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
+chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
+que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
+"""
+
+from __future__ import annotations
+
+from typing import Callable
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    brier_score_loss,
+    f1_score,
+    log_loss as sk_log_loss,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+
+__all__ = [
+    "ArrayLike",
+    "auc",
+    "average_precision",
+    "brier",
+    "log_loss",
+    "f1",
+    "precision",
+    "recall",
+    "accuracy",
+    "especificidade",
+    "sensibilidade",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "ic_bootstrap",
+]
+
+ArrayLike = np.ndarray | pd.Series | list
+
+
+def _to_np(x: ArrayLike) -> np.ndarray:
+    return np.asarray(x).ravel()
+
+
+def _to_int_labels(y: ArrayLike) -> np.ndarray:
+    return np.asarray(y).ravel().astype(int)
+
+
+def _contagens_confusao(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+) -> tuple[int, int, int, int]:
+    tp = int(((y_true == 1) & (y_pred == 1)).sum())
+    fp = int(((y_true == 0) & (y_pred == 1)).sum())
+    tn = int(((y_true == 0) & (y_pred == 0)).sum())
+    fn = int(((y_true == 1) & (y_pred == 0)).sum())
+    return tp, fp, tn, fn
+
+
+def _especificidade_de_contagens(tn: int, fp: int) -> float:
+    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
+    denom = tn + fp
+    return tn / denom if denom > 0 else 0.0
+
+
+def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(average_precision_score(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(brier_score_loss(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    """Log loss (entropia cruzada binária) sobre probabilidades."""
+    return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
+
+
+def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(f1_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(precision_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(recall_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(accuracy_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    ))
+
+
+def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
+    _, fp, tn, _ = _contagens_confusao(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    )
+    return _especificidade_de_contagens(tn, fp)
+
+
+def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
+    return recall(y_true, y_pred)
+
+
+def metricas_completas(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    limiar: float = 0.5,
+) -> dict[str, float]:
+    """
+    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
+
+    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
+    mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    y_pred = (p >= limiar).astype(int)
+    ap     = average_precision(y, p)
+
+    return {
+        "auc":            auc(y, p),
+        "ap":             ap,
+        "pr_auc":         ap,
+        "brier":          brier(y, p),
+        "log_loss":       log_loss(y, p),
+        "f1":             f1(y, y_pred),
+        "precision":      precision(y, y_pred),
+        "recall":         recall(y, y_pred),
+        "sensibilidade":  sensibilidade(y, y_pred),
+        "especificidade": especificidade(y, y_pred),
+        "accuracy":       accuracy(y, y_pred),
+        "limiar":         float(limiar),
+        "n":              float(len(y)),
+    }
+
+
+def metricas_por_limiar(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_limiares: int = 101,
+) -> pd.DataFrame:
+    """
+    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
+
+    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
+    sensibilidade, especificidade, accuracy, youden_j``.
+
+    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
+    o limiar que maximiza a separação entre as classes. As contagens de
+    confusão ficam expostas para permitir derivar qualquer outra métrica
+    a posteriori — não há tabela paralela de lambdas.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+
+    linhas: list[dict[str, float]] = []
+
+    for th in np.linspace(0.01, 0.99, n_limiares):
+        lim    = float(th)
+        y_pred = (p >= lim).astype(int)
+
+        tp, fp, tn, fn = _contagens_confusao(y, y_pred)
+        rec = recall(y, y_pred)
+        esp = _especificidade_de_contagens(tn, fp)
+
+        linhas.append({
+            "limiar":         lim,
+            "tp":             tp,
+            "fp":             fp,
+            "tn":             tn,
+            "fn":             fn,
+            "f1":             f1(y, y_pred),
+            "precision":      precision(y, y_pred),
+            "recall":         rec,
+            "sensibilidade":  rec,
+            "especificidade": esp,
+            "accuracy":       accuracy(y, y_pred),
+            "youden_j":       rec + esp - 1.0,
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def ic_bootstrap(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    *,
+    metrica: Callable[[ArrayLike, ArrayLike], float] = auc,
+    n_boot: int = 200,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float, float]:
+    """
+    Intervalo de confiança via bootstrap percentil.
+
+    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
+    degeneradas (uma única classe) são descartadas internamente. Métrica
+    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    n = len(y)
+
+    rng     = np.random.default_rng(seed)
+    valores = np.empty(n_boot, dtype="float64")
+
+    for i in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        valores[i] = (
+            metrica(y[idx], p[idx]) if len(np.unique(y[idx])) >= 2 else np.nan
+        )
+
+    est     = float(metrica(y, p))
+    validos = valores[~np.isnan(valores)]
+
+    if validos.size == 0:
+        return est, float("nan"), float("nan")
+
+    return (
+        est,
+        float(np.quantile(validos, alpha / 2)),
+        float(np.quantile(validos, 1 - alpha / 2)),
+    )
+```
+
+## `src/evaluation/temporal.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.4 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `eb8b768efe8484f354dd034bc536c2db975744457cc1c9e659d64c2b80458546`
+
+```python
+"""
+Split temporal em três blocos + trava do holdout.
+
+⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
+O split oficial do projeto é o **aleatório estratificado**, gerado no
+Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
+C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
+se mantém se eu treinar no passado e testar no futuro?".
+
+Regra de ouro (quando usado):
+    treino + validacao → escolha de modelo
+    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
+
+A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
+``G9_holdout`` não estiver aprovado.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Literal, get_args
+
+import pandas as pd
+
+from src.utils import config as C
+
+OnNat = Literal["raise", "drop"]
+_ON_NAT_VALORES = frozenset(get_args(OnNat))
+
+
+def _validar_fracao(nome: str, valor: float) -> None:
+    if not 0 < valor < 1:
+        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
+
+
+def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
+    if coluna_tempo not in df.columns:
+        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
+    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
+        raise TypeError(
+            f"Coluna temporal {coluna_tempo!r} não é datetime "
+            f"(dtype atual: {df[coluna_tempo].dtype}). "
+            "Converta com pd.to_datetime antes do split."
+        )
+
+
+def _tratar_nat(
+    df: pd.DataFrame,
+    coluna_tempo: str,
+    on_nat: OnNat,
+) -> pd.DataFrame:
+    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
+    nat_mask = df[coluna_tempo].isna()
+    n_nat    = int(nat_mask.sum())
+
+    if not n_nat:
+        return df
+    if on_nat == "raise":
+        raise ValueError(
+            f"{n_nat} linha(s) com data inválida (NaT) em "
+            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
+        )
+    return df.loc[~nat_mask].reset_index(drop=True)
+
+
+def split_temporal_3way(
+    df: pd.DataFrame,
+    coluna_tempo: str,
+    frac_treino: float = 0.7,
+    frac_validacao: float = 0.15,
+    *,
+    on_nat: OnNat = "raise",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Divide em treino / validação / holdout, **sem embaralhar**.
+
+    Garante, na ordem temporal::
+
+        max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
+        max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
+
+    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
+    remove essas linhas antes de ordenar.
+    """
+    if on_nat not in _ON_NAT_VALORES:
+        raise ValueError(
+            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
+        )
+
+    _validar_fracao("frac_treino",    frac_treino)
+    _validar_fracao("frac_validacao", frac_validacao)
+    if frac_treino + frac_validacao >= 1:
+        raise ValueError(
+            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
+        )
+
+    _validar_coluna_tempo(df, coluna_tempo)
+    df = _tratar_nat(df, coluna_tempo, on_nat)
+
+    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
+    n = len(ordenado)
+    if n < 3:
+        raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
+
+    corte_treino = int(n * frac_treino)
+    corte_valid  = int(n * (frac_treino + frac_validacao))
+
+    return (
+        ordenado.iloc[:corte_treino].reset_index(drop=True),
+        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
+        ordenado.iloc[corte_valid:].reset_index(drop=True),
+    )
+
+
+@dataclass
+class TemporalSplit:
+    """Guarda os três blocos e controla o acesso ao holdout.
+
+    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
+    Uso típico::
+
+        split = TemporalSplit(df, coluna_tempo="dt_notific")
+        tr, va = split.treino_validacao()  # seleção
+        split.concluir_selecao()           # exige G9_holdout aprovado
+        ho = split.holdout()               # avaliação, uma vez
+    """
+
+    df: pd.DataFrame
+    coluna_tempo: str
+    frac_treino: float = 0.7
+    frac_validacao: float = 0.15
+    on_nat: OnNat = "raise"
+
+    _treino: pd.DataFrame = field(init=False, repr=False)
+    _validacao: pd.DataFrame = field(init=False, repr=False)
+    _holdout: pd.DataFrame = field(init=False, repr=False)
+    _holdout_liberado: bool = field(init=False, default=False, repr=False)
+
+    def __post_init__(self) -> None:
+        tr, va, ho = split_temporal_3way(
+            self.df,
+            coluna_tempo=self.coluna_tempo,
+            frac_treino=self.frac_treino,
+            frac_validacao=self.frac_validacao,
+            on_nat=self.on_nat,
+        )
+        self._treino    = tr
+        self._validacao = va
+        self._holdout   = ho
+
+    def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """``(treino, validacao)`` — único par para a fase de seleção."""
+        return self._treino, self._validacao
+
+    @property
+    def treino(self) -> pd.DataFrame:
+        return self._treino
+
+    @property
+    def validacao(self) -> pd.DataFrame:
+        return self._validacao
+
+    def concluir_selecao(self) -> None:
+        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
+
+        O gate é a autorização explícita — G7 e G8 tratam de decisões da
+        fase de seleção e devem ter sido fechados *antes* deste ponto.
+        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
+        """
+        gate   = C.cfg("gates", "G9_holdout") or {}
+        status = gate.get("status")
+        if status != "aprovado":
+            raise RuntimeError(
+                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
+                f"(status atual: {status!r}). Feche o gate em "
+                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
+            )
+        self._holdout_liberado = True
+
+    @property
+    def holdout_liberado(self) -> bool:
+        return self._holdout_liberado
+
+    def holdout(self) -> pd.DataFrame:
+        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
+        if not self._holdout_liberado:
+            raise RuntimeError(
+                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
+            )
+        return self._holdout
+
+    @property
+    def n_treino(self) -> int:
+        return len(self._treino)
+
+    @property
+    def n_validacao(self) -> int:
+        return len(self._validacao)
+
+    @property
+    def n_holdout(self) -> int:
+        return len(self._holdout)
+
+    def resumo(self) -> str:
+        """Resumo legível — bom para log no ``Run``."""
+
+        def _periodo(d: pd.DataFrame) -> str:
+            if d.empty:
+                return "vazio"
+            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
+
+        estado = "liberado" if self._holdout_liberado else "bloqueado"
+        return (
+            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
+            f"papel='sensibilidade_temporal')\n"
+            f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
+            f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
+            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
+        )
+```
+
+## `src/features/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `508 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `bd18b2388ca98116b750d5ffea5c9471d3b169ae4be762c417a6195ed525cc34`
+
+```python
+"""Engenharia de atributos do pipeline supervisionado."""
+
+from src.features.engineering import (
+    COLUNAS_DERIVADAS,
+    ano_mes_internacao,
+    faixa_etaria,
+    idade_em_anos,
+    intervalo_sintomas_internacao,
+    montar_features,
+    sazonalidade,
+    sexo_categoria,
+)
+
+__all__ = [
+    "COLUNAS_DERIVADAS",
+    "ano_mes_internacao",
+    "faixa_etaria",
+    "idade_em_anos",
+    "intervalo_sintomas_internacao",
+    "montar_features",
+    "sazonalidade",
+    "sexo_categoria",
+]
+```
+
+## `src/features/engineering.py`
+
+- Git: `tracked` · status `clean`
+- Size: `8.0 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `6dc551fb32ada10a58850fe4481627da9855ebcbe58fb7b84e821030e8e61846`
+
+```python
+"""Engenharia de atributos do pipeline supervisionado.
+
+Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
+transforma colunas disponíveis na admissão hospitalar em atributos prontos
+para o modelo — nenhuma usa informação posterior ao desfecho.
+
+As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
+``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
+quando o YAML não define nada.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, get_args
+
+import numpy as np
+import pandas as pd
+
+from src.utils import config as C
+
+__all__ = [
+    "COLUNAS_DERIVADAS",
+    "idade_em_anos",
+    "intervalo_sintomas_internacao",
+    "sazonalidade",
+    "faixa_etaria",
+    "sexo_categoria",
+    "ano_mes_internacao",
+    "montar_features",
+]
+
+PoliticaIntervalo = Literal["sinalizar", "descartar"]
+
+_INTERVALO_MAX_DIAS_PADRAO = 60.0
+_SEMANAS_POR_ANO           = 52.18
+_POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
+
+_FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
+    ("<1",    0.0,   1.0),
+    ("1-4",   1.0,   5.0),
+    ("5-11",  5.0,  12.0),
+    ("12-17", 12.0, 18.0),
+    ("18-39", 18.0, 40.0),
+    ("40-59", 40.0, 60.0),
+    ("60-79", 60.0, 80.0),
+    ("80+",   80.0, None),
+)
+
+COLUNAS_DERIVADAS: tuple[str, ...] = (
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sin_semana",
+    "cos_semana",
+    "ano_internacao",
+    "mes_internacao",
+    "flag_intervalo_invalido",
+    "flag_internacao_antes_sintomas",
+    "faixa_etaria",
+    "sexo_categoria",
+)
+
+
+def _intervalo_max_dias() -> float:
+    valor = C.cfg("features", "engenharia", "intervalo_max_dias")
+    return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
+
+
+def _intervalo_politica() -> PoliticaIntervalo:
+    valor = C.cfg("features", "engenharia", "intervalo_politica")
+    if valor is None:
+        return "sinalizar"
+
+    politica = str(valor).strip().lower()
+    if politica not in _POLITICAS_VALIDAS:
+        raise ValueError(
+            f"features.engenharia.intervalo_politica inválida: {valor!r}. "
+            f"Use uma de {sorted(_POLITICAS_VALIDAS)}."
+        )
+    return politica  # type: ignore[return-value]
+
+
+def _faixas_etarias() -> list[tuple[str, float, float | None]]:
+    bruto = C.cfg("features", "engenharia", "faixas_etarias")
+    if not bruto:
+        return list(_FAIXAS_PADRAO)
+
+    return [
+        (
+            str(item["nome"]),
+            float(item["min"]),
+            None if item.get("max") is None else float(item["max"]),
+        )
+        for item in bruto
+    ]
+
+
+def idade_em_anos(df: pd.DataFrame) -> pd.Series:
+    """
+    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
+
+    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
+    a codificação é desconhecida, a idade é negativa ou excede 120.
+    """
+    idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
+    tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
+
+    anos = pd.Series(
+        np.select(
+            [tipo.eq(1), tipo.eq(2), tipo.eq(3)],
+            [idade / 365.25, idade / 12.0, idade],
+            default=np.nan,
+        ),
+        index=df.index,
+        dtype="float64",
+    )
+
+    invalido = idade.isna() | idade.lt(0) | ~tipo.isin([1, 2, 3]) | anos.gt(120)
+    return anos.where(~invalido)
+
+
+def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
+
+    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
+    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
+    fora de ``[0, intervalo_max_dias]`` vem de
+    ``features.engenharia.intervalo_politica``.
+    """
+    max_dias = _intervalo_max_dias()
+    politica = _intervalo_politica()
+
+    dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
+    dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
+
+    delta = (dt_int - dt_sin).dt.days.astype("float64")
+
+    invalido = delta.isna() | delta.lt(0) | delta.gt(max_dias)
+    negativo = delta.lt(0)
+
+    delta_final = delta.where(~invalido) if politica == "descartar" else delta
+
+    return pd.DataFrame({
+        "dias_sintomas_ate_internacao":   delta_final,
+        "flag_intervalo_invalido":        invalido.astype("int8"),
+        "flag_internacao_antes_sintomas": negativo.astype("int8"),
+    })
+
+
+def sazonalidade(
+    df: pd.DataFrame,
+    coluna_data: str | None = None,
+) -> pd.DataFrame:
+    """
+    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
+
+    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
+    Datas nulas resultam em NaN.
+    """
+    if coluna_data is None:
+        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
+    if coluna_data not in df.columns:
+        raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
+
+    datas = pd.to_datetime(df[coluna_data], errors="coerce")
+
+    semana = pd.Series(np.nan, index=df.index, dtype="float64")
+    mask = datas.notna()
+    if mask.any():
+        semana.loc[mask] = (
+            datas[mask].dt.isocalendar()["week"].astype("float64").to_numpy()
+        )
+
+    angulo = 2.0 * np.pi * (semana - 1.0) / _SEMANAS_POR_ANO
+
+    return pd.DataFrame({
+        "sin_semana": np.sin(angulo),
+        "cos_semana": np.cos(angulo),
+    })
+
+
+def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
+    """
+    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
+
+    Idade nula vira a categoria explícita ``"desconhecida"``.
+    """
+    faixas = _faixas_etarias()
+    idade  = pd.to_numeric(idade_anos, errors="coerce")
+
+    out = pd.Series("desconhecida", index=idade.index, dtype="object")
+    for nome, lo, hi in faixas:
+        mask = idade.ge(lo)
+        if hi is not None:
+            mask &= idade.lt(hi)
+        out[mask] = nome
+
+    return out.astype("category")
+
+
+def sexo_categoria(df: pd.DataFrame) -> pd.Series:
+    """
+    Normaliza ``cs_sexo`` em categórica explícita.
+
+    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
+    """
+    sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
+
+    out = pd.Series("ausente", index=df.index, dtype="object")
+    out[sexo.eq("M")] = "masculino"
+    out[sexo.eq("F")] = "feminino"
+    out[sexo.eq("I")] = "ignorado"
+
+    return out.astype("category")
+
+
+def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
+
+    Datas nulas resultam em NaN, mantendo compatibilidade com
+    ``SimpleImputer`` e ``StandardScaler``.
+    """
+    dt = pd.to_datetime(df["dt_interna"], errors="coerce")
+
+    return pd.DataFrame({
+        "ano_internacao": dt.dt.year.astype("float64"),
+        "mes_internacao": dt.dt.month.astype("float64"),
+    })
+
+
+def montar_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
+    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
+    """
+    out = df.copy()
+
+    out["idade_anos"] = idade_em_anos(df)
+
+    intervalo = intervalo_sintomas_internacao(df)
+    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
+    out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
+    out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
+
+    saz = sazonalidade(df)
+    out["sin_semana"] = saz["sin_semana"]
+    out["cos_semana"] = saz["cos_semana"]
+
+    out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
+    out["sexo_categoria"] = sexo_categoria(df)
+
+    ano_mes = ano_mes_internacao(df)
+    out["ano_internacao"] = ano_mes["ano_internacao"]
+    out["mes_internacao"] = ano_mes["mes_internacao"]
+
+    return out
+```
+
+## `src/features/normalization.py`
+
+- Git: `tracked` · status `clean`
+- Size: `0 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+```python
+
+```
+
+## `src/models/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `193d5ccf3d79ae3e4699f21e442947e652dd4430898e78753ff60f9d2a3a8a76`
+
+```python
+"""Modelos supervisionados do Projeto Integrador."""
+
+from src.models.baseline import (
+    DummyStrategy,
+    build_baseline_pipeline,
+    evaluate_baseline,
+)
+from src.models.boosting import build_boosting_pipeline
+from src.models.calibration import (
+    MetodoCalibracao,
+    Metrica,
+    calibrar,
+    escolher_limiar,
+)
+from src.models.factory import (
+    Finalista,
+    build_finalista,
+    finalistas_disponiveis,
+)
+from src.models.logistic import (
+    Penalty,
+    Solver,
+    build_logistic_pipeline,
+)
+from src.models.pipeline import (
+    ALVO,
+    AUSENTE,
+    COLUNA_TEMPO,
+    FEATURES,
+    FEATURES_CATEGORICAS,
+    FEATURES_NUMERICAS,
+    build_pipeline,
+    build_preprocessor,
+    criar_alvo_binario,
+    filtrar_rotulos_validos,
+    random_state,
+)
+
+__all__ = [
+    # pipeline (constantes + pré-processamento + alvo)
+    "ALVO",
+    "AUSENTE",
+    "COLUNA_TEMPO",
+    "FEATURES",
+    "FEATURES_CATEGORICAS",
+    "FEATURES_NUMERICAS",
+    "build_pipeline",
+    "build_preprocessor",
+    "criar_alvo_binario",
+    "filtrar_rotulos_validos",
+    "random_state",
+    # baseline
+    "DummyStrategy",
+    "build_baseline_pipeline",
+    "evaluate_baseline",
+    # logistic
+    "Penalty",
+    "Solver",
+    "build_logistic_pipeline",
+    # boosting
+    "build_boosting_pipeline",
+    # calibração
+    "MetodoCalibracao",
+    "Metrica",
+    "calibrar",
+    "escolher_limiar",
+    # fábrica
+    "Finalista",
+    "build_finalista",
+    "finalistas_disponiveis",
+]
+```
+
+## `src/models/baseline.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `c5d4d8e3a65bda1fe15756cb5169b953cf52aff95ac3e6795e6f3ae60094c43e`
+
+```python
+"""
+Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
+
+Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
+O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
+"""
+from __future__ import annotations
+
+from typing import Literal
+
+import pandas as pd
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import Pipeline
+
+from src.evaluation.metrics import metricas_completas
+from src.models.pipeline import build_preprocessor, random_state
+
+DummyStrategy = Literal[
+    "most_frequent",
+    "prior",
+    "stratified",
+    "uniform",
+    "constant",
+]
+
+
+def build_baseline_pipeline(
+    *,
+    strategy: DummyStrategy = "prior",
+    preprocessor=None,
+) -> Pipeline:
+    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
+
+    Estratégias mais úteis como piso:
+
+    - ``"prior"``         → probabilidade constante = prevalência do treino
+      (AUC ≈ 0.5 por construção; Brier ainda informativo);
+    - ``"most_frequent"`` → sempre a classe majoritária
+      (F1/recall = 0 se a positiva for minoria);
+    - ``"stratified"``    → amostra respeitando o prior.
+
+    ``preprocessor=None`` usa ``build_preprocessor()``.
+    """
+    pre = preprocessor if preprocessor is not None else build_preprocessor()
+
+    return Pipeline([
+        ("pre", pre),
+        ("clf", DummyClassifier(
+            strategy=strategy,
+            random_state=random_state(),
+        )),
+    ])
+
+
+def evaluate_baseline(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_eval: pd.DataFrame,
+    y_eval: pd.Series,
+    *,
+    strategy: DummyStrategy = "prior",
+) -> dict[str, str | float]:
+    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
+
+    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
+    ``metricas_completas`` — ver esse módulo para a lista completa.
+    """
+    pipe = build_baseline_pipeline(strategy=strategy)
+    pipe.fit(X_train, y_train)
+    y_prob = pipe.predict_proba(X_eval)[:, 1]
+
+    return {
+        "strategy": strategy,
+        **metricas_completas(y_eval, y_prob, limiar=0.5),
+    }
+```
+
+## `src/models/boosting.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.4 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `2f13ffb44edf322faa9718ede48d7387b35ee3a5c0caed09d1dc116692476d6d`
+
+```python
+"""Gradient boosting supervisionado do Projeto SRAG."""
+
+from __future__ import annotations
+
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.pipeline import Pipeline
+
+from src.models.pipeline import (
+    FEATURES_CATEGORICAS,
+    FEATURES_NUMERICAS,
+    build_preprocessor,
+    random_state,
+)
+
+__all__ = ["build_boosting_pipeline"]
+
+
+def build_boosting_pipeline(
+    learning_rate: float = 0.08,
+    max_iter: int = 150,
+    max_depth: int | None = None,
+    max_leaf_nodes: int = 31,
+    min_samples_leaf: int = 100,
+    l2_regularization: float = 0.10,
+    early_stopping: bool = True,
+    validation_fraction: float = 0.1,
+    n_iter_no_change: int = 20,
+    class_weight: str | dict | None = "balanced",
+    preprocessor=None,
+) -> Pipeline:
+    """Constrói o pipeline ordinal do HistGradientBoostingClassifier."""
+
+    categorical_features = None
+
+    if preprocessor is None:
+        preprocessor = build_preprocessor(
+            numericas=FEATURES_NUMERICAS,
+            categoricas=FEATURES_CATEGORICAS,
+            saida="ordinal",
+        )
+
+        categorical_features = [
+            False
+            for _ in FEATURES_NUMERICAS
+        ]
+
+        categorical_features.extend(
+            True
+            for _ in FEATURES_CATEGORICAS
+        )
+
+    if categorical_features is not None:
+        quantidade_features_esperada = sum(
+            (
+                len(FEATURES_NUMERICAS),
+                len(FEATURES_CATEGORICAS),
+            )
+        )
+
+        if len(categorical_features) != quantidade_features_esperada:
+            raise RuntimeError(
+                "A máscara categórica não possui o mesmo tamanho "
+                "do contrato de features."
+            )
+
+    classificador = HistGradientBoostingClassifier(
+        learning_rate=learning_rate,
+        max_iter=max_iter,
+        max_depth=max_depth,
+        max_leaf_nodes=max_leaf_nodes,
+        min_samples_leaf=min_samples_leaf,
+        l2_regularization=l2_regularization,
+        early_stopping=early_stopping,
+        validation_fraction=validation_fraction,
+        n_iter_no_change=n_iter_no_change,
+        class_weight=class_weight,
+        categorical_features=categorical_features,
+        random_state=random_state(),
+    )
+
+    return Pipeline(
+        steps=[
+            ("pre", preprocessor),
+            ("clf", classificador),
+        ]
+    )
+```
+
+## `src/models/calibration.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.3 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `ad67dccc727378dccad80ba90f070646617d99c49e7e1154e1198ad7f17f1c7a`
+
+```python
+"""
+Calibração de probabilidades e escolha de limiar de decisão.
+
+``calibrar`` envolve um ``Pipeline`` já ajustado em
+``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
+não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
+devolve o ótimo segundo uma métrica, com restrições opcionais de
+precision/recall.
+
+A agregação de métricas vive em ``src.evaluation.metrics``.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Literal, get_args
+
+import numpy as np
+import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import brier_score_loss, roc_auc_score
+
+from src.evaluation.metrics import metricas_por_limiar
+
+__all__ = [
+    "MetodoCalibracao",
+    "Metrica",
+    "calibrar",
+    "escolher_limiar",
+]
+
+Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
+MetodoCalibracao = Literal["isotonic", "sigmoid"]
+
+_METRICAS_VALIDAS = frozenset(get_args(Metrica))
+_METODOS_VALIDOS  = frozenset(get_args(MetodoCalibracao))
+
+
+def calibrar(
+    pipeline,
+    X_cal: pd.DataFrame,
+    y_cal: pd.Series,
+    *,
+    method: MetodoCalibracao = "isotonic",
+):
+    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
+
+    Use uma base de calibração distinta do treino do ``pipeline``. O
+    pipeline não é re-treinado — o calibrador aprende só o mapeamento
+    probabilidade → probabilidade.
+
+    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
+    (Platt) é paramétrico e mais estável em amostras pequenas.
+    """
+    if method not in _METODOS_VALIDOS:
+        raise ValueError(
+            f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
+        )
+
+    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
+    # importável em ambientes mais antigos (o erro surge só em calibrar()).
+    from sklearn.frozen import FrozenEstimator
+
+    modelo = CalibratedClassifierCV(
+        estimator=FrozenEstimator(pipeline),
+        method=method,
+    )
+    modelo.fit(X_cal, y_cal)
+    return modelo
+
+
+def escolher_limiar(
+    y_true: pd.Series | np.ndarray,
+    y_prob: pd.Series | np.ndarray,
+    *,
+    metrica: Metrica = "f1",
+    n_limiares: int = 101,
+    min_precision: float | None = None,
+    min_recall: float | None = None,
+) -> dict[str, Any]:
+    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
+
+    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
+    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
+    ``ValueError``.
+
+    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
+    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
+    ``metricas_por_limiar``).
+    """
+    if metrica not in _METRICAS_VALIDAS:
+        raise ValueError(
+            f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
+        )
+
+    y_true_arr = np.asarray(y_true).ravel().astype(int)
+    y_prob_arr = np.asarray(y_prob).ravel()
+
+    tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
+
+    candidatos = tabela
+    filtros: list[str] = []
+    if min_precision is not None:
+        filtros.append(f"precision ≥ {min_precision}")
+        candidatos = candidatos[candidatos["precision"] >= min_precision]
+    if min_recall is not None:
+        filtros.append(f"recall ≥ {min_recall}")
+        candidatos = candidatos[candidatos["recall"] >= min_recall]
+    if candidatos.empty:
+        restricao = " e ".join(filtros) if filtros else "sem restrição"
+        raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
+
+    if metrica not in candidatos.columns:
+        raise ValueError(
+            f"A métrica {metrica!r} não foi produzida por metricas_por_limiar. "
+            f"Colunas disponíveis: {sorted(candidatos.columns)}"
+        )
+
+    idx_melhor   = candidatos[metrica].idxmax()
+    linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
+
+    return {
+        "limiar":  float(linha_melhor["limiar"]),
+        "valor":   float(linha_melhor[metrica]),
+        "metrica": metrica,
+        "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
+        "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
+        "tabela":  tabela,
+    }
+```
+
+## `src/models/factory.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `bd098f04f4a328f10903bbd8ca8ee25642fcc8054a1c946e406e89ad8449251a`
+
+```python
+"""
+Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
+
+Hiperparâmetros vêm de ``models.<nome>`` no ``supervised.yaml``; overrides
+em ``**overrides`` têm precedência. ``preprocessor=None`` faz cada
+construtor usar o default (``build_preprocessor()``).
+"""
+
+from __future__ import annotations
+
+from typing import Any, Literal, get_args
+
+from sklearn.pipeline import Pipeline
+
+from src.models.boosting import build_boosting_pipeline
+from src.models.logistic import build_logistic_pipeline
+from src.utils import config as C
+
+__all__ = ["Finalista", "build_finalista", "finalistas_disponiveis"]
+
+Finalista = Literal["boosting", "logistic"]
+_FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
+
+
+def finalistas_disponiveis() -> tuple[str, ...]:
+    """Nomes canônicos dos finalistas registrados, em ordem estável."""
+    return tuple(sorted(_FINALISTAS_VALIDOS))
+
+
+def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
+    """Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
+
+    Descartados: chaves ``busca_*`` (grid de tuning) e valores ``None``
+    (deixa o default do construtor agir). Devolve ``{}`` se a secção não
+    existir ou não for mapping.
+    """
+    secao = C.cfg("models", nome)
+    if not isinstance(secao, dict):
+        return {}
+    return {
+        k: v
+        for k, v in secao.items()
+        if v is not None and not k.startswith("busca_")
+    }
+
+
+def build_finalista(
+    nome: str,
+    *,
+    preprocessor=None,
+    **overrides: Any,
+) -> Pipeline:
+    """Constrói o ``Pipeline`` de um finalista pelo nome.
+
+    Levanta ``ValueError`` se ``nome`` não estiver em
+    ``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
+    ajustado** — o caller faz ``fit``.
+    """
+    if nome not in _FINALISTAS_VALIDOS:
+        raise ValueError(
+            f"finalista desconhecido: {nome!r}. "
+            f"Use um destes: {sorted(_FINALISTAS_VALIDOS)}."
+        )
+
+    params = _kwargs_do_yaml(nome) | overrides
+    if preprocessor is not None:
+        params["preprocessor"] = preprocessor
+
+    if nome == "boosting":
+        return build_boosting_pipeline(**params)
+    return build_logistic_pipeline(**params)
+```
+
+## `src/models/logistic.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.5 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `c7c0f0c1cb6bb55ec926973765196ab35bb64ff8634fe781b12823261cc66d73`
+
+```python
+"""
+Regressão logística — modelo linear interpretável.
+
+A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
+para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
+do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
+traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
+única da verdade sem depender da API depreciada.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, cast
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
+from src.models.pipeline import build_preprocessor, random_state
+from src.utils import config as C
+
+__all__ = ["Penalty", "Solver", "build_logistic_pipeline"]
+
+Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
+Penalty = Literal["l1", "l2", "elasticnet"]
+
+# Solver × tipo de penalidade efetivo (derivado do l1_ratio final).
+_L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
+    "l2":         frozenset({"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"}),
+    "l1":         frozenset({"liblinear", "saga"}),
+    "elasticnet": frozenset({"saga"}),
+}
+
+_PENALTIES_VALIDAS = ("l1", "l2", "elasticnet")
+
+
+def _penalty_do_yaml() -> Penalty | None:
+    """Lê ``models.logistic.penalty`` do YAML.
+
+    Devolve ``None`` quando a chave está ausente, vazia ou nula — o
+    ``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
+    ``ValueError`` se a chave existir mas tiver valor desconhecido.
+    """
+    valor = C.cfg("models", "logistic", "penalty")
+    if not valor:
+        return None
+    if valor not in _PENALTIES_VALIDAS:
+        raise ValueError(
+            f"models.logistic.penalty inválido: {valor!r}. "
+            f"Use uma de {_PENALTIES_VALIDAS}."
+        )
+    return cast(Penalty, valor)
+
+
+def _tipo_penalidade(l1_ratio: float) -> str:
+    """Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``."""
+    if l1_ratio == 0.0:
+        return "l2"
+    if l1_ratio == 1.0:
+        return "l1"
+    return "elasticnet"
+
+
+def build_logistic_pipeline(
+    *,
+    C: float = 1.0,
+    l1_ratio: float = 0.0,
+    penalty: Penalty | None = None,
+    solver: Solver = "lbfgs",
+    max_iter: int = 1000,
+    class_weight: str | dict | None = "balanced",
+    preprocessor=None,
+) -> Pipeline:
+    """``Pipeline`` de pré-processamento + ``LogisticRegression``.
+
+    ``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
+    Quando definido, sobrepõe ``l1_ratio``:
+
+    - ``"l2"``          → força ``l1_ratio=0.0``;
+    - ``"l1"``          → força ``l1_ratio=1.0``;
+    - ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
+
+    ``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
+    ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
+    resultante (ver ``_L1_RATIO_SOLVERS``).
+
+    Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
+    combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
+    com ``l1_ratio`` nos extremos.
+    """
+    if not 0.0 <= l1_ratio <= 1.0:
+        raise ValueError(
+            f"l1_ratio deve estar em [0, 1]; "
+            f"recebido {l1_ratio!r}."
+        )
+
+    penalty_configurada = penalty
+
+    if penalty_configurada is None and l1_ratio == 0.0:
+        penalty_configurada = _penalty_do_yaml()
+
+    if penalty_configurada == "l2":
+        l1_ratio = 0.0
+
+    elif penalty_configurada == "l1":
+        l1_ratio = 1.0
+
+    elif penalty_configurada == "elasticnet":
+        if not 0.0 < l1_ratio < 1.0:
+            raise ValueError(
+                "penalty='elasticnet' requer "
+                "0 < l1_ratio < 1; "
+                f"recebido l1_ratio={l1_ratio!r}."
+            )
+
+    tipo             = _tipo_penalidade(l1_ratio)
+    solvers_validos  = _L1_RATIO_SOLVERS[tipo]
+    if solver not in solvers_validos:
+        raise ValueError(
+            f"combinação inválida: l1_ratio={l1_ratio!r} ({tipo}) "
+            f"com solver={solver!r}. Use um destes: {sorted(solvers_validos)}."
+        )
+
+    pre = preprocessor if preprocessor is not None else build_preprocessor()
+
+    return Pipeline([
+        ("pre", pre),
+        ("clf", LogisticRegression(
+            C=C,
+            l1_ratio=l1_ratio,
+            solver=solver,
+            max_iter=max_iter,
+            class_weight=class_weight,
+            random_state=random_state(),
+        )),
+    ])
+```
+
+## `src/models/pipeline.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.2 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `55dd34e499dcc9c88c5aaa99deff39dfd8125058a6fe487edd6308bc5425e904`
+
+```python
+"""
+Fundação dos modelos supervisionados.
+
+Fonte única de verdade para o pré-processamento e para a derivação do
+alvo binário a partir de ``evolucao``, além da leitura da config canônica
+(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
+
+Notebooks e demais modelos devem importar este módulo em vez de
+reimplementar o pré-processamento.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Iterable
+from typing import Iterable, Literal
+
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import (
+    FunctionTransformer,
+    OneHotEncoder,
+    OrdinalEncoder,
+    StandardScaler,
+)
+from src.utils import config as C
+
+__all__ = [
+    "ALVO",
+    "AUSENTE",
+    "COLUNA_TEMPO",
+    "FEATURES",
+    "FEATURES_CATEGORICAS",
+    "FEATURES_NUMERICAS",
+    "build_pipeline",
+    "build_preprocessor",
+    "criar_alvo_binario",
+    "filtrar_rotulos_validos",
+    "random_state",
+]
+
+logger = logging.getLogger(__name__)
+
+# Sem defaults próprios: se a config falhar, o import falha — decisão
+# deliberada para que um YAML inválido impeça a modelagem cedo.
+ALVO: str = C.cfg("target", "coluna")
+COLUNA_TEMPO: str = C.cfg("coluna_tempo")
+
+FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
+FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
+
+AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
+
+if _final := C.cfg("features", "final"):
+    _fs = set(_final)
+    FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
+    FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
+
+FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
+
+
+def _alvo_cfg_positivos() -> list[float]:
+    """Códigos de ``target.positivos`` do YAML, como floats."""
+    return [float(v) for v in (C.cfg("target", "positivos") or [])]
+
+
+def _alvo_cfg_negativos() -> list[float]:
+    """Códigos de ``target.negativos`` do YAML, como floats."""
+    return [float(v) for v in (C.cfg("target", "negativos") or [])]
+
+
+# SUBSTITUA build_preprocessor EM src/models/pipeline.py.
+# Garanta também os imports: Literal, numpy as np, FunctionTransformer, OrdinalEncoder.
+SaidaPreprocessador = Literal["esparsa", "ordinal"]
+
+def build_preprocessor(numericas=None,categoricas=None,*,saida: SaidaPreprocessador="esparsa"):
+    num=list(numericas) if numericas is not None else FEATURES_NUMERICAS
+    cat=list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
+    pipe_num=Pipeline([("imputer",SimpleImputer(strategy="median")),
+                       ("scaler",StandardScaler(with_mean=False) if saida=="esparsa" else StandardScaler())])
+    if saida=="esparsa":
+        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
+                           ("encoder",OneHotEncoder(handle_unknown="ignore",sparse_output=True,dtype=np.float32))])
+    elif saida=="ordinal":
+        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
+                           ("encoder",OrdinalEncoder(handle_unknown="use_encoded_value",unknown_value=np.nan,dtype=np.float32))])
+    else: raise ValueError("saida deve ser 'esparsa' ou 'ordinal'")
+    return ColumnTransformer([("num",pipe_num,num),("cat",pipe_cat,cat)],remainder="drop",
+                             sparse_threshold=1.0 if saida=="esparsa" else 0.0,
+                             verbose_feature_names_out=False)
+
+
+
+def criar_alvo_binario(
+    df: pd.DataFrame,
+    alvo: str | None = None,
+    positivos: Iterable[float] | None = None,
+    negativos: Iterable[float] | None = None,
+) -> pd.Series:
+    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
+
+    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
+    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
+    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
+
+    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
+    conjuntos se sobrepuserem ou se algum estiver vazio.
+    """
+    alvo = alvo if alvo is not None else ALVO
+
+    positivos_set = {
+        float(v) for v in (positivos if positivos is not None else _alvo_cfg_positivos())
+    }
+    negativos_set = {
+        float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
+    }
+
+    if overlap := positivos_set & negativos_set:
+        raise ValueError(
+            f"`positivos` e `negativos` não podem se sobrepor: {sorted(overlap)}"
+        )
+    if not positivos_set:
+        raise ValueError("`target.positivos` está vazio na config.")
+    if not negativos_set:
+        raise ValueError("`target.negativos` está vazio na config.")
+
+    valores = df[alvo].astype("float64")
+    y = pd.Series(float("nan"), index=df.index, dtype="float64")
+    y[valores.isin(negativos_set)] = 0
+    y[valores.isin(positivos_set)] = 1
+    return y
+
+
+def filtrar_rotulos_validos(
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
+    if not y.index.equals(X.index):
+        raise ValueError("X e y precisam ter o mesmo índice.")
+
+    mascara = y.notna()
+    return (
+        X.loc[mascara].reset_index(drop=True),
+        y.loc[mascara].astype("int8").reset_index(drop=True),
+    )
+
+
+def random_state() -> int:
+    """Seed canônica do projeto (``config.SEED``)."""
+    return int(C.SEED)
+
+
+def build_pipeline(
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
+    *,
+    classifier: object | None = None,
+    features: Iterable[str] | None = None,
+    strict: bool = True,
+) -> Pipeline:
+    """Constrói o ``Pipeline`` sklearn.
+
+    - ``classifier=None`` → devolve só o pré-processamento (útil no C2).
+    - ``classifier`` passado (C3+) → anexa como etapa final.
+    - ``features=None`` → usa ``FEATURES`` do módulo.
+    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
+      estiver ausente em ``X``; ``False`` → emite warning e segue só com
+      as presentes.
+    """
+    num = list(FEATURES_NUMERICAS)
+    cat = list(FEATURES_CATEGORICAS)
+
+    if features is not None:
+        fs = set(features)
+        num = [c for c in num if c in fs]
+        cat = [c for c in cat if c in fs]
+
+    if X is not None:
+        if ausentes := sorted((set(num) | set(cat)) - set(X.columns)):
+            msg = (
+                f"Features configuradas ausentes em X: {ausentes}. "
+                "Verifique `features` no supervised.yaml ou o DataFrame "
+                "de entrada."
+            )
+            if strict:
+                raise KeyError(msg)
+            logger.warning(msg)
+            num = [c for c in num if c in X.columns]
+            cat = [c for c in cat if c in X.columns]
+
+    pre = build_preprocessor(numericas=num, categoricas=cat)
+
+    etapas: list[tuple[str, object]] = [("pre", pre)]
+    if classifier is not None:
+        etapas.append(("clf", classifier))
+
+    return Pipeline(etapas)
+```
+
+## `src/protocolo/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `89 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `dc84b0499cded1d8b8fe8cffd8906ca4d73a01297f048160dd439decf23dcb02`
+
+```python
+"""Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões)."""
 ```
 

@@ -1,5301 +1,8 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 3/3 -->
-## `notebooks/C/C_13_boosting.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `33.3 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `5e8cd0be1182ecacaa42dfafb10518cf2a76f0372ee8cc4967d6dce01c8da23f`
-
-- Cells: `15` (`9` code, `6` markdown)
-- Code cells executed: `9` of `9`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# C4 — Boosting
-
-Avalia `HistGradientBoostingClassifier` na mesma partição do C3.
-Se o gate `G6_finalistas_tuning` estiver aprovado, executa busca
-limitada para ambos os finalistas. **Não abre o teste**, não calibra
-e não escolhe limiar — isso pertence ao C5.
-
-**Pré-requisito:** `pip install -e .`
-```
-
-### Cell 2 [code] · In [1]
-
-```python
-from pathlib import Path
-import itertools
-import json
-import os
-import sys
-import time
-
-import numpy as np
-import pandas as pd
-from IPython.display import display
-
-
-def encontrar_raiz_projeto(start: Path | None = None) -> Path:
-    atual = (start or Path.cwd()).resolve()
-    for candidato in (atual, *atual.parents):
-        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
-            return candidato
-    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-from src.utils import config as C
-from src.utils import env
-from src.utils.reproducibility import Run
-from src.data.supervised_artifact import load_supervised_artifact, split_partitions
-from src.evaluation.leakage import check_leakage
-from src.evaluation.metrics import metricas_completas
-from src.models.logistic import build_logistic_pipeline
-from src.models.boosting import build_boosting_pipeline
-
-env.carregar_dotenv()
-env.garantir_diretorios()
-
-TABLES_DIR      = C.TABLES_DIR
-PREDICTIONS_DIR = C.PREDICTIONS_DIR
-TABLES_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
-
-SEED = int(C.SEED)
-print(C.resumo())
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
-PARQUET_NAME      = srag.parquet
-DATA_VERSION      = dados-v2
-GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
-HTTP_TIMEOUT      = 180
-HTTP_TENTATIVAS   = 3
-SEED              = 42
-GITHUB_TOKEN?     = False
-SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
-SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## Carregar artefacto e materializar partições
-
-Mesma fonte que C2/C3. `split_partitions` devolve apenas
-`(treino, validacao)` — o teste fica inacessível.
-```
-
-### Cell 4 [code] · In [2]
-
-```python
-COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
-
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
-treino, validacao = split_partitions(df, manifest)
-
-PARTICAO = manifest["partition_column"]
-ALVO     = manifest["target_column"]
-FEATURES = list(manifest["feature_columns"])
-
-X_train = treino[FEATURES].copy()
-y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
-X_val   = validacao[FEATURES].copy()
-y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
-
-check_leakage(X_train)
-check_leakage(X_val)
-
-n_teste = int((df[PARTICAO].astype(str) == "teste").sum())
-
-display(pd.DataFrame({
-    "particao":   ["treino", "validacao"],
-    "n":          [len(treino), len(validacao)],
-    "positivos":  [int(y_train.sum()), int(y_val.sum())],
-    "prevalencia":[float(y_train.mean()), float(y_val.mean())],
-}))
-
-print(f"cohort_kind : {manifest['cohort_kind']}")
-print(f"features    : {len(FEATURES)}")
-print(f"teste       : {n_teste:,} (fechado)")
-```
-
-**Output 1 (display_data)**
-
-```text
-    particao        n  positivos  prevalencia
-0     treino  2740584     599323     0.218684
-1  validacao   587272     128429     0.218687
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-cohort_kind : provisional
-features    : 31
-teste       : 587,276 (fechado)
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## Modelos de referência
-
-Logística e boosting com configurações do YAML (sem tuning). Servem
-de base para a comparação caso o gate G6 esteja pendente.
-```
-
-### Cell 6 [code] · In [3]
-
-```python
-log_cfg   = C.cfg("models", "logistic") or {}
-boost_cfg = C.cfg("models", "boosting") or {}
-
-DEFAULTS_BOOST = {
-    "max_leaf_nodes":     int(boost_cfg.get("max_leaf_nodes") or 31),
-    "min_samples_leaf":   int(boost_cfg.get("min_samples_leaf") or 20),
-    "l2_regularization":  float(boost_cfg.get("l2_regularization") or 0.0),
-    "early_stopping":     bool(boost_cfg.get("early_stopping") or False),
-    "class_weight":       boost_cfg.get("class_weight") or "balanced",
-}
-
-DEFAULTS_LOG = {
-    "solver":       log_cfg.get("solver", "lbfgs"),
-    "max_iter":     int(log_cfg.get("max_iter", 1000)),
-    "class_weight": log_cfg.get("class_weight", "balanced"),
-}
-
-pipe_log_ref = build_logistic_pipeline(C=1.0, **DEFAULTS_LOG)
-pipe_log_ref.fit(X_train, y_train)
-prob_log_ref = pipe_log_ref.predict_proba(X_val)[:, 1]
-
-pipe_boost_ref = build_boosting_pipeline(
-    learning_rate=0.05, max_iter=500, max_depth=None, **DEFAULTS_BOOST,
-)
-pipe_boost_ref.fit(X_train, y_train)
-prob_boost_ref = pipe_boost_ref.predict_proba(X_val)[:, 1]
-
-display(pd.DataFrame([
-    {"modelo": "logistica_C1",  **metricas_completas(y_val, prob_log_ref,   limiar=0.5)},
-    {"modelo": "boosting_base", **metricas_completas(y_val, prob_boost_ref, limiar=0.5)},
-]))
-```
-
-**Output 1 (display_data)**
-
-```text
-          modelo       auc        ap    pr_auc     brier  log_loss        f1  \
-0   logistica_C1  0.775236  0.440616  0.440616  0.198063  0.567540  0.505889   
-1  boosting_base  0.787433  0.467521  0.467521  0.195973  0.552883  0.511183   
-
-   precision    recall  sensibilidade  especificidade  accuracy  limiar  \
-0   0.375804  0.773712       0.773712        0.640302  0.669477     0.5   
-1   0.371800  0.817744       0.817744        0.613273  0.657988     0.5   
-
-          n  
-0  587272.0  
-1  587272.0  
-[non-text output omitted: text/html]
-```
-
-### Cell 7 [markdown]
-
-```markdown
-## Busca limitada (somente se G6 aprovado)
-
-Respeita `tuning.metrica_principal` e `tuning.max_configuracoes_por_modelo`.
-Amostra apenas se `MAX_TREINO_BUSCA` for definido — caso contrário usa
-o treino completo.
-```
-
-### Cell 8 [code] · In [4]
-
-```python
-MAX_TREINO_BUSCA = None
-
-METRICAS = ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall")
-
-
-def _subamostrar(X, y, max_n, seed):
-    if max_n is None or max_n <= 0 or len(X) <= max_n:
-        return X, y
-    rng = np.random.default_rng(seed)
-    idx = rng.choice(len(X), size=max_n, replace=False)
-    return X.iloc[idx].copy(), y.iloc[idx].copy()
-
-
-def _busca_limitada(candidatos, construir, X_tr, y_tr, X_va, y_va, *,
-                    seed, max_configs, metrica_principal):
-    """Shuffle, avalia os `max_configs` primeiros, devolve (tabela, melhor)."""
-    rng = np.random.default_rng(seed)
-    ordem = rng.permutation(len(candidatos))
-    selecionados = [candidatos[i] for i in ordem][:max_configs]
-
-    linhas, melhor = [], None
-    for params in selecionados:
-        t0 = time.perf_counter()
-        pipe = construir(**params)
-        pipe.fit(X_tr, y_tr)
-        fit_s = time.perf_counter() - t0
-        prob = pipe.predict_proba(X_va)[:, 1]
-        m = metricas_completas(y_va, prob, limiar=0.5)
-
-        linha = {**{k: float(m[k]) for k in METRICAS},
-                 **params,
-                 "duracao_fit_s": float(fit_s)}
-        linhas.append(linha)
-
-        score = linha[metrica_principal]
-        if melhor is None or score > melhor["score"]:
-            melhor = {"score": score, "params": params,
-                      "pipeline": pipe, "prob_val": prob}
-
-    return pd.DataFrame(linhas), melhor
-
-
-def _candidatos_boosting():
-    return [
-        {"learning_rate": float(lr), "max_iter": int(mi),
-         "max_depth": (None if md is None else int(md))}
-        for lr in (C.cfg("models", "boosting", "busca_learning_rate") or [0.05])
-        for mi in (C.cfg("models", "boosting", "busca_max_iter")      or [500])
-        for md in (C.cfg("models", "boosting", "busca_max_depth")     or [None])
-    ]
-
-
-def _candidatos_logistica():
-    return [{"C": float(c)} for c in (C.cfg("models", "logistic", "busca_C") or [1.0])]
-```
-
-### Cell 9 [code] · In [5]
-
-```python
-G6_STATUS  = (C.cfg("gates", "G6_finalistas_tuning") or {}).get("status")
-G6_APROVADO = G6_STATUS == "aprovado"
-
-tuning_cfg        = C.cfg("tuning") or {}
-METRICA_PRINCIPAL = str(tuning_cfg.get("metrica_principal") or "pr_auc")
-MAX_CONFIGS       = max(1, int(tuning_cfg.get("max_configuracoes_por_modelo") or 30))
-
-print(f"G6_finalistas_tuning: {G6_STATUS} (aprovado={G6_APROVADO})")
-print(f"metrica_principal   : {METRICA_PRINCIPAL}")
-print(f"max_configs         : {MAX_CONFIGS}")
-
-resultados_busca_log = resultados_busca_boost = None
-melhor_config_log    = melhor_config_boost    = None
-
-pipe_log_final,   prob_log_final   = pipe_log_ref,   prob_log_ref
-pipe_boost_final, prob_boost_final = pipe_boost_ref, prob_boost_ref
-metricas_log_final   = {**metricas_completas(y_val, prob_log_final,   limiar=0.5), "modelo": "logistica_C1"}
-metricas_boost_final = {**metricas_completas(y_val, prob_boost_final, limiar=0.5), "modelo": "boosting_base"}
-
-if G6_APROVADO:
-    X_busca, y_busca = _subamostrar(X_train, y_train, MAX_TREINO_BUSCA, SEED)
-    print(f"\nBusca em {len(X_busca):,} linhas (treino original: {len(X_train):,}).")
-
-    resultados_busca_log, melhor_config_log = _busca_limitada(
-        _candidatos_logistica(),
-        lambda **p: build_logistic_pipeline(**p, **DEFAULTS_LOG),
-        X_busca, y_busca, X_val, y_val,
-        seed=SEED, max_configs=MAX_CONFIGS, metrica_principal=METRICA_PRINCIPAL,
-    )
-    resultados_busca_log = resultados_busca_log.sort_values(
-        [METRICA_PRINCIPAL, "brier"], ascending=[False, True]
-    ).reset_index(drop=True)
-    display(resultados_busca_log)
-
-    resultados_busca_boost, melhor_config_boost = _busca_limitada(
-        _candidatos_boosting(),
-        lambda **p: build_boosting_pipeline(**p, **DEFAULTS_BOOST),
-        X_busca, y_busca, X_val, y_val,
-        seed=SEED, max_configs=MAX_CONFIGS, metrica_principal=METRICA_PRINCIPAL,
-    )
-    resultados_busca_boost = resultados_busca_boost.sort_values(
-        [METRICA_PRINCIPAL, "brier"], ascending=[False, True]
-    ).reset_index(drop=True)
-    display(resultados_busca_boost)
-
-    if melhor_config_log is not None:
-        pipe_log_final = build_logistic_pipeline(**melhor_config_log["params"], **DEFAULTS_LOG)
-        pipe_log_final.fit(X_train, y_train)
-        prob_log_final = pipe_log_final.predict_proba(X_val)[:, 1]
-        metricas_log_final = {**metricas_completas(y_val, prob_log_final, limiar=0.5),
-                              "modelo": "logistica_tuned"}
-
-    if melhor_config_boost is not None:
-        pipe_boost_final = build_boosting_pipeline(**melhor_config_boost["params"], **DEFAULTS_BOOST)
-        pipe_boost_final.fit(X_train, y_train)
-        prob_boost_final = pipe_boost_final.predict_proba(X_val)[:, 1]
-        metricas_boost_final = {**metricas_completas(y_val, prob_boost_final, limiar=0.5),
-                                "modelo": "boosting_tuned"}
-else:
-    print("\nG6 pendente — busca limitada não executada. Comparação usará referências.")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-G6_finalistas_tuning: pendente (aprovado=False)
-metrica_principal   : pr_auc
-max_configs         : 30
-
-G6 pendente — busca limitada não executada. Comparação usará referências.
-```
-
-### Cell 10 [markdown]
-
-```markdown
-## Comparação, predições e persistência
-```
-
-### Cell 11 [code] · In [6]
-
-```python
-comparacao = pd.DataFrame([
-    {"modelo": metricas_log_final["modelo"],
-     **{k: metricas_log_final[k] for k in ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall", "accuracy")}},
-    {"modelo": metricas_boost_final["modelo"],
-     **{k: metricas_boost_final[k] for k in ("ap", "pr_auc", "auc", "brier", "f1", "precision", "recall", "accuracy")}},
-]).sort_values("ap", ascending=False).reset_index(drop=True)
-
-delta_ap = (
-    comparacao.loc[comparacao["modelo"].str.startswith("boosting"),  "ap"].iloc[0]
-    - comparacao.loc[comparacao["modelo"].str.startswith("logistica"), "ap"].iloc[0]
-)
-display(comparacao)
-print(f"Δ AP (boosting − logística): {delta_ap:+.4f}")
-
-pred_val = pd.concat([
-    pd.DataFrame({"y_true": y_val.to_numpy(), "y_prob": prob_log_final,
-                  "modelo": metricas_log_final["modelo"],
-                  "cohort_kind": manifest["cohort_kind"]}),
-    pd.DataFrame({"y_true": y_val.to_numpy(), "y_prob": prob_boost_final,
-                  "modelo": metricas_boost_final["modelo"],
-                  "cohort_kind": manifest["cohort_kind"]}),
-], ignore_index=True)
-pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
-```
-
-**Output 1 (display_data)**
-
-```text
-          modelo        ap    pr_auc       auc     brier        f1  precision  \
-0  boosting_base  0.467521  0.467521  0.787433  0.195973  0.511183   0.371800   
-1   logistica_C1  0.440616  0.440616  0.775236  0.198063  0.505889   0.375804   
-
-     recall  accuracy  
-0  0.817744  0.657988  
-1  0.773712  0.669477  
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-Δ AP (boosting − logística): +0.0269
-```
-
-### Cell 12 [code] · In [7]
-
-```python
-timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
-prefixo   = f"C4_boosting_{manifest['cohort_kind']}_{timestamp}"
-
-caminho_comparacao = TABLES_DIR      / f"{prefixo}_comparacao.csv"
-caminho_predicoes  = PREDICTIONS_DIR / f"{prefixo}_predicoes_validacao.parquet"
-caminho_manifesto  = TABLES_DIR      / f"{prefixo}_manifesto.json"
-caminho_busca_log  = TABLES_DIR      / f"{prefixo}_busca_logistica.csv"
-caminho_busca_bst  = TABLES_DIR      / f"{prefixo}_busca_boosting.csv"
-
-comparacao.to_csv(caminho_comparacao, index=False, encoding="utf-8-sig")
-pred_val.to_parquet(caminho_predicoes, index=False)
-if resultados_busca_log   is not None: resultados_busca_log.to_csv(caminho_busca_log, index=False, encoding="utf-8-sig")
-if resultados_busca_boost is not None: resultados_busca_boost.to_csv(caminho_busca_bst, index=False, encoding="utf-8-sig")
-
-manifesto_c4 = {
-    "cohort_kind":        manifest["cohort_kind"],
-    "dataset_path":       manifest["dataset_path"],
-    "dataset_sha256":     manifest["dataset_sha256"],
-    "feature_columns":    FEATURES,
-    "target_column":      ALVO,
-    "partition_column":   PARTICAO,
-    "n_treino":           int(len(treino)),
-    "n_validacao":        int(len(validacao)),
-    "n_teste_fechado":    n_teste,
-    "g6_status":          G6_STATUS,
-    "buscas_executadas":  bool(G6_APROVADO),
-    "metrica_principal":  METRICA_PRINCIPAL,
-    "max_configs":        MAX_CONFIGS,
-    "melhor_config_logistica": (
-        None if melhor_config_log is None
-        else {"C": melhor_config_log["params"]["C"],
-              "score": float(melhor_config_log["score"])}
-    ),
-    "melhor_config_boosting": (
-        None if melhor_config_boost is None
-        else {**melhor_config_boost["params"],
-              "score": float(melhor_config_boost["score"])}
-    ),
-    "limiar_usado":       0.5,
-    "limiar_e_diagnostico": True,
-    "calibracao_aplicada": False,
-    "teste_aberto":       False,
-    "features_final_congelada_no_yaml": bool(C.cfg("features", "final")),
-    "artefatos": {
-        "comparacao":          str(caminho_comparacao),
-        "predicoes_validacao": str(caminho_predicoes),
-        "busca_logistica":     str(caminho_busca_log) if resultados_busca_log   is not None else None,
-        "busca_boosting":      str(caminho_busca_bst) if resultados_busca_boost is not None else None,
-    },
-}
-caminho_manifesto.write_text(
-    json.dumps(manifesto_c4, ensure_ascii=False, indent=2, default=str),
-    encoding="utf-8",
-)
-
-assert len(pd.read_csv(caminho_comparacao, encoding="utf-8-sig")) == len(comparacao)
-assert len(pd.read_parquet(caminho_predicoes)) == len(pred_val)
-
-print(f"Comparação : {caminho_comparacao}")
-print(f"Predições  : {caminho_predicoes}")
-print(f"Manifesto  : {caminho_manifesto}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Comparação : <REPO>\outputs\tables\C4_boosting_provisional_20261017T010744Z_comparacao.csv
-Predições  : <REPO>\outputs\predictions\C4_boosting_provisional_20261017T010744Z_predicoes_validacao.parquet
-Manifesto  : <REPO>\outputs\tables\C4_boosting_provisional_20261017T010744Z_manifesto.json
-```
-
-### Cell 13 [markdown]
-
-```markdown
-## Proposta de atualização do YAML
-
-Consolida os hiperparâmetros vencedores num bloco pronto para colar em
-`supervised.yaml`. **Não é aplicada automaticamente** — o C5 lê o YAML
-que existir em disco.
-```
-
-### Cell 14 [code] · In [8]
-
-```python
-def _fmt(v):
-    if v is None: return "null"
-    if isinstance(v, bool): return "true" if v else "false"
-    return repr(v) if isinstance(v, str) else str(v)
-
-
-def _montar_proposta_yaml():
-    linhas = [
-        "# Proposta de atualização do YAML — gerada pelo C4.",
-        "# NÃO aplicada automaticamente; revise e cole em configs/supervised.yaml.",
-        f"# cohort_kind: {manifest['cohort_kind']}",
-        f"# g6_status: {G6_STATUS}",
-        f"# metrica_principal: {METRICA_PRINCIPAL}",
-        "models:",
-    ]
-    if melhor_config_log is not None:
-        linhas += ["  logistic:", f"    C: {_fmt(melhor_config_log['params']['C'])}"]
-    if melhor_config_boost is not None:
-        p = melhor_config_boost["params"]
-        linhas += [
-            "  boosting:",
-            f"    learning_rate: {_fmt(p['learning_rate'])}",
-            f"    max_iter: {_fmt(p['max_iter'])}",
-            f"    max_depth: {_fmt(p['max_depth'])}",
-        ]
-    return "\n".join(linhas) + "\n"
-
-
-if G6_APROVADO and (melhor_config_log or melhor_config_boost):
-    proposta = _montar_proposta_yaml()
-    caminho_proposta = TABLES_DIR / f"{prefixo}_proposta_yaml.yaml"
-    caminho_proposta.write_text(proposta, encoding="utf-8")
-    print(proposta)
-    print(f"Salvo: {caminho_proposta}")
-else:
-    caminho_proposta = None
-    print("Sem proposta de atualização do YAML (G6 pendente ou busca vazia).")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Sem proposta de atualização do YAML (G6 pendente ou busca vazia).
-```
-
-### Cell 15 [code] · In [9]
-
-```python
-with Run(
-    modelo="C4_boosting",
-    parametros={
-        "cohort_kind":       manifest["cohort_kind"],
-        "g6_status":         G6_STATUS,
-        "buscas_executadas": bool(G6_APROVADO),
-        "metrica_principal": METRICA_PRINCIPAL,
-        "max_configs":       MAX_CONFIGS,
-        "limiar_diagnostico": 0.5,
-        "calibracao_aplicada": False,
-        "teste_aberto":      False,
-    },
-    dataset={
-        "n_treino":        int(len(treino)),
-        "n_validacao":     int(len(validacao)),
-        "n_teste_fechado": n_teste,
-    },
-    features={"n_features": len(FEATURES), "usadas": FEATURES},
-    notas="C4 — boosting na partição do C3. Buscas condicionadas ao G6. Teste não consultado.",
-    dataset_path=Path(manifest["dataset_path"]),
-    dataset_sha256=manifest["dataset_sha256"],
-) as r:
-    r.metrica(
-        logistica_ap=metricas_log_final["ap"],
-        logistica_auc=metricas_log_final["auc"],
-        boosting_ap=metricas_boost_final["ap"],
-        boosting_auc=metricas_boost_final["auc"],
-        boosting_brier=metricas_boost_final["brier"],
-        delta_ap=delta_ap,
-    )
-
-print("Run registrado em:", r.pasta)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_220744_784223_C4_boosting
-Run registrado em: <REPO>\outputs\runs\2026-10-16_220744_784223_C4_boosting
-```
-
-## `notebooks/C/C_15_calibracao_limiar.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `29.3 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `4e02d65b69000c9e9347fcd32bc8cd12dcff67e2e5360c628d1f8eec9d608272`
-
-- Cells: `10` (`6` code, `4` markdown)
-- Code cells executed: `6` of `6`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# C5 — Calibração e Escolha de Limiar
-
-Calibra os finalistas e escolhe o limiar operacional usando **somente
-treino e validação**. Se `HONEST_CALIB_SPLIT = True`, a validação é
-dividida em `val_cal` (ajusta calibrador) e `val_meas` (mede Brier,
-escolhe limiar). Não abre o teste e não escreve no YAML.
-
-**Pré-requisito:** `pip install -e .` com scikit-learn ≥ 1.6.
-```
-
-### Cell 2 [code] · In [1]
-
-```python
-from pathlib import Path
-import hashlib
-import json
-import os
-import sys
-
-import numpy as np
-import pandas as pd
-from IPython.display import display
-from sklearn.model_selection import train_test_split
-
-
-def encontrar_raiz_projeto(start: Path | None = None) -> Path:
-    atual = (start or Path.cwd()).resolve()
-    for candidato in (atual, *atual.parents):
-        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
-            return candidato
-    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-try:
-    import sklearn.frozen  # noqa: F401
-except ImportError as exc:
-    raise RuntimeError(
-        "Este notebook requer scikit-learn >= 1.6 (FrozenEstimator)."
-    ) from exc
-
-from src.utils import config as C
-from src.utils import env
-from src.utils.reproducibility import Run
-from src.data.supervised_artifact import load_supervised_artifact, split_partitions
-from src.evaluation.leakage import check_leakage
-from src.evaluation.metrics import metricas_completas, brier
-from src.evaluation.calibration import curva_confiabilidade, ece, mce, brier_decomposicao
-from src.models.factory import build_finalista
-from src.models.calibration import calibrar, escolher_limiar
-
-env.carregar_dotenv()
-env.garantir_diretorios()
-
-TABLES_DIR      = C.TABLES_DIR
-PREDICTIONS_DIR = C.PREDICTIONS_DIR
-TABLES_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
-
-SEED      = int(C.SEED)
-G7_STATUS = str(C.cfg("gates", "G7_calibracao", "status") or "pendente")
-G8_STATUS = str(C.cfg("gates", "G8_limiar", "status") or "pendente")
-
-print(C.resumo())
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-ROOT_DIR          = <REPO>
-DATA_DIR          = <REPO>\data
-RAW_DIR           = <REPO>\data\raw
-PROCESSED_DIR     = <REPO>\data\processed
-ANALYTICAL_DIR    = <REPO>\data\analytical
-TREINO_DIR        = <REPO>\data\treino
-OUTPUTS_DIR       = <REPO>\outputs
-RUNS_DIR          = <REPO>\outputs\runs
-LOGS_DIR          = <REPO>\logs
-CONFIGS_DIR       = <REPO>\configs
-SUPERVISED_YAML   = <REPO>\configs\supervised.yaml (ok)
-PARQUET_NAME      = srag.parquet
-DATA_VERSION      = dados-v2
-GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador
-HTTP_TIMEOUT      = 180
-HTTP_TENTATIVAS   = 3
-SEED              = 42
-GITHUB_TOKEN?     = False
-SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet
-SUPERVISED_SHA256 = 6a86868c0d348086a4334960c2461a9ba66b8200020aeeabaec4bfadddbaa7c6
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## Carregar artefacto e preparar validação
-
-Se `HONEST_CALIB_SPLIT = True`, `val_cal` ajusta o calibrador e
-`val_meas` mede — evita o viés otimista de calibrar e medir no mesmo
-conjunto. Caso contrário, ambos são a validação inteira.
-```
-
-### Cell 4 [code] · In [2]
-
-```python
-COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
-
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
-treino, validacao = split_partitions(df, manifest)
-
-PARTICAO = manifest["partition_column"]
-ALVO     = manifest["target_column"]
-FEATURES = list(manifest["feature_columns"])
-
-X_train = treino[FEATURES].copy()
-y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
-X_val   = validacao[FEATURES].copy()
-y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
-
-check_leakage(X_train)
-check_leakage(X_val)
-
-HONEST_CALIB_SPLIT = True
-CALIB_SPLIT_FRAC   = 0.5
-CALIB_SPLIT_SEED   = SEED
-
-if HONEST_CALIB_SPLIT:
-    idx_cal, idx_meas = train_test_split(
-        np.arange(len(y_val)),
-        test_size=1.0 - CALIB_SPLIT_FRAC,
-        random_state=CALIB_SPLIT_SEED,
-        stratify=y_val.to_numpy(),
-    )
-    X_val_cal  = X_val.iloc[idx_cal].reset_index(drop=True)
-    y_val_cal  = y_val.iloc[idx_cal].reset_index(drop=True)
-    X_val_meas = X_val.iloc[idx_meas].reset_index(drop=True)
-    y_val_meas = y_val.iloc[idx_meas].reset_index(drop=True)
-    CALIB_SPLIT_HASH = hashlib.sha256(
-        np.asarray(idx_cal, dtype=np.int64).tobytes()
-    ).hexdigest()[:16]
-else:
-    X_val_cal, y_val_cal = X_val, y_val
-    X_val_meas, y_val_meas = X_val, y_val
-    CALIB_SPLIT_HASH = None
-
-n_teste = int((df[PARTICAO].astype(str) == "teste").sum())
-
-display(pd.DataFrame({
-    "bloco":      ["treino", "val_cal", "val_meas"],
-    "n":          [len(X_train), len(X_val_cal), len(X_val_meas)],
-    "positivos":  [int(y_train.sum()), int(y_val_cal.sum()), int(y_val_meas.sum())],
-}))
-
-print(f"cohort_kind : {manifest['cohort_kind']}")
-print(f"features    : {len(FEATURES)}")
-print(f"teste       : {n_teste:,} (fechado)")
-if CALIB_SPLIT_HASH:
-    print(f"split_hash  : {CALIB_SPLIT_HASH}")
-```
-
-**Output 1 (display_data)**
-
-```text
-      bloco        n  positivos
-0    treino  2740584     599323
-1   val_cal   293636      64215
-2  val_meas   293636      64214
-[non-text output omitted: text/html]
-```
-
-**Output 2 (stream:stdout)**
-
-```text
-cohort_kind : provisional
-features    : 31
-teste       : 587,276 (fechado)
-split_hash  : c1a8f0dfddbf2b40
-```
-
-### Cell 5 [markdown]
-
-```markdown
-## Calibrar finalistas e escolher limiar
-
-Para cada finalista da `selecao_modelos.finalistas`, treina no
-treino, calibra cada método candidato em `val_cal`, mede Brier em
-`val_meas` e escolhe o melhor. Depois escolhe o limiar no mesmo
-`val_meas`.
-
-O YAML usa `hist_gradient_boosting`; a fábrica usa `boosting` —
-mapeamento abaixo, sem duplicar lógica de construção.
-```
-
-### Cell 6 [code] · In [3]
-
-```python
-ALIASES_FINALISTA = {
-    "logistic":               "logistic",
-    "boosting":               "boosting",
-    "hist_gradient_boosting": "boosting",
-}
-
-selecao_cfg = C.cfg("selecao_modelos") or {}
-FINALISTAS  = list(selecao_cfg.get("finalistas") or [])
-if not FINALISTAS:
-    raise RuntimeError("selecao_modelos.finalistas está vazio no YAML.")
-
-desconhecidos = [n for n in FINALISTAS if n not in ALIASES_FINALISTA]
-if desconhecidos:
-    raise ValueError(f"Finalistas desconhecidos: {desconhecidos}")
-
-calibracao_cfg      = C.cfg("calibracao") or {}
-CALIBRACAO_ATIVA    = bool(calibracao_cfg.get("ativa", True))
-METODOS_CANDIDATOS  = list(calibracao_cfg.get("metodos_candidatos") or ["sigmoid", "isotonic"])
-
-limiar_cfg            = C.cfg("limiar") or {}
-LIMIAR_METRICA        = limiar_cfg.get("metrica") or "f1"
-LIMIAR_MIN_PRECISION  = limiar_cfg.get("min_precision")
-
-print(f"finalistas          : {FINALISTAS}")
-print(f"calibracao ativa    : {CALIBRACAO_ATIVA} ({METODOS_CANDIDATOS})")
-print(f"limiar metrica      : {LIMIAR_METRICA} (min_precision={LIMIAR_MIN_PRECISION})")
-
-resultados = {}
-
-for nome_yaml in FINALISTAS:
-    pipe = build_finalista(ALIASES_FINALISTA[nome_yaml])
-    pipe.fit(X_train, y_train)
-    prob_base = pipe.predict_proba(X_val_meas)[:, 1]
-    brier_base = float(brier(y_val_meas, prob_base))
-
-    calibracoes = {}
-    if CALIBRACAO_ATIVA:
-        for metodo in METODOS_CANDIDATOS:
-            try:
-                cal = calibrar(pipe, X_val_cal, y_val_cal, method=metodo)
-                prob = cal.predict_proba(X_val_meas)[:, 1]
-                calibracoes[metodo] = {
-                    "pipeline":  cal,
-                    "prob_meas": prob,
-                    "brier":     float(brier(y_val_meas, prob)),
-                }
-            except Exception as exc:
-                print(f"  {nome_yaml}/{metodo}: falhou ({exc!r})")
-
-    if calibracoes:
-        metodo = min(calibracoes, key=lambda m: calibracoes[m]["brier"])
-        escolha = {"metodo": metodo, **calibracoes[metodo]}
-    else:
-        escolha = {"metodo": None, "pipeline": pipe,
-                   "prob_meas": prob_base, "brier": brier_base}
-
-    resultados[nome_yaml] = {
-        "brier_base":    brier_base,
-        "prob_base_meas": prob_base,
-        "calibracoes":   calibracoes,
-        "escolha":       escolha,
-    }
-
-    res = escolher_limiar(
-        y_val_meas,
-        escolha["prob_meas"],
-        metrica=LIMIAR_METRICA,
-        min_precision=LIMIAR_MIN_PRECISION,
-    )
-    resultados[nome_yaml]["limiar"] = res
-
-tabela = pd.DataFrame([
-    {"finalista": n,
-     "metodo_calibracao": r["escolha"]["metodo"],
-     "brier_base": r["brier_base"],
-     "brier_calibrado": r["escolha"]["brier"],
-     "ganho_brier": r["brier_base"] - r["escolha"]["brier"],
-     "limiar": r["limiar"]["limiar"],
-     "metrica": r["limiar"]["metrica"],
-     "valor_metrica": r["limiar"]["valor"]}
-    for n, r in resultados.items()
-])
-display(tabela)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-finalistas          : ['hist_gradient_boosting', 'logistic']
-calibracao ativa    : True (['sigmoid', 'isotonic'])
-limiar metrica      : f1 (min_precision=None)
-```
-
-**Output 2 (display_data)**
-
-```text
-                finalista metodo_calibracao  brier_base  brier_calibrado  \
-0  hist_gradient_boosting           sigmoid    0.195889         0.140943   
-1                logistic          isotonic    0.198105         0.143855   
-
-   ganho_brier  limiar metrica  valor_metrica  
-0     0.054945   0.255      f1       0.515904  
-1     0.054250   0.255      f1       0.505913  
-[non-text output omitted: text/html]
-```
-
-### Cell 7 [markdown]
-
-```markdown
-## Diagnósticos e persistência
-
-Curva de confiabilidade, decomposição de Brier, ECE e MCE em
-`val_meas` com o método escolhido. Persistimos tudo em `outputs/`.
-```
-
-### Cell 8 [code] · In [4]
-
-```python
-diagnosticos = {}
-linhas_diag  = []
-
-for nome, r in resultados.items():
-    prob = r["escolha"]["prob_meas"]
-    d = {
-        "curva":  curva_confiabilidade(y_val_meas, prob, n_bins=10),
-        "decomp": brier_decomposicao(y_val_meas, prob, n_bins=10),
-        "ece":    float(ece(y_val_meas, prob, n_bins=10)),
-        "mce":    float(mce(y_val_meas, prob, n_bins=10)),
-    }
-    diagnosticos[nome] = d
-    linhas_diag.append({
-        "finalista":   nome,
-        "metodo":      r["escolha"]["metodo"] or "sem_calibracao",
-        "ece":         d["ece"],
-        "mce":         d["mce"],
-        "brier":       d["decomp"]["brier"],
-        "reliability": d["decomp"]["reliability"],
-        "resolution":  d["decomp"]["resolution"],
-    })
-
-display(pd.DataFrame(linhas_diag))
-```
-
-**Output 1 (display_data)**
-
-```text
-                finalista    metodo       ece       mce     brier  \
-0  hist_gradient_boosting   sigmoid  0.001753  0.182603  0.140943   
-1                logistic  isotonic  0.001096  0.179992  0.143855   
-
-   reliability  resolution  
-0     0.000014    0.029117  
-1     0.000004    0.026160  
-[non-text output omitted: text/html]
-```
-
-### Cell 9 [code] · In [5]
-
-```python
-timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
-prefixo   = f"C5_calibracao_limiar_{manifest['cohort_kind']}_{timestamp}"
-
-caminho_tabela       = TABLES_DIR      / f"{prefixo}_escolhas.csv"
-caminho_predicoes    = PREDICTIONS_DIR / f"{prefixo}_predicoes_val_meas.parquet"
-caminho_manifesto    = TABLES_DIR      / f"{prefixo}_manifesto.json"
-
-tabela.to_csv(caminho_tabela, index=False, encoding="utf-8-sig")
-
-artefatos_diag = {}
-for nome, d in diagnosticos.items():
-    c_curva = TABLES_DIR / f"{prefixo}_{nome}_curva.csv"
-    d["curva"].to_csv(c_curva, index=False, encoding="utf-8-sig")
-    resultados[nome]["limiar"]["tabela"].to_csv(
-        TABLES_DIR / f"{prefixo}_{nome}_limiar.csv", index=False, encoding="utf-8-sig",
-    )
-    artefatos_diag[nome] = {
-        "curva":         str(c_curva),
-        "ece":           d["ece"],
-        "mce":           d["mce"],
-        "brier_decomp":  {k: float(v) for k, v in d["decomp"].items()},
-    }
-
-predicoes = []
-for nome, r in resultados.items():
-    predicoes.append(pd.DataFrame({
-        "y_true": y_val_meas.to_numpy(), "y_prob": r["prob_base_meas"],
-        "modelo": f"{nome}_base", "cohort_kind": manifest["cohort_kind"],
-    }))
-    if r["escolha"]["metodo"]:
-        predicoes.append(pd.DataFrame({
-            "y_true": y_val_meas.to_numpy(), "y_prob": r["escolha"]["prob_meas"],
-            "modelo": f"{nome}_{r['escolha']['metodo']}", "cohort_kind": manifest["cohort_kind"],
-        }))
-
-pred_val = pd.concat(predicoes, ignore_index=True)
-pred_val["y_pred"] = (pred_val["y_prob"] >= 0.5).astype(int)
-pred_val.to_parquet(caminho_predicoes, index=False)
-
-manifesto_c5 = {
-    "cohort_kind":        manifest["cohort_kind"],
-    "dataset_sha256":     manifest["dataset_sha256"],
-    "feature_columns":    FEATURES,
-    "target_column":      ALVO,
-    "partition_column":   PARTICAO,
-    "n_treino":           int(len(treino)),
-    "n_validacao":        int(len(validacao)),
-    "n_val_cal":          int(len(X_val_cal)),
-    "n_val_meas":         int(len(X_val_meas)),
-    "n_teste_fechado":    n_teste,
-    "honest_calib_split": bool(HONEST_CALIB_SPLIT),
-    "calib_split_frac":   float(CALIB_SPLIT_FRAC),
-    "calib_split_seed":   int(CALIB_SPLIT_SEED),
-    "calib_split_hash":   CALIB_SPLIT_HASH,
-    "finalistas":         FINALISTAS,
-    "calibracao_ativa":   CALIBRACAO_ATIVA,
-    "metodos_candidatos": METODOS_CANDIDATOS,
-    "escolhas": {
-        n: {"metodo": r["escolha"]["metodo"],
-            "brier_base":      r["brier_base"],
-            "brier_calibrado": r["escolha"]["brier"],
-            "limiar":          r["limiar"]["limiar"],
-            "limiar_metrica":  r["limiar"]["metrica"]}
-        for n, r in resultados.items()
-    },
-    "diagnosticos":       artefatos_diag,
-    "g7_status":          G7_STATUS,
-    "g8_status":          G8_STATUS,
-    "teste_aberto":       False,
-    "yaml_atualizado":    False,
-    "artefatos": {
-        "tabela":              str(caminho_tabela),
-        "predicoes_val_meas":  str(caminho_predicoes),
-    },
-}
-caminho_manifesto.write_text(
-    json.dumps(manifesto_c5, ensure_ascii=False, indent=2, default=str),
-    encoding="utf-8",
-)
-
-print(f"Tabela     : {caminho_tabela}")
-print(f"Predições  : {caminho_predicoes}")
-print(f"Manifesto  : {caminho_manifesto}")
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-Tabela     : <REPO>\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_escolhas.csv
-Predições  : <REPO>\outputs\predictions\C5_calibracao_limiar_provisional_20261017T021055Z_predicoes_val_meas.parquet
-Manifesto  : <REPO>\outputs\tables\C5_calibracao_limiar_provisional_20261017T021055Z_manifesto.json
-```
-
-### Cell 10 [code] · In [6]
-
-```python
-melhor_nome      = max(resultados, key=lambda n: resultados[n]["limiar"]["auc"])
-metodo_escolhido = resultados[melhor_nome]["escolha"]["metodo"]
-limiar_escolhido = resultados[melhor_nome]["limiar"]
-
-proposta_yaml = "\n".join([
-    "# Proposta de atualização do YAML — C5 (não aplicada automaticamente).",
-    f"# cohort_kind: {manifest['cohort_kind']}",
-    f"# G7/G8 no momento: {G7_STATUS}/{G8_STATUS}",
-    f"# finalista sugerido (maior AUC em val_meas): {melhor_nome}",
-    "calibracao:",
-    f"  metodo: {metodo_escolhido}",
-    "limiar:",
-    f"  otimo: {limiar_escolhido['limiar']}",
-    f"  metrica: {limiar_escolhido['metrica']}",
-])
-print(proposta_yaml)
-
-with Run(
-    modelo="C5_calibracao_limiar",
-    parametros={
-        "cohort_kind":        manifest["cohort_kind"],
-        "finalistas":         FINALISTAS,
-        "calibracao_ativa":   CALIBRACAO_ATIVA,
-        "metodos_candidatos": METODOS_CANDIDATOS,
-        "honest_calib_split": HONEST_CALIB_SPLIT,
-        "limiar_metrica":     LIMIAR_METRICA,
-        "min_precision":      LIMIAR_MIN_PRECISION,
-        "teste_aberto":       False,
-        "yaml_atualizado":    False,
-    },
-    dataset={
-        "n_treino":        int(len(treino)),
-        "n_val_cal":       int(len(X_val_cal)),
-        "n_val_meas":      int(len(X_val_meas)),
-        "n_teste_fechado": n_teste,
-    },
-    features={"n_features": len(FEATURES), "usadas": FEATURES},
-    notas="C5 — calibração e limiar escolhidos na validação. Teste não consultado.",
-    dataset_path=Path(manifest["dataset_path"]),
-    dataset_sha256=manifest["dataset_sha256"],
-) as r:
-    r.metrica(**{
-        f"{n}_{sufixo}": float(valor)
-        for n, res in resultados.items()
-        for sufixo, valor in [
-            ("brier_base", res["brier_base"]),
-            ("brier_calibrado", res["escolha"]["brier"]),
-            ("limiar", res["limiar"]["limiar"]),
-            ("auc", res["limiar"]["auc"]),
-        ]
-    })
-
-print("Run registrado em:", r.pasta)
-```
-
-**Output 1 (stream:stdout)**
-
-```text
-# Proposta de atualização do YAML — C5 (não aplicada automaticamente).
-# cohort_kind: provisional
-# G7/G8 no momento: pendente/pendente
-# finalista sugerido (maior AUC em val_meas): hist_gradient_boosting
-calibracao:
-  metodo: sigmoid
-limiar:
-  otimo: 0.255
-  metrica: f1
-[reproducibility] run registrado em: <REPO>\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
-Run registrado em: <REPO>\outputs\runs\2026-10-16_231055_901408_C5_calibracao_limiar
-```
-
-## `notebooks/C/C_16_validacao_final.ipynb`
-
-- Git: `tracked` · status `clean`
-- Size: `31.5 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `e5820958e558f7dcb97b3d9600423b63af78d94e04959526412e616ec1f2dc4f`
-
-- Cells: `15` (`9` code, `6` markdown)
-- Code cells executed: `0` of `9`
-- Kernel: `.venv (3.14.8)`; Python `3.14.8`
-- Outputs: `text outputs included`
-
-### Cell 1 [markdown]
-
-```markdown
-# C6 — Validação Final
-
-Abre a partição de teste **uma única vez**, após `G7`, `G8` e `G9`
-estarem aprovados, e produz a avaliação final do modelo congelado.
-
-Reconstrói o pipeline deterministicamente do YAML, calibra em `val_cal`
-(mesmo split do C5) e avalia no teste: métricas agregadas, IC por
-bootstrap, erros (FN primeiro), por ano, por grupo e calibração por ano.
-No final, marca `G9_holdout` como `executado` no YAML.
-
-**Pré-requisito:** `pip install -e .` com scikit-learn ≥ 1.6.
-```
-
-### Cell 2 [code] · In [ ]
-
-```python
-from pathlib import Path
-import hashlib
-import json
-import os
-import re
-import sys
-
-import numpy as np
-import pandas as pd
-from IPython.display import display
-from sklearn.model_selection import train_test_split
-
-
-def encontrar_raiz_projeto(start: Path | None = None) -> Path:
-    atual = (start or Path.cwd()).resolve()
-    for candidato in (atual, *atual.parents):
-        if (candidato / "src").is_dir() and (candidato / "pyproject.toml").is_file():
-            return candidato
-    raise RuntimeError(f"Raiz do projeto não encontrada a partir de: {atual}")
-
-
-ROOT_DIR = encontrar_raiz_projeto()
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-try:
-    import sklearn.frozen  # noqa: F401
-except ImportError as exc:
-    raise RuntimeError(
-        "Este notebook requer scikit-learn >= 1.6 (FrozenEstimator)."
-    ) from exc
-
-from src.utils import config as C
-from src.utils import env
-from src.utils.reproducibility import Run
-from src.data.supervised_artifact import load_supervised_artifact
-from src.evaluation.metrics import (
-    metricas_completas, ic_bootstrap,
-    auc, average_precision, brier as brier_metric,
-)
-from src.evaluation.errors import matriz_confusao, metricas_por_grupo
-from src.evaluation.calibration import curva_confiabilidade, ece, mce, brier_decomposicao
-from src.features.engineering import faixa_etaria as _faixa_etaria
-from src.models.factory import build_finalista
-from src.models.calibration import calibrar
-
-env.carregar_dotenv()
-env.garantir_diretorios()
-
-TABLES_DIR      = C.TABLES_DIR
-PREDICTIONS_DIR = C.PREDICTIONS_DIR
-TABLES_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
-
-print(C.resumo())
-```
-
-### Cell 3 [markdown]
-
-```markdown
-## Verificar gates e carregar configuração congelada
-
-`G9_holdout` precisa estar `aprovado` — o notebook marcará `executado`
-no fim. A configuração do modelo (finalista, calibração, limiar,
-features) tem de estar congelada no YAML.
-```
-
-### Cell 4 [code] · In [ ]
-
-```python
-GATES_EXIGIDOS = ["G7_calibracao", "G8_limiar", "G9_holdout"]
-status_gates   = {g: (C.cfg("gates", g) or {}).get("status") for g in GATES_EXIGIDOS}
-
-display(pd.DataFrame({"gate": list(status_gates), "status": list(status_gates.values())}))
-
-faltando = [g for g, s in status_gates.items() if s != "aprovado"]
-if faltando:
-    raise RuntimeError(f"Gates não aprovados: {faltando}. Edite supervised.yaml.")
-
-n_acessos_antes = int((C.cfg("gates", "G9_holdout") or {}).get("n_acessos") or 0)
-
-COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
-
-PARTICAO = manifest["partition_column"]
-ALVO     = manifest["target_column"]
-
-selecao_cfg          = C.cfg("selecao_modelos") or {}
-finalista_escolhido  = selecao_cfg.get("finalista_escolhido")
-if finalista_escolhido is None:
-    candidatos = list(selecao_cfg.get("finalistas") or [])
-    if len(candidatos) == 1:
-        finalista_escolhido = candidatos[0]
-    else:
-        raise RuntimeError("selecao_modelos.finalista_escolhido não definido.")
-
-calib_cfg    = C.cfg("calibracao") or {}
-calib_metodo = calib_cfg.get("metodo")
-calib_ativa  = bool(calib_cfg.get("ativa", True))
-calib_fonte  = str(calib_cfg.get("fonte") or "validacao")
-
-limiar_cfg    = C.cfg("limiar") or {}
-limiar_final  = limiar_cfg.get("otimo")
-limiar_metrica = limiar_cfg.get("metrica")
-
-FEATURES = list(C.cfg("features", "final") or [])
-
-if not FEATURES:
-    raise RuntimeError("features.final vazio — congele as features antes do C6.")
-if calib_ativa and calib_metodo is None:
-    raise RuntimeError("calibracao.ativa=true mas metodo vazio no YAML.")
-if limiar_final is None:
-    raise RuntimeError("limiar.otimo vazio no YAML.")
-if calib_fonte != "validacao":
-    raise RuntimeError(f"calibracao.fonte deve ser 'validacao', não {calib_fonte!r}.")
-
-proibidas = set(C.cfg("features", "proibidas") or [])
-if set(FEATURES) & proibidas:
-    raise RuntimeError(f"features.final contém colunas proibidas: {sorted(set(FEATURES) & proibidas)}")
-
-limiar_final_val = float(limiar_final)
-
-display(pd.DataFrame([
-    {"chave": "finalista",        "valor": finalista_escolhido},
-    {"chave": "calibracao.metodo","valor": calib_metodo if calib_ativa else "desativada"},
-    {"chave": "limiar.otimo",    "valor": limiar_final_val},
-    {"chave": "limiar.metrica",  "valor": limiar_metrica},
-    {"chave": "features.final",  "valor": len(FEATURES)},
-    {"chave": "n_acessos_G9",    "valor": n_acessos_antes},
-]))
-```
-
-### Cell 5 [code] · In [ ]
-
-```python
-# Guarda contra reabertura do teste no mesmo dataset_sha256.
-ALLOW_REOPEN = os.getenv("SRAG_ALLOW_TEST_REOPEN", "0") == "1"
-
-reaberturas = []
-for caminho in TABLES_DIR.glob("C6_validacao_final_*_manifesto.json"):
-    try:
-        dados = json.loads(caminho.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        continue
-    if dados.get("dataset_sha256") == manifest["dataset_sha256"]:
-        reaberturas.append({"arquivo": caminho.name, "em_utc": dados.get("teste_aberto_em_utc")})
-
-if reaberturas and not ALLOW_REOPEN:
-    display(pd.DataFrame(reaberturas))
-    raise RuntimeError(
-        "Teste já aberto para este dataset_sha256. Defina "
-        "SRAG_ALLOW_TEST_REOPEN=1 para reabrir e registe o motivo em docs/decisoes.md."
-    )
-print("Guarda OK." if not reaberturas else f"Reabertura autorizada ({len(reaberturas)} anterior(es)).")
-```
-
-### Cell 6 [markdown]
-
-```markdown
-## Reproduzir split do C5 e calibrar
-
-O limiar congelado foi escolhido em `val_meas` com calibrador ajustado em
-`val_cal`. Se o C6 recalibrasse em `val` inteira, a escala mudaria e o
-limiar deixaria de ser o ótimo. Localizamos o manifesto do C5 compatível
-e reproduzimos o split (hash de índice confirma que é o mesmo).
-```
-
-### Cell 7 [code] · In [ ]
-
-```python
-CALIB_SPLIT_FRAC_PADRAO = 0.5
-HASH_LEN = 16
-
-
-def _reproduzir_split_val_cal(y_val, frac_cal, seed):
-    idx_cal, idx_meas = train_test_split(
-        np.arange(len(y_val)),
-        test_size=1.0 - frac_cal,
-        random_state=seed,
-        stratify=y_val.to_numpy(),
-    )
-    return (np.asarray(idx_cal,  dtype=np.int64),
-            np.asarray(idx_meas, dtype=np.int64))
-
-
-def _localizar_manifesto_c5(dataset_sha256, finalista, metodo, calib_ativa):
-    for caminho in sorted(
-        TABLES_DIR.glob("C5_calibracao_limiar_*_manifesto.json"),
-        key=lambda p: p.stat().st_mtime, reverse=True,
-    ):
-        try:
-            dados = json.loads(caminho.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        if dados.get("dataset_sha256") != dataset_sha256:
-            continue
-        if calib_ativa:
-            escolha = (dados.get("escolhas") or {}).get(finalista) or {}
-            if escolha.get("metodo") != metodo:
-                continue
-        return dados, caminho
-    return None, None
-
-
-treino    = df.loc[df[PARTICAO] == "treino"].reset_index(drop=True)
-validacao = df.loc[df[PARTICAO] == "validacao"].reset_index(drop=True)
-teste     = df.loc[df[PARTICAO] == "teste"].reset_index(drop=True)
-
-X_train = treino[FEATURES]
-y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
-X_val   = validacao[FEATURES]
-y_val   = pd.to_numeric(validacao[ALVO], errors="coerce").astype("int8")
-X_test  = teste[FEATURES]
-y_test  = pd.to_numeric(teste[ALVO], errors="coerce").astype("int8")
-
-manifesto_c5, manifesto_c5_path = _localizar_manifesto_c5(
-    manifest["dataset_sha256"], finalista_escolhido,
-    calib_metodo if calib_ativa else None, calib_ativa,
-)
-
-if calib_ativa and manifesto_c5 is None:
-    raise RuntimeError(
-        "Nenhum manifesto C5 compatível (dataset_sha256 + metodo). "
-        "Rode o C5 com a configuração atual do YAML antes do C6."
-    )
-
-HONEST_CALIB_SPLIT = bool(manifesto_c5.get("honest_calib_split", False)) if manifesto_c5 else False
-CALIB_SPLIT_FRAC   = float(manifesto_c5.get("calib_split_frac", CALIB_SPLIT_FRAC_PADRAO)) if manifesto_c5 else CALIB_SPLIT_FRAC_PADRAO
-CALIB_SPLIT_SEED   = int(manifesto_c5.get("calib_split_seed", C.SEED)) if manifesto_c5 else int(C.SEED)
-
-if HONEST_CALIB_SPLIT:
-    idx_cal, _ = _reproduzir_split_val_cal(y_val, CALIB_SPLIT_FRAC, CALIB_SPLIT_SEED)
-    hash_local = hashlib.sha256(idx_cal.tobytes()).hexdigest()[:HASH_LEN]
-    assert manifesto_c5 is not None
-    hash_c5 = manifesto_c5.get("calib_split_hash")
-    if hash_c5 and hash_local != hash_c5:
-        raise RuntimeError(f"Split divergente do C5 (local={hash_local}, C5={hash_c5}).")
-    X_val_cal = X_val.iloc[idx_cal].reset_index(drop=True)
-    y_val_cal = y_val.iloc[idx_cal].reset_index(drop=True)
-else:
-    X_val_cal, y_val_cal = X_val, y_val
-
-ALIASES_FINALISTA = {
-    "logistic":               "logistic",
-    "boosting":               "boosting",
-    "hist_gradient_boosting": "boosting",
-}
-if finalista_escolhido not in ALIASES_FINALISTA:
-    raise ValueError(f"Finalista desconhecido: {finalista_escolhido!r}")
-
-pipe_base = build_finalista(ALIASES_FINALISTA[finalista_escolhido])
-pipe_base.fit(X_train, y_train)
-
-if calib_ativa:
-    if calib_metodo is None:
-        raise ValueError("calib_metodo deve ser definido quando a calibração está ativa.")
-    calibrador = calibrar(pipe_base, X_val_cal, y_val_cal, method=calib_metodo)
-else:
-    calibrador = None
-
-preditor = calibrador if calibrador is not None else pipe_base
-
-display(pd.DataFrame({
-    "bloco":     ["treino", "val_cal", "teste"],
-    "n":         [len(treino), len(X_val_cal), len(teste)],
-    "positivos": [int(y_train.sum()), int(y_val_cal.sum()), int(y_test.sum())],
-    "prevalencia": [float(y_train.mean()), float(y_val_cal.mean()), float(y_test.mean())],
-}))
-print(f"finalista   : {finalista_escolhido} (fábrica: {ALIASES_FINALISTA[finalista_escolhido]})")
-print(f"calibração  : {calib_metodo if calib_ativa else 'desativada'}")
-print(f"split C5    : {'honesto' if HONEST_CALIB_SPLIT else 'validação inteira'}")
-```
-
-### Cell 8 [markdown]
-
-```markdown
-## Abrir o teste — predição única
-
-Esta é a **única** execução do C6 que toca no teste. Nada aqui é usado
-para reajustar modelo, calibração ou limiar.
-```
-
-### Cell 9 [code] · In [ ]
-
-```python
-abertura_teste_utc = pd.Timestamp.now(tz="UTC").isoformat()
-
-prob_test    = preditor.predict_proba(X_test)[:, 1]
-y_test_arr   = y_test.to_numpy()
-y_pred_test  = (prob_test >= limiar_final_val).astype(int)
-
-if not np.isfinite(prob_test).all() or not ((prob_test >= 0) & (prob_test <= 1)).all():
-    raise RuntimeError("Probabilidades inválidas no teste.")
-
-metricas_test = metricas_completas(y_test_arr, prob_test, limiar=limiar_final_val)
-matriz_test   = matriz_confusao(y_test_arr, y_pred_test)
-
-display(pd.DataFrame([{
-    "finalista": finalista_escolhido,
-    "calibracao": calib_metodo if calib_ativa else "nenhuma",
-    "limiar": limiar_final_val,
-    **{k: float(v) for k, v in metricas_test.items()},
-}]))
-display(matriz_test)
-
-print(f"Teste aberto em UTC: {abertura_teste_utc}")
-print(f"n teste: {len(prob_test):,}  óbitos reais: {int(y_test_arr.sum()):,}")
-```
-
-### Cell 10 [markdown]
-
-```markdown
-## IC bootstrap, erros e avaliação estratificada
-
-- IC percentil para AP, AUC e Brier, conforme `avaliacao.bootstrap`.
-- Falsos negativos primeiro (`analise_erros.priorizar_falsos_negativos`).
-- Métricas por ano e por grupo (`avaliacao.grupos`).
-- Calibração por ano.
-```
-
-### Cell 11 [code] · In [ ]
-
-```python
-boot_cfg   = C.cfg("avaliacao", "bootstrap") or {}
-BOOT_ATIVO = bool(boot_cfg.get("ativo", True))
-BOOT_REPS  = int(boot_cfg.get("repeticoes") or 1000)
-BOOT_NIVEL = float(boot_cfg.get("nivel") or 0.95)
-BOOT_SEED  = int(boot_cfg.get("seed") or C.SEED)
-
-ic_resultados = {}
-if BOOT_ATIVO:
-    for nome, fn in [("ap", average_precision), ("auc", auc), ("brier", brier_metric)]:
-        est, inf, sup = ic_bootstrap(
-            y_test_arr, prob_test, metrica=fn,
-            n_boot=BOOT_REPS, alpha=1.0 - BOOT_NIVEL, seed=BOOT_SEED,
-        )
-        ic_resultados[nome] = {"estimativa": est, "ic_inferior": inf, "ic_superior": sup, "nivel": BOOT_NIVEL}
-
-ic_df = pd.DataFrame([{"metrica": k, **v} for k, v in ic_resultados.items()])
-display(ic_df)
-```
-
-### Cell 12 [code] · In [ ]
-
-```python
-erros_cfg    = C.cfg("avaliacao", "analise_erros") or {}
-ERROS_ATIVA  = bool(erros_cfg.get("ativa", True))
-
-df_err = teste.copy()
-df_err["y_true"] = y_test_arr
-df_err["y_pred"] = y_pred_test
-df_err["y_prob"] = prob_test
-
-fn = df_err[(df_err.y_true == 1) & (df_err.y_pred == 0)]
-tp = df_err[(df_err.y_true == 1) & (df_err.y_pred == 1)]
-fp = df_err[(df_err.y_true == 0) & (df_err.y_pred == 1)]
-tn = df_err[(df_err.y_true == 0) & (df_err.y_pred == 0)]
-
-display(pd.DataFrame([
-    {"classe": "FN (óbito→cura)",     "n": len(fn), "frac": len(fn) / len(df_err)},
-    {"classe": "TP (óbito→óbito)",    "n": len(tp), "frac": len(tp) / len(df_err)},
-    {"classe": "FP (cura→óbito)",     "n": len(fp), "frac": len(fp) / len(df_err)},
-    {"classe": "TN (cura→cura)",      "n": len(tn), "frac": len(tn) / len(df_err)},
-]))
-
-comparacao_fn_tp = pd.DataFrame()
-amostra_fn       = pd.DataFrame()
-
-if ERROS_ATIVA and len(fn) > 0 and len(tp) > 0:
-    feats_num = [c for c in FEATURES if pd.api.types.is_numeric_dtype(df_err[c])]
-    comparacao_fn_tp = pd.DataFrame([
-        {"feature": c,
-         "fn_media": float(fn[c].mean()), "tp_media": float(tp[c].mean()),
-         "delta_media": float(fn[c].mean() - tp[c].mean())}
-        for c in feats_num
-    ])
-    comparacao_fn_tp["abs_delta"] = comparacao_fn_tp.delta_media.abs()
-    comparacao_fn_tp = comparacao_fn_tp.sort_values("abs_delta", ascending=False).reset_index(drop=True)
-    print("Features numéricas com maior diferença FN vs TP:")
-    display(comparacao_fn_tp)
-
-if len(fn) > 0:
-    amostra_fn = fn.sort_values("y_prob", ascending=False).head(20)[FEATURES + ["y_prob"]]
-    print("Top 20 falsos negativos por probabilidade predita:")
-    display(amostra_fn)
-```
-
-### Cell 13 [code] · In [ ]
-
-```python
-COLUNA_ANO = str(C.cfg("periodo", "coluna_ano") or "ano_internacao")
-
-metricas_por_ano_df = pd.DataFrame()
-curvas_por_ano      = {}
-calib_por_ano_df    = pd.DataFrame()
-
-if COLUNA_ANO in teste.columns:
-    anos = sorted(teste[COLUNA_ANO].dropna().astype(int).unique().tolist())
-    linhas_ano, linhas_calib = [], []
-
-    for ano in anos:
-        m = (teste[COLUNA_ANO].astype("Int64") == ano).to_numpy()
-        y_a, p_a = y_test_arr[m], prob_test[m]
-        if len(y_a) == 0:
-            continue
-        tem_2_classes = len(np.unique(y_a)) >= 2
-        linhas_ano.append({
-            "ano": int(ano), "n": int(len(y_a)), "positivos": int(y_a.sum()),
-            "prevalencia": float(y_a.mean()),
-            "ap":  float(average_precision(y_a, p_a)) if tem_2_classes else float("nan"),
-            "auc": float(auc(y_a, p_a)) if tem_2_classes else float("nan"),
-            "brier": float(brier_metric(y_a, p_a)),
-            "ece": float(ece(y_a, p_a, n_bins=10)) if len(y_a) >= 20 else float("nan"),
-        })
-        if len(y_a) >= 20 and tem_2_classes:
-            curvas_por_ano[int(ano)] = curva_confiabilidade(y_a, p_a, n_bins=10)
-            d = brier_decomposicao(y_a, p_a, n_bins=10)
-            linhas_calib.append({
-                "ano": int(ano), "n": int(len(y_a)),
-                "ece": float(ece(y_a, p_a, n_bins=10)),
-                "mce": float(mce(y_a, p_a, n_bins=10)),
-                **{k: float(v) for k, v in d.items()},
-            })
-
-    metricas_por_ano_df = pd.DataFrame(linhas_ano)
-    calib_por_ano_df    = pd.DataFrame(linhas_calib)
-
-display(metricas_por_ano_df)
-
-grupos_cfg    = list(C.cfg("avaliacao", "grupos") or [])
-min_n_grupo   = int(C.cfg("avaliacao", "min_n_grupo") or 100)
-
-df_grupos = teste.copy()
-if "faixa_etaria" in grupos_cfg and "faixa_etaria" not in df_grupos.columns and "idade_anos" in df_grupos.columns:
-    df_grupos["faixa_etaria"] = _faixa_etaria(df_grupos["idade_anos"])
-
-metricas_por_grupo_dict = {}
-grupos_pulados = []
-for grupo in grupos_cfg:
-    if grupo not in df_grupos.columns:
-        grupos_pulados.append(grupo)
-        continue
-    metricas_por_grupo_dict[grupo] = metricas_por_grupo(
-        df_grupos, y_test_arr, prob_test, grupo,
-        limiar=limiar_final_val, min_n=min_n_grupo,
-    )
-    print(f"\n=== {grupo} ===")
-    display(metricas_por_grupo_dict[grupo])
-
-if grupos_pulados:
-    print(f"\nGrupos pulados (ausentes no teste): {grupos_pulados}")
-
-display(calib_por_ano_df)
-```
-
-### Cell 14 [markdown]
-
-```markdown
-## Persistir, registar e marcar G9 como executado
-
-Edição cirúrgica do YAML: só o bloco `G9_holdout` é tocado (preserva
-comentários). Na próxima execução, a verificação de gates falha — é
-a disciplina de abertura única imposta pelo código.
-```
-
-### Cell 15 [code] · In [ ]
-
-```python
-timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
-prefixo   = f"C6_validacao_final_{manifest['cohort_kind']}_{timestamp}"
-
-caminho_metricas   = TABLES_DIR      / f"{prefixo}_metricas.csv"
-caminho_matriz     = TABLES_DIR      / f"{prefixo}_matriz_confusao.csv"
-caminho_por_ano    = TABLES_DIR      / f"{prefixo}_metricas_por_ano.csv"
-caminho_calib_ano  = TABLES_DIR      / f"{prefixo}_calibracao_por_ano.csv"
-caminho_ic         = TABLES_DIR      / f"{prefixo}_ic_bootstrap.csv"
-caminho_erros      = TABLES_DIR      / f"{prefixo}_analise_erros.csv"
-caminho_fn         = TABLES_DIR      / f"{prefixo}_fn_amostra.csv"
-caminho_predicoes  = PREDICTIONS_DIR / f"{prefixo}_predicoes_teste.parquet"
-caminho_manifesto  = TABLES_DIR      / f"{prefixo}_manifesto.json"
-
-pd.DataFrame([{"finalista": finalista_escolhido, "limiar": limiar_final_val,
-               **{k: float(v) for k, v in metricas_test.items()}}]).to_csv(
-    caminho_metricas, index=False, encoding="utf-8-sig")
-matriz_test.to_csv(caminho_matriz, encoding="utf-8-sig")
-metricas_por_ano_df.to_csv(caminho_por_ano, index=False, encoding="utf-8-sig")
-calib_por_ano_df.to_csv(caminho_calib_ano, index=False, encoding="utf-8-sig")
-if not ic_df.empty:           ic_df.to_csv(caminho_ic, index=False, encoding="utf-8-sig")
-if not comparacao_fn_tp.empty: comparacao_fn_tp.to_csv(caminho_erros, index=False, encoding="utf-8-sig")
-if not amostra_fn.empty:       amostra_fn.to_csv(caminho_fn, index=False, encoding="utf-8-sig")
-
-for grupo, tab in metricas_por_grupo_dict.items():
-    tab.to_csv(TABLES_DIR / f"{prefixo}_por_grupo_{grupo}.csv", index=False, encoding="utf-8-sig")
-for ano, curva in curvas_por_ano.items():
-    curva.to_csv(TABLES_DIR / f"{prefixo}_curva_{ano}.csv", index=False, encoding="utf-8-sig")
-
-pred_test = pd.DataFrame({
-    "y_true": y_test_arr, "y_prob": prob_test, "y_pred": y_pred_test,
-    "limiar": limiar_final_val, "modelo": finalista_escolhido,
-    "cohort_kind": manifest["cohort_kind"],
-})
-if COLUNA_ANO in teste.columns:
-    pred_test[COLUNA_ANO] = teste[COLUNA_ANO].to_numpy()
-pred_test.to_parquet(caminho_predicoes, index=False)
-
-manifesto_c6 = {
-    "cohort_kind":         manifest["cohort_kind"],
-    "dataset_path":        manifest["dataset_path"],
-    "dataset_sha256":      manifest["dataset_sha256"],
-    "feature_columns":     FEATURES,
-    "target_column":       ALVO,
-    "partition_column":    PARTICAO,
-    "n_treino":            int(len(treino)),
-    "n_validacao":         int(len(validacao)),
-    "n_teste":             int(len(teste)),
-    "finalista_escolhido": finalista_escolhido,
-    "calibracao_ativa":    calib_ativa,
-    "calibracao_metodo":   calib_metodo,
-    "calibracao_fonte":    calib_fonte,
-    "honest_calib_split":  HONEST_CALIB_SPLIT,
-    "manifesto_c5_usado":  str(manifesto_c5_path) if manifesto_c5_path else None,
-    "limiar_final":        limiar_final_val,
-    "limiar_metrica":      limiar_metrica,
-    "teste_aberto_em_utc": abertura_teste_utc,
-    "metricas_agregadas":  {k: float(v) for k, v in metricas_test.items()},
-    "ic_bootstrap":        ic_resultados,
-    "erros":               {"fn": len(fn), "tp": len(tp), "fp": len(fp), "tn": len(tn)},
-    "grupos_avaliados":    list(metricas_por_grupo_dict),
-    "grupos_pulados":      grupos_pulados,
-    "artefatos": {
-        "metricas":         str(caminho_metricas),
-        "matriz_confusao":  str(caminho_matriz),
-        "metricas_por_ano": str(caminho_por_ano),
-        "calibracao_por_ano": str(caminho_calib_ano),
-        "ic_bootstrap":     str(caminho_ic),
-        "analise_erros":    str(caminho_erros) if not comparacao_fn_tp.empty else None,
-        "fn_amostra":       str(caminho_fn)    if not amostra_fn.empty else None,
-        "predicoes_teste":  str(caminho_predicoes),
-    },
-}
-caminho_manifesto.write_text(
-    json.dumps(manifesto_c6, ensure_ascii=False, indent=2, default=str),
-    encoding="utf-8",
-)
-
-with Run(
-    modelo="C6_validacao_final",
-    parametros={"cohort_kind": manifest["cohort_kind"], "finalista": finalista_escolhido,
-                "calibracao_metodo": calib_metodo, "limiar_final": limiar_final_val,
-                "limiar_metrica": limiar_metrica, "teste_aberto_em_utc": abertura_teste_utc,
-                "n_acessos_antes": n_acessos_antes},
-    dataset={"n_treino": len(treino), "n_validacao": len(validacao), "n_teste": len(teste)},
-    features={"n_features": len(FEATURES), "usadas": FEATURES},
-    notas="C6 — abertura única do teste. Pipeline reconstruído via build_finalista.",
-    dataset_path=Path(manifest["dataset_path"]),
-    dataset_sha256=manifest["dataset_sha256"],
-) as r:
-    r.metrica(**{k: float(v) for k, v in metricas_test.items()})
-
-print(f"Run registrado em: {r.pasta}")
-
-
-# Marcar G9 como executado (edição cirúrgica do YAML, preserva comentários)
-def _marcar_g9_executado(root_dir: Path, timestamp_utc: str, n_antes: int) -> Path:
-    yaml_path = root_dir / "configs" / "supervised.yaml"
-    linhas = yaml_path.read_text(encoding="utf-8").splitlines(keepends=True)
-
-    i_ini = i_fim = indent_bloco = None
-    for i, linha in enumerate(linhas):
-        if linha.rstrip() == "  G9_holdout:":
-            i_ini = i
-            indent_bloco = len(linha) - len(linha.lstrip(" "))
-            continue
-        if i_ini is None or not linha.strip():
-            continue
-        if len(linha) - len(linha.lstrip(" ")) < indent_bloco:
-            i_fim = i
-            break
-    if i_ini is None:
-        raise RuntimeError("Bloco `G9_holdout:` não encontrado.")
-    i_fim = i_fim or len(linhas)
-
-    indent_chave = indent_bloco + 2
-
-    def _substituir(bloco, chave, valor):
-        padrao = re.compile(rf"^(\s{{{indent_chave}}}){re.escape(chave)}:\s*.*$")
-        for j, l in enumerate(bloco):
-            m = padrao.match(l)
-            if m:
-                bloco[j] = f"{m.group(1)}{chave}: {valor}\n"
-                return True
-        return False
-
-    bloco = linhas[i_ini:i_fim]
-    ok = [
-        _substituir(bloco, "status",       "executado"),
-        _substituir(bloco, "executado_em", f'"{timestamp_utc}"'),
-        _substituir(bloco, "n_acessos",    str(n_antes + 1)),
-    ]
-    if not all(ok):
-        raise RuntimeError(
-            "Campos status/executado_em/n_acessos ausentes no bloco G9_holdout. "
-            "O teste JÁ FOI ABERTO — corrija o YAML e defina SRAG_ALLOW_TEST_REOPEN=1 "
-            "para reexecutar."
-        )
-    linhas[i_ini:i_fim] = bloco
-    yaml_path.write_text("".join(linhas), encoding="utf-8")
-    return yaml_path
-
-
-caminho_yaml = _marcar_g9_executado(ROOT_DIR, abertura_teste_utc, n_acessos_antes)
-
-print()
-print("=" * 60)
-print(f"C6 concluído. AP={metricas_test['ap']:.4f}  AUC={metricas_test['auc']:.4f}  Brier={metricas_test['brier']:.4f}")
-print(f"Falsos negativos: {len(fn)} de {int(y_test_arr.sum())} óbitos")
-print(f"G9 marcado em {caminho_yaml}")
-print("=" * 60)
-```
-
-## `pyproject.toml`
-
-- Git: `tracked` · status `clean`
-- Size: `1.9 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `abadb0fb73a06e3a342f03ce049a7f74fede307ad1bf38aa39b4ce3d517d433c`
-
-```toml
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "projeto-integrador"
-version = "0.0.1"
-description = "Análise retrospectiva de risco de óbito por SRAG (SIVEP-Gripe)."
-readme = "README.md"
-requires-python = ">=3.11"
-license = { text = "Proprietary" }
-authors = [
-    { name = "Time do Projeto Integrador SRAG" },
-]
-keywords = ["srag", "sivep-gripe", "supervisionado", "saude-publica"]
-classifiers = [
-    "Private :: Do Not Upload",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: Medical Science Apps.",
-]
-
-dependencies = [
-    "numpy>=1.26",
-    "pandas>=2.1",
-    "pyarrow>=15.0",
-    "scikit-learn>=1.4",
-    "PyYAML>=6.0",
-    "requests>=2.31",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "pytest-cov>=5.0",
-    "ruff>=0.6",
-    "mypy>=1.11",
-]
-docs = [
-    "mkdocs>=1.6",
-    "mkdocs-material>=9.5",
-]
-
-[project.urls]
-Repository = "https://github.com/SEU_USUARIO/SEU_REPO"
-
-# ---------------------------------------------------------------------------
-# Empacotamento — src/ é o pacote de topo, para que `import src.*` funcione
-# ---------------------------------------------------------------------------
-[tool.setuptools.packages.find]
-where      = ["."]
-include    = ["src*"]
-namespaces = false
-
-# ---------------------------------------------------------------------------
-# Pytest
-# ---------------------------------------------------------------------------
-[tool.pytest.ini_options]
-minversion   = "7.0"
-testpaths    = ["tests"]
-python_files = ["test_*.py"]
-pythonpath   = ["."]
-addopts      = "-ra -q"
-markers = [
-    "slow: testes que fazem I/O pesado (Parquet, downloads)",
-    "net:  testes que exigem acesso à internet",
-]
-```
-
-## `README.md`
-
-- Git: `tracked` · status `clean`
-- Size: `19.9 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `c227016dabad9f197ff4507945ee8b5e69a42eedbcbf9ad884dc7cea334a3ada`
-
-````markdown
-# Projeto Integrador --- SRAG e Machine Learning
-
-Projeto acadêmico desenvolvido no âmbito do **Projeto Integrador I da
-Pós-Graduação em Inteligência Artificial**. Investiga o uso de técnicas
-de aprendizado de máquina sobre dados públicos de Síndrome Respiratória
-Aguda Grave (SRAG), com foco em preparação de dados, avaliação de
-modelos e reprodutibilidade.
-
-> **Status:** em desenvolvimento. A seleção final do modelo, a
-> calibração, a definição do limiar e a avaliação final ainda dependem
-> da conclusão dos gates metodológicos configurados no projeto.
-
-## Objetivo
-
-Construir um fluxo reproduzível para estudar a previsão retrospectiva de
-óbito por SRAG a partir de informações disponíveis **no momento da
-internação hospitalar**. O trabalho envolve:
-
--   acesso, organização e preparação dos dados;
--   definição e rastreabilidade da coorte analítica;
--   análise exploratória e experimentos não supervisionados;
--   engenharia e validação de atributos;
--   comparação de modelos supervisionados;
--   calibração das probabilidades e escolha de limiar;
--   avaliação de erros e análise de desempenho por grupos;
--   documentação dos experimentos e das limitações.
-
-O projeto tem finalidade **acadêmica e exploratória**. Não é um sistema
-clinicamente validado, não deve ser usado para diagnóstico ou decisão
-clínica e não permite inferir causalidade a partir de associações
-preditivas.
-
-## Fonte dos dados
-
-Os dados são provenientes da base pública **SRAG 2019--2026**,
-disponibilizada pelo Ministério da Saúde por meio da API de Dados
-Abertos.
-
--   **Fonte:** Ministério da Saúde --- Dados Abertos
--   **Endpoint:**
-    <https://apidadosabertos.saude.gov.br/vigilancia-e-meio-ambiente/srag-2019-2026>
-
-O projeto utiliza arquivos Parquet e rotinas de acesso/armazenamento. Os
-dados originais, arquivos Parquet, modelos treinados e resultados
-volumosos não devem ser versionados diretamente no Git.
-
-## Arquitetura e organização
-
-A lógica reutilizável deve ficar em `src/`; notebooks devem orquestrar
-experimentos, explicar decisões e apresentar tabelas e gráficos.
-Parâmetros e decisões metodológicas devem permanecer centralizados em
-`configs/` e `docs/`.
-
-``` text
-Projeto_Integrador/
-├── configs/
-│   ├── dicionario_variaveis_v1.csv
-│   └── supervised.yaml
-├── docs/
-│   └── decisoes.md
-├── notebooks/
-│   ├── 00_acesso_dados_parquet.ipynb
-│   ├── 01_extracao.ipynb
-│   ├── 02_eda/
-│   │   ├── 01_eda_primeira_passagem.ipynb
-│   │   ├── 02_eda_temporal_clustering.ipynb
-│   │   ├── 03_supervisionado_pilotos.ipynb
-│   │   ├── 04_consolidacao_shortlist_transicao_coorte.ipynb
-│   │   └── _provisorio_construcao_coorte_b.ipynb
-│   └── C/
-│       ├── C1_smoke_test.ipynb
-│       ├── C2_pipeline_supervisionado.ipynb
-│       ├── C3_baseline_logistica.ipynb
-│       ├── C4_boosting.ipynb
-│       ├── C5_calibracao_limiar.ipynb
-│       └── C6_validacao_final.ipynb
-├── src/
-│   ├── data/
-│   │   ├── cohort_source.py
-│   │   ├── split.py
-│   │   └── supervised_artifact.py
-│   ├── evaluation/
-│   │   ├── calibration.py
-│   │   ├── errors.py
-│   │   ├── leakage.py
-│   │   ├── metrics.py
-│   │   └── temporal.py
-│   ├── features/
-│   │   ├── engineering.py
-│   │   └── normalization.py
-│   ├── models/
-│   │   ├── baseline.py
-│   │   ├── boosting.py
-│   │   ├── calibration.py
-│   │   ├── factory.py
-│   │   ├── logistic.py
-│   │   └── pipeline.py
-│   └── utils/
-│       ├── config.py
-│       ├── env.py
-│       ├── reproducibility.py
-│       └── storage.py
-├── tests/
-├── tools/
-│   └── update_project_reference.py
-├── .env.example
-├── .gitignore
-├── pyproject.toml
-├── requirements.txt
-└── README.md
-```
-
-A árvore acima destaca os principais componentes identificados na
-referência do projeto; `tests/` contém testes automatizados para
-configuração, coorte, atributos, partições, pipeline, métricas,
-calibração, leakage e reprodutibilidade. Consulte os arquivos do
-repositório para a lista completa.
-
-### Responsabilidades principais
-
-  ---------------------------------------------------------------------------
-  Componente                              Responsabilidade
-  --------------------------------------- -----------------------------------
-  `configs/supervised.yaml`               Configura alvo, período, atributos,
-                                          partições, modelos, métricas e
-                                          gates metodológicos.
-
-  `configs/dicionario_variaveis_v1.csv`   Dicionário de variáveis.
-
-  `docs/decisoes.md`                      Registro das decisões
-                                          metodológicas.
-
-  `src/data/`                             Resolução/carregamento da coorte,
-                                          partições e artefatos
-                                          supervisionados.
-
-  `src/features/`                         Engenharia e normalização de
-                                          atributos.
-
-  `src/models/`                           Construção de pipelines, modelos e
-                                          calibração.
-
-  `src/evaluation/`                       Métricas, avaliação temporal,
-                                          calibração, erros e verificações de
-                                          leakage.
-
-  `src/utils/`                            Configuração, ambiente,
-                                          armazenamento e reprodutibilidade.
-
-  `tests/`                                Verificações automatizadas dos
-                                          contratos do projeto.
-
-  `notebooks/`                            Exploração, experimentos,
-                                          orquestração e comunicação dos
-                                          resultados.
-  ---------------------------------------------------------------------------
-
-## Notebooks
-
-  -----------------------------------------------------------------------------------------------
-  Notebook                                                    Finalidade
-  ----------------------------------------------------------- -----------------------------------
-  `00_acesso_dados_parquet.ipynb`                             Verificar o acesso aos dados
-                                                              Parquet.
-
-  `01_extracao.ipynb`                                         Documentar a etapa de extração.
-
-  `02_eda/01_eda_primeira_passagem.ipynb`                     Primeira exploração e diagnóstico
-                                                              dos dados.
-
-  `02_eda/02_eda_temporal_clustering.ipynb`                   Análises temporais e experimentos
-                                                              de agrupamento.
-
-  `02_eda/03_supervisionado_pilotos.ipynb`                    Experimentos supervisionados
-                                                              preliminares.
-
-  `02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`   Consolidar a shortlist e a
-                                                              transição da coorte.
-
-  `02_eda/_provisorio_construcao_coorte_b.ipynb`              Notebook provisório de construção
-                                                              de coorte; confirmar sua
-                                                              necessidade antes de tratá-lo como
-                                                              fluxo oficial.
-
-  `C/C1_smoke_test.ipynb`                                     Verificar componentes essenciais do
-                                                              ambiente e do projeto.
-
-  `C/C2_pipeline_supervisionado.ipynb`                        Orquestrar e validar o pipeline
-                                                              supervisionado.
-
-  `C/C3_baseline_logistica.ipynb`                             Executar referências e experimentos
-                                                              com regressão logística.
-
-  `C/C4_boosting.ipynb`                                       Executar a busca limitada e avaliar
-                                                              boosting.
-
-  `C/C5_calibracao_limiar.ipynb`                              Escolher calibração e limiar usando
-                                                              dados permitidos.
-
-  `C/C6_validacao_final.ipynb`                                Executar o protocolo de validação
-                                                              final, condicionado à liberação do
-                                                              gate correspondente.
-  -----------------------------------------------------------------------------------------------
-
-Os notebooks devem evitar implementações duplicadas de funções
-reutilizáveis. Uma função deve migrar para `src/` quando representar uma
-responsabilidade compartilhada ou uma regra que precise de testes;
-código exclusivo de apresentação e orquestração pode permanecer no
-notebook.
-
-## Metodologia supervisionada
-
-### Alvo e momento da previsão
-
-A configuração ativa define:
-
--   coluna de origem do alvo: `evolucao`;
--   coluna de modelagem: `alvo_obito_srag`;
--   classe positiva: valor `2.0`;
--   classe negativa: valor `1.0`;
--   descarte de outros valores para o alvo principal: habilitado;
--   análise de sensibilidade para qualquer óbito: configurada
-    separadamente.
-
-O momento de previsão definido metodologicamente é a **internação
-hospitalar**. Informações registradas depois desse momento não devem ser
-usadas como atributos de entrada.
-
-### Período e partições
-
-A configuração abrange 2019--2026, incluindo 2026 como ano parcial. A
-partição primária atualmente configurada é **aleatória estratificada por
-alvo e ano de internação**, com seed `42` e proporções:
-
--   treino: 70%;
--   validação: 15%;
--   teste/holdout: 15%.
-
-**Importante:** apesar do interesse em comportamento temporal, essa
-configuração não corresponde a uma separação estritamente cronológica
-entre passado e futuro. Análises temporais adicionais podem ser usadas
-como análises de robustez, mas não devem substituir silenciosamente a
-partição primária definida na configuração. A documentação e os
-resultados devem explicitar essa escolha.
-
-### Atributos e prevenção de leakage
-
-A configuração inclui atributos numéricos e categóricos, além de regras
-para engenharia de atributos. A lista final de atributos ainda depende
-da confirmação do gate `G1_definicao_alvo_features`.
-
-Variáveis relacionadas ao desfecho ou a informações posteriores à
-internação estão listadas entre as proibidas em
-`configs/supervised.yaml`. Antes de treinar, verificar:
-
-1.  se cada atributo estava disponível no momento da internação;
-2.  se o alvo não aparece entre as entradas;
-3.  se transformações e imputações são ajustadas somente nos dados de
-    treino;
-4.  se treino, validação e teste respeitam os contratos de partição;
-5.  se a coorte e a lista de atributos estão documentadas e versionadas
-    por metadados.
-
-Não use o holdout final para escolher modelo, hiperparâmetros,
-calibração ou limiar.
-
-### Modelos e seleção
-
-A configuração prevê baseline, regressão logística, árvore de decisão,
-random forest e boosting. A shortlist provisória registrada aponta
-`hist_gradient_boosting` e `logistic` como finalistas candidatos; isso
-não equivale a uma escolha final de modelo. A métrica principal
-configurada para comparação é `PR-AUC`.
-
-### Calibração, limiar e avaliação
-
-A configuração prevê comparar métodos de calibração (`sigmoid` e
-`isotonic`) e avaliar o Brier Score antes e depois da calibração. O
-limiar deve ser escolhido apenas com dados de validação, de acordo com
-os critérios registrados na configuração.
-
-As métricas configuradas incluem:
-
--   PR-AUC e ROC-AUC;
--   Brier Score e log loss;
--   precisão, recall/sensibilidade, F1 e especificidade;
--   matriz de confusão;
--   avaliação por grupos e por ano;
--   análise de erros, com prioridade para falsos negativos;
--   bootstrap para estimativa de incerteza, conforme os parâmetros
-    ativos.
-
-As métricas finais devem ser publicadas somente após a execução válida
-do protocolo de avaliação e acompanhadas do contexto, tamanho da amostra
-e limitações.
-
-## Gates metodológicos e status
-
-Os gates em `configs/supervised.yaml` registram decisões que precisam
-ser concluídas antes de avançar. No snapshot documentado:
-
-  -----------------------------------------------------------------------
-  Gate                    Situação registrada     Significado
-  ----------------------- ----------------------- -----------------------
-  G1 --- alvo e atributos Pendente                Confirmar coorte
-                                                  definitiva, alvo e
-                                                  lista final de
-                                                  atributos.
-
-  G2 --- janela e         Aprovado                Período e estratégia de
-  partições                                       partição registrados.
-
-  G4 --- baseline         Aprovado                Execução do modelo de
-                                                  referência registrada.
-
-  G5 --- pilotos          Aprovado                Pilotos supervisionados
-                                                  registrados.
-
-  G6 --- finalistas e     Pendente                Selecionar finalista e
-  tuning                                          concluir busca
-                                                  limitada.
-
-  G7 --- calibração       Pendente                Escolher método com
-                                                  dados permitidos.
-
-  G8 --- limiar           Pendente                Definir limiar usando
-                                                  validação.
-
-  G9 --- holdout final    Pendente                Liberar e executar o
-                                                  teste final uma única
-                                                  vez, após congelar as
-                                                  decisões.
-  -----------------------------------------------------------------------
-
-Esses estados são os registrados no snapshot de referência e podem
-mudar. Consulte sempre `configs/supervised.yaml` e os testes antes de
-executar ou descrever uma etapa como concluída.
-
-## Configuração do ambiente
-
-Recomenda-se executar o projeto em ambiente virtual, na raiz do
-repositório.
-
-### Windows PowerShell
-
-``` powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Se a política do PowerShell impedir a ativação, use o terminal Command
-Prompt:
-
-``` bat
-.venv\Scripts\activate.bat
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Configure o interpretador do ambiente `.venv` no VS Code. Não é
-necessário remover a instalação global do Python para usar esse
-ambiente.
-
-### Segredos e dados privados
-
-O projeto inclui `.env.example` como referência de configuração. Nunca
-comite tokens, arquivos `.env` com valores reais, senhas ou credenciais.
-Se o acesso aos dados exigir `GITHUB_TOKEN`, configure-o como variável
-de ambiente ou pelo mecanismo de segredos suportado pelo ambiente de
-execução.
-
-## Testes
-
-Execute os testes a partir da raiz do repositório, com o ambiente
-virtual ativado:
-
-``` powershell
-python -m pytest
-```
-
-Se o comando não estiver disponível, confira se as dependências de
-desenvolvimento estão instaladas no ambiente selecionado. Após mudanças,
-execute os testes pertinentes, revise o diff e verifique se a
-documentação continua coerente com código e configuração.
-
-## Reprodutibilidade e artefatos
-
-Para permitir a rastreabilidade dos experimentos:
-
--   mantenha parâmetros e decisões em `configs/` e `docs/`;
--   registre seeds, versões, origem e identificação da coorte;
--   mantenha transformações reutilizáveis em `src/`;
--   registre resultados e metadados sem expor dados sensíveis;
--   preserve a separação entre desenvolvimento e holdout;
--   use `.gitignore` para impedir o versionamento de dados grandes,
-    modelos, saídas geradas, segredos e caminhos locais.
-
-Os artefatos e resultados devem seguir as convenções já utilizadas no
-projeto. Não crie diretórios alternativos para a mesma finalidade sem
-antes verificar a organização existente.
-
-## Pontos de atenção conhecidos
-
-A referência estática do repositório identificou itens que precisam ser
-conferidos; eles não significam automaticamente que toda a
-funcionalidade esteja quebrada:
-
-1.  **Importação de `csv_to_parquet`:** `tests/test_pipeline.py`
-    referencia `src.data.extracao.csv_to_parquet`, mas o módulo
-    correspondente não aparece entre os arquivos rastreados no snapshot.
-    Verifique histórico de renomeação e atualize o teste ou a
-    implementação canônica, sem recriar o módulo às cegas.
-2.  **Engenharia de atributos:** nomes derivados configurados --- como
-    `sin_semana`, `cos_semana`, `ano_internacao` e
-    `dias_sintomas_ate_internacao` --- não foram todos encontrados como
-    nomes estáticos nos módulos de `src/data/` e `src/features/`.
-    Confirme sua geração real e cubra o contrato com testes.
-3.  **Documentação de decisões:** `docs/decisoes.md` cita
-    `configs/dicionario_variaveis_v1_revisao.csv`, que não aparece na
-    lista de arquivos rastreados do snapshot. Atualize a referência ou
-    restaure o arquivo se ele for realmente necessário.
-4.  **Lógica nos notebooks:** há funções auxiliares locais nos notebooks
-    de EDA e modelagem. Avalie caso a caso se são exclusivas de um
-    experimento ou se devem ser promovidas a módulos testados em `src/`.
-5.  **Caminhos e estrutura:** mantenha este README sincronizado com os
-    arquivos reais; a referência do projeto é um snapshot estático, não
-    uma verificação de execução ponta a ponta.
-
-## Limitações
-
-Os dados públicos podem conter ausências, inconsistências, duplicidades,
-diferenças de preenchimento e mudanças ao longo do tempo. A definição da
-coorte, do alvo e das variáveis disponíveis influencia os resultados. O
-ano de 2026 está configurado como parcial e exige interpretação
-cuidadosa.
-
-Os resultados descrevem desempenho preditivo na população e nas
-condições avaliadas. Não demonstram causalidade, não garantem
-generalização para outros períodos ou populações e não constituem
-validação clínica.
-
-## Autores
-
--   **Ivan Schincariol Oliveira** ---
-    [LinkedIn](https://www.linkedin.com/in/ivan-s-oliveira-3608a92aa/)
--   **Eduardo Hudson de Almeida Leite** ---
-    [LinkedIn](https://www.linkedin.com/in/eduardo-hudson-de-almeida-leite-71ab5a7b/)
--   **Pedro Henrique Silva dos Santos** ---
-    [LinkedIn](https://www.linkedin.com/in/pedro-h-s-santos/)
--   **Mateus da Silva Oliveira** ---
-    [LinkedIn](https://www.linkedin.com/in/mateusso)
-
-## Contexto acadêmico
-
-**Projeto Integrador I --- Pós-Graduação em Inteligência Artificial.**
-
-O projeto reúne práticas de engenharia de dados, análise exploratória,
-aprendizado supervisionado e não supervisionado, engenharia de
-atributos, avaliação de modelos, prevenção de vazamento de informação e
-reprodutibilidade.
-````
-
-## `requirements.txt`
-
-- Git: `tracked` · status `clean`
-- Size: `129 B` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `73ee76a39fe6c52069d4b78b0e09ef10b77d0fa8d9d6c26bcce043cef18f6ac8`
-
-```text
-python-dotenv
-PyYAML
-pandas
-requests
-ipykernel
-numpy
-matplotlib
-seaborn
-scikit-learn
-pyarrow
-jupyterlab
-pytest
-joblib
-```
-
-## `src/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-14 22:03 UTC`
-- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-
-```python
-
-```
-
-## `src/data/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-06 02:28 UTC`
-- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-
-```python
-
-```
-
-## `src/data/cohort_source.py`
-
-- Git: `tracked` · status `clean`
-- Size: `3.8 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `3cf13f00abc576d8b736b8aef0c3d7ef48b5cb863fee1b781e81116a8824487d`
-
-```python
-"""Resolve a fonte de coorte sem acoplar notebooks ao nome do arquivo.
-
-A troca entre coorte provisória e definitiva acontece por parâmetro ou
-pela variável de ambiente ``SRAG_COHORT_KIND``. Não transforma a coorte,
-não cria partições e não altera o alvo.
-"""
-
-from __future__ import annotations
-
-import os
-from dataclasses import asdict, dataclass
-from pathlib import Path
-from typing import Literal, get_args
-
-import pandas as pd
-
-from src.utils.hashing import sha256_file
-
-CohortKind = Literal["provisional", "final", "auto"]
-
-_ENV_VAR        = "SRAG_COHORT_KIND"
-_DEFAULT_KIND   = "provisional"
-_VALID_KINDS    = frozenset(get_args(CohortKind))
-_ANALYTICAL_DIR = Path("data") / "analytical"
-
-_FINAL_FILENAMES = ("coorte_final.parquet",)
-_PROVISIONAL_FILENAMES = (
-    "coorte_provisoria.parquet",
-    "coorte_provisoria_b.parquet",
-    "coorte.parquet",
-)
-
-
-@dataclass(frozen=True)
-class CohortSource:
-    """Metadados imutáveis da coorte selecionada."""
-
-    kind: str
-    path: str
-    sha256: str
-    size_bytes: int
-    rows: int
-    columns: int
-
-    def to_dict(self) -> dict[str, object]:
-        return asdict(self)
-
-
-def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
-    """Candidatos de coorte por tipo, na ordem de preferência."""
-    analytical = root / _ANALYTICAL_DIR
-    return {
-        "final":       tuple(analytical / n for n in _FINAL_FILENAMES),
-        "provisional": tuple(analytical / n for n in _PROVISIONAL_FILENAMES),
-    }
-
-
-def _resolve_kind(kind: CohortKind | None) -> str:
-    selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
-    if selected not in _VALID_KINDS:
-        raise ValueError(
-            f"{_ENV_VAR} deve ser {sorted(_VALID_KINDS)}. Recebido: {selected!r}."
-        )
-    return selected
-
-
-def _kind_from_path(path: Path) -> str:
-    return "final" if "final" in path.name.lower() else "provisional"
-
-
-def resolve_cohort_path(
-    root: Path,
-    *,
-    kind: CohortKind | None = None,
-    explicit_path: Path | None = None,
-) -> tuple[str, Path]:
-    """Resolve a coorte sem alternar silenciosamente de provisória para final.
-
-    ``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``provisional``).
-    ``auto`` prefere a definitiva quando existir. Execuções oficiais devem
-    usar ``provisional`` ou ``final`` explícitos.
-    """
-    if explicit_path is not None:
-        path = Path(explicit_path).expanduser().resolve()
-        if not path.is_file():
-            raise FileNotFoundError(f"Coorte explícita não encontrada: {path}")
-        return _kind_from_path(path), path
-
-    selected   = _resolve_kind(kind)
-    candidates = cohort_candidates(root)
-    order      = ("final", "provisional") if selected == "auto" else (selected,)
-
-    for effective_kind in order:
-        for path in candidates[effective_kind]:
-            if path.is_file():
-                return effective_kind, path.resolve()
-
-    candidatos = "\n".join(
-        f"- {p}" for k in order for p in candidates[k]
-    )
-    raise FileNotFoundError(
-        f"Nenhuma coorte do tipo {selected!r} encontrada. Candidatos:\n{candidatos}"
-    )
-
-
-def load_cohort(
-    root: Path,
-    *,
-    kind: CohortKind | None = None,
-    explicit_path: Path | None = None,
-    columns: list[str] | None = None,
-) -> tuple[pd.DataFrame, CohortSource]:
-    """Carrega a coorte selecionada e devolve dados + metadados da fonte."""
-    effective_kind, path = resolve_cohort_path(
-        root, kind=kind, explicit_path=explicit_path,
-    )
-    frame  = pd.read_parquet(path, columns=columns)
-    source = CohortSource(
-        kind=effective_kind,
-        path=str(path),
-        sha256=sha256_file(path),
-        size_bytes=path.stat().st_size,
-        rows=int(len(frame)),
-        columns=int(frame.shape[1]),
-    )
-    return frame, source
-```
-
-## `src/data/split.py`
-
-- Git: `tracked` · status `clean`
-- Size: `10.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `cb423ad56c5931511e575cb3bf1b6f9a3c4c03e661a1f42d62cc8930875b2e3e`
-
-```python
-"""Partições agrupadas e estratificadas (treino / validação / teste).
-
-Garante simultaneamente:
-
-- **Estratificação**: cada partição preserva a proporção do alvo (0/1),
-  importante porque a prevalência de óbito é baixa.
-- **Agrupamento**: todas as linhas de um mesmo grupo caem numa única
-  partição, evitando vazamento entre treino e avaliação.
-
-Estratos pequenos demais para as três partições são tratados por
-``politica_estratos_pequenos``. Uso::
-
-    from src.data.split import criar_particoes_agrupadas
-
-    df_part = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-    )
-"""
-
-from __future__ import annotations
-
-import warnings
-from typing import Any, Literal, get_args
-
-import numpy as np
-import pandas as pd
-
-__all__ = [
-    "PARTICOES_CANONICAS",
-    "SplitWarning",
-    "criar_particoes_agrupadas",
-]
-
-PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
-
-PoliticaEstratosPequenos = Literal["raise", "warn_teste", "warn_treino", "drop"]
-PoliticaGrupoHeterogeneo = Literal["raise", "warn"]
-
-_POLITICAS_ESTRATOS_PEQUENOS = frozenset(get_args(PoliticaEstratosPequenos))
-_POLITICAS_GRUPO_HETEROGENEO = frozenset(get_args(PoliticaGrupoHeterogeneo))
-
-
-class SplitWarning(UserWarning):
-    """Decisão não-trivial do split (estrato pequeno, grupo com alvo misto).
-
-    Filtre com ``warnings.filterwarnings("ignore", category=SplitWarning)``
-    se a decisão já foi tomada pelo grupo.
-    """
-
-
-def _validar_parametros(
-    df: pd.DataFrame,
-    *,
-    target_column: str,
-    group_column: str,
-    partition_column: str,
-    frac_treino: float,
-    frac_validacao: float,
-    min_grupos_por_estrato: int,
-    politica_estratos_pequenos: str,
-    on_grupo_alvo_heterogeneo: str,
-) -> None:
-    if df.empty:
-        raise ValueError("DataFrame vazio — não há como criar partições.")
-    if target_column not in df.columns:
-        raise KeyError(f"Coluna de alvo ausente: {target_column!r}")
-    if group_column not in df.columns:
-        raise KeyError(f"Coluna de grupo ausente: {group_column!r}")
-    if partition_column in df.columns:
-        raise ValueError(
-            f"DataFrame já contém a coluna {partition_column!r}. "
-            "Remova-a ou escolha outro nome — o split não sobrescreve partições."
-        )
-
-    if not 0.0 < frac_treino < 1.0:
-        raise ValueError(f"frac_treino deve estar em (0, 1); recebido {frac_treino!r}.")
-    if not 0.0 < frac_validacao < 1.0:
-        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {frac_validacao!r}.")
-    if frac_treino + frac_validacao >= 1.0:
-        raise ValueError("frac_treino + frac_validacao deve ser < 1 (resto vira `teste`).")
-
-    if min_grupos_por_estrato < len(PARTICOES_CANONICAS):
-        raise ValueError(
-            f"min_grupos_por_estrato deve ser >= {len(PARTICOES_CANONICAS)}; "
-            f"recebido {min_grupos_por_estrato!r}."
-        )
-    if politica_estratos_pequenos not in _POLITICAS_ESTRATOS_PEQUENOS:
-        raise ValueError(
-            f"politica_estratos_pequenos inválida: {politica_estratos_pequenos!r}. "
-            f"Use uma de {sorted(_POLITICAS_ESTRATOS_PEQUENOS)}."
-        )
-    if on_grupo_alvo_heterogeneo not in _POLITICAS_GRUPO_HETEROGENEO:
-        raise ValueError(
-            f"on_grupo_alvo_heterogeneo inválido: {on_grupo_alvo_heterogeneo!r}. "
-            f"Use uma de {sorted(_POLITICAS_GRUPO_HETEROGENEO)}."
-        )
-
-
-def _estrato_por_grupo(
-    df: pd.DataFrame,
-    *,
-    target_column: str,
-    group_column: str,
-    on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo,
-) -> pd.Series:
-    """Estrato (valor do alvo) por grupo.
-
-    Grupos com mais de um valor distinto de alvo são tratados por
-    ``on_grupo_alvo_heterogeneo``: ``"raise"`` levanta ``ValueError``;
-    ``"warn"`` emite ``SplitWarning`` e usa a moda. Grupos com alvo todo
-    nulo são descartados com ``SplitWarning``.
-    """
-    agrupado = df.groupby(group_column, observed=True)[target_column]
-
-    heterogeneos = agrupado.nunique(dropna=True)
-    heterogeneos = heterogeneos[heterogeneos > 1]
-    if not heterogeneos.empty:
-        amostra = heterogeneos.index.tolist()[:5]
-        msg = (
-            f"{len(heterogeneos)} grupo(s) com mais de um valor distinto "
-            f"de alvo em {target_column!r}. Exemplos: {amostra}"
-        )
-        if on_grupo_alvo_heterogeneo == "raise":
-            raise ValueError(
-                msg + ". Resolva as inconsistências ou use "
-                "on_grupo_alvo_heterogeneo='warn'."
-            )
-        warnings.warn(msg + ". Usando a moda por grupo.", SplitWarning, stacklevel=3)
-
-    estrato = agrupado.agg(
-        lambda s: s.dropna().mode().iloc[0] if s.notna().any() else None
-    )
-
-    if estrato.isna().any():
-        n = int(estrato.isna().sum())
-        warnings.warn(
-            f"{n} grupo(s) com alvo todo nulo em {target_column!r}. "
-            "Serão descartados do split.",
-            SplitWarning,
-            stacklevel=3,
-        )
-        estrato = estrato.dropna()
-
-    if estrato.empty:
-        raise ValueError("Nenhum grupo com alvo não nulo — impossível estratificar.")
-
-    return estrato
-
-
-def _distribuir_tamanhos(
-    n: int,
-    frac_treino: float,
-    frac_validacao: float,
-) -> tuple[int, int, int]:
-    """Distribui ``n >= 3`` grupos em (treino, validação, teste), ≥1 por partição."""
-    if n < 3:
-        raise ValueError(f"_distribuir_tamanhos requer n >= 3; recebido {n}.")
-
-    n_valid  = max(1, int(n * frac_validacao))
-    n_teste  = max(1, n - max(1, int(n * frac_treino)) - n_valid)
-    n_treino = n - n_valid - n_teste
-    return n_treino, n_valid, n_teste
-
-
-def _aplicar_politica_estrato_pequeno(
-    grupos: list[Any],
-    *,
-    estrato: Any,
-    min_grupos_por_estrato: int,
-    politica: PoliticaEstratosPequenos,
-    atribuicao: dict[Any, str],
-    descartar: set[Any],
-) -> None:
-    n = len(grupos)
-    msg = (
-        f"Estrato {estrato!r} tem apenas {n} grupo(s) "
-        f"(< min_grupos_por_estrato={min_grupos_por_estrato}). "
-        f"Política: {politica!r}."
-    )
-
-    if politica == "raise":
-        raise ValueError(
-            msg + " Ajuste min_grupos_por_estrato ou use "
-            "politica_estratos_pequenos='warn_teste'|'warn_treino'|'drop'."
-        )
-
-    if politica == "drop":
-        warnings.warn(f"{msg} Descartando do resultado.", SplitWarning, stacklevel=2)
-        descartar.update(grupos)
-        return
-
-    destino = "teste" if politica == "warn_teste" else "treino"
-    warnings.warn(f"{msg} Destinando ao {destino}.", SplitWarning, stacklevel=2)
-    atribuicao.update({g: destino for g in grupos})
-
-
-def criar_particoes_agrupadas(
-    df: pd.DataFrame,
-    *,
-    target_column: str,
-    group_column: str,
-    partition_column: str = "particao",
-    frac_treino: float = 0.7,
-    frac_validacao: float = 0.15,
-    seed: int = 42,
-    min_grupos_por_estrato: int = 3,
-    politica_estratos_pequenos: PoliticaEstratosPequenos = "raise",
-    on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo = "raise",
-) -> pd.DataFrame:
-    """Partições treino/validação/teste agrupadas e estratificadas.
-
-    Não muta ``df``: devolve cópia com ``partition_column`` adicionada.
-    Grupos com alvo nulo e estratos descartados por ``"drop"`` não aparecem.
-
-    Levanta ``KeyError`` se ``target_column`` ou ``group_column`` não
-    existirem em ``df``, e ``ValueError`` para parâmetros inválidos,
-    DataFrame vazio, coluna de partição já presente, ou estrato pequeno
-    com política ``"raise"``.
-    """
-    _validar_parametros(
-        df,
-        target_column=target_column,
-        group_column=group_column,
-        partition_column=partition_column,
-        frac_treino=frac_treino,
-        frac_validacao=frac_validacao,
-        min_grupos_por_estrato=min_grupos_por_estrato,
-        politica_estratos_pequenos=politica_estratos_pequenos,
-        on_grupo_alvo_heterogeneo=on_grupo_alvo_heterogeneo,
-    )
-
-    estrato_por_grupo = _estrato_por_grupo(
-        df,
-        target_column=target_column,
-        group_column=group_column,
-        on_grupo_alvo_heterogeneo=on_grupo_alvo_heterogeneo,
-    )
-
-    rng       = np.random.default_rng(seed)
-    atribuicao: dict[Any, str] = {}
-    descartar: set[Any] = set()
-
-    for estrato, sub in estrato_por_grupo.groupby(estrato_por_grupo):
-        grupos = sub.index.tolist()
-        rng.shuffle(grupos)
-
-        if len(grupos) < min_grupos_por_estrato:
-            _aplicar_politica_estrato_pequeno(
-                grupos,
-                estrato=estrato,
-                min_grupos_por_estrato=min_grupos_por_estrato,
-                politica=politica_estratos_pequenos,
-                atribuicao=atribuicao,
-                descartar=descartar,
-            )
-            continue
-
-        n_treino, n_valid, n_teste = _distribuir_tamanhos(
-            len(grupos), frac_treino, frac_validacao,
-        )
-        fatias = {
-            "treino":    grupos[:n_treino],
-            "validacao": grupos[n_treino:n_treino + n_valid],
-            "teste":     grupos[n_treino + n_valid:],
-        }
-        for particao, membros in fatias.items():
-            atribuicao.update({g: particao for g in membros})
-
-    out = df.copy()
-    out[partition_column] = out[group_column].map(atribuicao)
-
-    invalidos = out[partition_column].isna() | out[group_column].isin(descartar)
-    if invalidos.any():
-        out = out.loc[~invalidos].reset_index(drop=True)
-
-    out[partition_column] = out[partition_column].astype("object")
-
-    faltando = set(PARTICOES_CANONICAS) - set(out[partition_column].unique())
-    if faltando:
-        warnings.warn(
-            f"Partição(ões) sem nenhuma linha após o split: {sorted(faltando)}. "
-            "Verifique a distribuição dos estratos antes de prosseguir.",
-            SplitWarning,
-            stacklevel=2,
-        )
-
-    return out
-```
-
-## `src/data/supervised_artifact.py`
-
-- Git: `tracked` · status `clean`
-- Size: `11.3 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `8c1030a654b10ad4b2be788e6db4dcb2768919ddf45cdb18421987b04e9988e4`
-
-```python
-"""Persistencia e leitura do dataset supervisionado canonico.
-
-Separa notebooks da origem fisica da coorte: o Notebook 03 materializa uma
-unica particao e os notebooks seguintes apenas a reutilizam.
-
-O manifesto registra, alem do hash e das particoes:
-
-- ``feature_columns`` — colunas usadas como features;
-- ``numeric_columns`` / ``categorical_columns`` — divisao por tipo,
-  consumida por ``build_preprocessor``;
-- ``audit_columns`` — colunas no parquet que NAO entram em X, mas devem
-  ser preservadas para auditoria (ex.: ``sg_uf``, ``faixa_etaria``).
-
-Convencoes:
-
-- As particoes canonicas sao ``treino``, ``validacao`` e ``teste``.
-- ``split_partitions`` devolve ``(treino, validacao)`` — par consumido na
-  fase de selecao. O bloco ``teste`` NAO e exposto; use
-  ``holdout_partition`` respeitando o gate ``G9_holdout``.
-"""
-
-from __future__ import annotations
-
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Mapping, Sequence
-
-import pandas as pd
-
-from src.utils.hashing import sha256_file
-
-DATASET_NAME = "dataset_supervisionado.parquet"
-MANIFEST_NAME = "manifesto_supervisionado.json"
-SCHEMA_VERSION = 2
-
-_PARTITION_TREINO    = "treino"
-_PARTITION_VALIDACAO = "validacao"
-_PARTITION_TESTE     = "teste"
-
-ALLOWED_PARTITIONS = {_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE}
-
-
-def _paths(root: Path) -> tuple[Path, Path]:
-    """Caminhos canonicos (dataset, manifesto) para uma raiz de projeto."""
-    output_dir = Path(root).resolve() / "data" / "analytical"
-    return output_dir / DATASET_NAME, output_dir / MANIFEST_NAME
-
-
-def _validar_grupos(
-    num_set: set[str],
-    cat_set: set[str],
-    feats_set: set[str],
-) -> None:
-    if overlap := num_set & cat_set:
-        raise ValueError(
-            "Colunas presentes em numeric_columns E categorical_columns: "
-            f"{sorted(overlap)}"
-        )
-    if fora := (num_set | cat_set) - feats_set:
-        raise ValueError(
-            "numeric_columns/categorical_columns contem colunas fora de "
-            f"feature_columns: {sorted(fora)}"
-        )
-    if faltando := feats_set - (num_set | cat_set):
-        raise ValueError(
-            "Cada feature precisa estar em numeric_columns ou "
-            f"categorical_columns. Faltando: {sorted(faltando)}"
-        )
-
-
-def _resolver_grupos(
-    feature_columns: Sequence[str],
-    numeric_columns: Sequence[str] | None,
-    categorical_columns: Sequence[str] | None,
-) -> tuple[list[str] | None, list[str] | None]:
-    """Resolve o par ``(numericas, categoricas)``.
-
-    - Ambas ``None`` → ``(None, None)`` (compatibilidade com chamadas antigas).
-    - Apenas uma passada → o complemento e inferido dentro de ``feature_columns``.
-    - Ambas passadas → valida disjuncao e cobertura exata de ``feature_columns``.
-    """
-    if numeric_columns is None and categorical_columns is None:
-        return None, None
-
-    num = list(numeric_columns) if numeric_columns is not None else None
-    cat = list(categorical_columns) if categorical_columns is not None else None
-
-    if num is None:
-        assert cat is not None
-        cat_set = set(cat)
-        num = [c for c in feature_columns if c not in cat_set]
-    if cat is None:
-        num_set = set(num)
-        cat = [c for c in feature_columns if c not in num_set]
-
-    _validar_grupos(set(num), set(cat), set(feature_columns))
-    return num, cat
-
-
-def validate_supervised_frame(
-    frame: pd.DataFrame,
-    *,
-    feature_columns: Sequence[str],
-    target_column: str,
-    partition_column: str,
-    audit_columns: Sequence[str] | None = None,
-) -> None:
-    """Valida schema minimo, alvo e particoes do artefato supervisionado."""
-    required = set(feature_columns) | {target_column, partition_column}
-    if audit_columns:
-        required |= set(audit_columns)
-
-    if missing := sorted(required - set(frame.columns)):
-        raise KeyError(f"Colunas ausentes no dataset supervisionado: {missing}")
-
-    if frame.empty:
-        raise ValueError("O dataset supervisionado nao pode ser vazio.")
-
-    target_values = set(
-        pd.to_numeric(frame[target_column], errors="coerce")
-        .dropna().astype(int).unique()
-    )
-    if not target_values or not target_values.issubset({0, 1}):
-        raise ValueError(f"Alvo deve ser binario 0/1. Observado: {sorted(target_values)}")
-
-    observed = set(frame[partition_column].dropna().astype(str).unique())
-    if observed != ALLOWED_PARTITIONS:
-        raise ValueError(
-            "Particoes esperadas treino, validacao e teste. "
-            f"Observado: {sorted(observed)}"
-        )
-
-
-def _build_manifest(
-    *,
-    frame: pd.DataFrame,
-    dataset_path: Path,
-    source: Mapping[str, Any],
-    feature_columns: Sequence[str],
-    numeric_columns: list[str] | None,
-    categorical_columns: list[str] | None,
-    audit_columns: Sequence[str] | None,
-    target_column: str,
-    partition_column: str,
-    cohort_kind: str,
-    seed: int,
-) -> dict[str, Any]:
-    partition_counts = {
-        str(key): int(value)
-        for key, value in frame[partition_column].value_counts(dropna=False).items()
-    }
-    return {
-        "schema_version":      SCHEMA_VERSION,
-        "generated_utc":       datetime.now(timezone.utc).isoformat(),
-        "cohort_kind":         str(cohort_kind),
-        "source":              dict(source),
-        "dataset_path":        str(dataset_path),
-        "dataset_sha256":      sha256_file(dataset_path),
-        "rows":                int(len(frame)),
-        "columns":             int(frame.shape[1]),
-        "feature_columns":     list(feature_columns),
-        "numeric_columns":     numeric_columns,
-        "categorical_columns": categorical_columns,
-        "audit_columns":       list(audit_columns) if audit_columns else [],
-        "target_column":       target_column,
-        "partition_column":    partition_column,
-        "partition_counts":    partition_counts,
-        "seed":                int(seed),
-        "test_opened":         False,
-    }
-
-
-def persist_supervised_artifact(
-    frame: pd.DataFrame,
-    *,
-    root: Path,
-    source: Mapping[str, Any],
-    feature_columns: Sequence[str],
-    target_column: str,
-    partition_column: str,
-    cohort_kind: str,
-    seed: int,
-    numeric_columns: Sequence[str] | None = None,
-    categorical_columns: Sequence[str] | None = None,
-    audit_columns: Sequence[str] | None = None,
-    overwrite: bool = False,
-) -> tuple[Path, Path]:
-    """Grava dataset e manifesto, preservando a particao criada no Notebook 03.
-
-    ``numeric_columns``/``categorical_columns`` dividem ``feature_columns``
-    por tipo (ambas, uma, ou nenhuma — ver ``_resolver_grupos``).
-    ``audit_columns`` sao validadas como presentes mas nao entram em X.
-    """
-    num, cat = _resolver_grupos(feature_columns, numeric_columns, categorical_columns)
-
-    validate_supervised_frame(
-        frame,
-        feature_columns=feature_columns,
-        target_column=target_column,
-        partition_column=partition_column,
-        audit_columns=audit_columns,
-    )
-
-    dataset_path, manifest_path = _paths(root)
-    dataset_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and (dataset_path.exists() or manifest_path.exists()):
-        raise FileExistsError(
-            "Artefato supervisionado ja existe. Use overwrite=True somente em uma "
-            "reconstrucao deliberada da mesma etapa."
-        )
-
-    frame.to_parquet(dataset_path, index=False)
-
-    manifest = _build_manifest(
-        frame=frame,
-        dataset_path=dataset_path,
-        source=source,
-        feature_columns=feature_columns,
-        numeric_columns=num,
-        categorical_columns=cat,
-        audit_columns=audit_columns,
-        target_column=target_column,
-        partition_column=partition_column,
-        cohort_kind=cohort_kind,
-        seed=seed,
-    )
-    manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2, default=str),
-        encoding="utf-8",
-    )
-    return dataset_path, manifest_path
-
-
-def load_supervised_artifact(
-    root: Path,
-    *,
-    expected_kind: str | None = None,
-    columns: Sequence[str] | None = None,
-) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Carrega o artefato canonico e valida hash, tipo de coorte e schema."""
-    dataset_path, manifest_path = _paths(root)
-
-    if not dataset_path.is_file() or not manifest_path.is_file():
-        raise FileNotFoundError(
-            "Execute o Notebook 03 adaptado para gerar "
-            f"{DATASET_NAME} e {MANIFEST_NAME}."
-        )
-
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-
-    if expected_kind and manifest.get("cohort_kind") != expected_kind:
-        raise RuntimeError(
-            f"Artefato de coorte {manifest.get('cohort_kind')!r}, mas "
-            f"SRAG_COHORT_KIND={expected_kind!r}. Reconstrua no Notebook 03."
-        )
-
-    if sha256_file(dataset_path) != manifest.get("dataset_sha256"):
-        raise RuntimeError("Hash do dataset supervisionado difere do manifesto.")
-
-    frame = pd.read_parquet(dataset_path, columns=list(columns) if columns else None)
-
-    if columns is None:
-        validate_supervised_frame(
-            frame,
-            feature_columns=manifest["feature_columns"],
-            target_column=manifest["target_column"],
-            partition_column=manifest["partition_column"],
-            audit_columns=manifest.get("audit_columns") or None,
-        )
-
-    manifest["dataset_path"] = str(dataset_path)
-    return frame, manifest
-
-
-def _select_partition(
-    frame: pd.DataFrame,
-    manifest: Mapping[str, Any],
-    partition: str,
-) -> pd.DataFrame:
-    col = manifest["partition_column"]
-    if col not in frame.columns:
-        raise KeyError(f"Coluna de particao ausente no DataFrame: {col!r}")
-    return frame.loc[frame[col].astype(str) == partition].reset_index(drop=True)
-
-
-def split_partitions(
-    frame: pd.DataFrame,
-    manifest: Mapping[str, Any],
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Devolve ``(treino, validacao)`` a partir da coluna de particao canonica.
-
-    Este e o par consumido durante a fase de selecao de modelo (C2..C6).
-    O bloco ``teste`` NAO e exposto aqui de proposito — a avaliacao final
-    exige o gate ``G9_holdout`` aprovado e passa por ``holdout_partition``.
-    """
-    treino    = _select_partition(frame, manifest, _PARTITION_TREINO)
-    validacao = _select_partition(frame, manifest, _PARTITION_VALIDACAO)
-
-    if treino.empty:
-        raise ValueError("Particao 'treino' vazia no dataset supervisionado.")
-    if validacao.empty:
-        raise ValueError("Particao 'validacao' vazia no dataset supervisionado.")
-
-    return treino, validacao
-
-
-def holdout_partition(
-    frame: pd.DataFrame,
-    manifest: Mapping[str, Any],
-) -> pd.DataFrame:
-    """Devolve o bloco ``teste`` (holdout).
-
-    Uso disciplinado: so deve ser chamada depois que o gate ``G9_holdout``
-    estiver aprovado. A checagem do gate e responsabilidade do fluxo de
-    modelagem (ver ``TemporalSplit.concluir_selecao``); esta funcao apenas
-    isola o acesso fisico a particao.
-    """
-    teste = _select_partition(frame, manifest, _PARTITION_TESTE)
-    if teste.empty:
-        raise ValueError("Particao 'teste' vazia no dataset supervisionado.")
-    return teste
-```
-
-## `src/evaluation/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `1.5 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `641a3e6e599d6b8e24f989bf5323b6168d045aa268aa170c18144dafc9bee5e2`
-
-```python
-"""Avaliação: splits temporais, métricas, calibração e análise de erros."""
-
-from src.evaluation.calibration import (
-    brier_decomposicao,
-    curva_confiabilidade,
-    ece,
-    mce,
-)
-from src.evaluation.errors import (
-    CriterioTop,
-    extrair_falsos_negativos,
-    extrair_falsos_positivos,
-    matriz_confusao,
-    metricas_por_grupo,
-    top_erros,
-)
-from src.evaluation.leakage import (
-    LeakageError,
-    check_leakage,
-)
-from src.evaluation.metrics import (
-    ArrayLike,
-    accuracy,
-    auc,
-    average_precision,
-    brier,
-    especificidade,
-    f1,
-    ic_bootstrap,
-    log_loss,
-    metricas_completas,
-    metricas_por_limiar,
-    precision,
-    recall,
-    sensibilidade,
-)
-from src.evaluation.temporal import (
-    TemporalSplit,
-    split_temporal_3way,
-)
-
-__all__ = [
-    # metrics
-    "ArrayLike",
-    "accuracy",
-    "auc",
-    "average_precision",
-    "brier",
-    "especificidade",
-    "f1",
-    "ic_bootstrap",
-    "log_loss",
-    "metricas_completas",
-    "metricas_por_limiar",
-    "precision",
-    "recall",
-    "sensibilidade",
-    # calibration
-    "brier_decomposicao",
-    "curva_confiabilidade",
-    "ece",
-    "mce",
-    # errors
-    "CriterioTop",
-    "extrair_falsos_negativos",
-    "extrair_falsos_positivos",
-    "matriz_confusao",
-    "metricas_por_grupo",
-    "top_erros",
-    # leakage
-    "LeakageError",
-    "check_leakage",
-    # temporal
-    "TemporalSplit",
-    "split_temporal_3way",
-]
-```
-
-## `src/evaluation/calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.6 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `b76e7a28efe53ad9566eb664b60c4f931d78107b539d3c8f6fa903f162b6da94`
-
-```python
-"""
-Avaliação de calibração de probabilidades.
-
-Complementa ``src/models/calibration.py``:
-
-    src/models/calibration.py      → AJUSTA a calibração
-    src/evaluation/calibration.py  → MEDE a qualidade da calibração
-
-Métricas implementadas
-----------------------
-- Curva de confiabilidade (reliability diagram)
-- ECE  (Expected Calibration Error)
-- MCE  (Maximum Calibration Error)
-- Decomposição de Brier em Reliability + Resolution − Uncertainty
-  (Murphy, 1973)
-"""
-
-from __future__ import annotations
-
-import numpy as np
-import pandas as pd
-
-from src.evaluation.metrics import _to_int_labels, _to_np
-
-ArrayLike = np.ndarray | pd.Series | list
-
-
-def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
-    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
-    edges = np.linspace(0.0, 1.0, n_bins + 1)
-    return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
-
-
-def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]:
-    return {
-        "bin_centro":    float((edges[b] + edges[b + 1]) / 2),
-        "freq_positiva": float("nan"),
-        "n":             0.0,
-        "gap":           float("nan"),
-    }
-
-
-def curva_confiabilidade(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> pd.DataFrame:
-    """
-    Dados para o reliability diagram.
-
-    Colunas:
-        bin_centro    — probabilidade média prevista no bin
-        freq_positiva — fração real de positivos no bin
-        n             — número de amostras no bin
-        gap           — |freq_positiva - bin_centro|
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    edges  = np.linspace(0.0, 1.0, n_bins + 1)
-    idx    = _bins_digitize(p, n_bins)
-
-    linhas: list[dict[str, float]] = []
-    for b in range(n_bins):
-        m = idx == b
-        n = int(m.sum())
-
-        if n == 0:
-            linhas.append(_linha_vazia(b, edges))
-            continue
-
-        centro = float(p[m].mean())
-        freq   = float(y[m].mean())
-        linhas.append({
-            "bin_centro":    centro,
-            "freq_positiva": freq,
-            "n":             float(n),
-            "gap":           abs(freq - centro),
-        })
-
-    return pd.DataFrame(linhas)
-
-
-def ece(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> float:
-    """Expected Calibration Error — média ponderada dos gaps por bin."""
-    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    total  = float(tabela["n"].sum())
-
-    if total == 0:
-        return float("nan")
-
-    pesos = tabela["n"] / total
-    gaps  = tabela["gap"].fillna(0.0)
-    return float((pesos * gaps).sum())
-
-
-def mce(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> float:
-    """Maximum Calibration Error — o pior gap entre os bins."""
-    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    gaps   = tabela["gap"].dropna()
-
-    if gaps.empty:
-        return float("nan")
-
-    return float(gaps.max())
-
-
-def brier_decomposicao(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> dict[str, float]:
-    """
-    Decompõe o Brier score (Murphy, 1973):
-
-        Brier = Reliability − Resolution + Uncertainty
-
-    Retorna
-    -------
-    dict com:
-        brier         — Brier score observado
-        reliability   — quanto menor, melhor (penaliza desvios locais)
-        resolution    — quanto maior, melhor (capacidade de separar)
-        uncertainty   — entropia binária da base (fixa para o dataset)
-        n             — número de amostras
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    n = len(y)
-
-    if n == 0:
-        raise ValueError("y_true vazio — não há como decompor o Brier.")
-
-    base_rate   = float(y.mean())
-    uncertainty = base_rate * (1.0 - base_rate)
-    brier_obs   = float(np.mean((p - y) ** 2))
-    idx         = _bins_digitize(p, n_bins)
-
-    reliability = 0.0
-    resolution  = 0.0
-
-    for b in range(n_bins):
-        m   = idx == b
-        n_b = int(m.sum())
-
-        if n_b == 0:
-            continue
-
-        freq_obs  = float(y[m].mean())
-        freq_pred = float(p[m].mean())
-        peso      = n_b / n
-
-        reliability += peso * (freq_obs - freq_pred) ** 2
-        resolution  += peso * (freq_obs - base_rate) ** 2
-
-    return {
-        "brier":       brier_obs,
-        "reliability": float(reliability),
-        "resolution":  float(resolution),
-        "uncertainty": float(uncertainty),
-        "n":           float(n),
-    }
-```
-
-## `src/evaluation/errors.py`
-
-- Git: `tracked` · status `clean`
-- Size: `5.5 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `7a6e18f4d634a243771a6d0408cef798c3acc96c9b14fbbc559cd50477334dad`
-
-```python
-"""
-Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
-
-A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
-
-    from src.evaluation.leakage import LeakageError, check_leakage
-"""
-
-from __future__ import annotations
-
-from typing import Literal
-
-import numpy as np
-import pandas as pd
-
-from src.evaluation.metrics import (
-    _to_int_labels,
-    _to_np,
-    auc,
-    f1,
-    precision,
-    recall,
-)
-
-__all__ = [
-    "ArrayLike",
-    "CriterioTop",
-    "matriz_confusao",
-    "extrair_falsos_positivos",
-    "extrair_falsos_negativos",
-    "metricas_por_grupo",
-    "top_erros",
-]
-
-ArrayLike   = np.ndarray | pd.Series | list
-CriterioTop = Literal["fp", "fn", "erro_absoluto"]
-
-
-def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
-    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
-    if len(df) != len(y):
-        raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
-
-
-def matriz_confusao(
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """
-    Matriz de confusão 2×2 como DataFrame.
-
-    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
-    Adiciona linha/coluna ``"total"``.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-
-    contagens = {
-        (yv, pv): int(((y == yv) & (p == pv)).sum())
-        for yv in (0, 1)
-        for pv in (0, 1)
-    }
-
-    df = pd.DataFrame(
-        [[contagens[(0, 0)], contagens[(0, 1)]],
-         [contagens[(1, 0)], contagens[(1, 1)]]],
-        index=["real_0", "real_1"],
-        columns=["pred_0", "pred_1"],
-    )
-    df["total"] = df.sum(axis=1)
-    df.loc["total"] = df.sum(axis=0)
-    return df
-
-
-def _extrair_por_mascara(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-    *,
-    yv: int,
-    pv: int,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``."""
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-    return df.loc[(y == yv) & (p == pv)].reset_index(drop=True)
-
-
-def extrair_falsos_positivos(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde o modelo previu 1 mas o real é 0."""
-    return _extrair_por_mascara(df, y_true, y_pred, yv=0, pv=1)
-
-
-def extrair_falsos_negativos(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde o modelo previu 0 mas o real é 1."""
-    return _extrair_por_mascara(df, y_true, y_pred, yv=1, pv=0)
-
-
-def metricas_por_grupo(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    coluna_grupo: str,
-    *,
-    limiar: float = 0.5,
-    min_n: int = 30,
-) -> pd.DataFrame:
-    """
-    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
-
-    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
-    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
-    """
-    if coluna_grupo not in df.columns:
-        raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
-
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    _validar_tamanhos(df, y)
-
-    base   = df.reset_index(drop=True)
-    grupos = base[coluna_grupo].astype("string")
-
-    linhas: list[dict[str, float | str]] = []
-
-    for g in grupos.dropna().unique():
-        m = (grupos == g).to_numpy()
-        n = int(m.sum())
-
-        if n < min_n:
-            continue
-
-        y_g    = y[m]
-        p_g    = p[m]
-        y_pred = (p_g >= limiar).astype(int)
-
-        linhas.append({
-            "grupo":          str(g),
-            "n":              float(n),
-            "taxa_positivos": float(y_g.mean()),
-            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
-            "f1":             f1(y_g, y_pred),
-            "precision":      precision(y_g, y_pred),
-            "recall":         recall(y_g, y_pred),
-        })
-
-    return (
-        pd.DataFrame(linhas)
-        .sort_values("n", ascending=False)
-        .reset_index(drop=True)
-    )
-
-
-def top_erros(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    *,
-    n: int = 20,
-    criterio: CriterioTop = "erro_absoluto",
-    limiar: float = 0.5,
-) -> pd.DataFrame:
-    """
-    Retorna as ``n`` linhas de ``df`` com os piores erros.
-
-    ``criterio``:
-        - ``"fp"``            → prob decrescente entre FP
-        - ``"fn"``            → prob crescente entre FN
-        - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
-
-    Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    y_pred = (p >= limiar).astype(int)
-    _validar_tamanhos(df, y)
-
-    out = df.reset_index(drop=True).copy()
-    out["y_true"]   = y
-    out["y_prob"]   = p
-    out["y_pred"]   = y_pred
-    out["erro_abs"] = np.abs(p - y)
-
-    if criterio == "fp":
-        sel = out[(out.y_true == 0) & (out.y_pred == 1)].sort_values("y_prob", ascending=False)
-    elif criterio == "fn":
-        sel = out[(out.y_true == 1) & (out.y_pred == 0)].sort_values("y_prob", ascending=True)
-    elif criterio == "erro_absoluto":
-        sel = out[out.y_true != out.y_pred].sort_values("erro_abs", ascending=False)
-    else:
-        raise ValueError(f"criterio inválido: {criterio!r}. Use 'fp', 'fn' ou 'erro_absoluto'.")
-
-    return sel.head(n).reset_index(drop=True)
-```
-
-## `src/evaluation/leakage.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.1 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `e504ad9142e598ef1d3e6ee4ecc2c63804f5569c5370eaa0ce132cafd9b1bde4`
-
-```python
-"""Verificação anti-vazamento de dados.
-
-``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
-A lista efetiva é a união de:
-
-- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
-- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
-- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
-"""
-
-from __future__ import annotations
-
-from typing import Iterable
-
-import pandas as pd
-
-from src.utils import config as C
-
-__all__ = ["LeakageError", "check_leakage"]
-
-
-class LeakageError(RuntimeError):
-    """Erro lançado quando variáveis com vazamento são encontradas."""
-
-
-DEFAULT_LEAKAGE_COLUMNS = frozenset({
-    "evolucao", "dt_evoluca", "dt_encerra",
-    "uti", "utilizouvni", "suport_ven",
-    "antiviral", "antivirais",
-    "classificacao_final",
-    "cluster", "cluster_rotulo",
-})
-
-
-def _resolve_forbidden_columns(
-    forbidden_columns: Iterable[str] | None,
-    target_column: str | None,
-) -> set[str]:
-    """Conjunto efetivo de colunas proibidas.
-
-    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
-    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
-    """
-    base = (
-        set(forbidden_columns)
-        if forbidden_columns is not None
-        else set(C.cfg("features", "proibidas") or [])
-    )
-    base |= DEFAULT_LEAKAGE_COLUMNS
-
-    target = target_column if target_column is not None else C.cfg("target", "coluna")
-    if target:
-        base.add(target)
-    return base
-
-
-def check_leakage(
-    X: pd.DataFrame,
-    *,
-    forbidden_columns: Iterable[str] | None = None,
-    target_column: str | None = None,
-) -> None:
-    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
-
-    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
-    ``target_column=None`` usa ``target.coluna`` do YAML.
-    """
-    forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
-    if detected := sorted(set(X.columns) & forbidden):
-        raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
-```
-
-## `src/evaluation/metrics.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.5 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `a2536cd3cc53d9a5e7ebe6320a4e0011043d1dccf51803d84abe85eaf5184c14`
-
-```python
-"""
-Métricas de classificação binária — todas retornam ``float``.
-
-Encapsula o scikit-learn para garantir ``float``: em várias funções ele
-retorna ``Float | ndarray``, o que polui o type-checker.
-
-Oferece ainda:
-    - ``metricas_por_limiar`` → tabela varrendo limiares
-    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
-
-``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
-chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
-que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
-"""
-
-from __future__ import annotations
-
-from typing import Callable
-
-import numpy as np
-import pandas as pd
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    brier_score_loss,
-    f1_score,
-    log_loss as sk_log_loss,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
-
-__all__ = [
-    "ArrayLike",
-    "auc",
-    "average_precision",
-    "brier",
-    "log_loss",
-    "f1",
-    "precision",
-    "recall",
-    "accuracy",
-    "especificidade",
-    "sensibilidade",
-    "metricas_completas",
-    "metricas_por_limiar",
-    "ic_bootstrap",
-]
-
-ArrayLike = np.ndarray | pd.Series | list
-
-
-def _to_np(x: ArrayLike) -> np.ndarray:
-    return np.asarray(x).ravel()
-
-
-def _to_int_labels(y: ArrayLike) -> np.ndarray:
-    return np.asarray(y).ravel().astype(int)
-
-
-def _contagens_confusao(
-    y_true: np.ndarray,
-    y_pred: np.ndarray,
-) -> tuple[int, int, int, int]:
-    tp = int(((y_true == 1) & (y_pred == 1)).sum())
-    fp = int(((y_true == 0) & (y_pred == 1)).sum())
-    tn = int(((y_true == 0) & (y_pred == 0)).sum())
-    fn = int(((y_true == 1) & (y_pred == 0)).sum())
-    return tp, fp, tn, fn
-
-
-def _especificidade_de_contagens(tn: int, fp: int) -> float:
-    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
-    denom = tn + fp
-    return tn / denom if denom > 0 else 0.0
-
-
-def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(average_precision_score(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(brier_score_loss(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    """Log loss (entropia cruzada binária) sobre probabilidades."""
-    return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
-
-
-def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(f1_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(precision_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(recall_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(accuracy_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred),
-    ))
-
-
-def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
-    _, fp, tn, _ = _contagens_confusao(
-        _to_int_labels(y_true), _to_int_labels(y_pred),
-    )
-    return _especificidade_de_contagens(tn, fp)
-
-
-def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
-    return recall(y_true, y_pred)
-
-
-def metricas_completas(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    limiar: float = 0.5,
-) -> dict[str, float]:
-    """
-    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
-
-    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
-    mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    y_pred = (p >= limiar).astype(int)
-    ap     = average_precision(y, p)
-
-    return {
-        "auc":            auc(y, p),
-        "ap":             ap,
-        "pr_auc":         ap,
-        "brier":          brier(y, p),
-        "log_loss":       log_loss(y, p),
-        "f1":             f1(y, y_pred),
-        "precision":      precision(y, y_pred),
-        "recall":         recall(y, y_pred),
-        "sensibilidade":  sensibilidade(y, y_pred),
-        "especificidade": especificidade(y, y_pred),
-        "accuracy":       accuracy(y, y_pred),
-        "limiar":         float(limiar),
-        "n":              float(len(y)),
-    }
-
-
-def metricas_por_limiar(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_limiares: int = 101,
-) -> pd.DataFrame:
-    """
-    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
-
-    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
-    sensibilidade, especificidade, accuracy, youden_j``.
-
-    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
-    o limiar que maximiza a separação entre as classes. As contagens de
-    confusão ficam expostas para permitir derivar qualquer outra métrica
-    a posteriori — não há tabela paralela de lambdas.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-
-    linhas: list[dict[str, float]] = []
-
-    for th in np.linspace(0.01, 0.99, n_limiares):
-        lim    = float(th)
-        y_pred = (p >= lim).astype(int)
-
-        tp, fp, tn, fn = _contagens_confusao(y, y_pred)
-        rec = recall(y, y_pred)
-        esp = _especificidade_de_contagens(tn, fp)
-
-        linhas.append({
-            "limiar":         lim,
-            "tp":             tp,
-            "fp":             fp,
-            "tn":             tn,
-            "fn":             fn,
-            "f1":             f1(y, y_pred),
-            "precision":      precision(y, y_pred),
-            "recall":         rec,
-            "sensibilidade":  rec,
-            "especificidade": esp,
-            "accuracy":       accuracy(y, y_pred),
-            "youden_j":       rec + esp - 1.0,
-        })
-
-    return pd.DataFrame(linhas)
-
-
-def ic_bootstrap(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    *,
-    metrica: Callable[[ArrayLike, ArrayLike], float] = auc,
-    n_boot: int = 200,
-    alpha: float = 0.05,
-    seed: int = 42,
-) -> tuple[float, float, float]:
-    """
-    Intervalo de confiança via bootstrap percentil.
-
-    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
-    degeneradas (uma única classe) são descartadas internamente. Métrica
-    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    n = len(y)
-
-    rng     = np.random.default_rng(seed)
-    valores = np.empty(n_boot, dtype="float64")
-
-    for i in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        valores[i] = (
-            metrica(y[idx], p[idx]) if len(np.unique(y[idx])) >= 2 else np.nan
-        )
-
-    est     = float(metrica(y, p))
-    validos = valores[~np.isnan(valores)]
-
-    if validos.size == 0:
-        return est, float("nan"), float("nan")
-
-    return (
-        est,
-        float(np.quantile(validos, alpha / 2)),
-        float(np.quantile(validos, 1 - alpha / 2)),
-    )
-```
-
-## `src/evaluation/temporal.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.4 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `eb8b768efe8484f354dd034bc536c2db975744457cc1c9e659d64c2b80458546`
-
-```python
-"""
-Split temporal em três blocos + trava do holdout.
-
-⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
-O split oficial do projeto é o **aleatório estratificado**, gerado no
-Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
-C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
-se mantém se eu treinar no passado e testar no futuro?".
-
-Regra de ouro (quando usado):
-    treino + validacao → escolha de modelo
-    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
-
-A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
-``G9_holdout`` não estiver aprovado.
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import Literal, get_args
-
-import pandas as pd
-
-from src.utils import config as C
-
-OnNat = Literal["raise", "drop"]
-_ON_NAT_VALORES = frozenset(get_args(OnNat))
-
-
-def _validar_fracao(nome: str, valor: float) -> None:
-    if not 0 < valor < 1:
-        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
-
-
-def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
-    if coluna_tempo not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
-    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
-        raise TypeError(
-            f"Coluna temporal {coluna_tempo!r} não é datetime "
-            f"(dtype atual: {df[coluna_tempo].dtype}). "
-            "Converta com pd.to_datetime antes do split."
-        )
-
-
-def _tratar_nat(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    on_nat: OnNat,
-) -> pd.DataFrame:
-    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
-    nat_mask = df[coluna_tempo].isna()
-    n_nat    = int(nat_mask.sum())
-
-    if not n_nat:
-        return df
-    if on_nat == "raise":
-        raise ValueError(
-            f"{n_nat} linha(s) com data inválida (NaT) em "
-            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
-        )
-    return df.loc[~nat_mask].reset_index(drop=True)
-
-
-def split_temporal_3way(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    frac_treino: float = 0.7,
-    frac_validacao: float = 0.15,
-    *,
-    on_nat: OnNat = "raise",
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Divide em treino / validação / holdout, **sem embaralhar**.
-
-    Garante, na ordem temporal::
-
-        max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
-        max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
-
-    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
-    remove essas linhas antes de ordenar.
-    """
-    if on_nat not in _ON_NAT_VALORES:
-        raise ValueError(
-            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
-        )
-
-    _validar_fracao("frac_treino",    frac_treino)
-    _validar_fracao("frac_validacao", frac_validacao)
-    if frac_treino + frac_validacao >= 1:
-        raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
-        )
-
-    _validar_coluna_tempo(df, coluna_tempo)
-    df = _tratar_nat(df, coluna_tempo, on_nat)
-
-    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
-    n = len(ordenado)
-    if n < 3:
-        raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
-
-    corte_treino = int(n * frac_treino)
-    corte_valid  = int(n * (frac_treino + frac_validacao))
-
-    return (
-        ordenado.iloc[:corte_treino].reset_index(drop=True),
-        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
-        ordenado.iloc[corte_valid:].reset_index(drop=True),
-    )
-
-
-@dataclass
-class TemporalSplit:
-    """Guarda os três blocos e controla o acesso ao holdout.
-
-    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
-    Uso típico::
-
-        split = TemporalSplit(df, coluna_tempo="dt_notific")
-        tr, va = split.treino_validacao()  # seleção
-        split.concluir_selecao()           # exige G9_holdout aprovado
-        ho = split.holdout()               # avaliação, uma vez
-    """
-
-    df: pd.DataFrame
-    coluna_tempo: str
-    frac_treino: float = 0.7
-    frac_validacao: float = 0.15
-    on_nat: OnNat = "raise"
-
-    _treino: pd.DataFrame = field(init=False, repr=False)
-    _validacao: pd.DataFrame = field(init=False, repr=False)
-    _holdout: pd.DataFrame = field(init=False, repr=False)
-    _holdout_liberado: bool = field(init=False, default=False, repr=False)
-
-    def __post_init__(self) -> None:
-        tr, va, ho = split_temporal_3way(
-            self.df,
-            coluna_tempo=self.coluna_tempo,
-            frac_treino=self.frac_treino,
-            frac_validacao=self.frac_validacao,
-            on_nat=self.on_nat,
-        )
-        self._treino    = tr
-        self._validacao = va
-        self._holdout   = ho
-
-    def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """``(treino, validacao)`` — único par para a fase de seleção."""
-        return self._treino, self._validacao
-
-    @property
-    def treino(self) -> pd.DataFrame:
-        return self._treino
-
-    @property
-    def validacao(self) -> pd.DataFrame:
-        return self._validacao
-
-    def concluir_selecao(self) -> None:
-        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
-
-        O gate é a autorização explícita — G7 e G8 tratam de decisões da
-        fase de seleção e devem ter sido fechados *antes* deste ponto.
-        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
-        """
-        gate   = C.cfg("gates", "G9_holdout") or {}
-        status = gate.get("status")
-        if status != "aprovado":
-            raise RuntimeError(
-                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
-                f"(status atual: {status!r}). Feche o gate em "
-                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
-            )
-        self._holdout_liberado = True
-
-    @property
-    def holdout_liberado(self) -> bool:
-        return self._holdout_liberado
-
-    def holdout(self) -> pd.DataFrame:
-        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
-        if not self._holdout_liberado:
-            raise RuntimeError(
-                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
-            )
-        return self._holdout
-
-    @property
-    def n_treino(self) -> int:
-        return len(self._treino)
-
-    @property
-    def n_validacao(self) -> int:
-        return len(self._validacao)
-
-    @property
-    def n_holdout(self) -> int:
-        return len(self._holdout)
-
-    def resumo(self) -> str:
-        """Resumo legível — bom para log no ``Run``."""
-
-        def _periodo(d: pd.DataFrame) -> str:
-            if d.empty:
-                return "vazio"
-            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
-
-        estado = "liberado" if self._holdout_liberado else "bloqueado"
-        return (
-            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
-            f"papel='sensibilidade_temporal')\n"
-            f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
-            f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
-            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
-        )
-```
-
-## `src/features/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `508 B` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `bd18b2388ca98116b750d5ffea5c9471d3b169ae4be762c417a6195ed525cc34`
-
-```python
-"""Engenharia de atributos do pipeline supervisionado."""
-
-from src.features.engineering import (
-    COLUNAS_DERIVADAS,
-    ano_mes_internacao,
-    faixa_etaria,
-    idade_em_anos,
-    intervalo_sintomas_internacao,
-    montar_features,
-    sazonalidade,
-    sexo_categoria,
-)
-
-__all__ = [
-    "COLUNAS_DERIVADAS",
-    "ano_mes_internacao",
-    "faixa_etaria",
-    "idade_em_anos",
-    "intervalo_sintomas_internacao",
-    "montar_features",
-    "sazonalidade",
-    "sexo_categoria",
-]
-```
-
-## `src/features/engineering.py`
-
-- Git: `tracked` · status `clean`
-- Size: `8.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `6dc551fb32ada10a58850fe4481627da9855ebcbe58fb7b84e821030e8e61846`
-
-```python
-"""Engenharia de atributos do pipeline supervisionado.
-
-Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
-transforma colunas disponíveis na admissão hospitalar em atributos prontos
-para o modelo — nenhuma usa informação posterior ao desfecho.
-
-As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
-``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
-quando o YAML não define nada.
-"""
-
-from __future__ import annotations
-
-from typing import Literal, get_args
-
-import numpy as np
-import pandas as pd
-
-from src.utils import config as C
-
-__all__ = [
-    "COLUNAS_DERIVADAS",
-    "idade_em_anos",
-    "intervalo_sintomas_internacao",
-    "sazonalidade",
-    "faixa_etaria",
-    "sexo_categoria",
-    "ano_mes_internacao",
-    "montar_features",
-]
-
-PoliticaIntervalo = Literal["sinalizar", "descartar"]
-
-_INTERVALO_MAX_DIAS_PADRAO = 60.0
-_SEMANAS_POR_ANO           = 52.18
-_POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
-
-_FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
-    ("<1",    0.0,   1.0),
-    ("1-4",   1.0,   5.0),
-    ("5-11",  5.0,  12.0),
-    ("12-17", 12.0, 18.0),
-    ("18-39", 18.0, 40.0),
-    ("40-59", 40.0, 60.0),
-    ("60-79", 60.0, 80.0),
-    ("80+",   80.0, None),
-)
-
-COLUNAS_DERIVADAS: tuple[str, ...] = (
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sin_semana",
-    "cos_semana",
-    "ano_internacao",
-    "mes_internacao",
-    "flag_intervalo_invalido",
-    "flag_internacao_antes_sintomas",
-    "faixa_etaria",
-    "sexo_categoria",
-)
-
-
-def _intervalo_max_dias() -> float:
-    valor = C.cfg("features", "engenharia", "intervalo_max_dias")
-    return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
-
-
-def _intervalo_politica() -> PoliticaIntervalo:
-    valor = C.cfg("features", "engenharia", "intervalo_politica")
-    if valor is None:
-        return "sinalizar"
-
-    politica = str(valor).strip().lower()
-    if politica not in _POLITICAS_VALIDAS:
-        raise ValueError(
-            f"features.engenharia.intervalo_politica inválida: {valor!r}. "
-            f"Use uma de {sorted(_POLITICAS_VALIDAS)}."
-        )
-    return politica  # type: ignore[return-value]
-
-
-def _faixas_etarias() -> list[tuple[str, float, float | None]]:
-    bruto = C.cfg("features", "engenharia", "faixas_etarias")
-    if not bruto:
-        return list(_FAIXAS_PADRAO)
-
-    return [
-        (
-            str(item["nome"]),
-            float(item["min"]),
-            None if item.get("max") is None else float(item["max"]),
-        )
-        for item in bruto
-    ]
-
-
-def idade_em_anos(df: pd.DataFrame) -> pd.Series:
-    """
-    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
-
-    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
-    a codificação é desconhecida, a idade é negativa ou excede 120.
-    """
-    idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
-    tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
-
-    anos = pd.Series(
-        np.select(
-            [tipo.eq(1), tipo.eq(2), tipo.eq(3)],
-            [idade / 365.25, idade / 12.0, idade],
-            default=np.nan,
-        ),
-        index=df.index,
-        dtype="float64",
-    )
-
-    invalido = idade.isna() | idade.lt(0) | ~tipo.isin([1, 2, 3]) | anos.gt(120)
-    return anos.where(~invalido)
-
-
-def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
-
-    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
-    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
-    fora de ``[0, intervalo_max_dias]`` vem de
-    ``features.engenharia.intervalo_politica``.
-    """
-    max_dias = _intervalo_max_dias()
-    politica = _intervalo_politica()
-
-    dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
-    dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
-
-    delta = (dt_int - dt_sin).dt.days.astype("float64")
-
-    invalido = delta.isna() | delta.lt(0) | delta.gt(max_dias)
-    negativo = delta.lt(0)
-
-    delta_final = delta.where(~invalido) if politica == "descartar" else delta
-
-    return pd.DataFrame({
-        "dias_sintomas_ate_internacao":   delta_final,
-        "flag_intervalo_invalido":        invalido.astype("int8"),
-        "flag_internacao_antes_sintomas": negativo.astype("int8"),
-    })
-
-
-def sazonalidade(
-    df: pd.DataFrame,
-    coluna_data: str | None = None,
-) -> pd.DataFrame:
-    """
-    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
-
-    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
-    Datas nulas resultam em NaN.
-    """
-    if coluna_data is None:
-        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
-    if coluna_data not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
-
-    datas = pd.to_datetime(df[coluna_data], errors="coerce")
-
-    semana = pd.Series(np.nan, index=df.index, dtype="float64")
-    mask = datas.notna()
-    if mask.any():
-        semana.loc[mask] = (
-            datas[mask].dt.isocalendar()["week"].astype("float64").to_numpy()
-        )
-
-    angulo = 2.0 * np.pi * (semana - 1.0) / _SEMANAS_POR_ANO
-
-    return pd.DataFrame({
-        "sin_semana": np.sin(angulo),
-        "cos_semana": np.cos(angulo),
-    })
-
-
-def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
-    """
-    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
-
-    Idade nula vira a categoria explícita ``"desconhecida"``.
-    """
-    faixas = _faixas_etarias()
-    idade  = pd.to_numeric(idade_anos, errors="coerce")
-
-    out = pd.Series("desconhecida", index=idade.index, dtype="object")
-    for nome, lo, hi in faixas:
-        mask = idade.ge(lo)
-        if hi is not None:
-            mask &= idade.lt(hi)
-        out[mask] = nome
-
-    return out.astype("category")
-
-
-def sexo_categoria(df: pd.DataFrame) -> pd.Series:
-    """
-    Normaliza ``cs_sexo`` em categórica explícita.
-
-    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
-    """
-    sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
-
-    out = pd.Series("ausente", index=df.index, dtype="object")
-    out[sexo.eq("M")] = "masculino"
-    out[sexo.eq("F")] = "feminino"
-    out[sexo.eq("I")] = "ignorado"
-
-    return out.astype("category")
-
-
-def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
-
-    Datas nulas resultam em NaN, mantendo compatibilidade com
-    ``SimpleImputer`` e ``StandardScaler``.
-    """
-    dt = pd.to_datetime(df["dt_interna"], errors="coerce")
-
-    return pd.DataFrame({
-        "ano_internacao": dt.dt.year.astype("float64"),
-        "mes_internacao": dt.dt.month.astype("float64"),
-    })
-
-
-def montar_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
-    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
-    """
-    out = df.copy()
-
-    out["idade_anos"] = idade_em_anos(df)
-
-    intervalo = intervalo_sintomas_internacao(df)
-    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
-    out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
-    out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
-
-    saz = sazonalidade(df)
-    out["sin_semana"] = saz["sin_semana"]
-    out["cos_semana"] = saz["cos_semana"]
-
-    out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
-    out["sexo_categoria"] = sexo_categoria(df)
-
-    ano_mes = ano_mes_internacao(df)
-    out["ano_internacao"] = ano_mes["ano_internacao"]
-    out["mes_internacao"] = ano_mes["mes_internacao"]
-
-    return out
-```
-
-## `src/features/normalization.py`
-
-- Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-
-```python
-
-```
-
-## `src/models/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `1.5 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `193d5ccf3d79ae3e4699f21e442947e652dd4430898e78753ff60f9d2a3a8a76`
-
-```python
-"""Modelos supervisionados do Projeto Integrador."""
-
-from src.models.baseline import (
-    DummyStrategy,
-    build_baseline_pipeline,
-    evaluate_baseline,
-)
-from src.models.boosting import build_boosting_pipeline
-from src.models.calibration import (
-    MetodoCalibracao,
-    Metrica,
-    calibrar,
-    escolher_limiar,
-)
-from src.models.factory import (
-    Finalista,
-    build_finalista,
-    finalistas_disponiveis,
-)
-from src.models.logistic import (
-    Penalty,
-    Solver,
-    build_logistic_pipeline,
-)
-from src.models.pipeline import (
-    ALVO,
-    AUSENTE,
-    COLUNA_TEMPO,
-    FEATURES,
-    FEATURES_CATEGORICAS,
-    FEATURES_NUMERICAS,
-    build_pipeline,
-    build_preprocessor,
-    criar_alvo_binario,
-    filtrar_rotulos_validos,
-    random_state,
-)
-
-__all__ = [
-    # pipeline (constantes + pré-processamento + alvo)
-    "ALVO",
-    "AUSENTE",
-    "COLUNA_TEMPO",
-    "FEATURES",
-    "FEATURES_CATEGORICAS",
-    "FEATURES_NUMERICAS",
-    "build_pipeline",
-    "build_preprocessor",
-    "criar_alvo_binario",
-    "filtrar_rotulos_validos",
-    "random_state",
-    # baseline
-    "DummyStrategy",
-    "build_baseline_pipeline",
-    "evaluate_baseline",
-    # logistic
-    "Penalty",
-    "Solver",
-    "build_logistic_pipeline",
-    # boosting
-    "build_boosting_pipeline",
-    # calibração
-    "MetodoCalibracao",
-    "Metrica",
-    "calibrar",
-    "escolher_limiar",
-    # fábrica
-    "Finalista",
-    "build_finalista",
-    "finalistas_disponiveis",
-]
-```
-
-## `src/models/baseline.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.2 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `c5d4d8e3a65bda1fe15756cb5169b953cf52aff95ac3e6795e6f3ae60094c43e`
-
-```python
-"""
-Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
-
-Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
-O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
-"""
-from __future__ import annotations
-
-from typing import Literal
-
-import pandas as pd
-from sklearn.dummy import DummyClassifier
-from sklearn.pipeline import Pipeline
-
-from src.evaluation.metrics import metricas_completas
-from src.models.pipeline import build_preprocessor, random_state
-
-DummyStrategy = Literal[
-    "most_frequent",
-    "prior",
-    "stratified",
-    "uniform",
-    "constant",
-]
-
-
-def build_baseline_pipeline(
-    *,
-    strategy: DummyStrategy = "prior",
-    preprocessor=None,
-) -> Pipeline:
-    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
-
-    Estratégias mais úteis como piso:
-
-    - ``"prior"``         → probabilidade constante = prevalência do treino
-      (AUC ≈ 0.5 por construção; Brier ainda informativo);
-    - ``"most_frequent"`` → sempre a classe majoritária
-      (F1/recall = 0 se a positiva for minoria);
-    - ``"stratified"``    → amostra respeitando o prior.
-
-    ``preprocessor=None`` usa ``build_preprocessor()``.
-    """
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
-
-    return Pipeline([
-        ("pre", pre),
-        ("clf", DummyClassifier(
-            strategy=strategy,
-            random_state=random_state(),
-        )),
-    ])
-
-
-def evaluate_baseline(
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    X_eval: pd.DataFrame,
-    y_eval: pd.Series,
-    *,
-    strategy: DummyStrategy = "prior",
-) -> dict[str, str | float]:
-    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
-
-    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
-    ``metricas_completas`` — ver esse módulo para a lista completa.
-    """
-    pipe = build_baseline_pipeline(strategy=strategy)
-    pipe.fit(X_train, y_train)
-    y_prob = pipe.predict_proba(X_eval)[:, 1]
-
-    return {
-        "strategy": strategy,
-        **metricas_completas(y_eval, y_prob, limiar=0.5),
-    }
-```
-
-## `src/models/boosting.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `12d703ed5c3cc9f7cb12fd4aa4d961c54f2a24b9c1b1971110fc50c355118f39`
-
-```python
-"""
-Gradient boosting — ``HistGradientBoostingClassifier`` (nativo do sklearn).
-
-Requer scikit-learn >= 1.2 (``class_weight`` como str ou dict).
-"""
-from __future__ import annotations
-
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.pipeline import Pipeline
-
-from src.models.pipeline import build_preprocessor, random_state
-
-
-def build_boosting_pipeline(
-    *,
-    learning_rate: float = 0.05,
-    max_iter: int = 500,
-    max_depth: int | None = None,
-    max_leaf_nodes: int = 31,
-    min_samples_leaf: int = 20,
-    l2_regularization: float = 0.0,
-    early_stopping: bool = False,
-    validation_fraction: float = 0.1,
-    n_iter_no_change: int = 20,
-    class_weight: str | dict | None = "balanced",
-    preprocessor=None,
-) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``HistGradientBoostingClassifier``.
-
-    Parâmetros cujo default difere do sklearn por decisão do projeto:
-
-    - ``early_stopping=False`` (em vez de ``'auto'``): sem early stopping
-      interno, ``max_iter`` é escolhido na validação (gate G6);
-    - ``class_weight="balanced"``: ajusta pelo inverso da frequência.
-
-    Os restantes parâmetros seguem a semântica do sklearn
-    (``learning_rate``, ``max_depth``, ``max_leaf_nodes``,
-    ``min_samples_leaf``, ``l2_regularization``, ``validation_fraction``,
-    ``n_iter_no_change``).
-
-    ``preprocessor=None`` usa ``build_preprocessor()``.
-    """
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
-
-    clf = HistGradientBoostingClassifier(
-        learning_rate=learning_rate,
-        max_iter=max_iter,
-        max_depth=max_depth,
-        max_leaf_nodes=max_leaf_nodes,
-        min_samples_leaf=min_samples_leaf,
-        l2_regularization=l2_regularization,
-        early_stopping=early_stopping,
-        validation_fraction=validation_fraction,
-        n_iter_no_change=n_iter_no_change,
-        class_weight=class_weight,
-        random_state=random_state(),
-    )
-
-    return Pipeline([("pre", pre), ("clf", clf)])
-```
-
-## `src/models/calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.3 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `ad67dccc727378dccad80ba90f070646617d99c49e7e1154e1198ad7f17f1c7a`
-
-```python
-"""
-Calibração de probabilidades e escolha de limiar de decisão.
-
-``calibrar`` envolve um ``Pipeline`` já ajustado em
-``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
-não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
-devolve o ótimo segundo uma métrica, com restrições opcionais de
-precision/recall.
-
-A agregação de métricas vive em ``src.evaluation.metrics``.
-"""
-
-from __future__ import annotations
-
-from typing import Any, Literal, get_args
-
-import numpy as np
-import pandas as pd
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import brier_score_loss, roc_auc_score
-
-from src.evaluation.metrics import metricas_por_limiar
-
-__all__ = [
-    "MetodoCalibracao",
-    "Metrica",
-    "calibrar",
-    "escolher_limiar",
-]
-
-Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
-MetodoCalibracao = Literal["isotonic", "sigmoid"]
-
-_METRICAS_VALIDAS = frozenset(get_args(Metrica))
-_METODOS_VALIDOS  = frozenset(get_args(MetodoCalibracao))
-
-
-def calibrar(
-    pipeline,
-    X_cal: pd.DataFrame,
-    y_cal: pd.Series,
-    *,
-    method: MetodoCalibracao = "isotonic",
-):
-    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
-
-    Use uma base de calibração distinta do treino do ``pipeline``. O
-    pipeline não é re-treinado — o calibrador aprende só o mapeamento
-    probabilidade → probabilidade.
-
-    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
-    (Platt) é paramétrico e mais estável em amostras pequenas.
-    """
-    if method not in _METODOS_VALIDOS:
-        raise ValueError(
-            f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
-        )
-
-    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
-    # importável em ambientes mais antigos (o erro surge só em calibrar()).
-    from sklearn.frozen import FrozenEstimator
-
-    modelo = CalibratedClassifierCV(
-        estimator=FrozenEstimator(pipeline),
-        method=method,
-    )
-    modelo.fit(X_cal, y_cal)
-    return modelo
-
-
-def escolher_limiar(
-    y_true: pd.Series | np.ndarray,
-    y_prob: pd.Series | np.ndarray,
-    *,
-    metrica: Metrica = "f1",
-    n_limiares: int = 101,
-    min_precision: float | None = None,
-    min_recall: float | None = None,
-) -> dict[str, Any]:
-    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
-
-    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
-    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
-    ``ValueError``.
-
-    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
-    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
-    ``metricas_por_limiar``).
-    """
-    if metrica not in _METRICAS_VALIDAS:
-        raise ValueError(
-            f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
-        )
-
-    y_true_arr = np.asarray(y_true).ravel().astype(int)
-    y_prob_arr = np.asarray(y_prob).ravel()
-
-    tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
-
-    candidatos = tabela
-    filtros: list[str] = []
-    if min_precision is not None:
-        filtros.append(f"precision ≥ {min_precision}")
-        candidatos = candidatos[candidatos["precision"] >= min_precision]
-    if min_recall is not None:
-        filtros.append(f"recall ≥ {min_recall}")
-        candidatos = candidatos[candidatos["recall"] >= min_recall]
-    if candidatos.empty:
-        restricao = " e ".join(filtros) if filtros else "sem restrição"
-        raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
-
-    if metrica not in candidatos.columns:
-        raise ValueError(
-            f"A métrica {metrica!r} não foi produzida por metricas_por_limiar. "
-            f"Colunas disponíveis: {sorted(candidatos.columns)}"
-        )
-
-    idx_melhor   = candidatos[metrica].idxmax()
-    linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
-
-    return {
-        "limiar":  float(linha_melhor["limiar"]),
-        "valor":   float(linha_melhor[metrica]),
-        "metrica": metrica,
-        "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
-        "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
-        "tabela":  tabela,
-    }
-```
-
-## `src/models/factory.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.2 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `bd098f04f4a328f10903bbd8ca8ee25642fcc8054a1c946e406e89ad8449251a`
-
-```python
-"""
-Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
-
-Hiperparâmetros vêm de ``models.<nome>`` no ``supervised.yaml``; overrides
-em ``**overrides`` têm precedência. ``preprocessor=None`` faz cada
-construtor usar o default (``build_preprocessor()``).
-"""
-
-from __future__ import annotations
-
-from typing import Any, Literal, get_args
-
-from sklearn.pipeline import Pipeline
-
-from src.models.boosting import build_boosting_pipeline
-from src.models.logistic import build_logistic_pipeline
-from src.utils import config as C
-
-__all__ = ["Finalista", "build_finalista", "finalistas_disponiveis"]
-
-Finalista = Literal["boosting", "logistic"]
-_FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
-
-
-def finalistas_disponiveis() -> tuple[str, ...]:
-    """Nomes canônicos dos finalistas registrados, em ordem estável."""
-    return tuple(sorted(_FINALISTAS_VALIDOS))
-
-
-def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
-    """Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
-
-    Descartados: chaves ``busca_*`` (grid de tuning) e valores ``None``
-    (deixa o default do construtor agir). Devolve ``{}`` se a secção não
-    existir ou não for mapping.
-    """
-    secao = C.cfg("models", nome)
-    if not isinstance(secao, dict):
-        return {}
-    return {
-        k: v
-        for k, v in secao.items()
-        if v is not None and not k.startswith("busca_")
-    }
-
-
-def build_finalista(
-    nome: str,
-    *,
-    preprocessor=None,
-    **overrides: Any,
-) -> Pipeline:
-    """Constrói o ``Pipeline`` de um finalista pelo nome.
-
-    Levanta ``ValueError`` se ``nome`` não estiver em
-    ``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
-    ajustado** — o caller faz ``fit``.
-    """
-    if nome not in _FINALISTAS_VALIDOS:
-        raise ValueError(
-            f"finalista desconhecido: {nome!r}. "
-            f"Use um destes: {sorted(_FINALISTAS_VALIDOS)}."
-        )
-
-    params = _kwargs_do_yaml(nome) | overrides
-    if preprocessor is not None:
-        params["preprocessor"] = preprocessor
-
-    if nome == "boosting":
-        return build_boosting_pipeline(**params)
-    return build_logistic_pipeline(**params)
-```
-
-## `src/models/logistic.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.3 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `54130cc65471c262e5e13c152954e741ce077e7ea1ec52361e75a1102732c6c1`
-
-```python
-"""
-Regressão logística — modelo linear interpretável.
-
-A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
-para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
-do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
-traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
-única da verdade sem depender da API depreciada.
-"""
-
-from __future__ import annotations
-
-from typing import Literal, cast
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-
-from src.models.pipeline import build_preprocessor, random_state
-from src.utils import config as C
-
-__all__ = ["Penalty", "Solver", "build_logistic_pipeline"]
-
-Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
-Penalty = Literal["l1", "l2", "elasticnet"]
-
-# Solver × tipo de penalidade efetivo (derivado do l1_ratio final).
-_L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
-    "l2":         frozenset({"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"}),
-    "l1":         frozenset({"liblinear", "saga"}),
-    "elasticnet": frozenset({"saga"}),
-}
-
-_PENALTIES_VALIDAS = ("l1", "l2", "elasticnet")
-
-
-def _penalty_do_yaml() -> Penalty | None:
-    """Lê ``models.logistic.penalty`` do YAML.
-
-    Devolve ``None`` quando a chave está ausente, vazia ou nula — o
-    ``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
-    ``ValueError`` se a chave existir mas tiver valor desconhecido.
-    """
-    valor = C.cfg("models", "logistic", "penalty")
-    if not valor:
-        return None
-    if valor not in _PENALTIES_VALIDAS:
-        raise ValueError(
-            f"models.logistic.penalty inválido: {valor!r}. "
-            f"Use uma de {_PENALTIES_VALIDAS}."
-        )
-    return cast(Penalty, valor)
-
-
-def _tipo_penalidade(l1_ratio: float) -> str:
-    """Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``."""
-    if l1_ratio == 0.0:
-        return "l2"
-    if l1_ratio == 1.0:
-        return "l1"
-    return "elasticnet"
-
-
-def build_logistic_pipeline(
-    *,
-    C: float = 1.0,
-    l1_ratio: float = 0.0,
-    penalty: Penalty | None = None,
-    solver: Solver = "lbfgs",
-    max_iter: int = 1000,
-    class_weight: str | dict | None = "balanced",
-    preprocessor=None,
-) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``LogisticRegression``.
-
-    ``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
-    Quando definido, sobrepõe ``l1_ratio``:
-
-    - ``"l2"``          → força ``l1_ratio=0.0``;
-    - ``"l1"``          → força ``l1_ratio=1.0``;
-    - ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
-
-    ``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
-    ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
-    resultante (ver ``_L1_RATIO_SOLVERS``).
-
-    Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
-    combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
-    com ``l1_ratio`` nos extremos.
-    """
-    if penalty is None:
-        penalty = _penalty_do_yaml()
-
-    if penalty == "l2":
-        l1_ratio = 0.0
-    elif penalty == "l1":
-        l1_ratio = 1.0
-    elif penalty == "elasticnet" and not 0.0 < l1_ratio < 1.0:
-        raise ValueError(
-            f"penalty='elasticnet' requer 0 < l1_ratio < 1; "
-            f"recebido l1_ratio={l1_ratio!r}."
-        )
-
-    if not 0.0 <= l1_ratio <= 1.0:
-        raise ValueError(f"l1_ratio deve estar em [0, 1]; recebido {l1_ratio!r}.")
-
-    tipo             = _tipo_penalidade(l1_ratio)
-    solvers_validos  = _L1_RATIO_SOLVERS[tipo]
-    if solver not in solvers_validos:
-        raise ValueError(
-            f"combinação inválida: l1_ratio={l1_ratio!r} ({tipo}) "
-            f"com solver={solver!r}. Use um destes: {sorted(solvers_validos)}."
-        )
-
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
-
-    return Pipeline([
-        ("pre", pre),
-        ("clf", LogisticRegression(
-            C=C,
-            l1_ratio=l1_ratio,
-            solver=solver,
-            max_iter=max_iter,
-            class_weight=class_weight,
-            random_state=random_state(),
-        )),
-    ])
-```
-
-## `src/models/pipeline.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `c05a7280b283384e08f2d11a0a0abc77c00c7a961432d6d77f6c160c8a1ac9a1`
-
-```python
-"""
-Fundação dos modelos supervisionados.
-
-Fonte única de verdade para o pré-processamento e para a derivação do
-alvo binário a partir de ``evolucao``, além da leitura da config canônica
-(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
-
-Notebooks e demais modelos devem importar este módulo em vez de
-reimplementar o pré-processamento.
-"""
-
-from __future__ import annotations
-
-import logging
-from typing import Iterable
-
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-from src.utils import config as C
-
-__all__ = [
-    "ALVO",
-    "AUSENTE",
-    "COLUNA_TEMPO",
-    "FEATURES",
-    "FEATURES_CATEGORICAS",
-    "FEATURES_NUMERICAS",
-    "build_pipeline",
-    "build_preprocessor",
-    "criar_alvo_binario",
-    "filtrar_rotulos_validos",
-    "random_state",
-]
-
-logger = logging.getLogger(__name__)
-
-# Sem defaults próprios: se a config falhar, o import falha — decisão
-# deliberada para que um YAML inválido impeça a modelagem cedo.
-ALVO: str = C.cfg("target", "coluna")
-COLUNA_TEMPO: str = C.cfg("coluna_tempo")
-
-FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
-FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
-
-AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
-
-if _final := C.cfg("features", "final"):
-    _fs = set(_final)
-    FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
-    FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
-
-FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
-
-
-def _alvo_cfg_positivos() -> list[float]:
-    """Códigos de ``target.positivos`` do YAML, como floats."""
-    return [float(v) for v in (C.cfg("target", "positivos") or [])]
-
-
-def _alvo_cfg_negativos() -> list[float]:
-    """Códigos de ``target.negativos`` do YAML, como floats."""
-    return [float(v) for v in (C.cfg("target", "negativos") or [])]
-
-
-def build_preprocessor(
-    numericas: Iterable[str] | None = None,
-    categoricas: Iterable[str] | None = None,
-) -> ColumnTransformer:
-    """``ColumnTransformer`` de pré-processamento.
-
-    - Numéricas: ``SimpleImputer(strategy="median")`` + ``StandardScaler``.
-    - Categóricas: ``SimpleImputer(strategy="constant", fill_value=AUSENTE)``
-      + ``OneHotEncoder(handle_unknown="ignore")``.
-
-    ``AUSENTE`` vem de ``missingness.categoricas.valor_ausente`` no YAML,
-    mantendo o mesmo comportamento do Notebook 03. ``None`` em cada
-    parâmetro usa a lista correspondente do YAML.
-    """
-    num = list(numericas) if numericas is not None else FEATURES_NUMERICAS
-    cat = list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
-
-    pipe_num = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler",  StandardScaler()),
-    ])
-    pipe_cat = Pipeline([
-        ("imputer", SimpleImputer(strategy="constant", fill_value=AUSENTE)),
-        ("onehot",  OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
-
-    return ColumnTransformer(
-        transformers=[
-            ("num", pipe_num, num),
-            ("cat", pipe_cat, cat),
-        ],
-        remainder="drop",
-        verbose_feature_names_out=False,
-    )
-
-
-def criar_alvo_binario(
-    df: pd.DataFrame,
-    alvo: str | None = None,
-    positivos: Iterable[float] | None = None,
-    negativos: Iterable[float] | None = None,
-) -> pd.Series:
-    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
-
-    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
-    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
-    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
-
-    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
-    conjuntos se sobrepuserem ou se algum estiver vazio.
-    """
-    alvo = alvo if alvo is not None else ALVO
-
-    positivos_set = {
-        float(v) for v in (positivos if positivos is not None else _alvo_cfg_positivos())
-    }
-    negativos_set = {
-        float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
-    }
-
-    if overlap := positivos_set & negativos_set:
-        raise ValueError(
-            f"`positivos` e `negativos` não podem se sobrepor: {sorted(overlap)}"
-        )
-    if not positivos_set:
-        raise ValueError("`target.positivos` está vazio na config.")
-    if not negativos_set:
-        raise ValueError("`target.negativos` está vazio na config.")
-
-    valores = df[alvo].astype("float64")
-    y = pd.Series(float("nan"), index=df.index, dtype="float64")
-    y[valores.isin(negativos_set)] = 0
-    y[valores.isin(positivos_set)] = 1
-    return y
-
-
-def filtrar_rotulos_validos(
-    X: pd.DataFrame,
-    y: pd.Series,
-) -> tuple[pd.DataFrame, pd.Series]:
-    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
-    if not y.index.equals(X.index):
-        raise ValueError("X e y precisam ter o mesmo índice.")
-
-    mascara = y.notna()
-    return (
-        X.loc[mascara].reset_index(drop=True),
-        y.loc[mascara].astype("int8").reset_index(drop=True),
-    )
-
-
-def random_state() -> int:
-    """Seed canônica do projeto (``config.SEED``)."""
-    return int(C.SEED)
-
-
-def build_pipeline(
-    X: pd.DataFrame | None = None,
-    y: pd.Series | None = None,
-    *,
-    classifier: object | None = None,
-    features: Iterable[str] | None = None,
-    strict: bool = True,
-) -> Pipeline:
-    """Constrói o ``Pipeline`` sklearn.
-
-    - ``classifier=None`` → devolve só o pré-processamento (útil no C2).
-    - ``classifier`` passado (C3+) → anexa como etapa final.
-    - ``features=None`` → usa ``FEATURES`` do módulo.
-    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
-      estiver ausente em ``X``; ``False`` → emite warning e segue só com
-      as presentes.
-    """
-    num = list(FEATURES_NUMERICAS)
-    cat = list(FEATURES_CATEGORICAS)
-
-    if features is not None:
-        fs = set(features)
-        num = [c for c in num if c in fs]
-        cat = [c for c in cat if c in fs]
-
-    if X is not None:
-        if ausentes := sorted((set(num) | set(cat)) - set(X.columns)):
-            msg = (
-                f"Features configuradas ausentes em X: {ausentes}. "
-                "Verifique `features` no supervised.yaml ou o DataFrame "
-                "de entrada."
-            )
-            if strict:
-                raise KeyError(msg)
-            logger.warning(msg)
-            num = [c for c in num if c in X.columns]
-            cat = [c for c in cat if c in X.columns]
-
-    pre = build_preprocessor(numericas=num, categoricas=cat)
-
-    etapas: list[tuple[str, object]] = [("pre", pre)]
-    if classifier is not None:
-        etapas.append(("clf", classifier))
-
-    return Pipeline(etapas)
-```
-
-## `src/protocolo/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `89 B` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `dc84b0499cded1d8b8fe8cffd8906ca4d73a01297f048160dd439decf23dcb02`
-
-```python
-"""Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões)."""
-```
-
 ## `src/protocolo/verificacoes.py`
 
 - Git: `tracked` · status `clean`
-- Size: `89.8 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `89.8 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `2bf4f22f18037a036d9db390362ee569764e67732feb4adf65d5e3fc51f957fd`
 
 ```python
@@ -7041,7 +1748,7 @@ def make_demo(n: int = 30_000, seed: int = 0, inicio: str = "2022-01-01", anos: 
 ## `src/utils/__init__.py`
 
 - Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-06 02:28 UTC`
+- Size: `0 B` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 
 ```python
@@ -7051,7 +1758,7 @@ def make_demo(n: int = 30_000, seed: int = 0, inicio: str = "2022-01-01", anos: 
 ## `src/utils/config.py`
 
 - Git: `tracked` · status `clean`
-- Size: `8.0 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `8.0 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `83593c64261804f7b18aab33d121ef6e4d90c7a65aa612fb5649bf4889fed358`
 
 ```python
@@ -7311,7 +2018,7 @@ if __name__ == "__main__":
 ## `src/utils/env.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.7 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.7 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `7dce7d27c80c42f4efe7f89128fafb3763fe78c8070593ad5c3d508284ce866b`
 
 ```python
@@ -7439,7 +2146,7 @@ if __name__ == "__main__":
 ## `src/utils/hashing.py`
 
 - Git: `tracked` · status `clean`
-- Size: `891 B` · modified `2026-10-17 19:30 UTC`
+- Size: `891 B` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `aa96962d96190d264f1a459148e77cafb11afeb5598f0bc557f8422f797e044f`
 
 ```python
@@ -7473,10 +2180,148 @@ def sha256_file(path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE) -> str:
     return digest.hexdigest()
 ```
 
+## `src/utils/io_eficiente.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.2 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `88c0d654f32f8de1c7142692301599589b61a3aa4097a06cfd4b1bf74aae6859`
+
+```python
+"""I/O compacto para Parquet no projeto SRAG."""
+from __future__ import annotations
+from pathlib import Path
+import numpy as np, pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+def metadados_parquet(caminho):
+    arq=pq.ParquetFile(caminho); meta=arq.metadata
+    return {"caminho":str(caminho),"linhas":int(meta.num_rows),"colunas":int(meta.num_columns),
+            "row_groups":int(meta.num_row_groups),"nomes_colunas":list(arq.schema_arrow.names),
+            "tamanho_mb":Path(caminho).stat().st_size/1_048_576}
+
+def amostra_parquet(caminho,n=5,columns=None):
+    arq=pq.ParquetFile(caminho)
+    lote=next(arq.iter_batches(batch_size=n,columns=list(columns) if columns else None),None)
+    return pd.DataFrame(columns=columns or arq.schema_arrow.names) if lote is None else lote.to_pandas()
+
+def compactar_dataframe(df, limite_categoria=1000, colunas_texto_livre=()):
+    livres=set(colunas_texto_livre)
+    for col in list(df.columns):
+        s=df[col]
+        if col in livres:
+            df[col]=s.astype("string[pyarrow]"); continue
+        if isinstance(s.dtype,pd.CategoricalDtype): continue
+        if pd.api.types.is_datetime64_any_dtype(s.dtype):
+            df[col]=pd.to_datetime(s,errors="coerce").astype("datetime64[ns]"); continue
+        if pd.api.types.is_object_dtype(s.dtype) or pd.api.types.is_string_dtype(s.dtype):
+            df[col]=s.astype("category") if s.nunique(dropna=True)<=limite_categoria else s.astype("string[pyarrow]")
+        elif pd.api.types.is_float_dtype(s.dtype): df[col]=s.astype("float32")
+        elif pd.api.types.is_integer_dtype(s.dtype) and not pd.api.types.is_extension_array_dtype(s.dtype):
+            df[col]=pd.to_numeric(s,downcast="integer")
+    return df
+
+def ler_parquet_enxuto(caminho,columns=None,filters=None,colunas_texto_livre=()):
+    tabela=pq.read_table(caminho,columns=list(columns) if columns else None,filters=filters)
+    df=tabela.to_pandas(strings_to_categorical=True,self_destruct=True,split_blocks=True)
+    del tabela
+    return compactar_dataframe(df,colunas_texto_livre=colunas_texto_livre)
+
+def matriz_para_plot(df):
+    return pd.DataFrame(df.to_numpy(dtype=np.float64,na_value=np.nan),index=df.index.copy(),columns=df.columns.copy())
+```
+
+## `src/utils/performance.py`
+
+- Git: `tracked` · status `clean`
+- Size: `3.0 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `da66506466e2a3fe0c39751c34dda8812cb3125d1b831a35e00a1b9f13fa743d`
+
+```python
+"""Medição simples de tempo e memória para os notebooks SRAG."""
+from __future__ import annotations
+import gc, os, threading, time
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from pathlib import Path
+import pandas as pd
+try:
+    import psutil
+except ImportError:
+    psutil = None
+try:
+    import pyarrow as pa
+except ImportError:
+    pa = None
+_MB = 1_048_576
+
+def rss_mb() -> float:
+    return 0.0 if psutil is None else psutil.Process(os.getpid()).memory_info().rss / _MB
+
+def arrow_mb() -> float:
+    return 0.0 if pa is None else pa.total_allocated_bytes() / _MB
+
+def memoria_df_mb(obj) -> float:
+    uso = obj.memory_usage(index=True, deep=True)
+    return float(uso.sum() if hasattr(uso, "sum") else uso) / _MB
+
+def liberar(namespace: dict, nomes, fechar_figuras: bool=True) -> list[str]:
+    removidos=[]
+    for nome in nomes:
+        if nome in namespace:
+            del namespace[nome]; removidos.append(nome)
+    if fechar_figuras:
+        try:
+            import matplotlib.pyplot as plt
+            plt.close("all")
+        except Exception:
+            pass
+    antes=rss_mb(); gc.collect(); depois=rss_mb()
+    print(f"[liberar] {removidos} | RSS {antes:,.0f} -> {depois:,.0f} MB")
+    return removidos
+
+class _Pico:
+    def __init__(self, intervalo=0.2):
+        self.intervalo=intervalo; self.pico=rss_mb(); self.stop=threading.Event()
+        self.thread=threading.Thread(target=self._run,daemon=True)
+    def _run(self):
+        while not self.stop.is_set():
+            self.pico=max(self.pico,rss_mb()); time.sleep(self.intervalo)
+    def __enter__(self): self.thread.start(); return self
+    def __exit__(self,*_):
+        self.stop.set(); self.thread.join(timeout=2); self.pico=max(self.pico,rss_mb())
+
+@dataclass
+class Monitor:
+    notebook: str
+    pasta_saida: Path|None=None
+    registros: list[dict]=field(default_factory=list)
+    @contextmanager
+    def etapa(self,nome: str,**extras):
+        inicio=time.perf_counter(); rss0=rss_mb(); arr0=arrow_mb(); status="ok"
+        try:
+            with _Pico() as pico: yield
+        except BaseException:
+            status="erro"; raise
+        finally:
+            reg={"notebook":self.notebook,"etapa":nome,"status":status,
+                 "duracao_s":round(time.perf_counter()-inicio,3),
+                 "rss_inicio_mb":round(rss0,1),"rss_fim_mb":round(rss_mb(),1),
+                 "rss_pico_mb":round(pico.pico,1),"arrow_inicio_mb":round(arr0,1),
+                 "arrow_fim_mb":round(arrow_mb(),1)}
+            reg.update(extras); self.registros.append(reg)
+            print(f"[{self.notebook}] {nome}: {reg['duracao_s']}s | pico {reg['rss_pico_mb']} MB | {status}")
+    def resumo(self): return pd.DataFrame(self.registros)
+    def salvar(self):
+        pasta=self.pasta_saida or Path("outputs/performance"); pasta.mkdir(parents=True,exist_ok=True)
+        caminho=pasta/f"{self.notebook}.csv"; self.resumo().to_csv(caminho,index=False,encoding="utf-8-sig")
+        return caminho
+```
+
 ## `src/utils/reproducibility.py`
 
 - Git: `tracked` · status `clean`
-- Size: `13.1 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `13.1 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `15c5a5196d30fb740693656dc5700fc2ef5b7ff4c1cb9c9e55dd3bf876094064`
 
 ```python
@@ -7887,7 +2732,7 @@ class Run:
 ## `src/utils/storage.py`
 
 - Git: `tracked` · status `clean`
-- Size: `8.8 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `8.8 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `05b2bbcc41102e5028f55a7cc665d49df4b25eca58f050f77a004b74e20dc724`
 
 ```python
@@ -8186,7 +3031,7 @@ def read_srag(
 ## `tests/conftest.py`
 
 - Git: `tracked` · status `clean`
-- Size: `639 B` · modified `2026-10-17 19:30 UTC`
+- Size: `639 B` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `d09e0a36c305a02829b974b59774ccf94a97163357a9f419d17ec98e22a5d549`
 
 ```python
@@ -8216,7 +3061,7 @@ def parquet_disponivel() -> Path | None:
 ## `tests/test_calibration.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.5 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.5 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `993b7617cdacd34f6659bdf2b40134f6a21a79b3af9fc7c9d12c44a642bfeca5`
 
 ```python
@@ -8321,19 +3166,36 @@ def test_calibrar_isotonic_preserva_shape():
 ## `tests/test_cohort_source.py`
 
 - Git: `tracked` · status `clean`
-- Size: `2.1 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `81aae255c95584ea1c6178160a6e4b8a19fd4d8833ff17fa29bc4ec9b22c67e4`
+- Size: `6.1 KB` · modified `2026-10-18 16:01 UTC`
+- SHA-256: `ebf7038acc9f8e0ad20dac6fb32ab9267f9863874423af60850c4433970b0dbc`
 
 ```python
-"""Testes do resolvedor de coorte (provisória, final, auto)."""
+"""Testes do resolvedor de coorte (provisória, final, auto, explicit_path).
+
+Cobrem:
+- descoberta automática por ``kind`` e fallback dentro da família provisória;
+- ``auto`` preferindo a final e caindo em provisional quando só ela existe;
+- validação de ``explicit_path`` (nome canônico + coerência com ``kind``);
+- regressão da #30: ``coorte.parquet`` não é mais engolido como provisório.
+"""
+
+from __future__ import annotations
 
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from src.data.cohort_source import cohort_candidates, load_cohort, resolve_cohort_path
+from src.data.cohort_source import (
+    cohort_candidates,
+    load_cohort,
+    resolve_cohort_path,
+)
 
+
+# ---------------------------------------------------------------------------
+# Fixtures e helpers
+# ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
 def _sem_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -8351,10 +3213,19 @@ def _write(path: Path, value: int) -> None:
     pd.DataFrame({"value": [value]}).to_parquet(path, index=False)
 
 
+# ---------------------------------------------------------------------------
+# Descoberta automática por kind
+# ---------------------------------------------------------------------------
+
 def test_padrao_permanece_provisorio(tmp_path: Path) -> None:
+    """Sem ``kind``, o padrão é ``provisional``, mesmo com a final presente.
+
+    Quando ``coorte_provisoria.parquet`` não existe, o resolver cai no
+    próximo candidato provisório (``coorte_provisoria_b.parquet``).
+    """
     paths = cohort_candidates(tmp_path)
     _write(paths["provisional"][1], 1)   # coorte_provisoria_b.parquet
-    _write(paths["final"][0], 2)         # coorte_final.parquet (existe, mas não é o default)
+    _write(paths["final"][0], 2)         # coorte_final.parquet (não é o default)
 
     kind, path = resolve_cohort_path(tmp_path)
 
@@ -8363,8 +3234,12 @@ def test_padrao_permanece_provisorio(tmp_path: Path) -> None:
 
 
 def test_final_exige_escolha_explicita(tmp_path: Path) -> None:
+    """Só existe a coorte final; sem ``kind`` a busca falha em vez de devolvê-la."""
     path = cohort_candidates(tmp_path)["final"][0]
     _write(path, 2)
+
+    with pytest.raises(FileNotFoundError, match="provisional"):
+        resolve_cohort_path(tmp_path)
 
     frame, source = load_cohort(tmp_path, kind="final")
 
@@ -8385,16 +3260,90 @@ def test_auto_prefere_final(tmp_path: Path) -> None:
     assert path.name == "coorte_final.parquet"
 
 
+def test_auto_cai_em_provisional_quando_so_ela_existe(tmp_path: Path) -> None:
+    """``auto`` só prefere a final quando ela existe; senão usa a provisória."""
+    paths = cohort_candidates(tmp_path)
+    _write(paths["provisional"][0], 1)
+
+    kind, path = resolve_cohort_path(tmp_path, kind="auto")
+
+    assert kind == "provisional"
+    assert path.name == "coorte_provisoria.parquet"
+
+
 def test_tipo_invalido_falha(tmp_path: Path) -> None:
     # Valor viola intencionalmente o Literal CohortKind.
     with pytest.raises(ValueError, match="provisional, final ou auto"):
         resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
+
+
+def test_nenhum_candidato_falha(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="Nenhuma coorte"):
+        resolve_cohort_path(tmp_path, kind="provisional")
+
+
+# ---------------------------------------------------------------------------
+# Regressão da #30: nomes ambíguos não são mais aceitos
+# ---------------------------------------------------------------------------
+
+def test_coorte_parquet_nao_e_mais_candidato(tmp_path: Path) -> None:
+    """``coorte.parquet`` não deve ser engolido como provisório (regressão #30)."""
+    _write(tmp_path / "data" / "analytical" / "coorte.parquet", 2)
+
+    with pytest.raises(FileNotFoundError):
+        resolve_cohort_path(tmp_path, kind="provisional")
+
+
+# ---------------------------------------------------------------------------
+# explicit_path: nome canônico + coerência com `kind`
+# ---------------------------------------------------------------------------
+
+def test_explicit_path_sem_kind_usa_nome(tmp_path: Path) -> None:
+    path = cohort_candidates(tmp_path)["final"][0]
+    _write(path, 2)
+
+    kind, resolved = resolve_cohort_path(tmp_path, explicit_path=path)
+
+    assert kind == "final"
+    assert resolved.name == "coorte_final.parquet"
+
+
+def test_explicit_path_com_kind_consistente_ok(tmp_path: Path) -> None:
+    path = cohort_candidates(tmp_path)["final"][0]
+    _write(path, 2)
+
+    kind, resolved = resolve_cohort_path(tmp_path, kind="final", explicit_path=path)
+
+    assert kind == "final"
+    assert resolved.name == "coorte_final.parquet"
+
+
+def test_explicit_path_com_kind_conflitante_falha(tmp_path: Path) -> None:
+    """Coorte final passada como ``provisional`` → falha em vez de mascarar o tipo."""
+    path = cohort_candidates(tmp_path)["final"][0]
+    _write(path, 2)
+
+    with pytest.raises(ValueError, match="classificada como"):
+        resolve_cohort_path(tmp_path, kind="provisional", explicit_path=path)
+
+
+def test_explicit_path_com_nome_desconhecido_falha(tmp_path: Path) -> None:
+    path = tmp_path / "coorte_definitiva.parquet"
+    _write(path, 2)
+
+    with pytest.raises(ValueError, match="Nome de coorte não reconhecido"):
+        resolve_cohort_path(tmp_path, explicit_path=path)
+
+
+def test_explicit_path_inexistente_falha(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="Coorte explícita"):
+        resolve_cohort_path(tmp_path, explicit_path=tmp_path / "nao_existe.parquet")
 ```
 
 ## `tests/test_config.py`
 
 - Git: `tracked` · status `clean`
-- Size: `7.4 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `7.4 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `e9d6278318474900c708013ab29c1eaa30ed96c935b7a320868c01924ef7c5ca`
 
 ```python
@@ -8616,7 +3565,7 @@ def test_features_finais_existem_no_schema(parquet_disponivel) -> None:
 ## `tests/test_errors.py`
 
 - Git: `tracked` · status `clean`
-- Size: `5.5 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `5.5 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `7c4362c964cc4035939c32264b33a4e27cff1abf1cb40979616c1e8b55479164`
 
 ```python
@@ -8783,7 +3732,7 @@ def test_top_erros_criterio_invalido() -> None:
 ## `tests/test_features.py`
 
 - Git: `tracked` · status `clean`
-- Size: `11.3 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `11.3 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `db4f5e070d3e0bc1ea7298a41d48a9628bc341d91ea8da80359c8444981dcfe0`
 
 ```python
@@ -9075,7 +4024,7 @@ class TestPontoNoTempo:
 ## `tests/test_leakage.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.9 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.9 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `122506d41aa18213123b6ed3ddddcd38f68b16d69a8448e540708ef0d89a55f8`
 
 ```python
@@ -9205,7 +4154,7 @@ def test_dataset_sem_identificadores_duplicados(parquet_disponivel) -> None:
 ## `tests/test_metrics.py`
 
 - Git: `tracked` · status `clean`
-- Size: `5.5 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `5.5 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `1251e53dbcb79353e211e590d332539869bb13d1671fa69eaf4ca35e892eb370`
 
 ```python
@@ -9399,7 +4348,7 @@ def test_ic_bootstrap_metrica_customizada(
 ## `tests/test_model_pipelines.py`
 
 - Git: `tracked` · status `clean`
-- Size: `6.2 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `6.2 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `5dd0bbc04fc6c0033ae84664fc9de929d70e6c05a8ca0c4f89ccdd5b8c581af6`
 
 ```python
@@ -9575,7 +4524,7 @@ def test_logistic_pipeline_solver_invalido() -> None:
 ## `tests/test_pipeline.py`
 
 - Git: `tracked` · status `clean`
-- Size: `2.7 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `2.7 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `0b547fc2d43446a0239bbb73659cfcb3cbbb362a90b86f8bf7e73dd7b35cbc00`
 
 ```python
@@ -9666,7 +4615,7 @@ def test_diretorio_padrao_foi_criado(nome_dir: str) -> None:
 ## `tests/test_regras_pessoa_a.py`
 
 - Git: `tracked` · status `clean`
-- Size: `22.9 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `22.9 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `9b4f7be9ae95ffc9d1af19fd25f5182f4f3c57e8da0ad73e1cdf5aae7d3f74d7`
 
 ```python
@@ -10182,7 +5131,7 @@ def test_colunas_minimas_sao_menos_que_as_classificadas(cfg):
 ## `tests/test_reproducibility.py`
 
 - Git: `tracked` · status `clean`
-- Size: `5.1 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `5.1 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `27ce4e8b0f95c728593a299998f26b53c8c39feb88b531a56c125f251acc6194`
 
 ```python
@@ -10342,7 +5291,7 @@ def test_listar_e_carregar(tmp_path: Path) -> None:
 ## `tests/test_smoke.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.2 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.2 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `f3161fc26862baaf40b068430fdf0f334f7c016964efec5340d393f3fbe782bc`
 
 ```python
@@ -10453,7 +5402,7 @@ def test_storage_read_srag_com_filtro(parquet: Path) -> None:
 ## `tests/test_split.py`
 
 - Git: `tracked` · status `clean`
-- Size: `9.4 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `9.4 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `64427eee86a2c645dc367875cc93b984d65d716716fba3d1f498931894ab98e3`
 
 ```python
@@ -10736,14 +5685,15 @@ def test_df_vazio() -> None:
 ## `tests/test_supervised_artifact.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `a96b43cbaabb4dfc300bb4984a27705cea7d68b5c33607eedd157aeb1b2b7d44`
+- Size: `6.3 KB` · modified `2026-10-18 16:24 UTC`
+- SHA-256: `dd247e633bde059ab55d43a9dc86cdfec54f5b363452f9295f71944d2f81d544`
 
 ```python
-"""Testes do artefacto supervisionado (``src.data.supervised_artifact``).
+"""Testes do artefato supervisionado (``src.data.supervised_artifact``).
 
-Cobrem o contrato de persistência/leitura: preservação da partição,
-validação do tipo de coorte e exigência das três partições.
+Cobrem persistência, leitura, validação do tipo de coorte, exigência das
+três partições na gravação e a trava do gate ``G9_holdout`` sobre a
+partição de teste na leitura (#16).
 """
 
 from __future__ import annotations
@@ -10755,17 +5705,19 @@ import pandas as pd
 import pytest
 
 from src.data.supervised_artifact import (
+    GatePendenteError,
+    holdout_partition,
     load_supervised_artifact,
     persist_supervised_artifact,
 )
 
 
-def _frame() -> pd.DataFrame:
-    """6 registos — 2 por partição, alvo alternado (0/1).
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    Colunas mínimas para os testes: uma feature numérica, o alvo binário
-    e a coluna de partição.
-    """
+def _frame() -> pd.DataFrame:
+    """6 registos — 2 por partição, alvo alternado (0/1)."""
     return pd.DataFrame({
         "idade_anos":      [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
         "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
@@ -10774,11 +5726,7 @@ def _frame() -> pd.DataFrame:
 
 
 def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
-    """Grava ``frame`` como artefacto supervisionado em ``tmp_path``.
-
-    Preenche os kwargs obrigatórios com valores mínimos e deixa
-    ``**kwargs`` sobrepor (ex.: ``source`` com conteúdo).
-    """
+    """Grava ``frame`` com kwargs obrigatórios mínimos; ``**kwargs`` sobrepõe."""
     params: dict[str, Any] = {
         "source":           {},
         "feature_columns":  ["idade_anos"],
@@ -10791,46 +5739,134 @@ def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
     persist_supervised_artifact(frame, root=tmp_path, **params)
 
 
+@pytest.fixture
+def g9_aprovado(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``exigir_gate`` aceita qualquer gate (G9 aprovado)."""
+    monkeypatch.setattr("src.utils.config.gate_aprovado", lambda _nome: True)
+
+
+@pytest.fixture
+def g9_pendente(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``exigir_gate`` rejeita qualquer gate (G9 pendente)."""
+    monkeypatch.setattr("src.utils.config.gate_aprovado", lambda _nome: False)
+
+
 # ---------------------------------------------------------------------------
-# Contrato de round-trip
+# Persistência
 # ---------------------------------------------------------------------------
 
-def test_roundtrip_preserva_particao(tmp_path: Path) -> None:
-    """Gravar e ler preserva a partição, e o manifesto regista o estado inicial."""
-    frame = _frame()
-    _persistir(tmp_path, frame, source={"kind": "provisional", "sha256": "abc"})
+def test_persistencia_exige_tres_particoes(tmp_path: Path) -> None:
+    """Gravar sem ``teste`` viola o contrato de partições."""
+    with pytest.raises(ValueError, match="Particoes esperadas"):
+        _persistir(tmp_path, _frame().query("particao != 'teste'"))
+
+
+# ---------------------------------------------------------------------------
+# Round-trip
+# ---------------------------------------------------------------------------
+
+def test_default_nao_carrega_teste(tmp_path: Path) -> None:
+    """Por omissão, o loader devolve apenas treino+validação."""
+    _persistir(tmp_path, _frame(), source={"kind": "provisional", "sha256": "abc"})
 
     loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
 
-    assert loaded["particao"].tolist() == frame["particao"].tolist()
+    assert set(loaded["particao"]) == {"treino", "validacao"}
     assert manifest["test_opened"] is False
     assert manifest["seed"] == 42
 
 
+def test_roundtrip_completo_apos_g9(tmp_path: Path, g9_aprovado: None) -> None:
+    """Com G9 aprovado e ``partitions`` explícito, o teste entra no round-trip."""
+    frame = _frame()
+    _persistir(tmp_path, frame)
+
+    loaded, _ = load_supervised_artifact(
+        tmp_path, partitions=("treino", "validacao", "teste"),
+    )
+
+    assert loaded["particao"].tolist() == frame["particao"].tolist()
+
+
 # ---------------------------------------------------------------------------
-# Validações
+# Tipo de coorte
 # ---------------------------------------------------------------------------
 
 def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
-    """Ler com ``expected_kind`` diferente do gravado deve falhar."""
+    """``expected_kind`` divergente falha antes de tocar nos dados."""
     _persistir(tmp_path, _frame())
 
     with pytest.raises(RuntimeError, match="SRAG_COHORT_KIND"):
         load_supervised_artifact(tmp_path, expected_kind="final")
 
 
-def test_particoes_incompletas_falham(tmp_path: Path) -> None:
-    """Dataset sem o bloco ``teste`` viola o contrato de partições."""
-    frame = _frame().query("particao != 'teste'")
+# ---------------------------------------------------------------------------
+# Trava do gate G9 (#16)
+# ---------------------------------------------------------------------------
 
-    with pytest.raises(ValueError, match="Particoes esperadas"):
-        _persistir(tmp_path, frame)
+def test_default_funciona_com_g9_pendente(tmp_path: Path, g9_pendente: None) -> None:
+    """Sem ``teste`` na seleção, o loader não consulta o gate."""
+    _persistir(tmp_path, _frame())
+
+    loaded, _ = load_supervised_artifact(tmp_path)
+
+    assert set(loaded["particao"]) == {"treino", "validacao"}
+
+
+def test_load_com_teste_sem_g9_falha(tmp_path: Path, g9_pendente: None) -> None:
+    """Pedir ``teste`` sem G9 aprovado levanta antes de materializar o bloco."""
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(GatePendenteError, match="G9_holdout"):
+        load_supervised_artifact(
+            tmp_path, partitions=("treino", "validacao", "teste"),
+        )
+
+
+def test_holdout_partition_sem_g9_falha(tmp_path: Path, g9_pendente: None) -> None:
+    """``holdout_partition`` revalida o gate (defesa em profundidade)."""
+    _persistir(tmp_path, _frame())
+    loaded, manifest = load_supervised_artifact(tmp_path)
+
+    with pytest.raises(GatePendenteError, match="G9_holdout"):
+        holdout_partition(loaded, manifest)
+
+
+def test_holdout_partition_apos_g9(tmp_path: Path, g9_aprovado: None) -> None:
+    """Com G9 aprovado, ``holdout_partition`` devolve o bloco de teste."""
+    _persistir(tmp_path, _frame())
+    loaded, manifest = load_supervised_artifact(
+        tmp_path, partitions=("treino", "validacao", "teste"),
+    )
+
+    teste = holdout_partition(loaded, manifest)
+
+    assert set(teste["particao"]) == {"teste"}
+    assert len(teste) == 2
+
+
+# ---------------------------------------------------------------------------
+# Validação de ``partitions``
+# ---------------------------------------------------------------------------
+
+def test_partitions_vazias_falham(tmp_path: Path) -> None:
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(ValueError, match="partitions.*vazio"):
+        load_supervised_artifact(tmp_path, partitions=())
+
+
+def test_partitions_desconhecidas_falham(tmp_path: Path) -> None:
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(ValueError, match="Particoes desconhecidas"):
+        load_supervised_artifact(tmp_path, partitions=("treino", "foo"))
 ```
 
 ## `tests/test_target.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.7 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.7 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `d85c2169acc6f5354bd755e57e581a19a479be160515fcbac3260b4fcfb21aa7`
 
 ```python
@@ -10944,7 +5980,7 @@ def test_default_vem_do_yaml() -> None:
 ## `tests/test_temporal.py`
 
 - Git: `tracked` · status `clean`
-- Size: `5.9 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `5.9 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `8f3be3964a5456ddc4a6588aafc2c382e7525bc613eb9bb1d2ca25cd41a93fd0`
 
 ```python
@@ -11128,7 +6164,7 @@ def test_resumo_marca_holdout_bloqueado(df_temporal: pd.DataFrame) -> None:
 ## `tools/clean_project.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.7 KB` · modified `2026-10-17 19:30 UTC`
+- Size: `3.7 KB` · modified `2026-10-16 14:54 UTC`
 - SHA-256: `06775202d5495fc9c9bbe917b343da103153ec1a1c491c20b34c8e3cdd7260d6`
 
 ```python
@@ -11270,11 +6306,40 @@ if __name__ == "__main__":
     main()
 ```
 
+## `tools/comparar_saidas.py`
+
+- Git: `tracked` · status `clean`
+- Size: `1.2 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `0d6c1af4da97aad39c1f19408e40692ad94625d5863d69251260db35c5bd4dd0`
+
+```python
+from pathlib import Path
+import sys, numpy as np, pandas as pd
+
+def comparar(a,b,rtol=1e-6):
+    rows=[]
+    for pa in sorted(Path(a).glob("*.csv")):
+        pb=Path(b)/pa.name
+        if not pb.exists(): rows.append((pa.name,"ausente_depois",None)); continue
+        x=pd.read_csv(pa,encoding="utf-8-sig"); y=pd.read_csv(pb,encoding="utf-8-sig")
+        if x.shape!=y.shape or list(x.columns)!=list(y.columns): rows.append((pa.name,"estrutura_diferente",f"{x.shape} x {y.shape}")); continue
+        dif=0
+        for c in x.columns:
+            if pd.api.types.is_numeric_dtype(x[c]) and pd.api.types.is_numeric_dtype(y[c]):
+                iguais=np.isclose(x[c],y[c],rtol=rtol,equal_nan=True)
+            else: iguais=x[c].astype("string").fillna("<NA>").eq(y[c].astype("string").fillna("<NA>")).to_numpy()
+            dif+=int((~iguais).sum())
+        rows.append((pa.name,"igual" if dif==0 else "diferente",f"{dif} células diferentes"))
+    return pd.DataFrame(rows,columns=["arquivo","status","detalhe"])
+if __name__=="__main__":
+    r=comparar(sys.argv[1],sys.argv[2]); print(r.to_string(index=False)); raise SystemExit(0 if (r.status=="igual").all() else 1)
+```
+
 ## `tools/update_project_reference.py`
 
 - Git: `tracked` · status `clean`
-- Size: `106.0 KB` · modified `2026-10-17 19:30 UTC`
-- SHA-256: `2ffc9adf7a56f5afb4573d28b1f51925303f56a438ad52b4bcd32d637ee88617`
+- Size: `106.9 KB` · modified `2026-10-18 15:51 UTC`
+- SHA-256: `e5f2dfbc4339ad587b51626d3d1bfa5715e000624e0658e91fd314aca5c29acf`
 
 ```python
 #!/usr/bin/env python3
@@ -11297,16 +6362,16 @@ Creates (default):
 What the snapshot contains
 --------------------------
 1.  Git state: branch, commit, remote, status, recent log, diff stat and the
-    full diff of uncommitted changes (capped).
+    optional uncommitted diff, disabled by default for speed.
 2.  Full path inventory of the working folder, including ignored and local
     folders (data/, outputs/, models/, reports/), with size, modification time
     and Git state. File contents of data are never copied.
-3.  Full source of every relevant text file: .py, .ipynb, .md, .yaml, .yml,
+3.  Full, untruncated source of every relevant text file: .py, .ipynb, .md, .yaml, .yml,
     .toml, .json, .csv (capped), .txt, .ini, .cfg, .ps1, .sh, .sql, etc.
 4.  Notebooks: every cell source, execution counts and, by default, the TEXT
     outputs (streams, text/plain results, errors and tracebacks). Images and
     HTML are replaced by placeholders. Execution order problems are reported.
-5.  Small text artifacts produced by the project (manifests, waterfalls,
+5.  Optional small text artifacts produced by the project (manifests, waterfalls,
     summary tables under outputs/, reports/, data/ manifests), capped by size
     and number of CSV rows. Prediction folders are never included.
 6.  Text extracted from .docx and .pptx documents (plans, reports).
@@ -11370,7 +6435,7 @@ try:
 except Exception:  # pragma: no cover
     tomllib = None
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 6
 
 OUTPUT_DIR = Path("docs")
 OUTPUT_MD_NAME = "PROJECT_COMPLETE_REFERENCE.md"
@@ -11382,7 +6447,7 @@ DEFAULT_MAX_OUTPUT_CHARS = 6_000
 DEFAULT_MAX_ARTIFACT_BYTES = 300_000
 DEFAULT_MAX_CSV_ROWS = 60
 DEFAULT_MAX_DIFF_CHARS = 400_000
-DEFAULT_GIT_LOG = 40
+DEFAULT_GIT_LOG = 10
 DEFAULT_SPLIT_MB = 1.0
 MAX_INVENTORY_ENTRIES = 30_000
 MAX_DOCSTRING_CHARS = 4_000
@@ -11487,11 +6552,11 @@ CONTEXT = """# Project Complete Reference
 
 ## 1. Purpose
 
-This reference lets a person or an AI diagnose the SRAG project without prior
-conversation context and without access to the machine. It contains the full
-source of code, notebooks (with text outputs), configuration and documentation,
-plus the Git state, the local path inventory, installed package versions,
-parsed configuration and static consistency checks.
+This reference lets a person or an AI continue the SRAG project without prior
+conversation context and without access to the machine. It prioritizes the full,
+untruncated source of Python files, notebooks, tests, configuration and project
+documentation, plus fast structural diagnostics that prevent duplicated functions,
+conflicting pipelines and patchwork implementations.
 
 ## 2. Methodological guardrails
 
@@ -13133,8 +8198,10 @@ def split_document(document: str, max_bytes: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
+    print("[reference] 1/7 Coletando estado Git básico...", flush=True)
     redactor = Redactor(root)
     entries, tracked, untracked = collect_git_entries(root)
+    print("[reference] 2/7 Inventariando arquivos locais...", flush=True)
     inventory, inventory_truncated = walk_inventory(root, tracked, untracked)
     inv_by_path = {row["path"]: row for row in inventory}
     existing_paths = set(inv_by_path)
@@ -13177,7 +8244,16 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
     pyproject_error: str | None = None
     requirements: dict[str, str] | None = None
 
-    for rel, is_tracked, status in selected:
+    print(
+        f"[reference] 3/7 Lendo {len(selected)} arquivos de código, notebooks e documentação em integridade...",
+        flush=True,
+    )
+    for indice_arquivo, (rel, is_tracked, status) in enumerate(selected, 1):
+        if indice_arquivo == 1 or indice_arquivo % 10 == 0 or indice_arquivo == len(selected):
+            print(
+                f"[reference] Arquivo {indice_arquivo}/{len(selected)}: {rel.as_posix()}",
+                flush=True,
+            )
         absolute = root / rel
         data = absolute.read_bytes()
         digest = sha256_bytes(data)
@@ -13224,7 +8300,7 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
             text, warnings = redactor(text)
             files_text[rel.as_posix()] = text
             header.append("- Content: plain text extracted (formatting, tables layout and images not preserved)")
-            source_sections.append("\n".join(header) + "\n\n" + code_block(truncate(text, args.max_inline_bytes), "text") + "\n")
+            source_sections.append("\n".join(header) + "\n\n" + code_block(text.rstrip(), "text") + "\n")
             file_records.append(record)
             continue
         if b"\x00" in data[:8192]:
@@ -13252,14 +8328,9 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
             pyproject_data, pyproject_error = parse_pyproject(decoded)
         elif rel.name == "requirements.txt" and len(rel.parts) == 1:
             requirements = parse_requirements(decoded)
-        if suffix in {".csv", ".tsv"} and len(data) > args.max_artifact_bytes:
-            preview, total = csv_preview(text, args.max_csv_rows)
-            header.append(f"- Content: first {args.max_csv_rows} of {total} rows")
-            body = code_block(preview, "csv")
-        elif len(data) > args.max_inline_bytes:
-            body = code_block(truncate(text, args.max_inline_bytes), LANG.get(suffix, "text"))
-        else:
-            body = code_block(text.rstrip(), LANG.get(suffix, "text"))
+        # Source and documentation are included in full. Limits apply only to
+        # notebook outputs and generated artifacts, never to code or project docs.
+        body = code_block(text.rstrip(), LANG.get(suffix, "text"))
         source_sections.append("\n".join(header) + "\n\n" + body + "\n")
         file_records.append(record)
 
@@ -13296,6 +8367,7 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
 
     # Indexes and diagnostics
     symbols = [s for f in python_files for s in f.symbols]
+    print("[reference] 4/7 Construindo catálogo de APIs, consumidores e testes...", flush=True)
     consumers = index_consumers(symbols, python_files, notebooks)
     tests = index_tests(symbols, python_files)
     import_map = top_level_import_map()
@@ -13346,11 +8418,17 @@ def build_reference(root: Path, args: argparse.Namespace) -> tuple[str, dict[str
                                    f"Path inventory stopped at {MAX_INVENTORY_ENTRIES} files.", [],
                                    "Exclude large generated folders or raise MAX_INVENTORY_ENTRIES."))
 
+    if args.run_tests:
+        print("[reference] 5/7 Executando pytest...", flush=True)
+    else:
+        print("[reference] 5/7 Pytest não solicitado; seguindo sem executar código...", flush=True)
     tests_result = run_tests(root, args.pytest_args, args.test_timeout) if args.run_tests else None
     if tests_result and tests_result["returncode"] not in (0, None):
         attention.append(Attention("high", "tests-failing", "pytest returned a non-zero exit code.",
                                    [tests_result["output"].splitlines()[-1] if tests_result["output"] else ""],
                                    "See Section 11."))
+
+    print("[reference] 6/7 Coletando contexto Git rápido e montando documentos...", flush=True)
 
     # Git details
     branch = git(root, "branch", "--show-current").strip() or "detached"
@@ -13592,14 +8670,15 @@ def parse_args() -> argparse.Namespace:
                         help="Omit notebook outputs (sources only).")
     parser.add_argument("--max-output-chars", type=int, default=DEFAULT_MAX_OUTPUT_CHARS,
                         help="Maximum characters per notebook output.")
-    parser.add_argument("--no-artifacts", dest="artifacts", action="store_false",
-                        help="Do not include small text artifacts from data/, outputs/, reports/, models/.")
+    parser.add_argument("--artifacts", dest="artifacts", action="store_true",
+                        help="Also include small generated text artifacts. Disabled by default for speed.")
     parser.add_argument("--max-artifact-bytes", type=int, default=DEFAULT_MAX_ARTIFACT_BYTES)
     parser.add_argument("--max-csv-rows", type=int, default=DEFAULT_MAX_CSV_ROWS)
     parser.add_argument("--max-inline-bytes", type=int, default=DEFAULT_MAX_INLINE_BYTES,
-                        help="Files above this size are truncated (notebooks use a reduced view).")
+                        help="Legacy compatibility option. Source and documentation are always included in full.")
     parser.add_argument("--git-log", type=int, default=DEFAULT_GIT_LOG, help="Number of recent commits to list.")
-    parser.add_argument("--no-diff", dest="include_diff", action="store_false", help="Omit the full uncommitted diff.")
+    parser.add_argument("--include-diff", dest="include_diff", action="store_true",
+                        help="Include the full uncommitted diff. Disabled by default for speed.")
     parser.add_argument("--max-diff-chars", type=int, default=DEFAULT_MAX_DIFF_CHARS)
     parser.add_argument("--run-tests", action="store_true", help="Run pytest and include the result (executes project code).")
     parser.add_argument("--pytest-args", default="", help="Extra pytest arguments, e.g. \"-m 'not slow'\".")
@@ -13617,6 +8696,7 @@ def main() -> int:
     args = parse_args()
     root = root_dir()
     document, machine = build_reference(root, args)
+    print("[reference] 7/7 Gravando Markdown, JSON e partes...", flush=True)
     out_dir = root / args.output_dir
     output_md = out_dir / OUTPUT_MD_NAME
     output_json = out_dir / OUTPUT_JSON_NAME
@@ -13661,908 +8741,13 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-## `configs/paths.local.json`
-
-- Git: `untracked (working tree)` · status `!! ignored by .gitignore`
-- Size: `45 B` · modified `2026-10-08 01:30 UTC`
-- SHA-256: `6a840ee1f558f2fa14ca762c3df41bf82300c680614792cd298d857ea68da198`
-
-```json
-{
-"parquet_srag": "data/raw/srag.parquet"
-}
-```
-
 ## 18. Local artifacts (small text files from data/, outputs/, reports/, models/)
 
-### `data/manifest_dados-v2.yaml`
-
-- Git: `tracked` · `1.9 KB` · modified `2026-10-17 19:30 UTC`
-
-```yaml
-manifest_version: "1.0"
-
-dataset:
-  id: "srag-dados-v2"
-  versao: "dados-v2"
-  arquivo: "srag.parquet"
-  formato: "parquet"
-  caminho_relativo: "data/processed/dados-v2/srag.parquet"
-
-integridade:
-  sha256: "96ED6B9D5CEEBAAEA00659F77511112174B04BB980CB243B560C00DD2A8F316C
-  tamanho_bytes: 303573013
-  quantidade_linhas: 4666910
-  quantidade_colunas: 198
-
-cobertura_temporal:
-  periodo_nominal_fontes: "2019-2026"
-  periodo_observado_dt_notific:
-    inicio: "2018-12-30"
-    fim: "2026-09-28"
-  observacao:
-    - "Foram observados três registros com dt_notific em 2018."
-    - "A elegibilidade temporal da coorte será definida por dt_interna, não por dt_notific."
-    - "O recorte analítico principal considera internações entre 2019 e 2026."
-    - "O ano de 2026 está incompleto na versão atual dos dados e deverá ser identificado como tal nas análises temporais."
-    - "Os anos associados à pandemia serão mantidos inicialmente; qualquer exclusão posterior será tratada como análise de sensibilidade."
-
-geracao:
-  data_geracao: "2026-10-09"
-  motivo_nova_versao: >
-    Correção da geração de dt_notific. Na versão dados-v1,
-    a coluna não preservava as datas individuais de notificação
-    e apresentava valores concentrados em âncoras anuais do
-    calendário epidemiológico. A versão dados-v2 preserva os
-    valores individuais provenientes das fontes oficiais.
-
-fontes:
-  - nome: "Dados Abertos do SUS - SRAG 2019 a 2026"
-    url: "https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026"
-
-uso_no_projeto:
-  interface_leitura: "src.utils.storage.read_srag"
-  versao_configurada: "dados-v2"
-  observacao: >
-    Os notebooks devem acessar o dataset pela interface de storage
-    do repositório, evitando caminhos locais absolutos.
-
-validacao:
-  schema_verificado: true
-  dimensoes_verificadas: true
-  notebook_validacao: "01_eda_primeira_passagem.ipynb"
-  hash_confirmado_manualmente: true
-```
-
-### `data/analytical/dataset_supervisionado.meta.json`
-
-- Git: `ignored` · `1.7 KB` · modified `2026-10-17 19:14 UTC`
-
-```json
-{
-  "versao": "0.1",
-  "criado_em": "2026-10-17T16:14:53",
-  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-  "n_linhas": 3739615,
-  "colunas": [
-    "nu_notific",
-    "dt_interna",
-    "evolucao",
-    "idade_anos",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi",
-    "sg_uf",
-    "faixa_etaria",
-    "ano_internacao"
-  ],
-  "alvo": "evolucao",
-  "coluna_tempo": "dt_interna",
-  "anos": {
-    "2019": 43513,
-    "2020": 979812,
-    "2021": 1480215,
-    "2022": 475980,
-    "2023": 240704,
-    "2024": 229478,
-    "2025": 289913
-  },
-  "desenvolvimento": [
-    2019,
-    2020,
-    2021,
-    2022,
-    2023,
-    2024
-  ],
-  "holdout": [
-    2025
-  ],
-  "features_proibidas_no_dataset": [],
-  "features_ausentes_na_base": [
-    "DIAS_SINTOMAS_ATE_INTERNACAO",
-    "SEXO_CATEGORIA"
-  ],
-  "base_origem_linhas": 4666910,
-  "aliases_aplicados_yaml_para_fisico": {},
-  "descartadas_data_tempo_invalida": 0,
-  "derivadas_criadas": [
-    "idade_anos",
-    "faixa_etaria"
-  ],
-  "grupos_avaliacao_incluidos": [
-    "sg_uf",
-    "faixa_etaria"
-  ],
-  "sha256": "b43e34cc04bc0581dcc10f127eedf73fda3aff8a371409ff3ee807cbc384543c"
-}
-```
-
-### `data/analytical/dataset_supervisionado_sem_2020_2021.meta.json`
-
-- Git: `ignored` · `1.9 KB` · modified `2026-10-17 00:51 UTC`
-
-```json
-{
-  "versao": "0.1",
-  "criado_em": "2026-10-16T21:51:46",
-  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado_sem_2020_2021.parquet",
-  "n_linhas": 1279588,
-  "colunas": [
-    "nu_notific",
-    "dt_interna",
-    "evolucao",
-    "idade_anos",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi",
-    "sg_uf",
-    "faixa_etaria",
-    "ano_internacao",
-    "split"
-  ],
-  "alvo": "evolucao",
-  "coluna_tempo": "dt_interna",
-  "anos": {
-    "2019": 43513,
-    "2022": 475980,
-    "2023": 240704,
-    "2024": 229478,
-    "2025": 289913
-  },
-  "desenvolvimento": [
-    2019,
-    2022,
-    2023,
-    2024,
-    2025
-  ],
-  "holdout": [],
-  "features_proibidas_no_dataset": [],
-  "features_ausentes_na_base": [
-    "DIAS_SINTOMAS_ATE_INTERNACAO",
-    "SEXO_CATEGORIA"
-  ],
-  "base_origem_linhas": 4666910,
-  "aliases_aplicados_yaml_para_fisico": {},
-  "descartadas_data_tempo_invalida": 0,
-  "derivadas_criadas": [
-    "idade_anos",
-    "faixa_etaria"
-  ],
-  "grupos_avaliacao_incluidos": [
-    "sg_uf",
-    "faixa_etaria"
-  ],
-  "sha256": "e7c5c4a56d29bc72aab0b0c9a7b6dd67dae4830e758c97998a4bac1aca5444b9",
-  "split": {
-    "tipo": "aleatorio",
-    "seed": 42,
-    "fracoes": {
-      "treino": 0.7,
-      "validacao": 0.15,
-      "holdout": 0.15
-    },
-    "contagem": {
-      "treino": 895712,
-      "holdout": 191938,
-      "validacao": 191938
-    }
-  }
-}
-```
-
-### `data/analytical/dataset_supervisionado_todos_2019_2025.meta.json`
-
-- Git: `ignored` · `1.9 KB` · modified `2026-10-17 00:50 UTC`
-
-```json
-{
-  "versao": "0.1",
-  "criado_em": "2026-10-16T21:50:56",
-  "arquivo": "<REPO>\\data\\analytical\\dataset_supervisionado_todos_2019_2025.parquet",
-  "n_linhas": 3739615,
-  "colunas": [
-    "nu_notific",
-    "dt_interna",
-    "evolucao",
-    "idade_anos",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi",
-    "sg_uf",
-    "faixa_etaria",
-    "ano_internacao",
-    "split"
-  ],
-  "alvo": "evolucao",
-  "coluna_tempo": "dt_interna",
-  "anos": {
-    "2019": 43513,
-    "2020": 979812,
-    "2021": 1480215,
-    "2022": 475980,
-    "2023": 240704,
-    "2024": 229478,
-    "2025": 289913
-  },
-  "desenvolvimento": [
-    2019,
-    2020,
-    2021,
-    2022,
-    2023,
-    2024,
-    2025
-  ],
-  "holdout": [],
-  "features_proibidas_no_dataset": [],
-  "features_ausentes_na_base": [
-    "DIAS_SINTOMAS_ATE_INTERNACAO",
-    "SEXO_CATEGORIA"
-  ],
-  "base_origem_linhas": 4666910,
-  "aliases_aplicados_yaml_para_fisico": {},
-  "descartadas_data_tempo_invalida": 0,
-  "derivadas_criadas": [
-    "idade_anos",
-    "faixa_etaria"
-  ],
-  "grupos_avaliacao_incluidos": [
-    "sg_uf",
-    "faixa_etaria"
-  ],
-  "sha256": "7348b0e2f7403116d544fc27117dfe5f838fbd707f112c6b35df50ea3d2b94e4",
-  "split": {
-    "tipo": "aleatorio",
-    "seed": 42,
-    "fracoes": {
-      "treino": 0.7,
-      "validacao": 0.15,
-      "holdout": 0.15
-    },
-    "contagem": {
-      "treino": 2617730,
-      "holdout": 560943,
-      "validacao": 560942
-    }
-  }
-}
-```
-
-### `data/analytical/manifesto_supervisionado.json`
-
-- Git: `ignored` · `2.3 KB` · modified `2026-10-17 00:43 UTC`
-
-```json
-{
-  "schema_version": 2,
-  "generated_utc": "2026-10-17T00:43:25.222942+00:00",
-  "cohort_kind": "provisional",
-  "source": {
-    "kind": "provisional",
-    "path": "<REPO>\\data\\analytical\\coorte_provisoria_b.parquet",
-    "sha256": "da94652dbabd832f512f8346f19ef3fb12adc3e418c27c9229d693b4fe43c7f9",
-    "size_bytes": 209678288,
-    "rows": 3915136,
-    "columns": 125
-  },
-  "dataset_path": "<REPO>\\data\\analytical\\dataset_supervisionado.parquet",
-  "dataset_sha256": "408e5d40ef3dc82a57af5b5c9706a224641c7f0808819d333f48d4638d4e022b",
-  "rows": 3915132,
-  "columns": 43,
-  "feature_columns": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "numeric_columns": [
-    "idade_anos",
-    "dias_sintomas_ate_internacao"
-  ],
-  "categorical_columns": [
-    "sexo_categoria",
-    "cs_gestant",
-    "cs_raca",
-    "cs_zona",
-    "ave_suino",
-    "febre",
-    "tosse",
-    "garganta",
-    "dispneia",
-    "diarreia",
-    "vomito",
-    "dor_abd",
-    "fadiga",
-    "perd_olft",
-    "perd_pala",
-    "outro_sin",
-    "puerpera",
-    "cardiopati",
-    "hematologi",
-    "sind_down",
-    "hepatica",
-    "asma",
-    "diabetes",
-    "neurologic",
-    "pneumopati",
-    "imunodepre",
-    "renal",
-    "obesidade",
-    "out_morbi"
-  ],
-  "audit_columns": [
-    "nu_notific",
-    "grupo_split",
-    "ano_internacao",
-    "sg_uf",
-    "faixa_etaria",
-    "cs_escol_n",
-    "vacina",
-    "vacina_cov",
-    "saturacao",
-    "desc_resp"
-  ],
-  "target_column": "alvo_obito_srag",
-  "partition_column": "particao",
-  "partition_counts": {
-    "treino": 2740584,
-    "teste": 587276,
-    "validacao": 587272
-  },
-  "seed": 42,
-  "test_opened": false
-}
-```
-
-### `outputs/tables/pessoa_a/a1_alvo_por_ano.csv`
-
-- Git: `ignored` · `830 B` · modified `2026-10-17 19:14 UTC` · 32 rows
-
-```csv
-ano,1,2,3,9,<vazio>,total
-1917,1,0,0,0,3,4
-1918,0,0,0,0,1,1
-1941,1,0,0,1,2,4
-2009,1,0,0,0,0,1
-2011,1,0,0,0,0,1
-2012,2,0,0,0,0,2
-2016,0,1,0,0,0,1
-2017,2,0,0,0,0,2
-2018,10,0,0,0,1,11
-2019,38292,5221,8,1340,2682,47543
-2020,705699,274113,15414,20385,60753,1076364
-2021,1062924,417291,21305,38603,117266,1657389
-2022,389547,86433,13727,12552,33874,536133
-2023,217667,23037,7724,5528,11713,265669
-2024,210358,19120,7220,4212,12457,253367
-2025,268686,21227,8252,5561,11889,315615
-2026,165784,9743,5014,4454,25442,210437
-2027,6,0,0,1,0,7
-2028,4,0,0,0,0,4
-2029,3,0,0,3,3,9
-2031,2,0,0,0,0,2
-2032,1,0,0,0,0,1
-2033,0,0,0,0,3,3
-2034,0,0,0,1,0,1
-2050,0,0,0,0,1,1
-2052,1,0,0,0,0,1
-2055,0,0,0,0,1,1
-2056,0,0,0,0,1,1
-2092,1,0,0,0,0,1
-2098,1,0,0,1,0,2
-2099,1,0,0,0,0,1
-sem_data,38927,16729,1383,2610,12429,72078
-```
-
-### `outputs/tables/pessoa_a/a1_amostra_exclusoes_01.csv`
-
-- Git: `ignored` · `3.5 KB` · modified `2026-10-17 19:14 UTC` · 50 rows
-
-```csv
-HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
-,,,3,75,1950-11-02,2026-03-22,2026-03-23,,,31775652598724
-2,,1,3,4,2022-03-03,2026-03-23,2026-03-29,2026-03-31,2026-06-11,31781205405890
-,,1,2,8,2025-08-09,2026-04-18,2026-04-28,2026-04-19,2026-06-02,31780414044334
-2,,1,3,50,1975-04-08,2026-03-07,2026-03-07,,2026-03-20,31776951547485
-,,1,3,83,1942-12-21,2026-08-10,2026-08-13,,2026-08-13,31786648314248
-,,9,3,8,2017-09-29,2026-03-25,2026-03-26,,2026-03-30,31776114768213
-2,,,3,7,2019-02-21,2026-04-18,2026-04-22,,2026-04-26,31777485114556
-,,1,2,4,2026-03-22,2026-07-12,2026-07-13,2026-07-21,2026-07-21,31784037049124
-,,1,3,4,2021-09-27,2026-06-01,2026-06-15,,2026-07-23,31781782758352
-,,,3,75,1950-09-14,2026-06-07,2026-06-08,,,31780925222220
-,,,3,65,1960-07-08,2026-04-01,2026-04-14,,,31784125722808
-,,,3,9,2016-07-22,2026-01-13,2026-01-18,,,31768751302378
-2,,,2,7,2025-06-18,2026-01-04,2026-01-07,,,31767972796009
-,,,3,5,2020-10-10,2026-08-18,2026-08-20,,,31787317509231
-,,1,3,1,2025-01-15,2026-05-06,2026-05-06,,2026-05-08,31780258970676
-9,,1,3,4,2021-09-06,2026-05-03,2026-05-03,2026-05-05,2026-07-03,31783105365899
-2,,2,3,1,2025-03-11,2026-05-28,2026-06-09,2026-06-09,2026-06-16,31782311120470
-,,1,2,6,2025-11-02,2026-05-20,2026-05-21,2026-06-08,2026-06-23,31782218952764
-,,,2,7,2026-01-06,2026-08-02,2026-08-07,,,31786119085137
-,,,3,73,1952-08-22,2026-04-04,2026-04-13,,,31776078195609
-,,1,3,57,1968-08-22,2026-04-29,2026-04-30,,2026-05-12,31778069604877
-,,1,3,1,2025-04-14,2026-04-24,2026-04-27,,2026-05-05,31777322020581
-9,,1,3,40,1985-05-02,2026-01-30,2026-02-03,,2026-08-03,31772451218119
-2,,1,2,2,2026-04-13,2026-06-19,2026-06-22,2026-06-26,2026-06-26,31782249136338
-2,,1,3,6,2020-03-01,2026-05-03,2026-05-07,,2026-05-13,31778676513948
-,,,3,9,2017-02-18,2026-06-23,2026-06-24,,,31782997221458
-,,,2,2,2026-05-23,2026-07-06,2026-07-06,,,31783376982074
-,,,3,80,1945-10-02,2026-02-28,2026-03-06,,2026-03-18,31772828882255
-,,1,2,8,2025-11-28,2026-07-21,2026-07-24,,2026-07-24,31785406932822
-,,1,2,6,2026-02-17,2026-08-07,2026-08-11,2026-08-12,2026-08-31,31787766202549
-2,,2,3,12,2014-02-11,2026-03-19,2026-03-27,2026-03-27,2026-03-27,31774964608477
-,,1,3,1,2024-10-01,2026-02-09,2026-02-09,,2026-02-13,31779580487653
-2,,2,3,88,1937-10-25,2026-01-27,2026-01-31,2026-01-31,2026-02-12,31774289284081
-2,,,3,2,2023-10-15,2026-04-22,2026-04-24,,2026-04-28,31777486180757
-,,,3,66,1960-04-14,2026-08-08,2026-08-12,,,31786571794321
-,,,3,1,2024-10-13,2026-06-11,2026-06-17,,,31781707959452
-,,1,3,57,1969-05-11,2026-08-14,2026-08-17,2026-08-19,2026-08-19,31786973020085
-9,,,3,46,1979-11-27,2026-09-01,2026-09-02,,,31788371070901
-,,1,3,1,2024-12-23,2026-04-11,2026-04-16,,2026-06-08,31776357800729
-,,,3,1,2025-01-04,2026-04-05,2026-04-16,,,31776343591581
-2,,1,3,41,1984-05-03,2026-02-22,2026-03-02,2026-02-24,2026-03-02,31772423427061
-,,1,2,11,2025-08-30,2026-07-23,2026-07-24,,2026-08-03,31784914226565
-,,1,2,4,2025-09-06,2026-01-12,2026-01-12,2026-01-26,2026-02-06,31769008935928
-,,,3,35,1991-08-07,2026-08-15,2026-08-18,,,31787060140830
-,,,3,2,2024-05-29,2026-08-21,2026-08-28,,,31789074988249
-2,,1,3,90,1935-08-24,2026-01-07,2026-01-09,2026-01-09,2026-01-14,31768403627553
-,,1,3,67,1959-01-29,2026-06-15,2026-06-16,2026-06-19,2026-06-25,31781696854761
-2,,1,3,42,1983-12-15,2026-01-14,2026-02-08,,2026-02-08,31770572532065
-2,,2,3,64,1961-07-01,2026-02-21,2026-02-21,2026-02-21,2026-02-21,31773350909558
-,,,3,58,1968-06-08,2026-07-16,2026-07-21,,2026-08-10,31784646474693
-```
-
-### `outputs/tables/pessoa_a/a1_amostra_exclusoes_02.csv`
-
-- Git: `ignored` · `3.6 KB` · modified `2026-10-17 19:14 UTC` · 50 rows
-
-```csv
-HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
-1,,1,2,8,2025-08-10,2026-04-01,2026-04-15,,2026-04-21,31777549715837
-1,,1,3,77,1949-05-26,2026-07-12,2026-07-12,2026-07-15,2026-07-17,31788874096772
-1,,1,3,7,2018-08-31,2026-01-10,2026-01-12,2026-01-28,2026-02-09,31770647469632
-1,,,3,3,2023-04-20,2026-09-04,2026-09-09,,,31788975169679
-1,,1,2,3,2025-11-10,2026-02-06,2026-02-07,2026-02-20,2026-06-10,31773940312126
-1,,1,3,1,2024-09-24,2026-07-04,2026-08-26,2026-08-11,2026-08-26,31787751835649
-1,,1,3,43,1982-11-27,2026-02-21,2026-02-27,2026-03-02,2026-03-05,31772219564355
-1,,1,2,1,2025-12-04,2026-01-08,2026-01-12,2026-01-21,2026-01-26,31769453667829
-1,,1,2,11,2025-03-16,2026-02-20,2026-02-23,2026-02-24,2026-04-13,31771838270995
-1,,1,3,31,1994-11-08,2026-09-06,2026-09-09,2026-09-16,2026-09-17,31789563351861
-1,,1,3,62,1963-11-04,2026-02-11,2026-02-13,2026-02-20,2026-03-04,31771008239682
-1,,,1,7,2026-05-12,2026-05-19,2026-05-21,,,31779467820819
-1,,,3,3,2022-12-09,2026-09-03,2026-09-05,,,31788620734654
-1,,,3,4,2021-11-21,2026-07-30,2026-07-31,,,31786458971825
-1,,,3,2,2024-03-30,2026-08-01,2026-08-04,,,31785867861406
-1,,1,3,2,2023-09-24,2026-07-10,2026-07-20,2026-07-14,2026-07-22,31784748275602
-1,,1,3,2,2024-05-11,2026-09-03,2026-09-10,2026-09-15,2026-09-18,31789065947469
-1,,,3,2,2024-06-17,2026-09-01,2026-09-02,,,31788382629475
-1,,,3,2,2024-06-05,2026-08-14,2026-08-19,,,31787172228431
-1,,,3,2,2024-06-25,2026-06-26,2026-07-10,,,31783704794838
-1,,,3,1,2024-08-25,2026-06-20,2026-06-22,,,31782152025297
-1,,,3,1,2024-12-14,2026-05-03,2026-05-07,,,31778183597383
-1,,1,3,1,2025-06-09,2026-08-21,2026-08-24,2026-09-03,2026-09-22,31787583741919
-1,,,3,1,2025-07-27,2026-07-28,2026-07-29,,,31785360853298
-1,,,2,10,2025-08-16,2026-06-01,2026-06-04,,,31780575267248
-1,,1,2,8,2025-08-22,2026-04-25,2026-04-29,2026-05-01,2026-05-25,31777465516478
-1,,1,2,7,2025-08-18,2026-03-23,2026-03-28,,2026-04-01,31774888210371
-1,,1,3,73,1952-05-15,2026-04-25,2026-04-27,2026-04-30,2026-05-04,31778092086325
-1,,1,3,2,2023-11-03,2026-07-07,2026-07-09,2026-07-13,2026-07-14,31783942348556
-1,,,3,2,2023-10-10,2026-04-13,2026-04-13,,,31776091074476
-1,,1,3,2,2023-11-06,2026-08-25,2026-08-25,,2026-09-11,31787918509080
-1,,1,3,75,1950-11-05,2026-06-04,2026-06-11,,2026-06-16,31781178224317
-1,,1,3,1,2024-12-27,2026-03-12,2026-03-15,2026-03-16,2026-03-16,31773662225812
-1,,2,3,46,1980-03-30,2026-05-04,2026-05-07,2026-05-14,2026-05-15,31778770573608
-1,,1,3,2,2024-03-22,2026-04-22,2026-04-29,2026-05-02,2026-05-07,31781007905994
-1,,1,3,37,1989-08-03,2026-08-24,2026-08-25,2026-09-04,2026-09-25,31789485848987
-1,,,3,50,1975-05-26,2026-01-17,2026-01-18,,2026-01-22,31769099934860
-1,,1,3,74,1952-02-15,2026-07-20,2026-08-03,2026-08-03,2026-08-18,31786461727931
-1,,1,3,81,1944-05-31,2026-03-27,2026-04-09,2026-04-15,2026-04-20,31775740797449
-1,,1,3,2,2024-01-08,2026-09-01,2026-09-03,2026-09-05,2026-09-08,31789128973635
-1,,1,3,1,2024-10-17,2026-08-18,2026-08-24,,2026-09-10,31789062515336
-1,,1,3,2,2024-01-29,2026-03-17,2026-03-18,2026-03-26,2026-04-03,31775250713894
-1,,1,3,27,1998-11-17,2026-05-01,2026-05-09,,2026-05-18,31778336961281
-1,,1,3,57,1968-08-22,2026-01-19,2026-02-04,,2026-02-04,31770645711921
-1,,,3,2,2024-05-21,2026-08-04,2026-08-06,,2026-08-07,31786039467922
-1,,1,3,78,1947-11-07,2026-06-19,2026-06-26,,2026-07-08,31782494985225
-1,,1,3,1,2024-02-22,2026-01-06,2026-01-08,2026-01-13,2026-01-14,31768314692248
-1,,1,2,8,2025-12-25,2026-08-30,2026-09-02,2026-09-09,2026-09-11,31788527556568
-1,,1,3,1,2024-07-23,2026-01-30,2026-02-05,2026-02-13,2026-02-24,31770378778543
-1,,,2,7,2026-01-11,2026-09-07,2026-09-11,,,31789140997184
-```
-
-### `outputs/tables/pessoa_a/a1_amostra_exclusoes_03.csv`
-
-- Git: `ignored` · `4.1 KB` · modified `2026-10-17 19:14 UTC` · 50 rows
-
-```csv
-HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
-1,2026-06-11,1,2,1,2026-05-02,2026-06-02,2026-06-11,2026-06-19,2026-06-19,31781201987679
-1,2026-06-15,,3,37,1989-04-04,2026-06-15,2026-06-17,,,31782407823707
-1,2026-03-10,1,3,4,2021-10-06,2026-03-09,2026-03-14,,,31773493207022
-1,2026-03-18,1,1,11,2026-03-07,2026-03-18,2026-03-23,2026-04-14,2026-04-15,31774542694487
-1,2026-08-18,,3,75,1950-09-09,2026-08-08,2026-08-18,,,31787085791388
-1,2026-03-10,1,3,78,1947-11-10,2026-03-10,2026-03-10,2026-03-16,2026-03-16,31773441569320
-1,2026-05-27,,3,1,2025-03-11,2026-05-19,2026-05-26,,,31780065930274
-1,2026-05-08,,2,0,2025-05-13,2026-05-05,2026-05-08,,,31779901434401
-1,2026-06-15,,3,66,1960-06-13,2026-06-14,2026-06-16,,,31781629359036
-1,2026-05-23,,3,15,2011-04-14,2026-05-23,2026-05-24,,,31780947295202
-1,2026-07-07,1,3,4,2021-07-14,2026-07-03,2026-07-09,2026-07-11,2026-07-17,31783622594901
-1,2026-04-04,,3,32,1993-09-15,2026-04-04,2026-04-04,,,31779149516127
-1,2026-05-13,1,2,6,2025-11-17,2026-05-12,2026-05-13,2026-05-15,2026-05-21,31779376399165
-1,2026-05-15,,3,74,1952-04-18,2026-05-15,2026-05-16,,,31779137099882
-1,2026-03-19,1,3,11,2014-09-18,2026-03-19,2026-03-20,2026-03-28,2026-04-06,31775493343412
-1,2026-05-19,,3,75,1950-12-19,2026-05-16,2026-05-22,,,31779804314537
-1,2026-09-08,,2,5,2026-03-21,2026-09-08,2026-09-09,,,31788967146868
-1,2026-06-02,1,2,1,2026-04-22,2026-05-27,2026-06-03,2026-06-16,2026-06-19,31780508092246
-1,2026-04-14,1,2,5,2025-11-23,2026-04-14,2026-05-04,2026-04-14,2026-05-04,31777902324367
-1,2026-04-22,1,3,31,1995-01-25,2026-04-19,2026-04-23,2026-05-04,2026-05-11,31777581635868
-1,2026-03-28,,3,1,2024-10-25,2026-03-08,2026-03-28,,,31774869565386
-1,2026-04-11,1,3,5,2020-06-26,2026-04-05,2026-04-11,2026-04-13,2026-04-17,31776433120192
-1,2026-05-26,1,3,12,2013-08-27,2026-05-26,2026-05-28,2026-05-29,2026-06-03,31780063755400
-1,2026-03-26,,3,78,1947-12-30,2026-03-26,2026-03-31,,,31775052422525
-1,2026-06-02,1,2,4,2026-02-04,2026-06-02,2026-06-03,2026-06-09,2026-07-29,31785339117793
-1,2026-08-25,2,3,65,1961-06-06,2026-08-25,2026-08-25,2026-08-27,2026-09-01,31790273405307
-1,2026-05-18,1,3,58,1967-11-07,2026-05-16,2026-05-18,2026-05-25,2026-05-25,31779716421577
-1,2026-06-20,1,3,25,2001-02-10,2026-06-18,2026-06-20,2026-07-01,2026-07-07,31783419856968
-1,2026-05-26,1,3,2,2023-10-10,2026-05-21,2026-05-26,2026-05-30,2026-05-30,31781122407541
-1,2026-05-09,1,3,64,1962-02-11,2026-05-08,2026-05-12,2026-05-20,2026-05-20,31778874675119
-1,2026-04-13,1,3,80,1946-03-11,2026-04-01,2026-04-16,2026-05-07,2026-05-08,31776340279767
-1,2026-03-24,1,3,25,2000-04-11,2026-03-24,2026-03-25,2026-04-03,2026-04-13,31774465391980
-1,2026-05-05,1,3,1,2024-12-13,2026-05-05,2026-05-05,2026-05-10,2026-05-11,31778065923802
-1,2026-07-27,1,2,3,2026-04-14,2026-07-15,2026-07-27,2026-08-07,2026-08-10,31785175448633
-1,2026-01-18,1,3,81,1945-01-17,2026-01-18,2026-01-19,2026-01-24,2026-03-25,31768838162860
-1,2026-05-17,1,3,11,2014-07-17,2026-05-10,2026-05-18,2026-05-25,2026-05-29,31779116223319
-1,2026-08-09,,3,3,2023-06-18,2026-08-07,2026-08-10,,,31786456692694
-1,2026-04-11,,3,15,2010-07-19,2026-04-11,2026-04-11,,,31777560339040
-1,2026-06-24,1,3,90,1935-11-19,2026-06-24,2026-06-24,2026-07-10,2026-07-11,31782483816212
-1,2026-03-29,1,3,12,2013-06-20,2026-03-26,2026-03-30,2026-04-02,2026-04-02,31776451468405
-1,2026-08-13,1,3,3,2023-01-23,2026-08-05,2026-08-13,2026-08-17,2026-09-02,31787326594739
-1,2026-06-03,1,3,35,1991-04-24,2026-06-01,2026-06-03,,2026-06-16,31781011168335
-1,2026-06-09,1,2,1,2026-05-26,2026-06-09,2026-06-10,2026-06-23,2026-07-24,31781096428357
-1,2026-09-19,,3,67,1959-04-27,2026-09-19,2026-09-23,,,31790263201573
-1,2026-05-06,,3,1,2024-09-30,2026-05-05,2026-05-06,,,31778163531908
-1,2026-03-09,,3,85,1940-10-17,2026-03-08,2026-03-10,,,31773322485191
-1,2026-03-12,1,3,1,2024-11-10,2026-03-07,2026-03-12,2026-03-20,2026-03-23,31773400244831
-1,2026-07-12,1,3,8,2018-03-13,2026-07-10,2026-07-12,,2026-08-05,31783901810343
-1,2026-05-23,1,2,3,2026-02-03,2026-05-22,2026-05-25,2026-05-31,2026-06-19,31779735858953
-1,2026-05-06,1,3,2,2023-08-06,2026-05-04,2026-05-06,2026-05-09,2026-05-25,31779714355076
-```
-
-### `outputs/tables/pessoa_a/a1_amostra_exclusoes_04.csv`
-
-- Git: `ignored` · `3.8 KB` · modified `2026-10-17 19:14 UTC` · 50 rows
-
-```csv
-HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
-1,2020-06-21,,2,7,2026-01-27,2026-08-08,2026-08-09,,,31787231962439
-1,2025-12-24,9,2,4,2025-12-26,2026-04-09,2026-04-16,,2026-05-25,31776358797785
-1,2025-10-03,9,3,4,2021-09-04,2026-03-01,2026-03-04,,2026-06-03,31780500876680
-1,2025-12-16,9,2,6,2025-10-07,2026-04-08,2026-04-13,,2026-06-03,31780511592426
-1,2025-12-17,,3,48,1977-06-27,2026-01-10,2026-01-12,,2026-04-02,31768219829649
-1,2025-10-31,,3,67,1959-02-05,2026-03-16,2026-03-18,,,31773833215234
-1,2025-11-01,,3,1,2025-03-26,2026-06-10,2026-06-11,,,31781197871583
-1,2025-03-22,,3,75,1951-03-07,2026-03-24,2026-03-25,,,31774544007083
-1,2025-01-14,,1,8,2026-01-14,2026-01-22,2026-02-26,,,31772103567239
-1,2025-07-29,,2,6,2025-07-29,2026-01-19,2026-01-21,,,31769002628458
-1,2025-09-11,,2,9,2025-09-11,2026-06-29,2026-06-29,,,31782995283941
-1,2024-11-27,9,3,1,2024-11-11,2026-04-11,2026-04-19,,2026-05-26,31776623873074
-1,2025-06-25,,3,1,2025-04-04,2026-05-30,2026-06-30,,2026-07-02,31782913329965
-1,2025-12-27,,2,7,2025-12-26,2026-08-24,2026-08-31,,,31788210956301
-1,2025-12-27,9,2,3,2025-12-26,2026-03-29,2026-03-30,,2026-05-25,31779819988812
-1,2024-11-27,9,3,1,2024-11-11,2026-03-26,2026-03-31,,2026-05-26,31782076559440
-1,2025-09-06,9,3,1,2024-11-07,2026-02-12,2026-02-18,,2026-05-25,31771513748972
-1,2025-09-18,,3,12,2014-01-27,2026-06-29,2026-07-07,,2026-07-22,31783709799403
-1,2024-03-08,,3,3,2022-11-17,2026-03-01,2026-03-12,,,31773333151517
-1,2025-07-29,,2,9,2025-07-29,2026-04-18,2026-04-19,,,31776624396581
-1,2025-08-08,,2,2,2025-06-13,2025-08-08,2025-08-11,,,31754941893170
-1,2025-11-22,,3,63,1962-10-23,2025-11-20,2025-11-22,,,31774014430620
-1,2025-08-19,,2,11,2024-09-29,2025-08-19,2025-08-22,,,31756133743688
-1,2025-05-29,,2,3,2025-02-02,2025-05-27,2025-05-29,,2025-12-23,31748523312830
-1,2025-07-06,,1,20,2025-06-10,2025-06-30,2025-07-06,,,31751895447999
-1,2025-05-23,9,3,46,1978-12-12,2025-05-20,2025-05-24,,2025-05-25,31748089238562
-1,2025-11-17,,2,8,2025-03-13,2025-11-10,2025-11-19,,,31764859064552
-1,2025-05-31,9,3,1,2023-11-18,2025-05-28,2025-05-31,,2025-06-06,31749241564718
-1,2025-01-24,9,3,54,1970-08-22,2025-01-16,2025-02-06,,2025-02-06,31738852792527
-1,2025-03-29,,3,1,2023-06-23,2025-03-26,2025-03-31,,,31743606324329
-1,2025-09-20,,3,75,1950-03-01,2025-09-20,2025-09-27,,2025-10-01,31759177531632
-1,2025-08-26,,2,3,2025-05-07,2025-08-26,2025-08-27,,2025-09-01,31756299279917
-1,2025-06-25,9,2,7,2024-11-04,2025-06-21,2025-06-25,,2025-07-14,31751467374225
-1,2025-07-29,,3,2,2022-08-25,2025-07-28,2025-07-29,,,31754404310472
-1,2025-06-19,,3,1,2023-11-14,2025-06-19,2025-06-21,,2025-06-21,31750504750935
-1,2025-06-22,,3,3,2021-07-30,2025-06-22,2025-06-23,,,31750795034604
-1,2025-07-03,9,1,1,2025-06-28,2025-06-29,2025-07-03,,2025-07-07,31751634307198
-1,2025-07-23,,3,13,2011-12-11,2025-07-20,2025-08-08,,,31755001458106
-1,2025-05-09,9,2,8,2024-09-07,2025-05-09,2025-06-16,,2025-06-16,31747153986065
-1,2025-02-02,,3,1,2023-07-21,2025-01-31,2025-02-04,,,31738672439669
-1,2025-04-01,,3,8,2016-12-01,2025-03-31,2025-04-01,,,31743515421873
-1,2025-09-15,,2,1,2025-08-19,2025-09-12,2025-09-15,,,31760622681774
-1,2025-06-05,9,3,6,2018-09-30,2025-06-01,2025-06-05,,2025-06-18,31749648905665
-1,2025-10-23,,3,91,1934-06-23,2025-10-20,2025-10-29,,,31761741761758
-1,2025-05-21,9,1,9,2025-05-02,2025-05-11,2025-05-21,,2025-07-10,31747839435766
-1,2025-08-21,9,3,5,2019-08-29,2025-08-20,2025-08-26,,2025-09-08,31756211835539
-1,2025-06-01,9,3,4,2020-10-29,2025-05-31,2025-06-02,,2025-06-04,31748863954462
-1,2025-05-20,,3,75,1949-06-24,2025-05-19,2025-05-20,,,31747801163619
-1,2025-07-23,9,3,71,1953-12-10,2025-07-23,2025-07-26,,2025-07-26,31753555880402
-1,2025-10-22,9,3,1,2024-01-15,2025-10-22,2025-10-27,,,31761594784556
-```
-
-### `outputs/tables/pessoa_a/a1_amostra_exclusoes_05.csv`
-
-- Git: `ignored` · `4.5 KB` · modified `2026-10-17 19:14 UTC` · 50 rows
-
-```csv
-HOSPITAL,DT_INTERNA,EVOLUCAO,TP_IDADE,NU_IDADE_N,DT_NASC,DT_SIN_PRI,DT_NOTIFIC,DT_EVOLUCA,DT_ENCERRA,NU_NOTIFIC
-1,2025-09-24,3,2,8,2025-08-12,2026-04-11,2026-05-04,2026-04-16,2026-05-04,31777916441450
-1,2025-12-03,3,2,1,2025-12-03,2026-01-09,2026-01-30,2026-03-11,2026-03-12,31769792468795
-1,2025-12-18,3,3,77,1948-02-08,2026-01-05,2026-01-06,2026-01-06,2026-01-06,31768488161625
-1,2025-10-31,3,2,4,2025-10-31,2026-02-04,2026-05-01,2026-04-07,2026-05-01,31777634956473
-1,2025-12-30,3,3,50,1975-11-28,2026-01-09,2026-01-13,2026-01-21,2026-02-10,31770727069269
-1,2025-12-11,3,3,62,1963-10-16,2026-01-30,2026-02-03,2026-02-13,2026-02-19,31770125136508
-1,2025-02-10,3,3,52,1973-02-02,2025-02-09,2025-02-11,2025-02-18,2025-03-11,31739820410851
-1,2025-06-27,3,3,81,1944-05-26,2025-06-27,2025-06-30,2025-07-03,2025-07-04,31751305140132
-1,2025-08-16,3,2,4,2025-04-18,2025-08-09,2025-08-16,2025-10-11,2025-10-08,31755535974964
-1,2025-05-15,3,3,57,1967-10-16,2025-05-08,2025-05-15,2025-05-29,2025-06-13,31747425704642
-1,2025-04-10,3,3,68,1956-12-10,2025-04-10,2025-04-24,2025-04-10,2025-05-16,31747403476732
-1,2025-03-05,3,3,71,1953-04-23,2025-02-15,2025-03-28,2025-03-05,2025-04-03,31743690196040
-1,2025-03-08,3,3,9,2015-06-09,2025-03-07,2025-03-08,2025-03-08,2025-03-14,31741617511408
-1,2025-04-17,3,3,54,1971-02-10,2025-04-17,2025-04-17,2025-04-17,2025-04-23,31745430231436
-1,2025-07-24,3,3,98,1927-03-01,2025-07-22,2025-07-24,2025-07-31,2025-08-04,31753706945283
-1,2025-01-13,3,3,94,1930-09-16,2025-01-03,2025-01-09,2025-02-07,2025-02-23,31737987292722
-1,2025-08-06,3,3,37,1987-11-13,2025-08-06,2025-08-08,2025-08-11,2025-08-08,31754680600341
-1,2025-04-06,3,3,15,2009-08-26,2025-04-01,2025-04-10,2025-04-10,2025-04-10,31745600659334
-1,2025-12-23,3,2,1,2025-11-24,2025-12-20,2025-12-23,2025-12-26,2026-01-20,31766517607662
-1,2025-09-02,3,3,36,1988-10-29,2025-09-02,2025-09-12,2025-09-08,2025-09-12,31757676072748
-1,2025-07-01,3,3,66,1958-07-01,2025-06-30,2025-07-01,2025-09-04,2025-09-16,31751474441385
-1,2025-01-09,3,3,92,1932-09-05,2025-01-09,2025-02-03,2025-01-22,2025-02-03,31738613590398
-1,2025-01-20,3,2,5,2024-08-17,2025-01-17,2025-01-20,2025-01-27,2025-02-19,31737476808694
-1,2025-07-05,3,3,54,1971-01-20,2025-07-05,2025-07-05,2025-07-07,2025-07-08,31751959045074
-1,2025-06-05,3,3,86,1938-09-22,2025-06-04,2025-06-05,2025-06-12,2025-07-09,31752086047118
-1,2025-06-20,3,3,57,1967-11-05,2025-06-15,2025-06-27,2025-07-02,2025-07-02,31751046185463
-1,2025-05-20,3,3,73,1952-02-02,2025-05-20,2025-05-21,2025-05-22,2025-05-30,31747854379616
-1,2025-06-25,3,3,77,1948-05-01,2025-06-25,2025-06-25,2025-07-27,2025-08-22,31750947402157
-1,2025-07-18,3,3,78,1946-09-15,2025-07-16,2025-07-18,2025-08-13,2025-08-18,31752816212607
-1,2025-01-30,3,3,63,1961-09-30,2025-01-10,2025-01-30,2025-03-08,2025-03-08,31738669486415
-1,2025-05-07,3,3,56,1968-10-28,2025-05-07,2025-06-02,2025-06-09,2025-06-12,31748863298033
-1,2025-05-30,3,3,73,1951-12-15,2025-05-28,2025-06-02,2025-07-15,2025-07-18,31749474500518
-1,2025-04-22,3,2,8,2024-08-28,2025-04-10,2025-04-23,2025-04-23,2025-04-23,31745420160005
-1,2025-11-16,3,3,1,2024-01-05,2025-11-13,2025-11-17,2025-11-25,2025-12-11,31764096943902
-1,2025-04-11,3,3,65,1960-03-09,2025-04-09,2025-04-14,2025-05-05,2025-05-06,31744640890627
-1,2025-06-24,3,3,76,1948-11-18,2025-06-18,2025-06-26,2025-06-28,2025-07-02,31751387763386
-1,2025-10-20,3,3,60,1964-12-06,2025-10-17,2025-10-20,2025-10-23,2025-10-31,31761157628603
-1,2025-03-14,3,3,43,1981-12-04,2025-03-10,2025-03-17,2025-04-05,2025-06-09,31742315828370
-1,2025-04-08,3,3,38,1986-06-19,2025-04-05,2025-04-08,2025-04-08,2025-04-14,31745865241129
-1,2025-06-11,3,3,68,1957-05-30,2025-06-10,2025-06-11,2025-06-24,2025-07-01,31749629091064
-1,2025-12-03,3,3,54,1971-07-24,2025-11-28,2025-12-03,2025-12-07,2025-12-29,31765400192345
-1,2025-09-19,3,3,85,1939-12-14,2025-09-19,2025-09-19,2025-10-08,2025-10-18,31761743862779
-1,2025-05-07,3,3,1,2023-10-17,2025-05-05,2025-05-07,2025-05-28,2025-05-30,31747073511832
-1,2025-12-23,3,3,57,1968-05-20,2025-12-10,2025-12-24,2026-01-27,2026-01-27,31766574194275
-1,2025-08-21,3,3,73,1952-05-02,2025-08-18,2025-08-21,2025-09-17,2025-10-03,31755809317953
-1,2025-05-13,3,3,93,1932-02-23,2025-05-09,2025-05-15,2025-06-21,2025-06-24,31747331606130
-1,2025-01-22,3,3,87,1937-11-10,2025-01-22,2025-01-22,2025-02-01,2025-02-01,31739541405562
-1,2025-08-15,3,3,51,1974-03-22,2025-08-15,2025-08-16,2025-08-19,2025-08-19,31755863690526
-1,2025-07-04,3,3,32,1992-12-08,2025-06-27,2025-07-07,2025-07-07,2025-08-20,31755726935268
-1,2025-11-22,3,3,65,1960-01-04,2025-11-22,2025-11-25,2026-01-07,2026-01-08,31764096261188
-```
-
-### `outputs/tables/pessoa_a/a1_tabela_codigos.csv`
-
-- Git: `ignored` · `3.8 KB` · modified `2026-10-17 19:14 UTC` · 32 rows
-
-```csv
-codigo,campo,esperado,1917,1918,1941,2009,2011,2012,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2031,2032,2033,2034,2050,2052,2055,2056,2092,2098,2099,sem_data
-1,HOSPITAL,True,4,1,4,1,1,2,1,2,11,47543,1076364,1657389,536133,265669,253367,315615,210437,7,4,9,2,1,3,1,1,1,1,1,1,2,1,72078
-2,HOSPITAL,True,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,102956
-9,HOSPITAL,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10066
-<vazio>,HOSPITAL,False,0,0,0,0,0,0,0,0,0,2,11,4,2,2,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,119207
-1,EVOLUCAO,True,1,0,1,1,1,2,0,2,10,38294,705704,1062927,389548,217669,210358,268686,165785,6,4,3,2,1,0,0,0,1,0,0,1,1,1,141523
-2,EVOLUCAO,True,0,0,0,0,0,0,1,0,0,5221,274119,417293,86433,23037,19120,21227,9743,0,0,0,0,0,0,0,0,0,0,0,0,0,0,79814
-3,EVOLUCAO,True,0,0,0,0,0,0,0,0,0,8,15414,21305,13727,7724,7220,8253,5014,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7784
-9,EVOLUCAO,True,0,0,1,0,0,0,0,0,0,1340,20385,38603,12552,5528,4212,5561,4454,1,0,3,0,0,0,1,0,0,0,0,0,1,0,10928
-<vazio>,EVOLUCAO,False,3,1,2,0,0,0,0,0,1,2682,60753,117266,33875,11713,12457,11889,25442,0,0,3,0,0,3,0,1,0,1,1,0,0,0,64258
-1,TP_IDADE,True,0,0,0,0,0,0,0,0,0,1754,3866,5920,4181,3258,3638,4771,2724,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1695
-2,TP_IDADE,True,1,0,1,0,1,0,0,0,2,12580,18283,43407,54697,60504,60545,81218,57591,1,0,1,0,0,0,0,0,0,1,0,0,0,0,16103
-3,TP_IDADE,True,3,1,3,1,0,2,1,2,9,33211,1054226,1608067,477257,201909,189184,229627,150123,6,4,8,2,1,3,1,1,1,0,1,1,2,1,286509
-1,UTI,True,0,0,0,0,1,1,0,1,8,17130,332253,508784,147058,73955,73262,85580,53968,0,0,0,0,0,0,0,0,0,0,0,0,0,0,26453
-2,UTI,True,4,1,4,1,0,1,1,0,2,29183,629864,960616,325691,167145,160537,208066,141221,4,4,9,2,1,2,0,1,0,1,1,1,2,1,42265
-9,UTI,True,0,0,0,0,0,0,0,1,0,327,25070,34232,8046,2778,3241,3033,1930,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2650
-<vazio>,UTI,False,0,0,0,0,0,0,0,0,1,905,89188,153762,55340,21793,16327,18937,13319,3,0,0,0,0,1,1,0,1,0,0,0,0,0,232939
-1,FEBRE,True,1,0,4,0,0,1,1,1,7,41899,617699,877980,266070,152246,157260,195656,137085,5,3,7,1,1,0,0,0,0,0,1,1,2,1,145310
-2,FEBRE,True,3,0,0,1,1,1,0,1,4,5269,313591,483203,166184,76126,69569,94455,57941,2,1,2,1,0,2,0,1,1,1,0,0,0,0,66099
-9,FEBRE,True,0,0,0,0,0,0,0,0,0,213,15552,19160,5317,1574,987,981,670,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5986
-<vazio>,FEBRE,False,0,1,0,0,0,0,0,0,0,164,129533,277051,98564,35725,25551,24524,14742,0,0,0,0,0,1,1,0,0,0,0,0,0,0,86912
-1,TOSSE,True,2,1,3,0,0,2,0,1,7,44036,725450,1127588,366618,201006,198279,255199,172114,7,4,8,2,1,1,0,1,0,1,1,1,2,1,179090
-2,TOSSE,True,2,0,1,1,1,0,1,1,4,3131,229341,308468,97958,41498,38961,46422,29378,0,0,1,0,0,1,0,0,1,0,0,0,0,0,45857
-9,TOSSE,True,0,0,0,0,0,0,0,0,0,183,13179,15175,3874,1118,798,653,515,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5360
-<vazio>,TOSSE,False,0,0,0,0,0,0,0,0,0,195,108405,206163,67685,22049,15329,13342,8431,0,0,0,0,0,1,1,0,0,0,0,0,0,0,74000
-1,DISPNEIA,True,3,1,4,0,0,1,1,2,8,39368,745718,1170804,326207,174529,168783,215847,143136,5,3,6,1,0,1,0,1,1,1,1,1,0,1,145095
-2,DISPNEIA,True,0,0,0,1,1,1,0,0,3,7548,213596,280704,120980,56624,56905,75066,51206,2,1,2,1,1,1,0,0,0,0,0,0,1,0,64414
-9,DISPNEIA,True,0,0,0,0,0,0,0,0,0,260,11518,13196,4164,1506,1070,1141,721,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5483
-<vazio>,DISPNEIA,False,1,0,0,0,0,0,0,0,0,369,105543,192690,84784,33012,26609,23562,15375,0,0,1,0,0,1,1,0,0,0,0,0,1,0,89315
-1,SATURACAO,True,1,0,1,0,0,0,1,2,8,32213,605830,1068602,283505,143613,138419,173998,114940,5,3,6,1,0,1,1,1,1,1,1,0,0,0,101837
-2,SATURACAO,True,2,0,3,1,1,2,0,0,3,13811,298619,321592,140591,74378,76794,104460,71428,2,1,3,1,1,1,0,0,0,0,0,1,1,1,80891
-9,SATURACAO,True,0,0,0,0,0,0,0,0,0,713,18502,17516,4769,1715,1411,1626,1235,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9393
-<vazio>,SATURACAO,False,1,1,0,0,0,0,0,0,0,808,153424,249684,107270,45965,36743,35532,22835,0,0,0,0,0,1,0,0,0,0,0,0,1,0,112186
-```
-
-### `outputs/tables/pessoa_a/a1_waterfall.csv`
-
-- Git: `ignored` · `573 B` · modified `2026-10-17 19:14 UTC` · 6 rows
-
-```csv
-ordem,filtro,regra,n_excluido,n_restante,pct_restante
-0,Base completa,—,0,4666910,100.0
-1,Hospitalização confirmada,HOSPITAL = 1,232253,4434657,95.02
-2,Data de internação válida,"DT_INTERNA parseável, ≥ 2009-01-01 e ≤ hoje",72133,4362524,93.48
-3,Período analítico,"ano(DT_INTERNA) em [2019, 2020, 2021, 2022, 2023, 2024, 2025]",210444,4152080,88.97
-4,Evolução encerrada,"EVOLUCAO em ['1', '2', '3'] (9/ausente fora)",338815,3813265,81.71
-5,Alvo binário definido,"EVOLUCAO em {cura, óbito}; óbito por outras causas separado",73650,3739615,80.13
-```
-
-### `outputs/tables/pessoa_a/relatorio_A1.md`
-
-- Git: `ignored` · `1.1 KB` · modified `2026-10-17 19:14 UTC`
-
-```markdown
-# Relatório de verificações — relatorio_A1
-
-| Etapa | Verificação | Status | Detalhe |
-| --- | --- | --- | --- |
-| A1 | Colunas essenciais | OK | 11 colunas presentes |
-| A1 | Códigos inesperados | OK | todos os códigos dentro do esperado |
-| A1 | Waterfall da coorte | OK | 4,666,910 -> 3,739,615 registros (80.1%) |
-| A1 | Alvo: desconhecido ≠ cura | OK | 9/ausente/3 viram NA; só 1->0 e 2->1 |
-| A1 | Features derivadas | OK | criadas no dataset: idade_anos, faixa_etaria |
-| A1 | Dataset analítico | ATENÇÃO | 3,739,615 linhas v0.1; features ausentes na base: DIAS_SINTOMAS_ATE_INTERNACAO, SEXO_CATEGORIA |
-| A1-C2 | Colunas exigidas pelo C2 | FALHA | ausentes no dataset: dias_sintomas_ate_internacao, sexo_categoria |
-| A1-C2 | Coluna de tempo | OK | datetime válido, ordenado: 2019-01-01 -> 2025-12-31 |
-| A1-C2 | Alvo | OK | apenas cura/óbito; positivos [2.0] presentes |
-| A1-C2 | check_leakage (C2) | OK | nenhuma feature está em `proibidas` |
-| A1-C2 | Tamanho | OK | 3,739,615 linhas |
-
-**Resumo:** 9 OK · 1 atenção · 1 falha(s).
-```
-
-### `outputs/tables/pessoa_a/tabela_decisoes.csv`
-
-- Git: `ignored` · `1.2 KB` · modified `2026-10-17 19:14 UTC` · 6 rows
-
-```csv
-id,etapa,tema,decisao,responsavel,data,status,impacto,evidencia
-D-01,A1,Ponto de previsão,DT_INTERNA (admissão); campos posteriores bloqueados,Pessoa A,2026-10-17,proposta,Define quais variáveis podem entrar,Dicionário SIVEP-Gripe (completar)
-D-02,A1,Coorte estrita,"HOSPITAL=1, DT_INTERNA válida, período analítico, evolução encerrada",Pessoa A,2026-10-17,proposta,Ver waterfall (a1_waterfall.csv),
-D-03,A1,Alvo principal,Óbito SRAG (EVOLUCAO=2) vs cura (EVOLUCAO=1),Pessoa A,2026-10-17,proposta,Alinhar target.positivos do supervised.yaml (G1),
-D-04,A1,Evolução desconhecida e óbito outras causas,EVOLUCAO=9/ausente e 3 saem do alvo binário; nunca viram cura,Pessoa A,2026-10-17,proposta,"Exigir filtro EVOLUCAO in {1,2} no loader do C",
-D-12,A1,Features derivadas (criadas no dataset analítico),"idade_anos (TP_IDADE), faixa_etaria, intervalo sintomas->internação (inválido se ausente/negativo/>30 dias) + flag, sin/cos da semana ISO da internação",Pessoa A,2026-10-17,proposta,Só informação da admissão; o C2 as encontra no dataset (supervised.yaml),
-D-05,A1,Período analítico,"Desenvolvimento [2019, 2020, 2021, 2022, 2023, 2024]; holdout [2025]",Pessoa A,2026-10-17,proposta,Exclui anos fora do período; alinhar G2,
-```
+- None included (use defaults or check --no-artifacts).
 
 ## 19. Snapshot provenance
 
-- Generated UTC: `2026-10-17T21:06:48+00:00`
-- Branch / commit: `mateus/eda-inicial` / `8692d8e46776834cc039b398447d129e0cd909cd`
+- Generated UTC: `2026-10-18T16:40:28+00:00`
+- Branch / commit: `main` / `9fa6e694d08430d3fcb9d94c00fbec8a775080e1`
 - Origin: `https://github.com/Ivan-S-Oliveira/Projeto_Integrador.git`
-- Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': True, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 40, 'include_diff': True, 'max_diff_chars': 400000, 'run_tests': False, 'pytest_args': '', 'test_timeout': 1800, 'fail_on_high': False}`
+- Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': False, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 10, 'include_diff': False, 'max_diff_chars': 400000, 'run_tests': False, 'pytest_args': '', 'test_timeout': 1800, 'fail_on_high': False}`

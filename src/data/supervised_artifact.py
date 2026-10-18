@@ -139,6 +139,57 @@ def validate_supervised_frame(
             f"Particoes esperadas {sorted(expected)}. Observado: {sorted(observed)}"
         )
 
+def _validate_partial_load(
+    frame: pd.DataFrame,
+    *,
+    target_column: str,
+    partition_column: str,
+    expected_partitions: set[str],
+) -> None:
+    """Validação mínima quando ``columns=`` restringe a leitura.
+
+    Não substitui ``validate_supervised_frame`` — não confere features nem
+    colunas de auditoria (não foram lidas). Confere o que basta para
+    garantir que o artefato não está corrompido nas colunas que sustentam
+    a integridade das partições e do alvo:
+
+    - frame não vazio;
+    - alvo binário 0/1, sem nulos;
+    - coluna de partição sem nulos e apenas com as partições pedidas.
+    """
+    if frame.empty:
+        raise ValueError("O dataset supervisionado nao pode ser vazio.")
+
+    if target_column not in frame.columns:
+        raise KeyError(f"Coluna de alvo ausente na leitura: {target_column!r}")
+    if partition_column not in frame.columns:
+        raise KeyError(f"Coluna de particao ausente na leitura: {partition_column!r}")
+
+    target_numeric = pd.to_numeric(frame[target_column], errors="coerce")
+    n_nulos_alvo = int(target_numeric.isna().sum())
+    if n_nulos_alvo:
+        raise ValueError(
+            f"Alvo {target_column!r} contem {n_nulos_alvo} valor(es) nulo(s); "
+            "o dataset supervisionado deve ter alvo binario sem nulos."
+        )
+    target_values = set(target_numeric.astype(int).unique())
+    if not target_values or not target_values.issubset({0, 1}):
+        raise ValueError(
+            f"Alvo deve ser binario 0/1. Observado: {sorted(target_values)}"
+        )
+
+    partition_series = frame[partition_column]
+    n_nulos_part = int(partition_series.isna().sum())
+    if n_nulos_part:
+        raise ValueError(
+            f"Particao {partition_column!r} contem {n_nulos_part} valor(es) nulo(s)."
+        )
+    observed = set(partition_series.astype(str).unique())
+    if observed != expected_partitions:
+        raise ValueError(
+            f"Particoes esperadas {sorted(expected_partitions)}. "
+            f"Observado: {sorted(observed)}"
+        )
 
 def _build_manifest(
     *,
@@ -249,6 +300,12 @@ def load_supervised_artifact(
     o default e ``("treino", "validacao")``. Incluir ``"teste"`` exige o
     gate ``G9_holdout`` aprovado — caso contrario levanta
     ``GatePendenteError`` antes de tocar no arquivo.
+
+    ``columns`` restringe as colunas devolvidas. A coluna de alvo e a de
+    particao sao **sempre lidas internamente** para validar o artefato
+    (alvo binario, particoes coerentes, sem nulos) e descartadas no retorno
+    caso o chamador nao as tenha pedido. Isso impede que uma leitura
+    parcial burle a integridade do artefato.
     """
     dataset_path, manifest_path = _paths(root)
 
@@ -284,21 +341,37 @@ def load_supervised_artifact(
     if _PARTITION_TESTE in selected:
         exigir_gate("G9_holdout")
 
-    frame = pd.read_parquet(
-        dataset_path,
-        columns=list(columns) if columns else None,
-        filters=[(manifest["partition_column"], "in", list(selected))],
-    )
+    target_column = manifest["target_column"]
+    partition_column = manifest["partition_column"]
+    filters = [(partition_column, "in", list(selected))]
 
     if columns is None:
+        frame = pd.read_parquet(dataset_path, filters=filters)
         validate_supervised_frame(
             frame,
             feature_columns=manifest["feature_columns"],
-            target_column=manifest["target_column"],
-            partition_column=manifest["partition_column"],
+            target_column=target_column,
+            partition_column=partition_column,
             audit_columns=manifest.get("audit_columns") or None,
             required_partitions=selected,
         )
+    else:
+        # Lê alvo e partição junto com as colunas pedidas para validar.
+        requested = list(columns)
+        read_cols = list(
+            dict.fromkeys([*requested, target_column, partition_column])
+        )
+        frame = pd.read_parquet(
+            dataset_path, columns=read_cols, filters=filters,
+        )
+        _validate_partial_load(
+            frame,
+            target_column=target_column,
+            partition_column=partition_column,
+            expected_partitions=set(selected),
+        )
+        # Descarta as auxiliares que o chamador não pediu.
+        frame = frame[requested]
 
     manifest["dataset_path"] = str(dataset_path)
     return frame, manifest

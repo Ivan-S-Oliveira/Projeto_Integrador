@@ -7,6 +7,7 @@ partição de teste na leitura (#16).
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -170,3 +171,67 @@ def test_partitions_desconhecidas_falham(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Particoes desconhecidas"):
         load_supervised_artifact(tmp_path, partitions=("treino", "foo"))
+
+# ---------------------------------------------------------------------------
+# ``columns=`` não pula a validação (#18)
+# ---------------------------------------------------------------------------
+
+def test_load_com_columns_devolve_apenas_o_pedido(tmp_path: Path) -> None:
+    """``columns=["idade_anos"]`` devolve só essa coluna; alvo/partição saem."""
+    _persistir(tmp_path, _frame())
+    loaded, _ = load_supervised_artifact(tmp_path, columns=["idade_anos"])
+    assert list(loaded.columns) == ["idade_anos"]
+    assert not loaded.empty
+
+
+def test_load_com_columns_preserva_colunas_pedidas(tmp_path: Path) -> None:
+    """Se o chamador pedir alvo/partição, elas continuam no retorno."""
+    _persistir(tmp_path, _frame())
+    loaded, _ = load_supervised_artifact(
+        tmp_path, columns=["idade_anos", "alvo_obito_srag", "particao"],
+    )
+    assert {"idade_anos", "alvo_obito_srag", "particao"} <= set(loaded.columns)
+
+
+def test_load_com_columns_valida_alvo_binario(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Artefato com alvo inválido falha mesmo com ``columns=`` (que exclui o alvo)."""
+    _persistir(tmp_path, _frame())
+
+    dataset_path = tmp_path / "data" / "analytical" / "dataset_supervisionado.parquet"
+    frame = pd.read_parquet(dataset_path)
+    frame.loc[frame.index[0], "alvo_obito_srag"] = 5
+    frame.to_parquet(dataset_path, index=False)
+
+    manifest_hash = json.loads(
+        (dataset_path.parent / "manifesto_supervisionado.json").read_text(encoding="utf-8")
+    )["dataset_sha256"]
+    monkeypatch.setattr(
+        "src.data.supervised_artifact.sha256_file", lambda _p: manifest_hash,
+    )
+
+    with pytest.raises(ValueError, match="binario"):
+        load_supervised_artifact(tmp_path, columns=["idade_anos"])
+
+
+def test_load_com_columns_valida_particoes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Partição desaparecida do parquet é detectada mesmo com ``columns=``."""
+    _persistir(tmp_path, _frame())
+
+    dataset_path = tmp_path / "data" / "analytical" / "dataset_supervisionado.parquet"
+    frame = pd.read_parquet(dataset_path)
+    frame.loc[frame["particao"] == "validacao", "particao"] = "treino"
+    frame.to_parquet(dataset_path, index=False)
+
+    manifest_hash = json.loads(
+        (dataset_path.parent / "manifesto_supervisionado.json").read_text(encoding="utf-8")
+    )["dataset_sha256"]
+    monkeypatch.setattr(
+        "src.data.supervised_artifact.sha256_file", lambda _p: manifest_hash,
+    )
+
+    with pytest.raises(ValueError, match="Particoes esperadas"):
+        load_supervised_artifact(tmp_path, columns=["idade_anos"])
