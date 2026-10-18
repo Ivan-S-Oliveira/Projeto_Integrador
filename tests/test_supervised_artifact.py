@@ -1,7 +1,8 @@
-"""Testes do artefacto supervisionado (``src.data.supervised_artifact``).
+"""Testes do artefato supervisionado (``src.data.supervised_artifact``).
 
-Cobrem o contrato de persistência/leitura: preservação da partição,
-validação do tipo de coorte e exigência das três partições.
+Cobrem persistência, leitura, validação do tipo de coorte, exigência das
+três partições na gravação e a trava do gate ``G9_holdout`` sobre a
+partição de teste na leitura (#16).
 """
 
 from __future__ import annotations
@@ -13,17 +14,19 @@ import pandas as pd
 import pytest
 
 from src.data.supervised_artifact import (
+    GatePendenteError,
+    holdout_partition,
     load_supervised_artifact,
     persist_supervised_artifact,
 )
 
 
-def _frame() -> pd.DataFrame:
-    """6 registos — 2 por partição, alvo alternado (0/1).
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    Colunas mínimas para os testes: uma feature numérica, o alvo binário
-    e a coluna de partição.
-    """
+def _frame() -> pd.DataFrame:
+    """6 registos — 2 por partição, alvo alternado (0/1)."""
     return pd.DataFrame({
         "idade_anos":      [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
         "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
@@ -32,11 +35,7 @@ def _frame() -> pd.DataFrame:
 
 
 def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
-    """Grava ``frame`` como artefacto supervisionado em ``tmp_path``.
-
-    Preenche os kwargs obrigatórios com valores mínimos e deixa
-    ``**kwargs`` sobrepor (ex.: ``source`` com conteúdo).
-    """
+    """Grava ``frame`` com kwargs obrigatórios mínimos; ``**kwargs`` sobrepõe."""
     params: dict[str, Any] = {
         "source":           {},
         "feature_columns":  ["idade_anos"],
@@ -49,37 +48,125 @@ def _persistir(tmp_path: Path, frame: pd.DataFrame, **kwargs: Any) -> None:
     persist_supervised_artifact(frame, root=tmp_path, **params)
 
 
+@pytest.fixture
+def g9_aprovado(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``exigir_gate`` aceita qualquer gate (G9 aprovado)."""
+    monkeypatch.setattr("src.utils.config.gate_aprovado", lambda _nome: True)
+
+
+@pytest.fixture
+def g9_pendente(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``exigir_gate`` rejeita qualquer gate (G9 pendente)."""
+    monkeypatch.setattr("src.utils.config.gate_aprovado", lambda _nome: False)
+
+
 # ---------------------------------------------------------------------------
-# Contrato de round-trip
+# Persistência
 # ---------------------------------------------------------------------------
 
-def test_roundtrip_preserva_particao(tmp_path: Path) -> None:
-    """Gravar e ler preserva a partição, e o manifesto regista o estado inicial."""
-    frame = _frame()
-    _persistir(tmp_path, frame, source={"kind": "provisional", "sha256": "abc"})
+def test_persistencia_exige_tres_particoes(tmp_path: Path) -> None:
+    """Gravar sem ``teste`` viola o contrato de partições."""
+    with pytest.raises(ValueError, match="Particoes esperadas"):
+        _persistir(tmp_path, _frame().query("particao != 'teste'"))
+
+
+# ---------------------------------------------------------------------------
+# Round-trip
+# ---------------------------------------------------------------------------
+
+def test_default_nao_carrega_teste(tmp_path: Path) -> None:
+    """Por omissão, o loader devolve apenas treino+validação."""
+    _persistir(tmp_path, _frame(), source={"kind": "provisional", "sha256": "abc"})
 
     loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
 
-    assert loaded["particao"].tolist() == frame["particao"].tolist()
+    assert set(loaded["particao"]) == {"treino", "validacao"}
     assert manifest["test_opened"] is False
     assert manifest["seed"] == 42
 
 
+def test_roundtrip_completo_apos_g9(tmp_path: Path, g9_aprovado: None) -> None:
+    """Com G9 aprovado e ``partitions`` explícito, o teste entra no round-trip."""
+    frame = _frame()
+    _persistir(tmp_path, frame)
+
+    loaded, _ = load_supervised_artifact(
+        tmp_path, partitions=("treino", "validacao", "teste"),
+    )
+
+    assert loaded["particao"].tolist() == frame["particao"].tolist()
+
+
 # ---------------------------------------------------------------------------
-# Validações
+# Tipo de coorte
 # ---------------------------------------------------------------------------
 
 def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
-    """Ler com ``expected_kind`` diferente do gravado deve falhar."""
+    """``expected_kind`` divergente falha antes de tocar nos dados."""
     _persistir(tmp_path, _frame())
 
     with pytest.raises(RuntimeError, match="SRAG_COHORT_KIND"):
         load_supervised_artifact(tmp_path, expected_kind="final")
 
 
-def test_particoes_incompletas_falham(tmp_path: Path) -> None:
-    """Dataset sem o bloco ``teste`` viola o contrato de partições."""
-    frame = _frame().query("particao != 'teste'")
+# ---------------------------------------------------------------------------
+# Trava do gate G9 (#16)
+# ---------------------------------------------------------------------------
 
-    with pytest.raises(ValueError, match="Particoes esperadas"):
-        _persistir(tmp_path, frame)
+def test_default_funciona_com_g9_pendente(tmp_path: Path, g9_pendente: None) -> None:
+    """Sem ``teste`` na seleção, o loader não consulta o gate."""
+    _persistir(tmp_path, _frame())
+
+    loaded, _ = load_supervised_artifact(tmp_path)
+
+    assert set(loaded["particao"]) == {"treino", "validacao"}
+
+
+def test_load_com_teste_sem_g9_falha(tmp_path: Path, g9_pendente: None) -> None:
+    """Pedir ``teste`` sem G9 aprovado levanta antes de materializar o bloco."""
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(GatePendenteError, match="G9_holdout"):
+        load_supervised_artifact(
+            tmp_path, partitions=("treino", "validacao", "teste"),
+        )
+
+
+def test_holdout_partition_sem_g9_falha(tmp_path: Path, g9_pendente: None) -> None:
+    """``holdout_partition`` revalida o gate (defesa em profundidade)."""
+    _persistir(tmp_path, _frame())
+    loaded, manifest = load_supervised_artifact(tmp_path)
+
+    with pytest.raises(GatePendenteError, match="G9_holdout"):
+        holdout_partition(loaded, manifest)
+
+
+def test_holdout_partition_apos_g9(tmp_path: Path, g9_aprovado: None) -> None:
+    """Com G9 aprovado, ``holdout_partition`` devolve o bloco de teste."""
+    _persistir(tmp_path, _frame())
+    loaded, manifest = load_supervised_artifact(
+        tmp_path, partitions=("treino", "validacao", "teste"),
+    )
+
+    teste = holdout_partition(loaded, manifest)
+
+    assert set(teste["particao"]) == {"teste"}
+    assert len(teste) == 2
+
+
+# ---------------------------------------------------------------------------
+# Validação de ``partitions``
+# ---------------------------------------------------------------------------
+
+def test_partitions_vazias_falham(tmp_path: Path) -> None:
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(ValueError, match="partitions.*vazio"):
+        load_supervised_artifact(tmp_path, partitions=())
+
+
+def test_partitions_desconhecidas_falham(tmp_path: Path) -> None:
+    _persistir(tmp_path, _frame())
+
+    with pytest.raises(ValueError, match="Particoes desconhecidas"):
+        load_supervised_artifact(tmp_path, partitions=("treino", "foo"))

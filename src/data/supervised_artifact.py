@@ -1,22 +1,11 @@
 """Persistencia e leitura do dataset supervisionado canonico.
 
-Separa notebooks da origem fisica da coorte: o Notebook 03 materializa uma
-unica particao e os notebooks seguintes apenas a reutilizam.
+O manifesto registra features, divisao por tipo, colunas de auditoria e
+particoes. As particoes canonicas sao ``treino``, ``validacao`` e ``teste``.
 
-O manifesto registra, alem do hash e das particoes:
-
-- ``feature_columns`` — colunas usadas como features;
-- ``numeric_columns`` / ``categorical_columns`` — divisao por tipo,
-  consumida por ``build_preprocessor``;
-- ``audit_columns`` — colunas no parquet que NAO entram em X, mas devem
-  ser preservadas para auditoria (ex.: ``sg_uf``, ``faixa_etaria``).
-
-Convencoes:
-
-- As particoes canonicas sao ``treino``, ``validacao`` e ``teste``.
-- ``split_partitions`` devolve ``(treino, validacao)`` — par consumido na
-  fase de selecao. O bloco ``teste`` NAO e exposto; use
-  ``holdout_partition`` respeitando o gate ``G9_holdout``.
+O bloco ``teste`` exige o gate ``G9_holdout`` aprovado: tanto
+``load_supervised_artifact(partitions=(..., "teste"))`` quanto
+``holdout_partition`` levantam ``GatePendenteError`` caso contrario.
 """
 
 from __future__ import annotations
@@ -28,44 +17,52 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from src.utils.config import GatePendenteError, exigir_gate
 from src.utils.hashing import sha256_file
+
+__all__ = [
+    "ALLOWED_PARTITIONS",
+    "DATASET_NAME",
+    "MANIFEST_NAME",
+    "SCHEMA_VERSION",
+    "GatePendenteError",
+    "holdout_partition",
+    "load_supervised_artifact",
+    "persist_supervised_artifact",
+    "split_partitions",
+    "validate_supervised_frame",
+]
 
 DATASET_NAME = "dataset_supervisionado.parquet"
 MANIFEST_NAME = "manifesto_supervisionado.json"
 SCHEMA_VERSION = 2
 
-_PARTITION_TREINO    = "treino"
+_PARTITION_TREINO = "treino"
 _PARTITION_VALIDACAO = "validacao"
-_PARTITION_TESTE     = "teste"
+_PARTITION_TESTE = "teste"
 
-ALLOWED_PARTITIONS = {_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE}
+ALLOWED_PARTITIONS = frozenset({_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE})
 
 
 def _paths(root: Path) -> tuple[Path, Path]:
-    """Caminhos canonicos (dataset, manifesto) para uma raiz de projeto."""
     output_dir = Path(root).resolve() / "data" / "analytical"
     return output_dir / DATASET_NAME, output_dir / MANIFEST_NAME
 
 
-def _validar_grupos(
-    num_set: set[str],
-    cat_set: set[str],
-    feats_set: set[str],
-) -> None:
+def _validar_grupos(num_set: set[str], cat_set: set[str], feats_set: set[str]) -> None:
     if overlap := num_set & cat_set:
         raise ValueError(
-            "Colunas presentes em numeric_columns E categorical_columns: "
-            f"{sorted(overlap)}"
+            f"Colunas presentes em numeric_columns E categorical_columns: {sorted(overlap)}"
         )
     if fora := (num_set | cat_set) - feats_set:
         raise ValueError(
-            "numeric_columns/categorical_columns contem colunas fora de "
+            f"numeric_columns/categorical_columns contem colunas fora de "
             f"feature_columns: {sorted(fora)}"
         )
     if faltando := feats_set - (num_set | cat_set):
         raise ValueError(
-            "Cada feature precisa estar em numeric_columns ou "
-            f"categorical_columns. Faltando: {sorted(faltando)}"
+            f"Cada feature precisa estar em numeric_columns ou categorical_columns. "
+            f"Faltando: {sorted(faltando)}"
         )
 
 
@@ -74,11 +71,11 @@ def _resolver_grupos(
     numeric_columns: Sequence[str] | None,
     categorical_columns: Sequence[str] | None,
 ) -> tuple[list[str] | None, list[str] | None]:
-    """Resolve o par ``(numericas, categoricas)``.
+    """Resolve o par (numericas, categoricas).
 
-    - Ambas ``None`` → ``(None, None)`` (compatibilidade com chamadas antigas).
-    - Apenas uma passada → o complemento e inferido dentro de ``feature_columns``.
-    - Ambas passadas → valida disjuncao e cobertura exata de ``feature_columns``.
+    - ambas None → (None, None)
+    - apenas uma → o complemento é inferido dentro de feature_columns
+    - ambas → valida disjunção e cobertura exata
     """
     if numeric_columns is None and categorical_columns is None:
         return None, None
@@ -105,8 +102,13 @@ def validate_supervised_frame(
     target_column: str,
     partition_column: str,
     audit_columns: Sequence[str] | None = None,
+    required_partitions: Sequence[str] | None = None,
 ) -> None:
-    """Valida schema minimo, alvo e particoes do artefato supervisionado."""
+    """Valida schema minimo, alvo binario e particoes do dataset.
+
+    ``required_partitions=None`` exige as tres particoes canonicas; um
+    subconjunto permite validar leituras parciais (ex.: treino+validacao).
+    """
     required = set(feature_columns) | {target_column, partition_column}
     if audit_columns:
         required |= set(audit_columns)
@@ -124,11 +126,17 @@ def validate_supervised_frame(
     if not target_values or not target_values.issubset({0, 1}):
         raise ValueError(f"Alvo deve ser binario 0/1. Observado: {sorted(target_values)}")
 
+    expected = (
+        frozenset(required_partitions) if required_partitions is not None
+        else ALLOWED_PARTITIONS
+    )
+    if unknown := expected - ALLOWED_PARTITIONS:
+        raise ValueError(f"Particoes desconhecidas: {sorted(unknown)}")
+
     observed = set(frame[partition_column].dropna().astype(str).unique())
-    if observed != ALLOWED_PARTITIONS:
+    if observed != expected:
         raise ValueError(
-            "Particoes esperadas treino, validacao e teste. "
-            f"Observado: {sorted(observed)}"
+            f"Particoes esperadas {sorted(expected)}. Observado: {sorted(observed)}"
         )
 
 
@@ -186,12 +194,7 @@ def persist_supervised_artifact(
     audit_columns: Sequence[str] | None = None,
     overwrite: bool = False,
 ) -> tuple[Path, Path]:
-    """Grava dataset e manifesto, preservando a particao criada no Notebook 03.
-
-    ``numeric_columns``/``categorical_columns`` dividem ``feature_columns``
-    por tipo (ambas, uma, ou nenhuma — ver ``_resolver_grupos``).
-    ``audit_columns`` sao validadas como presentes mas nao entram em X.
-    """
+    """Grava dataset e manifesto, exigindo as tres particoes canonicas."""
     num, cat = _resolver_grupos(feature_columns, numeric_columns, categorical_columns)
 
     validate_supervised_frame(
@@ -238,14 +241,20 @@ def load_supervised_artifact(
     *,
     expected_kind: str | None = None,
     columns: Sequence[str] | None = None,
+    partitions: Sequence[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Carrega o artefato canonico e valida hash, tipo de coorte e schema."""
+    """Carrega o artefato canonico e valida hash, tipo de coorte e schema.
+
+    ``partitions`` restringe o subconjunto carregado (pushdown no Parquet);
+    o default e ``("treino", "validacao")``. Incluir ``"teste"`` exige o
+    gate ``G9_holdout`` aprovado — caso contrario levanta
+    ``GatePendenteError`` antes de tocar no arquivo.
+    """
     dataset_path, manifest_path = _paths(root)
 
     if not dataset_path.is_file() or not manifest_path.is_file():
         raise FileNotFoundError(
-            "Execute o Notebook 03 adaptado para gerar "
-            f"{DATASET_NAME} e {MANIFEST_NAME}."
+            f"Execute o Notebook 03 adaptado para gerar {DATASET_NAME} e {MANIFEST_NAME}."
         )
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -259,7 +268,27 @@ def load_supervised_artifact(
     if sha256_file(dataset_path) != manifest.get("dataset_sha256"):
         raise RuntimeError("Hash do dataset supervisionado difere do manifesto.")
 
-    frame = pd.read_parquet(dataset_path, columns=list(columns) if columns else None)
+    selected = (
+        tuple(partitions) if partitions is not None
+        else (_PARTITION_TREINO, _PARTITION_VALIDACAO)
+    )
+    if not selected:
+        raise ValueError("``partitions`` nao pode ser vazio.")
+
+    if unknown := set(selected) - ALLOWED_PARTITIONS:
+        raise ValueError(
+            f"Particoes desconhecidas: {sorted(unknown)}. "
+            f"Use subconjunto de {sorted(ALLOWED_PARTITIONS)}."
+        )
+
+    if _PARTITION_TESTE in selected:
+        exigir_gate("G9_holdout")
+
+    frame = pd.read_parquet(
+        dataset_path,
+        columns=list(columns) if columns else None,
+        filters=[(manifest["partition_column"], "in", list(selected))],
+    )
 
     if columns is None:
         validate_supervised_frame(
@@ -268,6 +297,7 @@ def load_supervised_artifact(
             target_column=manifest["target_column"],
             partition_column=manifest["partition_column"],
             audit_columns=manifest.get("audit_columns") or None,
+            required_partitions=selected,
         )
 
     manifest["dataset_path"] = str(dataset_path)
@@ -289,13 +319,12 @@ def split_partitions(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Devolve ``(treino, validacao)`` a partir da coluna de particao canonica.
+    """Devolve ``(treino, validacao)`` para a fase de selecao (C2..C6).
 
-    Este e o par consumido durante a fase de selecao de modelo (C2..C6).
-    O bloco ``teste`` NAO e exposto aqui de proposito — a avaliacao final
-    exige o gate ``G9_holdout`` aprovado e passa por ``holdout_partition``.
+    O bloco ``teste`` nao e exposto — use ``holdout_partition`` apos
+    aprovar ``G9_holdout``.
     """
-    treino    = _select_partition(frame, manifest, _PARTITION_TREINO)
+    treino = _select_partition(frame, manifest, _PARTITION_TREINO)
     validacao = _select_partition(frame, manifest, _PARTITION_VALIDACAO)
 
     if treino.empty:
@@ -310,13 +339,8 @@ def holdout_partition(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Devolve o bloco ``teste`` (holdout).
-
-    Uso disciplinado: so deve ser chamada depois que o gate ``G9_holdout``
-    estiver aprovado. A checagem do gate e responsabilidade do fluxo de
-    modelagem (ver ``TemporalSplit.concluir_selecao``); esta funcao apenas
-    isola o acesso fisico a particao.
-    """
+    """Devolve o bloco ``teste``. Exige ``G9_holdout`` aprovado."""
+    exigir_gate("G9_holdout")
     teste = _select_partition(frame, manifest, _PARTITION_TESTE)
     if teste.empty:
         raise ValueError("Particao 'teste' vazia no dataset supervisionado.")
