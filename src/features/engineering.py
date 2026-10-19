@@ -231,27 +231,39 @@ def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
-    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
-    """
-    out = df.copy()
+    Aplica todas as derivações e devolve cópia rasa de ``df`` com as
+    colunas de ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
 
-    out["idade_anos"] = idade_em_anos(df)
+    Com pandas 3 (Copy-on-Write), ``copy(deep=False)`` já garante que a
+    entrada original não é alterada, sem custo de cópia completa.
+
+    As colunas novas usam tipos compactos:
+
+    - ``idade_anos``, ``dias_sintomas_ate_internacao``: ``float32``;
+    - ``sin_semana``, ``cos_semana``: ``float32``;
+    - ``ano_internacao``: ``Int16`` (nullable, mantém NaN de datas ausentes);
+    - ``mes_internacao``: ``Int8`` (nullable, idem);
+    - ``flag_intervalo_invalido``, ``flag_internacao_antes_sintomas``: ``int8``;
+    - ``faixa_etaria``, ``sexo_categoria``: ``category``.
+    """
+    out = df.copy(deep=False)
+
+    out["idade_anos"] = idade_em_anos(df).astype("float32")
 
     intervalo = intervalo_sintomas_internacao(df)
-    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
+    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"].astype("float32")
     out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
     out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
 
     saz = sazonalidade(df)
-    out["sin_semana"] = saz["sin_semana"]
-    out["cos_semana"] = saz["cos_semana"]
+    out["sin_semana"] = saz["sin_semana"].astype("float32")
+    out["cos_semana"] = saz["cos_semana"].astype("float32")
 
     out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
     out["sexo_categoria"] = sexo_categoria(df)
 
     ano_mes = ano_mes_internacao(df)
-    out["ano_internacao"] = ano_mes["ano_internacao"]
-    out["mes_internacao"] = ano_mes["mes_internacao"]
+    out["ano_internacao"] = ano_mes["ano_internacao"].astype("Int16")
+    out["mes_internacao"] = ano_mes["mes_internacao"].astype("Int8")
 
     return out

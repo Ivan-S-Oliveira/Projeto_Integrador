@@ -281,3 +281,62 @@ class TestPontoNoTempo:
             normal[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
             invertido[list(COLUNAS_DERIVADAS_ESPERADAS)].iloc[::-1].reset_index(drop=True),
         )
+
+# ---------------------------------------------------------------------------
+# Tipos compactos das derivadas (#121)
+# ---------------------------------------------------------------------------
+
+def test_montar_features_usa_tipos_compactos(df_base: pd.DataFrame) -> None:
+    """As derivadas usam tipos compactos sem alterar a interface do módulo."""
+    out = montar_features(df_base)
+
+    assert out["idade_anos"].dtype == np.float32
+    assert out["dias_sintomas_ate_internacao"].dtype == np.float32
+    assert out["sin_semana"].dtype == np.float32
+    assert out["cos_semana"].dtype == np.float32
+    assert out["flag_intervalo_invalido"].dtype == np.int8
+    assert out["flag_internacao_antes_sintomas"].dtype == np.int8
+    assert str(out["ano_internacao"].dtype) == "Int16"
+    assert str(out["mes_internacao"].dtype) == "Int8"
+    assert isinstance(out["faixa_etaria"].dtype, pd.CategoricalDtype)
+    assert isinstance(out["sexo_categoria"].dtype, pd.CategoricalDtype)
+
+
+def test_montar_features_valores_numericos_inalterados(df_base: pd.DataFrame) -> None:
+    """A conversão de float64 para float32 não pode alterar os valores."""
+    out = montar_features(df_base)
+
+    pares = {
+        "idade_anos":                   idade_em_anos(df_base),
+        "dias_sintomas_ate_internacao": intervalo_sintomas_internacao(df_base)["dias_sintomas_ate_internacao"],
+        "sin_semana":                   sazonalidade(df_base)["sin_semana"],
+        "cos_semana":                   sazonalidade(df_base)["cos_semana"],
+        "ano_internacao":               ano_mes_internacao(df_base)["ano_internacao"],
+        "mes_internacao":               ano_mes_internacao(df_base)["mes_internacao"],
+    }
+
+    for nome, esperado in pares.items():
+        np.testing.assert_allclose(
+            out[nome].to_numpy(dtype="float64"),
+            esperado.to_numpy(dtype="float64"),
+            rtol=1e-6,
+            equal_nan=True,
+            err_msg=f"{nome} mudou de valor após a compactação de tipo",
+        )
+
+
+def test_montar_features_preserva_nan_em_ano_mes() -> None:
+    """Datas ausentes continuam virando NaN (via ``<NA>`` em Int16/Int8)."""
+    df = pd.DataFrame({
+        "nu_idade_n": [30, 40],
+        "tp_idade":   [3, 3],
+        "cs_sexo":    ["M", "F"],
+        "dt_sin_pri": ["2024-01-01", "2024-01-01"],
+        "dt_interna": ["2024-01-05", None],
+    })
+    out = montar_features(df)
+
+    assert out["ano_internacao"].isna().tolist() == [False, True]
+    assert out["mes_internacao"].isna().tolist() == [False, True]
+    assert int(out["ano_internacao"].iloc[0]) == 2024
+    assert int(out["mes_internacao"].iloc[0]) == 1
