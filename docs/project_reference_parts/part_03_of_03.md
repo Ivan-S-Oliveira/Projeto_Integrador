@@ -1,4 +1,2252 @@
 <!-- PROJECT_COMPLETE_REFERENCE part 3/3 -->
+## `src/evaluation/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `641a3e6e599d6b8e24f989bf5323b6168d045aa268aa170c18144dafc9bee5e2`
+
+```python
+"""Avaliação: splits temporais, métricas, calibração e análise de erros."""
+
+from src.evaluation.calibration import (
+    brier_decomposicao,
+    curva_confiabilidade,
+    ece,
+    mce,
+)
+from src.evaluation.errors import (
+    CriterioTop,
+    extrair_falsos_negativos,
+    extrair_falsos_positivos,
+    matriz_confusao,
+    metricas_por_grupo,
+    top_erros,
+)
+from src.evaluation.leakage import (
+    LeakageError,
+    check_leakage,
+)
+from src.evaluation.metrics import (
+    ArrayLike,
+    accuracy,
+    auc,
+    average_precision,
+    brier,
+    especificidade,
+    f1,
+    ic_bootstrap,
+    log_loss,
+    metricas_completas,
+    metricas_por_limiar,
+    precision,
+    recall,
+    sensibilidade,
+)
+from src.evaluation.temporal import (
+    TemporalSplit,
+    split_temporal_3way,
+)
+
+__all__ = [
+    # metrics
+    "ArrayLike",
+    "accuracy",
+    "auc",
+    "average_precision",
+    "brier",
+    "especificidade",
+    "f1",
+    "ic_bootstrap",
+    "log_loss",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "precision",
+    "recall",
+    "sensibilidade",
+    # calibration
+    "brier_decomposicao",
+    "curva_confiabilidade",
+    "ece",
+    "mce",
+    # errors
+    "CriterioTop",
+    "extrair_falsos_negativos",
+    "extrair_falsos_positivos",
+    "matriz_confusao",
+    "metricas_por_grupo",
+    "top_erros",
+    # leakage
+    "LeakageError",
+    "check_leakage",
+    # temporal
+    "TemporalSplit",
+    "split_temporal_3way",
+]
+```
+
+## `src/evaluation/calibration.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.6 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `b76e7a28efe53ad9566eb664b60c4f931d78107b539d3c8f6fa903f162b6da94`
+
+```python
+"""
+Avaliação de calibração de probabilidades.
+
+Complementa ``src/models/calibration.py``:
+
+    src/models/calibration.py      → AJUSTA a calibração
+    src/evaluation/calibration.py  → MEDE a qualidade da calibração
+
+Métricas implementadas
+----------------------
+- Curva de confiabilidade (reliability diagram)
+- ECE  (Expected Calibration Error)
+- MCE  (Maximum Calibration Error)
+- Decomposição de Brier em Reliability + Resolution − Uncertainty
+  (Murphy, 1973)
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from src.evaluation.metrics import _to_int_labels, _to_np
+
+ArrayLike = np.ndarray | pd.Series | list
+
+
+def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
+    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
+
+
+def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]:
+    return {
+        "bin_centro":    float((edges[b] + edges[b + 1]) / 2),
+        "freq_positiva": float("nan"),
+        "n":             0.0,
+        "gap":           float("nan"),
+    }
+
+
+def curva_confiabilidade(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> pd.DataFrame:
+    """
+    Dados para o reliability diagram.
+
+    Colunas:
+        bin_centro    — probabilidade média prevista no bin
+        freq_positiva — fração real de positivos no bin
+        n             — número de amostras no bin
+        gap           — |freq_positiva - bin_centro|
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    edges  = np.linspace(0.0, 1.0, n_bins + 1)
+    idx    = _bins_digitize(p, n_bins)
+
+    linhas: list[dict[str, float]] = []
+    for b in range(n_bins):
+        m = idx == b
+        n = int(m.sum())
+
+        if n == 0:
+            linhas.append(_linha_vazia(b, edges))
+            continue
+
+        centro = float(p[m].mean())
+        freq   = float(y[m].mean())
+        linhas.append({
+            "bin_centro":    centro,
+            "freq_positiva": freq,
+            "n":             float(n),
+            "gap":           abs(freq - centro),
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def ece(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Expected Calibration Error — média ponderada dos gaps por bin."""
+    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
+    total  = float(tabela["n"].sum())
+
+    if total == 0:
+        return float("nan")
+
+    pesos = tabela["n"] / total
+    gaps  = tabela["gap"].fillna(0.0)
+    return float((pesos * gaps).sum())
+
+
+def mce(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Maximum Calibration Error — o pior gap entre os bins."""
+    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
+    gaps   = tabela["gap"].dropna()
+
+    if gaps.empty:
+        return float("nan")
+
+    return float(gaps.max())
+
+
+def brier_decomposicao(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> dict[str, float]:
+    """
+    Decompõe o Brier score (Murphy, 1973):
+
+        Brier = Reliability − Resolution + Uncertainty
+
+    Retorna
+    -------
+    dict com:
+        brier         — Brier score observado
+        reliability   — quanto menor, melhor (penaliza desvios locais)
+        resolution    — quanto maior, melhor (capacidade de separar)
+        uncertainty   — entropia binária da base (fixa para o dataset)
+        n             — número de amostras
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    n = len(y)
+
+    if n == 0:
+        raise ValueError("y_true vazio — não há como decompor o Brier.")
+
+    base_rate   = float(y.mean())
+    uncertainty = base_rate * (1.0 - base_rate)
+    brier_obs   = float(np.mean((p - y) ** 2))
+    idx         = _bins_digitize(p, n_bins)
+
+    reliability = 0.0
+    resolution  = 0.0
+
+    for b in range(n_bins):
+        m   = idx == b
+        n_b = int(m.sum())
+
+        if n_b == 0:
+            continue
+
+        freq_obs  = float(y[m].mean())
+        freq_pred = float(p[m].mean())
+        peso      = n_b / n
+
+        reliability += peso * (freq_obs - freq_pred) ** 2
+        resolution  += peso * (freq_obs - base_rate) ** 2
+
+    return {
+        "brier":       brier_obs,
+        "reliability": float(reliability),
+        "resolution":  float(resolution),
+        "uncertainty": float(uncertainty),
+        "n":           float(n),
+    }
+```
+
+## `src/evaluation/errors.py`
+
+- Git: `tracked` · status `clean`
+- Size: `5.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `7a6e18f4d634a243771a6d0408cef798c3acc96c9b14fbbc559cd50477334dad`
+
+```python
+"""
+Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
+
+A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
+
+    from src.evaluation.leakage import LeakageError, check_leakage
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+import numpy as np
+import pandas as pd
+
+from src.evaluation.metrics import (
+    _to_int_labels,
+    _to_np,
+    auc,
+    f1,
+    precision,
+    recall,
+)
+
+__all__ = [
+    "ArrayLike",
+    "CriterioTop",
+    "matriz_confusao",
+    "extrair_falsos_positivos",
+    "extrair_falsos_negativos",
+    "metricas_por_grupo",
+    "top_erros",
+]
+
+ArrayLike   = np.ndarray | pd.Series | list
+CriterioTop = Literal["fp", "fn", "erro_absoluto"]
+
+
+def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
+    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
+    if len(df) != len(y):
+        raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
+
+
+def matriz_confusao(
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """
+    Matriz de confusão 2×2 como DataFrame.
+
+    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
+    Adiciona linha/coluna ``"total"``.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+
+    contagens = {
+        (yv, pv): int(((y == yv) & (p == pv)).sum())
+        for yv in (0, 1)
+        for pv in (0, 1)
+    }
+
+    df = pd.DataFrame(
+        [[contagens[(0, 0)], contagens[(0, 1)]],
+         [contagens[(1, 0)], contagens[(1, 1)]]],
+        index=["real_0", "real_1"],
+        columns=["pred_0", "pred_1"],
+    )
+    df["total"] = df.sum(axis=1)
+    df.loc["total"] = df.sum(axis=0)
+    return df
+
+
+def _extrair_por_mascara(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+    *,
+    yv: int,
+    pv: int,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``."""
+    y = _to_int_labels(y_true)
+    p = _to_int_labels(y_pred)
+    return df.loc[(y == yv) & (p == pv)].reset_index(drop=True)
+
+
+def extrair_falsos_positivos(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde o modelo previu 1 mas o real é 0."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=0, pv=1)
+
+
+def extrair_falsos_negativos(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_pred: ArrayLike,
+) -> pd.DataFrame:
+    """Linhas de ``df`` onde o modelo previu 0 mas o real é 1."""
+    return _extrair_por_mascara(df, y_true, y_pred, yv=1, pv=0)
+
+
+def metricas_por_grupo(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    coluna_grupo: str,
+    *,
+    limiar: float = 0.5,
+    min_n: int = 30,
+) -> pd.DataFrame:
+    """
+    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
+
+    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
+    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
+    """
+    if coluna_grupo not in df.columns:
+        raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
+
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    _validar_tamanhos(df, y)
+
+    base   = df.reset_index(drop=True)
+    grupos = base[coluna_grupo].astype("string")
+
+    linhas: list[dict[str, float | str]] = []
+
+    for g in grupos.dropna().unique():
+        m = (grupos == g).to_numpy()
+        n = int(m.sum())
+
+        if n < min_n:
+            continue
+
+        y_g    = y[m]
+        p_g    = p[m]
+        y_pred = (p_g >= limiar).astype(int)
+
+        linhas.append({
+            "grupo":          str(g),
+            "n":              float(n),
+            "taxa_positivos": float(y_g.mean()),
+            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
+            "f1":             f1(y_g, y_pred),
+            "precision":      precision(y_g, y_pred),
+            "recall":         recall(y_g, y_pred),
+        })
+
+    return (
+        pd.DataFrame(linhas)
+        .sort_values("n", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+def top_erros(
+    df: pd.DataFrame,
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    *,
+    n: int = 20,
+    criterio: CriterioTop = "erro_absoluto",
+    limiar: float = 0.5,
+) -> pd.DataFrame:
+    """
+    Retorna as ``n`` linhas de ``df`` com os piores erros.
+
+    ``criterio``:
+        - ``"fp"``            → prob decrescente entre FP
+        - ``"fn"``            → prob crescente entre FN
+        - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
+
+    Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    y_pred = (p >= limiar).astype(int)
+    _validar_tamanhos(df, y)
+
+    out = df.reset_index(drop=True).copy()
+    out["y_true"]   = y
+    out["y_prob"]   = p
+    out["y_pred"]   = y_pred
+    out["erro_abs"] = np.abs(p - y)
+
+    if criterio == "fp":
+        sel = out[(out.y_true == 0) & (out.y_pred == 1)].sort_values("y_prob", ascending=False)
+    elif criterio == "fn":
+        sel = out[(out.y_true == 1) & (out.y_pred == 0)].sort_values("y_prob", ascending=True)
+    elif criterio == "erro_absoluto":
+        sel = out[out.y_true != out.y_pred].sort_values("erro_abs", ascending=False)
+    else:
+        raise ValueError(f"criterio inválido: {criterio!r}. Use 'fp', 'fn' ou 'erro_absoluto'.")
+
+    return sel.head(n).reset_index(drop=True)
+```
+
+## `src/evaluation/leakage.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.1 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e504ad9142e598ef1d3e6ee4ecc2c63804f5569c5370eaa0ce132cafd9b1bde4`
+
+```python
+"""Verificação anti-vazamento de dados.
+
+``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
+A lista efetiva é a união de:
+
+- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
+- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
+- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
+"""
+
+from __future__ import annotations
+
+from typing import Iterable
+
+import pandas as pd
+
+from src.utils import config as C
+
+__all__ = ["LeakageError", "check_leakage"]
+
+
+class LeakageError(RuntimeError):
+    """Erro lançado quando variáveis com vazamento são encontradas."""
+
+
+DEFAULT_LEAKAGE_COLUMNS = frozenset({
+    "evolucao", "dt_evoluca", "dt_encerra",
+    "uti", "utilizouvni", "suport_ven",
+    "antiviral", "antivirais",
+    "classificacao_final",
+    "cluster", "cluster_rotulo",
+})
+
+
+def _resolve_forbidden_columns(
+    forbidden_columns: Iterable[str] | None,
+    target_column: str | None,
+) -> set[str]:
+    """Conjunto efetivo de colunas proibidas.
+
+    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
+    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
+    """
+    base = (
+        set(forbidden_columns)
+        if forbidden_columns is not None
+        else set(C.cfg("features", "proibidas") or [])
+    )
+    base |= DEFAULT_LEAKAGE_COLUMNS
+
+    target = target_column if target_column is not None else C.cfg("target", "coluna")
+    if target:
+        base.add(target)
+    return base
+
+
+def check_leakage(
+    X: pd.DataFrame,
+    *,
+    forbidden_columns: Iterable[str] | None = None,
+    target_column: str | None = None,
+) -> None:
+    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
+
+    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
+    ``target_column=None`` usa ``target.coluna`` do YAML.
+    """
+    forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
+    if detected := sorted(set(X.columns) & forbidden):
+        raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
+```
+
+## `src/evaluation/metrics.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `a2536cd3cc53d9a5e7ebe6320a4e0011043d1dccf51803d84abe85eaf5184c14`
+
+```python
+"""
+Métricas de classificação binária — todas retornam ``float``.
+
+Encapsula o scikit-learn para garantir ``float``: em várias funções ele
+retorna ``Float | ndarray``, o que polui o type-checker.
+
+Oferece ainda:
+    - ``metricas_por_limiar`` → tabela varrendo limiares
+    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
+
+``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
+chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
+que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
+"""
+
+from __future__ import annotations
+
+from typing import Callable
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    brier_score_loss,
+    f1_score,
+    log_loss as sk_log_loss,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+
+__all__ = [
+    "ArrayLike",
+    "auc",
+    "average_precision",
+    "brier",
+    "log_loss",
+    "f1",
+    "precision",
+    "recall",
+    "accuracy",
+    "especificidade",
+    "sensibilidade",
+    "metricas_completas",
+    "metricas_por_limiar",
+    "ic_bootstrap",
+]
+
+ArrayLike = np.ndarray | pd.Series | list
+
+
+def _to_np(x: ArrayLike) -> np.ndarray:
+    return np.asarray(x).ravel()
+
+
+def _to_int_labels(y: ArrayLike) -> np.ndarray:
+    return np.asarray(y).ravel().astype(int)
+
+
+def _contagens_confusao(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+) -> tuple[int, int, int, int]:
+    tp = int(((y_true == 1) & (y_pred == 1)).sum())
+    fp = int(((y_true == 0) & (y_pred == 1)).sum())
+    tn = int(((y_true == 0) & (y_pred == 0)).sum())
+    fn = int(((y_true == 1) & (y_pred == 0)).sum())
+    return tp, fp, tn, fn
+
+
+def _especificidade_de_contagens(tn: int, fp: int) -> float:
+    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
+    denom = tn + fp
+    return tn / denom if denom > 0 else 0.0
+
+
+def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(average_precision_score(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    return float(brier_score_loss(_to_int_labels(y_true), _to_np(y_prob)))
+
+
+def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
+    """Log loss (entropia cruzada binária) sobre probabilidades."""
+    return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
+
+
+def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(f1_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(precision_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(recall_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
+    ))
+
+
+def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    return float(accuracy_score(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    ))
+
+
+def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
+    _, fp, tn, _ = _contagens_confusao(
+        _to_int_labels(y_true), _to_int_labels(y_pred),
+    )
+    return _especificidade_de_contagens(tn, fp)
+
+
+def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
+    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
+    return recall(y_true, y_pred)
+
+
+def metricas_completas(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    limiar: float = 0.5,
+) -> dict[str, float]:
+    """
+    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
+
+    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
+    mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
+    """
+    y      = _to_int_labels(y_true)
+    p      = _to_np(y_prob)
+    y_pred = (p >= limiar).astype(int)
+    ap     = average_precision(y, p)
+
+    return {
+        "auc":            auc(y, p),
+        "ap":             ap,
+        "pr_auc":         ap,
+        "brier":          brier(y, p),
+        "log_loss":       log_loss(y, p),
+        "f1":             f1(y, y_pred),
+        "precision":      precision(y, y_pred),
+        "recall":         recall(y, y_pred),
+        "sensibilidade":  sensibilidade(y, y_pred),
+        "especificidade": especificidade(y, y_pred),
+        "accuracy":       accuracy(y, y_pred),
+        "limiar":         float(limiar),
+        "n":              float(len(y)),
+    }
+
+
+def metricas_por_limiar(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_limiares: int = 101,
+) -> pd.DataFrame:
+    """
+    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
+
+    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
+    sensibilidade, especificidade, accuracy, youden_j``.
+
+    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
+    o limiar que maximiza a separação entre as classes. As contagens de
+    confusão ficam expostas para permitir derivar qualquer outra métrica
+    a posteriori — não há tabela paralela de lambdas.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+
+    linhas: list[dict[str, float]] = []
+
+    for th in np.linspace(0.01, 0.99, n_limiares):
+        lim    = float(th)
+        y_pred = (p >= lim).astype(int)
+
+        tp, fp, tn, fn = _contagens_confusao(y, y_pred)
+        rec = recall(y, y_pred)
+        esp = _especificidade_de_contagens(tn, fp)
+
+        linhas.append({
+            "limiar":         lim,
+            "tp":             tp,
+            "fp":             fp,
+            "tn":             tn,
+            "fn":             fn,
+            "f1":             f1(y, y_pred),
+            "precision":      precision(y, y_pred),
+            "recall":         rec,
+            "sensibilidade":  rec,
+            "especificidade": esp,
+            "accuracy":       accuracy(y, y_pred),
+            "youden_j":       rec + esp - 1.0,
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def ic_bootstrap(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    *,
+    metrica: Callable[[ArrayLike, ArrayLike], float] = auc,
+    n_boot: int = 200,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float, float]:
+    """
+    Intervalo de confiança via bootstrap percentil.
+
+    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
+    degeneradas (uma única classe) são descartadas internamente. Métrica
+    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
+    """
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    n = len(y)
+
+    rng     = np.random.default_rng(seed)
+    valores = np.empty(n_boot, dtype="float64")
+
+    for i in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        valores[i] = (
+            metrica(y[idx], p[idx]) if len(np.unique(y[idx])) >= 2 else np.nan
+        )
+
+    est     = float(metrica(y, p))
+    validos = valores[~np.isnan(valores)]
+
+    if validos.size == 0:
+        return est, float("nan"), float("nan")
+
+    return (
+        est,
+        float(np.quantile(validos, alpha / 2)),
+        float(np.quantile(validos, 1 - alpha / 2)),
+    )
+```
+
+## `src/evaluation/temporal.py`
+
+- Git: `tracked` · status `clean`
+- Size: `7.4 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `eb8b768efe8484f354dd034bc536c2db975744457cc1c9e659d64c2b80458546`
+
+```python
+"""
+Split temporal em três blocos + trava do holdout.
+
+⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
+O split oficial do projeto é o **aleatório estratificado**, gerado no
+Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
+C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
+se mantém se eu treinar no passado e testar no futuro?".
+
+Regra de ouro (quando usado):
+    treino + validacao → escolha de modelo
+    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
+
+A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
+``G9_holdout`` não estiver aprovado.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Literal, get_args
+
+import pandas as pd
+
+from src.utils import config as C
+
+OnNat = Literal["raise", "drop"]
+_ON_NAT_VALORES = frozenset(get_args(OnNat))
+
+
+def _validar_fracao(nome: str, valor: float) -> None:
+    if not 0 < valor < 1:
+        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
+
+
+def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
+    if coluna_tempo not in df.columns:
+        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
+    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
+        raise TypeError(
+            f"Coluna temporal {coluna_tempo!r} não é datetime "
+            f"(dtype atual: {df[coluna_tempo].dtype}). "
+            "Converta com pd.to_datetime antes do split."
+        )
+
+
+def _tratar_nat(
+    df: pd.DataFrame,
+    coluna_tempo: str,
+    on_nat: OnNat,
+) -> pd.DataFrame:
+    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
+    nat_mask = df[coluna_tempo].isna()
+    n_nat    = int(nat_mask.sum())
+
+    if not n_nat:
+        return df
+    if on_nat == "raise":
+        raise ValueError(
+            f"{n_nat} linha(s) com data inválida (NaT) em "
+            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
+        )
+    return df.loc[~nat_mask].reset_index(drop=True)
+
+
+def split_temporal_3way(
+    df: pd.DataFrame,
+    coluna_tempo: str,
+    frac_treino: float = 0.7,
+    frac_validacao: float = 0.15,
+    *,
+    on_nat: OnNat = "raise",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Divide em treino / validação / holdout, **sem embaralhar**.
+
+    Garante, na ordem temporal::
+
+        max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
+        max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
+
+    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
+    remove essas linhas antes de ordenar.
+    """
+    if on_nat not in _ON_NAT_VALORES:
+        raise ValueError(
+            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
+        )
+
+    _validar_fracao("frac_treino",    frac_treino)
+    _validar_fracao("frac_validacao", frac_validacao)
+    if frac_treino + frac_validacao >= 1:
+        raise ValueError(
+            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
+        )
+
+    _validar_coluna_tempo(df, coluna_tempo)
+    df = _tratar_nat(df, coluna_tempo, on_nat)
+
+    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
+    n = len(ordenado)
+    if n < 3:
+        raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
+
+    corte_treino = int(n * frac_treino)
+    corte_valid  = int(n * (frac_treino + frac_validacao))
+
+    return (
+        ordenado.iloc[:corte_treino].reset_index(drop=True),
+        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
+        ordenado.iloc[corte_valid:].reset_index(drop=True),
+    )
+
+
+@dataclass
+class TemporalSplit:
+    """Guarda os três blocos e controla o acesso ao holdout.
+
+    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
+    Uso típico::
+
+        split = TemporalSplit(df, coluna_tempo="dt_notific")
+        tr, va = split.treino_validacao()  # seleção
+        split.concluir_selecao()           # exige G9_holdout aprovado
+        ho = split.holdout()               # avaliação, uma vez
+    """
+
+    df: pd.DataFrame
+    coluna_tempo: str
+    frac_treino: float = 0.7
+    frac_validacao: float = 0.15
+    on_nat: OnNat = "raise"
+
+    _treino: pd.DataFrame = field(init=False, repr=False)
+    _validacao: pd.DataFrame = field(init=False, repr=False)
+    _holdout: pd.DataFrame = field(init=False, repr=False)
+    _holdout_liberado: bool = field(init=False, default=False, repr=False)
+
+    def __post_init__(self) -> None:
+        tr, va, ho = split_temporal_3way(
+            self.df,
+            coluna_tempo=self.coluna_tempo,
+            frac_treino=self.frac_treino,
+            frac_validacao=self.frac_validacao,
+            on_nat=self.on_nat,
+        )
+        self._treino    = tr
+        self._validacao = va
+        self._holdout   = ho
+
+    def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """``(treino, validacao)`` — único par para a fase de seleção."""
+        return self._treino, self._validacao
+
+    @property
+    def treino(self) -> pd.DataFrame:
+        return self._treino
+
+    @property
+    def validacao(self) -> pd.DataFrame:
+        return self._validacao
+
+    def concluir_selecao(self) -> None:
+        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
+
+        O gate é a autorização explícita — G7 e G8 tratam de decisões da
+        fase de seleção e devem ter sido fechados *antes* deste ponto.
+        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
+        """
+        gate   = C.cfg("gates", "G9_holdout") or {}
+        status = gate.get("status")
+        if status != "aprovado":
+            raise RuntimeError(
+                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
+                f"(status atual: {status!r}). Feche o gate em "
+                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
+            )
+        self._holdout_liberado = True
+
+    @property
+    def holdout_liberado(self) -> bool:
+        return self._holdout_liberado
+
+    def holdout(self) -> pd.DataFrame:
+        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
+        if not self._holdout_liberado:
+            raise RuntimeError(
+                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
+            )
+        return self._holdout
+
+    @property
+    def n_treino(self) -> int:
+        return len(self._treino)
+
+    @property
+    def n_validacao(self) -> int:
+        return len(self._validacao)
+
+    @property
+    def n_holdout(self) -> int:
+        return len(self._holdout)
+
+    def resumo(self) -> str:
+        """Resumo legível — bom para log no ``Run``."""
+
+        def _periodo(d: pd.DataFrame) -> str:
+            if d.empty:
+                return "vazio"
+            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
+
+        estado = "liberado" if self._holdout_liberado else "bloqueado"
+        return (
+            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
+            f"papel='sensibilidade_temporal')\n"
+            f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
+            f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
+            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
+        )
+```
+
+## `src/features/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `508 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `bd18b2388ca98116b750d5ffea5c9471d3b169ae4be762c417a6195ed525cc34`
+
+```python
+"""Engenharia de atributos do pipeline supervisionado."""
+
+from src.features.engineering import (
+    COLUNAS_DERIVADAS,
+    ano_mes_internacao,
+    faixa_etaria,
+    idade_em_anos,
+    intervalo_sintomas_internacao,
+    montar_features,
+    sazonalidade,
+    sexo_categoria,
+)
+
+__all__ = [
+    "COLUNAS_DERIVADAS",
+    "ano_mes_internacao",
+    "faixa_etaria",
+    "idade_em_anos",
+    "intervalo_sintomas_internacao",
+    "montar_features",
+    "sazonalidade",
+    "sexo_categoria",
+]
+```
+
+## `src/features/engineering.py`
+
+- Git: `tracked` · status `clean`
+- Size: `8.0 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `6dc551fb32ada10a58850fe4481627da9855ebcbe58fb7b84e821030e8e61846`
+
+```python
+"""Engenharia de atributos do pipeline supervisionado.
+
+Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
+transforma colunas disponíveis na admissão hospitalar em atributos prontos
+para o modelo — nenhuma usa informação posterior ao desfecho.
+
+As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
+``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
+quando o YAML não define nada.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, get_args
+
+import numpy as np
+import pandas as pd
+
+from src.utils import config as C
+
+__all__ = [
+    "COLUNAS_DERIVADAS",
+    "idade_em_anos",
+    "intervalo_sintomas_internacao",
+    "sazonalidade",
+    "faixa_etaria",
+    "sexo_categoria",
+    "ano_mes_internacao",
+    "montar_features",
+]
+
+PoliticaIntervalo = Literal["sinalizar", "descartar"]
+
+_INTERVALO_MAX_DIAS_PADRAO = 60.0
+_SEMANAS_POR_ANO           = 52.18
+_POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
+
+_FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
+    ("<1",    0.0,   1.0),
+    ("1-4",   1.0,   5.0),
+    ("5-11",  5.0,  12.0),
+    ("12-17", 12.0, 18.0),
+    ("18-39", 18.0, 40.0),
+    ("40-59", 40.0, 60.0),
+    ("60-79", 60.0, 80.0),
+    ("80+",   80.0, None),
+)
+
+COLUNAS_DERIVADAS: tuple[str, ...] = (
+    "idade_anos",
+    "dias_sintomas_ate_internacao",
+    "sin_semana",
+    "cos_semana",
+    "ano_internacao",
+    "mes_internacao",
+    "flag_intervalo_invalido",
+    "flag_internacao_antes_sintomas",
+    "faixa_etaria",
+    "sexo_categoria",
+)
+
+
+def _intervalo_max_dias() -> float:
+    valor = C.cfg("features", "engenharia", "intervalo_max_dias")
+    return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
+
+
+def _intervalo_politica() -> PoliticaIntervalo:
+    valor = C.cfg("features", "engenharia", "intervalo_politica")
+    if valor is None:
+        return "sinalizar"
+
+    politica = str(valor).strip().lower()
+    if politica not in _POLITICAS_VALIDAS:
+        raise ValueError(
+            f"features.engenharia.intervalo_politica inválida: {valor!r}. "
+            f"Use uma de {sorted(_POLITICAS_VALIDAS)}."
+        )
+    return politica  # type: ignore[return-value]
+
+
+def _faixas_etarias() -> list[tuple[str, float, float | None]]:
+    bruto = C.cfg("features", "engenharia", "faixas_etarias")
+    if not bruto:
+        return list(_FAIXAS_PADRAO)
+
+    return [
+        (
+            str(item["nome"]),
+            float(item["min"]),
+            None if item.get("max") is None else float(item["max"]),
+        )
+        for item in bruto
+    ]
+
+
+def idade_em_anos(df: pd.DataFrame) -> pd.Series:
+    """
+    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
+
+    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
+    a codificação é desconhecida, a idade é negativa ou excede 120.
+    """
+    idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
+    tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
+
+    anos = pd.Series(
+        np.select(
+            [tipo.eq(1), tipo.eq(2), tipo.eq(3)],
+            [idade / 365.25, idade / 12.0, idade],
+            default=np.nan,
+        ),
+        index=df.index,
+        dtype="float64",
+    )
+
+    invalido = idade.isna() | idade.lt(0) | ~tipo.isin([1, 2, 3]) | anos.gt(120)
+    return anos.where(~invalido)
+
+
+def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
+
+    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
+    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
+    fora de ``[0, intervalo_max_dias]`` vem de
+    ``features.engenharia.intervalo_politica``.
+    """
+    max_dias = _intervalo_max_dias()
+    politica = _intervalo_politica()
+
+    dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
+    dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
+
+    delta = (dt_int - dt_sin).dt.days.astype("float64")
+
+    invalido = delta.isna() | delta.lt(0) | delta.gt(max_dias)
+    negativo = delta.lt(0)
+
+    delta_final = delta.where(~invalido) if politica == "descartar" else delta
+
+    return pd.DataFrame({
+        "dias_sintomas_ate_internacao":   delta_final,
+        "flag_intervalo_invalido":        invalido.astype("int8"),
+        "flag_internacao_antes_sintomas": negativo.astype("int8"),
+    })
+
+
+def sazonalidade(
+    df: pd.DataFrame,
+    coluna_data: str | None = None,
+) -> pd.DataFrame:
+    """
+    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
+
+    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
+    Datas nulas resultam em NaN.
+    """
+    if coluna_data is None:
+        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
+    if coluna_data not in df.columns:
+        raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
+
+    datas = pd.to_datetime(df[coluna_data], errors="coerce")
+
+    semana = pd.Series(np.nan, index=df.index, dtype="float64")
+    mask = datas.notna()
+    if mask.any():
+        semana.loc[mask] = (
+            datas[mask].dt.isocalendar()["week"].astype("float64").to_numpy()
+        )
+
+    angulo = 2.0 * np.pi * (semana - 1.0) / _SEMANAS_POR_ANO
+
+    return pd.DataFrame({
+        "sin_semana": np.sin(angulo),
+        "cos_semana": np.cos(angulo),
+    })
+
+
+def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
+    """
+    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
+
+    Idade nula vira a categoria explícita ``"desconhecida"``.
+    """
+    faixas = _faixas_etarias()
+    idade  = pd.to_numeric(idade_anos, errors="coerce")
+
+    out = pd.Series("desconhecida", index=idade.index, dtype="object")
+    for nome, lo, hi in faixas:
+        mask = idade.ge(lo)
+        if hi is not None:
+            mask &= idade.lt(hi)
+        out[mask] = nome
+
+    return out.astype("category")
+
+
+def sexo_categoria(df: pd.DataFrame) -> pd.Series:
+    """
+    Normaliza ``cs_sexo`` em categórica explícita.
+
+    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
+    """
+    sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
+
+    out = pd.Series("ausente", index=df.index, dtype="object")
+    out[sexo.eq("M")] = "masculino"
+    out[sexo.eq("F")] = "feminino"
+    out[sexo.eq("I")] = "ignorado"
+
+    return out.astype("category")
+
+
+def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
+
+    Datas nulas resultam em NaN, mantendo compatibilidade com
+    ``SimpleImputer`` e ``StandardScaler``.
+    """
+    dt = pd.to_datetime(df["dt_interna"], errors="coerce")
+
+    return pd.DataFrame({
+        "ano_internacao": dt.dt.year.astype("float64"),
+        "mes_internacao": dt.dt.month.astype("float64"),
+    })
+
+
+def montar_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
+    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
+    """
+    out = df.copy()
+
+    out["idade_anos"] = idade_em_anos(df)
+
+    intervalo = intervalo_sintomas_internacao(df)
+    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
+    out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
+    out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
+
+    saz = sazonalidade(df)
+    out["sin_semana"] = saz["sin_semana"]
+    out["cos_semana"] = saz["cos_semana"]
+
+    out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
+    out["sexo_categoria"] = sexo_categoria(df)
+
+    ano_mes = ano_mes_internacao(df)
+    out["ano_internacao"] = ano_mes["ano_internacao"]
+    out["mes_internacao"] = ano_mes["mes_internacao"]
+
+    return out
+```
+
+## `src/features/normalization.py`
+
+- Git: `tracked` · status `clean`
+- Size: `0 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+```python
+
+```
+
+## `src/models/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `193d5ccf3d79ae3e4699f21e442947e652dd4430898e78753ff60f9d2a3a8a76`
+
+```python
+"""Modelos supervisionados do Projeto Integrador."""
+
+from src.models.baseline import (
+    DummyStrategy,
+    build_baseline_pipeline,
+    evaluate_baseline,
+)
+from src.models.boosting import build_boosting_pipeline
+from src.models.calibration import (
+    MetodoCalibracao,
+    Metrica,
+    calibrar,
+    escolher_limiar,
+)
+from src.models.factory import (
+    Finalista,
+    build_finalista,
+    finalistas_disponiveis,
+)
+from src.models.logistic import (
+    Penalty,
+    Solver,
+    build_logistic_pipeline,
+)
+from src.models.pipeline import (
+    ALVO,
+    AUSENTE,
+    COLUNA_TEMPO,
+    FEATURES,
+    FEATURES_CATEGORICAS,
+    FEATURES_NUMERICAS,
+    build_pipeline,
+    build_preprocessor,
+    criar_alvo_binario,
+    filtrar_rotulos_validos,
+    random_state,
+)
+
+__all__ = [
+    # pipeline (constantes + pré-processamento + alvo)
+    "ALVO",
+    "AUSENTE",
+    "COLUNA_TEMPO",
+    "FEATURES",
+    "FEATURES_CATEGORICAS",
+    "FEATURES_NUMERICAS",
+    "build_pipeline",
+    "build_preprocessor",
+    "criar_alvo_binario",
+    "filtrar_rotulos_validos",
+    "random_state",
+    # baseline
+    "DummyStrategy",
+    "build_baseline_pipeline",
+    "evaluate_baseline",
+    # logistic
+    "Penalty",
+    "Solver",
+    "build_logistic_pipeline",
+    # boosting
+    "build_boosting_pipeline",
+    # calibração
+    "MetodoCalibracao",
+    "Metrica",
+    "calibrar",
+    "escolher_limiar",
+    # fábrica
+    "Finalista",
+    "build_finalista",
+    "finalistas_disponiveis",
+]
+```
+
+## `src/models/baseline.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `c5d4d8e3a65bda1fe15756cb5169b953cf52aff95ac3e6795e6f3ae60094c43e`
+
+```python
+"""
+Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
+
+Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
+O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
+"""
+from __future__ import annotations
+
+from typing import Literal
+
+import pandas as pd
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import Pipeline
+
+from src.evaluation.metrics import metricas_completas
+from src.models.pipeline import build_preprocessor, random_state
+
+DummyStrategy = Literal[
+    "most_frequent",
+    "prior",
+    "stratified",
+    "uniform",
+    "constant",
+]
+
+
+def build_baseline_pipeline(
+    *,
+    strategy: DummyStrategy = "prior",
+    preprocessor=None,
+) -> Pipeline:
+    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
+
+    Estratégias mais úteis como piso:
+
+    - ``"prior"``         → probabilidade constante = prevalência do treino
+      (AUC ≈ 0.5 por construção; Brier ainda informativo);
+    - ``"most_frequent"`` → sempre a classe majoritária
+      (F1/recall = 0 se a positiva for minoria);
+    - ``"stratified"``    → amostra respeitando o prior.
+
+    ``preprocessor=None`` usa ``build_preprocessor()``.
+    """
+    pre = preprocessor if preprocessor is not None else build_preprocessor()
+
+    return Pipeline([
+        ("pre", pre),
+        ("clf", DummyClassifier(
+            strategy=strategy,
+            random_state=random_state(),
+        )),
+    ])
+
+
+def evaluate_baseline(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_eval: pd.DataFrame,
+    y_eval: pd.Series,
+    *,
+    strategy: DummyStrategy = "prior",
+) -> dict[str, str | float]:
+    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
+
+    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
+    ``metricas_completas`` — ver esse módulo para a lista completa.
+    """
+    pipe = build_baseline_pipeline(strategy=strategy)
+    pipe.fit(X_train, y_train)
+    y_prob = pipe.predict_proba(X_eval)[:, 1]
+
+    return {
+        "strategy": strategy,
+        **metricas_completas(y_eval, y_prob, limiar=0.5),
+    }
+```
+
+## `src/models/boosting.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.4 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `2f13ffb44edf322faa9718ede48d7387b35ee3a5c0caed09d1dc116692476d6d`
+
+```python
+"""Gradient boosting supervisionado do Projeto SRAG."""
+
+from __future__ import annotations
+
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.pipeline import Pipeline
+
+from src.models.pipeline import (
+    FEATURES_CATEGORICAS,
+    FEATURES_NUMERICAS,
+    build_preprocessor,
+    random_state,
+)
+
+__all__ = ["build_boosting_pipeline"]
+
+
+def build_boosting_pipeline(
+    learning_rate: float = 0.08,
+    max_iter: int = 150,
+    max_depth: int | None = None,
+    max_leaf_nodes: int = 31,
+    min_samples_leaf: int = 100,
+    l2_regularization: float = 0.10,
+    early_stopping: bool = True,
+    validation_fraction: float = 0.1,
+    n_iter_no_change: int = 20,
+    class_weight: str | dict | None = "balanced",
+    preprocessor=None,
+) -> Pipeline:
+    """Constrói o pipeline ordinal do HistGradientBoostingClassifier."""
+
+    categorical_features = None
+
+    if preprocessor is None:
+        preprocessor = build_preprocessor(
+            numericas=FEATURES_NUMERICAS,
+            categoricas=FEATURES_CATEGORICAS,
+            saida="ordinal",
+        )
+
+        categorical_features = [
+            False
+            for _ in FEATURES_NUMERICAS
+        ]
+
+        categorical_features.extend(
+            True
+            for _ in FEATURES_CATEGORICAS
+        )
+
+    if categorical_features is not None:
+        quantidade_features_esperada = sum(
+            (
+                len(FEATURES_NUMERICAS),
+                len(FEATURES_CATEGORICAS),
+            )
+        )
+
+        if len(categorical_features) != quantidade_features_esperada:
+            raise RuntimeError(
+                "A máscara categórica não possui o mesmo tamanho "
+                "do contrato de features."
+            )
+
+    classificador = HistGradientBoostingClassifier(
+        learning_rate=learning_rate,
+        max_iter=max_iter,
+        max_depth=max_depth,
+        max_leaf_nodes=max_leaf_nodes,
+        min_samples_leaf=min_samples_leaf,
+        l2_regularization=l2_regularization,
+        early_stopping=early_stopping,
+        validation_fraction=validation_fraction,
+        n_iter_no_change=n_iter_no_change,
+        class_weight=class_weight,
+        categorical_features=categorical_features,
+        random_state=random_state(),
+    )
+
+    return Pipeline(
+        steps=[
+            ("pre", preprocessor),
+            ("clf", classificador),
+        ]
+    )
+```
+
+## `src/models/calibration.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.3 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `ad67dccc727378dccad80ba90f070646617d99c49e7e1154e1198ad7f17f1c7a`
+
+```python
+"""
+Calibração de probabilidades e escolha de limiar de decisão.
+
+``calibrar`` envolve um ``Pipeline`` já ajustado em
+``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
+não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
+devolve o ótimo segundo uma métrica, com restrições opcionais de
+precision/recall.
+
+A agregação de métricas vive em ``src.evaluation.metrics``.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Literal, get_args
+
+import numpy as np
+import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import brier_score_loss, roc_auc_score
+
+from src.evaluation.metrics import metricas_por_limiar
+
+__all__ = [
+    "MetodoCalibracao",
+    "Metrica",
+    "calibrar",
+    "escolher_limiar",
+]
+
+Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
+MetodoCalibracao = Literal["isotonic", "sigmoid"]
+
+_METRICAS_VALIDAS = frozenset(get_args(Metrica))
+_METODOS_VALIDOS  = frozenset(get_args(MetodoCalibracao))
+
+
+def calibrar(
+    pipeline,
+    X_cal: pd.DataFrame,
+    y_cal: pd.Series,
+    *,
+    method: MetodoCalibracao = "isotonic",
+):
+    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
+
+    Use uma base de calibração distinta do treino do ``pipeline``. O
+    pipeline não é re-treinado — o calibrador aprende só o mapeamento
+    probabilidade → probabilidade.
+
+    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
+    (Platt) é paramétrico e mais estável em amostras pequenas.
+    """
+    if method not in _METODOS_VALIDOS:
+        raise ValueError(
+            f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
+        )
+
+    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
+    # importável em ambientes mais antigos (o erro surge só em calibrar()).
+    from sklearn.frozen import FrozenEstimator
+
+    modelo = CalibratedClassifierCV(
+        estimator=FrozenEstimator(pipeline),
+        method=method,
+    )
+    modelo.fit(X_cal, y_cal)
+    return modelo
+
+
+def escolher_limiar(
+    y_true: pd.Series | np.ndarray,
+    y_prob: pd.Series | np.ndarray,
+    *,
+    metrica: Metrica = "f1",
+    n_limiares: int = 101,
+    min_precision: float | None = None,
+    min_recall: float | None = None,
+) -> dict[str, Any]:
+    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
+
+    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
+    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
+    ``ValueError``.
+
+    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
+    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
+    ``metricas_por_limiar``).
+    """
+    if metrica not in _METRICAS_VALIDAS:
+        raise ValueError(
+            f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
+        )
+
+    y_true_arr = np.asarray(y_true).ravel().astype(int)
+    y_prob_arr = np.asarray(y_prob).ravel()
+
+    tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
+
+    candidatos = tabela
+    filtros: list[str] = []
+    if min_precision is not None:
+        filtros.append(f"precision ≥ {min_precision}")
+        candidatos = candidatos[candidatos["precision"] >= min_precision]
+    if min_recall is not None:
+        filtros.append(f"recall ≥ {min_recall}")
+        candidatos = candidatos[candidatos["recall"] >= min_recall]
+    if candidatos.empty:
+        restricao = " e ".join(filtros) if filtros else "sem restrição"
+        raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
+
+    if metrica not in candidatos.columns:
+        raise ValueError(
+            f"A métrica {metrica!r} não foi produzida por metricas_por_limiar. "
+            f"Colunas disponíveis: {sorted(candidatos.columns)}"
+        )
+
+    idx_melhor   = candidatos[metrica].idxmax()
+    linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
+
+    return {
+        "limiar":  float(linha_melhor["limiar"]),
+        "valor":   float(linha_melhor[metrica]),
+        "metrica": metrica,
+        "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
+        "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
+        "tabela":  tabela,
+    }
+```
+
+## `src/models/factory.py`
+
+- Git: `tracked` · status `clean`
+- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `bd098f04f4a328f10903bbd8ca8ee25642fcc8054a1c946e406e89ad8449251a`
+
+```python
+"""
+Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
+
+Hiperparâmetros vêm de ``models.<nome>`` no ``supervised.yaml``; overrides
+em ``**overrides`` têm precedência. ``preprocessor=None`` faz cada
+construtor usar o default (``build_preprocessor()``).
+"""
+
+from __future__ import annotations
+
+from typing import Any, Literal, get_args
+
+from sklearn.pipeline import Pipeline
+
+from src.models.boosting import build_boosting_pipeline
+from src.models.logistic import build_logistic_pipeline
+from src.utils import config as C
+
+__all__ = ["Finalista", "build_finalista", "finalistas_disponiveis"]
+
+Finalista = Literal["boosting", "logistic"]
+_FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
+
+
+def finalistas_disponiveis() -> tuple[str, ...]:
+    """Nomes canônicos dos finalistas registrados, em ordem estável."""
+    return tuple(sorted(_FINALISTAS_VALIDOS))
+
+
+def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
+    """Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
+
+    Descartados: chaves ``busca_*`` (grid de tuning) e valores ``None``
+    (deixa o default do construtor agir). Devolve ``{}`` se a secção não
+    existir ou não for mapping.
+    """
+    secao = C.cfg("models", nome)
+    if not isinstance(secao, dict):
+        return {}
+    return {
+        k: v
+        for k, v in secao.items()
+        if v is not None and not k.startswith("busca_")
+    }
+
+
+def build_finalista(
+    nome: str,
+    *,
+    preprocessor=None,
+    **overrides: Any,
+) -> Pipeline:
+    """Constrói o ``Pipeline`` de um finalista pelo nome.
+
+    Levanta ``ValueError`` se ``nome`` não estiver em
+    ``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
+    ajustado** — o caller faz ``fit``.
+    """
+    if nome not in _FINALISTAS_VALIDOS:
+        raise ValueError(
+            f"finalista desconhecido: {nome!r}. "
+            f"Use um destes: {sorted(_FINALISTAS_VALIDOS)}."
+        )
+
+    params = _kwargs_do_yaml(nome) | overrides
+    if preprocessor is not None:
+        params["preprocessor"] = preprocessor
+
+    if nome == "boosting":
+        return build_boosting_pipeline(**params)
+    return build_logistic_pipeline(**params)
+```
+
+## `src/models/logistic.py`
+
+- Git: `tracked` · status `clean`
+- Size: `4.5 KB` · modified `2026-10-18 14:26 UTC`
+- SHA-256: `c7c0f0c1cb6bb55ec926973765196ab35bb64ff8634fe781b12823261cc66d73`
+
+```python
+"""
+Regressão logística — modelo linear interpretável.
+
+A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
+para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
+do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
+traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
+única da verdade sem depender da API depreciada.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, cast
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
+from src.models.pipeline import build_preprocessor, random_state
+from src.utils import config as C
+
+__all__ = ["Penalty", "Solver", "build_logistic_pipeline"]
+
+Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
+Penalty = Literal["l1", "l2", "elasticnet"]
+
+# Solver × tipo de penalidade efetivo (derivado do l1_ratio final).
+_L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
+    "l2":         frozenset({"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"}),
+    "l1":         frozenset({"liblinear", "saga"}),
+    "elasticnet": frozenset({"saga"}),
+}
+
+_PENALTIES_VALIDAS = ("l1", "l2", "elasticnet")
+
+
+def _penalty_do_yaml() -> Penalty | None:
+    """Lê ``models.logistic.penalty`` do YAML.
+
+    Devolve ``None`` quando a chave está ausente, vazia ou nula — o
+    ``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
+    ``ValueError`` se a chave existir mas tiver valor desconhecido.
+    """
+    valor = C.cfg("models", "logistic", "penalty")
+    if not valor:
+        return None
+    if valor not in _PENALTIES_VALIDAS:
+        raise ValueError(
+            f"models.logistic.penalty inválido: {valor!r}. "
+            f"Use uma de {_PENALTIES_VALIDAS}."
+        )
+    return cast(Penalty, valor)
+
+
+def _tipo_penalidade(l1_ratio: float) -> str:
+    """Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``."""
+    if l1_ratio == 0.0:
+        return "l2"
+    if l1_ratio == 1.0:
+        return "l1"
+    return "elasticnet"
+
+
+def build_logistic_pipeline(
+    *,
+    C: float = 1.0,
+    l1_ratio: float = 0.0,
+    penalty: Penalty | None = None,
+    solver: Solver = "lbfgs",
+    max_iter: int = 1000,
+    class_weight: str | dict | None = "balanced",
+    preprocessor=None,
+) -> Pipeline:
+    """``Pipeline`` de pré-processamento + ``LogisticRegression``.
+
+    ``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
+    Quando definido, sobrepõe ``l1_ratio``:
+
+    - ``"l2"``          → força ``l1_ratio=0.0``;
+    - ``"l1"``          → força ``l1_ratio=1.0``;
+    - ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
+
+    ``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
+    ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
+    resultante (ver ``_L1_RATIO_SOLVERS``).
+
+    Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
+    combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
+    com ``l1_ratio`` nos extremos.
+    """
+    if not 0.0 <= l1_ratio <= 1.0:
+        raise ValueError(
+            f"l1_ratio deve estar em [0, 1]; "
+            f"recebido {l1_ratio!r}."
+        )
+
+    penalty_configurada = penalty
+
+    if penalty_configurada is None and l1_ratio == 0.0:
+        penalty_configurada = _penalty_do_yaml()
+
+    if penalty_configurada == "l2":
+        l1_ratio = 0.0
+
+    elif penalty_configurada == "l1":
+        l1_ratio = 1.0
+
+    elif penalty_configurada == "elasticnet":
+        if not 0.0 < l1_ratio < 1.0:
+            raise ValueError(
+                "penalty='elasticnet' requer "
+                "0 < l1_ratio < 1; "
+                f"recebido l1_ratio={l1_ratio!r}."
+            )
+
+    tipo             = _tipo_penalidade(l1_ratio)
+    solvers_validos  = _L1_RATIO_SOLVERS[tipo]
+    if solver not in solvers_validos:
+        raise ValueError(
+            f"combinação inválida: l1_ratio={l1_ratio!r} ({tipo}) "
+            f"com solver={solver!r}. Use um destes: {sorted(solvers_validos)}."
+        )
+
+    pre = preprocessor if preprocessor is not None else build_preprocessor()
+
+    return Pipeline([
+        ("pre", pre),
+        ("clf", LogisticRegression(
+            C=C,
+            l1_ratio=l1_ratio,
+            solver=solver,
+            max_iter=max_iter,
+            class_weight=class_weight,
+            random_state=random_state(),
+        )),
+    ])
+```
+
+## `src/models/pipeline.py`
+
+- Git: `tracked` · status `clean`
+- Size: `8.3 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `88ae33a2f35472169c76ff751b6de4b13798f5c9d163acd71fac7ecf3595b40d`
+
+```python
+"""
+Fundação dos modelos supervisionados.
+
+Fonte única de verdade para o pré-processamento e para a derivação do
+alvo binário a partir de ``evolucao``, além da leitura da config canônica
+(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
+
+Notebooks e demais modelos devem importar este módulo em vez de
+reimplementar o pré-processamento.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Iterable, Literal
+
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import (
+    FunctionTransformer,
+    OneHotEncoder,
+    OrdinalEncoder,
+    StandardScaler,
+)
+from src.utils import config as C
+
+__all__ = [
+    "ALVO",
+    "AUSENTE",
+    "COLUNA_TEMPO",
+    "FEATURES",
+    "FEATURES_CATEGORICAS",
+    "FEATURES_NUMERICAS",
+    "build_pipeline",
+    "build_preprocessor",
+    "criar_alvo_binario",
+    "filtrar_rotulos_validos",
+    "random_state",
+]
+
+logger = logging.getLogger(__name__)
+
+# Sem defaults próprios: se a config falhar, o import falha — decisão
+# deliberada para que um YAML inválido impeça a modelagem cedo.
+ALVO: str = C.cfg("target", "coluna")
+COLUNA_TEMPO: str = C.cfg("coluna_tempo")
+
+FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
+FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
+
+AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
+
+if _final := C.cfg("features", "final"):
+    _fs = set(_final)
+    FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
+    FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
+
+FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
+
+
+def _alvo_cfg_positivos() -> list[float]:
+    """Códigos de ``target.positivos`` do YAML, como floats."""
+    return [float(v) for v in (C.cfg("target", "positivos") or [])]
+
+
+def _alvo_cfg_negativos() -> list[float]:
+    """Códigos de ``target.negativos`` do YAML, como floats."""
+    return [float(v) for v in (C.cfg("target", "negativos") or [])]
+
+
+SaidaPreprocessador = Literal["esparsa", "ordinal"]
+
+
+def _para_float32() -> FunctionTransformer:
+    """Converte as variáveis numéricas para float32."""
+    return FunctionTransformer(
+        np.asarray,
+        kw_args={"dtype": np.float32},
+        feature_names_out="one-to-one",
+    )
+
+
+def build_preprocessor(
+    numericas: Iterable[str] | None = None,
+    categoricas: Iterable[str] | None = None,
+    *,
+    saida: SaidaPreprocessador = "esparsa",
+) -> ColumnTransformer:
+    """Constrói o pré-processamento central dos modelos supervisionados."""
+    num = list(numericas) if numericas is not None else list(FEATURES_NUMERICAS)
+    cat = list(categoricas) if categoricas is not None else list(FEATURES_CATEGORICAS)
+
+    imputer_categorico = SimpleImputer(
+        strategy="constant",
+        fill_value=AUSENTE,
+    )
+
+    if saida == "esparsa":
+        pipe_num = Pipeline(
+            steps=[
+                ("float32", _para_float32()),
+                ("imputer", SimpleImputer(strategy="median")),
+                ("scaler", StandardScaler(with_mean=False)),
+            ]
+        )
+        pipe_cat = Pipeline(
+            steps=[
+                ("imputer", imputer_categorico),
+                (
+                    "encoder",
+                    OneHotEncoder(
+                        handle_unknown="ignore",
+                        sparse_output=True,
+                        dtype=np.float32,
+                    ),
+                ),
+            ]
+        )
+    elif saida == "ordinal":
+        pipe_num = Pipeline(
+            steps=[
+                ("float32", _para_float32()),
+                ("imputer", SimpleImputer(strategy="median")),
+            ]
+        )
+        pipe_cat = Pipeline(
+            steps=[
+                ("imputer", imputer_categorico),
+                (
+                    "encoder",
+                    OrdinalEncoder(
+                        handle_unknown="use_encoded_value",
+                        unknown_value=np.nan,
+                        dtype=np.float32,
+                    ),
+                ),
+            ]
+        )
+    else:
+        raise ValueError(
+            f"saida inválida: {saida!r}. Use 'esparsa' ou 'ordinal'."
+        )
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", pipe_num, num),
+            ("cat", pipe_cat, cat),
+        ],
+        remainder="drop",
+        sparse_threshold=1.0 if saida == "esparsa" else 0.0,
+        verbose_feature_names_out=False,
+    )
+
+def criar_alvo_binario(
+    df: pd.DataFrame,
+    alvo: str | None = None,
+    positivos: Iterable[float] | None = None,
+    negativos: Iterable[float] | None = None,
+) -> pd.Series:
+    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
+
+    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
+    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
+    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
+
+    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
+    conjuntos se sobrepuserem ou se algum estiver vazio.
+    """
+    alvo = alvo if alvo is not None else ALVO
+
+    positivos_set = {
+        float(v) for v in (positivos if positivos is not None else _alvo_cfg_positivos())
+    }
+    negativos_set = {
+        float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
+    }
+
+    if overlap := positivos_set & negativos_set:
+        raise ValueError(
+            f"`positivos` e `negativos` não podem se sobrepor: {sorted(overlap)}"
+        )
+    if not positivos_set:
+        raise ValueError("`target.positivos` está vazio na config.")
+    if not negativos_set:
+        raise ValueError("`target.negativos` está vazio na config.")
+
+    valores = df[alvo].astype("float64")
+    y = pd.Series(float("nan"), index=df.index, dtype="float64")
+    y[valores.isin(negativos_set)] = 0
+    y[valores.isin(positivos_set)] = 1
+    return y
+
+
+def filtrar_rotulos_validos(
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
+    if not y.index.equals(X.index):
+        raise ValueError("X e y precisam ter o mesmo índice.")
+
+    mascara = y.notna()
+    return (
+        X.loc[mascara].reset_index(drop=True),
+        y.loc[mascara].astype("int8").reset_index(drop=True),
+    )
+
+
+def random_state() -> int:
+    """Seed canônica do projeto (``config.SEED``)."""
+    return int(C.SEED)
+
+
+def build_pipeline(
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
+    *,
+    classifier: object | None = None,
+    features: Iterable[str] | None = None,
+    strict: bool = True,
+) -> Pipeline:
+    """Constrói o ``Pipeline`` sklearn.
+
+    - ``classifier=None`` → devolve só o pré-processamento (útil no C2).
+    - ``classifier`` passado (C3+) → anexa como etapa final.
+    - ``features=None`` → usa ``FEATURES`` do módulo.
+    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
+      estiver ausente em ``X``; ``False`` → emite warning e segue só com
+      as presentes.
+    """
+    num = list(FEATURES_NUMERICAS)
+    cat = list(FEATURES_CATEGORICAS)
+
+    if features is not None:
+        fs = set(features)
+        num = [c for c in num if c in fs]
+        cat = [c for c in cat if c in fs]
+
+    if X is not None:
+        if ausentes := sorted((set(num) | set(cat)) - set(X.columns)):
+            msg = (
+                f"Features configuradas ausentes em X: {ausentes}. "
+                "Verifique `features` no supervised.yaml ou o DataFrame "
+                "de entrada."
+            )
+            if strict:
+                raise KeyError(msg)
+            logger.warning(msg)
+            num = [c for c in num if c in X.columns]
+            cat = [c for c in cat if c in X.columns]
+
+    pre = build_preprocessor(numericas=num, categoricas=cat)
+
+    etapas: list[tuple[str, object]] = [("pre", pre)]
+    if classifier is not None:
+        etapas.append(("clf", classifier))
+
+    return Pipeline(etapas)
+```
+
+## `src/protocolo/__init__.py`
+
+- Git: `tracked` · status `clean`
+- Size: `89 B` · modified `2026-10-16 14:54 UTC`
+- SHA-256: `dc84b0499cded1d8b8fe8cffd8906ca4d73a01297f048160dd439decf23dcb02`
+
+```python
+"""Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões)."""
+```
+
 ## `src/protocolo/verificacoes.py`
 
 - Git: `tracked` · status `clean`
@@ -5291,8 +7539,8 @@ def test_listar_e_carregar(tmp_path: Path) -> None:
 ## `tests/test_smoke.py`
 
 - Git: `tracked` · status `clean`
-- Size: `3.2 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `f3161fc26862baaf40b068430fdf0f334f7c016964efec5340d393f3fbe782bc`
+- Size: `3.2 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `9bb4cb5360dc5d0a0b64c570d6fcba6006d2b8f8c8099a84186487c3f825b96d`
 
 ```python
 """
@@ -5331,10 +7579,11 @@ def parquet(parquet_disponivel: Path | None) -> Path:
     return parquet_disponivel
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def schema_colunas(parquet: Path) -> set[str]:
-    """Nome das colunas do Parquet — lido uma vez por módulo."""
+    """Nome das colunas do Parquet para os testes de schema."""
     return set(pq.read_schema(parquet).names)
+
 
 
 # ---------------------------------------------------------------------------
@@ -5685,8 +7934,8 @@ def test_df_vazio() -> None:
 ## `tests/test_supervised_artifact.py`
 
 - Git: `tracked` · status `clean`
-- Size: `6.3 KB` · modified `2026-10-18 16:24 UTC`
-- SHA-256: `dd247e633bde059ab55d43a9dc86cdfec54f5b363452f9295f71944d2f81d544`
+- Size: `8.9 KB` · modified `2026-10-18 16:54 UTC`
+- SHA-256: `6b5fb90b7115e4a191e16f62d26c7d4f1eb799b6201d9f84ada697ecd95305ce`
 
 ```python
 """Testes do artefato supervisionado (``src.data.supervised_artifact``).
@@ -5698,6 +7947,7 @@ partição de teste na leitura (#16).
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -5861,6 +8111,70 @@ def test_partitions_desconhecidas_falham(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Particoes desconhecidas"):
         load_supervised_artifact(tmp_path, partitions=("treino", "foo"))
+
+# ---------------------------------------------------------------------------
+# ``columns=`` não pula a validação (#18)
+# ---------------------------------------------------------------------------
+
+def test_load_com_columns_devolve_apenas_o_pedido(tmp_path: Path) -> None:
+    """``columns=["idade_anos"]`` devolve só essa coluna; alvo/partição saem."""
+    _persistir(tmp_path, _frame())
+    loaded, _ = load_supervised_artifact(tmp_path, columns=["idade_anos"])
+    assert list(loaded.columns) == ["idade_anos"]
+    assert not loaded.empty
+
+
+def test_load_com_columns_preserva_colunas_pedidas(tmp_path: Path) -> None:
+    """Se o chamador pedir alvo/partição, elas continuam no retorno."""
+    _persistir(tmp_path, _frame())
+    loaded, _ = load_supervised_artifact(
+        tmp_path, columns=["idade_anos", "alvo_obito_srag", "particao"],
+    )
+    assert {"idade_anos", "alvo_obito_srag", "particao"} <= set(loaded.columns)
+
+
+def test_load_com_columns_valida_alvo_binario(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Artefato com alvo inválido falha mesmo com ``columns=`` (que exclui o alvo)."""
+    _persistir(tmp_path, _frame())
+
+    dataset_path = tmp_path / "data" / "analytical" / "dataset_supervisionado.parquet"
+    frame = pd.read_parquet(dataset_path)
+    frame.loc[frame.index[0], "alvo_obito_srag"] = 5
+    frame.to_parquet(dataset_path, index=False)
+
+    manifest_hash = json.loads(
+        (dataset_path.parent / "manifesto_supervisionado.json").read_text(encoding="utf-8")
+    )["dataset_sha256"]
+    monkeypatch.setattr(
+        "src.data.supervised_artifact.sha256_file", lambda _p: manifest_hash,
+    )
+
+    with pytest.raises(ValueError, match="binario"):
+        load_supervised_artifact(tmp_path, columns=["idade_anos"])
+
+
+def test_load_com_columns_valida_particoes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Partição desaparecida do parquet é detectada mesmo com ``columns=``."""
+    _persistir(tmp_path, _frame())
+
+    dataset_path = tmp_path / "data" / "analytical" / "dataset_supervisionado.parquet"
+    frame = pd.read_parquet(dataset_path)
+    frame.loc[frame["particao"] == "validacao", "particao"] = "treino"
+    frame.to_parquet(dataset_path, index=False)
+
+    manifest_hash = json.loads(
+        (dataset_path.parent / "manifesto_supervisionado.json").read_text(encoding="utf-8")
+    )["dataset_sha256"]
+    monkeypatch.setattr(
+        "src.data.supervised_artifact.sha256_file", lambda _p: manifest_hash,
+    )
+
+    with pytest.raises(ValueError, match="Particoes esperadas"):
+        load_supervised_artifact(tmp_path, columns=["idade_anos"])
 ```
 
 ## `tests/test_target.py`
@@ -6306,33 +8620,904 @@ if __name__ == "__main__":
     main()
 ```
 
-## `tools/comparar_saidas.py`
+## `tools/deep_git_project_audit.py`
 
 - Git: `tracked` · status `clean`
-- Size: `1.2 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `0d6c1af4da97aad39c1f19408e40692ad94625d5863d69251260db35c5bd4dd0`
+- Size: `30.5 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `f78eee1328b0fe79a36d0fe494f71d25a105df6da715e66a95a2744494cddffe`
 
 ```python
-from pathlib import Path
-import sys, numpy as np, pandas as pd
+#!/usr/bin/env python3
+from __future__ import annotations
 
-def comparar(a,b,rtol=1e-6):
-    rows=[]
-    for pa in sorted(Path(a).glob("*.csv")):
-        pb=Path(b)/pa.name
-        if not pb.exists(): rows.append((pa.name,"ausente_depois",None)); continue
-        x=pd.read_csv(pa,encoding="utf-8-sig"); y=pd.read_csv(pb,encoding="utf-8-sig")
-        if x.shape!=y.shape or list(x.columns)!=list(y.columns): rows.append((pa.name,"estrutura_diferente",f"{x.shape} x {y.shape}")); continue
-        dif=0
-        for c in x.columns:
-            if pd.api.types.is_numeric_dtype(x[c]) and pd.api.types.is_numeric_dtype(y[c]):
-                iguais=np.isclose(x[c],y[c],rtol=rtol,equal_nan=True)
-            else: iguais=x[c].astype("string").fillna("<NA>").eq(y[c].astype("string").fillna("<NA>")).to_numpy()
-            dif+=int((~iguais).sum())
-        rows.append((pa.name,"igual" if dif==0 else "diferente",f"{dif} células diferentes"))
-    return pd.DataFrame(rows,columns=["arquivo","status","detalhe"])
-if __name__=="__main__":
-    r=comparar(sys.argv[1],sys.argv[2]); print(r.to_string(index=False)); raise SystemExit(0 if (r.status=="igual").all() else 1)
+r"""
+Auditoria profunda do Git e atualização conservadora do PROJECT_STATUS.md.
+
+Objetivos:
+- percorrer todo o histórico alcançável do Git, em todas as refs;
+- reconhecer marcadores explícitos e referências textuais a tarefas;
+- relacionar commits/arquivos às fontes declaradas no baseline do painel;
+- analisar sintaxe, notebooks, conflitos, riscos de segredo, performance e vazamento;
+- executar testes rápidos, locais e sem rede, salvo --no-tests;
+- atualizar tarefas somente de forma conservadora:
+    * [done...] -> CONCLUÍDA;
+    * evidência provável + auditoria sem bloqueio -> RESOLVIDA — PENDENTE DE VALIDAÇÃO;
+    * evidência provável + problema impeditivo -> PRECISA REVISÃO;
+- nunca reabrir automaticamente uma tarefa concluída;
+- nunca acessar Parquet, modelos, predições, dados brutos ou o holdout;
+- compartilhar apenas PROJECT_STATUS.md. O relatório detalhado fica local.
+
+Uso, na raiz do projeto:
+    .\.venv\Scripts\python.exe tools\deep_git_project_audit.py
+    .\.venv\Scripts\python.exe tools\deep_git_project_audit.py --dry-run
+    .\.venv\Scripts\python.exe tools\deep_git_project_audit.py --no-tests
+    .\.venv\Scripts\python.exe tools\deep_git_project_audit.py --since-commit SHA
+"""
+
+import argparse
+import ast
+import datetime as dt
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Iterable
+
+try:
+    import yaml  # type: ignore
+except Exception:
+    yaml = None
+
+SCHEMA_VERSION = 1
+STATUS_BLOCK = re.compile(
+    r"<!--\s*PROJECT_STATUS_DATA\s*\r?\n(.*?)\r?\nPROJECT_STATUS_DATA\s*-->",
+    re.S,
+)
+EXPLICIT_MARKER = re.compile(
+    r"\[(done|progress|reopen):(?:(?:id)?#?)?(\d+)\]",
+    re.I,
+)
+TASK_REFERENCE = re.compile(
+    r"(?<![\wÀ-ÿ])tarefa\s+#?0*(\d+)(?!\d)",
+    re.I,
+)
+COMPLETION_LANGUAGE = re.compile(
+    r"(?i)\b(corrig(?:e|ido|ida|ir)|implement(?:a|ado|ada|ar)|resolv(?:e|ido|ida|er)|"
+    r"conclu(?:i|ído|ída|ir)|finaliz(?:a|ado|ada|ar)|fecha(?:do|da|r)|entreg(?:a|ue|ado|ada))\b"
+)
+MERGE_CONFLICT = re.compile(r"^(<{7}|={7}|>{7})", re.M)
+TODO = re.compile(r"(?i)\b(TODO|FIXME|XXX|HACK|PENDENTE)\b[:\s-]*(.{0,160})")
+SECRET = re.compile(
+    r"(?i)(password|passwd|pwd|secret|token|api[_-]?key|private[_-]?key)"
+    r"\s*[:=]\s*['\"]([^'\"\n]{8,})['\"]"
+)
+PRIVATE_KEY = re.compile(r"-----BEGIN [^-]+ PRIVATE KEY-----", re.I)
+ABSOLUTE_PATH = re.compile(r"(?i)\b[A-Z]:[\\/]Users[\\/][^\\/\s]+|/(?:home|Users)/[^/\s]+")
+
+TEXT_SUFFIXES = {
+    ".py", ".pyi", ".ipynb", ".md", ".rst", ".txt", ".yaml", ".yml",
+    ".toml", ".ini", ".cfg", ".json", ".sql", ".ps1", ".psm1", ".sh",
+    ".bat", ".cmd", ".csv", ".tsv", ".html", ".css", ".js", ".r",
+}
+BINARY_OR_DATA_SUFFIXES = {
+    ".parquet", ".feather", ".arrow", ".pkl", ".pickle", ".joblib", ".onnx",
+    ".pt", ".pth", ".h5", ".hdf5", ".npy", ".npz", ".pdf", ".doc", ".docx",
+    ".ppt", ".pptx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".webp",
+    ".zip", ".7z", ".gz", ".tar", ".db", ".sqlite",
+}
+EXCLUDED_PARTS = {
+    ".git", ".venv", "venv", "env", "__pycache__", ".pytest_cache", ".mypy_cache",
+    ".ruff_cache", ".tox", ".nox", "node_modules", "site-packages", "dist", "build",
+    ".ipynb_checkpoints",
+}
+DATA_ROOTS = {"data", "outputs", "models", "artifacts", "mlruns", "predictions", "predicoes"}
+STATUS_LABELS = {
+    "open": "ABERTA",
+    "in_progress": "EM ANDAMENTO",
+    "resolved_pending_validation": "RESOLVIDA — PENDENTE DE VALIDAÇÃO",
+    "implemented_unconfirmed": "RESOLVIDA — PENDENTE DE VALIDAÇÃO",
+    "needs_review": "PRECISA REVISÃO",
+    "done": "CONCLUÍDA",
+}
+STATUS_ICONS = {
+    "open": "⬜",
+    "in_progress": "🟦",
+    "resolved_pending_validation": "🟪",
+    "implemented_unconfirmed": "🟪",
+    "needs_review": "🟨",
+    "done": "✅",
+}
+
+PERFORMANCE_RULES: list[tuple[str, re.Pattern[str], str, str]] = [
+    ("dense-one-hot", re.compile(r"sparse_output\s*=\s*False"), "high", "OneHotEncoder denso pode causar explosão de memória."),
+    ("toarray", re.compile(r"\.toarray\s*\("), "high", "Conversão explícita de matriz esparsa para densa."),
+    ("iterrows", re.compile(r"\.iterrows\s*\("), "medium", "iterrows em dados tabulares grandes tende a ser lento."),
+    ("apply-axis-1", re.compile(r"\.apply\s*\([^\n]*axis\s*=\s*1"), "medium", "apply(axis=1) tende a ser lento em milhões de linhas."),
+    ("deep-copy", re.compile(r"\.copy\s*\(\s*(?:deep\s*=\s*True)?\s*\)"), "low", "Cópia potencialmente profunda; revisar impacto de memória."),
+    ("read-parquet-wide", re.compile(r"read_parquet\s*\((?![^\)]*columns\s*=)"), "medium", "Leitura Parquet sem projeção explícita de colunas."),
+    ("groupby-observed", re.compile(r"\.groupby\s*\((?![^\)]*observed\s*=)"), "low", "groupby sem observed explícito pode gerar combinações categóricas vazias."),
+    ("unbounded-concat-loop", re.compile(r"for\s+.+:\s*(?:\n[^\n]*){0,5}\n[^\n]*pd\.concat\s*\("), "medium", "pd.concat dentro de loop pode ter custo quadrático."),
+]
+
+LEAKAGE_NAME_HINTS = {
+    "evolucao", "evolucao_categoria", "alvo_obito_srag", "obito", "dt_evoluca",
+    "uti", "suport_ven", "hospitaliz", "dt_saida", "encerramento", "classi_fin",
+}
+
+
+@dataclass
+class Finding:
+    severity: str
+    category: str
+    message: str
+    evidence: list[str] = field(default_factory=list)
+    paths: list[str] = field(default_factory=list)
+    commits: list[str] = field(default_factory=list)
+    task_ids: list[str] = field(default_factory=list)
+
+
+@dataclass
+class CommitRecord:
+    sha: str
+    when: str
+    author: str
+    subject: str
+    body: str
+    parents: list[str]
+    files: list[str] = field(default_factory=list)
+    explicit: list[tuple[str, str]] = field(default_factory=list)
+    task_mentions: list[str] = field(default_factory=list)
+
+
+class AuditError(RuntimeError):
+    pass
+
+
+def utc_now() -> str:
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def normalize_id(value: str) -> str:
+    stripped = value.lstrip("0")
+    return stripped or "0"
+
+
+def run(args: list[str], root: Path, timeout: int = 120, check: bool = False) -> subprocess.CompletedProcess[str]:
+    try:
+        result = subprocess.run(
+            args,
+            cwd=root,
+            text=True,
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(args, 124, exc.stdout or "", "timeout")
+    if check and result.returncode:
+        raise AuditError(result.stderr.strip() or result.stdout.strip() or "Command failed")
+    return result
+
+
+def git(root: Path, *args: str, timeout: int = 120, check: bool = False) -> subprocess.CompletedProcess[str]:
+    return run(["git", "-c", "core.quotepath=false", *args], root, timeout, check)
+
+
+def repo_root() -> Path:
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode:
+        raise AuditError("Execute dentro do repositório Git.")
+    return Path(result.stdout.strip()).resolve()
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8-sig", errors="strict")
+
+
+def atomic_write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="\n", delete=False, dir=path.parent) as handle:
+        handle.write(content)
+        temporary = Path(handle.name)
+    os.replace(temporary, path)
+
+
+def load_status(path: Path) -> tuple[str, dict[str, Any]]:
+    if not path.exists():
+        raise AuditError(f"Arquivo obrigatório ausente: {path}")
+    text = read_text(path)
+    match = STATUS_BLOCK.search(text)
+    if not match:
+        raise AuditError("PROJECT_STATUS.md não contém um bloco PROJECT_STATUS_DATA válido.")
+    try:
+        state = json.loads(match.group(1))
+    except json.JSONDecodeError as exc:
+        raise AuditError(f"JSON oculto inválido em PROJECT_STATUS.md: {exc}") from exc
+    if not isinstance(state.get("items"), dict):
+        raise AuditError("O estado oculto não contém o dicionário items.")
+    return text, state
+
+
+def load_definitions(root: Path) -> dict[str, dict[str, Any]]:
+    baseline = root / ".srag-status-local" / "baseline.json"
+    if not baseline.exists():
+        return {}
+    raw = json.loads(read_text(baseline))
+    definitions = {}
+    for key, value in raw.get("items", {}).items():
+        definitions[str(key)] = value.get("definition", {})
+    return definitions
+
+
+def parse_commit_history(root: Path, since_commit: str | None) -> list[CommitRecord]:
+    fmt = "%H%x1f%aI%x1f%an%x1f%P%x1f%s%x1f%b%x1e"
+    args = ["log", "--all", "--reverse", f"--format={fmt}"]
+    if since_commit:
+        args.extend(["--not", since_commit])
+    result = git(root, *args, timeout=300, check=True)
+    records: list[CommitRecord] = []
+    for raw in result.stdout.split("\x1e"):
+        raw = raw.strip("\r\n")
+        if not raw:
+            continue
+        parts = raw.split("\x1f", 5)
+        if len(parts) != 6:
+            continue
+        sha, when, author, parents_raw, subject, body = parts
+        message = f"{subject}\n{body}"
+        explicit = [(action.lower(), normalize_id(item)) for action, item in EXPLICIT_MARKER.findall(message)]
+        mentions = sorted({normalize_id(value) for value in TASK_REFERENCE.findall(message)}, key=int)
+        files_result = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "-m", sha, timeout=60)
+        files = sorted({line.strip() for line in files_result.stdout.splitlines() if line.strip()})
+        records.append(
+            CommitRecord(
+                sha=sha,
+                when=when,
+                author=author,
+                subject=subject.strip(),
+                body=body.strip(),
+                parents=parents_raw.split(),
+                files=files,
+                explicit=explicit,
+                task_mentions=mentions,
+            )
+        )
+    return records
+
+
+def source_tokens(definition: dict[str, Any]) -> list[str]:
+    source = str(definition.get("source", "")).replace("\\", "/")
+    tokens = []
+    for part in source.split(";"):
+        cleaned = re.sub(r"\s*\([^)]*\).*", "", part).strip(" .")
+        name = Path(cleaned).name.lower()
+        if len(name) > 3 and not any(word in name for word in ("projeto", "reunião", "orientação", "plano")):
+            tokens.append(name)
+    return sorted(set(tokens))
+
+
+def task_files(definition: dict[str, Any], paths: Iterable[str]) -> list[str]:
+    tokens = source_tokens(definition)
+    return sorted({path for path in paths if any(token in Path(path).name.lower() or token in path.lower() for token in tokens)})
+
+
+def tracked_text_files(root: Path) -> list[Path]:
+    result = git(root, "ls-files", "-co", "--exclude-standard", check=True)
+    output = []
+    for rel in result.stdout.splitlines():
+        path = Path(rel)
+        if not rel or any(part in EXCLUDED_PARTS for part in path.parts):
+            continue
+        if path.parts and path.parts[0] in DATA_ROOTS:
+            continue
+        if path.suffix.lower() in BINARY_OR_DATA_SUFFIXES:
+            continue
+        if path.suffix.lower() not in TEXT_SUFFIXES and path.name not in {"README", "LICENSE", "Makefile", "Dockerfile"}:
+            continue
+        absolute = root / path
+        if absolute.is_file():
+            output.append(path)
+    return sorted(set(output), key=lambda value: value.as_posix().lower())
+
+
+def scan_file(root: Path, relative: Path) -> list[Finding]:
+    path = root / relative
+    rel = relative.as_posix()
+    findings: list[Finding] = []
+    try:
+        text = read_text(path)
+    except Exception as exc:
+        return [Finding("high", "encoding", f"Falha ao ler {rel} como UTF-8: {exc}", paths=[rel])]
+    if MERGE_CONFLICT.search(text):
+        findings.append(Finding("high", "merge-conflict", "Marcadores de conflito Git encontrados.", paths=[rel]))
+    if PRIVATE_KEY.search(text):
+        findings.append(Finding("critical", "secret", "Possível chave privada no repositório.", paths=[rel]))
+    for match in SECRET.finditer(text):
+        findings.append(Finding("critical", "secret", f"Possível segredo atribuído à chave {match.group(1)}.", paths=[rel]))
+    for match in ABSOLUTE_PATH.finditer(text):
+        findings.append(Finding("medium", "absolute-path", "Caminho local absoluto encontrado.", evidence=[match.group(0)[:180]], paths=[rel]))
+    todo_matches = TODO.findall(text)
+    if todo_matches:
+        findings.append(Finding("low", "todo", f"Arquivo contém {len(todo_matches)} marcador(es) TODO/FIXME/PENDENTE.", evidence=[f"{a}: {b}" for a, b in todo_matches[:10]], paths=[rel]))
+    for category, pattern, severity, message in PERFORMANCE_RULES:
+        matches = list(pattern.finditer(text))
+        if matches:
+            lines = [str(text.count("\n", 0, match.start()) + 1) for match in matches[:20]]
+            findings.append(Finding(severity, f"performance-{category}", message, evidence=[f"linhas: {', '.join(lines)}"], paths=[rel]))
+
+    suffix = relative.suffix.lower()
+    if suffix in {".py", ".pyi"}:
+        try:
+            ast.parse(text, filename=rel)
+        except SyntaxError as exc:
+            findings.append(Finding("high", "python-syntax", f"Erro de sintaxe Python: {exc}", paths=[rel]))
+    elif suffix == ".ipynb":
+        try:
+            notebook = json.loads(text)
+            counts: list[int] = []
+            saved_errors = []
+            parse_errors = []
+            for index, cell in enumerate(notebook.get("cells", []), 1):
+                if cell.get("cell_type") != "code":
+                    continue
+                count = cell.get("execution_count")
+                if isinstance(count, int):
+                    counts.append(count)
+                source = "".join(cell.get("source", []))
+                source = "\n".join("# " + line if line.lstrip().startswith(("%", "!", "?")) else line for line in source.splitlines())
+                if source.strip():
+                    try:
+                        ast.parse(source, filename=f"{rel}:cell-{index}")
+                    except SyntaxError as exc:
+                        parse_errors.append(f"célula {index}: {exc}")
+                for output in cell.get("outputs", []):
+                    if output.get("output_type") == "error":
+                        saved_errors.append(f"célula {index}: {output.get('ename')}: {output.get('evalue')}")
+            if any(next_count < count for count, next_count in zip(counts, counts[1:])):
+                findings.append(Finding("medium", "notebook-order", "Notebook salvo com contagens de execução fora de ordem.", paths=[rel]))
+            if saved_errors:
+                findings.append(Finding("high", "notebook-saved-error", "Notebook contém saídas de erro salvas.", evidence=saved_errors[:20], paths=[rel]))
+            if parse_errors:
+                findings.append(Finding("high", "notebook-syntax", "Células do notebook não puderam ser analisadas.", evidence=parse_errors[:20], paths=[rel]))
+        except Exception as exc:
+            findings.append(Finding("high", "notebook-json", f"Notebook inválido: {exc}", paths=[rel]))
+    elif suffix == ".json":
+        try:
+            json.loads(text)
+        except Exception as exc:
+            findings.append(Finding("high", "json-invalid", f"JSON inválido: {exc}", paths=[rel]))
+    elif suffix in {".yaml", ".yml"} and yaml is not None:
+        try:
+            yaml.safe_load(text)
+        except Exception as exc:
+            findings.append(Finding("high", "yaml-invalid", f"YAML inválido: {exc}", paths=[rel]))
+    return findings
+
+
+def scan_config_leakage(root: Path) -> list[Finding]:
+    config_path = root / "configs" / "supervised.yaml"
+    if not config_path.exists() or yaml is None:
+        return []
+    try:
+        config = yaml.safe_load(read_text(config_path)) or {}
+    except Exception:
+        return []
+    features = config.get("features", {}) if isinstance(config, dict) else {}
+    configured: list[str] = []
+    for key in ("final", "numericas", "categoricas"):
+        value = features.get(key, []) if isinstance(features, dict) else []
+        if isinstance(value, list):
+            configured.extend(str(item) for item in value)
+    suspects = sorted({name for name in configured if any(hint in name.lower() for hint in LEAKAGE_NAME_HINTS)})
+    if not suspects:
+        return []
+    return [
+        Finding(
+            "critical",
+            "possible-temporal-leakage",
+            "Features configuradas têm nomes associados a desfecho ou informação potencialmente posterior à internação. Exige revisão humana; o scanner não conclui temporalidade apenas pelo nome.",
+            evidence=suspects,
+            paths=["configs/supervised.yaml"],
+        )
+    ]
+
+
+def run_tests(root: Path, timeout: int) -> tuple[Finding | None, dict[str, Any]]:
+    args = [sys.executable, "-m", "pytest", "-q", "-m", "not slow and not net", "--maxfail=1"]
+    result = run(args, root, timeout=timeout)
+    detail = (result.stdout + "\n" + result.stderr).strip()[-6000:]
+    record = {"command": args[1:], "returncode": result.returncode, "detail": detail}
+    if result.returncode == 0:
+        return None, record
+    severity = "medium" if result.returncode == 5 else "high"
+    return Finding(severity, "pytest", f"pytest rápido retornou código {result.returncode}.", evidence=[detail[-1800:]]), record
+
+
+def severity_rank(value: str) -> int:
+    return {"critical": 4, "high": 3, "medium": 2, "low": 1}.get(value, 0)
+
+
+def relate_findings_to_tasks(findings: list[Finding], definitions: dict[str, dict[str, Any]]) -> None:
+    for finding in findings:
+        for task_id, definition in definitions.items():
+            if task_files(definition, finding.paths):
+                finding.task_ids.append(task_id)
+        finding.task_ids = sorted(set(finding.task_ids), key=int)
+
+
+def summarize_task_evidence(
+    commits: list[CommitRecord],
+    definitions: dict[str, dict[str, Any]],
+    existing_items: dict[str, Any],
+    findings: list[Finding],
+) -> dict[str, dict[str, Any]]:
+    evidence: dict[str, dict[str, Any]] = {
+        task_id: {"explicit": [], "mentions": [], "source_commits": [], "findings": []}
+        for task_id in existing_items
+    }
+    for commit in commits:
+        explicit_ids = set()
+        for action, task_id in commit.explicit:
+            if task_id in evidence:
+                evidence[task_id]["explicit"].append({"action": action, "commit": commit.sha, "when": commit.when, "author": commit.author, "subject": commit.subject})
+                explicit_ids.add(task_id)
+        for task_id in commit.task_mentions:
+            if task_id in evidence and task_id not in explicit_ids:
+                evidence[task_id]["mentions"].append({"commit": commit.sha, "when": commit.when, "author": commit.author, "subject": commit.subject})
+        for task_id, definition in definitions.items():
+            if task_id in evidence:
+                hits = task_files(definition, commit.files)
+                if hits and COMPLETION_LANGUAGE.search(f"{commit.subject}\n{commit.body}"):
+                    evidence[task_id]["source_commits"].append({"commit": commit.sha, "when": commit.when, "author": commit.author, "subject": commit.subject, "files": hits})
+    for index, finding in enumerate(findings):
+        for task_id in finding.task_ids:
+            if task_id in evidence:
+                evidence[task_id]["findings"].append(index)
+    return evidence
+
+
+def update_state(
+    state: dict[str, Any],
+    evidence: dict[str, dict[str, Any]],
+    findings: list[Finding],
+    tests_ok: bool,
+    head: str,
+) -> list[str]:
+    changes: list[str] = []
+    for task_id, item in state["items"].items():
+        item.setdefault("id", task_id)
+        item.setdefault("evidence", [])
+        item.setdefault("comments", [])
+        ev = evidence.get(task_id, {})
+        explicit = ev.get("explicit", [])
+        mentions = ev.get("mentions", [])
+        sources = ev.get("source_commits", [])
+        related_findings = [findings[index] for index in ev.get("findings", [])]
+
+        for marker in explicit:
+            if marker["action"] == "done":
+                if item.get("status") != "done" or not item.get("done"):
+                    changes.append(f"#{task_id}: marcador explícito de conclusão encontrado")
+                item["status"] = "done"
+                item["done"] = True
+                item["updated_at"] = marker["when"]
+                item["updated_by"] = marker["author"]
+                item["note"] = f"Commit {marker['commit'][:12]}: {marker['subject']}"
+            elif marker["action"] == "reopen":
+                item["status"] = "open"
+                item["done"] = False
+                item["updated_at"] = marker["when"]
+                item["updated_by"] = marker["author"]
+                item["note"] = f"Commit {marker['commit'][:12]}: {marker['subject']}"
+                changes.append(f"#{task_id}: reabertura explícita encontrada")
+            elif marker["action"] == "progress" and not item.get("done"):
+                item["status"] = "in_progress"
+                item["updated_at"] = marker["when"]
+                item["updated_by"] = marker["author"]
+                item["note"] = f"Commit {marker['commit'][:12]}: {marker['subject']}"
+                changes.append(f"#{task_id}: progresso explícito encontrado")
+            item["evidence"].append({"type": "commit_marker", **marker})
+
+        if item.get("done"):
+            item["evidence"] = item["evidence"][-40:]
+            continue
+
+        candidate = bool(mentions or sources)
+        if not candidate:
+            continue
+        blocking = any(severity_rank(finding.severity) >= 3 for finding in related_findings)
+        if blocking or not tests_ok:
+            new_status = "needs_review"
+            message = "Evidência de implementação encontrada, mas há problema impeditivo ou teste rápido não aprovado."
+        else:
+            new_status = "resolved_pending_validation"
+            message = "Evidência de implementação encontrada e verificações automáticas sem bloqueio. Confirmar manualmente."
+        if item.get("status") != new_status:
+            changes.append(f"#{task_id}: {STATUS_LABELS.get(new_status, new_status)}")
+        item["status"] = new_status
+        item["done"] = False
+        latest = (mentions + sources)[-1]
+        item["updated_at"] = latest["when"]
+        item["updated_by"] = "auditoria profunda automática"
+        item["note"] = message
+        for record in mentions[-8:]:
+            item["evidence"].append({"type": "commit_task_reference", **record})
+        for record in sources[-8:]:
+            item["evidence"].append({"type": "commit_source_match", **record})
+        for finding in related_findings[-12:]:
+            item["evidence"].append({"type": "audit_finding", "severity": finding.severity, "category": finding.category, "message": finding.message, "paths": finding.paths})
+        item["evidence"] = item["evidence"][-40:]
+
+    state["schema_version"] = max(int(state.get("schema_version", 1)), 2)
+    state["generated_at"] = utc_now()
+    state["last_scanned_commit"] = head
+    state["deep_audit"] = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": state["generated_at"],
+        "head": head,
+        "findings": Counter(finding.severity for finding in findings),
+        "tests_ok": tests_ok,
+    }
+    return changes
+
+
+def replace_visible_task_statuses(text: str, state: dict[str, Any]) -> str:
+    for task_id, item in state["items"].items():
+        label = STATUS_LABELS.get(item.get("status", "open"), item.get("status", "open"))
+        icon = STATUS_ICONS.get(item.get("status", "open"), "⬜")
+        pattern = re.compile(rf"(?m)^-\s+[⬜🟦🟪🟨✅]\s+\*\*#{re.escape(task_id)}\*\*(.*?)\s+—\s+[^·\n]+(\s+·.*)$")
+        text = pattern.sub(lambda match: f"- {icon} **#{task_id}**{match.group(1)} — {label}{match.group(2)}", text)
+    counts = Counter(item.get("status", "open") for item in state["items"].values())
+    replacements = {
+        r"(?m)^- Concluídas: \*\*\d+\*\*$": f"- Concluídas: **{counts['done']}**",
+        r"(?m)^- Resolvidas pendentes de validação: \*\*\d+\*\*$": f"- Resolvidas pendentes de validação: **{counts['resolved_pending_validation'] + counts['implemented_unconfirmed']}**",
+        r"(?m)^- Precisam revisão: \*\*\d+\*\*$": f"- Precisam revisão: **{counts['needs_review']}**",
+        r"(?m)^- Em andamento: \*\*\d+\*\*$": f"- Em andamento: **{counts['in_progress']}**",
+        r"(?m)^- Abertas: \*\*\d+\*\*$": f"- Abertas: **{counts['open']}**",
+    }
+    for pattern, replacement in replacements.items():
+        text = re.sub(pattern, replacement, text)
+    text = re.sub(r"(?m)^> Atualizado em .*\.$", f"> Atualizado em {state['generated_at']}.", text)
+    return text
+
+
+def render_status(text: str, state: dict[str, Any]) -> str:
+    visible = replace_visible_task_statuses(text, state)
+    payload = json.dumps(state, ensure_ascii=False, separators=(",", ":"), default=str)
+    replacement = f"<!-- PROJECT_STATUS_DATA\n{payload}\nPROJECT_STATUS_DATA -->"
+    return STATUS_BLOCK.sub(replacement, visible, count=1)
+
+
+def write_local_report(root: Path, commits: list[CommitRecord], findings: list[Finding], changes: list[str], tests: dict[str, Any]) -> Path:
+    report_dir = root / ".srag-status-local"
+    report_dir.mkdir(exist_ok=True)
+    report = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": utc_now(),
+        "commits_scanned": len(commits),
+        "findings": [asdict(finding) for finding in findings],
+        "status_changes": changes,
+        "tests": tests,
+    }
+    path = report_dir / "deep_git_audit_report.json"
+    atomic_write(path, json.dumps(report, ensure_ascii=False, indent=2, default=str) + "\n")
+    return path
+
+
+def backup_status(root: Path, status_path: Path) -> Path:
+    backup_dir = root / ".srag-status-local" / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    stamp = dt.datetime.now().strftime("%Y%m%dT%H%M%S")
+    backup = backup_dir / f"PROJECT_STATUS_before_deep_audit_{stamp}.md"
+    backup.write_bytes(status_path.read_bytes())
+    return backup
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Audita profundamente o Git e atualiza PROJECT_STATUS.md de forma conservadora.")
+    parser.add_argument("--dry-run", action="store_true", help="Não altera PROJECT_STATUS.md.")
+    parser.add_argument("--no-tests", action="store_true", help="Não executa pytest rápido.")
+    parser.add_argument("--test-timeout", type=int, default=300, help="Timeout do pytest rápido em segundos.")
+    parser.add_argument("--since-commit", help="Limita a análise histórica a commits posteriores a este SHA.")
+    parser.add_argument("--fail-on-high", action="store_true", help="Retorna código 2 se houver achado HIGH ou CRITICAL.")
+    return parser.parse_args()
+
+
+def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    args = parse_args()
+    root = repo_root()
+    status_path = root / "PROJECT_STATUS.md"
+    print("[auditoria] 1/7 Lendo estado compartilhado e definições...")
+    original_text, state = load_status(status_path)
+    definitions = load_definitions(root)
+
+    print("[auditoria] 2/7 Percorrendo histórico Git em todas as refs...")
+    commits = parse_commit_history(root, args.since_commit)
+    print(f"[auditoria] {len(commits)} commit(s) analisado(s).")
+
+    print("[auditoria] 3/7 Analisando arquivos textuais atuais...")
+    files = tracked_text_files(root)
+    findings: list[Finding] = []
+    for index, relative in enumerate(files, 1):
+        if index == 1 or index % 25 == 0 or index == len(files):
+            print(f"[auditoria] arquivo {index}/{len(files)}: {relative.as_posix()}")
+        findings.extend(scan_file(root, relative))
+    findings.extend(scan_config_leakage(root))
+
+    print("[auditoria] 4/7 Relacionando achados às tarefas...")
+    relate_findings_to_tasks(findings, definitions)
+
+    tests_record: dict[str, Any] = {"executed": False, "ok": True}
+    if not args.no_tests:
+        print("[auditoria] 5/7 Executando pytest rápido, sem slow e sem net...")
+        test_finding, raw_test = run_tests(root, args.test_timeout)
+        tests_record = {"executed": True, "ok": test_finding is None, **raw_test}
+        if test_finding:
+            findings.append(test_finding)
+    else:
+        print("[auditoria] 5/7 Testes desativados por --no-tests.")
+
+    print("[auditoria] 6/7 Inferindo progresso conservador...")
+    evidence = summarize_task_evidence(commits, definitions, state["items"], findings)
+    head_result = git(root, "rev-parse", "HEAD", check=True)
+    head = head_result.stdout.strip()
+    changes = update_state(state, evidence, findings, bool(tests_record.get("ok")), head)
+    report_path = write_local_report(root, commits, findings, changes, tests_record)
+
+    if args.dry_run:
+        print("[auditoria] 7/7 Dry-run: PROJECT_STATUS.md não foi alterado.")
+    else:
+        print("[auditoria] 7/7 Gravando PROJECT_STATUS.md com backup e escrita atômica...")
+        backup = backup_status(root, status_path)
+        atomic_write(status_path, render_status(original_text, state))
+        print(f"Backup local: {backup.relative_to(root)}")
+
+    counts = Counter(finding.severity for finding in findings)
+    print(f"Relatório local: {report_path.relative_to(root)}")
+    print(f"Achados: critical={counts['critical']}, high={counts['high']}, medium={counts['medium']}, low={counts['low']}")
+    print(f"Mudanças de status propostas/aplicadas: {len(changes)}")
+    for change in changes[:40]:
+        print(f"- {change}")
+    print("Arquivo compartilhado alterado: PROJECT_STATUS.md" if not args.dry_run else "Nenhum arquivo compartilhado alterado.")
+    if args.fail_on_high and (counts["critical"] or counts["high"]):
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+## `tools/read_outputs.py`
+
+- Git: `tracked` · status `clean`
+- Size: `15.4 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `7c6b3fcac367a144f5170ed8a2a434b271f928871336075030b321bd77968834`
+
+```python
+#!/usr/bin/env python3
+"""Consolida resultados locais do projeto em UM DOCX autocontido.
+
+Execute na raiz do repositório:
+    python tools/read_outputs.py
+
+Saída única:
+    docs/RESULTADOS_COMPLETOS.docx
+"""
+from __future__ import annotations
+import argparse, hashlib, json, os, platform, re, subprocess, sys, tempfile
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+try: import pandas as pd
+except Exception: pd=None
+try: from PIL import Image
+except Exception: Image=None
+from docx import Document
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
+
+TEXT={'.txt','.md','.log','.rst'}; TABLE={'.csv','.tsv'}; STRUCT={'.json','.yaml','.yml'}
+IMAGES={'.png','.jpg','.jpeg','.webp','.gif','.bmp','.tif','.tiff'}
+MODELS={'.joblib','.pkl','.pickle','.onnx','.pt','.pth','.h5','.hdf5'}; DATA={'.parquet','.feather','.arrow'}; NOTEBOOK={'.ipynb'}
+RESULT_DIRS={'outputs','output','results','resultados','reports','report','figures','figuras','tables','tabelas','metrics','metricas','predictions','predicoes','runs','models','modelos','artifacts','artefatos','logs','evaluation','avaliacao','experiments','experimentos'}
+HINTS={'result','resultado','metric','metrica','score','prediction','predicao','evaluation','avaliacao','report','relatorio','manifest','manifesto','waterfall','comparison','comparacao','calibration','calibracao','confusion','confusao','importance','importancia','bootstrap','subgroup','subgrupo','error','erro','performance','benchmark','summary','resumo','feature','cluster','silhouette','auc','brier','threshold','limiar','shap','umap','pca','curva','matriz'}
+EXCLUDE={'.git','.venv','venv','env','__pycache__','.pytest_cache','.mypy_cache','.ruff_cache','.tox','.nox','.ipynb_checkpoints','node_modules','.idea','.vscode','site-packages','build','dist','.local-analysis','.srag-status-local','.project-status-local'}
+SECRET=re.compile(r'(?im)^\s*([A-Za-z_][\w.-]*(?:token|secret|password|passwd|pwd|api[_-]?key|private[_-]?key|credential)[\w.-]*)\s*[:=]\s*(.+)$')
+HOMEWIN=re.compile(r'(?i)\b[A-Z]:[\\/]+Users[\\/]+[^\\/\s\"\'<>|]+'); HOMEPOSIX=re.compile(r'(?<![A-Za-z0-9_])/(?:home|Users)/[^/\s\"\'<>|]+')
+NAVY='17365D'; BLUE='2F5597'; GREY='F3F5F9'; AMBER='FFF4E5'; RED='FDECEA'
+
+def repo_root(start:Path)->Path:
+ p=subprocess.run(['git','rev-parse','--show-toplevel'],cwd=start,text=True,capture_output=True,encoding='utf-8',errors='replace'); return Path(p.stdout.strip()).resolve() if p.returncode==0 and p.stdout.strip() else start.resolve()
+def git(root:Path,*a:str)->str:
+ p=subprocess.run(['git',*a],cwd=root,text=True,capture_output=True,encoding='utf-8',errors='replace'); return p.stdout.strip() if p.returncode==0 else 'indisponível'
+def sha(path:Path)->str:
+ h=hashlib.sha256()
+ with path.open('rb') as f:
+  for c in iter(lambda:f.read(1024*1024),b''):h.update(c)
+ return h.hexdigest()
+def size(n:int)->str:
+ v=float(n)
+ for u in ['B','KB','MB','GB','TB']:
+  if v<1024 or u=='TB':return f'{v:.0f} {u}' if u=='B' else f'{v:.1f} {u}'
+  v/=1024
+def redact(t:str,root:Path)->str:
+ t=SECRET.sub(lambda m:f'{m.group(1)}=[REDACTED]',t).replace(str(root),'<REPO>').replace(root.as_posix(),'<REPO>'); return HOMEPOSIX.sub('<HOME>',HOMEWIN.sub('<HOME>',t))
+def kind(p:Path)->str:
+ e=p.suffix.lower()
+ if e in TABLE:return 'tabela'
+ if e in TEXT:return 'texto'
+ if e in STRUCT:return 'estruturado'
+ if e in IMAGES:return 'imagem'
+ if e in MODELS:return 'modelo'
+ if e in DATA:return 'dados'
+ if e in NOTEBOOK:return 'notebook'
+ return 'outro'
+def wanted(p:Path,root:Path,notebooks:bool)->bool:
+ rel=p.relative_to(root); parts=[x.lower() for x in rel.parts]
+ if any(x in EXCLUDE for x in parts[:-1]):return False
+ e=p.suffix.lower(); supported=e in TEXT|TABLE|STRUCT|IMAGES|MODELS|DATA or (notebooks and e in NOTEBOOK)
+ return supported and (any(x in RESULT_DIRS for x in parts[:-1]) or any(h in p.stem.lower() for h in HINTS))
+def scan(root:Path,notebooks:bool)->list[Path]:
+ out=[]
+ for cur,dirs,files in os.walk(root):
+  dirs[:]=sorted(d for d in dirs if d.lower() not in EXCLUDE)
+  for n in sorted(files):
+   p=Path(cur)/n
+   try:
+    if wanted(p,root,notebooks):out.append(p)
+   except Exception:pass
+ return sorted(out,key=lambda p:p.relative_to(root).as_posix().lower())
+def shade(c:Any,color:str):
+ pr=c._tc.get_or_add_tcPr();x=pr.find(qn('w:shd'))
+ if x is None:x=OxmlElement('w:shd');pr.append(x)
+ x.set(qn('w:fill'),color)
+def margins(c:Any,v:int=70):
+ pr=c._tc.get_or_add_tcPr();m=pr.first_child_found_in('w:tcMar')
+ if m is None:m=OxmlElement('w:tcMar');pr.append(m)
+ for side in ['top','start','bottom','end']:
+  x=m.find(qn('w:'+side))
+  if x is None:x=OxmlElement('w:'+side);m.append(x)
+  x.set(qn('w:w'),str(v));x.set(qn('w:type'),'dxa')
+def header(row:Any):
+ pr=row._tr.get_or_add_trPr();x=OxmlElement('w:tblHeader');x.set(qn('w:val'),'true');pr.append(x)
+def table(doc:Document,heads:list[str],rows:list[tuple],font=7):
+ t=doc.add_table(rows=1,cols=len(heads));t.style='Table Grid';t.alignment=WD_TABLE_ALIGNMENT.CENTER
+ for j,h in enumerate(heads):
+  c=t.rows[0].cells[j];shade(c,NAVY);margins(c);r=c.paragraphs[0].add_run(str(h));r.bold=True;r.font.color.rgb=RGBColor(255,255,255);r.font.size=Pt(font)
+ header(t.rows[0])
+ for i,row in enumerate(rows):
+  cs=t.add_row().cells
+  for j,v in enumerate(row):
+   margins(cs[j],55);cs[j].vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER
+   if i%2:shade(cs[j],GREY)
+   r=cs[j].paragraphs[0].add_run(str(v));r.font.size=Pt(font-0.5)
+ return t
+def callout(doc:Document,title:str,text:str,color=AMBER):
+ t=doc.add_table(rows=1,cols=1);c=t.cell(0,0);shade(c,color);margins(c,130);r=c.paragraphs[0].add_run(title+'\n');r.bold=True;r.font.color.rgb=RGBColor.from_string(NAVY);c.paragraphs[0].add_run(text);doc.add_paragraph()
+def add_text(doc:Document,text:str,root:Path,limit:int):
+ text=redact(text,root)
+ if len(text)>limit:text=text[:int(limit*.8)]+f'\n\n[... {len(text)-limit} caracteres omitidos ...]\n\n'+text[-int(limit*.2):]
+ for b in re.split(r'\n{2,}',text):
+  if b.strip():
+   p=doc.add_paragraph();r=p.add_run(b.strip());r.font.name='Consolas';r.font.size=Pt(8);p.paragraph_format.space_after=Pt(3)
+def read(path:Path)->str:return path.read_bytes().decode('utf-8-sig',errors='replace')
+def add_csv(doc:Document,p:Path,a):
+ if pd is None:add_text(doc,read(p),a.root_resolved,a.max_text_chars);return
+ try:df=pd.read_csv(p,sep='\t' if p.suffix.lower()=='.tsv' else ',',encoding='utf-8-sig',low_memory=False,nrows=a.max_rows_read)
+ except Exception as e:callout(doc,'FALHA AO LER TABELA',repr(e),RED);add_text(doc,read(p),a.root_resolved,a.max_text_chars);return
+ table(doc,['Campo','Valor'],[('Linhas analisadas',len(df)),('Colunas',len(df.columns)),('Limite de leitura',a.max_rows_read)])
+ shown=df.iloc[:a.rows_docx,:a.cols_docx];rows=[]
+ for _,r in shown.iterrows():rows.append(tuple('<NA>' if pd.isna(v) else str(v)[:300] for v in r))
+ if len(shown.columns):table(doc,[str(x) for x in shown.columns],rows,font=6.5)
+ stats=[]
+ for c in df.columns[:a.summary_cols]:
+  s=df[c];miss=int(s.isna().sum())
+  if pd.api.types.is_numeric_dtype(s):
+   d=s.dropna().describe();detail='; '.join(f'{k}={float(d[k]):.6g}' for k in ['count','mean','std','min','25%','50%','75%','max'] if k in d and not pd.isna(d[k]))
+  else:detail='; '.join(f'{k}={int(v)}' for k,v in s.astype('string').fillna('<NA>').value_counts().head(a.top_values).items())
+  stats.append((c,str(s.dtype),miss,detail))
+ table(doc,['Coluna','Tipo','Ausentes','Resumo'],stats,font=6.5)
+def flatten(x:Any,prefix='',limit=12000):
+ out=[]
+ def rec(v,p):
+  if len(out)>=limit:return
+  if isinstance(v,dict):
+   for k,z in v.items():rec(z,f'{p}.{k}' if p else str(k))
+  elif isinstance(v,list):
+   out.append((p,f'<lista com {len(v)} itens>'))
+   for i,z in enumerate(v[:50]):rec(z,f'{p}[{i}]')
+  else:out.append((p,repr(v)))
+ rec(x,prefix);return out
+def add_struct(doc:Document,p:Path,a):
+ raw=read(p);data=None
+ try:
+  if p.suffix.lower()=='.json':data=json.loads(raw)
+  else:
+   import yaml;data=yaml.safe_load(raw)
+ except Exception as e:callout(doc,'ESTRUTURA NÃO INTERPRETADA',repr(e),AMBER)
+ if data is not None:table(doc,['Chave','Valor'],[(k,v[:1000]) for k,v in flatten(data,limit=a.max_struct)],font=6.5)
+ doc.add_paragraph('Conteúdo textual:',style='Heading 3');add_text(doc,raw,a.root_resolved,a.max_text_chars)
+def add_image(doc:Document,p:Path,a,tmp:Path):
+ if Image is None:callout(doc,'PILLOW INDISPONÍVEL',p.name);return
+ try:
+  with Image.open(p) as im:
+   w,h=im.size;fmt=im.format;mode=im.mode;frames=getattr(im,'n_frames',1);x=im.convert('RGB');x.thumbnail((a.image_pixels,a.image_pixels));q=tmp/(hashlib.sha1(str(p).encode()).hexdigest()[:12]+'.jpg');x.save(q,quality=88,optimize=True)
+  table(doc,['Campo','Valor'],[('Dimensões',f'{w} × {h}'),('Formato/modo',f'{fmt}/{mode}'),('Frames',frames)])
+  par=doc.add_paragraph();par.alignment=WD_ALIGN_PARAGRAPH.CENTER;par.add_run().add_picture(str(q),width=Inches(a.image_inches));cap=doc.add_paragraph(p.relative_to(a.root_resolved).as_posix());cap.alignment=WD_ALIGN_PARAGRAPH.CENTER;cap.runs[0].italic=True
+ except Exception as e:callout(doc,'FALHA AO INCORPORAR IMAGEM',repr(e),RED)
+def add_notebook(doc:Document,p:Path,a):
+ try:nb=json.loads(p.read_text(encoding='utf-8-sig'))
+ except Exception as e:callout(doc,'NOTEBOOK INVÁLIDO',repr(e),RED);return
+ n=0
+ for i,c in enumerate(nb.get('cells',[]),1):
+  if c.get('cell_type')!='code' or not c.get('outputs'):continue
+  n+=1;doc.add_paragraph(f'Célula {i} · execution_count={c.get("execution_count")}',style='Heading 3');texts=[]
+  for o in c['outputs']:
+   k=o.get('output_type')
+   if k=='stream':texts.append(''.join(o.get('text',[])))
+   elif k=='error':texts.append(f'ERRO {o.get("ename")}: {o.get("evalue")}\n'+'\n'.join(o.get('traceback',[])))
+   elif k in {'execute_result','display_data'}:
+    d=o.get('data',{});v=d.get('text/plain');texts.extend([''.join(v) if isinstance(v,list) else str(v)] if v else []);texts.extend(f'[saída não textual: {m}]' for m in d if m!='text/plain')
+  add_text(doc,'\n\n'.join(texts),a.root_resolved,a.max_cell_chars)
+ callout(doc,'RESUMO DO NOTEBOOK',f'Células totais: {len(nb.get("cells",[]))}; células com outputs: {n}.')
+def add_data(doc:Document,p:Path,a):
+ rows=[('Formato',p.suffix.lower()),('Tamanho',size(p.stat().st_size)),('SHA-256',sha(p))]
+ if pd is not None:
+  try:df=pd.read_parquet(p).head(a.parquet_rows);rows.extend([('Colunas',len(df.columns)),('Prévia',len(df))]);table(doc,['Campo','Valor'],rows);table(doc,[str(x) for x in df.columns[:a.cols_docx]],[tuple('<NA>' if pd.isna(v) else str(v)[:300] for v in r) for _,r in df.iloc[:a.parquet_rows,:a.cols_docx].iterrows()],font=6.5);return
+  except Exception as e:rows.append(('Leitura',repr(e)))
+ table(doc,['Campo','Valor'],rows)
+def setup(doc:Document):
+ s=doc.sections[0];s.top_margin=Inches(.65);s.bottom_margin=Inches(.65);s.left_margin=Inches(.65);s.right_margin=Inches(.65);doc.styles['Normal'].font.name='Aptos';doc.styles['Normal'].font.size=Pt(9)
+ for n,z,c in [('Title',24,NAVY),('Heading 1',16,NAVY),('Heading 2',13,BLUE),('Heading 3',10,BLUE)]:st=doc.styles[n];st.font.name='Aptos Display';st.font.size=Pt(z);st.font.color.rgb=RGBColor.from_string(c);st.font.bold=True
+ f=s.footer.paragraphs[0];f.alignment=WD_ALIGN_PARAGRAPH.CENTER;f.add_run('Compilação local de resultados - tools/read_outputs.py').font.size=Pt(7)
+def args():
+ p=argparse.ArgumentParser(description='Gera um único DOCX autocontido com resultados do projeto.');p.add_argument('--root',type=Path,default=Path.cwd());p.add_argument('--output-dir',type=Path,default=Path('docs'));p.add_argument('--name',default='RESULTADOS_COMPLETOS');p.add_argument('--no-notebook-outputs',dest='notebooks',action='store_false');p.set_defaults(notebooks=True);p.add_argument('--max-text-chars',type=int,default=300000);p.add_argument('--max-cell-chars',type=int,default=40000);p.add_argument('--max-rows-read',type=int,default=500000);p.add_argument('--rows-docx',type=int,default=200);p.add_argument('--cols-docx',type=int,default=30);p.add_argument('--summary-cols',type=int,default=300);p.add_argument('--top-values',type=int,default=15);p.add_argument('--max-struct',type=int,default=12000);p.add_argument('--image-inches',type=float,default=6.7);p.add_argument('--image-pixels',type=int,default=2200);p.add_argument('--parquet-rows',type=int,default=30);return p.parse_args()
+def main():
+ a=args();root=repo_root(a.root);a.root_resolved=root;out=(a.output_dir if a.output_dir.is_absolute() else root/a.output_dir).resolve();out.mkdir(parents=True,exist_ok=True)
+ target=out/(a.name+'.docx')
+ if target.exists():target.unlink()
+ files=scan(root,a.notebooks);doc=Document();setup(doc);p=doc.add_paragraph(style='Title');p.alignment=WD_ALIGN_PARAGRAPH.CENTER;p.add_run('Resultados completos do projeto');q=doc.add_paragraph();q.alignment=WD_ALIGN_PARAGRAPH.CENTER;q.add_run('Arquivo único para análise por IA: textos, tabelas, imagens, manifestos, modelos catalogados e outputs de notebooks').italic=True
+ meta=[('Gerado em',datetime.now(timezone.utc).replace(microsecond=0).isoformat()),('Repositório',root.name),('Branch',git(root,'branch','--show-current')),('Commit',git(root,'rev-parse','HEAD')),('Árvore Git','limpa' if not git(root,'status','--porcelain') else 'com alterações locais'),('Python',sys.version.split()[0]),('Plataforma',platform.platform())];table(doc,['Campo','Valor'],meta);callout(doc,'COMO USAR','Envie somente este DOCX à IA. Todos os materiais encontrados estão incorporados. A compilação não recalcula resultados e pode reunir evidências provisórias; sempre cruzar caminho, SHA-256, commit, manifesto e configuração.',AMBER)
+ c=Counter(kind(x) for x in files);doc.add_heading('1. Inventário',1);doc.add_paragraph(f'Arquivos encontrados: {len(files)}. '+'; '.join(f'{k}: {v}' for k,v in sorted(c.items()))+'.');table(doc,['#','Caminho','Tipo','Tamanho','SHA-256'],[(i,x.relative_to(root).as_posix(),kind(x),size(x.stat().st_size),sha(x)[:16]+'…') for i,x in enumerate(files,1)],font=6.5);doc.add_page_break();doc.add_heading('2. Conteúdo compilado',1);errors=[]
+ with tempfile.TemporaryDirectory(prefix='read_outputs_') as td:
+  for i,x in enumerate(files,1):
+   rel=x.relative_to(root).as_posix();k=kind(x);print(f'[read_outputs] {i}/{len(files)} {rel}');doc.add_heading(f'2.{i} {rel}',2);table(doc,['Campo','Valor'],[('Tipo',k),('Extensão',x.suffix.lower()),('Tamanho',size(x.stat().st_size)),('Modificado UTC',datetime.fromtimestamp(x.stat().st_mtime,timezone.utc).isoformat()),('SHA-256',sha(x))])
+   try:
+    if k=='tabela':add_csv(doc,x,a)
+    elif k=='texto':add_text(doc,read(x),root,a.max_text_chars)
+    elif k=='estruturado':add_struct(doc,x,a)
+    elif k=='imagem':add_image(doc,x,a,Path(td))
+    elif k=='notebook':add_notebook(doc,x,a)
+    elif k=='dados':add_data(doc,x,a)
+    elif k=='modelo':callout(doc,'ARTEFATO DE MODELO',f'Binário não desserializado. Tamanho: {size(x.stat().st_size)}. SHA-256: {sha(x)}.')
+   except Exception as e:errors.append((rel,repr(e)));callout(doc,'ERRO AO COMPILAR',repr(e),RED)
+  if errors:doc.add_heading('3. Erros',1);[doc.add_paragraph(f'{r}: {e}',style='List Bullet') for r,e in errors]
+  doc.save(target)
+ print(f'[read_outputs] Arquivo único: {target}');print(f'[read_outputs] Arquivos: {len(files)}; erros: {len(errors)}');return 1 if errors else 0
+if __name__=='__main__':raise SystemExit(main())
 ```
 
 ## `tools/update_project_reference.py`
@@ -8747,7 +11932,7 @@ if __name__ == "__main__":
 
 ## 19. Snapshot provenance
 
-- Generated UTC: `2026-10-18T16:40:28+00:00`
-- Branch / commit: `main` / `9fa6e694d08430d3fcb9d94c00fbec8a775080e1`
+- Generated UTC: `2026-10-19T12:17:48+00:00`
+- Branch / commit: `main` / `5f66a1cecbf11555217771c0c77b48d74725adad`
 - Origin: `https://github.com/Ivan-S-Oliveira/Projeto_Integrador.git`
-- Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': False, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 10, 'include_diff': False, 'max_diff_chars': 400000, 'run_tests': False, 'pytest_args': '', 'test_timeout': 1800, 'fail_on_high': False}`
+- Generator options: `{'output_dir': 'docs', 'config': 'configs/supervised.yaml', 'split_mb': 1.0, 'split': True, 'notebook_outputs': True, 'max_output_chars': 6000, 'artifacts': False, 'max_artifact_bytes': 300000, 'max_csv_rows': 60, 'max_inline_bytes': 4000000, 'git_log': 10, 'include_diff': False, 'max_diff_chars': 400000, 'run_tests': True, 'pytest_args': "-m 'not slow'", 'test_timeout': 1800, 'fail_on_high': False}`

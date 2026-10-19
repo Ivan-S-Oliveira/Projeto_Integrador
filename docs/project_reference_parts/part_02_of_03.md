@@ -2,8 +2,8 @@
 ## `notebooks/B/B_06_eda_temporal_clustering.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `6.8 MB` · modified `2026-10-18 15:51 UTC`
-- SHA-256: `2f0e06d523807ac2b8d03ef3dc4ad67589f0c5de8f5df6678854db3d4f05b73a`
+- Size: `6.8 MB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `de4f109d19e27e64021ede1ba82917ecd0e311f70aa9e120fd4cf1922e943947`
 
 - Cells: `147` (`119` code, `28` markdown)
 - Code cells executed: `119` of `119`
@@ -40,58 +40,69 @@ do notebook.
   da solução não supervisionada.
 ```
 
-### Cell 2 [code] · In [359]
+### Cell 2 [code] · In [121]
 
 ```python
-# ============================================================
-# Localização e carregamento compacto da coorte
-# ============================================================
-
 from pathlib import Path
 import gc
+import sys
 import time
 
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
-# ============================================================
-# Localização e carregamento compacto da coorte
-# ============================================================
 
-from pathlib import Path
-import gc
-import time
+def encontrar_raiz_projeto() -> Path:
+    pasta_atual = Path.cwd().resolve()
 
-import numpy as np
-import pandas as pd
-import pyarrow.parquet as pq
+    for pasta in [pasta_atual, *pasta_atual.parents]:
+        possui_src = (pasta / "src").is_dir()
+        possui_configs = (pasta / "configs").is_dir()
+
+        if possui_src and possui_configs:
+            return pasta
+
+    raise FileNotFoundError(
+        "Não foi possível localizar a raiz do projeto."
+    )
+
+
+ROOT_DIR = encontrar_raiz_projeto()
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from src.utils import config as C
+
+
+analytical_dir = Path(C.ANALYTICAL_DIR)
+
+if not analytical_dir.is_dir():
+    raise FileNotFoundError(
+        "O diretório analítico configurado não existe: "
+        f"{analytical_dir}"
+    )
 
 
 CANDIDATOS_COORTE = [
     {
-        "nome": "coorte_oficial",
-        "caminho": (
-            C.ANALYTICAL_DIR
-            / "coorte.parquet"
-        ),
+        "nome": "coorte_final",
+        "caminho": analytical_dir / "coorte_final.parquet",
     },
     {
-        "nome": "coorte_pessoa_a",
-        "caminho": (
-            C.ANALYTICAL_DIR
-            / "coorte_provisoria.parquet"
-        ),
+        "nome": "coorte_canonica",
+        "caminho": analytical_dir / "coorte.parquet",
+    },
+    {
+        "nome": "coorte_provisoria",
+        "caminho": analytical_dir / "coorte_provisoria.parquet",
     },
     {
         "nome": "coorte_desenvolvimento",
-        "caminho": (
-            C.ANALYTICAL_DIR
-            / "coorte_provisoria_b.parquet"
-        ),
+        "caminho": analytical_dir / "coorte_provisoria_b.parquet",
     },
 ]
-
 
 fonte_coorte = None
 
@@ -232,18 +243,7 @@ COLUNAS_SOLICITADAS_B06 = list(
 arquivo_parquet = pq.ParquetFile(
     CAMINHO_COORTE
 )
-
-COLUNAS_DISPONIVEIS_COORTE = set(
-    arquivo_parquet.schema_arrow.names
-)
-
-COLUNAS_EXISTENTES_B06 = [
-    coluna
-    for coluna in COLUNAS_SOLICITADAS_B06
-    if coluna in COLUNAS_DISPONIVEIS_COORTE
-]
-
-# ... 361 lines omitted ...
+# ... 372 lines omitted ...
 ```
 
 **Output 1 (stream:stdout)**
@@ -260,7 +260,7 @@ Dimensão carregada: (3915136, 44)
 Memória após leitura: 1,455.58 MB
 Memória após compactação: 321.03 MB
 Redução após compactação: 77.94%
-Tempo de leitura e compactação: 6.96 s
+Tempo de leitura e compactação: 15.46 s
 ```
 
 **Output 2 (display_data)**
@@ -318,7 +318,7 @@ Tempo de leitura e compactação: 6.96 s
 Memória após leitura: 1,455.58 MB
 Memória após compactação: 321.03 MB
 Redução após compactação: 77.94%
-Tempo de leitura e compactação: 6.96 s
+Tempo de leitura e compactação: 15.46 s
 ```
 
 **Output 4 (display_data)**
@@ -370,7 +370,7 @@ Tempo de leitura e compactação: 6.96 s
 [non-text output omitted: text/html]
 ```
 
-### Cell 3 [code] · In [360]
+### Cell 3 [code] · In [122]
 
 ```python
 COLUNAS_OBRIGATORIAS_COORTE = [
@@ -489,7 +489,7 @@ print(
 Contrato mínimo da coorte validado.
 ```
 
-### Cell 4 [code] · In [361]
+### Cell 4 [code] · In [123]
 
 ```python
 CAMINHO_VOLUME_ANO = (
@@ -584,7 +584,7 @@ O ano de 2026 deve ser interpretado de acordo com a data de encerramento
 da base carregada.
 ```
 
-### Cell 6 [code] · In [362]
+### Cell 6 [code] · In [124]
 
 ```python
 import matplotlib.pyplot as plt
@@ -617,7 +617,7 @@ Figura de volume: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\r
 Figura do desfecho: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
 ```
 
-### Cell 7 [code] · In [363]
+### Cell 7 [code] · In [125]
 
 ```python
 volume_por_ano = (
@@ -703,7 +703,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 8 [code] · In [364]
+### Cell 8 [code] · In [126]
 
 ```python
 contagem_alvo_por_ano = (
@@ -843,7 +843,7 @@ alvo_obito_srag  quantidade_total  percentual_cura  percentual_obito_srag
 [non-text output omitted: text/html]
 ```
 
-### Cell 9 [code] · In [365]
+### Cell 9 [code] · In [127]
 
 ```python
 resumo_temporal = (
@@ -934,7 +934,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 10 [code] · In [366]
+### Cell 10 [code] · In [128]
 
 ```python
 anos_volume = (
@@ -1065,7 +1065,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_volume_por_ano.png
 ```
 
-### Cell 11 [code] · In [367]
+### Cell 11 [code] · In [129]
 
 ```python
 anos_alvo = (
@@ -1209,7 +1209,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_proporcao_obito_por_ano.png
 ```
 
-### Cell 12 [code] · In [368]
+### Cell 12 [code] · In [130]
 
 ```python
 volume_por_ano.to_csv(
@@ -1259,7 +1259,7 @@ Distribuição do alvo salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Proje
 Resumo temporal salvo em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_temporal.csv
 ```
 
-### Cell 13 [code] · In [369]
+### Cell 13 [code] · In [131]
 
 ```python
 ANOS_ESPERADOS = {
@@ -1421,7 +1421,7 @@ A análise incluirá:
 Os campos originais serão preservados.
 ```
 
-### Cell 15 [code] · In [370]
+### Cell 15 [code] · In [132]
 
 ```python
 CAMINHO_IDADE_ANO = (
@@ -1478,7 +1478,7 @@ Tabela de faixa etária: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integ
 Tabela de sexo: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_sexo_por_ano.csv
 ```
 
-### Cell 16 [code] · In [371]
+### Cell 16 [code] · In [133]
 
 ```python
 COLUNAS_IDADE_OBRIGATORIAS = [
@@ -1675,7 +1675,7 @@ Idades não convertidas ou implausíveis: 24
 Tipos de idade inválidos: 0
 ```
 
-### Cell 17 [code] · In [372]
+### Cell 17 [code] · In [134]
 
 ```python
 auditoria_idade = (
@@ -1769,7 +1769,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 18 [code] · In [373]
+### Cell 18 [code] · In [135]
 
 ```python
 idade_por_ano = (
@@ -1955,7 +1955,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 19 [code] · In [374]
+### Cell 19 [code] · In [136]
 
 ```python
 LIMITES_FAIXA_ETARIA = [
@@ -2094,7 +2094,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 20 [code] · In [375]
+### Cell 20 [code] · In [137]
 
 ```python
 if "cs_sexo" not in coorte.columns:
@@ -2228,7 +2228,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 21 [code] · In [376]
+### Cell 21 [code] · In [138]
 
 ```python
 anos_idade = (
@@ -2371,7 +2371,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_idade_por_ano.png
 ```
 
-### Cell 22 [code] · In [377]
+### Cell 22 [code] · In [139]
 
 ```python
 ORDEM_FAIXA_ETARIA = (
@@ -2483,7 +2483,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_faixa_etaria_por_ano.png
 ```
 
-### Cell 23 [code] · In [378]
+### Cell 23 [code] · In [140]
 
 ```python
 idade_por_ano.to_csv(
@@ -2658,7 +2658,7 @@ As tabelas serão produzidas em formato longo para facilitar filtros,
 gráficos e análises posteriores por grupo de variáveis.
 ```
 
-### Cell 25 [code] · In [379]
+### Cell 25 [code] · In [141]
 
 ```python
 CAMINHO_DICIONARIO_OPERACIONAL = (
@@ -2834,7 +2834,7 @@ Variáveis do dicionário ausentes na coorte: 50
 [non-text output omitted: text/html]
 ```
 
-### Cell 26 [code] · In [380]
+### Cell 26 [code] · In [142]
 
 ```python
 CAMINHO_PREENCHIMENTO_ANO = (
@@ -2881,7 +2881,7 @@ Resumo de preenchimento: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integ
 Figura de variação: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
 ```
 
-### Cell 27 [code] · In [381]
+### Cell 27 [code] · In [143]
 
 ```python
 quantidade_por_ano = (
@@ -3160,7 +3160,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 28 [code] · In [382]
+### Cell 28 [code] · In [144]
 
 ```python
 quantidade_total_coorte = len(
@@ -3385,7 +3385,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 29 [code] · In [383]
+### Cell 29 [code] · In [145]
 
 ```python
 variacao_preenchimento = (
@@ -3561,7 +3561,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 30 [code] · In [384]
+### Cell 30 [code] · In [146]
 
 ```python
 USOS_RELEVANTES_PARA_GRAFICO = {
@@ -3787,7 +3787,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_variacao_preenchimento.png
 ```
 
-### Cell 31 [code] · In [385]
+### Cell 31 [code] · In [147]
 
 ```python
 preenchimento_por_variavel_ano.to_csv(
@@ -3999,7 +3999,7 @@ Também serão derivados, por registro:
 Ausência e resposta ignorada não serão convertidas em resposta negativa.
 ```
 
-### Cell 33 [code] · In [386]
+### Cell 33 [code] · In [148]
 
 ```python
 # ============================================================
@@ -4072,7 +4072,7 @@ Sintomas encontrados: 13
 Comorbidades encontradas: 13
 ```
 
-### Cell 34 [code] · In [387]
+### Cell 34 [code] · In [149]
 
 ```python
 nomes_amigaveis_dicionario = (
@@ -4143,7 +4143,7 @@ Tabela de comorbidades: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integr
 Tabela de contadores clínicos: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_contadores_clinicos_por_ano.csv
 ```
 
-### Cell 35 [code] · In [388]
+### Cell 35 [code] · In [150]
 
 ```python
 def normalizar_resposta_clinica(
@@ -4212,7 +4212,7 @@ def normalizar_resposta_clinica(
     )
 ```
 
-### Cell 36 [code] · In [389]
+### Cell 36 [code] · In [151]
 
 ```python
 def criar_tabela_clinica_por_ano(
@@ -4418,7 +4418,7 @@ def criar_tabela_clinica_por_ano(
 # ... 13 lines omitted ...
 ```
 
-### Cell 37 [code] · In [390]
+### Cell 37 [code] · In [152]
 
 ```python
 sintomas_por_ano = (
@@ -4662,7 +4662,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 38 [code] · In [391]
+### Cell 38 [code] · In [153]
 
 ```python
 # ============================================================
@@ -4910,7 +4910,7 @@ max           1.000000e+00
 [non-text output omitted: text/html]
 ```
 
-### Cell 39 [code] · In [392]
+### Cell 39 [code] · In [154]
 
 ```python
 contadores_clinicos_por_ano = (
@@ -5033,7 +5033,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 40 [code] · In [393]
+### Cell 40 [code] · In [155]
 
 ```python
 def calcular_variacao_clinica(
@@ -5267,7 +5267,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 41 [code] · In [394]
+### Cell 41 [code] · In [156]
 
 ```python
 QUANTIDADE_INDICADORES_GRAFICO = 8
@@ -5345,7 +5345,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 42 [code] · In [395]
+### Cell 42 [code] · In [157]
 
 ```python
 def criar_grafico_clinico_temporal(
@@ -5511,7 +5511,7 @@ def criar_grafico_clinico_temporal(
     )
 ```
 
-### Cell 43 [code] · In [396]
+### Cell 43 [code] · In [158]
 
 ```python
 criar_grafico_clinico_temporal(
@@ -5567,7 +5567,7 @@ Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\re
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_comorbidades_por_ano.png
 ```
 
-### Cell 44 [code] · In [397]
+### Cell 44 [code] · In [159]
 
 ```python
 sintomas_por_ano.to_csv(
@@ -5828,7 +5828,7 @@ refletir alterações de preenchimento, cobertura ou composição da
 população registrada.
 ```
 
-### Cell 46 [code] · In [398]
+### Cell 46 [code] · In [160]
 
 ```python
 COLUNAS_VACINACAO_PLANEJADAS = [
@@ -5926,7 +5926,7 @@ Tabela de escolaridade: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integr
 Tabela de UF de residência: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_uf_residencia_por_ano.csv
 ```
 
-### Cell 47 [code] · In [399]
+### Cell 47 [code] · In [161]
 
 ```python
 vacinacao_por_ano = (
@@ -6068,7 +6068,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 48 [code] · In [400]
+### Cell 48 [code] · In [162]
 
 ```python
 escolaridade_normalizada = (
@@ -6261,7 +6261,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 49 [code] · In [401]
+### Cell 49 [code] · In [163]
 
 ```python
 escolaridade_preenchimento_ano = (
@@ -6364,7 +6364,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 50 [code] · In [402]
+### Cell 50 [code] · In [164]
 
 ```python
 uf_residencia_normalizada = (
@@ -6529,7 +6529,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 51 [code] · In [403]
+### Cell 51 [code] · In [165]
 
 ```python
 resumo_uf_residencia = (
@@ -6610,7 +6610,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 52 [code] · In [404]
+### Cell 52 [code] · In [166]
 
 ```python
 figura_vacinacao, eixo_vacinacao = plt.subplots(
@@ -6742,7 +6742,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_vacinacao_por_ano.png
 ```
 
-### Cell 53 [code] · In [405]
+### Cell 53 [code] · In [167]
 
 ```python
 figura_escolaridade, eixo_escolaridade = plt.subplots(
@@ -6867,7 +6867,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_escolaridade_preenchimento_por_ano.png
 ```
 
-### Cell 54 [code] · In [406]
+### Cell 54 [code] · In [168]
 
 ```python
 QUANTIDADE_UF_GRAFICO = 10
@@ -7011,7 +7011,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_principais_uf_residencia.png
 ```
 
-### Cell 55 [code] · In [407]
+### Cell 55 [code] · In [169]
 
 ```python
 vacinacao_por_ano.to_csv(
@@ -7278,7 +7278,7 @@ Serão destacados:
 - mudanças na composição das principais UFs de residência.
 ```
 
-### Cell 57 [code] · In [408]
+### Cell 57 [code] · In [170]
 
 ```python
 ANO_INICIAL_TRIAGEM_TEMPORAL = 2019
@@ -7332,7 +7332,7 @@ Tabela de rupturas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador
 Resumo de rupturas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_resumo_rupturas_temporais.csv
 ```
 
-### Cell 58 [code] · In [409]
+### Cell 58 [code] · In [171]
 
 ```python
 def resumir_amplitude_temporal(
@@ -7538,7 +7538,7 @@ def resumir_amplitude_temporal(
 # ... 7 lines omitted ...
 ```
 
-### Cell 59 [code] · In [410]
+### Cell 59 [code] · In [172]
 
 ```python
 volume_triagem = (
@@ -7692,7 +7692,7 @@ alvo_obito_srag  ano_internacao  percentual_obito_srag       indicador
 [non-text output omitted: text/html]
 ```
 
-### Cell 60 [code] · In [411]
+### Cell 60 [code] · In [173]
 
 ```python
 ruptura_volume = (
@@ -7788,7 +7788,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 61 [code] · In [412]
+### Cell 61 [code] · In [174]
 
 ```python
 preenchimento_triagem = (
@@ -7962,7 +7962,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 62 [code] · In [413]
+### Cell 62 [code] · In [175]
 
 ```python
 sintomas_triagem = (
@@ -8174,7 +8174,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 63 [code] · In [414]
+### Cell 63 [code] · In [176]
 
 ```python
 vacinacao_triagem = (
@@ -8302,7 +8302,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 64 [code] · In [415]
+### Cell 64 [code] · In [177]
 
 ```python
 ufs_triagem = (
@@ -8442,7 +8442,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 65 [code] · In [416]
+### Cell 65 [code] · In [178]
 
 ```python
 TABELAS_RUPTURAS = [
@@ -8642,7 +8642,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 66 [code] · In [417]
+### Cell 66 [code] · In [179]
 
 ```python
 resumo_rupturas_temporais = (
@@ -8746,7 +8746,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 67 [code] · In [418]
+### Cell 67 [code] · In [180]
 
 ```python
 QUANTIDADE_DESTAQUES_GRAFICO = 20
@@ -8895,7 +8895,7 @@ else:
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_rupturas_temporais.png
 ```
 
-### Cell 68 [code] · In [419]
+### Cell 68 [code] · In [181]
 
 ```python
 rupturas_temporais.to_csv(
@@ -9097,7 +9097,7 @@ As associações apresentadas são descritivas e não devem ser interpretadas
 como relações causais ou como importância preditiva ajustada.
 ```
 
-### Cell 70 [code] · In [420]
+### Cell 70 [code] · In [182]
 
 ```python
 # ============================================================
@@ -9314,10 +9314,10 @@ Colunas utilizadas: 35
 Memória da coorte completa: 586.18 MB
 Memória da base enxuta de desfecho: 171.75 MB
 Redução de memória: 70.70%
-Tempo de preparação: 0.71 s
+Tempo de preparação: 0.75 s
 ```
 
-### Cell 71 [code] · In [421]
+### Cell 71 [code] · In [183]
 
 ```python
 CAMINHO_OBITO_FAIXA_ETARIA = (
@@ -9399,7 +9399,7 @@ Tabela de óbito por comorbidades: <HOME>\OneDrive - Pfizer\Documents\GitHub\Pro
 Tabela de óbito por sintomas: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_obito_sintomas.csv
 ```
 
-### Cell 72 [code] · In [422]
+### Cell 72 [code] · In [184]
 
 ```python
 def calcular_ic_wilson(
@@ -9605,7 +9605,7 @@ def calcular_odds_ratio_bruta(
 # ... 109 lines omitted ...
 ```
 
-### Cell 73 [code] · In [423]
+### Cell 73 [code] · In [185]
 
 ```python
 if "faixa_etaria" not in base_analise_desfecho.columns:
@@ -9698,7 +9698,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 74 [code] · In [424]
+### Cell 74 [code] · In [186]
 
 ```python
 COLUNAS_CONTAGEM_COMORBIDADES = [
@@ -9837,7 +9837,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 75 [code] · In [425]
+### Cell 75 [code] · In [187]
 
 ```python
 def criar_tabela_obito_indicadores(
@@ -10043,7 +10043,7 @@ def criar_tabela_obito_indicadores(
 # ... 38 lines omitted ...
 ```
 
-### Cell 76 [code] · In [426]
+### Cell 76 [code] · In [188]
 
 ```python
 obito_sintomas = (
@@ -10310,7 +10310,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 77 [code] · In [427]
+### Cell 77 [code] · In [189]
 
 ```python
 COLUNAS_AUSENCIA_DESFECHO = list(
@@ -10565,7 +10565,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 78 [code] · In [428]
+### Cell 78 [code] · In [190]
 
 ```python
 dados_faixa_grafico = (
@@ -10726,7 +10726,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_obito_faixa_etaria.png
 ```
 
-### Cell 79 [code] · In [429]
+### Cell 79 [code] · In [191]
 
 ```python
 dados_comorbidades_grafico = (
@@ -10887,7 +10887,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_obito_numero_comorbidades.png
 ```
 
-### Cell 80 [code] · In [430]
+### Cell 80 [code] · In [192]
 
 ```python
 def criar_grafico_odds_ratio(
@@ -11067,7 +11067,7 @@ def criar_grafico_odds_ratio(
     )
 ```
 
-### Cell 81 [code] · In [431]
+### Cell 81 [code] · In [193]
 
 ```python
 criar_grafico_odds_ratio(
@@ -11119,7 +11119,7 @@ Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\re
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_odds_ratio_comorbidades.png
 ```
 
-### Cell 82 [code] · In [432]
+### Cell 82 [code] · In [194]
 
 ```python
 QUANTIDADE_VARIAVEIS_AUSENCIA_GRAFICO = 15
@@ -11249,7 +11249,7 @@ print(
 Figura salva em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\eda_02_ausencia_por_desfecho.png
 ```
 
-### Cell 83 [code] · In [433]
+### Cell 83 [code] · In [195]
 
 ```python
 quantidade_base_desfecho = len(
@@ -11340,7 +11340,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 84 [code] · In [434]
+### Cell 84 [code] · In [196]
 
 ```python
 obito_faixa_etaria.to_csv(
@@ -11586,7 +11586,7 @@ na proporção registrada de uma condição pode refletir tanto mudança na
 população quanto mudança na cobertura do preenchimento.
 ```
 
-### Cell 86 [code] · In [435]
+### Cell 86 [code] · In [197]
 
 ```python
 import seaborn as sns
@@ -11792,7 +11792,7 @@ def exibir_heatmap_percentual(
 # ... 26 lines omitted ...
 ```
 
-### Cell 87 [code] · In [436]
+### Cell 87 [code] · In [198]
 
 ```python
 matriz_sintomas_presenca, rotulos_sintomas = (
@@ -11821,7 +11821,7 @@ exibir_heatmap_percentual(
 [non-text output omitted: image/png]
 ```
 
-### Cell 88 [code] · In [437]
+### Cell 88 [code] · In [199]
 
 ```python
 matriz_comorbidades_presenca, rotulos_comorbidades = (
@@ -11850,7 +11850,7 @@ exibir_heatmap_percentual(
 [non-text output omitted: image/png]
 ```
 
-### Cell 89 [code] · In [438]
+### Cell 89 [code] · In [200]
 
 ```python
 matriz_sintomas_sem_resposta, rotulos_sintomas_sem_resposta = (
@@ -11908,7 +11908,7 @@ exibir_heatmap_percentual(
 [non-text output omitted: image/png]
 ```
 
-### Cell 90 [code] · In [439]
+### Cell 90 [code] · In [201]
 
 ```python
 COLUNAS_CONTADORES_GRAFICO = [
@@ -12121,7 +12121,7 @@ figura_contadores.tight_layout(
 [non-text output omitted: image/png]
 ```
 
-### Cell 91 [code] · In [440]
+### Cell 91 [code] · In [202]
 
 ```python
 verificacoes_paineis_clinicos = {
@@ -12254,7 +12254,7 @@ As comparações são descritivas e não representam efeitos causais ou
 associações ajustadas.
 ```
 
-### Cell 93 [code] · In [441]
+### Cell 93 [code] · In [203]
 
 ```python
 def criar_tabela_obito_categoria_ano(
@@ -12460,7 +12460,7 @@ def criar_tabela_obito_categoria_ano(
 # ... 8 lines omitted ...
 ```
 
-### Cell 94 [code] · In [442]
+### Cell 94 [code] · In [204]
 
 ```python
 if "faixa_etaria" not in base_analise_desfecho.columns:
@@ -12774,7 +12774,7 @@ if not matriz_obito_faixa_etaria_ano_plot.columns.equals(
 [non-text output omitted: text/html]
 ```
 
-### Cell 95 [code] · In [443]
+### Cell 95 [code] · In [205]
 
 ```python
 if (
@@ -13006,7 +13006,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 96 [code] · In [444]
+### Cell 96 [code] · In [206]
 
 ```python
 def exibir_letalidade_sim_nao(
@@ -13212,7 +13212,7 @@ def exibir_letalidade_sim_nao(
 # ... 31 lines omitted ...
 ```
 
-### Cell 97 [code] · In [445]
+### Cell 97 [code] · In [207]
 
 ```python
 letalidade_sintomas_grafico = (
@@ -13289,7 +13289,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 98 [code] · In [446]
+### Cell 98 [code] · In [208]
 
 ```python
 letalidade_comorbidades_grafico = (
@@ -13366,7 +13366,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 99 [code] · In [447]
+### Cell 99 [code] · In [209]
 
 ```python
 ORDEM_SEXO = [
@@ -13499,7 +13499,7 @@ Categorias presentes na coorte: ['Masculino', 'Feminino', 'Ignorado']
 Categorias presentes na análise do desfecho: ['Masculino', 'Feminino', 'Ignorado']
 ```
 
-### Cell 100 [code] · In [448]
+### Cell 100 [code] · In [210]
 
 ```python
 resumo_sexo_observado = (
@@ -13553,7 +13553,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 101 [code] · In [449]
+### Cell 101 [code] · In [211]
 
 ```python
 sexo_grafico = (
@@ -13720,7 +13720,7 @@ display(
 [non-text output omitted: text/html]
 ```
 
-### Cell 102 [code] · In [450]
+### Cell 102 [code] · In [212]
 
 ```python
 obito_por_sexo = (
@@ -13948,7 +13948,7 @@ for barra, percentual, quantidade in zip(
 [non-text output omitted: text/html]
 ```
 
-### Cell 103 [code] · In [451]
+### Cell 103 [code] · In [213]
 
 ```python
 COLUNAS_OBITO_SEXO_ANO_NECESSARIAS = [
@@ -14218,7 +14218,7 @@ eixo_obito_sexo_ano.set_ylabel(
 [non-text output omitted: text/html]
 ```
 
-### Cell 104 [code] · In [452]
+### Cell 104 [code] · In [214]
 
 ```python
 verificacoes_paineis_desfecho = {
@@ -14377,7 +14377,7 @@ representados como volume zero. Eles permanecerão ausentes para evitar
 a interpretação incorreta de períodos ainda não observados.
 ```
 
-### Cell 106 [code] · In [453]
+### Cell 106 [code] · In [215]
 
 ```python
 COLUNAS_SERIE_MENSAL_NECESSARIAS = [
@@ -14586,7 +14586,7 @@ calendario_mensal[
 **Output 1 (stream:stderr)**
 
 ```text
-<HOME>\AppData\Local\Temp\1\ipykernel_34996\3723131606.py:35: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+<HOME>\AppData\Local\Temp\1\ipykernel_10188\3723131606.py:35: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
   na_value=np.datetime64("NaT"),
 ```
 
@@ -14647,7 +14647,7 @@ Meses sem registros: 0
 [non-text output omitted: text/html]
 ```
 
-### Cell 107 [code] · In [454]
+### Cell 107 [code] · In [216]
 
 ```python
 JANELA_MEDIA_MOVEL_MESES = 3
@@ -14906,7 +14906,7 @@ eixo_volume_mensal.plot(
 [non-text output omitted: text/html]
 ```
 
-### Cell 108 [code] · In [455]
+### Cell 108 [code] · In [217]
 
 ```python
 ORDEM_MESES = [
@@ -15184,7 +15184,7 @@ ano_internacao
 [non-text output omitted: text/html]
 ```
 
-### Cell 109 [code] · In [456]
+### Cell 109 [code] · In [218]
 
 ```python
 anotacoes_volume_ano_mes = (
@@ -15308,7 +15308,7 @@ plt.close(
 [non-text output omitted: image/png]
 ```
 
-### Cell 110 [code] · In [457]
+### Cell 110 [code] · In [219]
 
 ```python
 valor_maximo_obito_mensal = float(
@@ -15481,7 +15481,7 @@ plt.close(
 [non-text output omitted: image/png]
 ```
 
-### Cell 111 [code] · In [458]
+### Cell 111 [code] · In [220]
 
 ```python
 total_volume_matriz = int(
@@ -15669,7 +15669,7 @@ O desfecho será utilizado somente depois que a solução de clustering
 estiver definida, para caracterização descritiva dos grupos.
 ```
 
-### Cell 113 [code] · In [459]
+### Cell 113 [code] · In [221]
 
 ```python
 COLUNAS_IDENTIFICADORAS = [
@@ -16015,7 +16015,7 @@ A imputação e a padronização serão definidas somente depois da análise
 de cobertura e distribuição das variáveis transformadas.
 ```
 
-### Cell 115 [code] · In [460]
+### Cell 115 [code] · In [222]
 
 ```python
 COLUNAS_CONTRATO_CLUSTERING = [
@@ -16319,7 +16319,7 @@ A amostra de desenvolvimento não substitui a aplicação posterior da
 solução escolhida à população analítica completa.
 ```
 
-### Cell 117 [code] · In [461]
+### Cell 117 [code] · In [223]
 
 ```python
 SEMENTE_CLUSTERING = 42
@@ -16582,7 +16582,7 @@ a comparação posterior entre uma solução clínica mais simples e uma
 solução com variáveis adicionais de contexto.
 ```
 
-### Cell 119 [code] · In [462]
+### Cell 119 [code] · In [224]
 
 ```python
 if "amostra_desenvolvimento" not in globals():
@@ -16920,7 +16920,7 @@ Nenhuma variável será excluída silenciosamente. As decisões serão
 registradas em uma tabela de diagnóstico.
 ```
 
-### Cell 121 [code] · In [463]
+### Cell 121 [code] · In [225]
 
 ```python
 if "matriz_nucleo_bruta" not in globals():
@@ -17273,7 +17273,7 @@ O contador continuará disponível nos metadados para caracterização
 posterior dos clusters.
 ```
 
-### Cell 123 [code] · In [464]
+### Cell 123 [code] · In [226]
 
 ```python
 COLUNAS_CONTADORES_REDUNDANCIA = [
@@ -17542,7 +17542,7 @@ de sensibilidade e na interpretação dos clusters.
 Nenhuma ausência será imputada nesta etapa.
 ```
 
-### Cell 125 [code] · In [465]
+### Cell 125 [code] · In [227]
 
 ```python
 OBJETOS_NECESSARIOS = [
@@ -17860,7 +17860,7 @@ silenciosamente como resposta negativa. O pipeline adicionará um
 indicador específico quando houver imputação.
 ```
 
-### Cell 127 [code] · In [466]
+### Cell 127 [code] · In [228]
 
 ```python
 from sklearn.compose import ColumnTransformer
@@ -18198,7 +18198,7 @@ porque essas features apresentam o mesmo valor em todos os registros da
 amostra.
 ```
 
-### Cell 129 [code] · In [467]
+### Cell 129 [code] · In [229]
 
 ```python
 OBJETOS_DIAGNOSTICO_PROCESSADO_NECESSARIOS = [
@@ -18488,7 +18488,7 @@ visual. A ausência de separação visual clara não implica, isoladamente,
 ausência de estrutura multivariada.
 ```
 
-### Cell 131 [code] · In [468]
+### Cell 131 [code] · In [230]
 
 ```python
 from sklearn.decomposition import PCA
@@ -18788,7 +18788,7 @@ A comparação considerará conjuntamente:
 O maior silhouette não determinará sozinho a solução final.
 ```
 
-### Cell 133 [code] · In [469]
+### Cell 133 [code] · In [231]
 
 ```python
 from sklearn.cluster import MiniBatchKMeans
@@ -19158,7 +19158,7 @@ A pontuação desta etapa é diagnóstica. A decisão final também dependerá
 da interpretação clínica e temporal dos perfis encontrados.
 ```
 
-### Cell 135 [code] · In [470]
+### Cell 135 [code] · In [232]
 
 ```python
 from sklearn.cluster import MiniBatchKMeans
@@ -19599,7 +19599,7 @@ dos perfis clínicos, da composição temporal, da influência da ausência
 e da utilidade das variáveis contextuais.
 ```
 
-### Cell 137 [code] · In [471]
+### Cell 137 [code] · In [233]
 
 ```python
 from sklearn.cluster import MiniBatchKMeans
@@ -19886,7 +19886,7 @@ Por isso, a interpretação deve priorizar a magnitude absoluta e a
 associação de cada lado do componente aos clusters observados.
 ```
 
-### Cell 139 [code] · In [472]
+### Cell 139 [code] · In [234]
 
 ```python
 OBJETOS_PERFIS_NECESSARIOS = [
@@ -20439,7 +20439,7 @@ a estrutura dos clusters permanece quando o padrão de preenchimento
 deixa de participar diretamente das distâncias.
 ```
 
-### Cell 141 [code] · In [473]
+### Cell 141 [code] · In [235]
 
 ```python
 from sklearn.cluster import MiniBatchKMeans
@@ -20757,7 +20757,7 @@ avaliação por período e comparação explícita de pipelines com e sem
 indicadores de ausência.
 ```
 
-### Cell 143 [code] · In [474]
+### Cell 143 [code] · In [236]
 
 ```python
 from pathlib import Path
@@ -21029,7 +21029,7 @@ Cluster será aplicado à coorte completa: False
 [non-text output omitted: text/html]
 ```
 
-### Cell 144 [code] · In [475]
+### Cell 144 [code] · In [237]
 
 ```python
 # ============================================================
@@ -21320,7 +21320,7 @@ ARI núcleo versus ampliada sem indicadores de ausência: 0.918673
 [non-text output omitted: text/html]
 ```
 
-### Cell 145 [code] · In [476]
+### Cell 145 [code] · In [238]
 
 ```python
 # ============================================================
@@ -21735,7 +21735,7 @@ Comorbidades: 13
 [non-text output omitted: text/html]
 ```
 
-### Cell 146 [code] · In [477]
+### Cell 146 [code] · In [239]
 
 ```python
 # ============================================================
@@ -21959,7 +21959,7 @@ rotulos_kmeans_hca = (
 
 ```text
 Comparacao minima de HCA e DBSCAN concluida.
-Tempo para calcular k-distance do DBSCAN: 0.569 segundos
+Tempo para calcular k-distance do DBSCAN: 0.62 segundos
 Arquivos gerados:
 - <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_dbscan_varredura_minima.csv
 - <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\eda_02_hca_dbscan_resumo_minimo.csv
@@ -21981,7 +21981,7 @@ Decisao metodologica: HCA e DBSCAN foram executados como comparacoes curtas em a
 1                    0             100.0         NaN                NaN   
 
    davies_bouldin  menor_cluster_percentual  ari_vs_kmeans  tempo_segundos  \
-0        1.760106                     46.16       0.784244        0.622436   
+0        1.760106                     46.16       0.784244        0.609788   
 1             NaN                       NaN            NaN             NaN   
 
                 parametros                                            decisao  
@@ -22014,16 +22014,16 @@ Decisao metodologica: HCA e DBSCAN foram executados como comparacoes curtas em a
 2                       NaN                                 NaN   
 
    ari_dbscan_vs_kmeans  tempo_segundos  
-0              0.000693        2.016054  
-1              0.000029        1.935020  
-2             -0.000009        2.443006  
+0              0.000693        0.853829  
+1              0.000029        1.368717  
+2             -0.000009        2.571786  
 [non-text output omitted: text/html]
 ```
 
 **Output 6 (execute_result)**
 
 ```text
-134559
+138090
 ```
 
 ### Cell 147 [markdown]
@@ -22298,11 +22298,11 @@ A expansão do clustering é encerrada neste ponto. O ganho substantivo seguinte
 ## `notebooks/B/B_07_supervisionado_pilotos.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `571.4 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `03ac705f3dbfb59357d98a6dfe681e958e081f36781a860a25fe5deaf97fde34`
+- Size: `578.6 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `77cc53d3cc0361255377436016b6ff089b3fe0e6f2e4a404ea477efb3ce4663f`
 
-- Cells: `52` (`30` code, `22` markdown)
-- Code cells executed: `28` of `30`
+- Cells: `53` (`31` code, `22` markdown)
+- Code cells executed: `31` of `31`
 - Kernel: `.venv (3.14.7)`; Python `3.14.7`
 - Outputs: `text outputs included`
 
@@ -22714,19 +22714,8 @@ if ALVO_MODELO not in df.columns:
         df=df,
         alvo=ALVO_BRUTO,
         positivos=target_cfg["positivos"],
-        ignorados=target_cfg.get(
-            "ignorados",
-            {9.0},
-        ),
-        descartar_nao_rotulados=bool(
-            target_cfg.get(
-                "descartar_nao_rotulados",
-                True,
-            )
-        ),
-    ).astype(
-        "Int8"
-    )
+        negativos=target_cfg["negativos"],
+    ).astype("Int8")
 
     ajustes_aplicados.append(
         {
@@ -22817,7 +22806,145 @@ Distribuicao do alvo:
 [non-text output omitted: text/html]
 ```
 
-### Cell 10 [markdown]
+### Cell 10 [code] · In [5]
+
+```python
+# Teste isolado da pendência #6.
+# Não modifica df e não acessa nenhuma partição do experimento.
+
+df_teste_alvo = df.drop(
+    columns=[ALVO_MODELO],
+    errors="raise",
+).copy()
+
+target_cfg_teste = CFG["target"]
+
+alvo_recriado_teste = criar_alvo_binario(
+    df=df_teste_alvo,
+    alvo=ALVO_BRUTO,
+    positivos=target_cfg_teste["positivos"],
+    negativos=target_cfg_teste["negativos"],
+).astype("Int8")
+
+distribuicao_original = (
+    df[ALVO_MODELO]
+    .value_counts(dropna=False)
+    .rename_axis("classe")
+    .reset_index(name="quantidade")
+)
+
+distribuicao_recriada = (
+    alvo_recriado_teste
+    .value_counts(dropna=False)
+    .rename_axis("classe")
+    .reset_index(name="quantidade")
+)
+
+distribuicao_original["classe"] = (
+    distribuicao_original["classe"]
+    .astype("Int64")
+)
+
+distribuicao_recriada["classe"] = (
+    distribuicao_recriada["classe"]
+    .astype("Int64")
+)
+
+distribuicao_original["quantidade"] = (
+    distribuicao_original["quantidade"]
+    .astype("int64")
+)
+
+distribuicao_recriada["quantidade"] = (
+    distribuicao_recriada["quantidade"]
+    .astype("int64")
+)
+
+distribuicao_original = (
+    distribuicao_original
+    .sort_values(
+        by="classe",
+        na_position="last",
+    )
+    .reset_index(drop=True)
+)
+
+distribuicao_recriada = (
+    distribuicao_recriada
+    .sort_values(
+        by="classe",
+        na_position="last",
+    )
+    .reset_index(drop=True)
+)
+
+pd.testing.assert_frame_equal(
+    distribuicao_recriada,
+    distribuicao_original,
+    check_dtype=True,
+)
+
+
+valores_recriados = set(
+    alvo_recriado_teste
+    .dropna()
+    .astype(int)
+    .unique()
+    .tolist()
+)
+
+if not valores_recriados.issubset({0, 1}):
+    raise AssertionError(
+        "O alvo recriado contém valores diferentes de 0 e 1: "
+        f"{sorted(valores_recriados)}"
+    )
+
+print("OK: criar_alvo_binario funciona sem a coluna de alvo pré-existente.")
+print("Distribuição original:")
+display(distribuicao_original)
+print("Distribuição recriada:")
+display(distribuicao_recriada)
+
+del df_teste_alvo
+del alvo_recriado_teste
+del distribuicao_original
+del distribuicao_recriada
+del valores_recriados
+del target_cfg_teste
+```
+
+**Output 1 (stream:stdout)**
+
+```text
+OK: criar_alvo_binario funciona sem a coluna de alvo pré-existente.
+Distribuição original:
+```
+
+**Output 2 (display_data)**
+
+```text
+   classe  quantidade
+0       0     3058951
+1       1      856185
+[non-text output omitted: text/html]
+```
+
+**Output 3 (stream:stdout)**
+
+```text
+Distribuição recriada:
+```
+
+**Output 4 (display_data)**
+
+```text
+   classe  quantidade
+0       0     3058951
+1       1      856185
+[non-text output omitted: text/html]
+```
+
+### Cell 11 [markdown]
 
 ```markdown
 ## 5. Contrato de features e validação estrutural
@@ -22825,7 +22952,7 @@ Distribuicao do alvo:
 Enquanto `features.final` estiver vazio, o piloto usa a concatenação das listas numérica e categórica. A lista final permanece pendente até a coorte definitiva.
 ```
 
-### Cell 11 [code] · In [5]
+### Cell 12 [code] · In [6]
 
 ```python
 features_cfg = CFG["features"]
@@ -22902,7 +23029,7 @@ Faltantes: []
 Vazamento na configuração: []
 ```
 
-### Cell 12 [code] · In [6]
+### Cell 13 [code] · In [7]
 
 ```python
 # ============================================================
@@ -23023,7 +23150,7 @@ Ausentes: []
 OK: todas as colunas necessárias existem na coorte.
 ```
 
-### Cell 13 [markdown]
+### Cell 14 [markdown]
 
 ```markdown
 ## 6. Auditoria de tipos, alvo, período e ausência
@@ -23031,7 +23158,7 @@ OK: todas as colunas necessárias existem na coorte.
 A célula descreve a base que efetivamente entrará no piloto. Nenhuma decisão de exclusão de feature é tomada aqui.
 ```
 
-### Cell 14 [code] · In [7]
+### Cell 15 [code] · In [8]
 
 ```python
 resumo_base = pd.DataFrame({
@@ -23129,7 +23256,7 @@ display(ausencia_features.head(20))
 [non-text output omitted: text/html]
 ```
 
-### Cell 15 [markdown]
+### Cell 16 [markdown]
 
 ```markdown
 ## 7. Preparar a base elegível e a chave de grupo
@@ -23137,7 +23264,7 @@ display(ausencia_features.head(20))
 Linhas sem rótulo ou sem data não são usadas no piloto. O identificador técnico é mantido apenas para impedir que ocorrências repetidas sejam distribuídas entre partições.
 ```
 
-### Cell 16 [code] · In [8]
+### Cell 17 [code] · In [9]
 
 ```python
 colunas_necessarias = list(dict.fromkeys(
@@ -23205,7 +23332,7 @@ estrato_split
 [non-text output omitted: text/html]
 ```
 
-### Cell 17 [code] · In [9]
+### Cell 18 [code] · In [10]
 
 ```python
 from pathlib import Path
@@ -23557,7 +23684,7 @@ Waterfall da quarentena: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integ
 Base provisória pronta para o split agrupado. Nenhum grupo restante cruza combinações de ano e alvo.
 ```
 
-### Cell 18 [markdown]
+### Cell 19 [markdown]
 
 ```markdown
 ## 8. Criar a partição provisória persistível
@@ -23565,7 +23692,7 @@ Base provisória pronta para o split agrupado. Nenhum grupo restante cruza combi
 A implementação faz a divisão no nível do identificador, preservando a composição conjunta de ano e alvo tanto quanto possível. O teste é criado e rotulado, mas não é acessado nas etapas de comparação.
 ```
 
-### Cell 19 [code] · In [10]
+### Cell 20 [code] · In [11]
 
 ```python
 import time
@@ -23750,7 +23877,7 @@ del codigo_grupo_chk, grupos_unicos_chk, alvo_chk, alvo_min, alvo_max, particao_
 
 ```text
 Partição: hash_grupo_estratificado_v1 | sal: srag_particao_v1_seed42
-Tempo da partição: 8.7s
+Tempo da partição: 10.6s
 
 Distribuicao final das linhas:
 ```
@@ -23771,7 +23898,7 @@ Distribuicao final das linhas:
 Maior desvio por estrato em relação às frações: 0.02 p.p.
 ```
 
-### Cell 20 [markdown]
+### Cell 21 [markdown]
 
 ```markdown
 ## 9. Validar partições sem inspecionar métricas do teste
@@ -23779,7 +23906,7 @@ Maior desvio por estrato em relação às frações: 0.02 p.p.
 A validação abaixo usa somente estrutura, tamanho, anos e distribuição do alvo. Não calcula qualquer desempenho de modelo no teste.
 ```
 
-### Cell 21 [code] · In [11]
+### Cell 22 [code] · In [12]
 
 ```python
 sobreposicao_grupos = (
@@ -23853,7 +23980,7 @@ Grupos presentes em múltiplas partições: 0
 Teste criado e mantido fechado para avaliação de modelos.
 ```
 
-### Cell 22 [code] · In [12]
+### Cell 23 [code] · In [13]
 
 ```python
 import inspect
@@ -24002,7 +24129,7 @@ Tipo canônico da coorte: provisional
 [non-text output omitted: text/html]
 ```
 
-### Cell 23 [code] · In [13]
+### Cell 24 [code] · In [14]
 
 ```python
 # ============================================================
@@ -24109,7 +24236,7 @@ Método da partição: hash_grupo_estratificado_v1 | sal: srag_particao_v1_seed4
 Manifesto OK: as três listas estão gravadas e as partições conferem com o método.
 ```
 
-### Cell 24 [markdown]
+### Cell 25 [markdown]
 
 ```markdown
 ## 10. Separar somente treino e validação
@@ -24117,7 +24244,7 @@ Manifesto OK: as três listas estão gravadas e as partições conferem com o m�
 A variável `teste` não é criada. Isso reduz o risco de uso acidental durante a seleção.
 ```
 
-### Cell 25 [code] · In [14]
+### Cell 26 [code] · In [15]
 
 ```python
 treino = base_modelagem.loc[
@@ -24187,7 +24314,7 @@ Treino: (2740584, 31) positivos: 599323
 Validacao: (587272, 31) positivos: 128429
 ```
 
-### Cell 26 [code] · In [ ]
+### Cell 27 [code] · In [17]
 
 ```python
 # ============================================================
@@ -24338,7 +24465,28 @@ print("Teste real do preprocessor concluído com sucesso.")
 print("X_treino foi preservado:", "X_treino" in globals())
 ```
 
-### Cell 27 [code] · In [ ]
+**Output 1 (stream:stdout)**
+
+```text
+Contrato central confirmado.
+Features numéricas: 2
+Features categóricas: 29
+Total de features originais: 31
+Dimensão da entrada: (50000, 31)
+Tipo da saída: csr_matrix
+Dimensão da saída: (50000, 125)
+É esparsa: True
+Dtype: float32
+Valores não nulos: 1,541,225
+Densidade: 24.66%
+Memória esparsa observada: 11.95 MB
+Memória densa estimada em float32: 23.84 MB
+Economia estimada: 49.88%
+Teste real do preprocessor concluído com sucesso.
+X_treino foi preservado: True
+```
+
+### Cell 28 [code] · In [18]
 
 ```python
 # ============================================================
@@ -24483,7 +24631,20 @@ gc.collect()
 print("Objetos temporários do teste do boosting removidos.")
 ```
 
-### Cell 28 [markdown]
+**Output 1 (stream:stdout)**
+
+```text
+Etapas do pipeline: ['pre', 'clf']
+Classificador: HistGradientBoostingClassifier
+Tipo da matriz ordinal: ndarray
+Dimensão da matriz ordinal: (10000, 31)
+Dtype da matriz ordinal: float32
+Formato das probabilidades: (1000, 2)
+Teste estrutural do boosting concluído com sucesso.
+Objetos temporários do teste do boosting removidos.
+```
+
+### Cell 29 [markdown]
 
 ```markdown
 ## 11. Construir o pré-processamento
@@ -24491,7 +24652,7 @@ print("Objetos temporários do teste do boosting removidos.")
 Numéricas: mediana + padronização. Categóricas: categoria explícita para ausência + one-hot que ignora categorias novas. O `fit` será executado exclusivamente no treino.
 ```
 
-### Cell 29 [code] · In [15]
+### Cell 30 [code] · In [19]
 
 ```python
 VALOR_AUSENTE_CATEGORICO = (
@@ -24561,7 +24722,7 @@ ColumnTransformer(transformers=[('num',
                   verbose_feature_names_out=False)
 ```
 
-### Cell 30 [markdown]
+### Cell 31 [markdown]
 
 ```markdown
 ## 12. Funções locais de avaliação do piloto
@@ -24569,7 +24730,7 @@ ColumnTransformer(transformers=[('num',
 Estas funções apenas organizam resultados na validação. Não escolhem limiar e não acessam o teste.
 ```
 
-### Cell 31 [code] · In [16]
+### Cell 32 [code] · In [20]
 
 ```python
 import gc
@@ -24681,7 +24842,7 @@ Funções de avaliação carregadas.
 Teto de treino da etapa inicial: 1000000
 ```
 
-### Cell 32 [markdown]
+### Cell 33 [markdown]
 
 ```markdown
 ## 13. Executar o baseline Dummy
@@ -24689,7 +24850,7 @@ Teto de treino da etapa inicial: 1000000
 O Dummy define o piso mínimo. O modelo não será usado para decisão final.
 ```
 
-### Cell 33 [code] · In [17]
+### Cell 34 [code] · In [21]
 
 ```python
 estrategia_dummy = CFG.get("models", {}).get("baseline", {}).get("strategy", "prior")
@@ -24717,11 +24878,11 @@ display(pd.DataFrame([metricas_dummy]))
 0                        0.5       587272  dummy_prior    provisoria   
 
   versao_execucao  n_treino_usado  duracao_fit_s  duracao_pred_s  
-0       piloto_v1         2740584       0.279579        0.011728  
+0       piloto_v1         2740584       0.103373        0.013644  
 [non-text output omitted: text/html]
 ```
 
-### Cell 34 [markdown]
+### Cell 35 [markdown]
 
 ```markdown
 ## 14. Executar a regressão logística piloto
@@ -24729,7 +24890,7 @@ display(pd.DataFrame([metricas_dummy]))
 Usamos `C=1.0` apenas como configuração neutra de integração. Esse valor não é tuning e não será tratado como hiperparâmetro final.
 ```
 
-### Cell 35 [code] · In [18]
+### Cell 36 [code] · In [22]
 
 ```python
 log_cfg = CFG.get("models", {}).get("logistic", {})
@@ -24765,11 +24926,11 @@ display(pd.DataFrame([metricas_logistica]))
 0                        0.5       587272  logistica_piloto_C1    provisoria   
 
   versao_execucao  n_treino_usado  duracao_fit_s  duracao_pred_s  
-0       piloto_v1         1000000      18.607921        4.496748  
+0       piloto_v1         1000000      18.916217          4.5584  
 [non-text output omitted: text/html]
 ```
 
-### Cell 36 [markdown]
+### Cell 37 [markdown]
 
 ```markdown
 ## 15. Comparação provisória na validação
@@ -24777,7 +24938,7 @@ display(pd.DataFrame([metricas_logistica]))
 A comparação confirma apenas que o pipeline aprende algo além do piso. Não seleciona finalista e não autoriza tuning.
 ```
 
-### Cell 37 [code] · In [19]
+### Cell 38 [code] · In [23]
 
 ```python
 resultados_piloto = pd.DataFrame([
@@ -24832,8 +24993,8 @@ print("Status da coorte validado:", STATUS_COORTE)
 1          dummy_prior  0.218687  0.500000  0.170863  0.000000   0.000000   
 
          f1  accuracy  duracao_fit_s  duracao_pred_s status_coorte  
-0  0.505697  0.669436      18.607921        4.496748    provisoria  
-1  0.000000  0.781313       0.279579        0.011728    provisoria  
+0  0.505697  0.669436      18.916217        4.558400    provisoria  
+1  0.000000  0.781313       0.103373        0.013644    provisoria  
 [non-text output omitted: text/html]
 ```
 
@@ -24843,7 +25004,7 @@ print("Status da coorte validado:", STATUS_COORTE)
 Status da coorte validado: provisoria
 ```
 
-### Cell 38 [markdown]
+### Cell 39 [markdown]
 
 ```markdown
 ## 16. Validações pós-treino
@@ -24851,7 +25012,7 @@ Status da coorte validado: provisoria
 Esta célula confirma que o pré-processador foi ajustado, que as categorias pertencem ao treino e que as probabilidades de validação são válidas.
 ```
 
-### Cell 39 [code] · In [20]
+### Cell 40 [code] · In [24]
 
 ```python
 pre_log = pipeline_logistica.named_steps["pre"]
@@ -24901,7 +25062,7 @@ Quantidade de features após transformação: 126
 Primeiras features: ['idade_anos', 'dias_sintomas_ate_internacao', 'sexo_categoria_feminino', 'sexo_categoria_ignorado', 'sexo_categoria_masculino', 'cs_gestant_0', 'cs_gestant_1', 'cs_gestant_2', 'cs_gestant_3', 'cs_gestant_4', 'cs_gestant_5', 'cs_gestant_6', 'cs_gestant_9', 'cs_raca_1', 'cs_raca_2']
 ```
 
-### Cell 40 [markdown]
+### Cell 41 [markdown]
 
 ```markdown
 ## 17. Persistir somente artefatos provisórios pequenos
@@ -24909,7 +25070,7 @@ Primeiras features: ['idade_anos', 'dias_sintomas_ate_internacao', 'sexo_categor
 Não salvamos o modelo treinado como candidato final. Salvamos contrato, partições, métricas e predições de validação para auditoria.
 ```
 
-### Cell 41 [code] · In [21]
+### Cell 42 [code] · In [25]
 
 ```python
 timestamp_execucao = pd.Timestamp.now(
@@ -24978,14 +25139,14 @@ for caminho in [caminho_contrato, caminho_particoes, caminho_metricas, caminho_p
 
 ```text
 Artefatos provisórios gravados:
-- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_contrato.csv
-- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_particoes.csv
-- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_metricas_validacao.csv
-- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\03_pilotos_provisoria_20261017T004408Z_predicoes_validacao.parquet
-- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261017T004408Z_manifesto.json
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261018T195433Z_contrato.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261018T195433Z_particoes.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261018T195433Z_metricas_validacao.csv
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\predictions\03_pilotos_provisoria_20261018T195433Z_predicoes_validacao.parquet
+- <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\tables\03_pilotos_provisoria_20261018T195433Z_manifesto.json
 ```
 
-### Cell 42 [markdown]
+### Cell 43 [markdown]
 
 ```markdown
 ## 18. Reabrir e validar os artefatos
@@ -24993,7 +25154,7 @@ Artefatos provisórios gravados:
 A persistência somente é considerada concluída depois do round-trip.
 ```
 
-### Cell 43 [code] · In [22]
+### Cell 44 [code] · In [26]
 
 ```python
 metricas_reabertas = pd.read_csv(caminho_metricas, encoding="utf-8-sig")
@@ -25037,7 +25198,7 @@ if not all(validacoes_artefatos.values()):
 [non-text output omitted: text/html]
 ```
 
-### Cell 44 [markdown]
+### Cell 45 [markdown]
 
 ```markdown
 ## 19. Registro da execução no projeto
@@ -25045,7 +25206,7 @@ if not all(validacoes_artefatos.values()):
 No modo real, o notebook registra uma execução com `Run`. No smoke test isolado, cria um registro local simples apenas para validar o fluxo.
 ```
 
-### Cell 45 [code] · In [23]
+### Cell 46 [code] · In [27]
 
 ```python
 with Run(
@@ -25129,11 +25290,11 @@ print(
 **Output 1 (stream:stdout)**
 
 ```text
-[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
-Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-16_214409_272745_03_supervisionado_pilotos
+[reproducibility] run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-18_165433_436865_03_supervisionado_pilotos
+Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\outputs\runs\2026-10-18_165433_436865_03_supervisionado_pilotos
 ```
 
-### Cell 46 [markdown]
+### Cell 47 [markdown]
 
 ```markdown
 ## 20. Checklist de encerramento desta primeira execução
@@ -25141,7 +25302,7 @@ Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\
 O notebook está pronto para o próximo incremento somente se todos os itens abaixo forem verdadeiros.
 ```
 
-### Cell 47 [code] · In [24]
+### Cell 48 [code] · In [28]
 
 ```python
 checklist_final = {
@@ -25191,7 +25352,7 @@ Notebook 03 executado com sucesso até Dummy + Regressão Logística piloto.
 O teste permaneceu fechado.
 ```
 
-### Cell 48 [code] · In [25]
+### Cell 49 [code] · In [29]
 
 ```python
 # ============================================================
@@ -25645,7 +25806,7 @@ print("Amostras comparáveis e funções carregadas com sucesso.")
 Amostras comparáveis e funções carregadas com sucesso.
 ```
 
-### Cell 49 [code] · In [26]
+### Cell 50 [code] · In [30]
 
 ```python
 # ============================================================
@@ -25830,15 +25991,15 @@ print("As cinco famílias foram executadas na mesma amostra comparável.")
 
 ```text
 Executando: dummy_prior_v2
-PR-AUC: 0.218683 | ROC-AUC: 0.5 | Brier: 0.170861 | fit (s): 3.77
+PR-AUC: 0.218683 | ROC-AUC: 0.5 | Brier: 0.170861 | fit (s): 3.57
 Executando: logistica_C1_v2
-PR-AUC: 0.439195 | ROC-AUC: 0.773334 | Brier: 0.198195 | fit (s): 6.39
+PR-AUC: 0.439195 | ROC-AUC: 0.773334 | Brier: 0.198195 | fit (s): 5.67
 Executando: arvore_rasa_v2
-PR-AUC: 0.39922 | ROC-AUC: 0.756532 | Brier: 0.20657 | fit (s): 8.29
+PR-AUC: 0.39922 | ROC-AUC: 0.756532 | Brier: 0.20657 | fit (s): 6.91
 Executando: random_forest_contida_v2
-PR-AUC: 0.429916 | ROC-AUC: 0.765178 | Brier: 0.201149 | fit (s): 43.92
+PR-AUC: 0.429916 | ROC-AUC: 0.765178 | Brier: 0.201149 | fit (s): 60.45
 Executando: hist_gradient_boosting_v2
-PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 11.14
+PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 9.96
 ```
 
 **Output 2 (display_data)**
@@ -25852,18 +26013,18 @@ PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 11.14
 4             dummy_prior_v2  0.218683  0.500000  0.170861  0.000000   
 
    precision        f1  accuracy  n_treino  n_validacao  duracao_fit_s  \
-0   0.370070  0.508980  0.656192    300000       120000      11.144345   
-1   0.374747  0.503914  0.668908    300000       120000       6.388927   
-2   0.353651  0.492687  0.634375    300000       120000      43.916742   
-3   0.347346  0.489302  0.622258    300000       120000       8.286849   
-4   0.000000  0.000000  0.781317    300000       120000       3.770865   
+0   0.370070  0.508980  0.656192    300000       120000       9.960420   
+1   0.374747  0.503914  0.668908    300000       120000       5.665718   
+2   0.353651  0.492687  0.634375    300000       120000      60.448013   
+3   0.347346  0.489302  0.622258    300000       120000       6.912345   
+4   0.000000  0.000000  0.781317    300000       120000       3.569989   
 
    duracao_pred_s status_coorte           versao_execucao  
-0        1.424538    provisoria  piloto_v2_cinco_familias  
-1        1.553659    provisoria  piloto_v2_cinco_familias  
-2        1.571947    provisoria  piloto_v2_cinco_familias  
-3        0.977522    provisoria  piloto_v2_cinco_familias  
-4        0.972777    provisoria  piloto_v2_cinco_familias  
+0        1.550102    provisoria  piloto_v2_cinco_familias  
+1        1.010487    provisoria  piloto_v2_cinco_familias  
+2        1.770098    provisoria  piloto_v2_cinco_familias  
+3        0.944375    provisoria  piloto_v2_cinco_familias  
+4        0.922748    provisoria  piloto_v2_cinco_familias  
 [non-text output omitted: text/html]
 ```
 
@@ -25873,7 +26034,7 @@ PR-AUC: 0.459686 | ROC-AUC: 0.783371 | Brier: 0.196329 | fit (s): 11.14
 As cinco famílias foram executadas na mesma amostra comparável.
 ```
 
-### Cell 50 [code] · In [27]
+### Cell 51 [code] · In [31]
 
 ```python
 # ============================================================
@@ -26285,7 +26446,7 @@ Figuras gravadas:
 - <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\reports\figures\supervisionado_03\03_pilotos_metricas_por_ano.png
 ```
 
-### Cell 51 [code] · In [28]
+### Cell 52 [code] · In [32]
 
 ```python
 # ============================================================
@@ -26500,7 +26661,7 @@ O teste permaneceu fechado.
 Próximo gate: coorte definitiva, features congeladas, tuning limitado, calibração e limiar.
 ```
 
-### Cell 52 [markdown]
+### Cell 53 [markdown]
 
 ```markdown
 # Conclusão provisória ampliada
@@ -27804,13 +27965,13 @@ print("SMOKE TEST: OK")
 
 ## `notebooks/C/C_11_pipeline_supervisionado.ipynb`
 
-- Git: `tracked` · status `clean`
-- Size: `194.7 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `42269121c5b7439f3c4afc8df3fe803a2e38763e2595db987ad0d4bdbb933821`
+- Git: `tracked` · status `M`
+- Size: `190.8 KB` · modified `2026-10-19 12:12 UTC`
+- SHA-256: `fff5f17b39bd0a25375644e6c4305d1c08370f381c81d59604f62b5c112bd5ce`
 
 - Cells: `14` (`7` code, `7` markdown)
-- Code cells executed: `7` of `7`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Code cells executed: `6` of `7`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -27897,13 +28058,17 @@ O artefato já traz features, alvo e coluna `particao`. `expected_kind`
 precisa casar com o `cohort_kind` gravado no manifesto pelo Notebook 03.
 ```
 
-### Cell 4 [code] · In [2]
+### Cell 4 [code] · In [ ]
 
 ```python
 EXPECTED_KIND = "provisional"
 os.environ["SRAG_COHORT_KIND"] = EXPECTED_KIND
 
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=EXPECTED_KIND)
+df, manifest = load_supervised_artifact(
+    ROOT_DIR,
+    expected_kind=EXPECTED_KIND,
+    partitions=("treino", "validacao"),
+)
 
 PARTICAO  = manifest["partition_column"]
 TARGET    = manifest.get("target_column") or C.cfg("target", "coluna")
@@ -28207,13 +28372,13 @@ Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\
 
 ## `notebooks/C/C_12_baseline_logistica.ipynb`
 
-- Git: `tracked` · status `clean`
-- Size: `21.1 KB` · modified `2026-10-17 14:00 UTC`
-- SHA-256: `9f899fbd1b460ee43463efe8c74f9cf6fe980b44df0ddfbd688f8aee30272535`
+- Git: `tracked` · status `M`
+- Size: `20.7 KB` · modified `2026-10-19 12:14 UTC`
+- SHA-256: `8970180d858774e9d5dfbc1fffa07c5b956065a4969732996248db99e763909b`
 
 - Cells: `10` (`6` code, `4` markdown)
-- Code cells executed: `6` of `6`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Code cells executed: `5` of `6`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -28309,12 +28474,16 @@ três partições. `split_partitions` devolve apenas `(treino, validacao)`
 — o teste fica inacessível por construção.
 ```
 
-### Cell 4 [code] · In [2]
+### Cell 4 [code] · In [ ]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
 
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
+df, manifest = load_supervised_artifact(
+    ROOT_DIR,
+    expected_kind=EXPECTED_KIND,
+    partitions=("treino", "validacao"),
+)
 treino, validacao = split_partitions(df, manifest)
 
 PARTICAO = manifest["partition_column"]
@@ -28561,13 +28730,13 @@ Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\
 
 ## `notebooks/C/C_13_boosting.ipynb`
 
-- Git: `tracked` · status `clean`
-- Size: `33.3 KB` · modified `2026-10-17 14:00 UTC`
-- SHA-256: `5e8cd0be1182ecacaa42dfafb10518cf2a76f0372ee8cc4967d6dce01c8da23f`
+- Git: `tracked` · status `M`
+- Size: `32.5 KB` · modified `2026-10-19 12:15 UTC`
+- SHA-256: `4269ebc6bbed4bdb4c59ace9c7d5f654815c79944ed3061e3bccc3e3fc9c2fbc`
 
 - Cells: `15` (`9` code, `6` markdown)
-- Code cells executed: `9` of `9`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Code cells executed: `8` of `9`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -28665,12 +28834,16 @@ Mesma fonte que C2/C3. `split_partitions` devolve apenas
 `(treino, validacao)` — o teste fica inacessível.
 ```
 
-### Cell 4 [code] · In [2]
+### Cell 4 [code] · In [ ]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
 
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
+df, manifest = load_supervised_artifact(
+    ROOT_DIR,
+    expected_kind=EXPECTED_KIND,
+    partitions=("treino", "validacao"),
+)
 treino, validacao = split_partitions(df, manifest)
 
 PARTICAO = manifest["partition_column"]
@@ -29153,13 +29326,13 @@ Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\
 
 ## `notebooks/C/C_15_calibracao_limiar.ipynb`
 
-- Git: `tracked` · status `clean`
-- Size: `29.3 KB` · modified `2026-10-17 14:00 UTC`
-- SHA-256: `4e02d65b69000c9e9347fcd32bc8cd12dcff67e2e5360c628d1f8eec9d608272`
+- Git: `tracked` · status `M`
+- Size: `28.7 KB` · modified `2026-10-19 12:15 UTC`
+- SHA-256: `600618cc811db3e30ce054df0248cbafd148c41ca897d8d404c45cd816caf319`
 
 - Cells: `10` (`6` code, `4` markdown)
-- Code cells executed: `6` of `6`
-- Kernel: `.venv (3.14.7)`; Python `3.14.7`
+- Code cells executed: `5` of `6`
+- Kernel: `.venv (3.14.8)`; Python `3.14.8`
 - Outputs: `text outputs included`
 
 ### Cell 1 [markdown]
@@ -29269,12 +29442,16 @@ Se `HONEST_CALIB_SPLIT = True`, `val_cal` ajusta o calibrador e
 conjunto. Caso contrário, ambos são a validação inteira.
 ```
 
-### Cell 4 [code] · In [2]
+### Cell 4 [code] · In [ ]
 
 ```python
 COHORT_KIND = os.getenv("SRAG_COHORT_KIND", "provisional").lower()
 
-df, manifest = load_supervised_artifact(ROOT_DIR, expected_kind=COHORT_KIND)
+df, manifest = load_supervised_artifact(
+    ROOT_DIR,
+    expected_kind=EXPECTED_KIND,
+    partitions=("treino", "validacao"),
+)
 treino, validacao = split_partitions(df, manifest)
 
 PARTICAO = manifest["partition_column"]
@@ -29692,8 +29869,8 @@ Run registrado em: <HOME>\OneDrive - Pfizer\Documents\GitHub\Projeto_Integrador\
 ## `notebooks/C/C_16_validacao_final.ipynb`
 
 - Git: `tracked` · status `clean`
-- Size: `34.2 KB` · modified `2026-10-18 16:22 UTC`
-- SHA-256: `d362b04edc2c7ed49e88c2316ad6911987350864def6114730a57ae635df5f9f`
+- Size: `33.4 KB` · modified `2026-10-18 16:47 UTC`
+- SHA-256: `26760a53087e7e9c71a4b37283090e26ac83f0595c7bb7472afa000e7059fd19`
 
 - Cells: `20` (`11` code, `9` markdown)
 - Code cells executed: `0` of `11`
@@ -29756,6 +29933,7 @@ from src.utils import env
 from src.utils.reproducibility import Run
 from src.data.supervised_artifact import (
     GatePendenteError,
+    holdout_partition,     
     load_supervised_artifact,
 )
 from src.evaluation.metrics import (
@@ -29975,7 +30153,7 @@ def _localizar_manifesto_c5(dataset_sha256, finalista, metodo, calib_ativa):
 
 treino    = df.loc[df[PARTICAO] == "treino"].reset_index(drop=True)
 validacao = df.loc[df[PARTICAO] == "validacao"].reset_index(drop=True)
-teste     = df.loc[df[PARTICAO] == "teste"].reset_index(drop=True)
+teste     = holdout_partition(df, manifest)
 
 X_train = treino[FEATURES]
 y_train = pd.to_numeric(treino[ALVO], errors="coerce").astype("int8")
@@ -30418,19 +30596,19 @@ print("=" * 60)
 ## `PROJECT_STATUS.md`
 
 - Git: `tracked` · status `M`
-- Size: `36.9 KB` · modified `2026-10-18 16:34 UTC`
-- SHA-256: `54a2d89af55c637ade3ba5e284b7820e60c5819e9e847ff6e0d8a430a4def670`
+- Size: `116.6 KB` · modified `2026-10-19 12:03 UTC`
+- SHA-256: `857359356847ba35be1213db2ef07ddb5dbb845f85297fad0aa428acecb9ed24`
 
 ```markdown
 # Status do projeto
 
-> Atualizado em 2026-10-18T16:34:05Z.
+> Atualizado em 2026-10-19T12:03:33Z.
 
-- Concluídas: **15**
+- Concluídas: **20**
 - Implementadas a confirmar: **0**
-- Precisam revisão: **7**
-- Em andamento: **0**
-- Abertas: **100**
+- Precisam revisão: **11**
+- Em andamento: **2**
+- Abertas: **57**
 
 ## Itens em acompanhamento
 
@@ -30438,44 +30616,39 @@ print("=" * 60)
 - ⬜ **#112** Atualizar a revisão bibliográfica com busca científica dirigida — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 01/11
 - ⬜ **#53** Exploração opcional: validar o modelo congelado em 2026 — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
 - ⬜ **#130** Regerar a referência do projeto ao fim de cada marco — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
-- ⬜ **#10** Regra definitiva para números de notificação repetidos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
+- 🟨 **#10** Regra definitiva para números de notificação repetidos — PRECISA REVISÃO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#59** Documentar 2026 como período parcial e exclusivamente exploratório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#72** Quem é responsável pelos próximos passos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#73** decisoes.md parado em 10/10 — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#82** Decidir o que fazer com intervalos impossíveis entre sintomas e internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#83** Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#73** decisoes.md parado em 10/10 — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#82** Decidir o que fazer com intervalos impossíveis entre sintomas e internação — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#83** Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
-- 🟨 **#16** Nada no código impede abrir o teste antes do G9 — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- 🟦 **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- 🟦 **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — EM ANDAMENTO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - 🟨 **#18** Carregar só algumas colunas do artefato pula a validação — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#61** pyproject aceita scikit-learn 1.4, mas o código precisa de 1.8+ — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#63** Dependências sem versão e espalhadas em dois arquivos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
-- ⬜ **#86** Levar a partição por hash do notebook para src/data/split.py — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
-- ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
+- 🟨 **#86** Levar a partição por hash do notebook para src/data/split.py — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - 🟨 **#123** Ler o artefato por partição, para o teste nunca chegar à memória por engano — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
-- ⬜ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
-- ⬜ **#14** A variável SRAG_PARQUET_URL não tem efeito — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#14** A variável SRAG_PARQUET_URL não tem efeito — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#19** O YAML aceita chaves duplicadas em silêncio e fica em cache — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#20** Nome do finalista diferente no YAML e no código — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
-- ⬜ **#29** Itens desatualizados ou sem uso no YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#29** Itens desatualizados ou sem uso no YAML — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#34** O C_13 manda colar os hiperparâmetros em config.yaml (o certo é supervised.yaml) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
-- ⬜ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
-- ⬜ **#38** Sobras no B_07: modo de teste sintético e imports sem uso — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- 🟨 **#38** Sobras no B_07: modo de teste sintético e imports sem uso — PRECISA REVISÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#40** A construção da coorte provisória não gera os arquivos de rastreio esperados — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#66** Teste lento roda junto com os rápidos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#76** Nenhum notebook confere a versão do scikit-learn no início — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
-- ⬜ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#122** read_srag sem opção de leitura compacta — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#98** Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 21/10
-- ⬜ **#15** Pré-processador e manifesto podem usar listas de variáveis diferentes — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- 🟨 **#15** Pré-processador e manifesto podem usar listas de variáveis diferentes — PRECISA REVISÃO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#27** O manifesto "mais recente" é escolhido pela data do arquivo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -30485,62 +30658,67 @@ print("=" * 60)
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#119** Executar o modelo congelado nas duas janelas de teste (E_02) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 23/10
 - ⬜ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 24/10
-- ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
-- ⬜ **#57** Associações "protetoras" que são efeito da idade — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#57** Associações "protetoras" que são efeito da idade — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#89** Revisar a conclusão do A_09 de que o sorteio é "otimista" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#110** Estado como variável: comparar sem geografia, com região e com UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 26/10
 - ⬜ **#111** Recorte só de São Paulo como entrega mínima — ABERTA · Equipe · 26/10
-- ⬜ **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#3** Garantir que a busca de hiperparâmetros termine a tempo — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#9** Saturação, desconforto respiratório e vacina: cada documento diz uma coisa — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#13** A sazonalidade é criada, mas não entra no modelo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#54** Rodar as sensibilidades de gravidade, contexto e "qualquer óbito" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- 🟨 **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#3** Garantir que a busca de hiperparâmetros termine a tempo — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#9** Saturação, desconforto respiratório e vacina: cada documento diz uma coisa — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#13** A sazonalidade é criada, mas não entra no modelo — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#54** Rodar as sensibilidades de gravidade, contexto e "qualquer óbito" — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
 - ⬜ **#52** Fichas de óbito têm as doenças prévias mais preenchidas — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
-- ⬜ **#109** UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
-- ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
-- ⬜ **#28** O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#109** UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
+- ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#28** O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#37** O B_10 vai falhar de propósito quando a lista final de variáveis existir — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#77** Aprovar o G1 com a seleção de features da coorte provisória congelada — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#79** Aprovar o G7: escolher o método de calibração (proposta do C_15: sigmoid) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#80** Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
-- ⬜ **#81** Aprovar o G9 e liberar as duas janelas de teste uma única vez — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#81** Aprovar o G9 e liberar as duas janelas de teste uma única vez — resolved_pending_validation · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#126** Rodar a cadeia final em processos isolados e registrar tempo e pico de memória — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
 - 🟨 **#26** O manifesto nunca registra que o teste foi aberto — PRECISA REVISÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 30/10
-- ⬜ **#12** Intervalos impossíveis entram no modelo como se fossem válidos — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#45** Vacina contra COVID marcada como "sim" antes de existir a vacina — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#12** Intervalos impossíveis entram no modelo como se fossem válidos — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#45** Vacina contra COVID marcada como "sim" antes de existir a vacina — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#46** 58 linhas repetem 29 números de notificação na base bruta — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#47** Idades, datas e anos impossíveis — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#56** Mostrar por que a data de internação é a âncora, e quem ficou de fora — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#56** Mostrar por que a data de internação é a âncora, e quem ficou de fora — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — resolved_pending_validation · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#69** Plano v2 e orientação de TCC descrevem outro período e outra divisão — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — resolved_pending_validation · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#71** Cuidados de redação no relatório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#11** A sensibilidade de indicadores de ausência não existe no código — ABERTA · C · Após 03/11
-- ⬜ **#24** Curvas de calibração calculadas de dois jeitos — ABERTA · C · Após 03/11
+- ⬜ **#11** A sensibilidade de indicadores de ausência não existe no código — resolved_pending_validation · C · Após 03/11
+- 🟨 **#24** Curvas de calibração calculadas de dois jeitos — PRECISA REVISÃO · C · Após 03/11
 - ⬜ **#25** A checagem de vazamento só olha o nome das colunas — ABERTA · C · Após 03/11
 - ⬜ **#31** configs/paths.local.json aponta para uma pasta que ninguém usa — ABERTA · C · Após 03/11
 - 🟨 **#32** Textos antigos no código (dt_notific, nomes de gates) — PRECISA REVISÃO · C · Após 03/11
 - ⬜ **#33** normalization.py está vazio — ABERTA · C · Após 03/11
-- ⬜ **#35** Notebooks B recalculam com código próprio o que já existe em src/ — ABERTA · B · Após 03/11
+- ⬜ **#35** Notebooks B recalculam com código próprio o que já existe em src/ — resolved_pending_validation · B · Após 03/11
 - ⬜ **#39** Matriz de transição do B_10 com status escritos à mão — ABERTA · B · Após 03/11
 - ⬜ **#41** "provisoria", "provisorio" e "provisional" misturados — ABERTA · B + C · Após 03/11
-- 🟨 **#42** Cada notebook encontra a pasta do projeto de um jeito — PRECISA REVISÃO · B + C · Após 03/11
-- ⬜ **#43** Arquivos e listas que ninguém usa (preprocessor.joblib, lista de coortes no B_06) — ABERTA · B + C · Após 03/11
+- ⬜ **#42** Cada notebook encontra a pasta do projeto de um jeito — resolved_pending_validation · B + C · Após 03/11
+- ⬜ **#43** Arquivos e listas que ninguém usa (preprocessor.joblib, lista de coortes no B_06) — resolved_pending_validation · B + C · Após 03/11
 - ⬜ **#48** 41 fichas com povo tradicional preenchido sem a pessoa ser de povo tradicional — ABERTA · A · Após 03/11
-- ⬜ **#49** Códigos a confirmar no dicionário — ABERTA · A · Após 03/11
-- ⬜ **#50** Em que ano cada campo entrou na ficha — ABERTA · A · Após 03/11
+- ⬜ **#49** Códigos a confirmar no dicionário — resolved_pending_validation · A · Após 03/11
+- ⬜ **#50** Em que ano cada campo entrou na ficha — resolved_pending_validation · A · Após 03/11
 - ⬜ **#68** Texto com codificação corrompida — ABERTA · C · Após 03/11
-- ⬜ **#74** Faltam os números do clustering sem saturação e desconforto — ABERTA · B · Após 03/11
+- ⬜ **#74** Faltam os números do clustering sem saturação e desconforto — resolved_pending_validation · B · Após 03/11
 - ⬜ **#88** A exportação da Pessoa A não tem duas variáveis que o modelo exige — ABERTA · A · Após 03/11
 - ⬜ **#90** O A_09 sorteia linhas, e não grupos: a mesma ficha cai em duas partições — ABERTA · A · Após 03/11
 - ⬜ **#93** O A_14 não tem a tabela de candidatos para comparar — ABERTA · A + C · Após 03/11
 - ⬜ **#94** Alertas falsos no relatório automático do projeto — ABERTA · C · Após 03/11
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
+- ✅ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
+- ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#16** Nada no código impede abrir o teste antes do G9 — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#4** O boosting do código central não é o mesmo do piloto — CONCLUÍDA · C · Concluído
 - ✅ **#7** Artefato supervisionado com colunas de auditoria (sg_uf, vacina, saturação…) — CONCLUÍDA · B · Concluído
 - ✅ **#8** Partição estratificada por ano × desfecho — CONCLUÍDA · B · Concluído
@@ -30558,7 +30736,7 @@ print("=" * 60)
 - ✅ **#116** Referência do projeto lenta e incompleta para outra IA (schema v6) — CONCLUÍDA · B · Concluído
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":1,"generated_at":"2026-10-18T16:34:05Z","last_scanned_commit":"9fa6e694d08430d3fcb9d94c00fbec8a775080e1","items":{"120":{"id":"120","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"10":{"id":"10","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"72":{"id":"72","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"82":{"id":"82","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"83":{"id":"83","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"84":{"id":"84","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"97":{"id":"97","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"102":{"id":"102","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"30":{"id":"30","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"59":{"id":"59","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"73":{"id":"73","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"6":{"id":"6","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"86":{"id":"86","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"87":{"id":"87","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"123":{"id":"123","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"16":{"id":"16","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"18":{"id":"18","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"61":{"id":"61","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"63":{"id":"63","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"125":{"id":"125","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"101":{"id":"101","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"14":{"id":"14","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"19":{"id":"19","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"36":{"id":"36","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"99":{"id":"99","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"121":{"id":"121","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"124":{"id":"124","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"20":{"id":"20","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"21":{"id":"21","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"29":{"id":"29","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"38":{"id":"38","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"40":{"id":"40","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"66":{"id":"66","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"122":{"id":"122","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"34":{"id":"34","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"76":{"id":"76","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"98":{"id":"98","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"118":{"id":"118","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"127":{"id":"127","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"15":{"id":"15","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"64":{"id":"64","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"22":{"id":"22","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"23":{"id":"23","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"27":{"id":"27","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"58":{"id":"58","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"119":{"id":"119","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"95":{"id":"95","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"51":{"id":"51","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"91":{"id":"91","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"55":{"id":"55","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"57":{"id":"57","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"89":{"id":"89","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"110":{"id":"110","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"111":{"id":"111","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"1":{"id":"1","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"5":{"id":"5","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"78":{"id":"78","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"9":{"id":"9","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"13":{"id":"13","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"54":{"id":"54","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"52":{"id":"52","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"109":{"id":"109","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"77":{"id":"77","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"79":{"id":"79","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"80":{"id":"80","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"81":{"id":"81","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"37":{"id":"37","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"126":{"id":"126","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"28":{"id":"28","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"26":{"id":"26","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"12":{"id":"12","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"45":{"id":"45","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"46":{"id":"46","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"47":{"id":"47","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"56":{"id":"56","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"69":{"id":"69","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"70":{"id":"70","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"71":{"id":"71","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"60":{"id":"60","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"112":{"id":"112","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"96":{"id":"96","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"130":{"id":"130","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"53":{"id":"53","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"11":{"id":"11","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"24":{"id":"24","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"25":{"id":"25","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"31":{"id":"31","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"32":{"id":"32","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"33":{"id":"33","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"35":{"id":"35","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"39":{"id":"39","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"41":{"id":"41","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"42":{"id":"42","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:33:33Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/C/C_16_validacao_final.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"43":{"id":"43","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"48":{"id":"48","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"49":{"id":"49","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"50":{"id":"50","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"68":{"id":"68","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"74":{"id":"74","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"88":{"id":"88","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"90":{"id":"90","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"93":{"id":"93","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"94":{"id":"94","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"128":{"id":"128","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"129":{"id":"129","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"4":{"id":"4","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"7":{"id":"7","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"8":{"id":"8","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"44":{"id":"44","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"85":{"id":"85","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"92":{"id":"92","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"113":{"id":"113","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"17":{"id":"17","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"62":{"id":"62","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"114":{"id":"114","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"65":{"id":"65","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"67":{"id":"67","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"75":{"id":"75","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"115":{"id":"115","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"116":{"id":"116","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]}}}
+{"schema_version":1,"generated_at":"2026-10-19T12:03:33Z","last_scanned_commit":"5f66a1cecbf11555217771c0c77b48d74725adad","items":{"120":{"id":"120","status":"in_progress","done":false,"note":"Commit fd7dcaa5cc2f: Atualiza contrato temporal, dicionário e EDA","updated_at":"2026-10-19T00:26:02-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"fd7dcaa5cc2f60f4f17411016f49367e94a2a937","marker":"progress"}]},"10":{"id":"10","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_07_supervisionado_pilotos.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"72":{"id":"72","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"82":{"id":"82","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"file","path":"docs/decisoes.md"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"83":{"id":"83","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"file","path":"docs/decisoes.md"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"84":{"id":"84","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/dicionario_variaveis_v1.csv"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"97":{"id":"97","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"102":{"id":"102","status":"in_progress","done":false,"note":"Commit fd7dcaa5cc2f: Atualiza contrato temporal, dicionário e EDA","updated_at":"2026-10-19T00:26:02-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"fd7dcaa5cc2f60f4f17411016f49367e94a2a937","marker":"progress"}]},"30":{"id":"30","status":"done","done":true,"note":"","updated_at":"2026-10-18T17:03:01.643Z","updated_by":"anonymous","evidence":[]},"59":{"id":"59","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"73":{"id":"73","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"docs/decisoes.md"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"6":{"id":"6","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"a91322865c239b30e8621dd56dbe87a10004c8fa"},{"type":"commit_marker","action":"done","commit":"a91322865c239b30e8621dd56dbe87a10004c8fa","when":"2026-10-18T17:23:01-03:00","author":"mateus-so","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]"}]},"86":{"id":"86","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_07_supervisionado_pilotos.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"87":{"id":"87","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/decisoes.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"123":{"id":"123","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T17:04:04Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"16":{"id":"16","status":"done","done":true,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T16:47:55.276Z","updated_by":"anonymous","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/lastfailed"]},{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"18":{"id":"18","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T17:04:04Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"61":{"id":"61","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"63":{"id":"63","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"125":{"id":"125","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"a91322865c239b30e8621dd56dbe87a10004c8fa"},{"type":"commit_marker","action":"done","commit":"a91322865c239b30e8621dd56dbe87a10004c8fa","when":"2026-10-18T17:23:01-03:00","author":"mateus-so","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]"}]},"101":{"id":"101","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"14":{"id":"14","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/01_extracao.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"19":{"id":"19","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"36":{"id":"36","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"99":{"id":"99","status":"done","done":true,"note":"Commit fd7dcaa5cc2f: Atualiza contrato temporal, dicionário e EDA","updated_at":"2026-10-19T00:26:02-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"fd7dcaa5cc2f60f4f17411016f49367e94a2a937","marker":"done"}]},"121":{"id":"121","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"124":{"id":"124","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"20":{"id":"20","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"21":{"id":"21","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"29":{"id":"29","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"38":{"id":"38","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_07_supervisionado_pilotos.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"40":{"id":"40","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"66":{"id":"66","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"122":{"id":"122","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"34":{"id":"34","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"76":{"id":"76","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"98":{"id":"98","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"118":{"id":"118","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"127":{"id":"127","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"15":{"id":"15","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/models/pipeline.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"64":{"id":"64","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"tests/test_smoke.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"22":{"id":"22","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"23":{"id":"23","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"27":{"id":"27","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"58":{"id":"58","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"119":{"id":"119","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"95":{"id":"95","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"51":{"id":"51","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"91":{"id":"91","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"55":{"id":"55","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"57":{"id":"57","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"89":{"id":"89","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"110":{"id":"110","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"111":{"id":"111","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"1":{"id":"1","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/models/pipeline.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"3":{"id":"3","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"5":{"id":"5","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"78":{"id":"78","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"9":{"id":"9","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"13":{"id":"13","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"54":{"id":"54","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"52":{"id":"52","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"109":{"id":"109","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"2":{"id":"2","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"77":{"id":"77","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"79":{"id":"79","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"80":{"id":"80","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"81":{"id":"81","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"37":{"id":"37","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"126":{"id":"126","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"28":{"id":"28","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"26":{"id":"26","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T17:04:04Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"12":{"id":"12","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"45":{"id":"45","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"46":{"id":"46","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"47":{"id":"47","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"56":{"id":"56","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"69":{"id":"69","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"70":{"id":"70","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/dicionario_variaveis_v1.csv"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"71":{"id":"71","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"60":{"id":"60","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"112":{"id":"112","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"96":{"id":"96","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"130":{"id":"130","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"53":{"id":"53","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"11":{"id":"11","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/supervised.yaml"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"24":{"id":"24","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T20:41:13Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_07_supervisionado_pilotos.ipynb"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"25":{"id":"25","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"31":{"id":"31","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"32":{"id":"32","status":"needs_review","done":false,"note":"Implementação relacionada detectada, com alerta na validação rápida.","updated_at":"2026-10-18T17:04:04Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"src/data/supervised_artifact.py"},{"type":"file","path":"tests/test_supervised_artifact.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"notebooks","ok":true,"detail":[]},{"name":"pytest rápido","ok":false,"detail":"<HOME>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}]},"33":{"id":"33","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"35":{"id":"35","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"39":{"id":"39","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"41":{"id":"41","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"42":{"id":"42","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/00_acesso_dados_parquet.ipynb"},{"type":"file","path":"notebooks/01_extracao.ipynb"},{"type":"file","path":"notebooks/A/A_03_coorte_protocolo.ipynb"},{"type":"file","path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb"},{"type":"file","path":"notebooks/B/B_05_eda_primeira_passagem.ipynb"},{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"43":{"id":"43","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"48":{"id":"48","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"49":{"id":"49","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/dicionario_variaveis_v1.csv"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"50":{"id":"50","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"configs/dicionario_variaveis_v1.csv"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"68":{"id":"68","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"74":{"id":"74","status":"resolved_pending_validation","done":false,"note":"Há evidência de implementação relacionada e as verificações leves passaram. Confirmar manualmente antes de concluir.","updated_at":"2026-10-19T03:27:15Z","updated_by":"verificação automática","evidence":[{"type":"file","path":"notebooks/B/B_06_eda_temporal_clustering.ipynb"},{"type":"validation","result":{"ok":true,"files":[{"path":"configs/decisoes.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"configs/supervised.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"data/manifest_dados-v2.yaml","ok":true,"checks":["YAML válido."],"warnings":[]},{"path":"docs/decisoes.md","ok":true,"checks":[],"warnings":[]},{"path":"notebooks/00_acesso_dados_parquet.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/01_extracao.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_03_coorte_protocolo.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/A/A_04_qualidade_elegibilidade.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_05_eda_primeira_passagem.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"notebooks/B/B_06_eda_temporal_clustering.ipynb","ok":true,"checks":["JSON e células Python válidos."],"warnings":[]},{"path":"tools/deep_git_project_audit.py","ok":true,"checks":["Sintaxe Python válida."],"warnings":[]}],"pytest":{"ok":true,"returncode":0,"detail":"........................................................................ [ 30%]\n........................................................................ [ 61%]\n........................................................................ [ 91%]\n...................                                                      [100%]\n============================== warnings summary ===============================\ntests/test_regras_pessoa_a.py: 29 warnings\n  <HOME>\\OneDrive - Pfizer\\Documents\\GitHub\\Projeto_Integrador\\src\\protocolo\\verificacoes.py:242: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.\n    vals = np.full(len(s), np.datetime64(\"NaT\"), dtype=\"datetime64[ns]\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n"}}}]},"88":{"id":"88","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"90":{"id":"90","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"93":{"id":"93","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"94":{"id":"94","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"128":{"id":"128","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"129":{"id":"129","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"4":{"id":"4","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"7":{"id":"7","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"8":{"id":"8","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"44":{"id":"44","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"85":{"id":"85","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"92":{"id":"92","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"113":{"id":"113","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"17":{"id":"17","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"62":{"id":"62","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"114":{"id":"114","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"65":{"id":"65","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"67":{"id":"67","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"75":{"id":"75","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"115":{"id":"115","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]},"116":{"id":"116","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[]}}}
 PROJECT_STATUS_DATA -->
 ```
 
@@ -31678,8 +31856,8 @@ def criar_particoes_agrupadas(
 ## `src/data/supervised_artifact.py`
 
 - Git: `tracked` · status `clean`
-- Size: `11.8 KB` · modified `2026-10-18 16:18 UTC`
-- SHA-256: `8f8cd29b325a26185dcfb66f24c9585b5ffcb44f27e13aa958ed0345c243c4d7`
+- Size: `14.9 KB` · modified `2026-10-18 16:52 UTC`
+- SHA-256: `4c6f0180f3989951e91b89fd95f421fa922d144c93f5ca0237513eb5ccfcdbf2`
 
 ```python
 """Persistencia e leitura do dataset supervisionado canonico.
@@ -31823,6 +32001,57 @@ def validate_supervised_frame(
             f"Particoes esperadas {sorted(expected)}. Observado: {sorted(observed)}"
         )
 
+def _validate_partial_load(
+    frame: pd.DataFrame,
+    *,
+    target_column: str,
+    partition_column: str,
+    expected_partitions: set[str],
+) -> None:
+    """Validação mínima quando ``columns=`` restringe a leitura.
+
+    Não substitui ``validate_supervised_frame`` — não confere features nem
+    colunas de auditoria (não foram lidas). Confere o que basta para
+    garantir que o artefato não está corrompido nas colunas que sustentam
+    a integridade das partições e do alvo:
+
+    - frame não vazio;
+    - alvo binário 0/1, sem nulos;
+    - coluna de partição sem nulos e apenas com as partições pedidas.
+    """
+    if frame.empty:
+        raise ValueError("O dataset supervisionado nao pode ser vazio.")
+
+    if target_column not in frame.columns:
+        raise KeyError(f"Coluna de alvo ausente na leitura: {target_column!r}")
+    if partition_column not in frame.columns:
+        raise KeyError(f"Coluna de particao ausente na leitura: {partition_column!r}")
+
+    target_numeric = pd.to_numeric(frame[target_column], errors="coerce")
+    n_nulos_alvo = int(target_numeric.isna().sum())
+    if n_nulos_alvo:
+        raise ValueError(
+            f"Alvo {target_column!r} contem {n_nulos_alvo} valor(es) nulo(s); "
+            "o dataset supervisionado deve ter alvo binario sem nulos."
+        )
+    target_values = set(target_numeric.astype(int).unique())
+    if not target_values or not target_values.issubset({0, 1}):
+        raise ValueError(
+            f"Alvo deve ser binario 0/1. Observado: {sorted(target_values)}"
+        )
+
+    partition_series = frame[partition_column]
+    n_nulos_part = int(partition_series.isna().sum())
+    if n_nulos_part:
+        raise ValueError(
+            f"Particao {partition_column!r} contem {n_nulos_part} valor(es) nulo(s)."
+        )
+    observed = set(partition_series.astype(str).unique())
+    if observed != expected_partitions:
+        raise ValueError(
+            f"Particoes esperadas {sorted(expected_partitions)}. "
+            f"Observado: {sorted(observed)}"
+        )
 
 def _build_manifest(
     *,
@@ -31933,6 +32162,12 @@ def load_supervised_artifact(
     o default e ``("treino", "validacao")``. Incluir ``"teste"`` exige o
     gate ``G9_holdout`` aprovado — caso contrario levanta
     ``GatePendenteError`` antes de tocar no arquivo.
+
+    ``columns`` restringe as colunas devolvidas. A coluna de alvo e a de
+    particao sao **sempre lidas internamente** para validar o artefato
+    (alvo binario, particoes coerentes, sem nulos) e descartadas no retorno
+    caso o chamador nao as tenha pedido. Isso impede que uma leitura
+    parcial burle a integridade do artefato.
     """
     dataset_path, manifest_path = _paths(root)
 
@@ -31968,21 +32203,37 @@ def load_supervised_artifact(
     if _PARTITION_TESTE in selected:
         exigir_gate("G9_holdout")
 
-    frame = pd.read_parquet(
-        dataset_path,
-        columns=list(columns) if columns else None,
-        filters=[(manifest["partition_column"], "in", list(selected))],
-    )
+    target_column = manifest["target_column"]
+    partition_column = manifest["partition_column"]
+    filters = [(partition_column, "in", list(selected))]
 
     if columns is None:
+        frame = pd.read_parquet(dataset_path, filters=filters)
         validate_supervised_frame(
             frame,
             feature_columns=manifest["feature_columns"],
-            target_column=manifest["target_column"],
-            partition_column=manifest["partition_column"],
+            target_column=target_column,
+            partition_column=partition_column,
             audit_columns=manifest.get("audit_columns") or None,
             required_partitions=selected,
         )
+    else:
+        # Lê alvo e partição junto com as colunas pedidas para validar.
+        requested = list(columns)
+        read_cols = list(
+            dict.fromkeys([*requested, target_column, partition_column])
+        )
+        frame = pd.read_parquet(
+            dataset_path, columns=read_cols, filters=filters,
+        )
+        _validate_partial_load(
+            frame,
+            target_column=target_column,
+            partition_column=partition_column,
+            expected_partitions=set(selected),
+        )
+        # Descarta as auxiliares que o chamador não pediu.
+        frame = frame[requested]
 
     manifest["dataset_path"] = str(dataset_path)
     return frame, manifest
@@ -32029,2193 +32280,5 @@ def holdout_partition(
     if teste.empty:
         raise ValueError("Particao 'teste' vazia no dataset supervisionado.")
     return teste
-```
-
-## `src/evaluation/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `641a3e6e599d6b8e24f989bf5323b6168d045aa268aa170c18144dafc9bee5e2`
-
-```python
-"""Avaliação: splits temporais, métricas, calibração e análise de erros."""
-
-from src.evaluation.calibration import (
-    brier_decomposicao,
-    curva_confiabilidade,
-    ece,
-    mce,
-)
-from src.evaluation.errors import (
-    CriterioTop,
-    extrair_falsos_negativos,
-    extrair_falsos_positivos,
-    matriz_confusao,
-    metricas_por_grupo,
-    top_erros,
-)
-from src.evaluation.leakage import (
-    LeakageError,
-    check_leakage,
-)
-from src.evaluation.metrics import (
-    ArrayLike,
-    accuracy,
-    auc,
-    average_precision,
-    brier,
-    especificidade,
-    f1,
-    ic_bootstrap,
-    log_loss,
-    metricas_completas,
-    metricas_por_limiar,
-    precision,
-    recall,
-    sensibilidade,
-)
-from src.evaluation.temporal import (
-    TemporalSplit,
-    split_temporal_3way,
-)
-
-__all__ = [
-    # metrics
-    "ArrayLike",
-    "accuracy",
-    "auc",
-    "average_precision",
-    "brier",
-    "especificidade",
-    "f1",
-    "ic_bootstrap",
-    "log_loss",
-    "metricas_completas",
-    "metricas_por_limiar",
-    "precision",
-    "recall",
-    "sensibilidade",
-    # calibration
-    "brier_decomposicao",
-    "curva_confiabilidade",
-    "ece",
-    "mce",
-    # errors
-    "CriterioTop",
-    "extrair_falsos_negativos",
-    "extrair_falsos_positivos",
-    "matriz_confusao",
-    "metricas_por_grupo",
-    "top_erros",
-    # leakage
-    "LeakageError",
-    "check_leakage",
-    # temporal
-    "TemporalSplit",
-    "split_temporal_3way",
-]
-```
-
-## `src/evaluation/calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.6 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `b76e7a28efe53ad9566eb664b60c4f931d78107b539d3c8f6fa903f162b6da94`
-
-```python
-"""
-Avaliação de calibração de probabilidades.
-
-Complementa ``src/models/calibration.py``:
-
-    src/models/calibration.py      → AJUSTA a calibração
-    src/evaluation/calibration.py  → MEDE a qualidade da calibração
-
-Métricas implementadas
-----------------------
-- Curva de confiabilidade (reliability diagram)
-- ECE  (Expected Calibration Error)
-- MCE  (Maximum Calibration Error)
-- Decomposição de Brier em Reliability + Resolution − Uncertainty
-  (Murphy, 1973)
-"""
-
-from __future__ import annotations
-
-import numpy as np
-import pandas as pd
-
-from src.evaluation.metrics import _to_int_labels, _to_np
-
-ArrayLike = np.ndarray | pd.Series | list
-
-
-def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
-    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
-    edges = np.linspace(0.0, 1.0, n_bins + 1)
-    return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
-
-
-def _linha_vazia(b: int, edges: np.ndarray) -> dict[str, float]:
-    return {
-        "bin_centro":    float((edges[b] + edges[b + 1]) / 2),
-        "freq_positiva": float("nan"),
-        "n":             0.0,
-        "gap":           float("nan"),
-    }
-
-
-def curva_confiabilidade(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> pd.DataFrame:
-    """
-    Dados para o reliability diagram.
-
-    Colunas:
-        bin_centro    — probabilidade média prevista no bin
-        freq_positiva — fração real de positivos no bin
-        n             — número de amostras no bin
-        gap           — |freq_positiva - bin_centro|
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    edges  = np.linspace(0.0, 1.0, n_bins + 1)
-    idx    = _bins_digitize(p, n_bins)
-
-    linhas: list[dict[str, float]] = []
-    for b in range(n_bins):
-        m = idx == b
-        n = int(m.sum())
-
-        if n == 0:
-            linhas.append(_linha_vazia(b, edges))
-            continue
-
-        centro = float(p[m].mean())
-        freq   = float(y[m].mean())
-        linhas.append({
-            "bin_centro":    centro,
-            "freq_positiva": freq,
-            "n":             float(n),
-            "gap":           abs(freq - centro),
-        })
-
-    return pd.DataFrame(linhas)
-
-
-def ece(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> float:
-    """Expected Calibration Error — média ponderada dos gaps por bin."""
-    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    total  = float(tabela["n"].sum())
-
-    if total == 0:
-        return float("nan")
-
-    pesos = tabela["n"] / total
-    gaps  = tabela["gap"].fillna(0.0)
-    return float((pesos * gaps).sum())
-
-
-def mce(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> float:
-    """Maximum Calibration Error — o pior gap entre os bins."""
-    tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
-    gaps   = tabela["gap"].dropna()
-
-    if gaps.empty:
-        return float("nan")
-
-    return float(gaps.max())
-
-
-def brier_decomposicao(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_bins: int = 10,
-) -> dict[str, float]:
-    """
-    Decompõe o Brier score (Murphy, 1973):
-
-        Brier = Reliability − Resolution + Uncertainty
-
-    Retorna
-    -------
-    dict com:
-        brier         — Brier score observado
-        reliability   — quanto menor, melhor (penaliza desvios locais)
-        resolution    — quanto maior, melhor (capacidade de separar)
-        uncertainty   — entropia binária da base (fixa para o dataset)
-        n             — número de amostras
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    n = len(y)
-
-    if n == 0:
-        raise ValueError("y_true vazio — não há como decompor o Brier.")
-
-    base_rate   = float(y.mean())
-    uncertainty = base_rate * (1.0 - base_rate)
-    brier_obs   = float(np.mean((p - y) ** 2))
-    idx         = _bins_digitize(p, n_bins)
-
-    reliability = 0.0
-    resolution  = 0.0
-
-    for b in range(n_bins):
-        m   = idx == b
-        n_b = int(m.sum())
-
-        if n_b == 0:
-            continue
-
-        freq_obs  = float(y[m].mean())
-        freq_pred = float(p[m].mean())
-        peso      = n_b / n
-
-        reliability += peso * (freq_obs - freq_pred) ** 2
-        resolution  += peso * (freq_obs - base_rate) ** 2
-
-    return {
-        "brier":       brier_obs,
-        "reliability": float(reliability),
-        "resolution":  float(resolution),
-        "uncertainty": float(uncertainty),
-        "n":           float(n),
-    }
-```
-
-## `src/evaluation/errors.py`
-
-- Git: `tracked` · status `clean`
-- Size: `5.5 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `7a6e18f4d634a243771a6d0408cef798c3acc96c9b14fbbc559cd50477334dad`
-
-```python
-"""
-Análise de erros: quem o modelo erra, por quanto, e em quais grupos.
-
-A checagem de leakage vive em ``src/evaluation/leakage`` — importe de lá::
-
-    from src.evaluation.leakage import LeakageError, check_leakage
-"""
-
-from __future__ import annotations
-
-from typing import Literal
-
-import numpy as np
-import pandas as pd
-
-from src.evaluation.metrics import (
-    _to_int_labels,
-    _to_np,
-    auc,
-    f1,
-    precision,
-    recall,
-)
-
-__all__ = [
-    "ArrayLike",
-    "CriterioTop",
-    "matriz_confusao",
-    "extrair_falsos_positivos",
-    "extrair_falsos_negativos",
-    "metricas_por_grupo",
-    "top_erros",
-]
-
-ArrayLike   = np.ndarray | pd.Series | list
-CriterioTop = Literal["fp", "fn", "erro_absoluto"]
-
-
-def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
-    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
-    if len(df) != len(y):
-        raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
-
-
-def matriz_confusao(
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """
-    Matriz de confusão 2×2 como DataFrame.
-
-    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
-    Adiciona linha/coluna ``"total"``.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-
-    contagens = {
-        (yv, pv): int(((y == yv) & (p == pv)).sum())
-        for yv in (0, 1)
-        for pv in (0, 1)
-    }
-
-    df = pd.DataFrame(
-        [[contagens[(0, 0)], contagens[(0, 1)]],
-         [contagens[(1, 0)], contagens[(1, 1)]]],
-        index=["real_0", "real_1"],
-        columns=["pred_0", "pred_1"],
-    )
-    df["total"] = df.sum(axis=1)
-    df.loc["total"] = df.sum(axis=0)
-    return df
-
-
-def _extrair_por_mascara(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-    *,
-    yv: int,
-    pv: int,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde ``y_true == yv`` e ``y_pred == pv``."""
-    y = _to_int_labels(y_true)
-    p = _to_int_labels(y_pred)
-    return df.loc[(y == yv) & (p == pv)].reset_index(drop=True)
-
-
-def extrair_falsos_positivos(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde o modelo previu 1 mas o real é 0."""
-    return _extrair_por_mascara(df, y_true, y_pred, yv=0, pv=1)
-
-
-def extrair_falsos_negativos(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-) -> pd.DataFrame:
-    """Linhas de ``df`` onde o modelo previu 0 mas o real é 1."""
-    return _extrair_por_mascara(df, y_true, y_pred, yv=1, pv=0)
-
-
-def metricas_por_grupo(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    coluna_grupo: str,
-    *,
-    limiar: float = 0.5,
-    min_n: int = 30,
-) -> pd.DataFrame:
-    """
-    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
-
-    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
-    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
-    """
-    if coluna_grupo not in df.columns:
-        raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
-
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    _validar_tamanhos(df, y)
-
-    base   = df.reset_index(drop=True)
-    grupos = base[coluna_grupo].astype("string")
-
-    linhas: list[dict[str, float | str]] = []
-
-    for g in grupos.dropna().unique():
-        m = (grupos == g).to_numpy()
-        n = int(m.sum())
-
-        if n < min_n:
-            continue
-
-        y_g    = y[m]
-        p_g    = p[m]
-        y_pred = (p_g >= limiar).astype(int)
-
-        linhas.append({
-            "grupo":          str(g),
-            "n":              float(n),
-            "taxa_positivos": float(y_g.mean()),
-            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
-            "f1":             f1(y_g, y_pred),
-            "precision":      precision(y_g, y_pred),
-            "recall":         recall(y_g, y_pred),
-        })
-
-    return (
-        pd.DataFrame(linhas)
-        .sort_values("n", ascending=False)
-        .reset_index(drop=True)
-    )
-
-
-def top_erros(
-    df: pd.DataFrame,
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    *,
-    n: int = 20,
-    criterio: CriterioTop = "erro_absoluto",
-    limiar: float = 0.5,
-) -> pd.DataFrame:
-    """
-    Retorna as ``n`` linhas de ``df`` com os piores erros.
-
-    ``criterio``:
-        - ``"fp"``            → prob decrescente entre FP
-        - ``"fn"``            → prob crescente entre FN
-        - ``"erro_absoluto"`` → ``|prob − y|`` decrescente (todos os erros)
-
-    Adiciona colunas ``y_true``, ``y_prob``, ``y_pred``, ``erro_abs``.
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    y_pred = (p >= limiar).astype(int)
-    _validar_tamanhos(df, y)
-
-    out = df.reset_index(drop=True).copy()
-    out["y_true"]   = y
-    out["y_prob"]   = p
-    out["y_pred"]   = y_pred
-    out["erro_abs"] = np.abs(p - y)
-
-    if criterio == "fp":
-        sel = out[(out.y_true == 0) & (out.y_pred == 1)].sort_values("y_prob", ascending=False)
-    elif criterio == "fn":
-        sel = out[(out.y_true == 1) & (out.y_pred == 0)].sort_values("y_prob", ascending=True)
-    elif criterio == "erro_absoluto":
-        sel = out[out.y_true != out.y_pred].sort_values("erro_abs", ascending=False)
-    else:
-        raise ValueError(f"criterio inválido: {criterio!r}. Use 'fp', 'fn' ou 'erro_absoluto'.")
-
-    return sel.head(n).reset_index(drop=True)
-```
-
-## `src/evaluation/leakage.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.1 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `e504ad9142e598ef1d3e6ee4ecc2c63804f5569c5370eaa0ce132cafd9b1bde4`
-
-```python
-"""Verificação anti-vazamento de dados.
-
-``check_leakage`` valida que nenhuma coluna proibida aparece em ``X``.
-A lista efetiva é a união de:
-
-- ``forbidden_columns`` (explícito) OU ``features.proibidas`` do YAML;
-- ``DEFAULT_LEAKAGE_COLUMNS`` (desfecho, tratamentos, clusters);
-- ``target_column`` (explícito) OU ``target.coluna`` do YAML.
-"""
-
-from __future__ import annotations
-
-from typing import Iterable
-
-import pandas as pd
-
-from src.utils import config as C
-
-__all__ = ["LeakageError", "check_leakage"]
-
-
-class LeakageError(RuntimeError):
-    """Erro lançado quando variáveis com vazamento são encontradas."""
-
-
-DEFAULT_LEAKAGE_COLUMNS = frozenset({
-    "evolucao", "dt_evoluca", "dt_encerra",
-    "uti", "utilizouvni", "suport_ven",
-    "antiviral", "antivirais",
-    "classificacao_final",
-    "cluster", "cluster_rotulo",
-})
-
-
-def _resolve_forbidden_columns(
-    forbidden_columns: Iterable[str] | None,
-    target_column: str | None,
-) -> set[str]:
-    """Conjunto efetivo de colunas proibidas.
-
-    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
-    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
-    """
-    base = (
-        set(forbidden_columns)
-        if forbidden_columns is not None
-        else set(C.cfg("features", "proibidas") or [])
-    )
-    base |= DEFAULT_LEAKAGE_COLUMNS
-
-    target = target_column if target_column is not None else C.cfg("target", "coluna")
-    if target:
-        base.add(target)
-    return base
-
-
-def check_leakage(
-    X: pd.DataFrame,
-    *,
-    forbidden_columns: Iterable[str] | None = None,
-    target_column: str | None = None,
-) -> None:
-    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
-
-    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
-    ``target_column=None`` usa ``target.coluna`` do YAML.
-    """
-    forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
-    if detected := sorted(set(X.columns) & forbidden):
-        raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
-```
-
-## `src/evaluation/metrics.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.5 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `a2536cd3cc53d9a5e7ebe6320a4e0011043d1dccf51803d84abe85eaf5184c14`
-
-```python
-"""
-Métricas de classificação binária — todas retornam ``float``.
-
-Encapsula o scikit-learn para garantir ``float``: em várias funções ele
-retorna ``Float | ndarray``, o que polui o type-checker.
-
-Oferece ainda:
-    - ``metricas_por_limiar`` → tabela varrendo limiares
-    - ``ic_bootstrap``        → intervalo de confiança por bootstrap
-
-``ap`` (average precision) e ``pr_auc`` são a **mesma métrica** — a
-chave ``pr_auc`` é um alias mantido para compatibilidade com consumidores
-que usam essa nomenclatura (ex.: C4). Ambas apontam para o mesmo valor.
-"""
-
-from __future__ import annotations
-
-from typing import Callable
-
-import numpy as np
-import pandas as pd
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    brier_score_loss,
-    f1_score,
-    log_loss as sk_log_loss,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
-
-__all__ = [
-    "ArrayLike",
-    "auc",
-    "average_precision",
-    "brier",
-    "log_loss",
-    "f1",
-    "precision",
-    "recall",
-    "accuracy",
-    "especificidade",
-    "sensibilidade",
-    "metricas_completas",
-    "metricas_por_limiar",
-    "ic_bootstrap",
-]
-
-ArrayLike = np.ndarray | pd.Series | list
-
-
-def _to_np(x: ArrayLike) -> np.ndarray:
-    return np.asarray(x).ravel()
-
-
-def _to_int_labels(y: ArrayLike) -> np.ndarray:
-    return np.asarray(y).ravel().astype(int)
-
-
-def _contagens_confusao(
-    y_true: np.ndarray,
-    y_pred: np.ndarray,
-) -> tuple[int, int, int, int]:
-    tp = int(((y_true == 1) & (y_pred == 1)).sum())
-    fp = int(((y_true == 0) & (y_pred == 1)).sum())
-    tn = int(((y_true == 0) & (y_pred == 0)).sum())
-    fn = int(((y_true == 1) & (y_pred == 0)).sum())
-    return tp, fp, tn, fn
-
-
-def _especificidade_de_contagens(tn: int, fp: int) -> float:
-    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
-    denom = tn + fp
-    return tn / denom if denom > 0 else 0.0
-
-
-def auc(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(roc_auc_score(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def average_precision(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(average_precision_score(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    return float(brier_score_loss(_to_int_labels(y_true), _to_np(y_prob)))
-
-
-def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    """Log loss (entropia cruzada binária) sobre probabilidades."""
-    return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
-
-
-def f1(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(f1_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def precision(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(precision_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def recall(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(recall_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred), zero_division=0,
-    ))
-
-
-def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    return float(accuracy_score(
-        _to_int_labels(y_true), _to_int_labels(y_pred),
-    ))
-
-
-def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
-    _, fp, tn, _ = _contagens_confusao(
-        _to_int_labels(y_true), _to_int_labels(y_pred),
-    )
-    return _especificidade_de_contagens(tn, fp)
-
-
-def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
-    return recall(y_true, y_pred)
-
-
-def metricas_completas(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    limiar: float = 0.5,
-) -> dict[str, float]:
-    """
-    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
-
-    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
-    mantido por compatibilidade com consumidores que usam esse nome (ex.: C4).
-    """
-    y      = _to_int_labels(y_true)
-    p      = _to_np(y_prob)
-    y_pred = (p >= limiar).astype(int)
-    ap     = average_precision(y, p)
-
-    return {
-        "auc":            auc(y, p),
-        "ap":             ap,
-        "pr_auc":         ap,
-        "brier":          brier(y, p),
-        "log_loss":       log_loss(y, p),
-        "f1":             f1(y, y_pred),
-        "precision":      precision(y, y_pred),
-        "recall":         recall(y, y_pred),
-        "sensibilidade":  sensibilidade(y, y_pred),
-        "especificidade": especificidade(y, y_pred),
-        "accuracy":       accuracy(y, y_pred),
-        "limiar":         float(limiar),
-        "n":              float(len(y)),
-    }
-
-
-def metricas_por_limiar(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    n_limiares: int = 101,
-) -> pd.DataFrame:
-    """
-    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
-
-    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
-    sensibilidade, especificidade, accuracy, youden_j``.
-
-    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
-    o limiar que maximiza a separação entre as classes. As contagens de
-    confusão ficam expostas para permitir derivar qualquer outra métrica
-    a posteriori — não há tabela paralela de lambdas.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-
-    linhas: list[dict[str, float]] = []
-
-    for th in np.linspace(0.01, 0.99, n_limiares):
-        lim    = float(th)
-        y_pred = (p >= lim).astype(int)
-
-        tp, fp, tn, fn = _contagens_confusao(y, y_pred)
-        rec = recall(y, y_pred)
-        esp = _especificidade_de_contagens(tn, fp)
-
-        linhas.append({
-            "limiar":         lim,
-            "tp":             tp,
-            "fp":             fp,
-            "tn":             tn,
-            "fn":             fn,
-            "f1":             f1(y, y_pred),
-            "precision":      precision(y, y_pred),
-            "recall":         rec,
-            "sensibilidade":  rec,
-            "especificidade": esp,
-            "accuracy":       accuracy(y, y_pred),
-            "youden_j":       rec + esp - 1.0,
-        })
-
-    return pd.DataFrame(linhas)
-
-
-def ic_bootstrap(
-    y_true: ArrayLike,
-    y_prob: ArrayLike,
-    *,
-    metrica: Callable[[ArrayLike, ArrayLike], float] = auc,
-    n_boot: int = 200,
-    alpha: float = 0.05,
-    seed: int = 42,
-) -> tuple[float, float, float]:
-    """
-    Intervalo de confiança via bootstrap percentil.
-
-    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
-    degeneradas (uma única classe) são descartadas internamente. Métrica
-    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
-    """
-    y = _to_int_labels(y_true)
-    p = _to_np(y_prob)
-    n = len(y)
-
-    rng     = np.random.default_rng(seed)
-    valores = np.empty(n_boot, dtype="float64")
-
-    for i in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        valores[i] = (
-            metrica(y[idx], p[idx]) if len(np.unique(y[idx])) >= 2 else np.nan
-        )
-
-    est     = float(metrica(y, p))
-    validos = valores[~np.isnan(valores)]
-
-    if validos.size == 0:
-        return est, float("nan"), float("nan")
-
-    return (
-        est,
-        float(np.quantile(validos, alpha / 2)),
-        float(np.quantile(validos, 1 - alpha / 2)),
-    )
-```
-
-## `src/evaluation/temporal.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.4 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `eb8b768efe8484f354dd034bc536c2db975744457cc1c9e659d64c2b80458546`
-
-```python
-"""
-Split temporal em três blocos + trava do holdout.
-
-⚠️  Ferramenta de **sensibilidade temporal** — NÃO é o split oficial.
-O split oficial do projeto é o **aleatório estratificado**, gerado no
-Notebook 03 e persistido em `dataset_supervisionado.parquet` (usado por
-C2, C3, C5, C6). Este módulo serve para perguntas do tipo "o desempenho
-se mantém se eu treinar no passado e testar no futuro?".
-
-Regra de ouro (quando usado):
-    treino + validacao → escolha de modelo
-    holdout            → UMA ÚNICA vez, após ``concluir_selecao()``
-
-A classe ``TemporalSplit`` bloqueia o acesso ao holdout enquanto o gate
-``G9_holdout`` não estiver aprovado.
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import Literal, get_args
-
-import pandas as pd
-
-from src.utils import config as C
-
-OnNat = Literal["raise", "drop"]
-_ON_NAT_VALORES = frozenset(get_args(OnNat))
-
-
-def _validar_fracao(nome: str, valor: float) -> None:
-    if not 0 < valor < 1:
-        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
-
-
-def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
-    if coluna_tempo not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
-    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
-        raise TypeError(
-            f"Coluna temporal {coluna_tempo!r} não é datetime "
-            f"(dtype atual: {df[coluna_tempo].dtype}). "
-            "Converta com pd.to_datetime antes do split."
-        )
-
-
-def _tratar_nat(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    on_nat: OnNat,
-) -> pd.DataFrame:
-    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
-    nat_mask = df[coluna_tempo].isna()
-    n_nat    = int(nat_mask.sum())
-
-    if not n_nat:
-        return df
-    if on_nat == "raise":
-        raise ValueError(
-            f"{n_nat} linha(s) com data inválida (NaT) em "
-            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
-        )
-    return df.loc[~nat_mask].reset_index(drop=True)
-
-
-def split_temporal_3way(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    frac_treino: float = 0.7,
-    frac_validacao: float = 0.15,
-    *,
-    on_nat: OnNat = "raise",
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Divide em treino / validação / holdout, **sem embaralhar**.
-
-    Garante, na ordem temporal::
-
-        max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
-        max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
-
-    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
-    remove essas linhas antes de ordenar.
-    """
-    if on_nat not in _ON_NAT_VALORES:
-        raise ValueError(
-            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
-        )
-
-    _validar_fracao("frac_treino",    frac_treino)
-    _validar_fracao("frac_validacao", frac_validacao)
-    if frac_treino + frac_validacao >= 1:
-        raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
-        )
-
-    _validar_coluna_tempo(df, coluna_tempo)
-    df = _tratar_nat(df, coluna_tempo, on_nat)
-
-    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
-    n = len(ordenado)
-    if n < 3:
-        raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
-
-    corte_treino = int(n * frac_treino)
-    corte_valid  = int(n * (frac_treino + frac_validacao))
-
-    return (
-        ordenado.iloc[:corte_treino].reset_index(drop=True),
-        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
-        ordenado.iloc[corte_valid:].reset_index(drop=True),
-    )
-
-
-@dataclass
-class TemporalSplit:
-    """Guarda os três blocos e controla o acesso ao holdout.
-
-    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
-    Uso típico::
-
-        split = TemporalSplit(df, coluna_tempo="dt_notific")
-        tr, va = split.treino_validacao()  # seleção
-        split.concluir_selecao()           # exige G9_holdout aprovado
-        ho = split.holdout()               # avaliação, uma vez
-    """
-
-    df: pd.DataFrame
-    coluna_tempo: str
-    frac_treino: float = 0.7
-    frac_validacao: float = 0.15
-    on_nat: OnNat = "raise"
-
-    _treino: pd.DataFrame = field(init=False, repr=False)
-    _validacao: pd.DataFrame = field(init=False, repr=False)
-    _holdout: pd.DataFrame = field(init=False, repr=False)
-    _holdout_liberado: bool = field(init=False, default=False, repr=False)
-
-    def __post_init__(self) -> None:
-        tr, va, ho = split_temporal_3way(
-            self.df,
-            coluna_tempo=self.coluna_tempo,
-            frac_treino=self.frac_treino,
-            frac_validacao=self.frac_validacao,
-            on_nat=self.on_nat,
-        )
-        self._treino    = tr
-        self._validacao = va
-        self._holdout   = ho
-
-    def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """``(treino, validacao)`` — único par para a fase de seleção."""
-        return self._treino, self._validacao
-
-    @property
-    def treino(self) -> pd.DataFrame:
-        return self._treino
-
-    @property
-    def validacao(self) -> pd.DataFrame:
-        return self._validacao
-
-    def concluir_selecao(self) -> None:
-        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
-
-        O gate é a autorização explícita — G7 e G8 tratam de decisões da
-        fase de seleção e devem ter sido fechados *antes* deste ponto.
-        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
-        """
-        gate   = C.cfg("gates", "G9_holdout") or {}
-        status = gate.get("status")
-        if status != "aprovado":
-            raise RuntimeError(
-                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
-                f"(status atual: {status!r}). Feche o gate em "
-                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
-            )
-        self._holdout_liberado = True
-
-    @property
-    def holdout_liberado(self) -> bool:
-        return self._holdout_liberado
-
-    def holdout(self) -> pd.DataFrame:
-        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
-        if not self._holdout_liberado:
-            raise RuntimeError(
-                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
-            )
-        return self._holdout
-
-    @property
-    def n_treino(self) -> int:
-        return len(self._treino)
-
-    @property
-    def n_validacao(self) -> int:
-        return len(self._validacao)
-
-    @property
-    def n_holdout(self) -> int:
-        return len(self._holdout)
-
-    def resumo(self) -> str:
-        """Resumo legível — bom para log no ``Run``."""
-
-        def _periodo(d: pd.DataFrame) -> str:
-            if d.empty:
-                return "vazio"
-            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
-
-        estado = "liberado" if self._holdout_liberado else "bloqueado"
-        return (
-            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
-            f"papel='sensibilidade_temporal')\n"
-            f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
-            f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
-            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
-        )
-```
-
-## `src/features/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `508 B` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `bd18b2388ca98116b750d5ffea5c9471d3b169ae4be762c417a6195ed525cc34`
-
-```python
-"""Engenharia de atributos do pipeline supervisionado."""
-
-from src.features.engineering import (
-    COLUNAS_DERIVADAS,
-    ano_mes_internacao,
-    faixa_etaria,
-    idade_em_anos,
-    intervalo_sintomas_internacao,
-    montar_features,
-    sazonalidade,
-    sexo_categoria,
-)
-
-__all__ = [
-    "COLUNAS_DERIVADAS",
-    "ano_mes_internacao",
-    "faixa_etaria",
-    "idade_em_anos",
-    "intervalo_sintomas_internacao",
-    "montar_features",
-    "sazonalidade",
-    "sexo_categoria",
-]
-```
-
-## `src/features/engineering.py`
-
-- Git: `tracked` · status `clean`
-- Size: `8.0 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `6dc551fb32ada10a58850fe4481627da9855ebcbe58fb7b84e821030e8e61846`
-
-```python
-"""Engenharia de atributos do pipeline supervisionado.
-
-Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
-transforma colunas disponíveis na admissão hospitalar em atributos prontos
-para o modelo — nenhuma usa informação posterior ao desfecho.
-
-As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
-``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
-quando o YAML não define nada.
-"""
-
-from __future__ import annotations
-
-from typing import Literal, get_args
-
-import numpy as np
-import pandas as pd
-
-from src.utils import config as C
-
-__all__ = [
-    "COLUNAS_DERIVADAS",
-    "idade_em_anos",
-    "intervalo_sintomas_internacao",
-    "sazonalidade",
-    "faixa_etaria",
-    "sexo_categoria",
-    "ano_mes_internacao",
-    "montar_features",
-]
-
-PoliticaIntervalo = Literal["sinalizar", "descartar"]
-
-_INTERVALO_MAX_DIAS_PADRAO = 60.0
-_SEMANAS_POR_ANO           = 52.18
-_POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
-
-_FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
-    ("<1",    0.0,   1.0),
-    ("1-4",   1.0,   5.0),
-    ("5-11",  5.0,  12.0),
-    ("12-17", 12.0, 18.0),
-    ("18-39", 18.0, 40.0),
-    ("40-59", 40.0, 60.0),
-    ("60-79", 60.0, 80.0),
-    ("80+",   80.0, None),
-)
-
-COLUNAS_DERIVADAS: tuple[str, ...] = (
-    "idade_anos",
-    "dias_sintomas_ate_internacao",
-    "sin_semana",
-    "cos_semana",
-    "ano_internacao",
-    "mes_internacao",
-    "flag_intervalo_invalido",
-    "flag_internacao_antes_sintomas",
-    "faixa_etaria",
-    "sexo_categoria",
-)
-
-
-def _intervalo_max_dias() -> float:
-    valor = C.cfg("features", "engenharia", "intervalo_max_dias")
-    return _INTERVALO_MAX_DIAS_PADRAO if valor is None else float(valor)
-
-
-def _intervalo_politica() -> PoliticaIntervalo:
-    valor = C.cfg("features", "engenharia", "intervalo_politica")
-    if valor is None:
-        return "sinalizar"
-
-    politica = str(valor).strip().lower()
-    if politica not in _POLITICAS_VALIDAS:
-        raise ValueError(
-            f"features.engenharia.intervalo_politica inválida: {valor!r}. "
-            f"Use uma de {sorted(_POLITICAS_VALIDAS)}."
-        )
-    return politica  # type: ignore[return-value]
-
-
-def _faixas_etarias() -> list[tuple[str, float, float | None]]:
-    bruto = C.cfg("features", "engenharia", "faixas_etarias")
-    if not bruto:
-        return list(_FAIXAS_PADRAO)
-
-    return [
-        (
-            str(item["nome"]),
-            float(item["min"]),
-            None if item.get("max") is None else float(item["max"]),
-        )
-        for item in bruto
-    ]
-
-
-def idade_em_anos(df: pd.DataFrame) -> pd.Series:
-    """
-    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
-
-    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
-    a codificação é desconhecida, a idade é negativa ou excede 120.
-    """
-    idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
-    tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
-
-    anos = pd.Series(
-        np.select(
-            [tipo.eq(1), tipo.eq(2), tipo.eq(3)],
-            [idade / 365.25, idade / 12.0, idade],
-            default=np.nan,
-        ),
-        index=df.index,
-        dtype="float64",
-    )
-
-    invalido = idade.isna() | idade.lt(0) | ~tipo.isin([1, 2, 3]) | anos.gt(120)
-    return anos.where(~invalido)
-
-
-def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
-
-    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
-    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
-    fora de ``[0, intervalo_max_dias]`` vem de
-    ``features.engenharia.intervalo_politica``.
-    """
-    max_dias = _intervalo_max_dias()
-    politica = _intervalo_politica()
-
-    dt_sin = pd.to_datetime(df["dt_sin_pri"], errors="coerce")
-    dt_int = pd.to_datetime(df["dt_interna"], errors="coerce")
-
-    delta = (dt_int - dt_sin).dt.days.astype("float64")
-
-    invalido = delta.isna() | delta.lt(0) | delta.gt(max_dias)
-    negativo = delta.lt(0)
-
-    delta_final = delta.where(~invalido) if politica == "descartar" else delta
-
-    return pd.DataFrame({
-        "dias_sintomas_ate_internacao":   delta_final,
-        "flag_intervalo_invalido":        invalido.astype("int8"),
-        "flag_internacao_antes_sintomas": negativo.astype("int8"),
-    })
-
-
-def sazonalidade(
-    df: pd.DataFrame,
-    coluna_data: str | None = None,
-) -> pd.DataFrame:
-    """
-    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
-
-    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
-    Datas nulas resultam em NaN.
-    """
-    if coluna_data is None:
-        coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
-    if coluna_data not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_data!r}")
-
-    datas = pd.to_datetime(df[coluna_data], errors="coerce")
-
-    semana = pd.Series(np.nan, index=df.index, dtype="float64")
-    mask = datas.notna()
-    if mask.any():
-        semana.loc[mask] = (
-            datas[mask].dt.isocalendar()["week"].astype("float64").to_numpy()
-        )
-
-    angulo = 2.0 * np.pi * (semana - 1.0) / _SEMANAS_POR_ANO
-
-    return pd.DataFrame({
-        "sin_semana": np.sin(angulo),
-        "cos_semana": np.cos(angulo),
-    })
-
-
-def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
-    """
-    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
-
-    Idade nula vira a categoria explícita ``"desconhecida"``.
-    """
-    faixas = _faixas_etarias()
-    idade  = pd.to_numeric(idade_anos, errors="coerce")
-
-    out = pd.Series("desconhecida", index=idade.index, dtype="object")
-    for nome, lo, hi in faixas:
-        mask = idade.ge(lo)
-        if hi is not None:
-            mask &= idade.lt(hi)
-        out[mask] = nome
-
-    return out.astype("category")
-
-
-def sexo_categoria(df: pd.DataFrame) -> pd.Series:
-    """
-    Normaliza ``cs_sexo`` em categórica explícita.
-
-    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
-    """
-    sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
-
-    out = pd.Series("ausente", index=df.index, dtype="object")
-    out[sexo.eq("M")] = "masculino"
-    out[sexo.eq("F")] = "feminino"
-    out[sexo.eq("I")] = "ignorado"
-
-    return out.astype("category")
-
-
-def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
-
-    Datas nulas resultam em NaN, mantendo compatibilidade com
-    ``SimpleImputer`` e ``StandardScaler``.
-    """
-    dt = pd.to_datetime(df["dt_interna"], errors="coerce")
-
-    return pd.DataFrame({
-        "ano_internacao": dt.dt.year.astype("float64"),
-        "mes_internacao": dt.dt.month.astype("float64"),
-    })
-
-
-def montar_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aplica todas as derivações e devolve cópia de ``df`` com as colunas de
-    ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
-    """
-    out = df.copy()
-
-    out["idade_anos"] = idade_em_anos(df)
-
-    intervalo = intervalo_sintomas_internacao(df)
-    out["dias_sintomas_ate_internacao"]   = intervalo["dias_sintomas_ate_internacao"]
-    out["flag_intervalo_invalido"]        = intervalo["flag_intervalo_invalido"]
-    out["flag_internacao_antes_sintomas"] = intervalo["flag_internacao_antes_sintomas"]
-
-    saz = sazonalidade(df)
-    out["sin_semana"] = saz["sin_semana"]
-    out["cos_semana"] = saz["cos_semana"]
-
-    out["faixa_etaria"]   = faixa_etaria(out["idade_anos"])
-    out["sexo_categoria"] = sexo_categoria(df)
-
-    ano_mes = ano_mes_internacao(df)
-    out["ano_internacao"] = ano_mes["ano_internacao"]
-    out["mes_internacao"] = ano_mes["mes_internacao"]
-
-    return out
-```
-
-## `src/features/normalization.py`
-
-- Git: `tracked` · status `clean`
-- Size: `0 B` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-
-```python
-
-```
-
-## `src/models/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `1.5 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `193d5ccf3d79ae3e4699f21e442947e652dd4430898e78753ff60f9d2a3a8a76`
-
-```python
-"""Modelos supervisionados do Projeto Integrador."""
-
-from src.models.baseline import (
-    DummyStrategy,
-    build_baseline_pipeline,
-    evaluate_baseline,
-)
-from src.models.boosting import build_boosting_pipeline
-from src.models.calibration import (
-    MetodoCalibracao,
-    Metrica,
-    calibrar,
-    escolher_limiar,
-)
-from src.models.factory import (
-    Finalista,
-    build_finalista,
-    finalistas_disponiveis,
-)
-from src.models.logistic import (
-    Penalty,
-    Solver,
-    build_logistic_pipeline,
-)
-from src.models.pipeline import (
-    ALVO,
-    AUSENTE,
-    COLUNA_TEMPO,
-    FEATURES,
-    FEATURES_CATEGORICAS,
-    FEATURES_NUMERICAS,
-    build_pipeline,
-    build_preprocessor,
-    criar_alvo_binario,
-    filtrar_rotulos_validos,
-    random_state,
-)
-
-__all__ = [
-    # pipeline (constantes + pré-processamento + alvo)
-    "ALVO",
-    "AUSENTE",
-    "COLUNA_TEMPO",
-    "FEATURES",
-    "FEATURES_CATEGORICAS",
-    "FEATURES_NUMERICAS",
-    "build_pipeline",
-    "build_preprocessor",
-    "criar_alvo_binario",
-    "filtrar_rotulos_validos",
-    "random_state",
-    # baseline
-    "DummyStrategy",
-    "build_baseline_pipeline",
-    "evaluate_baseline",
-    # logistic
-    "Penalty",
-    "Solver",
-    "build_logistic_pipeline",
-    # boosting
-    "build_boosting_pipeline",
-    # calibração
-    "MetodoCalibracao",
-    "Metrica",
-    "calibrar",
-    "escolher_limiar",
-    # fábrica
-    "Finalista",
-    "build_finalista",
-    "finalistas_disponiveis",
-]
-```
-
-## `src/models/baseline.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `c5d4d8e3a65bda1fe15756cb5169b953cf52aff95ac3e6795e6f3ae60094c43e`
-
-```python
-"""
-Baseline: ``DummyClassifier`` — piso mínimo de desempenho.
-
-Serve para responder: "o modelo aprendeu algo além da classe majoritária?"
-O piso efetivo depende de ``strategy`` — ver ``build_baseline_pipeline``.
-"""
-from __future__ import annotations
-
-from typing import Literal
-
-import pandas as pd
-from sklearn.dummy import DummyClassifier
-from sklearn.pipeline import Pipeline
-
-from src.evaluation.metrics import metricas_completas
-from src.models.pipeline import build_preprocessor, random_state
-
-DummyStrategy = Literal[
-    "most_frequent",
-    "prior",
-    "stratified",
-    "uniform",
-    "constant",
-]
-
-
-def build_baseline_pipeline(
-    *,
-    strategy: DummyStrategy = "prior",
-    preprocessor=None,
-) -> Pipeline:
-    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
-
-    Estratégias mais úteis como piso:
-
-    - ``"prior"``         → probabilidade constante = prevalência do treino
-      (AUC ≈ 0.5 por construção; Brier ainda informativo);
-    - ``"most_frequent"`` → sempre a classe majoritária
-      (F1/recall = 0 se a positiva for minoria);
-    - ``"stratified"``    → amostra respeitando o prior.
-
-    ``preprocessor=None`` usa ``build_preprocessor()``.
-    """
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
-
-    return Pipeline([
-        ("pre", pre),
-        ("clf", DummyClassifier(
-            strategy=strategy,
-            random_state=random_state(),
-        )),
-    ])
-
-
-def evaluate_baseline(
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    X_eval: pd.DataFrame,
-    y_eval: pd.Series,
-    *,
-    strategy: DummyStrategy = "prior",
-) -> dict[str, str | float]:
-    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
-
-    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
-    ``metricas_completas`` — ver esse módulo para a lista completa.
-    """
-    pipe = build_baseline_pipeline(strategy=strategy)
-    pipe.fit(X_train, y_train)
-    y_prob = pipe.predict_proba(X_eval)[:, 1]
-
-    return {
-        "strategy": strategy,
-        **metricas_completas(y_eval, y_prob, limiar=0.5),
-    }
-```
-
-## `src/models/boosting.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.4 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `2f13ffb44edf322faa9718ede48d7387b35ee3a5c0caed09d1dc116692476d6d`
-
-```python
-"""Gradient boosting supervisionado do Projeto SRAG."""
-
-from __future__ import annotations
-
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.pipeline import Pipeline
-
-from src.models.pipeline import (
-    FEATURES_CATEGORICAS,
-    FEATURES_NUMERICAS,
-    build_preprocessor,
-    random_state,
-)
-
-__all__ = ["build_boosting_pipeline"]
-
-
-def build_boosting_pipeline(
-    learning_rate: float = 0.08,
-    max_iter: int = 150,
-    max_depth: int | None = None,
-    max_leaf_nodes: int = 31,
-    min_samples_leaf: int = 100,
-    l2_regularization: float = 0.10,
-    early_stopping: bool = True,
-    validation_fraction: float = 0.1,
-    n_iter_no_change: int = 20,
-    class_weight: str | dict | None = "balanced",
-    preprocessor=None,
-) -> Pipeline:
-    """Constrói o pipeline ordinal do HistGradientBoostingClassifier."""
-
-    categorical_features = None
-
-    if preprocessor is None:
-        preprocessor = build_preprocessor(
-            numericas=FEATURES_NUMERICAS,
-            categoricas=FEATURES_CATEGORICAS,
-            saida="ordinal",
-        )
-
-        categorical_features = [
-            False
-            for _ in FEATURES_NUMERICAS
-        ]
-
-        categorical_features.extend(
-            True
-            for _ in FEATURES_CATEGORICAS
-        )
-
-    if categorical_features is not None:
-        quantidade_features_esperada = sum(
-            (
-                len(FEATURES_NUMERICAS),
-                len(FEATURES_CATEGORICAS),
-            )
-        )
-
-        if len(categorical_features) != quantidade_features_esperada:
-            raise RuntimeError(
-                "A máscara categórica não possui o mesmo tamanho "
-                "do contrato de features."
-            )
-
-    classificador = HistGradientBoostingClassifier(
-        learning_rate=learning_rate,
-        max_iter=max_iter,
-        max_depth=max_depth,
-        max_leaf_nodes=max_leaf_nodes,
-        min_samples_leaf=min_samples_leaf,
-        l2_regularization=l2_regularization,
-        early_stopping=early_stopping,
-        validation_fraction=validation_fraction,
-        n_iter_no_change=n_iter_no_change,
-        class_weight=class_weight,
-        categorical_features=categorical_features,
-        random_state=random_state(),
-    )
-
-    return Pipeline(
-        steps=[
-            ("pre", preprocessor),
-            ("clf", classificador),
-        ]
-    )
-```
-
-## `src/models/calibration.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.3 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `ad67dccc727378dccad80ba90f070646617d99c49e7e1154e1198ad7f17f1c7a`
-
-```python
-"""
-Calibração de probabilidades e escolha de limiar de decisão.
-
-``calibrar`` envolve um ``Pipeline`` já ajustado em
-``CalibratedClassifierCV`` com ``FrozenEstimator`` — o pipeline base
-não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
-devolve o ótimo segundo uma métrica, com restrições opcionais de
-precision/recall.
-
-A agregação de métricas vive em ``src.evaluation.metrics``.
-"""
-
-from __future__ import annotations
-
-from typing import Any, Literal, get_args
-
-import numpy as np
-import pandas as pd
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import brier_score_loss, roc_auc_score
-
-from src.evaluation.metrics import metricas_por_limiar
-
-__all__ = [
-    "MetodoCalibracao",
-    "Metrica",
-    "calibrar",
-    "escolher_limiar",
-]
-
-Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
-MetodoCalibracao = Literal["isotonic", "sigmoid"]
-
-_METRICAS_VALIDAS = frozenset(get_args(Metrica))
-_METODOS_VALIDOS  = frozenset(get_args(MetodoCalibracao))
-
-
-def calibrar(
-    pipeline,
-    X_cal: pd.DataFrame,
-    y_cal: pd.Series,
-    *,
-    method: MetodoCalibracao = "isotonic",
-):
-    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
-
-    Use uma base de calibração distinta do treino do ``pipeline``. O
-    pipeline não é re-treinado — o calibrador aprende só o mapeamento
-    probabilidade → probabilidade.
-
-    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
-    (Platt) é paramétrico e mais estável em amostras pequenas.
-    """
-    if method not in _METODOS_VALIDOS:
-        raise ValueError(
-            f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
-        )
-
-    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
-    # importável em ambientes mais antigos (o erro surge só em calibrar()).
-    from sklearn.frozen import FrozenEstimator
-
-    modelo = CalibratedClassifierCV(
-        estimator=FrozenEstimator(pipeline),
-        method=method,
-    )
-    modelo.fit(X_cal, y_cal)
-    return modelo
-
-
-def escolher_limiar(
-    y_true: pd.Series | np.ndarray,
-    y_prob: pd.Series | np.ndarray,
-    *,
-    metrica: Metrica = "f1",
-    n_limiares: int = 101,
-    min_precision: float | None = None,
-    min_recall: float | None = None,
-) -> dict[str, Any]:
-    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
-
-    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
-    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
-    ``ValueError``.
-
-    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
-    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
-    ``metricas_por_limiar``).
-    """
-    if metrica not in _METRICAS_VALIDAS:
-        raise ValueError(
-            f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
-        )
-
-    y_true_arr = np.asarray(y_true).ravel().astype(int)
-    y_prob_arr = np.asarray(y_prob).ravel()
-
-    tabela = metricas_por_limiar(y_true_arr, y_prob_arr, n_limiares=n_limiares)
-
-    candidatos = tabela
-    filtros: list[str] = []
-    if min_precision is not None:
-        filtros.append(f"precision ≥ {min_precision}")
-        candidatos = candidatos[candidatos["precision"] >= min_precision]
-    if min_recall is not None:
-        filtros.append(f"recall ≥ {min_recall}")
-        candidatos = candidatos[candidatos["recall"] >= min_recall]
-    if candidatos.empty:
-        restricao = " e ".join(filtros) if filtros else "sem restrição"
-        raise ValueError(f"Nenhum limiar atende à(s) restrição(ões): {restricao}.")
-
-    if metrica not in candidatos.columns:
-        raise ValueError(
-            f"A métrica {metrica!r} não foi produzida por metricas_por_limiar. "
-            f"Colunas disponíveis: {sorted(candidatos.columns)}"
-        )
-
-    idx_melhor   = candidatos[metrica].idxmax()
-    linha_melhor = tabela.loc[[idx_melhor]].iloc[0]
-
-    return {
-        "limiar":  float(linha_melhor["limiar"]),
-        "valor":   float(linha_melhor[metrica]),
-        "metrica": metrica,
-        "auc":     float(roc_auc_score(y_true_arr, y_prob_arr)),
-        "brier":   float(brier_score_loss(y_true_arr, y_prob_arr)),
-        "tabela":  tabela,
-    }
-```
-
-## `src/models/factory.py`
-
-- Git: `tracked` · status `clean`
-- Size: `2.2 KB` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `bd098f04f4a328f10903bbd8ca8ee25642fcc8054a1c946e406e89ad8449251a`
-
-```python
-"""
-Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
-
-Hiperparâmetros vêm de ``models.<nome>`` no ``supervised.yaml``; overrides
-em ``**overrides`` têm precedência. ``preprocessor=None`` faz cada
-construtor usar o default (``build_preprocessor()``).
-"""
-
-from __future__ import annotations
-
-from typing import Any, Literal, get_args
-
-from sklearn.pipeline import Pipeline
-
-from src.models.boosting import build_boosting_pipeline
-from src.models.logistic import build_logistic_pipeline
-from src.utils import config as C
-
-__all__ = ["Finalista", "build_finalista", "finalistas_disponiveis"]
-
-Finalista = Literal["boosting", "logistic"]
-_FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
-
-
-def finalistas_disponiveis() -> tuple[str, ...]:
-    """Nomes canônicos dos finalistas registrados, em ordem estável."""
-    return tuple(sorted(_FINALISTAS_VALIDOS))
-
-
-def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
-    """Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
-
-    Descartados: chaves ``busca_*`` (grid de tuning) e valores ``None``
-    (deixa o default do construtor agir). Devolve ``{}`` se a secção não
-    existir ou não for mapping.
-    """
-    secao = C.cfg("models", nome)
-    if not isinstance(secao, dict):
-        return {}
-    return {
-        k: v
-        for k, v in secao.items()
-        if v is not None and not k.startswith("busca_")
-    }
-
-
-def build_finalista(
-    nome: str,
-    *,
-    preprocessor=None,
-    **overrides: Any,
-) -> Pipeline:
-    """Constrói o ``Pipeline`` de um finalista pelo nome.
-
-    Levanta ``ValueError`` se ``nome`` não estiver em
-    ``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
-    ajustado** — o caller faz ``fit``.
-    """
-    if nome not in _FINALISTAS_VALIDOS:
-        raise ValueError(
-            f"finalista desconhecido: {nome!r}. "
-            f"Use um destes: {sorted(_FINALISTAS_VALIDOS)}."
-        )
-
-    params = _kwargs_do_yaml(nome) | overrides
-    if preprocessor is not None:
-        params["preprocessor"] = preprocessor
-
-    if nome == "boosting":
-        return build_boosting_pipeline(**params)
-    return build_logistic_pipeline(**params)
-```
-
-## `src/models/logistic.py`
-
-- Git: `tracked` · status `clean`
-- Size: `4.5 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `c7c0f0c1cb6bb55ec926973765196ab35bb64ff8634fe781b12823261cc66d73`
-
-```python
-"""
-Regressão logística — modelo linear interpretável.
-
-A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
-para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
-do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
-traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
-única da verdade sem depender da API depreciada.
-"""
-
-from __future__ import annotations
-
-from typing import Literal, cast
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-
-from src.models.pipeline import build_preprocessor, random_state
-from src.utils import config as C
-
-__all__ = ["Penalty", "Solver", "build_logistic_pipeline"]
-
-Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
-Penalty = Literal["l1", "l2", "elasticnet"]
-
-# Solver × tipo de penalidade efetivo (derivado do l1_ratio final).
-_L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
-    "l2":         frozenset({"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"}),
-    "l1":         frozenset({"liblinear", "saga"}),
-    "elasticnet": frozenset({"saga"}),
-}
-
-_PENALTIES_VALIDAS = ("l1", "l2", "elasticnet")
-
-
-def _penalty_do_yaml() -> Penalty | None:
-    """Lê ``models.logistic.penalty`` do YAML.
-
-    Devolve ``None`` quando a chave está ausente, vazia ou nula — o
-    ``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
-    ``ValueError`` se a chave existir mas tiver valor desconhecido.
-    """
-    valor = C.cfg("models", "logistic", "penalty")
-    if not valor:
-        return None
-    if valor not in _PENALTIES_VALIDAS:
-        raise ValueError(
-            f"models.logistic.penalty inválido: {valor!r}. "
-            f"Use uma de {_PENALTIES_VALIDAS}."
-        )
-    return cast(Penalty, valor)
-
-
-def _tipo_penalidade(l1_ratio: float) -> str:
-    """Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``."""
-    if l1_ratio == 0.0:
-        return "l2"
-    if l1_ratio == 1.0:
-        return "l1"
-    return "elasticnet"
-
-
-def build_logistic_pipeline(
-    *,
-    C: float = 1.0,
-    l1_ratio: float = 0.0,
-    penalty: Penalty | None = None,
-    solver: Solver = "lbfgs",
-    max_iter: int = 1000,
-    class_weight: str | dict | None = "balanced",
-    preprocessor=None,
-) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``LogisticRegression``.
-
-    ``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
-    Quando definido, sobrepõe ``l1_ratio``:
-
-    - ``"l2"``          → força ``l1_ratio=0.0``;
-    - ``"l1"``          → força ``l1_ratio=1.0``;
-    - ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
-
-    ``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
-    ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
-    resultante (ver ``_L1_RATIO_SOLVERS``).
-
-    Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
-    combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
-    com ``l1_ratio`` nos extremos.
-    """
-    if not 0.0 <= l1_ratio <= 1.0:
-        raise ValueError(
-            f"l1_ratio deve estar em [0, 1]; "
-            f"recebido {l1_ratio!r}."
-        )
-
-    penalty_configurada = penalty
-
-    if penalty_configurada is None and l1_ratio == 0.0:
-        penalty_configurada = _penalty_do_yaml()
-
-    if penalty_configurada == "l2":
-        l1_ratio = 0.0
-
-    elif penalty_configurada == "l1":
-        l1_ratio = 1.0
-
-    elif penalty_configurada == "elasticnet":
-        if not 0.0 < l1_ratio < 1.0:
-            raise ValueError(
-                "penalty='elasticnet' requer "
-                "0 < l1_ratio < 1; "
-                f"recebido l1_ratio={l1_ratio!r}."
-            )
-
-    tipo             = _tipo_penalidade(l1_ratio)
-    solvers_validos  = _L1_RATIO_SOLVERS[tipo]
-    if solver not in solvers_validos:
-        raise ValueError(
-            f"combinação inválida: l1_ratio={l1_ratio!r} ({tipo}) "
-            f"com solver={solver!r}. Use um destes: {sorted(solvers_validos)}."
-        )
-
-    pre = preprocessor if preprocessor is not None else build_preprocessor()
-
-    return Pipeline([
-        ("pre", pre),
-        ("clf", LogisticRegression(
-            C=C,
-            l1_ratio=l1_ratio,
-            solver=solver,
-            max_iter=max_iter,
-            class_weight=class_weight,
-            random_state=random_state(),
-        )),
-    ])
-```
-
-## `src/models/pipeline.py`
-
-- Git: `tracked` · status `clean`
-- Size: `7.2 KB` · modified `2026-10-18 14:26 UTC`
-- SHA-256: `55dd34e499dcc9c88c5aaa99deff39dfd8125058a6fe487edd6308bc5425e904`
-
-```python
-"""
-Fundação dos modelos supervisionados.
-
-Fonte única de verdade para o pré-processamento e para a derivação do
-alvo binário a partir de ``evolucao``, além da leitura da config canônica
-(``configs/supervised.yaml``) e da conveniência ``build_pipeline``.
-
-Notebooks e demais modelos devem importar este módulo em vez de
-reimplementar o pré-processamento.
-"""
-
-from __future__ import annotations
-
-import logging
-from typing import Iterable
-from typing import Iterable, Literal
-
-import numpy as np
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import (
-    FunctionTransformer,
-    OneHotEncoder,
-    OrdinalEncoder,
-    StandardScaler,
-)
-from src.utils import config as C
-
-__all__ = [
-    "ALVO",
-    "AUSENTE",
-    "COLUNA_TEMPO",
-    "FEATURES",
-    "FEATURES_CATEGORICAS",
-    "FEATURES_NUMERICAS",
-    "build_pipeline",
-    "build_preprocessor",
-    "criar_alvo_binario",
-    "filtrar_rotulos_validos",
-    "random_state",
-]
-
-logger = logging.getLogger(__name__)
-
-# Sem defaults próprios: se a config falhar, o import falha — decisão
-# deliberada para que um YAML inválido impeça a modelagem cedo.
-ALVO: str = C.cfg("target", "coluna")
-COLUNA_TEMPO: str = C.cfg("coluna_tempo")
-
-FEATURES_NUMERICAS: list[str] = list(C.cfg("features", "numericas") or [])
-FEATURES_CATEGORICAS: list[str] = list(C.cfg("features", "categoricas") or [])
-
-AUSENTE: str = C.cfg("missingness", "categoricas", "valor_ausente")
-
-if _final := C.cfg("features", "final"):
-    _fs = set(_final)
-    FEATURES_NUMERICAS = [c for c in FEATURES_NUMERICAS if c in _fs]
-    FEATURES_CATEGORICAS = [c for c in FEATURES_CATEGORICAS if c in _fs]
-
-FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
-
-
-def _alvo_cfg_positivos() -> list[float]:
-    """Códigos de ``target.positivos`` do YAML, como floats."""
-    return [float(v) for v in (C.cfg("target", "positivos") or [])]
-
-
-def _alvo_cfg_negativos() -> list[float]:
-    """Códigos de ``target.negativos`` do YAML, como floats."""
-    return [float(v) for v in (C.cfg("target", "negativos") or [])]
-
-
-# SUBSTITUA build_preprocessor EM src/models/pipeline.py.
-# Garanta também os imports: Literal, numpy as np, FunctionTransformer, OrdinalEncoder.
-SaidaPreprocessador = Literal["esparsa", "ordinal"]
-
-def build_preprocessor(numericas=None,categoricas=None,*,saida: SaidaPreprocessador="esparsa"):
-    num=list(numericas) if numericas is not None else FEATURES_NUMERICAS
-    cat=list(categoricas) if categoricas is not None else FEATURES_CATEGORICAS
-    pipe_num=Pipeline([("imputer",SimpleImputer(strategy="median")),
-                       ("scaler",StandardScaler(with_mean=False) if saida=="esparsa" else StandardScaler())])
-    if saida=="esparsa":
-        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
-                           ("encoder",OneHotEncoder(handle_unknown="ignore",sparse_output=True,dtype=np.float32))])
-    elif saida=="ordinal":
-        pipe_cat=Pipeline([("imputer",SimpleImputer(strategy="constant",fill_value=AUSENTE)),
-                           ("encoder",OrdinalEncoder(handle_unknown="use_encoded_value",unknown_value=np.nan,dtype=np.float32))])
-    else: raise ValueError("saida deve ser 'esparsa' ou 'ordinal'")
-    return ColumnTransformer([("num",pipe_num,num),("cat",pipe_cat,cat)],remainder="drop",
-                             sparse_threshold=1.0 if saida=="esparsa" else 0.0,
-                             verbose_feature_names_out=False)
-
-
-
-def criar_alvo_binario(
-    df: pd.DataFrame,
-    alvo: str | None = None,
-    positivos: Iterable[float] | None = None,
-    negativos: Iterable[float] | None = None,
-) -> pd.Series:
-    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
-
-    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
-    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
-    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
-
-    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
-    conjuntos se sobrepuserem ou se algum estiver vazio.
-    """
-    alvo = alvo if alvo is not None else ALVO
-
-    positivos_set = {
-        float(v) for v in (positivos if positivos is not None else _alvo_cfg_positivos())
-    }
-    negativos_set = {
-        float(v) for v in (negativos if negativos is not None else _alvo_cfg_negativos())
-    }
-
-    if overlap := positivos_set & negativos_set:
-        raise ValueError(
-            f"`positivos` e `negativos` não podem se sobrepor: {sorted(overlap)}"
-        )
-    if not positivos_set:
-        raise ValueError("`target.positivos` está vazio na config.")
-    if not negativos_set:
-        raise ValueError("`target.negativos` está vazio na config.")
-
-    valores = df[alvo].astype("float64")
-    y = pd.Series(float("nan"), index=df.index, dtype="float64")
-    y[valores.isin(negativos_set)] = 0
-    y[valores.isin(positivos_set)] = 1
-    return y
-
-
-def filtrar_rotulos_validos(
-    X: pd.DataFrame,
-    y: pd.Series,
-) -> tuple[pd.DataFrame, pd.Series]:
-    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
-    if not y.index.equals(X.index):
-        raise ValueError("X e y precisam ter o mesmo índice.")
-
-    mascara = y.notna()
-    return (
-        X.loc[mascara].reset_index(drop=True),
-        y.loc[mascara].astype("int8").reset_index(drop=True),
-    )
-
-
-def random_state() -> int:
-    """Seed canônica do projeto (``config.SEED``)."""
-    return int(C.SEED)
-
-
-def build_pipeline(
-    X: pd.DataFrame | None = None,
-    y: pd.Series | None = None,
-    *,
-    classifier: object | None = None,
-    features: Iterable[str] | None = None,
-    strict: bool = True,
-) -> Pipeline:
-    """Constrói o ``Pipeline`` sklearn.
-
-    - ``classifier=None`` → devolve só o pré-processamento (útil no C2).
-    - ``classifier`` passado (C3+) → anexa como etapa final.
-    - ``features=None`` → usa ``FEATURES`` do módulo.
-    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
-      estiver ausente em ``X``; ``False`` → emite warning e segue só com
-      as presentes.
-    """
-    num = list(FEATURES_NUMERICAS)
-    cat = list(FEATURES_CATEGORICAS)
-
-    if features is not None:
-        fs = set(features)
-        num = [c for c in num if c in fs]
-        cat = [c for c in cat if c in fs]
-
-    if X is not None:
-        if ausentes := sorted((set(num) | set(cat)) - set(X.columns)):
-            msg = (
-                f"Features configuradas ausentes em X: {ausentes}. "
-                "Verifique `features` no supervised.yaml ou o DataFrame "
-                "de entrada."
-            )
-            if strict:
-                raise KeyError(msg)
-            logger.warning(msg)
-            num = [c for c in num if c in X.columns]
-            cat = [c for c in cat if c in X.columns]
-
-    pre = build_preprocessor(numericas=num, categoricas=cat)
-
-    etapas: list[tuple[str, object]] = [("pre", pre)]
-    if classifier is not None:
-        etapas.append(("clf", classifier))
-
-    return Pipeline(etapas)
-```
-
-## `src/protocolo/__init__.py`
-
-- Git: `tracked` · status `clean`
-- Size: `89 B` · modified `2026-10-16 14:54 UTC`
-- SHA-256: `dc84b0499cded1d8b8fe8cffd8906ca4d73a01297f048160dd439decf23dcb02`
-
-```python
-"""Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões)."""
 ```
 
