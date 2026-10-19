@@ -25,10 +25,19 @@ dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
     "pyarrow>=15.0",
+    "scipy>=1.11",
     "scikit-learn>=1.8",
-    "packaging>=24",
+    "joblib>=1.3",
     "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "packaging>=24",
     "requests>=2.31",
+    "psutil>=5.9",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "ipython>=8.0",
+    "ipykernel>=6.0",
+    "jupyterlab>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -44,19 +53,13 @@ docs = [
 ]
 
 [project.urls]
-Repository = "https://github.com/SEU_USUARIO/SEU_REPO"
+Repository = "https://github.com/Ivan-S-Oliveira/Projeto_Integrador"
 
-# ---------------------------------------------------------------------------
-# Empacotamento — src/ é o pacote de topo, para que `import src.*` funcione
-# ---------------------------------------------------------------------------
 [tool.setuptools.packages.find]
 where      = ["."]
 include    = ["src*"]
 namespaces = false
 
-# ---------------------------------------------------------------------------
-# Pytest
-# ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion   = "7.0"
 testpaths    = ["tests"]

@@ -211,3 +211,57 @@ def test_features_finais_existem_no_schema(parquet_disponivel) -> None:
 
     faltando = (base | entradas) - colunas
     assert not faltando, f"Colunas ausentes no Parquet: {sorted(faltando)}"
+
+# ---------------------------------------------------------------------------
+# Consistência entre pyproject.toml e requirements.txt (#63)
+# ---------------------------------------------------------------------------
+
+def _nomes_diretos(specs: list[str]) -> set[str]:
+    from packaging.requirements import Requirement
+
+    return {Requirement(s).name.lower().replace("_", "-") for s in specs}
+
+
+def test_requirements_cobre_dependencias_de_runtime_do_pyproject() -> None:
+    """Toda dependência de runtime do pyproject está no requirements.txt.
+
+    Se este teste falhar, alguém adicionou uma dependência nova em
+    ``pyproject.toml`` (ou removeu do ``requirements.txt``) e os dois
+    arquivos divergiram — exatamente o cenário do card #63.
+    """
+    import tomllib
+
+    root = Path(__file__).resolve().parents[1]
+    pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+    declaradas = _nomes_diretos(pyproject["project"]["dependencies"])
+
+    listadas: set[str] = set()
+    for linha in (root / "requirements.txt").read_text(encoding="utf-8").splitlines():
+        limpa = linha.split("#", 1)[0].strip()
+        if not limpa or limpa.startswith("-"):
+            continue
+        listadas |= _nomes_diretos([limpa])
+
+    faltando = sorted(declaradas - listadas)
+    assert not faltando, (
+        f"requirements.txt não inclui dependências de runtime: {faltando}. "
+        "Atualize-o junto com pyproject.toml."
+    )
+
+
+def test_requirements_tem_versao_fixada() -> None:
+    """Nenhum pacote no requirements.txt pode ficar sem versão.
+
+    Um pacote sem ``==`` ou ``>=`` faz duas máquinas receberem versões
+    diferentes com o mesmo repositório — o cenário do card #63.
+    """
+    root = Path(__file__).resolve().parents[1]
+    sem_versao: list[str] = []
+    for linha in (root / "requirements.txt").read_text(encoding="utf-8").splitlines():
+        limpa = linha.split("#", 1)[0].strip()
+        if not limpa or limpa.startswith("-"):
+            continue
+        if "==" not in limpa and ">=" not in limpa and "~=" not in limpa:
+            sem_versao.append(limpa)
+
+    assert not sem_versao, f"requirements.txt tem pacotes sem versão: {sem_versao}"
