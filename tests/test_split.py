@@ -22,6 +22,7 @@ import pytest
 from src.data.split import (
     PARTICOES_CANONICAS,
     SplitWarning,
+    atribuir_particao_estratificada_por_hash,
     criar_particoes_agrupadas,
 )
 
@@ -272,3 +273,100 @@ def test_politica_invalida() -> None:
 def test_df_vazio() -> None:
     with pytest.raises(ValueError, match="vazio"):
         _split(pd.DataFrame({"alvo": [], "nu_notific": []}))
+
+# ---------------------------------------------------------------------------
+# Partição por hash (método oficial) — #86
+# ---------------------------------------------------------------------------
+
+def _df_hash(
+    estratos: dict[str, int] | None = None,
+    *,
+    linhas_por_grupo: int = 3,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """DataFrame com um estrato por grupo, várias linhas por grupo."""
+    estratos = estratos or {"A": 30, "B": 20}
+    rng = np.random.default_rng(seed)
+    linhas = []
+    gid = 0
+    for estrato, n_grupos in estratos.items():
+        for _ in range(n_grupos):
+            grupo = f"g{gid:04d}"
+            gid += 1
+            n = int(rng.integers(1, linhas_por_grupo + 1))
+            for _ in range(n):
+                linhas.append({"grupo": grupo, "estrato": estrato, "valor": float(rng.normal())})
+    return pd.DataFrame(linhas)
+
+
+def _hash_particao(df: pd.DataFrame, *, sal: str = "s", ft: float = 0.70, fv: float = 0.15):
+    return atribuir_particao_estratificada_por_hash(
+        df["grupo"], df["estrato"], sal=sal, frac_treino=ft, frac_validacao=fv,
+    )
+
+
+def test_hash_deterministica_com_linhas_embaralhadas() -> None:
+    """Mesma coorte, linhas em ordem diferente → mesma partição por grupo."""
+    df = _df_hash()
+    a = _hash_particao(df)
+    df_shuffled = df.sample(frac=1, random_state=1).reset_index(drop=True)
+    b = _hash_particao(df_shuffled)
+    part_a = df.assign(p=a).groupby("grupo")["p"].first()
+    part_b = df_shuffled.assign(p=b).groupby("grupo")["p"].first()
+    pd.testing.assert_series_equal(part_a.sort_index(), part_b.sort_index())
+
+
+def test_hash_grupos_nao_cruzam_particoes() -> None:
+    df = _df_hash()
+    df = df.assign(particao=_hash_particao(df))
+    assert (df.groupby("grupo")["particao"].nunique() == 1).all()
+
+
+def test_hash_remover_um_estrato_nao_afeta_o_outro() -> None:
+    """Remover todos os grupos de um estrato não muda a partição do outro."""
+    df = _df_hash({"A": 100, "B": 100}, linhas_por_grupo=1)
+    part_full = df.assign(p=_hash_particao(df)).set_index("grupo")["p"]
+    df_a = df[df["estrato"] == "A"].reset_index(drop=True)
+    part_a = df_a.assign(p=_hash_particao(df_a)).set_index("grupo")["p"]
+    for grupo in part_a.index:
+        assert part_a[grupo] == part_full[grupo], grupo
+
+
+def test_hash_desvio_por_estrato_pequeno() -> None:
+    df = _df_hash({"A": 100, "B": 100}, linhas_por_grupo=1)
+    df = df.assign(particao=_hash_particao(df))
+    for estrato in ("A", "B"):
+        props = df.loc[df["estrato"] == estrato, "particao"].value_counts(normalize=True)
+        assert abs(props["treino"] - 0.70) < 0.03
+        assert abs(props["validacao"] - 0.15) < 0.03
+        assert abs(props["teste"] - 0.15) < 0.03
+
+
+def test_hash_estrato_abaixo_do_minimo_levanta_erro() -> None:
+    df = _df_hash({"A": 30, "B": 2})  # B tem 2 < 3
+    with pytest.raises(ValueError, match="Estratos abaixo"):
+        _hash_particao(df)
+
+
+def test_hash_grupo_em_dois_estratos_levanta_erro() -> None:
+    df = _df_hash({"A": 30, "B": 20})
+    # Corrompe: põe a primeira linha de g0000 no estrato B
+    idx = df.index[df["grupo"] == "g0000"][0]
+    df.loc[idx, "estrato"] = "B"
+    with pytest.raises(ValueError, match="mais de um estrato"):
+        _hash_particao(df)
+
+
+def test_hash_sal_diferente_muda_particao() -> None:
+    df = _df_hash({"A": 100}, linhas_por_grupo=1)
+    a = _hash_particao(df, sal="s1")
+    b = _hash_particao(df, sal="s2")
+    assert not (a == b).all()
+
+
+def test_hash_sem_grupo_nulo_ou_estrato_nulo() -> None:
+    df = _df_hash({"A": 30})
+    df_bad = df.copy()
+    df_bad.loc[df_bad.index[0], "grupo"] = None
+    with pytest.raises(ValueError, match="valores ausentes"):
+        _hash_particao(df_bad)

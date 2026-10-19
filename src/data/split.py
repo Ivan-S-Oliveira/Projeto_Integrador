@@ -1,26 +1,9 @@
-"""Partições agrupadas e estratificadas (treino / validação / teste).
-
-Garante simultaneamente:
-
-- **Estratificação**: cada partição preserva a proporção do alvo (0/1),
-  importante porque a prevalência de óbito é baixa.
-- **Agrupamento**: todas as linhas de um mesmo grupo caem numa única
-  partição, evitando vazamento entre treino e avaliação.
-
-Estratos pequenos demais para as três partições são tratados por
-``politica_estratos_pequenos``. Uso::
-
-    from src.data.split import criar_particoes_agrupadas
-
-    df_part = criar_particoes_agrupadas(
-        df, target_column="alvo", group_column="nu_notific",
-    )
-"""
+"""Particionamento agrupado, estratificado e determinístico por hash."""
 
 from __future__ import annotations
 
 import warnings
-from typing import Any, Literal, get_args
+from typing import Any, Literal, cast, get_args
 
 import numpy as np
 import pandas as pd
@@ -28,6 +11,7 @@ import pandas as pd
 __all__ = [
     "PARTICOES_CANONICAS",
     "SplitWarning",
+    "atribuir_particao_estratificada_por_hash",
     "criar_particoes_agrupadas",
 ]
 
@@ -103,13 +87,7 @@ def _estrato_por_grupo(
     group_column: str,
     on_grupo_alvo_heterogeneo: PoliticaGrupoHeterogeneo,
 ) -> pd.Series:
-    """Estrato (valor do alvo) por grupo.
-
-    Grupos com mais de um valor distinto de alvo são tratados por
-    ``on_grupo_alvo_heterogeneo``: ``"raise"`` levanta ``ValueError``;
-    ``"warn"`` emite ``SplitWarning`` e usa a moda. Grupos com alvo todo
-    nulo são descartados com ``SplitWarning``.
-    """
+    """Estrato (valor do alvo) por grupo."""
     agrupado = df.groupby(group_column, observed=True)[target_column]
 
     heterogeneos = agrupado.nunique(dropna=True)
@@ -194,6 +172,96 @@ def _aplicar_politica_estrato_pequeno(
     atribuicao.update({g: destino for g in grupos})
 
 
+def atribuir_particao_estratificada_por_hash(
+    grupos: pd.Series,
+    estratos: pd.Series,
+    *,
+    sal: str,
+    frac_treino: float,
+    frac_validacao: float,
+    min_grupos_por_estrato: int = 3,
+) -> pd.Categorical:
+    """Partição agrupada, estratificada e determinística por hash.
+
+    - Agrupada: todas as linhas de um grupo vão para a mesma partição.
+    - Estratificada: dentro de cada estrato (ex.: ano x alvo), os grupos
+      são ordenados pelo hash do ID e cortados nas frações dadas.
+    - Determinística: não usa gerador aleatório. O resultado depende só
+      do ID do grupo, do estrato, do ``sal`` e das frações, não da ordem
+      das linhas.
+
+    É o método oficial do projeto (``hash_grupo_estratificado_v1``).
+    """
+    if grupos.isna().any():
+        raise ValueError(f"'{grupos.name}' contém valores ausentes.")
+    if estratos.isna().any():
+        raise ValueError(f"'{estratos.name}' contém valores ausentes.")
+
+    if not 0.0 < frac_treino < 1.0:
+        raise ValueError(f"frac_treino deve estar em (0, 1); recebido {frac_treino!r}.")
+    if not 0.0 < frac_validacao < 1.0:
+        raise ValueError(f"frac_validacao deve estar em (0, 1); recebido {frac_validacao!r}.")
+    if frac_treino + frac_validacao >= 1.0:
+        raise ValueError("frac_treino + frac_validacao deve ser < 1 (resto vira teste).")
+    if min_grupos_por_estrato < len(PARTICOES_CANONICAS):
+        raise ValueError(
+            f"min_grupos_por_estrato deve ser >= {len(PARTICOES_CANONICAS)}; "
+            f"recebido {min_grupos_por_estrato!r}."
+        )
+
+    codigo_grupo, grupos_unicos = pd.factorize(grupos, sort=False)
+    codigo_estrato_linha, estratos_unicos = pd.factorize(estratos, sort=True)
+    n_grupos = len(grupos_unicos)
+
+    estrato_min = np.full(n_grupos, np.iinfo(np.int64).max, dtype=np.int64)
+    estrato_max = np.full(n_grupos, -1, dtype=np.int64)
+    np.minimum.at(estrato_min, codigo_grupo, codigo_estrato_linha)
+    np.maximum.at(estrato_max, codigo_grupo, codigo_estrato_linha)
+    multiestrato = int((estrato_min != estrato_max).sum())
+    if multiestrato:
+        raise ValueError(f"{multiestrato} grupos possuem mais de um estrato.")
+    estrato_grupo = estrato_min
+
+    grupos_por_estrato = np.bincount(estrato_grupo, minlength=len(estratos_unicos))
+    pequenos = [
+        (str(estratos_unicos[i]), int(qtd))
+        for i, qtd in enumerate(grupos_por_estrato)
+        if qtd < min_grupos_por_estrato
+    ]
+    if pequenos:
+        raise ValueError(
+            f"Estratos abaixo de min_grupos_por_estrato={min_grupos_por_estrato}: {pequenos}"
+        )
+
+    chaves = sal + "|" + pd.Series(grupos_unicos.astype(str), dtype=object)
+    hashes = pd.util.hash_pandas_object(chaves, index=False).to_numpy(dtype=np.uint64)
+
+    # lexsort usa a última chave como primária; por isso a ordem é (hash, estrato).
+    ordem = np.lexsort((hashes, estrato_grupo))
+    inicio_estrato = np.concatenate(([0], np.cumsum(grupos_por_estrato)[:-1]))
+    posicao = np.empty(n_grupos, dtype=np.int64)
+    posicao[ordem] = np.arange(n_grupos) - inicio_estrato[estrato_grupo[ordem]]
+
+    tamanho = grupos_por_estrato[estrato_grupo]
+    corte_valid = np.minimum(
+        np.floor(tamanho * (frac_treino + frac_validacao)).astype(np.int64),
+        tamanho - 1,
+    )
+    corte_treino = np.minimum(
+        np.floor(tamanho * frac_treino).astype(np.int64),
+        corte_valid - 1,
+    )
+
+    codigo_particao_grupo = np.where(
+        posicao < corte_treino, 0, np.where(posicao < corte_valid, 1, 2)
+    ).astype(np.int8)
+
+    return pd.Categorical.from_codes(
+        codigo_particao_grupo[codigo_grupo].astype(np.int64),
+        categories=cast(Any, list(PARTICOES_CANONICAS)),
+    )
+
+
 def criar_particoes_agrupadas(
     df: pd.DataFrame,
     *,
@@ -209,13 +277,11 @@ def criar_particoes_agrupadas(
 ) -> pd.DataFrame:
     """Partições treino/validação/teste agrupadas e estratificadas.
 
-    Não muta ``df``: devolve cópia com ``partition_column`` adicionada.
-    Grupos com alvo nulo e estratos descartados por ``"drop"`` não aparecem.
-
-    Levanta ``KeyError`` se ``target_column`` ou ``group_column`` não
-    existirem em ``df``, e ``ValueError`` para parâmetros inválidos,
-    DataFrame vazio, coluna de partição já presente, ou estrato pequeno
-    com política ``"raise"``.
+    .. deprecated::
+        Use ``atribuir_particao_estratificada_por_hash``. Esta função não
+        produz a partição oficial do projeto — mantém-se apenas por
+        compatibilidade com testes históricos e usa um laço em Python que
+        não escala para a coorte real (> 10 min vs ~9 s).
     """
     _validar_parametros(
         df,
