@@ -165,3 +165,37 @@ def test_logistic_pipeline_solver_invalido() -> None:
     """
     with pytest.raises(ValueError, match="combinação inválida"):
         build_logistic_pipeline(l1_ratio=1.0, solver="lbfgs")
+
+# ---------------------------------------------------------------------------
+# Contrato de versão do scikit-learn (#61)
+# ---------------------------------------------------------------------------
+
+def test_scikit_learn_instalado_e_maior_ou_igual_1_8() -> None:
+    """O ambiente do projeto precisa de sklearn>=1.8 (l1_ratio, FrozenEstimator)."""
+    from importlib import metadata
+    from packaging.version import Version
+
+    instalada = metadata.version("scikit-learn")
+    assert Version(instalada) >= Version("1.8"), (
+        f"scikit-learn>={1.8} é necessário; instalado: {instalada}. "
+        "Atualize o ambiente antes de rodar os notebooks C."
+    )
+
+
+def test_verificar_sklearn_minima_aceita_versao_atual() -> None:
+    """``_verificar_sklearn_minima`` não levanta com o ambiente atual."""
+    from src.models.logistic import _verificar_sklearn_minima
+
+    _verificar_sklearn_minima()
+
+
+def test_logistic_falha_com_sklearn_antiga(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Simula sklearn 1.4 e confirma que o construtor levanta erro claro."""
+    from src.models import logistic as L
+
+    monkeypatch.setattr(
+        L.metadata, "version", lambda _name: "1.4.2",
+    )
+
+    with pytest.raises(RuntimeError, match=r"scikit-learn>=1\.8"):
+        L.build_logistic_pipeline()

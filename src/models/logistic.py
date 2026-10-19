@@ -4,14 +4,19 @@ Regressão logística — modelo linear interpretável.
 A partir do scikit-learn 1.8, ``penalty`` foi depreciado (remoção prevista
 para 1.10) em favor de ``l1_ratio``. A chave ``models.logistic.penalty``
 do ``supervised.yaml`` (``"l1"``, ``"l2"`` ou ``"elasticnet"``) é
-traduzida para o ``l1_ratio`` equivalente, mantendo a config como fonte
-única da verdade sem depender da API depreciada.
+traduzida para o ``l1_ratio`` equivalente.
+
+Este módulo exige scikit-learn>=1.8: ``build_logistic_pipeline`` falha
+com ``RuntimeError`` em versões anteriores, porque ``l1_ratio`` seria
+ignorado silenciosamente e a config do YAML mentiria sobre o modelo.
 """
 
 from __future__ import annotations
 
+from importlib import metadata
 from typing import Literal, cast
 
+from packaging.version import Version
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
@@ -23,7 +28,6 @@ __all__ = ["Penalty", "Solver", "build_logistic_pipeline"]
 Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
 Penalty = Literal["l1", "l2", "elasticnet"]
 
-# Solver × tipo de penalidade efetivo (derivado do l1_ratio final).
 _L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
     "l2":         frozenset({"lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"}),
     "l1":         frozenset({"liblinear", "saga"}),
@@ -31,6 +35,33 @@ _L1_RATIO_SOLVERS: dict[str, frozenset[str]] = {
 }
 
 _PENALTIES_VALIDAS = ("l1", "l2", "elasticnet")
+
+SKLEARN_L1_RATIO_MIN = "1.8"
+
+
+def _verificar_sklearn_minima() -> None:
+    """Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8.
+
+    Versões anteriores ignoram ``l1_ratio`` em ``LogisticRegression``:
+    ``penalty: l1`` do YAML viraria L2 sem aviso.
+    """
+    try:
+        instalada = metadata.version("scikit-learn")
+    except metadata.PackageNotFoundError as exc:
+        raise RuntimeError(
+            f"scikit-learn>={SKLEARN_L1_RATIO_MIN} é necessário; "
+            "nenhuma versão instalada. "
+            f"Instale com: pip install \"scikit-learn>={SKLEARN_L1_RATIO_MIN}\""
+        ) from exc
+
+    if Version(instalada) < Version(SKLEARN_L1_RATIO_MIN):
+        raise RuntimeError(
+            f"scikit-learn>={SKLEARN_L1_RATIO_MIN} é necessário "
+            f"(instalado: {instalada}). "
+            "A API de l1_ratio só existe a partir da 1.8; versões "
+            "anteriores ignoram o parâmetro silenciosamente. "
+            f"Atualize: pip install \"scikit-learn>={SKLEARN_L1_RATIO_MIN}\""
+        )
 
 
 def _penalty_do_yaml() -> Penalty | None:
@@ -83,10 +114,13 @@ def build_logistic_pipeline(
     ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
     resultante (ver ``_L1_RATIO_SOLVERS``).
 
-    Levanta ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``,
-    combinação ``solver`` × tipo inválida, ou ``penalty="elasticnet"``
-    com ``l1_ratio`` nos extremos.
+    Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8, e
+    ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``, combinação
+    ``solver`` × tipo inválida, ou ``penalty="elasticnet"`` com
+    ``l1_ratio`` nos extremos.
     """
+    _verificar_sklearn_minima()
+
     if not 0.0 <= l1_ratio <= 1.0:
         raise ValueError(
             f"l1_ratio deve estar em [0, 1]; "
@@ -112,8 +146,8 @@ def build_logistic_pipeline(
                 f"recebido l1_ratio={l1_ratio!r}."
             )
 
-    tipo             = _tipo_penalidade(l1_ratio)
-    solvers_validos  = _L1_RATIO_SOLVERS[tipo]
+    tipo            = _tipo_penalidade(l1_ratio)
+    solvers_validos = _L1_RATIO_SOLVERS[tipo]
     if solver not in solvers_validos:
         raise ValueError(
             f"combinação inválida: l1_ratio={l1_ratio!r} ({tipo}) "

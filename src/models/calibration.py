@@ -7,11 +7,15 @@ não é re-treinado. ``escolher_limiar`` varre uma grade de limiares e
 devolve o ótimo segundo uma métrica, com restrições opcionais de
 precision/recall.
 
+Requer scikit-learn>=1.6 (``FrozenEstimator``); o projeto fixa >=1.8
+por causa da API de ``l1_ratio`` em ``src/models/logistic.py``.
+
 A agregação de métricas vive em ``src.evaluation.metrics``.
 """
 
 from __future__ import annotations
 
+from importlib import metadata
 from typing import Any, Literal, get_args
 
 import numpy as np
@@ -50,15 +54,28 @@ def calibrar(
 
     ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
     (Platt) é paramétrico e mais estável em amostras pequenas.
+
+    Levanta ``RuntimeError`` se ``sklearn.frozen`` não estiver disponível
+    (scikit-learn anterior a 1.6).
     """
     if method not in _METODOS_VALIDOS:
         raise ValueError(
             f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
         )
 
-    # Lazy: sklearn.frozen só existe a partir do 1.6 — mantém o módulo
-    # importável em ambientes mais antigos (o erro surge só em calibrar()).
-    from sklearn.frozen import FrozenEstimator
+    try:
+        from sklearn.frozen import FrozenEstimator
+    except ImportError as exc:
+        try:
+            instalada = metadata.version("scikit-learn")
+        except metadata.PackageNotFoundError:
+            instalada = "não instalado"
+
+        raise RuntimeError(
+            "calibrar() requer scikit-learn>=1.6 (FrozenEstimator); "
+            f"o projeto exige >=1.8. Versão instalada: {instalada}. "
+            "Atualize: pip install \"scikit-learn>=1.8\""
+        ) from exc
 
     modelo = CalibratedClassifierCV(
         estimator=FrozenEstimator(pipeline),

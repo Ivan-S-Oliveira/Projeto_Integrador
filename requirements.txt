@@ -6,7 +6,8 @@ ipykernel
 numpy
 matplotlib
 seaborn
-scikit-learn
+scikit-learn>=1.8
+packaging>=24
 pyarrow
 jupyterlab
 pytest
