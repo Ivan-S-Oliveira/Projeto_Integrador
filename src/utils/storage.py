@@ -240,10 +240,7 @@ def get_parquet(
         path.unlink()
         sha256_path(path).unlink(missing_ok=True)
 
-    public_url = (
-        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
-        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
-    )
+    public_url = C.srag_parquet_url()
 
     try:
         digest = download_file(

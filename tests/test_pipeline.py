@@ -80,3 +80,65 @@ def test_diretorio_padrao_foi_criado(nome_dir: str) -> None:
     env.garantir_diretorios()
     caminho = getattr(env, nome_dir)
     assert caminho.is_dir(), f"{caminho} não é diretório"
+
+def test_get_parquet_usa_srag_parquet_url(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``get_parquet`` deve usar ``C.srag_parquet_url()``, não montar a URL à mão.
+
+    Regressão do card #14: ``SRAG_PARQUET_URL`` era descrita no
+    ``01_extracao.ipynb`` como override, mas ``get_parquet`` ignorava.
+    """
+    from src.utils import storage
+
+    url_customizada = "https://example.org/dados/srag_teste.parquet"
+    monkeypatch.setenv("SRAG_PARQUET_URL", url_customizada)
+
+    chamadas: list[tuple[str, Path]] = []
+
+    def fake_download_file(url, dest, **kwargs):
+        chamadas.append((url, Path(dest)))
+        Path(dest).write_bytes(b"PAR1" + b"\x00" * 64 + b"PAR1")
+        return "0" * 64
+
+    monkeypatch.setattr(storage, "download_file", fake_download_file)
+    monkeypatch.setattr(storage, "PROCESSED", tmp_path)
+
+    storage.get_parquet(force=True)
+
+    assert chamadas, "download_file não foi chamado"
+    assert chamadas[0][0] == url_customizada, (
+        f"get_parquet usou {chamadas[0][0]!r} em vez de {url_customizada!r}. "
+        "Provavelmente a URL está sendo remontada à mão em vez de usar "
+        "C.srag_parquet_url()."
+    )
+
+
+def test_get_parquet_usa_url_padrao_sem_env_var(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Sem ``SRAG_PARQUET_URL``, o default continua sendo a URL da release."""
+    from src.utils import config as C
+    from src.utils import storage
+
+    monkeypatch.delenv("SRAG_PARQUET_URL", raising=False)
+    esperado = (
+        f"https://github.com/{C.GITHUB_REPO}/releases/download/"
+        f"{C.DATA_VERSION}/{C.PARQUET_NAME}"
+    )
+
+    chamadas: list[str] = []
+
+    def fake_download_file(url, dest, **kwargs):
+        chamadas.append(url)
+        Path(dest).write_bytes(b"PAR1" + b"\x00" * 64 + b"PAR1")
+        return "0" * 64
+
+    monkeypatch.setattr(storage, "download_file", fake_download_file)
+    monkeypatch.setattr(storage, "PROCESSED", tmp_path)
+
+    storage.get_parquet(force=True)
+
+    assert chamadas[0] == esperado
