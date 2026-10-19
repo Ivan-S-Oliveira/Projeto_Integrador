@@ -6,13 +6,14 @@ Integrador SRAG.
 
 Decisões específicas de cada variável são mantidas em:
 
-- `configs/dicionario_variaveis_v1.csv`;
-- `configs/dicionario_variaveis_v1_revisao.csv`.
+- `configs/dicionario_variaveis_v1.csv`.
+
+Visões reduzidas podem ser geradas em `outputs/tables/`, mas não constituem uma segunda fonte editável de decisões.
 
 Este documento registra somente decisões gerais ou com impacto em várias
 etapas do projeto.
 
-Última atualização: 10/10/2026.
+Última atualização: 18/10/2026.
 
 ---
 
@@ -21,44 +22,38 @@ etapas do projeto.
 ### 1.1 Decisões fechadas
 
 - Dataset oficial: `dados-v2`.
-- Ponto de previsão: admissão hospitalar, operacionalizada por
-  `dt_interna`.
-- Período da coorte principal: internações entre 2019 e 2026,
-conforme o ano de `dt_interna`.
-- Estratégia de divisão: separação aleatória da coorte elegível,
-preservando a distribuição do alvo e dos anos entre treino,
-validação e teste.
-- Período da pandemia: mantido inicialmente na coorte principal.
-- Sensibilidade temporal: eventual remoção do período pandêmico
-somente depois da elaboração das visualizações por período e da
-identificação de distorções relevantes nos experimentos.
-- Ano de 2026: mantido na coorte, com identificação explícita de
-que representa um período incompleto na versão atual dos dados.
+- Ponto de previsão: admissão hospitalar, operacionalizada por `dt_interna`.
+- Ano de `dt_interna`, e não de `dt_notific`, como referência de elegibilidade temporal.
+- Coorte definitiva inicial: seleção de features construída e auditada na coorte provisória B, promovida e congelada para o fluxo principal.
 - Alvo principal: `evolucao = 1` versus `evolucao = 2`.
-- Tratamentos: somente EDA e auditoria até a conclusão do modelo
-  principal.
-- Textos livres: EDA agora, sem NLP completo antes do Fine Tuning.
-- Geografia inicial: UF de residência.
+- Desenvolvimento: apenas 2019, 2023, 2024 e 2025.
+- Blocos de desenvolvimento: `train_ref`, `val_tune`, `val_cal` e `val_meas`.
+- Teste A: `test_ref`, com 2019, 2023, 2024 e 2025 e grupos nunca usados no desenvolvimento; é o resultado principal.
+- Teste B: união lógica de `test_ref` com `test_pandemic`, cobrindo 2019–2025; é a avaliação ampliada de robustez temporal.
+- `test_pandemic`: somente 2020, 2021 e 2022, sem participação em qualquer decisão de desenvolvimento.
+- Resultado pandêmico: 2020–2022 sempre será reportado separadamente, além do Teste B agregado.
+- 2026: fora do desenvolvimento e dos Testes A/B; apenas exploração opcional posterior, sem reajuste.
+- Interpretação A × B: sensibilidade à composição temporal, sem interpretação causal do efeito da pandemia.
+- Testes fechados: `test_ref` e `test_pandemic` permanecem inacessíveis até G9.
+- Tratamentos: somente EDA e auditoria até a conclusão do modelo principal.
+- Textos livres: EDA, sem NLP completo antes do Fine Tuning.
+- Geografia: UF de residência preservada; comparação sem geografia × região é obrigatória, e UF como preditora é condicional.
 - Município de residência: extensão posterior ao modelo principal.
-- `saturacao`: Modelo A.
-- `desc_resp`: Modelo B.
-- Internações anteriores aos sintomas: auditoria com `nosocomial`
-  antes de qualquer exclusão.
-- `sem_pri`: auditoria e descrição epidemiológica, sem uso direto
-  nas matrizes de modelagem.
-- Ano de `dt_interna`, e não de `dt_notific`, como referência para
-  elegibilidade temporal.
+- `saturacao` e `desc_resp`: sensibilidade de gravidade no cenário vencedor, fora do modelo principal até o contrato final de features.
+- Internações anteriores aos sintomas: auditoria com `nosocomial` antes de qualquer exclusão.
+- `sem_pri`: auditoria e descrição epidemiológica, sem uso direto nas matrizes.
 
-#### 1.2 Decisões pendentes
+### 1.2 Decisões pendentes
 
-- Critério para escolha do limiar de classificação: decisão posterior,
-depois da avaliação dos modelos finalistas na validação.
-- Definição operacional do período pandêmico, caso seja necessária uma
-análise de sensibilidade sem esse período.
-- Critérios objetivos que justificariam executar e interpretar a análise
-de sensibilidade temporal.
+- Regra definitiva para identificadores repetidos e destino dos grupos em quarentena.
+- Aprovação do G1 com alvo e lista final de features.
+- Escolha final do método de calibração no G7, após o ajuste fino.
+- Escolha final do critério e valor do limiar no G8, usando somente validação.
+- Aprovação conjunta do G9 depois do congelamento de features, modelo, hiperparâmetros, calibrador, limiar, commit e manifestos.
 
----
+### 1.3 Desenho supersedido
+
+Até 10/10/2026, o documento registrava coorte 2019–2026, manutenção dos anos pandêmicos no desenvolvimento e divisão aleatória 70/15/15. Esse desenho foi supersedido em 18/10/2026 pelo contrato das seções 5, 21, 22 e 28. O registro histórico é preservado nesta subseção, mas não deve orientar novas execuções.
 
 ## 2. Dataset oficial do projeto
 
@@ -107,87 +102,57 @@ uso como preditoras.
 
 ## 4. Coorte analítica
 
-A construção da coorte será realizada em notebook específico, e não no
-Notebook 01 de EDA.
+A construção da coorte será realizada em notebook específico, e não no Notebook 01 de EDA.
 
-Os critérios planejados para a coorte principal são:
+Os critérios da coorte auditável são:
 
-- hospitalização confirmada em `hospital`;
+- hospitalização confirmada;
 - `dt_interna` válida;
-- ano de `dt_interna` entre 2019 e 2026;
+- cobertura bruta de 2019 a 2026, preservada para auditoria;
 - `evolucao` elegível para o alvo principal;
 - remoção somente de duplicidades exatas;
 - auditoria de identificadores repetidos não idênticos;
-- preservação de um waterfall com as contagens antes e depois de cada
-  filtro.
+- waterfall com contagens antes e depois de cada filtro.
 
-O período será definido pelo ano de `dt_interna`, e não pelo ano de
-`dt_notific`.
+A cobertura auditável não determina o uso experimental dos anos. Para o fluxo principal:
 
-O período de 2026 será mantido, mas marcado como incompleto na versão
-atual dos dados. Essa condição deverá ser considerada nas visualizações,
-nas métricas por ano e na interpretação dos resultados.
+- 2019, 2023, 2024 e 2025 podem alimentar desenvolvimento e Teste A, com grupos disjuntos;
+- 2020–2022 ficam exclusivamente em `test_pandemic`;
+- 2026 fica fora dos blocos principais e é apenas exploração opcional posterior.
 
-Os anos associados à pandemia não serão excluídos na construção inicial
-da coorte. Qualquer recorte posterior será tratado como análise de
-sensibilidade, sem substituir silenciosamente a coorte principal.
+A coorte definitiva inicial utiliza a seleção de features já construída e auditada na coorte provisória B. Sua promoção deve gerar `coorte_final.parquet`, `coorte_waterfall.csv`, `variaveis_finais.csv` e `manifesto_coorte.json`, acompanhados de SHA-256, commit, schema, cobertura temporal, contagens e versão.
 
-A coorte auditável preservará um conjunto amplo de variáveis para EDA,
-auditoria, transformação e experimentos.
+A coorte auditável preservará variáveis amplas para EDA, auditoria, transformação e experimentos. A permanência de uma coluna na coorte não significa inclusão automática nos modelos.
 
-A permanência de uma coluna na coorte não significa sua inclusão
-automática nos modelos.
+## 5. Período da coorte e uso dos anos
 
----
+A fonte `dados-v2` cobre registros de 2019 a 2026. O experimento usa os anos de forma assimétrica e definida antes da avaliação.
 
-### 5. Período da coorte e uso dos anos
+### 5.1 Desenvolvimento de referência
 
-A coorte principal incluirá internações entre 2019 e 2026, conforme o
-ano de `dt_interna`.
+Somente 2019, 2023, 2024 e 2025 podem alimentar `train_ref`, `val_tune`, `val_cal` e `val_meas`. Esses blocos são disjuntos por `group_id`. Nenhum registro de 2020–2022 ou 2026 pode participar de decisões de desenvolvimento.
 
-O período completo será utilizado inicialmente na construção da coorte,
-na divisão aleatória dos dados, no desenvolvimento dos modelos e na
-avaliação final.
+### 5.2 Teste A
 
-O ano de 2026 será mantido, mas tratado como período incompleto na
-versão atual do dataset. Essa condição será registrada nas tabelas,
-visualizações e limitações do estudo.
+`test_ref` contém registros de 2019, 2023, 2024 e 2025 pertencentes a grupos nunca usados no desenvolvimento. É o resultado principal do projeto.
 
-A inclusão dos anos associados à pandemia é intencional nesta primeira
-etapa. Esses anos não serão removidos antes da elaboração das
-visualizações temporais e da análise do comportamento dos modelos.
+### 5.3 Teste B
 
-Antes de considerar qualquer exclusão temporal, serão avaliados por ano
-ou período:
+O Teste B é a união lógica de `test_ref` com `test_pandemic`. O segundo bloco contém exclusivamente 2020–2022. O agregado 2019–2025 mede a robustez do mesmo modelo congelado quando os anos pandêmicos são acrescentados à avaliação.
 
-- volume de registros;
-- proporção das classes do alvo;
-- taxa observada de óbito por SRAG;
-- preenchimento das principais variáveis;
-- distribuição de variáveis clínicas relevantes;
-- desempenho dos modelos;
-- calibração;
-- estabilidade das previsões;
-- mudanças relevantes na importância ou contribuição das variáveis.
+O Teste B nunca será apresentado sozinho. Devem acompanhá-lo resultado exclusivo de 2020–2022, métricas por ano, região e UF, prevalência, PR-AUC, PR-AUC/prevalência, ROC-AUC, Brier e calibração.
 
-Se forem observadas distorções relevantes, poderá ser executada uma
-análise de sensibilidade sem o período pandêmico. Essa análise:
+### 5.4 Exploração opcional de 2026
 
-- não substituirá automaticamente a coorte principal;
-- terá período e justificativa registrados antes da execução;
-- utilizará o mesmo pipeline de preparação e avaliação;
-- será comparada diretamente com o resultado da coorte completa;
-- não utilizará o conjunto de teste para decidir retroativamente qual
-recorte produz o resultado mais favorável.
+2026 é parcial e fica fora de treino, validações e Testes A/B. Só poderá ser avaliado depois da conclusão dos testes principais, relatório e revisão, sem recalibração, novo limiar ou qualquer reajuste.
 
-As contagens definitivas por ano serão recalculadas depois da aplicação
-dos critérios de:
+### 5.5 Interpretação
 
-- hospitalização;
-- validade de `dt_interna`;
-- elegibilidade do desfecho;
-- auditoria de duplicidades;
-- coerência temporal.
+A diferença A × B descreve sensibilidade à composição temporal e não identifica causalmente o efeito da pandemia. Diferenças de prevalência e volume devem acompanhar as métricas.
+
+### 5.6 Contagens e auditoria
+
+O manifesto da partição-mestre registrará, por bloco, linhas, grupos, anos, prevalência, região e hash depois dos filtros de hospitalização, data, desfecho, duplicidades e coerência temporal.
 
 ## 6. Identificadores e duplicidades
 
@@ -600,97 +565,49 @@ A criação do Modelo C não faz parte do caminho crítico até 17/10/2026.
 
 ---
 
-### 21. Separação dos dados
+## 21. Separação dos dados
 
-**Status:** decisão fechada pelo grupo.
+**Status:** decisão fechada em 18/10/2026.
 
-A coorte elegível de 2019 a 2026 será dividida aleatoriamente uma única
-vez em:
+A divisão 70/15/15 foi supersedida. A partição-mestre determinística por `group_id` possui seis blocos:
 
-- 70% para treino;
-- 15% para validação;
-- 15% para teste;
-- seed 42.
+| Bloco | Anos | Finalidade | Influencia decisões? |
+|---|---|---|---|
+| `train_ref` | 2019, 2023, 2024, 2025 | treino | Sim |
+| `val_tune` | 2019, 2023, 2024, 2025 | features, geografia e tuning | Sim |
+| `val_cal` | 2019, 2023, 2024, 2025 | calibração e limiar | Sim |
+| `val_meas` | 2019, 2023, 2024, 2025 | confirmação pré-teste | Somente confirmação |
+| `test_ref` | 2019, 2023, 2024, 2025 | Teste A | Não |
+| `test_pandemic` | 2020, 2021, 2022 | parcela adicional do Teste B | Não |
 
-A divisão deverá preservar, tanto quanto tecnicamente viável, a
-distribuição conjunta:
+Invariantes:
 
-- do alvo;
-- do ano de `dt_interna`.
+- nenhum `group_id` cruza blocos;
+- 2020–2022 aparecem somente em `test_pandemic`;
+- 2026 não aparece nos seis blocos;
+- mesma entrada, seed e configuração reproduzem o mapa;
+- ambos os testes ficam fechados até G9;
+- Teste B é união lógica sem duplicação física;
+- estratificação por ano × alvo × região quando houver volume;
+- fallback e estratos pequenos são tratados explicitamente e registrados.
 
-A estratificação por alvo e ano será utilizada para reduzir o risco de
-uma partição concentrar desproporcionalmente determinados anos ou uma
-das classes.
+A coluna de partição será gravada no artefato. Nenhum notebook posterior criará nova divisão. Resultados de teste não poderão orientar features, algoritmo, hiperparâmetros, imputação, encoding, balanceamento, calibração, limiar, período ou coorte.
 
-Antes da divisão, deverá ser criada uma chave de estratificação
-combinando o alvo e o ano da internação. Estratos muito pequenos deverão
-ser identificados e tratados explicitamente, sem exclusões silenciosas.
+## 22. Preservação dos conjuntos de teste
 
-A divisão será criada uma única vez no notebook de construção da coorte
-ou em uma função central reutilizável. Nenhum notebook posterior deverá
-criar uma nova divisão independente.
+`test_ref` e `test_pandemic` permanecerão isolados durante EDA orientada ao desfecho, escolha de features, comparação de algoritmos, Fine Tuning, calibração, escolha de limiar, construção de categorias de texto, decisões geográficas e seleção de representação, incluindo UMAP.
 
-A coluna `particao` será gravada na coorte analítica com um dos valores:
+A abertura ocorrerá uma única vez, depois do fechamento de coorte, features, modelo, hiperparâmetros, calibrador, limiar, commit, ambiente, manifestos e hashes, com G1, G7, G8 e G9 aprovados.
 
-- `treino`;
-- `validacao`;
-- `teste`.
+Sem novo ajuste, a execução produzirá:
 
-Um mesmo `nu_notific` ou episódio não poderá estar presente em mais de
-uma partição.
+1. Teste A em `test_ref`;
+2. Teste B na união de `test_ref` e `test_pandemic`;
+3. relatório isolado de 2020–2022.
 
-O ano de 2026 será mantido na divisão, mas identificado como período
-incompleto. A distribuição de anos deverá ser conferida separadamente
-em treino, validação e teste.
+Para cada saída serão registrados população, prevalência, PR-AUC, PR-AUC/prevalência, ROC-AUC, Brier, calibração, métricas por ano, região e UF, intervalos de confiança por bootstrap de grupo, hash, commit e timestamp.
 
-O período associado à pandemia será mantido na divisão principal.
-Uma eventual análise sem pandemia será tratada como sensibilidade
-posterior e não poderá redefinir o teste principal depois da observação
-de seus resultados.
-
-Nenhum resultado do teste será utilizado para:
-
-- selecionar variáveis;
-- selecionar algoritmos;
-- ajustar hiperparâmetros;
-- definir imputação;
-- definir encoding;
-- selecionar estratégia de balanceamento;
-- escolher calibração;
-- escolher limiar;
-- decidir pela remoção de anos.
-
-## 22. Preservação do conjunto de teste
-
-O conjunto de teste permanecerá isolado durante:
-
-- EDA orientada ao desfecho;
-- escolha de features;
-- comparação e escolha de algoritmos;
-- Fine Tuning;
-- calibração;
-- escolha do limiar;
-- construção de categorias de texto;
-- decisões sobre granularidade geográfica.
-
-O teste será aberto uma única vez, depois do fechamento do:
-
-- modelo;
-- conjunto de features;
-- estratégia de calibração;
-- critério de limiar.
-
-Como a divisão aleatória foi adotada, as métricas deverão ser
-apresentadas por ano e também de forma agregada.
-
-A interpretação deverá destacar que 2026 é um período incompleto na
-versão atual dos dados.
-
-A decisão de executar uma sensibilidade sem o período pandêmico deverá
-ser baseada nas análises temporais de treino e validação, e não na busca
-por melhora das métricas finais do teste.
-
----
+Depois da abertura, G9 será `executado`, o manifesto registrará `test_opened: true` e nenhuma decisão de modelagem poderá mudar em resposta aos resultados.
 
 ## 23. Critério de escolha do limiar
 
@@ -802,22 +719,73 @@ Independentemente das simplificações realizadas para cumprir o prazo:
 
 ## 27. Extensões fora do caminho crítico
 
-As seguintes extensões permanecerão registradas, mas não deverão
-bloquear o Fine Tuning:
+Permanecem registradas, sem bloquear o fluxo principal:
 
-- análise de sensibilidade com exclusão do período pandêmico, somente
-se as visualizações e os experimentos indicarem distorções relevantes;
-- comparação específica do desempenho e da calibração entre anos;
-- análise adicional do efeito de 2026 como período incompleto;
-- análise envolvendo `evolucao = 3`;
-- granularidade por município de residência;
-- agrupamento detalhado de ocupações;
-- categorização de textos livres;
-- NLP;
-- Modelo C com tratamentos anteriores à admissão;
-- análise de IMC;
-- novas famílias de modelos depois do congelamento dos finalistas;
-- investigações territoriais de alta granularidade.
+- exploração de 2026, somente depois dos Testes A/B e sem reajuste;
+- análise com `evolucao = 3`;
+- município de residência;
+- ocupações detalhadas;
+- categorização de textos e NLP;
+- tratamentos anteriores à admissão;
+- IMC;
+- novas famílias de modelos após congelamento;
+- alta granularidade territorial;
+- UMAP supervisionado;
+- UF como feature, condicionada ao resultado com região.
 
-Essas extensões somente serão executadas depois da conclusão dos
-entregáveis do caminho crítico.
+Não são extensões e não podem ser cortados:
+
+- partição-mestre disjunta por grupo;
+- bloqueio técnico dos testes até G9;
+- calibração e limiar congelados;
+- Teste A, Teste B e resultado exclusivo de 2020–2022;
+- importância das variáveis na validação;
+- documentação de limitações e rastreabilidade.
+
+Nenhuma extensão poderá retroagir para otimizar o resultado oficial de teste.
+
+## 28. Decisão temporal — treino de referência e duas janelas de teste
+
+**Data:** 18/10/2026  
+**Status:** aprovada e congelada  
+**Origem:** decisão metodológica aprovada pelo time  
+**Responsável pelo registro:** Pessoa B  
+**Natureza:** contrato metodológico do experimento principal
+
+### 28.1 Decisão
+
+Um único modelo será desenvolvido sem 2020–2022. Treino e desenvolvimento usam exclusivamente 2019, 2023, 2024 e 2025, distribuídos em `train_ref`, `val_tune`, `val_cal` e `val_meas`, com separação determinística por grupo.
+
+- **Teste A (`test_ref`)**: 2019, 2023, 2024 e 2025, em grupos nunca usados no desenvolvimento. É o resultado principal.
+- **Teste B**: união lógica de `test_ref` com `test_pandemic`. Este último contém somente 2020–2022. É a avaliação ampliada de robustez temporal.
+- **2026**: exploração opcional posterior, fora de todos os blocos principais e sem reajuste.
+
+### 28.2 Regras invariantes
+
+- nenhum `group_id` em mais de um bloco;
+- 2020–2022 apenas em `test_pandemic`;
+- 2026 fora dos blocos principais;
+- testes fechados até G9;
+- mesmo pipeline, features, modelo, hiperparâmetros, calibrador e limiar nas duas janelas;
+- nenhuma métrica de teste orienta desenvolvimento;
+- Teste B acompanhado do resultado isolado de 2020–2022 e de métricas anuais;
+- comparação A × B interpretada como robustez temporal, nunca como efeito causal da pandemia.
+
+### 28.3 Saídas mínimas
+
+Registrar, por janela, população, prevalência, PR-AUC, PR-AUC/prevalência, ROC-AUC, Brier, calibração e resultados por ano, região e UF. Registrar hashes, commit e timestamp.
+
+### 28.4 Critério de aceite
+
+A decisão estará implementada quando:
+
+- este registro estiver versionado;
+- os YAMLs declararem os seis blocos e seus anos;
+- nenhuma configuração ativa permitir 2020–2022 ou 2026 em desenvolvimento;
+- testes automatizados bloquearem anos proibidos e sobreposição de grupos;
+- o manifesto registrar anos, contagens, prevalência, grupos e hash por bloco;
+- documentação, configuração e implementação estiverem sem conflito.
+
+### 28.5 Relação com a implementação
+
+Este documento registra o contrato metodológico. Os arquivos de configuração devem refletir os mesmos blocos e restrições temporais; a partição-mestre deve materializar o contrato com grupos disjuntos e testes automatizados; e a execução final deve aplicar o modelo congelado, sem ajustes, nas duas janelas de teste. A aprovação documental não substitui os critérios técnicos de aceite da configuração, da partição, dos manifestos e da execução.

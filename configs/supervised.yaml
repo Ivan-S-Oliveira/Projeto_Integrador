@@ -1,171 +1,251 @@
-version: 2
-
+version: 3
 seed: 42
-
 target:
   coluna: evolucao
   coluna_modelagem: alvo_obito_srag
   positivos:
-    - 2.0
+  - 2.0
   negativos:
-    - 1.0
+  - 1.0
   descartar_outros: true
   sensibilidade_qualquer_obito:
     ativa: true
     positivos:
-      - 2.0
-      - 3.0
+    - 2.0
+    - 3.0
     negativos:
-      - 1.0
-
+    - 1.0
 coluna_tempo: dt_interna
-
 periodo:
-  ano_inicial: 2019
-  ano_final: 2026
-  coluna_ano: ano_internacao
-  incluir_limites: true
-  anos_parciais:
+  cobertura_fonte:
+    ano_inicial: 2019
+    ano_final: 2026
+    coluna_ano: ano_internacao
+    incluir_limites: true
+    anos_parciais:
     - 2026
-
+  desenvolvimento:
+  - 2019
+  - 2023
+  - 2024
+  - 2025
+  teste_pandemico:
+  - 2020
+  - 2021
+  - 2022
+  exploracao_opcional:
+  - 2026
 features:
   numericas:
-    - idade_anos
-    - dias_sintomas_ate_internacao
-
+  - idade_anos
+  - dias_sintomas_ate_internacao
   categoricas:
-    - sexo_categoria
-    - cs_gestant
-    - cs_raca
-    - cs_zona
-    - ave_suino
-    - febre
-    - tosse
-    - garganta
-    - dispneia
-    - diarreia
-    - vomito
-    - dor_abd
-    - fadiga
-    - perd_olft
-    - perd_pala
-    - outro_sin
-    - puerpera
-    - cardiopati
-    - hematologi
-    - sind_down
-    - hepatica
-    - asma
-    - diabetes
-    - neurologic
-    - pneumopati
-    - imunodepre
-    - renal
-    - obesidade
-    - out_morbi
-
+  - sexo_categoria
+  - cs_gestant
+  - cs_raca
+  - cs_zona
+  - ave_suino
+  - febre
+  - tosse
+  - garganta
+  - dispneia
+  - diarreia
+  - vomito
+  - dor_abd
+  - fadiga
+  - perd_olft
+  - perd_pala
+  - outro_sin
+  - puerpera
+  - cardiopati
+  - hematologi
+  - sind_down
+  - hepatica
+  - asma
+  - diabetes
+  - neurologic
+  - pneumopati
+  - imunodepre
+  - renal
+  - obesidade
+  - out_morbi
   final: null
-
   contexto_incremental:
-    - cs_escol_n
-    - sg_uf
-    - vacina
-    - vacina_cov
-
+  - cs_escol_n
+  - sg_uf
+  - vacina
+  - vacina_cov
   sensibilidade_gravidade_admissao:
-    - saturacao
-    - desc_resp
-
+  - saturacao
+  - desc_resp
   sensibilidade_indicadores_ausencia:
     ativa: true
     incluir_no_pipeline_principal: false
     prefixo_esperado: missingindicator_
-
   sensibilidade_contadores_clinicos:
     ativa: false
-    motivo: >
-      Os contadores agregados podem duplicar o peso das variaveis
-      individuais das quais foram derivados.
+    motivo: 'Os contadores agregados podem duplicar o peso das variaveis individuais das quais foram derivados.
+
+      '
     colunas:
-      - n_sintomas_confirmados
-      - n_sintomas_avaliados
-      - n_comorbidades_confirmadas
-      - n_comorbidades_avaliadas
-
+    - n_sintomas_confirmados
+    - n_sintomas_avaliados
+    - n_comorbidades_confirmadas
+    - n_comorbidades_avaliadas
   proibidas:
-    - evolucao
-    - alvo_obito_srag
-    - evolucao_normalizada
-    - evolucao_covid19
-    - dt_evoluca
-    - dt_encerra
-    - dt_digita
-    - uti
-    - dt_entuti
-    - dt_saiduti
-    - suport_ven
-    - utilizouvni
-    - antiviral
-    - tp_antivir
-    - out_antiv
-    - dt_antivir
-    - trat_cov
-    - tipo_trat
-    - dt_trt_cov
-    - out_trat
-    - cluster
-    - cluster_rotulo
-
+  - evolucao
+  - alvo_obito_srag
+  - evolucao_normalizada
+  - evolucao_covid19
+  - dt_evoluca
+  - dt_encerra
+  - dt_digita
+  - uti
+  - dt_entuti
+  - dt_saiduti
+  - suport_ven
+  - utilizouvni
+  - antiviral
+  - tp_antivir
+  - out_antiv
+  - dt_antivir
+  - trat_cov
+  - tipo_trat
+  - dt_trt_cov
+  - out_trat
+  - cluster
+  - cluster_rotulo
   engenharia:
     intervalo_max_dias: 60
     intervalo_politica: sinalizar
     coluna_sazonalidade: dt_sin_pri
-
     faixas_etarias:
-      - {nome: "<1", min: 0, max: 1}
-      - {nome: "1-4", min: 1, max: 5}
-      - {nome: "5-11", min: 5, max: 12}
-      - {nome: "12-17", min: 12, max: 18}
-      - {nome: "18-39", min: 18, max: 40}
-      - {nome: "40-59", min: 40, max: 60}
-      - {nome: "60-79", min: 60, max: 80}
-      - {nome: "80+", min: 80, max: null}
-
+    - nome: <1
+      min: 0
+      max: 1
+    - nome: 1-4
+      min: 1
+      max: 5
+    - nome: 5-11
+      min: 5
+      max: 12
+    - nome: 12-17
+      min: 12
+      max: 18
+    - nome: 18-39
+      min: 18
+      max: 40
+    - nome: 40-59
+      min: 40
+      max: 60
+    - nome: 60-79
+      min: 60
+      max: 80
+    - nome: 80+
+      min: 80
+      max: null
     derivadas:
-      - idade_anos
-      - dias_sintomas_ate_internacao
-      - sin_semana
-      - cos_semana
-      - ano_internacao
-      - mes_internacao
-      - flag_intervalo_invalido
-      - flag_internacao_antes_sintomas
-      - faixa_etaria
-      - sexo_categoria
-
+    - idade_anos
+    - dias_sintomas_ate_internacao
+    - sin_semana
+    - cos_semana
+    - ano_internacao
+    - mes_internacao
+    - flag_intervalo_invalido
+    - flag_internacao_antes_sintomas
+    - faixa_etaria
+    - sexo_categoria
     entradas:
-      - nu_idade_n
-      - tp_idade
-      - cs_sexo
-      - dt_sin_pri
-      - dt_interna
-
+    - nu_idade_n
+    - tp_idade
+    - cs_sexo
+    - dt_sin_pri
+    - dt_interna
 temporal:
-  modo: aleatorio_estratificado
+  modo: particao_mestra_por_grupo
+  seed: 42
+  coluna_grupo: group_id
+  coluna_particao: particao
   coluna_estratificacao_temporal: ano_internacao
   coluna_estratificacao_alvo: alvo_obito_srag
-  seed: 42
+  coluna_estratificacao_geografica: regiao_residencia
   gravar_particao_na_coorte: true
-  coluna_particao: particao
   permitir_novo_sorteio: false
   metodo_particao: hash_grupo_estratificado_v1
   min_grupos_por_estrato: 3
+  fallback_estratificacao: reduzir_geografia_e_registrar_no_manifesto
   teste_aberto_uma_unica_vez: true
-  fracao:
-    treino: 0.70
-    validacao: 0.15
-    holdout: 0.15
-
+  blocos:
+    train_ref:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: treino
+      influencia_decisoes: true
+    val_tune:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: selecao_de_features_geografia_e_tuning
+      influencia_decisoes: true
+    val_cal:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: calibracao_e_escolha_de_limiar
+      influencia_decisoes: true
+    val_meas:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: confirmacao_intermediaria_pre_teste
+      influencia_decisoes: false
+    test_ref:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: teste_a_resultado_principal
+      influencia_decisoes: false
+      requer_gate: G9_holdout
+    test_pandemic:
+      anos:
+      - 2020
+      - 2021
+      - 2022
+      papel: bloco_adicional_do_teste_b
+      influencia_decisoes: false
+      requer_gate: G9_holdout
+  janelas_avaliacao:
+    teste_a:
+    - test_ref
+    teste_b:
+    - test_ref
+    - test_pandemic
+    relatorio_pandemico_separado: true
+  exploracao_2026:
+    ativa: false
+    anos:
+    - 2026
+    somente_apos_fluxo_principal: true
+    permitir_reajuste: false
+  invariantes:
+    grupos_disjuntos: true
+    anos_pandemicos_exclusivos_test_pandemic: true
+    ano_2026_fora_blocos_principais: true
+    testes_fechados_ate_g9: true
+    teste_b_uniao_logica_sem_duplicacao: true
+    configuracao_congelada_entre_janelas: true
+    preprocessamento_ajustado_so_no_treino: true
 missingness:
   vazio_nao_e_nao: true
   ignorado_nao_e_nao: true
@@ -179,122 +259,113 @@ missingness:
   indicadores_ausencia:
     pipeline_principal: false
     sensibilidade: true
-
 models:
   baseline:
     strategy: prior
-
   logistic:
     C: null
     busca_C:
-      - 0.001
-      - 0.01
-      - 0.1
-      - 1.0
-      - 10.0
+    - 0.001
+    - 0.01
+    - 0.1
+    - 1.0
+    - 10.0
     penalty: l2
     solver: lbfgs
     max_iter: 1000
     class_weight: balanced
-
   decision_tree:
     ativa: true
     max_depth:
-      - 3
-      - 5
-      - 8
-      - null
+    - 3
+    - 5
+    - 8
+    - null
     min_samples_leaf:
-      - 20
-      - 50
-      - 100
+    - 20
+    - 50
+    - 100
     class_weight: balanced
-
   random_forest:
     ativa: true
     n_estimators: 300
     max_depth:
-      - 6
-      - 10
-      - null
+    - 6
+    - 10
+    - null
     min_samples_leaf:
-      - 10
-      - 20
-      - 50
+    - 10
+    - 20
+    - 50
     max_features:
-      - sqrt
-      - log2
+    - sqrt
+    - log2
     class_weight: balanced
     n_jobs: -1
-
   boosting:
     learning_rate: null
     busca_learning_rate:
-      - 0.03
-      - 0.05
-      - 0.10
+    - 0.03
+    - 0.05
+    - 0.1
     max_iter: null
     busca_max_iter:
-      - 300
-      - 500
-      - 1000
+    - 300
+    - 500
+    - 1000
     max_depth: null
     busca_max_depth:
-      - null
-      - 4
-      - 6
-      - 8
+    - null
+    - 4
+    - 6
+    - 8
     max_leaf_nodes: 31
     min_samples_leaf: 20
     l2_regularization: 0.0
     early_stopping: false
     class_weight: balanced
-
 tuning:
   metrica_principal: pr_auc
   concentrar_nos_dois_melhores: true
   usar_apenas_treino_validacao: true
   teste_proibido_durante_tuning: true
   max_configuracoes_por_modelo: 30
-
 calibracao:
   ativa: true
   metodo: null
   metodos_candidatos:
-    - sigmoid
-    - isotonic
+  - sigmoid
+  - isotonic
   fonte: validacao
   comparar_brier_antes_depois: true
-
 limiar:
-  default: 0.50
+  default: 0.5
   otimo: null
   metrica: null
   metricas_candidatas:
-    - f1
-    - recall
-    - precision
+  - f1
+  - recall
+  - precision
   min_precision: null
   selecionar_somente_na_validacao: true
-
 avaliacao:
   metrica_principal: pr_auc
   metricas:
-    - pr_auc
-    - roc_auc
-    - brier_score
-    - log_loss
-    - recall
-    - precision
-    - f1
-    - especificidade
-    - sensibilidade
-    - matriz_confusao
+  - pr_auc
+  - roc_auc
+  - brier_score
+  - log_loss
+  - recall
+  - precision
+  - f1
+  - especificidade
+  - sensibilidade
+  - matriz_confusao
   grupos:
-    - sg_uf
-    - sexo_categoria
-    - faixa_etaria
-    - ano_internacao
+  - sg_uf
+  - sexo_categoria
+  - faixa_etaria
+  - ano_internacao
   min_n_grupo: 100
   desempenho_por_ano: true
   calibracao_por_ano: true
@@ -306,7 +377,27 @@ avaliacao:
   analise_erros:
     ativa: true
     priorizar_falsos_negativos: true
-
+  janelas:
+    teste_a:
+      blocos:
+      - test_ref
+      resultado_principal: true
+    teste_b:
+      blocos:
+      - test_ref
+      - test_pandemic
+      resultado_principal: false
+    pandemico_isolado:
+      blocos:
+      - test_pandemic
+      obrigatorio: true
+  comparacao_temporal:
+    interpretacao: sensibilidade_a_composicao_temporal
+    interpretacao_causal_permitida: false
+    mesmo_modelo_features_hiperparametros_calibrador_e_limiar: true
+  relatar_por_ano: true
+  relatar_prevalencia: true
+  relatar_pr_auc_sobre_prevalencia: true
 sensibilidades:
   temporal:
     ativa: true
@@ -318,95 +409,90 @@ sensibilidades:
     ativa: true
   alvo_qualquer_obito:
     ativa: true
-
 artefatos_coorte:
   parquet: coorte_final.parquet
   waterfall: coorte_waterfall.csv
   variaveis: variaveis_finais.csv
   manifesto: manifesto_coorte.json
-
+  particao_mestra: partitions_master.parquet
+  manifesto_particao: manifesto_particao.json
+  contrato_features: feature_contract_v1.json
 gates:
   G1_definicao_alvo_features:
-    descricao: >
-      Confirmar schema da coorte definitiva, alvo e lista final de
-      features. Inclui a decisao sobre onde ficam saturacao,
-      desc_resp, vacina e vacina_cov.
+    descricao: 'Confirmar schema da coorte definitiva, alvo e lista final de features. Inclui a decisao
+      sobre onde ficam saturacao, desc_resp, vacina e vacina_cov.
+
+      '
     status: pendente
     aprovado_por: null
     data: null
-
   G2_janela_temporal:
-    descricao: >
-      Periodo 2019-2026 e split aleatorio estratificado 70/15/15 por
-      alvo e ano de internacao, seed 42.
+    descricao: Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos mesmos anos com grupos
+      nao vistos; 2020 a 2022 apenas no teste pandemico; 2026 apenas como exploracao posterior. Particao
+      mestra deterministica por grupo, seed 42.
     status: aprovado
     aprovado_por: time_do_projeto
-    data: "2026-10-11"
-
+    data: '2026-10-18'
   G4_baseline:
-    descricao: >
-      Rodar DummyClassifier e registrar as metricas de referencia.
+    descricao: 'Rodar DummyClassifier e registrar as metricas de referencia.
+
+      '
     status: aprovado
     aprovado_por: time_do_projeto
-    data: "2026-10-11"
-
+    data: '2026-10-11'
   G5_pilotos:
-    descricao: >
-      Rodar regressao logistica, arvore, random forest e boosting sem
-      consultar o teste.
+    descricao: 'Rodar regressao logistica, arvore, random forest e boosting sem consultar o teste.
+
+      '
     status: aprovado
     aprovado_por: time_do_projeto
-    data: "2026-10-11"
-
+    data: '2026-10-11'
   G6_finalistas_tuning:
-    descricao: >
-      Selecionar no maximo dois finalistas e executar tuning limitado.
-      Ao final, preencher selecao_modelos.finalista_escolhido.
+    descricao: 'Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher selecao_modelos.finalista_escolhido.
+
+      '
     status: pendente
     aprovado_por: null
     data: null
-
   G7_calibracao:
-    descricao: >
-      Escolher o metodo de calibracao usando apenas treino e validacao.
+    descricao: 'Escolher o metodo de calibracao usando apenas treino e validacao.
+
+      '
     status: pendente
     aprovado_por: null
     data: null
-
   G8_limiar:
-    descricao: >
-      Escolher o limiar operacional usando apenas a validacao.
+    descricao: 'Escolher o limiar operacional usando apenas a validacao.
+
+      '
     status: pendente
     aprovado_por: null
     data: null
-
   G9_holdout:
-    descricao: >
-      Liberar o teste uma unica vez apos congelar modelo, calibracao
-      e limiar. Estados: pendente -> aprovado -> executado.
-      "aprovado" libera o acesso; "executado" registra que o teste ja
-      foi consultado (estado terminal, irreversivel).
+    descricao: Liberar test_ref e test_pandemic uma unica vez depois de congelar features, modelo, hiperparametros,
+      calibrador e limiar. O estado aprovado libera o acesso; executado registra a consulta e e terminal.
     status: pendente
     aprovado_por: null
     data: null
     executado_em: null
     n_acessos: 0
-
 selecao_modelos:
   status: shortlist_provisoria
   origem: pilotos
   teste_consultado: false
   finalistas:
-    - hist_gradient_boosting
-    - logistic
+  - hist_gradient_boosting
+  - logistic
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
   finalista_escolhido: null
   familias_encerradas:
-    - decision_tree
-    - random_forest
+  - decision_tree
+  - random_forest
   criterio_principal: pr_auc
   observacoes:
-    - probabilidades brutas ainda nao calibradas
-    - decisao sujeita a repeticao na coorte definitiva
+  - probabilidades brutas ainda nao calibradas
+  - decisao sujeita a repeticao na coorte definitiva
+  - a escolha final usa somente os blocos de desenvolvimento
+  - test_ref e test_pandemic permanecem fechados ate autorizacao formal

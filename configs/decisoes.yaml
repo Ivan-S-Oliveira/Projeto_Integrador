@@ -1,66 +1,65 @@
 # =============================================================================
-# Config de decisões da Pessoa — v0.1 (fonte de verdade para A1–A4)
+# Decisões metodológicas e parâmetros do estudo
 # =============================================================================
-# Cada valor abaixo é uma DECISÃO. Enquanto `status_decisoes` estiver como
+# Valores com status `proposta` ainda exigem aprovação.
 # "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
 # Ao confirmar: atualizar o valor, mudar o status para "aprovada" e registrar
-# em outputs/tables/pessoa_a/tabela_decisoes.csv (v.log_decision).
 #
 # `cols`: nomes canônicos SIVEP. Nomes alternativos da base (ex.: internado ->
 # HOSPITAL) são tratados em ALIASES no módulo src/protocolo/verificacoes.py.
 # Os Gates G1 (alvo/features) e G2 (janela temporal) do supervised.yaml são
 # aprovados por A com base nestas decisões.
 # =============================================================================
-versao: '0.4'
+versao: '0.5'
 status_decisoes:
   ponto_de_previsao:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   coorte_estrita:
     status: proposta
-    responsavel: Pessoa 
+    responsavel: a_definir
     data: null
   alvo:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   evolucao_desconhecida:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   periodos:
-    status: proposta
-    responsavel: Pessoa
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   acoes_inconsistencias_datas:
     status: proposta
-    responsavel: Pessoa  
+    responsavel: a_definir
     data: null
   variaveis_proibidas:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   variaveis_condicionais:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   maturidade_evolucao:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   features_derivadas:
     status: proposta
-    responsavel: Pessoa
+    responsavel: a_definir
     data: null
   split_aleatorio_70_15_15:
-    status: proposta
-    responsavel: Pessoa
-    data: null
-  cenario_sem_2020_2021:
-    status: proposta
-    responsavel: Pessoa
-    data: null
+    status: supersedida
+    responsavel: time_do_projeto
+    data: '2026-10-18'
+  protocolo_temporal_duas_janelas:
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
 cols:
   hospital: HOSPITAL
   dt_interna: DT_INTERNA
@@ -75,13 +74,15 @@ cols:
   nu_notific: NU_NOTIFIC
 dev_years:
 - 2019
+- 2023
+- 2024
+- 2025
+pandemic_test_years:
 - 2020
 - 2021
 - 2022
-- 2023
-- 2024
-holdout_years:
-- 2025
+optional_exploration_years:
+- 2026
 min_date: '2009-01-01'
 expected_codes:
   HOSPITAL:
@@ -284,31 +285,89 @@ exclusion_sample_rows: 50
 dataset_analitico:
   path: data/analytical/dataset_supervisionado.parquet
 experimentos_split:
+  versao: temporal_v1
   seed: 42
-  fracoes:
-    treino: 0.7
-    validacao: 0.15
-    holdout: 0.15
-  estratificar_por_alvo: true
-  bench_max_linhas: 200000
-  cenarios:
-    todos_2019_2025:
+  coluna_grupo: group_id
+  coluna_particao: particao
+  metodo: hash_grupo_estratificado_v1
+  permitir_novo_sorteio: false
+  estratificacao:
+    primaria:
+    - ano_internacao
+    - alvo_obito_srag
+    - regiao_residencia
+    fallback: documentado_no_manifesto
+    min_grupos_por_estrato: 3
+  blocos:
+    train_ref:
       anos:
       - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: treino
+      influencia_decisoes: true
+    val_tune:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: selecao_de_features_geografia_e_tuning
+      influencia_decisoes: true
+    val_cal:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: calibracao_e_escolha_de_limiar
+      influencia_decisoes: true
+    val_meas:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: confirmacao_intermediaria_pre_teste
+      influencia_decisoes: false
+    test_ref:
+      anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+      papel: teste_a_resultado_principal
+      influencia_decisoes: false
+      requer_gate: G9_holdout
+    test_pandemic:
+      anos:
       - 2020
       - 2021
       - 2022
-      - 2023
-      - 2024
-      - 2025
-      descricao: Base completa 2019-2025
-    sem_2020_2021_2022:
-      anos:
-      - 2019
-      - 2023
-      - 2024
-      - 2025
-      descricao: Remove 2020 e 2021 (anos de pandemia)
+      papel: bloco_adicional_do_teste_b
+      influencia_decisoes: false
+      requer_gate: G9_holdout
+  janelas_avaliacao:
+    teste_a:
+    - test_ref
+    teste_b:
+    - test_ref
+    - test_pandemic
+    relatorio_pandemico_separado: true
+  exploracao_2026:
+    ativa: false
+    anos:
+    - 2026
+    somente_apos_fluxo_principal: true
+    permitir_reajuste: false
+  invariantes:
+    grupos_disjuntos: true
+    anos_pandemicos_exclusivos_test_pandemic: true
+    ano_2026_fora_blocos_principais: true
+    testes_fechados_ate_g9: true
+    teste_b_uniao_logica_sem_duplicacao: true
+    configuracao_congelada_entre_janelas: true
 derivadas:
   intervalo_max_dias: 30
   periodo_semanas: 52.1775

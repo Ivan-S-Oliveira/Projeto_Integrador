@@ -1,4 +1,4 @@
-manifest_version: "1.0"
+manifest_version: "1.1"
 
 dataset:
   id: "srag-dados-v2"
@@ -8,7 +8,7 @@ dataset:
   caminho_relativo: "data/processed/dados-v2/srag.parquet"
 
 integridade:
-  sha256: "96ED6B9D5CEEBAAEA00659F77511112174B04BB980CB243B560C00DD2A8F316C
+  sha256: "96ED6B9D5CEEBAAEA00659F77511112174B04BB980CB243B560C00DD2A8F316C"
   tamanho_bytes: 303573013
   quantidade_linhas: 4666910
   quantidade_colunas: 198
@@ -18,12 +18,76 @@ cobertura_temporal:
   periodo_observado_dt_notific:
     inicio: "2018-12-30"
     fim: "2026-09-28"
-  observacao:
+  observacoes:
     - "Foram observados três registros com dt_notific em 2018."
-    - "A elegibilidade temporal da coorte será definida por dt_interna, não por dt_notific."
-    - "O recorte analítico principal considera internações entre 2019 e 2026."
-    - "O ano de 2026 está incompleto na versão atual dos dados e deverá ser identificado como tal nas análises temporais."
-    - "Os anos associados à pandemia serão mantidos inicialmente; qualquer exclusão posterior será tratada como análise de sensibilidade."
+    - "A elegibilidade temporal da coorte é definida por dt_interna, não por dt_notific."
+    - "A cobertura do arquivo bruto não determina a participação de cada ano no experimento."
+    - "O ano de 2026 está incompleto na versão atual dos dados."
+
+uso_temporal_no_experimento:
+  coluna_referencia: "dt_interna"
+  coluna_ano: "ano_internacao"
+  desenvolvimento:
+    anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+    blocos:
+      - "train_ref"
+      - "val_tune"
+      - "val_cal"
+      - "val_meas"
+  teste_referencia:
+    anos:
+      - 2019
+      - 2023
+      - 2024
+      - 2025
+    bloco: "test_ref"
+    resultado_principal: true
+  teste_pandemico:
+    anos:
+      - 2020
+      - 2021
+      - 2022
+    bloco: "test_pandemic"
+    participa_do_desenvolvimento: false
+  janelas_avaliacao:
+    teste_a:
+      blocos:
+        - "test_ref"
+    teste_b:
+      blocos:
+        - "test_ref"
+        - "test_pandemic"
+    relatorio_2020_2022_separado: true
+  exploracao_2026:
+    ativa_no_fluxo_principal: false
+    anos:
+      - 2026
+    somente_apos_conclusao_do_fluxo_principal: true
+    permitir_reajuste: false
+  interpretacao:
+    comparacao_teste_a_teste_b: "sensibilidade_a_composicao_temporal"
+    interpretacao_causal_da_pandemia: false
+
+particionamento:
+  artefato: "partitions_master.parquet"
+  coluna_grupo: "group_id"
+  coluna_particao: "particao"
+  metodo: "hash_grupo_estratificado_v1"
+  seed: 42
+  permitir_novo_sorteio: false
+  grupos_disjuntos: true
+  testes_fechados_ate_autorizacao: true
+  teste_aberto_uma_unica_vez: true
+  invariantes:
+    - "Nenhum group_id pode aparecer em mais de um bloco."
+    - "Registros de 2020 a 2022 só podem aparecer em test_pandemic."
+    - "Registros de 2026 não podem aparecer nos blocos principais."
+    - "Teste B é uma união lógica sem duplicação física de registros."
+    - "Features, modelo, hiperparâmetros, calibrador e limiar permanecem congelados entre as janelas."
 
 geracao:
   data_geracao: "2026-10-09"
@@ -44,9 +108,18 @@ uso_no_projeto:
   observacao: >
     Os notebooks devem acessar o dataset pela interface de storage
     do repositório, evitando caminhos locais absolutos.
+  configuracao_supervisionada: "configs/supervised.yaml"
+  configuracao_metodologica: "configs/decisoes.yaml"
+  contrato_features: "feature_contract_v1.json"
+  manifesto_particao: "manifesto_particao.json"
 
 validacao:
   schema_verificado: true
   dimensoes_verificadas: true
   notebook_validacao: "01_eda_primeira_passagem.ipynb"
   hash_confirmado_manualmente: true
+  verificacoes_requeridas_antes_do_uso:
+    - "Confirmar o SHA-256 do arquivo local."
+    - "Confirmar quantidade de linhas e colunas."
+    - "Confirmar presença das colunas temporais, do alvo e do identificador de grupo."
+    - "Confirmar que a partição usada corresponde ao manifesto da execução."
