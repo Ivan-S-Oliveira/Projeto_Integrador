@@ -3,13 +3,13 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-20T14:51:29Z.
+> Atualizado em 2026-10-20T14:54:55Z.
 
-- Concluídas: **34**
+- Concluídas: **35**
 - Resolvidas pendentes de validação: **17**
 - Precisam revisão: **4**
 - Em andamento: **0**
-- Abertas: **67**
+- Abertas: **66**
 
 ## Precisam revisão (a auditoria encontrou problema) (4)
 
@@ -42,7 +42,7 @@
 
 _Nenhum item._
 
-## Abertas (67)
+## Abertas (66)
 
 - ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -83,7 +83,6 @@ _Nenhum item._
 - ⬜ **#73** decisoes.md parado em 10/10 — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#29** Itens desatualizados ou sem uso no YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#40** A construção da coorte provisória não gera os arquivos de rastreio esperados — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
-- ⬜ **#66** Teste lento roda junto com os rápidos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#98** Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 21/10
 - ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -112,7 +111,7 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (34)
+## Concluídas (35)
 
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -141,6 +140,7 @@ _Nenhum item._
 - ✅ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10 · ⚠ reconfirmar
 - ✅ **#65** test_temporal.py era cópia de test_leakage.py — CONCLUÍDA · C · Concluído
 - ✅ **#67** Rodar a suíte de testes depois das correções — CONCLUÍDA · C · Concluído
@@ -158,7 +158,7 @@ _Nenhum item._
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-20T14:51:29Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan","items":{
+{"schema_version":3,"generated_at":"2026-10-20T14:54:55Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"file","path":"src/models/logistic.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
@@ -224,7 +224,7 @@ _Nenhum item._
 "63":{"id":"63","status":"done","done":true,"note":"build(deps): pyproject único + requirements pinado","updated_at":"2026-10-19T13:35:03.023Z","updated_by":"Ivan","evidence":[{"type":"file","path":"pyproject.toml"},{"type":"file","path":"requirements.txt"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{}},
 "64":{"id":"64","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"tests/test_features.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]}},
 "65":{"id":"65","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
-"66":{"id":"66","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
+"66":{"id":"66","status":"done","done":true,"note":"","updated_at":"2026-10-20T14:54:48Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:54:48Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"4b34fb01-ed8f-43c4-92e2-7f44e5a84a99"}],"dismissed":[],"flags":{},"applied_events":["4b34fb01-ed8f-43c4-92e2-7f44e5a84a99"]},
 "67":{"id":"67","status":"done","done":true,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]}},
 "68":{"id":"68","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "69":{"id":"69","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
