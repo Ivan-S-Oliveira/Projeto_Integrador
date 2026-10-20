@@ -3,13 +3,13 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-20T01:13:35Z.
+> Atualizado em 2026-10-20T01:13:55Z.
 
-- Concluídas: **29**
+- Concluídas: **30**
 - Resolvidas pendentes de validação: **14**
 - Precisam revisão: **4**
 - Em andamento: **1**
-- Abertas: **74**
+- Abertas: **73**
 
 ## Precisam revisão (a auditoria encontrou problema) (4)
 
@@ -39,7 +39,7 @@
 
 - 🟦 **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — EM ANDAMENTO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 
-## Abertas (74)
+## Abertas (73)
 
 - ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -59,7 +59,6 @@
 - ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 24/10
 - ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
@@ -116,7 +115,7 @@
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (29)
+## Concluídas (30)
 
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -136,6 +135,7 @@
 - ✅ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#14** A variável SRAG_PARQUET_URL não tem efeito — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#17** One-hot denso no código central: risco de faltar memória — CONCLUÍDA · C · Concluído
 - ✅ **#62** pyproject.toml inválido — CONCLUÍDA · C · Concluído
 - ✅ **#114** Precedência errada entre penalty do YAML e l1_ratio explícito na logística — CONCLUÍDA · C · Concluído
@@ -157,7 +157,7 @@
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-20T01:13:35Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-19T19:37:30Z","by":"Mateus","head":"bedeb4f876f363dd0a1678d37cdd938f1419d123","files_scanned":80,"counts":{"critical":0,"high":2,"medium":17,"low":45},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"mateus-so","items":{
+{"schema_version":3,"generated_at":"2026-10-20T01:13:55Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-19T19:37:30Z","by":"Mateus","head":"bedeb4f876f363dd0a1678d37cdd938f1419d123","files_scanned":80,"counts":{"critical":0,"high":2,"medium":17,"low":45},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"mateus-so","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"file","path":"src/models/logistic.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
@@ -256,7 +256,7 @@
 "96":{"id":"96","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "97":{"id":"97","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "98":{"id":"98","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/___provisorio_construcao_coorte_b.ipynb"]}]}},
-"99":{"id":"99","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{},"audit":{"blocking":1,"findings":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]},{"severity":"medium","category":"performance-iterrows","message":"iterrows em dados tabulares grandes tende a ser lento.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]}]}},
+"99":{"id":"99","status":"done","done":true,"note":"","updated_at":"2026-10-20T01:13:43Z","updated_by":"Mateus","evidence":[],"comments":[],"origin":"human","history":[{"at":"2026-10-20T01:13:43Z","by":"Mateus","from":"open","to":"done","origin":"human","ref":"883b219d-c871-47dd-9e84-43b34c12f91c"}],"dismissed":[],"flags":{},"audit":{"blocking":1,"findings":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]},{"severity":"medium","category":"performance-iterrows","message":"iterrows em dados tabulares grandes tende a ser lento.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]}]},"applied_events":["883b219d-c871-47dd-9e84-43b34c12f91c"]},
 "101":{"id":"101","status":"done","done":true,"note":"notebook removido por Pessoa C","updated_at":"2026-10-19T16:01:55.887Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{}},
 "102":{"id":"102","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "109":{"id":"109","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{},"audit":{"blocking":1,"findings":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]},{"severity":"medium","category":"performance-iterrows","message":"iterrows em dados tabulares grandes tende a ser lento.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"]}]}},
