@@ -3,13 +3,13 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-20T14:19:00Z.
+> Atualizado em 2026-10-20T14:31:29Z.
 
-- Concluídas: **32**
+- Concluídas: **33**
 - Resolvidas pendentes de validação: **14**
 - Precisam revisão: **4**
 - Em andamento: **0**
-- Abertas: **72**
+- Abertas: **71**
 
 ## Precisam revisão (a auditoria encontrou problema) (4)
 
@@ -39,7 +39,7 @@
 
 _Nenhum item._
 
-## Abertas (72)
+## Abertas (71)
 
 - ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -59,7 +59,6 @@ _Nenhum item._
 - ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 - ⬜ **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 24/10
 - ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#57** Associações "protetoras" que são efeito da idade — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
@@ -114,7 +113,7 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (32)
+## Concluídas (33)
 
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -136,6 +135,7 @@ _Nenhum item._
 - ✅ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#17** One-hot denso no código central: risco de faltar memória — CONCLUÍDA · C · Concluído
 - ✅ **#62** pyproject.toml inválido — CONCLUÍDA · C · Concluído
 - ✅ **#114** Precedência errada entre penalty do YAML e l1_ratio explícito na logística — CONCLUÍDA · C · Concluído
@@ -158,7 +158,7 @@ _Nenhum item._
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-20T14:19:00Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-19T19:37:30Z","by":"Mateus","head":"bedeb4f876f363dd0a1678d37cdd938f1419d123","files_scanned":80,"counts":{"critical":0,"high":2,"medium":17,"low":45},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
+{"schema_version":3,"generated_at":"2026-10-20T14:31:29Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-19T19:37:30Z","by":"Mateus","head":"bedeb4f876f363dd0a1678d37cdd938f1419d123","files_scanned":80,"counts":{"critical":0,"high":2,"medium":17,"low":45},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"file","path":"src/models/logistic.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
@@ -274,7 +274,7 @@ _Nenhum item._
 "121":{"id":"121","status":"done","done":true,"note":"foi se aplicados os testes e agora não esta fazendo o coorte pesado","updated_at":"2026-10-20T14:18:50Z","updated_by":"Ivan","evidence":[{"type":"file","path":"src/features/engineering.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]},{"type":"commit_task_reference","sha":"72e839fb1013","subject":"tarefa 121 arrumada","author":"Ivan-S-Oliveira","when":"2026-10-19T14:07:58-03:00","completion_language":false}],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:18:50Z","by":"Ivan","from":"in_progress","to":"done","origin":"human","ref":"a054f225-cdbb-4bb9-a35a-9a0fa4a69b09"}],"dismissed":[],"flags":{},"applied_events":["a054f225-cdbb-4bb9-a35a-9a0fa4a69b09"]},
 "122":{"id":"122","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/utils/storage.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/utils/storage.py"]}]}},
 "123":{"id":"123","status":"done","done":true,"note":"pytest tests/test_supervised_artifact.py -q → 14 passed; C_11..C_15 usam partitions=(\"treino\",\"validacao\")","updated_at":"2026-10-19T13:14:39.577Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/data/supervised_artifact.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]}},
-"124":{"id":"124","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
+"124":{"id":"124","status":"done","done":true,"note":"","updated_at":"2026-10-20T14:31:19Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:31:19Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"36c1bdf9-845c-4738-be60-b2451cdaa87d"}],"dismissed":[],"flags":{},"applied_events":["36c1bdf9-845c-4738-be60-b2451cdaa87d"]},
 "125":{"id":"125","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"a91322865c239b30e8621dd56dbe87a10004c8fa"}],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
 "126":{"id":"126","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "127":{"id":"127","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
