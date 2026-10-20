@@ -1,18 +1,15 @@
 """
 Fábrica de finalistas — ponto único de construção dos modelos de C5/C6.
 
-Aceita nomes canônicos (`boosting`, `logistic`) e apelidos documentados
-do YAML (`hist_gradient_boosting` → `boosting`). A normalização vive
-**somente** aqui: notebooks e testes importam `build_finalista` e passam
-o nome como está no YAML.
-
-Hiperparâmetros vêm de `models.<nome>` no `supervised.yaml`; overrides em
-`**overrides` têm precedência. `preprocessor=None` faz cada construtor
-usar o default (`build_preprocessor()`).
+Aceita nomes canônicos (`boosting`, `logistic`) e apelidos do YAML
+(`hist_gradient_boosting` → `boosting`). A normalização vive **somente**
+aqui: notebooks e testes chamam `build_finalista` com o nome do YAML.
 """
 
 from __future__ import annotations
 
+import inspect
+import warnings
 from typing import Any, Literal, get_args
 
 from sklearn.pipeline import Pipeline
@@ -32,10 +29,13 @@ __all__ = [
 Finalista = Literal["boosting", "logistic"]
 _FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
 
-# Apelidos do YAML → nome canônico interno. Este é o único mapeamento
-# autorizado no projeto; não duplicar em notebooks nem em testes.
 _FINALISTA_ALIASES: dict[str, str] = {
     "hist_gradient_boosting": "boosting",
+}
+
+_CONSTRUTORES: dict[str, Any] = {
+    "boosting": build_boosting_pipeline,
+    "logistic": build_logistic_pipeline,
 }
 
 
@@ -45,11 +45,7 @@ def finalistas_disponiveis() -> tuple[str, ...]:
 
 
 def finalistas_aceitos() -> tuple[str, ...]:
-    """Nomes canônicos + apelidos aceitos por ``build_finalista``.
-
-    Use quando precisar validar um nome que vem do YAML antes de
-    construir o pipeline (ex.: C_16 checando ``finalista_escolhido``).
-    """
+    """Nomes canônicos + apelidos aceitos por ``build_finalista``."""
     return tuple(sorted(_FINALISTAS_VALIDOS | set(_FINALISTA_ALIASES)))
 
 
@@ -59,20 +55,41 @@ def resolver_finalista(nome: str) -> str:
 
 
 def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
-    """Lê ``models.<nome>`` do YAML e devolve kwargs aceitos pelo construtor.
+    """Lê ``models.<nome>`` do YAML e devolve só kwargs aceitos pelo construtor.
 
-    ``nome`` aqui deve ser **canônico** — ``build_finalista`` já normalizou
-    antes de chamar. Descartados: chaves ``busca_*`` (grid de tuning) e
-    valores ``None`` (deixa o default do construtor agir).
+    Filtra: chaves ``busca_*``, valores ``None`` e chaves que o construtor
+    não reconhece (administrativas ou typos), avisando via ``RuntimeWarning``.
     """
     secao = C.cfg("models", nome)
     if not isinstance(secao, dict):
         return {}
-    return {
-        k: v
-        for k, v in secao.items()
-        if v is not None and not k.startswith("busca_")
-    }
+
+    construtor = _CONSTRUTORES.get(nome)
+    if construtor is None:
+        return {}
+
+    aceitos = set(inspect.signature(construtor).parameters)
+    filtrados: dict[str, Any] = {}
+    ignoradas: list[str] = []
+
+    for chave, valor in secao.items():
+        if chave.startswith("busca_") or valor is None:
+            continue
+        if chave in aceitos:
+            filtrados[chave] = valor
+        else:
+            ignoradas.append(chave)
+
+    if ignoradas:
+        warnings.warn(
+            f"models.{nome}: chave(s) ignorada(s) — não aceita(s) por "
+            f"{construtor.__name__}: {sorted(ignoradas)}. "
+            f"Aceitas: {sorted(aceitos)}.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+
+    return filtrados
 
 
 def build_finalista(
@@ -83,14 +100,8 @@ def build_finalista(
 ) -> Pipeline:
     """Constrói o ``Pipeline`` de um finalista pelo nome ou apelido.
 
-    Aceita nomes canônicos (``boosting``, ``logistic``) e apelidos do YAML
-    (``hist_gradient_boosting`` → ``boosting``). A normalização acontece
-    **antes** de `_kwargs_do_yaml`, então o alias lê `models.boosting`
-    (que é onde os hiperparâmetros realmente moram).
-
-    Levanta ``ValueError`` se ``nome`` (após normalização) não estiver em
-    ``finalistas_disponiveis()``. O ``Pipeline`` devolvido **não está
-    ajustado** — o caller faz ``fit``.
+    Levanta ``ValueError`` se ``nome`` (após normalização) for desconhecido.
+    O ``Pipeline`` devolvido não está ajustado — o caller faz ``fit``.
     """
     nome = resolver_finalista(nome)
 
@@ -104,6 +115,4 @@ def build_finalista(
     if preprocessor is not None:
         params["preprocessor"] = preprocessor
 
-    if nome == "boosting":
-        return build_boosting_pipeline(**params)
-    return build_logistic_pipeline(**params)
+    return _CONSTRUTORES[nome](**params)

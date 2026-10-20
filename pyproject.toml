@@ -65,7 +65,7 @@ minversion   = "7.0"
 testpaths    = ["tests"]
 python_files = ["test_*.py"]
 pythonpath   = ["."]
-addopts      = "-ra -q"
+addopts = "-ra -q -m 'not slow and not net'"
 markers = [
     "slow: testes que fazem I/O pesado (Parquet, downloads)",
     "net:  testes que exigem acesso à internet",

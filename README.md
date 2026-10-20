@@ -379,6 +379,10 @@ virtual ativado:
 ``` powershell
 python -m pytest
 ```
+Por padrão, `pytest` roda só os rápidos.
+Suíte completa:  pytest -m ""
+Só os lentos:    pytest -m slow
+Só os de rede:   pytest -m net
 
 Se o comando não estiver disponível, confira se as dependências de
 desenvolvimento estão instaladas no ambiente selecionado. Após mudanças,

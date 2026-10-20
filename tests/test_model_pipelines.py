@@ -257,3 +257,75 @@ def test_finalistas_disponiveis_apenas_canonicos() -> None:
     disponiveis = finalistas_disponiveis()
     assert "hist_gradient_boosting" not in disponiveis
     assert set(disponiveis) == {"boosting", "logistic"}
+
+# ---------------------------------------------------------------------------
+# Contrato de filtro do YAML (#21)
+# ---------------------------------------------------------------------------
+
+def test_kwargs_do_yaml_descarta_chave_administrativa(monkeypatch) -> None:
+    """Chaves administrativas (ex.: ``ativa``) não chegam ao construtor (#21)."""
+    from src.models import factory as F
+
+    def cfg_patch(*args, **kwargs):
+        if args == ("models", "boosting"):
+            return {"max_iter": 500, "ativa": True, "busca_max_iter": [1, 2]}
+        return None
+
+    monkeypatch.setattr(F.C, "cfg", cfg_patch)
+
+    with pytest.warns(RuntimeWarning, match="ativa"):
+        params = F._kwargs_do_yaml("boosting")
+
+    assert params == {"max_iter": 500}
+
+
+def test_kwargs_do_yaml_descarta_typo(monkeypatch) -> None:
+    """Erro de digitação gera aviso em vez de chegar silenciosamente ao construtor (#21)."""
+    from src.models import factory as F
+
+    def cfg_patch(*args, **kwargs):
+        if args == ("models", "logistic"):
+            return {"C": 1.0, "max_iters": 1000}  # typo
+        return None
+
+    monkeypatch.setattr(F.C, "cfg", cfg_patch)
+
+    with pytest.warns(RuntimeWarning, match="max_iters"):
+        params = F._kwargs_do_yaml("logistic")
+
+    assert params == {"C": 1.0}
+
+
+def test_kwargs_do_yaml_mantem_chaves_aceitas(monkeypatch) -> None:
+    """Chaves presentes na assinatura continuam passando (#21, não regride)."""
+    from src.models import factory as F
+
+    def cfg_patch(*args, **kwargs):
+        if args == ("models", "boosting"):
+            return {"max_iter": 500, "class_weight": "balanced"}
+        return None
+
+    monkeypatch.setattr(F.C, "cfg", cfg_patch)
+
+    # Sem warning: ambas as chaves são aceitas
+    params = F._kwargs_do_yaml("boosting")
+    assert params == {"max_iter": 500, "class_weight": "balanced"}
+
+
+def test_build_finalista_aceita_yaml_com_chave_extra(monkeypatch) -> None:
+    """``build_finalista`` não estoura quando o YAML ganha chave administrativa (#21)."""
+    from src.models import factory as F
+
+    original_cfg = F.C.cfg
+
+    def cfg_patch(*args, **kwargs):
+        if args == ("models", "boosting"):
+            return {"max_iter": 5, "ativa": True}
+        return original_cfg(*args, **kwargs)
+
+    monkeypatch.setattr(F.C, "cfg", cfg_patch)
+
+    with pytest.warns(RuntimeWarning, match="ativa"):
+        pipe = F.build_finalista("boosting")
+
+    assert isinstance(pipe, Pipeline)
