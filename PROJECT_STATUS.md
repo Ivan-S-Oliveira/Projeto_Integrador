@@ -3,10 +3,10 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-20T14:54:55Z.
+> Atualizado em 2026-10-20T15:02:15Z.
 
-- Concluídas: **35**
-- Resolvidas pendentes de validação: **17**
+- Concluídas: **36**
+- Resolvidas pendentes de validação: **16**
 - Precisam revisão: **4**
 - Em andamento: **0**
 - Abertas: **66**
@@ -18,7 +18,7 @@
 - 🟨 **#42** Cada notebook encontra a pasta do projeto de um jeito — PRECISA REVISÃO · B + C · Após 03/11
 - 🟨 **#88** A exportação da Pessoa A não tem duas variáveis que o modelo exige — PRECISA REVISÃO · A · Após 03/11
 
-## Detectadas como resolvidas — confirmar no painel (17)
+## Detectadas como resolvidas — confirmar no painel (16)
 
 - 🟪 **#118** Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
 - 🟪 **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
@@ -30,7 +30,6 @@
 - 🟪 **#64** Testes que faltam — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
 - 🟪 **#13** A sazonalidade é criada, mas não entra no modelo — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
 - 🟪 **#12** Intervalos impossíveis entram no modelo como se fossem válidos — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- 🟪 **#21** A fábrica passa qualquer chave nova do YAML ao modelo — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - 🟪 **#38** Sobras no B_07: modo de teste sintético e imports sem uso — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - 🟪 **#122** read_srag sem opção de leitura compacta — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - 🟪 **#11** A sensibilidade de indicadores de ausência não existe no código — RESOLVIDA — PENDENTE DE VALIDAÇÃO · C · Após 03/11
@@ -111,7 +110,7 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (35)
+## Concluídas (36)
 
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -140,6 +139,7 @@ _Nenhum item._
 - ✅ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10 · ⚠ reconfirmar
 - ✅ **#65** test_temporal.py era cópia de test_leakage.py — CONCLUÍDA · C · Concluído
@@ -158,7 +158,7 @@ _Nenhum item._
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-20T14:54:55Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan","items":{
+{"schema_version":3,"generated_at":"2026-10-20T15:02:15Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"file","path":"src/models/logistic.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
@@ -179,7 +179,7 @@ _Nenhum item._
 "18":{"id":"18","status":"done","done":true,"note":"Commit f8e574fc2d4a: \"test(artifact): cobre columns= sem pular validação de alvo e partição [done:#18]\"","updated_at":"2026-10-19T10:10:12-03:00","updated_by":"Ivan-S-Oliveira","evidence":[{"type":"commit","sha":"f8e574fc2d4a294262188e4178d61ce90d879bfc"}],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/data/supervised_artifact.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]}},
 "19":{"id":"19","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"tests/test_config.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]}]}},
 "20":{"id":"20","status":"done","done":true,"note":"","updated_at":"2026-10-20T14:49:28Z","updated_by":"Ivan","evidence":[{"type":"commit","sha":"00d7105cc819","subject":"refactor(factory): unifica aliases de finalista (hist_gradient_boosting → boosting) e remove duplicação em C_15/C_16 [done:#20]","author":"Ivan-S-Oliveira","when":"2026-10-20T11:50:27-03:00","marker":"done"}],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:49:28Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"58832f9c-c735-41d8-a03b-81b6fb76ed0c"}],"dismissed":[],"flags":{},"applied_events":["58832f9c-c735-41d8-a03b-81b6fb76ed0c"]},
-"21":{"id":"21","status":"resolved_pending_validation","done":false,"note":"Commit 00d7105cc819 de Ivan-S-Oliveira alterou src/models/factory.py com linguagem de conclusão. Confirme no painel.","updated_at":"2026-10-20T14:51:29Z","updated_by":"auditoria profunda automática","evidence":[{"type":"commit_source_match","sha":"00d7105cc819","subject":"refactor(factory): unifica aliases de finalista (hist_gradient_boosting → boosting) e remove duplicação em C_15/C_16 [done:#20]","author":"Ivan-S-Oliveira","when":"2026-10-20T11:50:27-03:00","files":["src/models/factory.py"]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-20T14:51:29Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"00d7105cc819"}],"dismissed":[],"flags":{},"auto_prev":"open"},
+"21":{"id":"21","status":"done","done":true,"note":"Commit 00d7105cc819 de Ivan-S-Oliveira alterou src/models/factory.py com linguagem de conclusão. Confirme no painel.","updated_at":"2026-10-20T15:02:08Z","updated_by":"Ivan","evidence":[{"type":"commit_source_match","sha":"00d7105cc819","subject":"refactor(factory): unifica aliases de finalista (hist_gradient_boosting → boosting) e remove duplicação em C_15/C_16 [done:#20]","author":"Ivan-S-Oliveira","when":"2026-10-20T11:50:27-03:00","files":["src/models/factory.py"]}],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:51:29Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"00d7105cc819"},{"at":"2026-10-20T15:02:08Z","by":"Ivan","from":"resolved_pending_validation","to":"done","origin":"human","ref":"594ca1c9-4593-4570-89d9-665e6b0a8dba"}],"dismissed":[],"flags":{},"auto_prev":"open","applied_events":["594ca1c9-4593-4570-89d9-665e6b0a8dba"]},
 "22":{"id":"22","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "23":{"id":"23","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "24":{"id":"24","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
