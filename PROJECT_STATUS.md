@@ -3,10 +3,10 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-20T15:05:06Z.
+> Atualizado em 2026-10-20T15:09:19Z.
 
-- Concluídas: **37**
-- Resolvidas pendentes de validação: **15**
+- Concluídas: **38**
+- Resolvidas pendentes de validação: **14**
 - Precisam revisão: **4**
 - Em andamento: **0**
 - Abertas: **66**
@@ -18,7 +18,7 @@
 - 🟨 **#42** Cada notebook encontra a pasta do projeto de um jeito — PRECISA REVISÃO · B + C · Após 03/11
 - 🟨 **#88** A exportação da Pessoa A não tem duas variáveis que o modelo exige — PRECISA REVISÃO · A · Após 03/11
 
-## Detectadas como resolvidas — confirmar no painel (15)
+## Detectadas como resolvidas — confirmar no painel (14)
 
 - 🟪 **#118** Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
 - 🟪 **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
@@ -30,7 +30,6 @@
 - 🟪 **#13** A sazonalidade é criada, mas não entra no modelo — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
 - 🟪 **#12** Intervalos impossíveis entram no modelo como se fossem válidos — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - 🟪 **#38** Sobras no B_07: modo de teste sintético e imports sem uso — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
-- 🟪 **#122** read_srag sem opção de leitura compacta — RESOLVIDA — PENDENTE DE VALIDAÇÃO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - 🟪 **#11** A sensibilidade de indicadores de ausência não existe no código — RESOLVIDA — PENDENTE DE VALIDAÇÃO · C · Após 03/11
 - 🟪 **#24** Curvas de calibração calculadas de dois jeitos — RESOLVIDA — PENDENTE DE VALIDAÇÃO · C · Após 03/11
 - 🟪 **#32** Textos antigos no código (dt_notific, nomes de gates) — RESOLVIDA — PENDENTE DE VALIDAÇÃO · C · Após 03/11
@@ -109,7 +108,7 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (37)
+## Concluídas (38)
 
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -141,6 +140,7 @@ _Nenhum item._
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#122** read_srag sem opção de leitura compacta — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10 · ⚠ reconfirmar
 - ✅ **#65** test_temporal.py era cópia de test_leakage.py — CONCLUÍDA · C · Concluído
 - ✅ **#67** Rodar a suíte de testes depois das correções — CONCLUÍDA · C · Concluído
@@ -158,7 +158,7 @@ _Nenhum item._
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-20T15:05:06Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
+{"schema_version":3,"generated_at":"2026-10-20T15:09:19Z","last_scanned_commit":"e94dbe2ca01413248c6929586e5af4054572bd35","scan":{"seen":[],"deep_seen":[],"migrated_from":"e94dbe2ca01413248c6929586e5af4054572bd35"},"audit":{"generated_at":"2026-10-20T14:51:29Z","by":"Ivan","head":"00d7105cc8192f7bfc552afbb7fe256ce02ba723","files_scanned":77,"counts":{"critical":0,"high":2,"medium":17,"low":42},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/models/calibration.py"},{"type":"file","path":"src/models/logistic.py"},{"type":"validation","ok":false,"checks":[{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
@@ -272,7 +272,7 @@ _Nenhum item._
 "119":{"id":"119","status":"open","done":false,"note":"","updated_at":"2026-10-18T14:30:00Z","updated_by":"baseline","evidence":[],"comments":[],"origin":"baseline","history":[],"dismissed":[],"flags":{}},
 "120":{"id":"120","status":"done","done":true,"note":"Commit 41775ea7798b: chore(status): sincroniza painel [done:#120]","updated_at":"2026-10-19T12:14:09-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"5604471e00ed0c9f2d635105d32ac5b9e5062d61"},{"type":"commit","sha":"47ff2fe4119d46364d6225c75cf864bf3c64ac20","marker":"done"},{"type":"manual_confirmation","event_id":"828f37af-2e6f-4be2-a2b3-0d936cfa671a","when":"2026-10-19T15:12:59Z"},{"type":"commit","sha":"41775ea7798bdc284e631ff2ecb12b221ebfc51a"}],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{}},
 "121":{"id":"121","status":"done","done":true,"note":"foi se aplicados os testes e agora não esta fazendo o coorte pesado","updated_at":"2026-10-20T14:18:50Z","updated_by":"Ivan","evidence":[{"type":"file","path":"src/features/engineering.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]},{"type":"commit_task_reference","sha":"72e839fb1013","subject":"tarefa 121 arrumada","author":"Ivan-S-Oliveira","when":"2026-10-19T14:07:58-03:00","completion_language":false}],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:18:50Z","by":"Ivan","from":"in_progress","to":"done","origin":"human","ref":"a054f225-cdbb-4bb9-a35a-9a0fa4a69b09"}],"dismissed":[],"flags":{},"applied_events":["a054f225-cdbb-4bb9-a35a-9a0fa4a69b09"]},
-"122":{"id":"122","status":"resolved_pending_validation","done":false,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-19T19:37:30Z","updated_by":"auditoria profunda automática","evidence":[{"type":"file","path":"src/utils/storage.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"auto","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/utils/storage.py"]}]}},
+"122":{"id":"122","status":"done","done":true,"note":"Os problemas que motivaram a revisão não aparecem mais. Confirme no painel.","updated_at":"2026-10-20T15:09:10Z","updated_by":"Ivan","evidence":[{"type":"file","path":"src/utils/storage.py"},{"type":"validation","ok":false,"checks":[{"name":"existência","ok":false,"detail":[".pytest_cache/v/cache/nodeids"]},{"name":"compileall","ok":true,"detail":""},{"name":"pytest rápido","ok":false,"detail":"C:\\Users\\ivanI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n"}]}],"comments":[],"origin":"human","history":[{"at":"2026-10-19T19:37:30Z","by":"auditoria profunda automática","from":"needs_review","to":"resolved_pending_validation","origin":"auto"},{"at":"2026-10-20T15:09:10Z","by":"Ivan","from":"resolved_pending_validation","to":"done","origin":"human","ref":"c4477b33-4d52-4dfc-b4e9-a268bc6f602a"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/utils/storage.py"]}]},"applied_events":["c4477b33-4d52-4dfc-b4e9-a268bc6f602a"]},
 "123":{"id":"123","status":"done","done":true,"note":"pytest tests/test_supervised_artifact.py -q → 14 passed; C_11..C_15 usam partitions=(\"treino\",\"validacao\")","updated_at":"2026-10-19T13:14:39.577Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["src/data/supervised_artifact.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]}},
 "124":{"id":"124","status":"done","done":true,"note":"","updated_at":"2026-10-20T14:31:19Z","updated_by":"Ivan","evidence":[],"comments":[],"origin":"human","history":[{"at":"2026-10-20T14:31:19Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"36c1bdf9-845c-4738-be60-b2451cdaa87d"}],"dismissed":[],"flags":{},"applied_events":["36c1bdf9-845c-4738-be60-b2451cdaa87d"]},
 "125":{"id":"125","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","evidence":[{"type":"commit","sha":"a91322865c239b30e8621dd56dbe87a10004c8fa"}],"comments":[],"origin":"human","history":[],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
