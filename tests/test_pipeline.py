@@ -142,3 +142,47 @@ def test_get_parquet_usa_url_padrao_sem_env_var(
     storage.get_parquet(force=True)
 
     assert chamadas[0] == esperado
+
+def test_read_srag_compactar_delega_para_ler_parquet_enxuto(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``compactar=True`` usa io_eficiente em vez de pandas.read_parquet direto."""
+    import pandas as pd
+    from src.utils import storage
+
+    parquet_sintetico = tmp_path / "srag.parquet"
+    pd.DataFrame({
+        "sg_uf":        ["SP", "RJ", "SP", "MG"],
+        "evolucao":     ["1", "2", "1", "2"],
+        "nu_idade_n":   [30, 45, 60, 22],
+    }).to_parquet(parquet_sintetico, index=False)
+
+    monkeypatch.setattr(storage, "get_parquet", lambda: parquet_sintetico)
+
+    df = storage.read_srag(compactar=True)
+
+    assert len(df) == 4
+    assert isinstance(df["sg_uf"].dtype, pd.CategoricalDtype)
+
+
+def test_read_srag_sem_compactar_mantem_dtypes_originais(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``compactar=False`` (default) preserva o comportamento antigo."""
+    import pandas as pd
+    from src.utils import storage
+
+    parquet_sintetico = tmp_path / "srag.parquet"
+    pd.DataFrame({
+        "sg_uf":    ["SP", "RJ", "SP", "MG"],
+        "evolucao": ["1", "2", "1", "2"],
+    }).to_parquet(parquet_sintetico, index=False)
+
+    monkeypatch.setattr(storage, "get_parquet", lambda: parquet_sintetico)
+
+    df = storage.read_srag()
+
+    assert len(df) == 4
+    assert not isinstance(df["sg_uf"].dtype, pd.CategoricalDtype)

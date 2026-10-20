@@ -3,9 +3,9 @@ Contrato oficial de acesso ao Parquet de SRAG.
 
 Fluxo: ``GitHub Release → data/processed/<DATA_VERSION>/srag.parquet``.
 
-Tenta o download público via release; se falhar e houver ``GITHUB_TOKEN``,
-usa o asset privado via API do GitHub. Grava um sidecar ``<arquivo>.sha256``
-para reprodutibilidade. ``force=True`` rebaixa e descarta o sidecar antigo.
+Tenta download público via release; se falhar e houver ``GITHUB_TOKEN``,
+usa o asset privado via API do GitHub. Grava sidecar ``<arquivo>.sha256``
+para reprodutibilidade; ``force=True`` rebaixa e descarta o sidecar antigo.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ import requests
 
 from src.utils import config as C
 from src.utils.env import PROCESSED, get_secret
+from src.utils.io_eficiente import ler_parquet_enxuto
 
 
 PARQUET_MAGIC: bytes = b"PAR1"
@@ -79,7 +80,6 @@ def _abrir_stream(
         if r.ok:
             return r
 
-        # 4xx permanente (excepto 429): falha sem retentar.
         if 400 <= r.status_code < 500 and r.status_code != 429:
             r.close()
             r.raise_for_status()
@@ -274,14 +274,33 @@ def get_parquet(
 def read_srag(
     columns: Iterable[str] | None = None,
     filters: list[tuple] | None = None,
+    *,
+    compactar: bool = False,
+    colunas_texto_livre: Iterable[str] = (),
 ) -> pd.DataFrame:
     """Lê o Parquet de SRAG como DataFrame.
 
-    ``columns`` restringe o subconjunto carregado (pushdown do Parquet);
-    ``filters`` segue o formato de ``pd.read_parquet(filters=...)``.
+    ``columns`` faz pushdown (só lê as colunas pedidas) e ``filters`` segue
+    o formato de ``pd.read_parquet(filters=...)``.
+
+    ``compactar=True`` delega para ``io_eficiente.ler_parquet_enxuto``:
+    texto vira ``category``, inteiros descem de largura, floats viram
+    ``float32``. Reduz o pico de memória em bases grandes, ao custo de
+    tipos não-nativos. ``colunas_texto_livre`` lista colunas que devem
+    permanecer como texto livre (não viram ``category``).
+
+    O comportamento antigo (dtypes nativos do pandas) continua sendo o
+    padrão: ``compactar=False``.
     """
-    return pd.read_parquet(
-        get_parquet(),
-        columns=list(columns) if columns is not None else None,
-        filters=filters,
-    )
+    caminho = get_parquet()
+    columns_list = list(columns) if columns is not None else None
+
+    if compactar:
+        return ler_parquet_enxuto(
+            caminho,
+            columns=columns_list,
+            filters=filters,
+            colunas_texto_livre=tuple(colunas_texto_livre),
+        )
+
+    return pd.read_parquet(caminho, columns=columns_list, filters=filters)
