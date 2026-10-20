@@ -199,3 +199,61 @@ def test_logistic_falha_com_sklearn_antiga(monkeypatch: pytest.MonkeyPatch) -> N
 
     with pytest.raises(RuntimeError, match=r"scikit-learn>=1\.8"):
         L.build_logistic_pipeline()
+
+# ---------------------------------------------------------------------------
+# Contrato de nomes da fábrica de finalistas (#20)
+# ---------------------------------------------------------------------------
+
+def test_build_finalista_aceita_nomes_do_yaml() -> None:
+    """Cada nome em `selecao_modelos.finalistas` precisa construir um Pipeline.
+
+    O YAML usa nomes descritivos (`hist_gradient_boosting`), a fábrica
+    interna trabalha com nomes curtos (`boosting`). Os apelidos vivem em
+    `src/models/factory.py` — este teste garante a tradução ponta a ponta
+    e falha cedo se alguém renomear um finalista no YAML sem adicionar o
+    alias correspondente na fábrica.
+    """
+    from src.models.factory import build_finalista
+
+    finalistas = list(C.cfg("selecao_modelos", "finalistas") or [])
+    if not finalistas:
+        pytest.skip("selecao_modelos.finalistas vazio no YAML.")
+
+    for nome in finalistas:
+        pipe = build_finalista(nome)
+        assert isinstance(pipe, Pipeline), f"{nome}: não é Pipeline"
+        assert list(pipe.named_steps.keys()) == ["pre", "clf"], nome
+
+
+def test_build_finalista_aceita_nomes_canonicos() -> None:
+    """Os nomes canônicos continuam funcionando direto."""
+    from src.models.factory import build_finalista
+
+    for nome in ("boosting", "logistic"):
+        assert isinstance(build_finalista(nome), Pipeline)
+
+
+def test_build_finalista_rejeita_nome_desconhecido() -> None:
+    from src.models.factory import build_finalista
+
+    with pytest.raises(ValueError, match="finalista desconhecido"):
+        build_finalista("xgboost_inexistente")
+
+
+def test_finalistas_aceitos_inclui_canonicos_e_apelidos() -> None:
+    """`finalistas_aceitos()` deve expor nomes canônicos e apelidos do YAML."""
+    from src.models.factory import finalistas_aceitos
+
+    aceitos = finalistas_aceitos()
+    assert "boosting" in aceitos
+    assert "logistic" in aceitos
+    assert "hist_gradient_boosting" in aceitos
+
+
+def test_finalistas_disponiveis_apenas_canonicos() -> None:
+    """`finalistas_disponiveis()` continua devolvendo somente os nomes canônicos."""
+    from src.models.factory import finalistas_disponiveis
+
+    disponiveis = finalistas_disponiveis()
+    assert "hist_gradient_boosting" not in disponiveis
+    assert set(disponiveis) == {"boosting", "logistic"}

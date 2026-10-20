@@ -15,7 +15,9 @@ from src.models.calibration import (
 from src.models.factory import (
     Finalista,
     build_finalista,
+    finalistas_aceitos,
     finalistas_disponiveis,
+    resolver_finalista,
 )
 from src.models.logistic import (
     Penalty,
@@ -68,4 +70,7 @@ __all__ = [
     "Finalista",
     "build_finalista",
     "finalistas_disponiveis",
+    "finalistas_aceitos",
+    "finalistas_disponiveis",
+    "resolver_finalista",
 ]
