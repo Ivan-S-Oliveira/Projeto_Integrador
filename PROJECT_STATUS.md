@@ -3,13 +3,13 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-21T18:57:06Z.
+> Atualizado em 2026-10-21T18:57:23Z.
 
-- Concluídas: **5**
+- Concluídas: **6**
 - Resolvidas pendentes de validação: **5**
 - Precisam revisão: **0**
 - Em andamento: **6**
-- Abertas: **106**
+- Abertas: **105**
 
 ## Precisam revisão (a auditoria encontrou problema) (0)
 
@@ -32,7 +32,7 @@ _Nenhum item._
 - 🟦 **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - 🟦 **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — EM ANDAMENTO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
 
-## Abertas (106)
+## Abertas (105)
 
 - ⬜ **#86** Levar a partição por hash do notebook para src/data/split.py — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
 - ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -42,7 +42,6 @@ _Nenhum item._
 - ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
 - ⬜ **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
-- ⬜ **#3** Garantir que a busca de hiperparâmetros termine a tempo — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
 - ⬜ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
 - ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
 - ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
@@ -141,19 +140,20 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (5)
+## Concluídas (6)
 
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#3** Garantir que a busca de hiperparâmetros termine a tempo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
 - ✅ **#18** Carregar só algumas colunas do artefato pula a validação — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-21T18:57:06Z","scan":{"seen":[],"deep_seen":[]},"audit":{},"published_by":"Ivan","items":{
+{"schema_version":3,"generated_at":"2026-10-21T18:57:23Z","scan":{"seen":[],"deep_seen":[]},"audit":{},"published_by":"Ivan-S-Oliveira","items":{
 "1":{"id":"1","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
-"3":{"id":"3","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
+"3":{"id":"3","status":"done","done":true,"note":"","comments":[],"updated_at":"2026-10-21T18:57:14Z","updated_by":"Ivan","origin":"human","evidence":[],"history":[{"at":"2026-10-21T18:57:14Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"d5697899-04a8-4745-9517-97d159c45dcc"}],"dismissed":[],"flags":{},"applied_events":["d5697899-04a8-4745-9517-97d159c45dcc"]},
 "4":{"id":"4","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "5":{"id":"5","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "6":{"id":"6","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","comments":[],"updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","origin":"commit","evidence":[{"type":"commit","sha":"a91322865c23","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","author":"mateus-so","when":"2026-10-18T17:23:01-03:00","marker":"done"}],"history":[{"at":"2026-10-18T17:23:01-03:00","by":"mateus-so","from":"open","to":"done","origin":"commit","ref":"a91322865c23"}],"dismissed":[],"flags":{}},
