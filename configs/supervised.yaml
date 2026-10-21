@@ -69,7 +69,38 @@ features:
   - renal
   - obesidade
   - out_morbi
-  final: null
+  final:
+  - idade_anos
+  - dias_sintomas_ate_internacao
+  - sexo_categoria
+  - cs_gestant
+  - cs_raca
+  - cs_zona
+  - ave_suino
+  - febre
+  - tosse
+  - garganta
+  - dispneia
+  - diarreia
+  - vomito
+  - dor_abd
+  - fadiga
+  - perd_olft
+  - perd_pala
+  - outro_sin
+  - puerpera
+  - cardiopati
+  - hematologi
+  - sind_down
+  - hepatica
+  - asma
+  - diabetes
+  - neurologic
+  - pneumopati
+  - imunodepre
+  - renal
+  - obesidade
+  - out_morbi
   contexto_incremental:
   - cs_escol_n
   - sg_uf
@@ -115,6 +146,18 @@ features:
   - out_trat
   - cluster
   - cluster_rotulo
+  - nu_notific
+  - nu_notific_normalizado
+  - id_registro
+  - arquivo_origem
+  - data_snapshot
+  - hospital
+  - dt_interna
+  - dt_sin_pri
+  - dt_notific
+  - sem_pri
+  - group_id
+  - particao
   engenharia:
     intervalo_max_dias: 60
     intervalo_politica: sinalizar
@@ -161,6 +204,12 @@ features:
     - cs_sexo
     - dt_sin_pri
     - dt_interna
+  final_metadata:
+    versao: v1
+    origem: selecao_auditada_da_coorte_provisoria_b
+    status: congelada_para_validacao_g1
+    teste_consultado: false
+    reabrir_somente_por: falha_material_vazamento_ou_indisponibilidade_na_admissao
 temporal:
   modo: particao_mestra_por_grupo
   seed: 42
@@ -419,17 +468,17 @@ artefatos_coorte:
   contrato_features: feature_contract_v1.json
 gates:
   G1_definicao_alvo_features:
-    descricao: 'Confirmar schema da coorte definitiva, alvo e lista final de features. Inclui a decisao
-      sobre onde ficam saturacao, desc_resp, vacina e vacina_cov.
+    descricao: 'Confirmar schema da coorte definitiva, alvo e lista final de features. Inclui a decisao sobre onde
+      ficam saturacao, desc_resp, vacina e vacina_cov.
 
       '
     status: pendente
     aprovado_por: null
     data: null
   G2_janela_temporal:
-    descricao: Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos mesmos anos com grupos
-      nao vistos; 2020 a 2022 apenas no teste pandemico; 2026 apenas como exploracao posterior. Particao
-      mestra deterministica por grupo, seed 42.
+    descricao: Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos mesmos anos com grupos nao vistos;
+      2020 a 2022 apenas no teste pandemico; 2026 apenas como exploracao posterior. Particao mestra deterministica
+      por grupo, seed 42.
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-18'

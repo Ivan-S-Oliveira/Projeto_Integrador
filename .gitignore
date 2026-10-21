@@ -194,5 +194,6 @@ docs/project_reference_parts/*
 /.srag-status-local/
 /.project-status-local/
 /SRAG_status_discreto_single_markdown/
+/.scripts/
 !/PROJECT_STATUS.md
 # END LOCAL PENDENCIAS PANEL

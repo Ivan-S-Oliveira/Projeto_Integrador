@@ -1,0 +1,114 @@
+{
+  "contract_version": "1.0",
+  "status": "congelado_para_validacao_g1",
+  "source": "configs/supervised.yaml",
+  "seed": 42,
+  "target": {
+    "coluna": "evolucao",
+    "coluna_modelagem": "alvo_obito_srag",
+    "positivos": [
+      2.0
+    ],
+    "negativos": [
+      1.0
+    ],
+    "descartar_outros": true,
+    "sensibilidade_qualquer_obito": {
+      "ativa": true,
+      "positivos": [
+        2.0,
+        3.0
+      ],
+      "negativos": [
+        1.0
+      ]
+    }
+  },
+  "features": {
+    "final": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "fadiga",
+      "perd_olft",
+      "perd_pala",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ],
+    "contexto_incremental": [
+      "cs_escol_n",
+      "sg_uf",
+      "vacina",
+      "vacina_cov"
+    ],
+    "sensibilidade_gravidade_admissao": [
+      "saturacao",
+      "desc_resp"
+    ],
+    "proibidas": [
+      "evolucao",
+      "alvo_obito_srag",
+      "evolucao_normalizada",
+      "evolucao_covid19",
+      "dt_evoluca",
+      "dt_encerra",
+      "dt_digita",
+      "uti",
+      "dt_entuti",
+      "dt_saiduti",
+      "suport_ven",
+      "utilizouvni",
+      "antiviral",
+      "tp_antivir",
+      "out_antiv",
+      "dt_antivir",
+      "trat_cov",
+      "tipo_trat",
+      "dt_trt_cov",
+      "out_trat",
+      "cluster",
+      "cluster_rotulo",
+      "nu_notific",
+      "nu_notific_normalizado",
+      "id_registro",
+      "arquivo_origem",
+      "data_snapshot",
+      "hospital",
+      "dt_interna",
+      "dt_sin_pri",
+      "dt_notific",
+      "sem_pri",
+      "group_id",
+      "particao"
+    ]
+  },
+  "invariants": {
+    "teste_consultado": false,
+    "informacao_posterior_admissao_no_modelo_principal": false,
+    "identificadores_como_preditores": false,
+    "categorias_especiais_fundidas": false
+  }
+}

@@ -1,33 +1,21 @@
-# =============================================================================
-# Decisões metodológicas e parâmetros do estudo
-# =============================================================================
-# Valores com status `proposta` ainda exigem aprovação.
-# "proposta", o item ainda não foi confirmado no dicionário do SIVEP-Gripe.
-# Ao confirmar: atualizar o valor, mudar o status para "aprovada" e registrar
-#
-# `cols`: nomes canônicos SIVEP. Nomes alternativos da base (ex.: internado ->
-# HOSPITAL) são tratados em ALIASES no módulo src/protocolo/verificacoes.py.
-# Os Gates G1 (alvo/features) e G2 (janela temporal) do supervised.yaml são
-# aprovados por A com base nestas decisões.
-# =============================================================================
 versao: '0.5'
 status_decisoes:
   ponto_de_previsao:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   coorte_estrita:
     status: proposta
     responsavel: a_definir
     data: null
   alvo:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   evolucao_desconhecida:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   periodos:
     status: aprovada
     responsavel: time_do_projeto
@@ -37,9 +25,9 @@ status_decisoes:
     responsavel: a_definir
     data: null
   variaveis_proibidas:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   variaveis_condicionais:
     status: proposta
     responsavel: a_definir
@@ -49,9 +37,9 @@ status_decisoes:
     responsavel: a_definir
     data: null
   features_derivadas:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-18'
   split_aleatorio_70_15_15:
     status: supersedida
     responsavel: time_do_projeto
@@ -149,7 +137,7 @@ date_rules:
   - dt_encerra
   - Encerramento anterior à evolução
   - manter com flag
-max_symptom_to_admission_days: 30
+max_symptom_to_admission_days: 60
 max_age_years: 120
 forbidden_vars:
 - EVOLUCAO
@@ -369,7 +357,7 @@ experimentos_split:
     teste_b_uniao_logica_sem_duplicacao: true
     configuracao_congelada_entre_janelas: true
 derivadas:
-  intervalo_max_dias: 30
+  intervalo_max_dias: 60
   periodo_semanas: 52.1775
   faixas_etarias:
     bins:
@@ -397,3 +385,18 @@ derivadas:
     - 60-69
     - 70-79
     - 80+
+intervalo_sintomas_internacao:
+  limite_sinalizacao_dias: 60
+  politica_acima_limite: manter_com_flag
+  politica_intervalo_negativo: auditar_nosocomial_antes_de_excluir
+  exclusao_automatica: false
+duplicidades:
+  remover_duplicidades_exatas: true
+  repeticoes_nao_identicas: manter_sinalizar_e_agrupar
+  escolher_primeira_ocorrencia: false
+  impedir_grupo_em_multiplas_particoes: true
+  destino_grupos_quarentena: pendente_aprovacao_do_time
+dataset_oficial:
+  id: srag-dados-v2
+  caminho_relativo: data/processed/dados-v2/srag.parquet
+  sha256: 96ED6B9D5CEEBAAEA00659F77511112174B04BB980CB243B560C00DD2A8F316C
