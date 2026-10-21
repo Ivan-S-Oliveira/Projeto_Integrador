@@ -3,13 +3,13 @@
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 
-> Atualizado em 2026-10-21T19:04:11Z.
+> Atualizado em 2026-10-21T19:06:10Z.
 
-- Concluídas: **19**
+- Concluídas: **20**
 - Resolvidas pendentes de validação: **45**
 - Precisam revisão: **13**
 - Em andamento: **2**
-- Abertas: **43**
+- Abertas: **42**
 
 ## Precisam revisão (a auditoria encontrou problema) (13)
 
@@ -80,7 +80,7 @@
 - 🟦 **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — EM ANDAMENTO · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
 - 🟦 **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
 
-## Abertas (43)
+## Abertas (42)
 
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#119** Executar o modelo congelado nas duas janelas de teste (E_02) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 23/10
@@ -103,7 +103,6 @@
 - ⬜ **#71** Cuidados de redação no relatório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#112** Atualizar a revisão bibliográfica com busca científica dirigida — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 01/11
 - ⬜ **#59** Documentar 2026 como período parcial e exclusivamente exploratório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
-- ⬜ **#66** Teste lento roda junto com os rápidos — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#122** read_srag sem opção de leitura compacta — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
 - ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
@@ -126,7 +125,7 @@
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (19)
+## Concluídas (20)
 
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#86** Levar a partição por hash do notebook para src/data/split.py — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
@@ -147,6 +146,7 @@
 - ✅ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 - ✅ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
 
 ## Última auditoria profunda
 
@@ -157,7 +157,7 @@
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-21T19:04:11Z","scan":{"seen":[],"deep_seen":[]},"audit":{"generated_at":"2026-10-21T18:58:57Z","by":"Ivan","head":"ab03cdb82542f07ead7525730e2267a92a70c50e","files_scanned":80,"counts":{"critical":0,"high":2,"medium":16,"low":41},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
+{"schema_version":3,"generated_at":"2026-10-21T19:06:10Z","scan":{"seen":[],"deep_seen":[]},"audit":{"generated_at":"2026-10-21T18:58:57Z","by":"Ivan","head":"ab03cdb82542f07ead7525730e2267a92a70c50e","files_scanned":80,"counts":{"critical":0,"high":2,"medium":16,"low":41},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90"]}]},"published_by":"Ivan-S-Oliveira","items":{
 "1":{"id":"1","status":"resolved_pending_validation","done":false,"note":"Commit a91322865c23 de mateus-so alterou src/models/pipeline.py com linguagem de conclusão. Confirme no painel.","comments":[],"updated_at":"2026-10-21T18:58:57Z","updated_by":"auditoria profunda automática","origin":"auto","evidence":[{"type":"commit_source_match","sha":"a91322865c23","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","author":"mateus-so","when":"2026-10-18T17:23:01-03:00","files":["src/models/pipeline.py"]}],"history":[{"at":"2026-10-21T18:58:57Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"a91322865c23"}],"dismissed":[],"flags":{},"auto_prev":"open"},
 "2":{"id":"2","status":"resolved_pending_validation","done":false,"note":"Commit 0f565b58a1b6 de Ivan-S-Oliveira alterou configs/supervised.yaml com linguagem de conclusão. Confirme no painel.","comments":[],"updated_at":"2026-10-21T18:58:57Z","updated_by":"auditoria profunda automática","origin":"auto","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["configs/supervised.yaml"]}],"history":[{"at":"2026-10-21T18:58:57Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"}],"dismissed":[],"flags":{},"auto_prev":"open"},
 "3":{"id":"3","status":"done","done":true,"note":"","comments":[],"updated_at":"2026-10-21T18:57:14Z","updated_by":"Ivan","origin":"human","evidence":[],"history":[{"at":"2026-10-21T18:57:14Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"d5697899-04a8-4745-9517-97d159c45dcc"}],"dismissed":[],"flags":{},"applied_events":["d5697899-04a8-4745-9517-97d159c45dcc"]},
@@ -223,7 +223,7 @@
 "63":{"id":"63","status":"done","done":true,"note":"Commit 17584cfab245 de Ivan-S-Oliveira cita a tarefa com linguagem de conclusão: “resolvendo tarefa 63”. Confirme no painel.","comments":[],"updated_at":"2026-10-21T19:00:19Z","updated_by":"Ivan","origin":"human","evidence":[{"type":"commit_task_reference","sha":"17584cfab245","subject":"resolvendo tarefa 63","author":"Ivan-S-Oliveira","when":"2026-10-19T10:36:13-03:00","completion_language":true}],"history":[{"at":"2026-10-19T10:36:13-03:00","by":"varredura de commits","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"17584cfab245"},{"at":"2026-10-21T19:00:19Z","by":"Ivan","from":"resolved_pending_validation","to":"done","origin":"human","ref":"9da641a5-6297-4ccd-846a-f0904580a839"}],"dismissed":[],"flags":{},"auto_prev":"open","applied_events":["9da641a5-6297-4ccd-846a-f0904580a839"]},
 "64":{"id":"64","status":"done","done":true,"note":"Commit 0f565b58a1b6 de Ivan-S-Oliveira alterou tests/test_config.py, tests/test_features.py com linguagem de conclusão. Confirme no painel.","comments":[],"updated_at":"2026-10-21T19:03:49Z","updated_by":"Ivan","origin":"human","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["tests/test_config.py","tests/test_features.py"]}],"history":[{"at":"2026-10-21T18:58:57Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"},{"at":"2026-10-21T19:03:49Z","by":"Ivan","from":"resolved_pending_validation","to":"done","origin":"human","ref":"47f5b66d-6f1f-45f3-9075-ca3264e8cb62"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]},"auto_prev":"open","applied_events":["47f5b66d-6f1f-45f3-9075-ca3264e8cb62"]},
 "65":{"id":"65","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
-"66":{"id":"66","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
+"66":{"id":"66","status":"done","done":true,"note":"","comments":[],"updated_at":"2026-10-21T19:06:00Z","updated_by":"Ivan","origin":"human","evidence":[],"history":[{"at":"2026-10-21T19:06:00Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"ba56b34e-e228-4610-8b16-ccc513ff217a"}],"dismissed":[],"flags":{},"applied_events":["ba56b34e-e228-4610-8b16-ccc513ff217a"]},
 "67":{"id":"67","status":"resolved_pending_validation","done":false,"note":"Commit 0f565b58a1b6 de Ivan-S-Oliveira alterou tests/test_config.py, tests/test_features.py com linguagem de conclusão. Confirme no painel.","comments":[],"updated_at":"2026-10-21T18:58:57Z","updated_by":"auditoria profunda automática","origin":"auto","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["tests/test_config.py","tests/test_features.py"]}],"history":[{"at":"2026-10-21T18:58:57Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"absolute-path","message":"Caminho local absoluto encontrado.","paths":["tests/test_config.py"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["tests/test_supervised_artifact.py"]}]},"auto_prev":"open"},
 "68":{"id":"68","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "69":{"id":"69","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
