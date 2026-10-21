@@ -1,5 +1,6 @@
 version: 3
 seed: 42
+
 target:
   coluna: evolucao
   coluna_modelagem: alvo_obito_srag
@@ -15,7 +16,9 @@ target:
     - 3.0
     negativos:
     - 1.0
+
 coluna_tempo: dt_interna
+
 periodo:
   cobertura_fonte:
     ano_inicial: 2019
@@ -35,6 +38,7 @@ periodo:
   - 2022
   exploracao_opcional:
   - 2026
+
 features:
   numericas:
   - idade_anos
@@ -115,9 +119,7 @@ features:
     prefixo_esperado: missingindicator_
   sensibilidade_contadores_clinicos:
     ativa: false
-    motivo: 'Os contadores agregados podem duplicar o peso das variaveis individuais das quais foram derivados.
-
-      '
+    motivo: Os contadores agregados podem duplicar o peso das variaveis individuais das quais foram derivados.
     colunas:
     - n_sintomas_confirmados
     - n_sintomas_avaliados
@@ -210,6 +212,7 @@ features:
     status: congelada_para_validacao_g1
     teste_consultado: false
     reabrir_somente_por: falha_material_vazamento_ou_indisponibilidade_na_admissao
+
 temporal:
   modo: particao_mestra_por_grupo
   seed: 42
@@ -220,8 +223,8 @@ temporal:
   coluna_estratificacao_geografica: regiao_residencia
   gravar_particao_na_coorte: true
   permitir_novo_sorteio: false
-  metodo_particao: hash_grupo_estratificado_v1
-  min_grupos_por_estrato: 3
+  metodo_particao: hash_grupo_estratificado_mestre_v1
+  min_grupos_por_estrato: 5
   fallback_estratificacao: reduzir_geografia_e_registrar_no_manifesto
   teste_aberto_uma_unica_vez: true
   blocos:
@@ -231,6 +234,7 @@ temporal:
       - 2023
       - 2024
       - 2025
+      fracao: 0.70
       papel: treino
       influencia_decisoes: true
     val_tune:
@@ -239,6 +243,7 @@ temporal:
       - 2023
       - 2024
       - 2025
+      fracao: 0.05
       papel: selecao_de_features_geografia_e_tuning
       influencia_decisoes: true
     val_cal:
@@ -247,6 +252,7 @@ temporal:
       - 2023
       - 2024
       - 2025
+      fracao: 0.05
       papel: calibracao_e_escolha_de_limiar
       influencia_decisoes: true
     val_meas:
@@ -255,6 +261,7 @@ temporal:
       - 2023
       - 2024
       - 2025
+      fracao: 0.05
       papel: confirmacao_intermediaria_pre_teste
       influencia_decisoes: false
     test_ref:
@@ -263,6 +270,7 @@ temporal:
       - 2023
       - 2024
       - 2025
+      fracao: 0.15
       papel: teste_a_resultado_principal
       influencia_decisoes: false
       requer_gate: G9_holdout
@@ -295,6 +303,7 @@ temporal:
     teste_b_uniao_logica_sem_duplicacao: true
     configuracao_congelada_entre_janelas: true
     preprocessamento_ajustado_so_no_treino: true
+
 missingness:
   vazio_nao_e_nao: true
   ignorado_nao_e_nao: true
@@ -308,6 +317,7 @@ missingness:
   indicadores_ausencia:
     pipeline_principal: false
     sensibilidade: true
+
 models:
   baseline:
     strategy: prior
@@ -373,12 +383,14 @@ models:
     l2_regularization: 0.0
     early_stopping: false
     class_weight: balanced
+
 tuning:
   metrica_principal: pr_auc
   concentrar_nos_dois_melhores: true
   usar_apenas_treino_validacao: true
   teste_proibido_durante_tuning: true
   max_configuracoes_por_modelo: 30
+
 calibracao:
   ativa: true
   metodo: null
@@ -387,6 +399,7 @@ calibracao:
   - isotonic
   fonte: validacao
   comparar_brier_antes_depois: true
+
 limiar:
   default: 0.5
   otimo: null
@@ -397,6 +410,7 @@ limiar:
   - precision
   min_precision: null
   selecionar_somente_na_validacao: true
+
 avaliacao:
   metrica_principal: pr_auc
   metricas:
@@ -447,6 +461,7 @@ avaliacao:
   relatar_por_ano: true
   relatar_prevalencia: true
   relatar_pr_auc_sobre_prevalencia: true
+
 sensibilidades:
   temporal:
     ativa: true
@@ -458,6 +473,7 @@ sensibilidades:
     ativa: true
   alvo_qualquer_obito:
     ativa: true
+
 artefatos_coorte:
   parquet: coorte_final.parquet
   waterfall: coorte_waterfall.csv
@@ -466,65 +482,62 @@ artefatos_coorte:
   particao_mestra: partitions_master.parquet
   manifesto_particao: manifesto_particao.json
   contrato_features: feature_contract_v1.json
+
 gates:
   G1_definicao_alvo_features:
-    descricao: 'Confirmar schema da coorte definitiva, alvo e lista final de features. Inclui a decisao sobre onde
-      ficam saturacao, desc_resp, vacina e vacina_cov.
-
-      '
+    descricao: >-
+      Confirmar schema da coorte definitiva, alvo e lista final de features.
+      Inclui a decisao sobre onde ficam saturacao, desc_resp, vacina e vacina_cov.
     status: pendente
     aprovado_por: null
     data: null
   G2_janela_temporal:
-    descricao: Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos mesmos anos com grupos nao vistos;
-      2020 a 2022 apenas no teste pandemico; 2026 apenas como exploracao posterior. Particao mestra deterministica
+    descricao: >-
+      Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos
+      mesmos anos com grupos nao vistos; 2020 a 2022 apenas no teste pandemico;
+      2026 apenas como exploracao posterior. Particao mestra deterministica
       por grupo, seed 42.
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-18'
   G4_baseline:
-    descricao: 'Rodar DummyClassifier e registrar as metricas de referencia.
-
-      '
+    descricao: Rodar DummyClassifier e registrar as metricas de referencia.
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-11'
   G5_pilotos:
-    descricao: 'Rodar regressao logistica, arvore, random forest e boosting sem consultar o teste.
-
-      '
+    descricao: Rodar regressao logistica, arvore, random forest e boosting sem consultar o teste.
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-11'
   G6_finalistas_tuning:
-    descricao: 'Selecionar no maximo dois finalistas e executar tuning limitado. Ao final, preencher selecao_modelos.finalista_escolhido.
-
-      '
+    descricao: >-
+      Selecionar no maximo dois finalistas e executar tuning limitado.
+      Ao final, preencher selecao_modelos.finalista_escolhido.
     status: pendente
     aprovado_por: null
     data: null
   G7_calibracao:
-    descricao: 'Escolher o metodo de calibracao usando apenas treino e validacao.
-
-      '
+    descricao: Escolher o metodo de calibracao usando apenas treino e validacao.
     status: pendente
     aprovado_por: null
     data: null
   G8_limiar:
-    descricao: 'Escolher o limiar operacional usando apenas a validacao.
-
-      '
+    descricao: Escolher o limiar operacional usando apenas a validacao.
     status: pendente
     aprovado_por: null
     data: null
   G9_holdout:
-    descricao: Liberar test_ref e test_pandemic uma unica vez depois de congelar features, modelo, hiperparametros,
-      calibrador e limiar. O estado aprovado libera o acesso; executado registra a consulta e e terminal.
+    descricao: >-
+      Liberar test_ref e test_pandemic uma unica vez depois de congelar
+      features, modelo, hiperparametros, calibrador e limiar. O estado
+      aprovado libera o acesso; executado registra a consulta e e terminal.
     status: pendente
     aprovado_por: null
     data: null
     executado_em: null
     n_acessos: 0
+
 selecao_modelos:
   status: shortlist_provisoria
   origem: pilotos

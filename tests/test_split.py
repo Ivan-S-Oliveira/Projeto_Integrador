@@ -23,6 +23,7 @@ from src.data.split import (
     PARTICOES_CANONICAS,
     SplitWarning,
     atribuir_particao_estratificada_por_hash,
+    criar_particao_mestra,
     criar_particoes_agrupadas,
 )
 
@@ -370,3 +371,61 @@ def test_hash_sem_grupo_nulo_ou_estrato_nulo() -> None:
     df_bad.loc[df_bad.index[0], "grupo"] = None
     with pytest.raises(ValueError, match="valores ausentes"):
         _hash_particao(df_bad)
+
+def _df_master(seed=0, anos=None):
+    rng = np.random.default_rng(seed)
+    anos = anos or [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+    linhas = []
+    gid = 0
+    for ano in anos:
+        for _ in range(100):  # 100 grupos por ano
+            g = f"g{gid:04d}"; gid += 1
+            alvo = int(rng.integers(0, 2))
+            regiao = rng.choice(["N", "SE", "S"])
+            for _ in range(int(rng.integers(1, 4))):
+                linhas.append({
+                    "group_id": g, "ano_internacao": ano,
+                    "alvo_obito_srag": alvo, "regiao_residencia": regiao,
+                })
+    return pd.DataFrame(linhas)
+
+
+TEMPORAL_CFG = {
+    "seed": 42,
+    "min_grupos_por_estrato": 5,
+    "coluna_particao": "particao",
+    "blocos": {
+        "train_ref":     {"anos": [2019, 2023, 2024, 2025], "fracao": 0.70},
+        "val_tune":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
+        "val_cal":       {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
+        "val_meas":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
+        "test_ref":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.15},
+        "test_pandemic": {"anos": [2020, 2021, 2022]},
+    },
+}
+
+
+def test_particao_mestra_pandemia_isolada():
+    out, m = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
+    assert set(out.loc[out.ano_internacao.isin([2020, 2021, 2022]), "particao"]) == {"test_pandemic"}
+    assert set(out.loc[out.ano_internacao.isin([2019, 2023, 2024, 2025]), "particao"]) <= {
+        "train_ref", "val_tune", "val_cal", "val_meas", "test_ref",
+    }
+
+
+def test_particao_mestra_disjuncao_por_grupo():
+    out, _ = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
+    assert (out.groupby("group_id")["particao"].nunique() == 1).all()
+
+
+def test_particao_mestra_2026_marcado_exploracao():
+    out, m = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
+    assert set(out.loc[out.ano_internacao == 2026, "particao"]) == {"exploracao"}
+    assert m["blocos"]["exploracao"]["n_linhas"] > 0
+
+
+def test_particao_mestra_manifesto_tem_hash_por_bloco():
+    _, m = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
+    for nome in ("train_ref", "val_tune", "val_cal", "val_meas", "test_ref", "test_pandemic"):
+        assert m["blocos"][nome]["n_linhas"] > 0
+        assert m["blocos"][nome]["hash_bloco"]
