@@ -171,7 +171,10 @@ def run(args: list[str], root: Path, timeout: int = 120, check: bool = False) ->
             timeout=timeout,
         )
     except subprocess.TimeoutExpired as exc:
-        return subprocess.CompletedProcess(args, 124, exc.stdout or "", "timeout")
+        stdout = exc.stdout or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode("utf-8", errors="replace")
+        return subprocess.CompletedProcess(args, 124, stdout, "timeout")
     if check and result.returncode:
         raise AuditError(result.stderr.strip() or result.stdout.strip() or "Command failed")
     return result
@@ -610,7 +613,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
+            reconfigure = getattr(stream, "reconfigure", None)
+            if callable(reconfigure):
+                reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
     args = parse_args()

@@ -836,10 +836,12 @@ class Redactor:
             for index, line in enumerate(lines):
                 new_line, changed = self._redact_assignment(line, python_like=python_like)
                 if changed:
-                    key = ASSIGN_RE.match(line).group("key")
+                    match = ASSIGN_RE.match(line)
                     lines[index] = new_line
-                    events.append({"line": index + 1, "kind": "secret-assignment",
-                                   "detail": f"value of `{key}` removed"})
+                    if match is not None:
+                        key = match.group("key")
+                        events.append({"line": index + 1, "kind": "secret-assignment",
+                                       "detail": f"value of `{key}` removed"})
             if lines:
                 text = "\n".join(lines)
         text = self.replace_paths(text, events)
@@ -1927,7 +1929,7 @@ def load_yaml_strict(text):
             if key in seen:
                 duplicates.append(f"{key!r} (line {key_node.start_mark.line + 1})")
             seen.add(key)
-        return yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+        return loader.construct_mapping(node, deep=deep)
 
     DupLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
     try:
@@ -2637,7 +2639,7 @@ def render_tree(inventory):
     for d in sorted(dirs):
         depth = 0 if d == "." else d.count("/") + 1
         name = "./" if d == "." else Path(d).name + "/"
-        files_count, size = dirs.get(d)
+        files_count, size = dirs[d]
         lines.append(f"{'  ' * depth}{name}  ({files_count} files, {human_bytes(size)})")
     return code_block("\n".join(lines), "text")
 
@@ -3083,6 +3085,7 @@ def build_reference(root, args):
                 if error:
                     as_metadata(record, absolute, f"archive not listed: {error}")
                     continue
+                text = text or ""
                 if args.hash_binaries:
                     record["sha256"] = sha256_file(absolute)
                 record.update(category="archive", mode="listing", lines=len(text.splitlines()))
@@ -3143,6 +3146,7 @@ def build_reference(root, args):
 
             # Notebooks.
             if suffix == ".ipynb":
+                nb = {}
                 try:
                     analysis, nb = analyze_notebook(rel, decoded, internal_roots)
                 except Exception as exc:
@@ -3924,7 +3928,9 @@ def write_txt_parts(parts_dir, text, max_mb):
 def main():
     for stream in (sys.stdout, sys.stderr):
         try:
-            stream.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles
+            reconfigure = getattr(stream, "reconfigure", None)
+            if callable(reconfigure):
+                reconfigure(encoding="utf-8", errors="replace")  # Windows consoles
         except Exception:
             pass
     args = parse_args()
