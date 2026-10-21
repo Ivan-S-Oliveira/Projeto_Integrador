@@ -197,3 +197,6 @@ docs/project_reference_parts/*
 /.scripts/
 !/PROJECT_STATUS.md
 # END LOCAL PENDENCIAS PANEL
+docs/PROJECT_COMPLETE_REFERENCE.txt
+docs/PROJECT_COVERAGE.csv
+docs/PROJECT_FILES.jsonl
