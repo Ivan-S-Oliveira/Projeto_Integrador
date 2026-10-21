@@ -1,0 +1,87 @@
+contract:
+  id: final_cohort_v1
+  version: 1
+  status: candidate
+  description: Contrato populacional da coorte definitiva inicial do projeto SRAG.
+
+source:
+  path: data/processed/dados-v2/srag.parquet
+  manifest_path: data/manifest_dados-v2.yaml
+
+period:
+  start: "2019-01-01"
+  end: "2026-12-31"
+
+target:
+  source_column: evolucao
+  output_column: alvo_obito_srag
+  mapping:
+    "1": 0
+    "2": 1
+  excluded_codes:
+    - "3"
+    - "9"
+  exclude_missing: true
+
+audit:
+  max_symptom_to_admission_days: 60
+  rule_order:
+    - hospital_nao_confirmado
+    - dt_interna_invalida
+    - evolucao_fora_alvo_principal
+    - dt_interna_antes_periodo
+    - dt_interna_apos_periodo
+    - intervalo_sintomas_negativo
+    - intervalo_sintomas_maior_limite
+
+  rules:
+    hospital_nao_confirmado:
+      action: approved_exclusion
+      decision_id: D_COORTE_001
+      rationale: A população do estudo exige hospital igual a 1.
+
+    dt_interna_invalida:
+      action: approved_exclusion
+      decision_id: D_COORTE_002
+      rationale: A data de internação é a âncora temporal obrigatória do estudo.
+
+    evolucao_fora_alvo_principal:
+      action: approved_exclusion
+      decision_id: D_COORTE_003
+      rationale: O alvo principal aceita somente cura e óbito por SRAG.
+
+    dt_interna_antes_periodo:
+      action: approved_exclusion
+      decision_id: D_COORTE_004
+      rationale: O período auditável da coorte começa em 2019.
+
+    dt_interna_apos_periodo:
+      action: approved_exclusion
+      decision_id: D_COORTE_005
+      rationale: O período auditável da coorte termina em 2026.
+
+    intervalo_sintomas_negativo:
+      action: audit_only
+      decision_id: null
+      rationale: A exclusão depende da auditoria de volume, sobreposição e distribuição anual.
+
+    intervalo_sintomas_maior_limite:
+      action: audit_only
+      decision_id: null
+      rationale: O limite de 60 dias será avaliado antes de promover a regra para exclusão.
+
+required_columns:
+  - hospital
+  - dt_interna
+  - dt_sin_pri
+  - evolucao
+
+outputs:
+  candidate_directory: outputs/coorte_candidata
+  candidate_parquet: outputs/coorte_candidata/coorte_final.parquet
+  audit_summary: outputs/coorte_candidata/resumo_regras.csv
+  simulated_waterfall: outputs/coorte_candidata/waterfall_simulado.csv
+  effective_waterfall: outputs/coorte_candidata/coorte_waterfall.csv
+  manifest: outputs/coorte_candidata/manifesto_coorte.json
+  publication_validation: outputs/coorte_candidata/validacao_publicacao.json
+  published_parquet: data/analytical/coorte_final.parquet
