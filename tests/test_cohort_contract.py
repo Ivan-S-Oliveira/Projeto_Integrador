@@ -38,16 +38,14 @@ def test_contract_exposes_approved_exclusions() -> None:
         "evolucao_fora_alvo_principal",
         "dt_interna_antes_periodo",
         "dt_interna_apos_periodo",
-    )
-
-
-def test_contract_keeps_temporal_anomalies_as_audit_only() -> None:
-    contract = load_cohort_contract(CONTRACT_PATH)
-
-    assert contract.audit_only_rule_ids == (
         "intervalo_sintomas_negativo",
         "intervalo_sintomas_maior_limite",
     )
+
+def test_contract_has_no_pending_audit_only_rules() -> None:
+    contract = load_cohort_contract(CONTRACT_PATH)
+
+    assert contract.audit_only_rule_ids == ()
 
 
 def test_contract_uses_expected_target_mapping() -> None:

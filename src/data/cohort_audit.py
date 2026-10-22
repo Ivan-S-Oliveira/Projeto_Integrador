@@ -126,9 +126,33 @@ def normalize_srag_code(series: pd.Series) -> pd.Series:
 
 
 def parse_srag_date(series: pd.Series) -> pd.Series:
-    """Converte datas inválidas em NaT sem corrigir valores silenciosamente."""
+    """Converte datas SRAG no formato ISO e preserva inválidos como NaT."""
 
-    return pd.to_datetime(series, errors="coerce")
+    if pd.api.types.is_datetime64_any_dtype(series.dtype):
+        return pd.to_datetime(
+            series,
+            errors="coerce",
+        )
+
+    normalized = (
+        series.astype("string")
+        .str.strip()
+        .replace(
+            {
+                "": pd.NA,
+                "nan": pd.NA,
+                "NaN": pd.NA,
+                "None": pd.NA,
+                "<NA>": pd.NA,
+            }
+        )
+    )
+
+    return pd.to_datetime(
+        normalized,
+        format="%Y-%m-%d",
+        errors="coerce",
+    )
 
 
 def evaluate_audit_rules(

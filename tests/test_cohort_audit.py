@@ -10,6 +10,7 @@ from src.data.cohort_audit import (
     build_simulated_waterfall,
     evaluate_audit_rules,
     normalize_srag_code,
+    parse_srag_date,
     summarize_audit_rules,
     validate_audit_schema,
 )
@@ -101,6 +102,91 @@ def test_normalization_preserves_distinct_codes() -> None:
     assert result.iloc[5] == "1"
     assert result.iloc[6] == "2"
 
+def test_parse_srag_date_accepts_iso_dates() -> None:
+    source = pd.Series(
+        [
+            "2019-01-01",
+            "2026-12-31",
+            " 2024-02-29 ",
+        ],
+        dtype="string",
+    )
+
+    result = parse_srag_date(source)
+
+    expected = pd.Series(
+        pd.to_datetime(
+            [
+                "2019-01-01",
+                "2026-12-31",
+                "2024-02-29",
+            ]
+        )
+    )
+
+    pd.testing.assert_series_equal(
+        result.reset_index(drop=True),
+        expected,
+        check_names=False,
+    )
+
+
+def test_parse_srag_date_converts_missing_values_to_nat() -> None:
+    source = pd.Series(
+        [
+            None,
+            pd.NA,
+            "",
+            "   ",
+            "nan",
+            "NaN",
+            "None",
+            "<NA>",
+        ],
+        dtype="string",
+    )
+
+    result = parse_srag_date(source)
+
+    assert result.isna().all()
+
+
+def test_parse_srag_date_rejects_non_iso_values() -> None:
+    source = pd.Series(
+        [
+            "31/12/2024",
+            "2024/12/31",
+            "2024-02-30",
+            "texto",
+            "05/03/2022 00:00",
+        ],
+        dtype="string",
+    )
+
+    result = parse_srag_date(source)
+
+    assert result.isna().all()
+
+
+def test_parse_srag_date_preserves_datetime_series() -> None:
+    source = pd.Series(
+        pd.to_datetime(
+            [
+                "2019-01-01",
+                "2026-12-31",
+                None,
+            ]
+        )
+    )
+
+    result = parse_srag_date(source)
+
+    expected = pd.to_datetime(source, errors="coerce")
+
+    pd.testing.assert_series_equal(
+        result,
+        expected,
+    )
 
 def test_evaluation_does_not_modify_source(
     audit_frame: pd.DataFrame,

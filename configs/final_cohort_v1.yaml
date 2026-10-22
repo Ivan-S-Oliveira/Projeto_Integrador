@@ -61,14 +61,14 @@ audit:
       rationale: O período auditável da coorte termina em 2026.
 
     intervalo_sintomas_negativo:
-      action: audit_only
-      decision_id: null
-      rationale: A exclusão depende da auditoria de volume, sobreposição e distribuição anual.
+      action: approved_exclusion
+      decision_id: D_COORTE_006
+      rationale: A internação anterior ao início dos sintomas é incompatível com a cronologia do episódio de SRAG e com o ponto temporal de previsão na admissão.
 
     intervalo_sintomas_maior_limite:
-      action: audit_only
-      decision_id: null
-      rationale: O limite de 60 dias será avaliado antes de promover a regra para exclusão.
+      action: approved_exclusion
+      decision_id: D_COORTE_007
+      rationale: Intervalos superiores a 60 dias excedem o domínio temporal definido para o episódio agudo; a auditoria confirmou cauda extrema, com máximo de 1.836 dias, sem falhas de conversão das datas ISO.
 
 required_columns:
   - hospital

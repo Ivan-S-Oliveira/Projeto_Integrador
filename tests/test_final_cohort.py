@@ -115,8 +115,7 @@ def test_candidate_does_not_modify_source(
         original,
     )
 
-
-def test_candidate_applies_only_approved_exclusions(
+def test_candidate_applies_all_approved_exclusions(
     source_frame: pd.DataFrame,
     contract,
 ) -> None:
@@ -127,12 +126,10 @@ def test_candidate_applies_only_approved_exclusions(
 
     assert result.frame.index.tolist() == [
         100,
-        101,
-        106,
     ]
 
 
-def test_negative_interval_is_audited_but_not_excluded(
+def test_negative_interval_is_excluded(
     source_frame: pd.DataFrame,
     contract,
 ) -> None:
@@ -147,10 +144,11 @@ def test_negative_interval_is_audited_but_not_excluded(
         ].loc[101]
     )
 
-    assert 101 in result.frame.index
+    assert 101 not in result.frame.index
+    assert bool(result.excluded_mask.loc[101])
 
 
-def test_long_interval_is_audited_but_not_excluded(
+def test_long_interval_is_excluded(
     source_frame: pd.DataFrame,
     contract,
 ) -> None:
@@ -165,7 +163,8 @@ def test_long_interval_is_audited_but_not_excluded(
         ].loc[106]
     )
 
-    assert 106 in result.frame.index
+    assert 106 not in result.frame.index
+    assert bool(result.excluded_mask.loc[106])
 
 
 def test_candidate_creates_binary_target(
@@ -183,11 +182,11 @@ def test_candidate_creates_binary_target(
 
     assert target.to_dict() == {
         100: 0,
-        101: 1,
-        106: 1,
     }
 
     assert str(target.dtype) == "int8"
+    assert target.isna().sum() == 0
+    assert set(target.unique()) <= {0, 1}
 
 
 def test_candidate_preserves_auxiliary_columns(
@@ -205,8 +204,6 @@ def test_candidate_preserves_auxiliary_columns(
         "coluna_auxiliar"
     ].tolist() == [
         "a",
-        "b",
-        "g",
     ]
 
 
@@ -220,8 +217,8 @@ def test_candidate_counts_close(
     )
 
     assert result.total_source_rows == 9
-    assert result.total_excluded_rows == 6
-    assert result.total_candidate_rows == 3
+    assert result.total_excluded_rows == 8
+    assert result.total_candidate_rows == 1
 
     assert (
         result.total_source_rows
@@ -229,8 +226,10 @@ def test_candidate_counts_close(
         + result.total_candidate_rows
     )
 
+    assert int(result.excluded_mask.sum()) == 8
 
-def test_effective_waterfall_uses_only_approved_rules(
+
+def test_effective_waterfall_uses_all_approved_rules(
     source_frame: pd.DataFrame,
     contract,
 ) -> None:
@@ -249,18 +248,20 @@ def test_effective_waterfall_uses_only_approved_rules(
         contract.approved_exclusion_rule_ids
     )
 
+    assert observed_rules == contract.rule_order
+
     assert (
         "intervalo_sintomas_negativo"
-        not in observed_rules
+        in observed_rules
     )
 
     assert (
         "intervalo_sintomas_maior_limite"
-        not in observed_rules
+        in observed_rules
     )
 
 
-def test_simulated_waterfall_contains_all_rules(
+def test_effective_and_simulated_waterfalls_match(
     source_frame: pd.DataFrame,
     contract,
 ) -> None:
@@ -274,6 +275,17 @@ def test_simulated_waterfall_contains_all_rules(
             "regra"
         ].tolist()
     ) == contract.rule_order
+
+    assert tuple(
+        result.effective_waterfall[
+            "regra"
+        ].tolist()
+    ) == contract.rule_order
+
+    pd.testing.assert_frame_equal(
+        result.effective_waterfall.reset_index(drop=True),
+        result.simulated_waterfall.reset_index(drop=True),
+    )
 
 
 def test_candidate_rejects_missing_required_column(
