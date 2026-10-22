@@ -200,3 +200,4 @@ docs/project_reference_parts/*
 docs/PROJECT_COMPLETE_REFERENCE.txt
 docs/PROJECT_COVERAGE.csv
 docs/PROJECT_FILES.jsonl
+.pytest_cache/*
