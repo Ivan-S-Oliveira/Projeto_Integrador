@@ -2,9 +2,6 @@
 
 O modo ``audit`` avalia as regras populacionais sobre a fonte real sem
 remover registros, gerar uma candidata ou publicar artefatos canônicos.
-
-Os modos de geração da candidata e publicação serão adicionados depois
-da revisão dos resultados desta auditoria.
 """
 
 from __future__ import annotations

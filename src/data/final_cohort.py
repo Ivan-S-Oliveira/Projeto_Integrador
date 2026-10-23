@@ -3,9 +3,6 @@
 Este módulo conecta o contrato declarativo às regras de auditoria já
 implementadas. Ele não lê nem grava arquivos e não cria partições de
 desenvolvimento ou teste.
-
-A persistência e a publicação da coorte serão tratadas em incrementos
-posteriores.
 """
 
 from __future__ import annotations
