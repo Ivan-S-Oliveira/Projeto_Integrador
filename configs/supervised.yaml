@@ -487,10 +487,12 @@ gates:
   G1_definicao_alvo_features:
     descricao: >-
       Confirmar schema da coorte definitiva, alvo e lista final de features.
-      Inclui a decisao sobre onde ficam saturacao, desc_resp, vacina e vacina_cov.
-    status: pendente
-    aprovado_por: null
-    data: null
+      As variaveis saturacao e desc_resp permanecem na analise de sensibilidade
+      de gravidade na admissao; vacina e vacina_cov permanecem como contexto
+      incremental, fora do conjunto principal.
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: '2026-10-22'
   G2_janela_temporal:
     descricao: >-
       Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos
