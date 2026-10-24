@@ -75,10 +75,29 @@ SaidaPreprocessador = Literal["esparsa", "ordinal"]
 
 
 def _para_float32() -> FunctionTransformer:
-    """Converte as variáveis numéricas para float32."""
     return FunctionTransformer(
-        np.asarray,
-        kw_args={"dtype": np.float32},
+        lambda values: values.astype(np.float32),
+        feature_names_out="one-to-one",
+    )
+
+
+def _normalizar_ausentes_categoricos(
+    values: pd.DataFrame,
+) -> pd.DataFrame:
+    """Converte ausências pandas em valores aceitos pelo scikit-learn."""
+
+    normalized = values.astype("object")
+    return normalized.where(
+        pd.notna(normalized),
+        np.nan,
+    )
+
+
+def _normalizador_categorico() -> FunctionTransformer:
+    """Cria a transformação aplicada antes da imputação categórica."""
+
+    return FunctionTransformer(
+        _normalizar_ausentes_categoricos,
         feature_names_out="one-to-one",
     )
 
@@ -108,7 +127,14 @@ def build_preprocessor(
         )
         pipe_cat = Pipeline(
             steps=[
-                ("imputer", imputer_categorico),
+                (
+                    "normalizar_ausentes",
+                    _normalizador_categorico(),
+                ),
+                (
+                    "imputer",
+                    imputer_categorico,
+                ),
                 (
                     "encoder",
                     OneHotEncoder(
@@ -128,7 +154,14 @@ def build_preprocessor(
         )
         pipe_cat = Pipeline(
             steps=[
-                ("imputer", imputer_categorico),
+                (
+                    "normalizar_ausentes",
+                    _normalizador_categorico(),
+                ),
+                (
+                    "imputer",
+                    imputer_categorico,
+                ),
                 (
                     "encoder",
                     OrdinalEncoder(
