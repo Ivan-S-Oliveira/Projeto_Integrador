@@ -61,11 +61,11 @@ cols:
   dt_encerra: DT_ENCERRA
   nu_notific: NU_NOTIFIC
 dev_years:
-- 2019
 - 2023
 - 2024
 - 2025
 pandemic_test_years:
+- 2019
 - 2020
 - 2021
 - 2022
@@ -289,7 +289,6 @@ experimentos_split:
   blocos:
     train_ref:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -297,7 +296,6 @@ experimentos_split:
       influencia_decisoes: true
     val_tune:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -305,7 +303,6 @@ experimentos_split:
       influencia_decisoes: true
     val_cal:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -313,7 +310,6 @@ experimentos_split:
       influencia_decisoes: true
     val_meas:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -321,7 +317,6 @@ experimentos_split:
       influencia_decisoes: false
     test_ref:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -330,6 +325,7 @@ experimentos_split:
       requer_gate: G9_holdout
     test_pandemic:
       anos:
+      - 2019
       - 2020
       - 2021
       - 2022

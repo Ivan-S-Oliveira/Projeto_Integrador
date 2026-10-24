@@ -28,11 +28,11 @@ periodo:
     anos_parciais:
     - 2026
   desenvolvimento:
-  - 2019
   - 2023
   - 2024
   - 2025
   teste_pandemico:
+  - 2019
   - 2020
   - 2021
   - 2022
@@ -230,7 +230,6 @@ temporal:
   blocos:
     train_ref:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -239,7 +238,6 @@ temporal:
       influencia_decisoes: true
     val_tune:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -248,7 +246,6 @@ temporal:
       influencia_decisoes: true
     val_cal:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -257,7 +254,6 @@ temporal:
       influencia_decisoes: true
     val_meas:
       anos:
-      - 2019
       - 2023
       - 2024
       - 2025
@@ -265,8 +261,7 @@ temporal:
       papel: confirmacao_intermediaria_pre_teste
       influencia_decisoes: false
     test_ref:
-      anos:
-      - 2019
+      anos:    
       - 2023
       - 2024
       - 2025
@@ -276,6 +271,7 @@ temporal:
       requer_gate: G9_holdout
     test_pandemic:
       anos:
+      - 2019
       - 2020
       - 2021
       - 2022
@@ -495,8 +491,8 @@ gates:
     data: '2026-10-22'
   G2_janela_temporal:
     descricao: >-
-      Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos
-      mesmos anos com grupos nao vistos; 2020 a 2022 apenas no teste pandemico;
+      Desenvolvimento em 2023, 2024 e 2025; teste de referencia nos
+      mesmos anos com grupos nao vistos; 2019 a 2022 apenas no teste pandemico;
       2026 apenas como exploracao posterior. Particao mestra deterministica
       por grupo, seed 42.
     status: aprovado
