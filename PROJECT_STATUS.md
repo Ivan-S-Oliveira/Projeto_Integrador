@@ -4,13 +4,13 @@
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
 > O texto das pendências (títulos, seções, responsáveis, datas) fica em `PROJECT_STATUS_TEXT.md` — esse sim pode ser editado à mão.
 
-> Atualizado em 2026-10-25T00:40:12Z.
+> Atualizado em 2026-10-25T00:41:32Z.
 
-- Concluídas: **6**
+- Concluídas: **7**
 - Resolvidas pendentes de validação: **5**
 - Precisam revisão: **0**
 - Em andamento: **5**
-- Abertas: **114**
+- Abertas: **113**
 
 ## Precisam revisão (a auditoria encontrou problema) (0)
 
@@ -32,9 +32,8 @@ _Nenhum item._
 - 🟦 **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — EM ANDAMENTO · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 - 🟦 **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — EM ANDAMENTO · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 
-## Abertas (114)
+## Abertas (113)
 
-- ⬜ **#72** Quem é responsável pelos próximos passos (passagem de bastão de 24/10) — ABERTA · Pessoa B (registra e comunica) + Equipe · 24/10
 - ⬜ **#10** Regra definitiva para números de notificação repetidos — ABERTA · Pessoa A (regra, função e testes) · revisão: Pessoa C · 25/10
 - ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B até 24/10 → Pessoa C a partir de 26/10 · 25/10
 - ⬜ **#131** Levar para o src o artefato de seis blocos que o B_07 já gera (group_id, região, partição, leitura protegida) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 25/10
@@ -149,8 +148,9 @@ _Nenhum item._
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
 
-## Concluídas (6)
+## Concluídas (7)
 
+- ✅ **#72** Quem é responsável pelos próximos passos (passagem de bastão de 24/10) — CONCLUÍDA · Pessoa B (registra e comunica) + Equipe · 24/10
 - ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#18** Carregar só algumas colunas do artefato pula a validação — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
@@ -159,7 +159,7 @@ _Nenhum item._
 - ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-25T00:40:12Z","scan":{"seen":[],"deep_seen":[]},"audit":{},"published_by":"Mateus","items":{
+{"schema_version":3,"generated_at":"2026-10-25T00:41:32Z","scan":{"seen":[],"deep_seen":[]},"audit":{},"published_by":"mateus-so","items":{
 "1":{"id":"1","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "2":{"id":"2","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "3":{"id":"3","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
@@ -231,7 +231,7 @@ _Nenhum item._
 "69":{"id":"69","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "70":{"id":"70","status":"in_progress","done":false,"note":"Commit fd7dcaa5cc2f: Atualiza contrato temporal, dicionário e EDA","comments":[],"updated_at":"2026-10-19T00:26:02-03:00","updated_by":"mateus-so","origin":"commit","evidence":[{"type":"commit","sha":"fd7dcaa5cc2f","subject":"Atualiza contrato temporal, dicionário e EDA","author":"mateus-so","when":"2026-10-19T00:26:02-03:00","marker":"in_progress"}],"history":[{"at":"2026-10-19T00:26:02-03:00","by":"mateus-so","from":"open","to":"in_progress","origin":"commit","ref":"fd7dcaa5cc2f"}],"dismissed":[],"flags":{}},
 "71":{"id":"71","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
-"72":{"id":"72","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
+"72":{"id":"72","status":"done","done":true,"note":"","comments":[],"updated_at":"2026-10-25T00:41:20Z","updated_by":"Mateus","origin":"human","evidence":[],"history":[{"at":"2026-10-25T00:41:20Z","by":"Mateus","from":"open","to":"done","origin":"human","ref":"fb977a9d-1bd4-419f-8138-8cead77fbed2"}],"dismissed":[],"flags":{},"applied_events":["fb977a9d-1bd4-419f-8138-8cead77fbed2"]},
 "73":{"id":"73","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "74":{"id":"74","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
 "75":{"id":"75","status":"open","done":false,"note":"","comments":[],"updated_at":null,"updated_by":"baseline","origin":"baseline","evidence":[],"history":[],"dismissed":[],"flags":{}},
