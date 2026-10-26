@@ -20,33 +20,32 @@ Revisão de 24/10 (noite), depois da orientação com o professor. Coorte defini
 
 ### Cronograma
 
-- **24/10 sex** — Orientação (#95); passagem de bastão (#72); funções de avaliação (#127, #22, #23)
-- **25/10 sáb** — Regra de grupo (#10); artefato de seis blocos no src (#131); decisões e YAMLs (#73, #83, #9, #59); esqueleto do relatório (#133)
-- **26/10 dom** — Invariantes no artefato real (#135); cadeia C nos seis blocos (#132); vacina (#84); YAMLs (#102, #29, #87)
-- **27/10 seg** — Sintomas de 2019 (#50); ablações (#54); ajuste fino e peso de classe (#1, #5); G6 (#78); perfil óbito × cura no treino (#137, #51)
-- **28/10 ter** — Calibração G7 (#79); corte G8 global e por região (#80, #110); importância (#91); marca de teste aberto (#26); âncora e excluídos (#56); variáveis finais (#40, #70)
-- **29/10 qua** — Checklist e aprovação do G9 (#81); tag de congelamento; Métodos do relatório
-- **30/10 qui** — Testes A e B e 2020–2022, uma única vez; exportar previsões (#2, #119). Pessoa B volta à noite
-- **31/10 sex** — Não supervisionado com one-hot (#136) e perfis (#137); subgrupos, região, completude, interpretação (#55, #110, #52, #91)
+- **24–25/10** — Orientação (#95); passagem de bastão (#72); regra de grupo (#10); artefato de seis blocos no src (#131); decisões e YAMLs (#73, #83, #9, #59)
+- **26/10 dom · Fase E** — Invariantes (#135); cadeia C nos seis blocos e previsões do piloto no `val_tune` (#132); **EDA descritiva na coorte definitiva (#139)**; vacina e YAMLs (#84, #102, #29, #87)
+- **27/10 seg · Fase E** — Perfil óbito × cura no treino (#137); sintomas de 2019 (#50); ablações (#54); **não supervisionado com one-hot (#136)**
+- **28/10 ter · Fase E** — Completude (#52), subgrupos (#55) e região (#110) no `val_tune`; perfil dos clusters (#137); **ponto de decisão dos achados (#140)**
+- **29/10 qua** — Ajuste fino e peso de classe (#1, #5); G6 (#78); calibração G7 (#79); importância (#91); marca de teste aberto (#26)
+- **30/10 qui** — Corte global e por região, G8 (#80, #110); checklist e aprovação do G9 (#81); congelamento. Pessoa B volta à noite
+- **31/10 sex** — Testes A e B e 2020–2022, uma única vez, de manhã (#2, #119); repetição no teste para o relatório (#55, #110, #52); interpretação (#91); âncora e excluídos (#56)
 - **01/11 sáb** — Relatório completo (#133); slides (#134); reprodução independente (#126)
-- **02/11 dom** — Conferência de números e ensaio (feriado: dia de contingência)
+- **02/11 dom** — Conferência de números e ensaio (feriado: contingência)
 - **03/11 seg** — Entrega
 
 ### Pessoas
 
-- **A** — protocolo, regras, verificação, relatório e conferência de números (esforço estimado até 03/11: ≈ 54 h, o maior, porque é quem menos entregou até 24/10)
-- **B** — exploração, não supervisionado, interpretação, figuras e apresentação; fora de 25 a 30/10 (≈ 36 h, concentradas de 31/10 a 02/11)
-- **C** — artefato, pipeline, modelos, avaliação final e reprodução (≈ 41 h, concentradas até 30/10)
-- **Equipe** — aprovações de gates e itens conjuntos
+- **A** — protocolo, regras, verificação, Fase E (EDA definitiva, perfil estatístico, completude), relatório e conferência de números (esforço estimado até 03/11: ≈ 55 h, o maior, porque é quem menos entregou até 24/10)
+- **B** — interpretação, não supervisionado (leitura), figuras, relatório e apresentação; fora de 25 a 30/10 (≈ 32 h, concentradas de 31/10 a 02/11)
+- **C** — artefato, pipeline, Fase E (clustering one-hot, subgrupos e região no `val_tune`), modelos, avaliação final e reprodução (≈ 49 h, concentradas até 31/10)
+- **Equipe** — ponto de decisão da Fase E (#140) e aprovações de gates
 
 ### Caminho crítico
 
-#10 → #131 → #135 → #132 → #50 → #54 → #1 → #78 → #79 → #80 → #81 → #2 → #119 → #136 → #137 → #133
+#10 → #131 → #135 → #132 → Fase E (#139, #137, #50, #54, #136, #52, #55, #110) → #140 → #1 → #78 → #79 → #80 → #81 → #2 → #119 → #133
 
 ### Aviso da revisão
 
-> [!atenção] Revisão de 24/10 (noite): orientação incorporada e plano detalhado
-> Cada card ativo agora tem um "O que fazer" com dono, prazo, esforço estimado, passo a passo, como validar e o que fazer se der errado. Novos: #136 (one-hot e normalização no não supervisionado), #137 (qui-quadrado e ANOVA), #138 (opcional). Reformulados: #110 (corte por região), #131, #50, #51. A carga estimada equilibra o esforço total do projeto, considerando o que cada pessoa já entregou. Contexto completo: Base de Conhecimento v9.
+> [!atenção] Replanejamento de 26/10: exploração antes da validação
+> Com a troca para a coorte definitiva, todas as análises que podem mudar decisões rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`, e são decididas no **#140** (28/10 à noite). Novos: #139 (EDA descritiva na coorte definitiva) e #140 (ponto de decisão). Antecipados: #136, #137, #52, #55, #110. Ajuste fino passa para 29/10 e o teste abre em 31/10 de manhã. Depois do teste, as análises só são repetidas para o relatório.
 
 ### Ajuda · Como ler a carga estimada
 
@@ -452,7 +451,7 @@ Não corrija o artefato você mesma(o). Cole no card do #131 o nome do teste, a 
 - depende de: #131
 - tags: Código, Notebook, Partição, Modelagem, Vazamento
 - pilar: Eficiência + Performance + Valor científico-acadêmico
-- carga: 7
+- carga: 8
 - novo: sim
 - professores: não
 - arquivos: notebooks/C/C_11_pipeline_supervisionado.ipynb, notebooks/C/C_12_baseline_logistica.ipynb, notebooks/C/C_13_boosting.ipynb, notebooks/C/C_15_calibracao_limiar.ipynb, notebooks/C/C_16_validacao_final.ipynb
@@ -501,6 +500,117 @@ A cadeia roda sem tocar o teste e com cada bloco no seu papel.
 #### Se der errado
 Prioridade: C_11, C_12 e C_13 (destravam as ablações e o G6). C_15 e C_16 podem ser adaptados em 27/10 de manhã.
 
+#### Acréscimo do replanejamento de 26/10: previsões do piloto para a Fase E
+9. Depois do C_12 e do C_13 (sem busca), exporte `outputs/final/predicoes_val_tune_piloto.parquet` com: `id_registro`, `group_id`, `ano_internacao`, `regiao_residencia`, `sg_uf`, `faixa_etaria`, `sexo_categoria`, `y`, `prob_logistica`, `prob_boosting` (probabilidades brutas, sem calibração). Avise no #52, #55 e #110. É o que permite as análises de subgrupo, região e completude **antes** do ajuste fino. ≈ 30 min.
+
+## #139 · Fase E: EDA descritiva na coorte definitiva (B_06 parte A apontando para coorte_final)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M3
+- data ideal: 26/10
+- responsável: Pessoa A (executa com roteiro) · Pessoa B (revisa ao voltar)
+- pessoas: A, B
+- fonte: Replanejamento de 26/10; B_06 de 24/10; commit fd7dcaa (contrato temporal, dicionário e EDA)
+- depende de: —
+- tags: Dados/Coorte, Notebook, Metodologia
+- pilar: Valor científico-acadêmico
+- carga: 3
+- novo: sim
+- professores: não
+
+### ① Para entender
+
+A análise exploratória (EDA) do B_06 foi feita na coorte **provisória**. A definitiva tem 30.408 fichas a menos e regras novas (intervalos negativos e acima de 60 dias saíram). Os percentuais devem mudar pouco, mas "devem" não é "mudaram": é preciso **ver** a base nova antes de modelar.
+
+| O que esta EDA responde | Por que importa antes do ajuste |
+|---|---|
+| Volume e mortalidade por ano mudaram com as regras novas? | Confirma a prevalência por bloco (≈ 8,44%) e por ano |
+| O preenchimento por ano continua igual (inclusive os três sintomas de 2019)? | Alimenta a decisão do #50 |
+| O intervalo sintomas → internação mudou de forma (agora entre 0 e 60)? | Variável numérica do modelo; muda a escala |
+| As rupturas temporais (preenchimento, idade, vacinação) se mantêm? | Base da discussão de drift e do Teste B |
+
+Só a **parte A** (tempo e descrição) é refeita aqui. Tabelas de óbito × cura vêm do #137 (só treino); o clustering vem do #136.
+
+### ② Problema
+
+Sem esta passagem, o ajuste e a validação partem de números descritivos de outra base, e o relatório misturaria as duas coortes.
+
+### ③ O que fazer
+
+**Dono:** Pessoa A · **Prazo:** 26/10 (domingo) · **Esforço estimado:** ≈ 3 h (parte é tempo de máquina) · **Revisão:** Pessoa B ao voltar (31/10)
+
+#### Objetivo
+Rodar a parte descritiva do B_06 na coorte definitiva, sem alterar a lógica do notebook, e registrar o que mudou em relação à provisória.
+
+#### Passo a passo
+1. `git pull` (o commit `fd7dcaa` da Pessoa B atualizou contrato temporal, dicionário e EDA). Confira se a coorte definitiva existe na sua máquina; se não, gere pelo CLI (`.\.venv\Scripts\python.exe -m src.data.final_cohort_cli` seguindo o README) e confira o SHA-256 com `coorte_final.manifest.json` (começa com `87f28d39`).
+2. Abra `notebooks/B/B_06_eda_temporal_clustering.ipynb`. Na célula de carregamento, confirme que a fonte é `data/analytical/coorte_final.parquet` (procure por `coorte_provisoria_b` e por `SRAG_COHORT_KIND`; com `SRAG_COHORT_KIND=final` o loader `cohort_source` usa a definitiva). Se precisar mudar algo além disso, **não edite**: comente no card e a Pessoa C ajusta.
+3. Rode **só as seções da parte A** (até antes de "A ideia do clustering"): volume e óbito por ano, idade e sexo, sim/não/ignorado/ausente, sintomas e comorbidades por ano, vacinação, escolaridade e UF, rupturas temporais, série mensal. **Não rode** as seções de desfecho (óbito por característica) nem o clustering.
+4. Confira na primeira saída: "Tipo efetivo: final" e dimensão com 3.884.728 linhas. Se aparecer 3.915.136, a fonte ainda é a provisória: pare e comente.
+5. Salve o notebook com as saídas.
+6. Monte `outputs/final/eda_definitiva_vs_provisoria.csv` com, por ano: fichas, % de óbito, % de branco em `perd_olft`, `perd_pala`, `fadiga`, `dispneia`, mediana de idade e mediana de dias até internar, nas duas coortes (os números da provisória estão em `outputs/tables/eda_02_*` de 24/10).
+7. Comente no card as três maiores diferenças (em pontos percentuais) e se alguma muda uma decisão (ex.: os três sintomas deixarem de estar 99% em branco em 2019).
+
+#### Pronto quando
+B_06 parte A salvo com saídas da coorte definitiva, o CSV comparativo existir e o comentário estiver no card.
+
+#### Se der errado
+Erro de memória: feche outros programas e rode de novo; se persistir, comente no card com a célula e a mensagem. A Pessoa C decide se usa leitura projetada.
+
+## #140 · Fase E: ponto de decisão dos achados exploratórios (28/10 à noite)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M3
+- data ideal: 28/10
+- responsável: Pessoa A (conduz e registra) + Pessoa C + Pessoa B (por mensagem)
+- pessoas: A, C, Equipe
+- fonte: Replanejamento de 26/10
+- depende de: #139, #137, #50, #54, #136, #52, #55, #110
+- tags: Decisão, Metodologia, Gate
+- pilar: Valor científico-acadêmico
+- carga: 2
+- novo: sim
+- professores: não
+
+### ① Para entender
+
+A Fase E existe para que descobertas na base nova **possam mudar o plano**. Este card é o momento em que isso acontece: antes do ajuste fino (G6), a equipe olha todos os achados juntos e decide o que muda. Depois do G6, mudanças de variáveis ou de representação ficam muito caras; depois do G9, ficam proibidas.
+
+### ② Problema
+
+Sem um ponto de decisão explícito, os achados exploratórios viram só "texto de relatório" e não influenciam o modelo, que é justamente o risco que o replanejamento quer evitar.
+
+### ③ O que fazer
+
+**Dono:** Pessoa A (conduz) · **Prazo:** 28/10, até as 21h · **Esforço estimado:** A ≈ 1 h 30 · C ≈ 30 min · B ≈ 15 min (mensagem)
+
+#### Antes (cada dono comenta no próprio card até as 18h de 28/10)
+Três linhas por análise: o que encontrou, quão grande é o efeito e se sugere mudança.
+
+#### Roteiro de decisão (a Pessoa A preenche esta tabela neste card)
+| Análise | Pergunta de decisão | Opções | Padrão se não houver consenso |
+|---|---|---|---|
+| EDA definitiva (#139) | Algo mudou o suficiente para rever variáveis ou faixas? | manter · ajustar | manter |
+| Sintomas de 2019 (#50) | Retirar `perd_olft`, `perd_pala`, `fadiga`? | manter · retirar | critério objetivo do #50 |
+| Ablações (#54) | Algum bloco extra (gravidade, contexto, região, sazonalidade) muda a narrativa? | só relatório · reabrir G1 | só relatório |
+| Perfil óbito × cura (#137) | Alguma variável com efeito grande que não está no modelo, ou efeito estranho que indique erro de dado? | nada · investigar | nada |
+| Completude (#52) | O desempenho sobe muito com a completude da ficha (viés de documentação)? | só limitação · testar modelo sem comorbidades em branco | só limitação |
+| Subgrupos (#55) | Alguma faixa etária, sexo ou ano com calibração muito ruim (O/E fora de 0,8–1,2)? | só relatório · calibrar por faixa (sensibilidade) | só relatório |
+| Região (#110) | Diferença grande de desempenho ou calibração entre regiões? | corte por região (já previsto) · só relatório | corte por região |
+| Não supervisionado (#136) | Os grupos novos revelam perfis além da idade? Algum achado sugere variável derivada? | só relatório · nova ablação | só relatório |
+
+#### Depois
+1. A Pessoa A registra as decisões no `docs/decisoes.md` (#73) com data e motivo.
+2. Se alguma decisão mudar variáveis: a Pessoa C atualiza o YAML antes de começar o #1, e a Pessoa A atualiza `variaveis_finais.csv` (#40).
+3. A Pessoa B confirma por mensagem ("de acordo" ou objeção em uma linha).
+
+#### Pronto quando
+A tabela estiver preenchida com a decisão de cada linha, registrada no `decisoes.md`, e o YAML refletir as mudanças (se houver).
+
 ## #72 · Quem é responsável pelos próximos passos (passagem de bastão de 24/10)
 
 - prioridade: P1
@@ -540,11 +650,14 @@ Deixar claro quem faz o quê de 25/10 a 03/11, para ninguém ficar parado espera
 
 | Pessoa | Frente | Esforço estimado até 03/11 | Quando concentra |
 |---|---|---|---|
-| A | Protocolo, regras, verificação, relatório e conferência de números | ≈ 54 h | Distribuído de 25/10 a 02/11 |
-| B | Exploração, não supervisionado, interpretação, figuras e apresentação | ≈ 36 h | Leve de 25 a 30/10 (leitura e rascunhos no tablet); forte de 31/10 a 02/11 |
-| C | Artefato, pipeline, modelos, avaliação final e reprodução | ≈ 41 h | Forte até 30/10; revisão técnica de 31/10 a 02/11 |
+| A | Protocolo, regras, verificação, relatório e conferência de números | ≈ 55 h | Distribuído de 25/10 a 02/11 |
+| B | Exploração, não supervisionado, interpretação, figuras e apresentação | ≈ 32 h | Leve de 25 a 30/10 (leitura e rascunhos no tablet); forte de 31/10 a 02/11 |
+| C | Artefato, pipeline, modelos, avaliação final e reprodução | ≈ 49 h | Forte até 30/10; revisão técnica de 31/10 a 02/11 |
 
 Somando o já entregue (commits de código até 24/10: B 81, C 81, A 12) com o estimado até 03/11, o esforço total fica o mais próximo possível entre as três pessoas dentro do que cada frente comporta. As horas de cada item estão no "O que fazer" de cada card.
+
+> [!decisão] Replanejamento de 26/10
+> As análises que podem mudar decisões foram antecipadas para a Fase E (26 a 28/10), antes do ajuste fino, e são feitas pelas Pessoas A e C. A Pessoa B fica com a interpretação, a repetição no teste para o relatório e a apresentação a partir de 31/10. O teste abre em 31/10 de manhã (um dia depois do plano anterior).
 
 #### O que muda de mãos (quadro oficial)
 | Assunto | Dono | Itens |
@@ -555,8 +668,9 @@ Somando o já entregue (commits de código até 24/10: B 81, C 81, A 12) com o e
 | Tabelas de âncora e excluídos, falsos negativos, reprodução independente | Pessoa A | #56, #55 (parte), #126 (parte) |
 | Artefato de seis blocos, cadeia C, ablações, ajuste, calibração, limiar, testes finais | Pessoa C | #131, #132, #54, #50 (parte), #1, #5, #78, #79, #80, #2, #119 |
 | Funções de avaliação (bootstrap pareado, métricas por grupo) | Pessoa B (hoje); Pessoa C se não ficarem prontas até 25/10 | #127, #22, #23 |
-| Representação one-hot do não supervisionado e nova rodada de agrupamento | Pessoa B (31/10); Pessoa C como contingência | #136 |
-| Subgrupos, limiar por região, completude, interpretação, literatura, slides | Pessoa B | #55, #110, #52, #91, #57, #112, #134 |
+| Representação one-hot do não supervisionado e nova rodada de agrupamento | Pessoa C executa na Fase E (27/10); Pessoa B interpreta (31/10) | #136 |
+| Fase E antes do ajuste: EDA definitiva, completude, subgrupos e região no `val_tune`, ponto de decisão | Pessoas A e C | #139, #52, #55, #110, #140 |
+| Repetição no teste para o relatório, interpretação, tabelas de âncora e excluídos, literatura, slides | Pessoa B | #55, #110, #52, #91, #57, #56, #112, #134 |
 
 #### O que a Pessoa B deixa hoje (24/10)
 1. Este card publicado e avisado no grupo.
@@ -2144,7 +2258,7 @@ A busca do C_13 usa a validação inteira. O C_15 divide a validação em duas m
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 30/10
+- data ideal: 31/10
 - responsável: Pessoa C (execução) + Pessoa B (revisão ao voltar)
 - pessoas: C, B
 - fonte: Plano integrado v2, seções 3 e 4; notebooks/E/E_02
@@ -2174,7 +2288,7 @@ As duas janelas têm prevalências e composição temporal diferentes. Comparar 
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (até 30/10) · revisão da Pessoa B ao voltar · **Prazo:** 29/10 (preparar) e 30/10 (executar) · **Esforço estimado:** ≈ 3 h
+**Dono:** Pessoa C (até 30/10) · revisão da Pessoa B ao voltar · **Prazo:** 30/10 (preparar) e 31/10 de manhã (executar) · **Esforço estimado:** ≈ 3 h
 
 #### O que o C_16 precisa produzir (preparar até 29/10)
 1. **Teste A** (`test_ref`): n, óbitos, prevalência, PR-AUC, PR-AUC ÷ prevalência, ROC-AUC, Brier, Brier do nulo, intercepto e inclinação de calibração, curva de calibração por quantis, matriz de confusão e sensibilidade, precisão, especificidade e F1 no corte congelado (e no de 0,70).
@@ -2293,7 +2407,7 @@ As tabelas de desfecho do B_06 (letalidade por variável) usaram a coorte inteir
 - situação: aberta
 - estratégia: desenvolver
 - marco: M4
-- data ideal: 28/10
+- data ideal: 29/10
 - responsável: Pessoa C (tabelas) + Pessoa B (interpretação em 31/10)
 - pessoas: C, B
 - fonte: Projeto (pergunta de pesquisa); finalistas do C_13/C_15; relatório
@@ -2334,7 +2448,7 @@ Nenhum notebook calcula importância de variáveis. O B_06 tem razões de chance
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (tabelas, 28/10) + Pessoa B (interpretação, 31/10) · **Prazo:** 31/10 · **Esforço estimado:** C ≈ 2 h · B ≈ 2 h · **Começa quando:** G6
+**Dono:** Pessoa C (tabelas, 29/10) + Pessoa B (interpretação, 31/10) · **Prazo:** 31/10 · **Esforço estimado:** C ≈ 2 h · B ≈ 2 h · **Começa quando:** G6
 
 #### O que é
 A segunda metade da pergunta de pesquisa: quais características pesam no risco.
@@ -2344,7 +2458,7 @@ A segunda metade da pergunta de pesquisa: quais características pesam no risco.
 | Razão de chances ajustada (logística) | "Com diabetes, a chance de óbito é X vezes maior, comparando pessoas parecidas no resto." |
 | Importância por permutação (boosting) | Embaralha uma variável e mede quanto a PR-AUC cai: quanto maior a queda, mais o modelo depende dela. |
 
-#### Parte da Pessoa C
+#### Parte da Pessoa C (29/10, depois do G6)
 1. **Logística:** `np.exp(coef_)` do pipeline final com os nomes de `get_feature_names_out()`; uma tabela por variável original (categoria × referência). Nota obrigatória: "associação ajustada e regularizada, não causal".
 2. **Boosting:** `permutation_importance` em `val_meas` (amostra de 100 mil), `scoring="average_precision"`, `n_repeats=5`, semente 42, permutando as **colunas originais** (pipeline inteiro como estimador).
 3. **Estabilidade:** repetir a permutação em duas amostras diferentes de `val_meas` e reportar a correlação de postos.
@@ -2362,15 +2476,15 @@ A segunda metade da pergunta de pesquisa: quais características pesam no risco.
 - prioridade: P2
 - situação: aberta
 - estratégia: desenvolver
-- marco: M5
-- data ideal: 31/10
-- responsável: Pessoa B (subgrupos e calibração) + Pessoa A (falsos negativos e figura)
-- pessoas: B, A
+- marco: M3
+- data ideal: 28/10
+- responsável: Pessoa C (Fase E, val_tune) · Pessoa B (teste, 31/10) · Pessoa A (falsos negativos, 31/10)
+- pessoas: C, B, A
 - fonte: notebooks C_16
-- depende de: #119, #23
+- depende de: #132, #23
 - tags: Metodologia, Notebook
 - pilar: Eficiência + Performance + Valor científico-acadêmico
-- carga: 5
+- carga: 6
 - novo: não
 - professores: não
 
@@ -2386,22 +2500,27 @@ Faltam o desempenho e a calibração por ano, faixa etária, sexo e UF, e a aná
 
 ### ③ O que fazer
 
-**Dono:** Pessoa B (subgrupos e calibração) + Pessoa A (falsos negativos e figura) · **Prazo:** 31/10 · **Esforço estimado:** B ≈ 3 h · A ≈ 2 h · **Começa quando:** #119 e #23
+> [!decisão] Replanejamento de 26/10: exploração antes da validação
+> A troca para a coorte definitiva é uma base "nova": antes de ajustar e validar modelos, todas as análises que podem mudar decisões (variáveis, representação, limiar, calibração, leitura por região) rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`. Os achados são discutidos no **ponto de decisão do #140 (28/10 à noite)**. Só então começam o ajuste fino (29/10) e a validação. Depois do teste, as mesmas análises são apenas repetidas para o relatório, sem decidir nada.
 
-#### O que é
-Um modelo pode ir bem na média e mal num grupo. A análise de equidade mostra isso, e é o que um avaliador de saúde pública procura primeiro.
+**Dono:** Pessoa C (Fase E) · Pessoa B e Pessoa A (relatório) · **Prazo:** 28/10 (C) · 31/10 (B e A) · **Esforço estimado:** C ≈ 1 h · B ≈ 3 h · A ≈ 2 h · **Começa quando:** previsões do piloto em `val_tune` (#132) e `metricas_por_grupo` ampliada (#23)
 
-#### Parte da Pessoa B
-1. Com `predicoes_val_meas.parquet` e `predicoes_teste.parquet`, rode `metricas_por_grupo` por `ano_internacao`, `faixa_etaria` e `sexo_categoria` (região e UF ficam no #110), nos Testes A e B e em `val_meas`.
-2. Calibração por faixa etária: O/E por faixa. Pergunta: o modelo superestima o risco de idosos? E de crianças?
-3. Salve `outputs/final/por_subgrupo.csv`.
+#### Por que antes da validação
+Um modelo pode ir bem na média e mal num grupo. Se uma faixa etária ou um ano estiver muito mal calibrado no `val_tune`, ainda dá para decidir (no #140) uma calibração por faixa como sensibilidade, ou discutir a variável. Depois do G9, não.
 
-#### Parte da Pessoa A
-4. **Falsos negativos no Teste A** (óbitos sem alerta no corte congelado): compare com os verdadeiros positivos em idade, dias até internar, número de sintomas e de comorbidades marcados e completude da ficha. Use a função do #137 com `coluna_grupo` = "falso negativo × verdadeiro positivo". Salve `outputs/final/falsos_negativos_perfil.csv`.
-5. Figura (forest plot simples): PR-AUC ÷ prevalência com IC por faixa etária e por região (a partir do `por_subgrupo.csv` e do #110).
+#### Parte da Pessoa C (28/10, sobre o `val_tune`)
+1. Com `predicoes_val_tune_piloto.parquet` (logística e boosting do piloto, já com as colunas `ano_internacao`, `faixa_etaria`, `sexo_categoria`), rode `metricas_por_grupo` por ano, faixa etária e sexo.
+2. Salve `outputs/final/subgrupos_val_tune.csv` e comente no #140 qualquer grupo com O/E fora de 0,8–1,2 ou ROC-AUC muito abaixo da média.
+
+#### Parte da Pessoa B (31/10, relatório)
+3. Repita com `predicoes_val_meas.parquet` e `predicoes_teste.parquet` (Testes A e B), sem decidir nada. Salve `outputs/final/por_subgrupo.csv`; calibração (O/E) por faixa etária; três frases de resultado.
+
+#### Parte da Pessoa A (31/10, relatório)
+4. **Falsos negativos no Teste A** (óbitos sem alerta no corte congelado): compare com os verdadeiros positivos em idade, dias até internar, número de sintomas e de comorbidades e completude, usando `perfil_estatistico` (#137) com `coluna_grupo` = "falso negativo × verdadeiro positivo". Salve `outputs/final/falsos_negativos_perfil.csv`.
+5. Figura com PR-AUC ÷ prevalência e IC por faixa etária e por região.
 
 #### Pronto quando
-Os dois CSVs e a figura existirem, com três frases de resultado escritas pela Pessoa B.
+Subgrupos do `val_tune` comentados no #140 (28/10) e os arquivos do relatório prontos (31/10).
 
 ## #57 · Associações "protetoras" que são efeito da idade
 
@@ -2500,14 +2619,14 @@ No benchmark do A_09 (logística, cerca de 140 mil de treino e 30 mil de valida�
 - situação: aberta
 - estratégia: desenvolver
 - marco: M3
-- data ideal: 31/10
+- data ideal: 28/10
 - responsável: Pessoa C (execução) + Pessoa B (interpretação em 31/10)
 - pessoas: C, B
 - fonte: artefato supervisionado (sg_uf); E_03; orientação de 17/10
-- depende de: #80, #119
+- depende de: #132, #23
 - tags: Features, Geografia
 - pilar: Eficiência + Performance + Valor científico-acadêmico
-- carga: 4
+- carga: 5
 - novo: sim
 - professores: não
 
@@ -2531,20 +2650,25 @@ Geografia nunca foi testada como variável.
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (cálculo, 28/10) + Pessoa B (análise e texto, 31/10) · **Prazo:** 31/10 · **Esforço estimado:** C ≈ 1 h · B ≈ 3 h · **Começa quando:** #80 e #119
+> [!decisão] Replanejamento de 26/10: exploração antes da validação
+> A troca para a coorte definitiva é uma base "nova": antes de ajustar e validar modelos, todas as análises que podem mudar decisões (variáveis, representação, limiar, calibração, leitura por região) rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`. Os achados são discutidos no **ponto de decisão do #140 (28/10 à noite)**. Só então começam o ajuste fino (29/10) e a validação. Depois do teste, as mesmas análises são apenas repetidas para o relatório, sem decidir nada.
 
-#### Parte da Pessoa C (28/10, junto com o #80)
-1. Em `val_cal`, para cada região (Norte, Nordeste, Centro-Oeste, Sudeste, Sul), escolher o corte com maior precisão entre os que dão sensibilidade ≥ 0,80, com o mesmo modelo calibrado.
-2. Gravar `outputs/final/limiares_por_regiao.csv` (região, n, prevalência, corte, sensibilidade, precisão e % de alertas) e os cortes no YAML numa chave separada (`limiar.por_regiao`), sem substituir o corte global.
+**Dono:** Pessoa C (Fase E e cortes) · Pessoa B (relatório) · **Prazo:** 28/10 (métricas) · 30/10 (cortes) · 31/10 (B) · **Esforço estimado:** C ≈ 2 h · B ≈ 3 h · **Começa quando:** #132 e #23
 
-#### Parte da Pessoa B (31/10, com as previsões do #119)
-3. Em `val_meas` e no Teste A, comparar **corte global × corte da própria região**: sensibilidade, precisão, especificidade e % de alertas, por região.
-4. Rodar `metricas_por_grupo` (#23) por região e por UF (n ≥ 100): PR-AUC ÷ prevalência, ROC-AUC e O/E.
-5. Uma figura: barras por região com sensibilidade e precisão nos dois cortes.
-6. Três frases para a Discussão: onde o corte regional ajuda, se alguma região está mal calibrada (O/E longe de 1) e o dilema de equidade (cortes diferentes melhoram a utilidade local, mas tratam regiões de forma diferente).
+#### Parte da Pessoa C · 28/10 (Fase E, sobre o `val_tune`)
+1. Com `predicoes_val_tune_piloto.parquet`, rode `metricas_por_grupo` por região e por UF (n ≥ 100): PR-AUC ÷ prevalência, ROC-AUC, O/E.
+2. Salve `outputs/final/regiao_val_tune.csv` e comente no #140 se alguma região tem desempenho ou calibração muito diferente.
+
+#### Parte da Pessoa C · 30/10 (junto com o #80)
+3. Em `val_cal`, para cada região, o corte de maior precisão entre os que dão sensibilidade ≥ 0,80, no modelo calibrado. Grave `outputs/final/limiares_por_regiao.csv` e `limiar.por_regiao` no YAML, sem substituir o corte global.
+
+#### Parte da Pessoa B · 31/10 (relatório)
+4. Em `val_meas` e no Teste A: corte global × corte regional por região (sensibilidade, precisão, especificidade, % de alertas).
+5. `metricas_por_grupo` por região e UF no teste.
+6. Figura de barras por região nos dois cortes e três frases (onde o corte regional ajuda, alguma região mal calibrada, o dilema de equidade).
 
 #### Pronto quando
-Os dois CSVs, a figura e o texto existirem.
+Métricas por região do `val_tune` comentadas no #140, cortes no YAML e figura e texto do relatório prontos.
 
 ## #138 · Opcional: "o mundo voltou?" Comparar 2019 com 2023–2025
 
@@ -2617,11 +2741,11 @@ Continua despriorizado. **Gatilho revisado para o novo calendário:** acionar s�
 - situação: aberta
 - estratégia: desenvolver
 - marco: M3
-- data ideal: 27/10
+- data ideal: 29/10
 - responsável: Pessoa C (dona; revisão cruzada sem edição concorrente)
 - pessoas: C
 - fonte: configs/supervised.yaml (gates G6, G7, G8; models; calibracao; limiar); notebooks C_13 e C_15
-- depende de: #132, #54
+- depende de: #140
 - tags: Modelagem, Gate, Notebook
 - pilar: Eficiência + Performance + Valor científico-acadêmico
 - carga: 4
@@ -2648,7 +2772,7 @@ Os gates `G6_finalistas_tuning`, `G7_calibracao` e `G8_limiar` estão **pendente
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 27/10 · **Esforço estimado:** ≈ 4 h · **Começa quando:** #132 e #54 (a decisão do #50 entra antes)
+**Dono:** Pessoa C · **Prazo:** 29/10 · **Esforço estimado:** ≈ 4 h · **Começa quando:** ponto de decisão da Fase E (#140)
 
 #### Objetivo
 Escolher a melhor configuração de cada finalista com uma busca curta e defensável, e decidir o modelo final.
@@ -2714,7 +2838,7 @@ A grade do boosting inclui `max_iter` de até 1.000, com `early_stopping: false`
 - situação: parcial
 - estratégia: desenvolver
 - marco: M3
-- data ideal: 27/10
+- data ideal: 29/10
 - responsável: Pessoa C (dona; revisão cruzada sem edição concorrente)
 - pessoas: C
 - fonte: src/models/logistic.py; src/models/boosting.py; configs/supervised.yaml (class_weight); B_10
@@ -2751,7 +2875,7 @@ Os dois finalistas usam `class_weight="balanced"`. A média das probabilidades p
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 27/10, dentro do ajuste fino · **Esforço estimado:** ≈ 1 h · **Começa quando:** #132
+**Dono:** Pessoa C · **Prazo:** 29/10, dentro do ajuste fino · **Esforço estimado:** ≈ 1 h · **Começa quando:** #132
 
 #### Objetivo
 Decidir por evidência se o treino usa peso de classe.
@@ -2774,11 +2898,11 @@ O YAML refletir a escolha e houver uma tabela com as duas versões.
 - situação: aberta
 - estratégia: desenvolver
 - marco: M3
-- data ideal: 27/10
+- data ideal: 29/10
 - responsável: Pessoa C (aprova) + Pessoa A (registra)
 - pessoas: C, A
 - fonte: configs/supervised.yaml (gates.G6_finalistas_tuning); notebooks C_13
-- depende de: #131, #132, #5
+- depende de: #1, #5, #140
 - tags: Gate, Modelagem
 - pilar: Eficiência + Performance + Valor científico-acadêmico
 - carga: 1
@@ -2808,16 +2932,16 @@ O gate `G6_finalistas_tuning` está `pendente`. Sem ele, o C_13 não faz a busca
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (aprova) + Pessoa A (registra) · **Prazo:** 27/10 à noite · **Esforço estimado:** ≈ 30 min · **Começa quando:** #1, #5, #50
+**Dono:** Pessoa C (aprova) + Pessoa A (registra) · **Prazo:** 29/10 · **Esforço estimado:** ≈ 30 min · **Começa quando:** #1, #5, #50
 
 #### Checklist para aprovar o G6
 1. #131, #135 e #132 concluídos: tudo rodou na coorte definitiva, em `train_ref` → `val_tune`.
-2. Decisão dos três sintomas de 2019 (#50) tomada e refletida no YAML.
+2. Decisões do ponto de decisão da Fase E (#140), incluindo os três sintomas de 2019 (#50), tomadas e refletidas no YAML.
 3. Ablações (#54) gravadas.
 4. Busca (#1) dentro do tempo; peso de classe (#5) decidido.
 5. Finalista e hiperparâmetros no YAML.
 
-**Ação:** `gates.G6_finalistas_tuning.status: aprovado`, `aprovado_por: time_do_projeto`, `data: '2026-10-27'`. A Pessoa A registra a entrada no `decisoes.md`.
+**Ação:** `gates.G6_finalistas_tuning.status: aprovado`, `aprovado_por: time_do_projeto`, `data: '2026-10-29'`. A Pessoa A registra a entrada no `decisoes.md`.
 
 ## #9 · Saturação, desconforto respiratório e vacina: cada documento diz uma coisa
 
@@ -2951,7 +3075,7 @@ Faltam as sensibilidades de gravidade na admissão (com `saturacao` e `desc_resp
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (execução) + Pessoa A (tabela no relatório) · **Prazo:** 27/10, antes do ajuste fino · **Esforço estimado:** C ≈ 3 h · A ≈ 30 min · **Começa quando:** #132
+**Dono:** Pessoa C (execução) + Pessoa A (tabela no relatório) · **Prazo:** 27/10 (Fase E), antes do ponto de decisão · **Esforço estimado:** C ≈ 3 h · A ≈ 30 min · **Começa quando:** #132
 
 #### Objetivo
 Uma única tabela que mostra quanto cada grupo de informação acrescenta ao modelo. É o resultado "de laboratório" mais rico do trabalho e custa pouco, porque reusa o mesmo pipeline.
@@ -2989,15 +3113,15 @@ O CSV existir e a Pessoa A tiver colado a tabela no relatório.
 - prioridade: P3
 - situação: aberta
 - estratégia: explorar
-- marco: M6
-- data ideal: 31/10
-- responsável: Pessoa B (dona; revisão cruzada sem edição concorrente)
-- pessoas: B
+- marco: M3
+- data ideal: 28/10
+- responsável: Pessoa A (Fase E, val_tune) · Pessoa B (repete no teste, 31/10)
+- pessoas: A, B
 - fonte: Projeto (análise de desempenho)
-- depende de: #119
+- depende de: #132
 - tags: Metodologia, Vazamento
 - pilar: Eficiência + Performance + Valor científico-acadêmico
-- carga: 2
+- carga: 3
 - novo: não
 - professores: não
 
@@ -3019,18 +3143,25 @@ As comorbidades estão mais preenchidas nos óbitos (diferença de 13 a 21 ponto
 
 ### ③ O que fazer
 
-**Dono:** Pessoa B · **Prazo:** 31/10 · **Esforço estimado:** ≈ 2 h · **Começa quando:** #119
+> [!decisão] Replanejamento de 26/10: exploração antes da validação
+> A troca para a coorte definitiva é uma base "nova": antes de ajustar e validar modelos, todas as análises que podem mudar decisões (variáveis, representação, limiar, calibração, leitura por região) rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`. Os achados são discutidos no **ponto de decisão do #140 (28/10 à noite)**. Só então começam o ajuste fino (29/10) e a validação. Depois do teste, as mesmas análises são apenas repetidas para o relatório, sem decidir nada.
+
+**Dono:** Pessoa A (Fase E) · Pessoa B (relatório) · **Prazo:** 28/10 (A) · 31/10 (B) · **Esforço estimado:** A ≈ 2 h · B ≈ 1 h · **Começa quando:** previsões do piloto em `val_tune` (#132)
 
 #### Por que importa
-Nas fichas de óbito, as comorbidades ficam 13 a 21 pontos percentuais **menos em branco** (cardiopatia em branco: 39% nos óbitos × 60% nas curas). Se o modelo aprendeu "ficha completa ⇒ óbito", parte do desempenho é hábito de registro, não doença.
+Nas fichas de óbito, as comorbidades ficam 13 a 21 pontos percentuais **menos em branco** (cardiopatia em branco: 39% nos óbitos × 60% nas curas). Se o modelo aprendeu "ficha completa ⇒ óbito", parte do desempenho é hábito de registro (viés de documentação). Descobrir isso **antes** do ajuste permite reagir (por exemplo, testar uma versão sem as categorias `AUSENTE` das comorbidades).
 
-#### Passo a passo
-1. Em `predicoes_val_meas.parquet` (junte com as variáveis do artefato por `id_registro`), calcule a **completude** de cada ficha: % dos 11 sintomas e 12 comorbidades com resposta 1 ou 2.
-2. Divida em terços de completude. Por terço: n, prevalência, ROC-AUC, PR-AUC ÷ prevalência e O/E.
-3. Leitura: se o desempenho e a prevalência subirem juntos com a completude, escreva nas limitações que parte do sinal pode ser viés de documentação.
-4. Salve `outputs/final/completude_val_meas.csv`.
+#### Parte da Pessoa A (28/10, sobre o `val_tune`)
+1. Leia `outputs/final/predicoes_val_tune_piloto.parquet` (exportado pela Pessoa C no #132) e junte às variáveis do artefato por `id_registro`, lendo só os 11 sintomas e 12 comorbidades.
+2. Calcule a **completude** de cada ficha: % desses 23 campos com resposta 1 ou 2.
+3. Divida em terços de completude (`pd.qcut(..., 3)`). Por terço: fichas, prevalência, ROC-AUC, PR-AUC ÷ prevalência e O/E (use `metricas_por_grupo` do #23 com `coluna_grupo` = terço).
+4. Salve `outputs/final/completude_val_tune.csv` e comente no #140: se desempenho **e** prevalência sobem juntos com a completude, sinal de viés de documentação.
 
-**Pronto quando:** CSV e parágrafo prontos.
+#### Parte da Pessoa B (31/10, para o relatório)
+5. Repita os passos 2 a 4 em `predicoes_val_meas.parquet` e no Teste A, sem decidir nada. Salve `completude_val_meas.csv` e escreva o parágrafo de limitações.
+
+#### Pronto quando
+CSV do `val_tune` comentado no #140 (28/10) e o do relatório pronto (31/10).
 
 ## #109 · UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada
 
@@ -3081,7 +3212,7 @@ Continua **pós-entrega**. A parte de não supervisionado pedida pelos professor
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 30/10
+- data ideal: 31/10
 - responsável: Pessoa C (dona; revisão cruzada sem edição concorrente)
 - pessoas: C
 - fonte: notebooks C_16; configs/supervised.yaml (features.final, selecao_modelos.finalista_escolhido)
@@ -3108,7 +3239,7 @@ O C_16 interrompe a execução quando `features.final` ou `selecao_modelos.final
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 30/10 de manhã · **Esforço estimado:** ≈ 3 h · **Começa quando:** G9
+**Dono:** Pessoa C · **Prazo:** 31/10 de manhã · **Esforço estimado:** ≈ 3 h · **Começa quando:** G9
 
 1. Kernel limpo. Rodar o C_16 inteiro de uma vez.
 2. Se quebrar **antes** de carregar os testes: corrigir e rodar de novo. Se quebrar **depois**: corrigir só o código de relatório (nunca modelo, calibrador ou limiar) e registrar no card.
@@ -3165,7 +3296,7 @@ O gate `G1_definicao_alvo_features` está `pendente`. É ele que confirma o sche
 - situação: parcial
 - estratégia: desenvolver
 - marco: M4
-- data ideal: 28/10
+- data ideal: 29/10
 - responsável: Pessoa C (dona; revisão cruzada sem edição concorrente)
 - pessoas: C
 - fonte: configs/supervised.yaml (gates.G7_calibracao; calibracao.metodo); notebooks C_15
@@ -3194,7 +3325,7 @@ O gate `G7_calibracao` está **pendente** e `calibracao.metodo` está `null`. O 
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 28/10 · **Esforço estimado:** ≈ 2 h · **Começa quando:** G6
+**Dono:** Pessoa C · **Prazo:** 29/10 · **Esforço estimado:** ≈ 2 h · **Começa quando:** G6
 
 #### O que é calibração
 Fazer com que "30% de risco" signifique cerca de 30 óbitos em cada 100 fichas parecidas. A calibração quase não muda a ordem dos pacientes (ROC-AUC fica igual); ela corrige o **número**.
@@ -3215,7 +3346,7 @@ No piloto antigo, o boosting calibrado foi de Brier 0,196 para 0,141. Espera-se 
 - situação: parcial
 - estratégia: desenvolver
 - marco: M4
-- data ideal: 28/10
+- data ideal: 30/10
 - responsável: Pessoa C (dona; revisão cruzada sem edição concorrente)
 - pessoas: C
 - fonte: configs/supervised.yaml (gates.G8_limiar; limiar.metrica, limiar.otimo); notebooks C_15
@@ -3247,7 +3378,7 @@ O gate `G8_limiar` está **pendente**, e `limiar.metrica` e `limiar.otimo` estã
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 28/10 · **Esforço estimado:** ≈ 2 h · **Começa quando:** #79
+**Dono:** Pessoa C · **Prazo:** 30/10 · **Esforço estimado:** ≈ 2 h · **Começa quando:** #79
 
 #### O que é
 O ponto de corte que transforma probabilidade em "alerta". Mexer nele troca óbitos perdidos por alarmes falsos. O professor disse que 80% de sensibilidade "já está bom" e 70% "já está muito bom".
@@ -3271,7 +3402,7 @@ O YAML tiver o corte e houver `outputs/final/limiares_val_cal.csv`.
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 29/10
+- data ideal: 30/10
 - responsável: Pessoa A (conduz o checklist) + Pessoa C (modelagem) + Equipe (aprova)
 - pessoas: A, C, Equipe
 - fonte: configs/supervised.yaml (gates.G9_holdout); notebooks C_16
@@ -3300,7 +3431,7 @@ O gate `G9_holdout` está `pendente`. Ele libera o teste uma única vez e é irr
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A (conduz) + Pessoa C (modelagem) + Equipe (aprova) · **Prazo:** 29/10 · **Esforço estimado:** A ≈ 1 h · C ≈ 30 min
+**Dono:** Pessoa A (conduz) + Pessoa C (modelagem) + Equipe (aprova) · **Prazo:** 30/10 · **Esforço estimado:** A ≈ 1 h · C ≈ 30 min
 
 #### O que é
 O G9 libera o teste **uma única vez**. Depois dele, nada do modelo pode mudar. É o envelope da nota final.
@@ -3312,10 +3443,10 @@ O G9 libera o teste **uma única vez**. Depois dele, nada do modelo pode mudar. 
 4. Medição em `val_meas` registrada (a última foto antes do teste).
 5. Proteção do teste testada (o teste rápido do #131) e `pytest -m "not slow"` passando.
 6. `marcar_teste_aberto` (#26) pronto e chamado no C_16.
-7. Commit com a tag `congelado-2026-10-29` e o SHA anotado aqui.
+7. Commit com a tag `congelado-2026-10-30` e o SHA anotado aqui.
 
 #### Aprovação
-Cada pessoa comenta "aprovo o G9" (a Pessoa B pode aprovar do celular). Com duas aprovações e nenhuma objeção em 12 horas, a Pessoa C muda `G9_holdout.status: aprovado` e roda o #2 em 30/10.
+Cada pessoa comenta "aprovo o G9" (a Pessoa B volta na noite de 30/10 e pode aprovar do celular). Com duas aprovações e nenhuma objeção em 12 horas, a Pessoa C muda `G9_holdout.status: aprovado` e roda o #2 na manhã de 31/10.
 
 ## #37 · O B_10 vai falhar de propósito quando a lista final de variáveis existir
 
@@ -3432,7 +3563,7 @@ O comentário do YAML diz que `finalista_escolhido` é preenchido no fim do C_16
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 28/10
+- data ideal: 29/10
 - responsável: Pessoa A (função e teste) · Pessoa C (chamada no C_16)
 - pessoas: A
 - fonte: src/data/supervised_artifact.py (manifesto); notebooks C_16
@@ -3453,7 +3584,7 @@ O manifesto tem o campo `test_opened`, mas ele nunca muda para `True`, nem depoi
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** 28/10 · **Esforço estimado:** ≈ 1 h 30 · **Revisão:** Pessoa C
+**Dono:** Pessoa A · **Prazo:** 29/10 · **Esforço estimado:** ≈ 1 h 30 · **Revisão:** Pessoa C
 
 1. Em `src/data/supervised_artifact.py`, crie `marcar_teste_aberto(root) -> dict`: lê o manifesto, grava `test_opened: true`, `test_opened_at` (data e hora UTC) e o commit atual (`git rev-parse HEAD`), escrevendo num arquivo temporário e trocando com `os.replace` (assim o manifesto nunca fica pela metade).
 2. Se o manifesto já tiver `test_opened: true`, a função **não** sobrescreve a data original: devolve o que já estava e emite um aviso.
@@ -3600,9 +3731,9 @@ Há 24 idades implausíveis (mantidas com a idade vazia), 17 internações com d
 - situação: aberta
 - estratégia: documentar
 - marco: M4
-- data ideal: 28/10
-- responsável: Pessoa A (antes: Pessoa B)
-- pessoas: A
+- data ideal: 31/10
+- responsável: Pessoa B
+- pessoas: B
 - fonte: B_06_eda_temporal_clustering; construção da coorte
 - depende de: —
 - tags: Metodologia, Dados/Coorte, Documentação
@@ -3626,7 +3757,7 @@ Não foram produzidas a tabela da diferença entre `dt_notific` e `dt_interna`, 
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** 28/10 · **Esforço estimado:** ≈ 3 h · **Revisão:** Pessoa C (só se travar no código)
+**Dono:** Pessoa B · **Prazo:** 31/10 · **Esforço estimado:** ≈ 3 h · **Revisão:** Pessoa A (números no relatório)
 
 #### Por que a banca vai pedir
 Duas perguntas típicas de saúde pública: "por que a data de internação, e não a de notificação?" e "quem ficou de fora da coorte?" (viés de seleção).
@@ -3896,10 +4027,10 @@ Os clusters refletem principalmente fases da vida (bebês e idosos), não perfis
 - prioridade: P1
 - situação: aberta
 - estratégia: desenvolver
-- marco: M6
-- data ideal: 31/10
-- responsável: Pessoa B (dona) · contingência: Pessoa C
-- pessoas: B, C
+- marco: M3
+- data ideal: 27/10
+- responsável: Pessoa C (executa na Fase E) · Pessoa B (interpreta ao voltar)
+- pessoas: C, B
 - fonte: Orientação de 24/10 (cobrança de one-hot); base de conhecimento v9 §6.3 e §8; B_06 de 24/10
 - depende de: #131
 - tags: Não supervisionado, Features, Código, Metodologia
@@ -3934,42 +4065,45 @@ A representação usada no clustering misturou "em branco" com "não" e deu peso
 
 ### ③ O que fazer
 
-**Dono:** Pessoa B · **Prazo:** 31/10 (sexta) · **Esforço estimado:** ≈ 6 h · **Revisão:** Pessoa C (função no src) · **Começa quando:** #131 (amostra da coorte definitiva)
+> [!decisão] Replanejamento de 26/10: exploração antes da validação
+> A troca para a coorte definitiva é uma base "nova": antes de ajustar e validar modelos, todas as análises que podem mudar decisões (variáveis, representação, limiar, calibração, leitura por região) rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`. Os achados são discutidos no **ponto de decisão do #140 (28/10 à noite)**. Só então começam o ajuste fino (29/10) e a validação. Depois do teste, as mesmas análises são apenas repetidas para o relatório, sem decidir nada.
 
-> [!atenção] Contingência
-> Se a Pessoa B não puder em 31/10, a Pessoa C executa a partir da função pronta. A função (passos 1 e 2) pode ser escrita pela Pessoa B no tablet durante a viagem e testada na volta.
+**Dono:** Pessoa C (execução) · Pessoa B (interpretação, 31/10) · **Prazo:** 27/10 (segunda) · **Esforço estimado:** C ≈ 6 h · B ≈ 1 h · **Revisão:** Pessoa B · **Começa quando:** #131 (amostra da coorte definitiva)
+
+> [!atenção] Mudança de dono
+> Para rodar **antes** do ajuste fino, a execução passa para a Pessoa C (a Pessoa B está fora até 30/10). A Pessoa B revisa a função, interpreta os grupos e escreve a seção do relatório ao voltar.
 
 #### Passo a passo
-1. **Função no `src`:** em `src/features/normalization.py` (hoje vazio; assim ele ganha um papel claro), crie `construir_preprocessador_clustering(numericas, categoricas, pesar_por_variavel=True, saida="esparsa")` que devolve um `ColumnTransformer`:
+1. **Função no `src`:** em `src/features/normalization.py` (hoje vazio), crie `construir_preprocessador_clustering(numericas, categoricas, pesar_por_variavel=True, saida="esparsa")` que devolve um `ColumnTransformer`:
    - numéricas (`idade_anos`, `dias_sintomas_ate_internacao`): mediana para faltantes e `StandardScaler`;
-   - categóricas e clínicas (sexo, raça, zona, gestante, puerpério, os 11 sintomas e as 12 comorbidades): o mesmo normalizador de ausentes do pipeline supervisionado (vazio → `AUSENTE`; reaproveite a função de `src/models/pipeline.py`), depois `OneHotEncoder(handle_unknown="ignore", dtype=np.float32)`;
-   - peso: multiplicar o bloco one-hot de cada variável por `1/√k`, com `k` = número de categorias dela (um `FunctionTransformer` ou uma etapa própria);
+   - categóricas e clínicas (sexo, raça, zona, gestante, puerpério, os 11 sintomas, as 12 comorbidades): o mesmo normalizador de ausentes do pipeline supervisionado (vazio → `AUSENTE`; reaproveite o de `src/models/pipeline.py`), depois `OneHotEncoder(handle_unknown="ignore", dtype=np.float32)`;
+   - peso: multiplicar o bloco one-hot de cada variável por `1/√k` (k = número de categorias);
    - **sem** `SimpleImputer(strategy="most_frequent")` e **sem** `add_indicator`.
-2. **Testes** em `tests/test_features.py` com 8 linhas inventadas: o número de colunas é a soma das categorias; um vazio vira a coluna `_AUSENTE`; nenhum vazio vira "não"; os pesos foram aplicados.
-3. **Amostra:** 80 mil fichas do `train_ref` da coorte definitiva, estratificadas por ano × desfecho, semente 42. Leia do artefato só as colunas necessárias. O desfecho não entra no agrupamento.
-4. **Redução:** `TruncatedSVD` (funciona com matriz esparsa) ou PCA na matriz densa (80 mil linhas cabem), até cerca de 90% da variância. Anote dimensão, tempo e memória.
-5. **Agrupamento:** `MiniBatchKMeans` com k de 2 a 8 e HCA (Ward) com k de 2 a 4 numa subamostra de 10 a 20 mil. Para cada solução: silhueta, Calinski-Harabasz, Davies-Bouldin e estabilidade (ARI entre 5 sementes).
-6. **Comparação com o antigo:** ARI entre a solução nova e a antiga do B_06 nas fichas em comum, se possível; senão, comparação das métricas.
-7. **Só adultos:** repita os passos 4 e 5 só com 18 anos ou mais (~95% das fichas), para tirar o peso dominante da idade.
-8. **Saídas:** `outputs/tables/ns_onehot_metricas.csv` (uma linha por representação × k × algoritmo) e `outputs/tables/ns_onehot_rotulos.parquet` (`id_registro`, rótulos de cada solução escolhida). Não salve a matriz. Libere memória (`del`, `gc.collect()`).
-9. **Passe os rótulos para o #137** (perfil estatístico).
+2. **Testes** em `tests/test_features.py` com 8 linhas inventadas: número de colunas = soma das categorias; vazio vira a coluna `_AUSENTE`; nenhum vazio vira "não"; pesos aplicados.
+3. **Amostra:** 80 mil fichas do `train_ref`, estratificadas por ano × desfecho, semente 42; ler só as colunas necessárias. O desfecho não entra no agrupamento.
+4. **Redução:** `TruncatedSVD` (esparso) ou PCA (denso; 80 mil cabem) até ~90% da variância. Registrar dimensão, tempo e memória.
+5. **Agrupamento:** `MiniBatchKMeans` k = 2 a 8; HCA (Ward) k = 2 a 4 numa subamostra de 10 a 20 mil. Para cada solução: silhueta, Calinski-Harabasz, Davies-Bouldin e ARI entre 5 sementes.
+6. **Comparação com a representação antiga:** rodar também a representação do B_06 (binárias com imputação pela moda) na **mesma** amostra e calcular o ARI entre as duas soluções. Isso dá a tabela "antiga × nova" na mesma base.
+7. **Só adultos:** repetir 4 e 5 com 18 anos ou mais.
+8. **Saídas:** `outputs/tables/ns_onehot_metricas.csv` e `outputs/tables/ns_onehot_rotulos.parquet` (`id_registro` + rótulos de cada solução escolhida). Não salvar matrizes. `del` + `gc.collect()`.
+9. Passar os rótulos para a Pessoa A rodar o perfil estatístico (#137, uso 2) em 28/10 e comentar no #140 o resumo (três linhas).
 
-#### Como escolher o k
-Combine silhueta (maior é melhor), estabilidade (ARI próximo de 1) e interpretabilidade (grupos com tamanho razoável, nenhum abaixo de 5%). Escreva por que escolheu.
+#### Como escolher k
+Silhueta e Calinski-Harabasz (maior), Davies-Bouldin (menor), ARI entre sementes perto de 1, nenhum grupo abaixo de 5%. Escrever o motivo.
 
 #### Pronto quando
-Função testada no `src`, os dois arquivos de saída existem e há uma tabela "representação antiga × nova".
+Função testada no `src`, os dois arquivos de saída e o comentário no #140.
 
-#### Para o relatório
-Qualquer resultado é válido. Se surgirem perfis clínicos além da idade, ótimo; se não, a conclusão "a estrutura dos dados é dominada pela idade e pelo registro, mesmo com representação adequada" é um achado com evidência.
+#### Pessoa B (31/10)
+Revisar a função, ler o perfil estatístico (#137), escrever a seção "Não supervisionado: representação antiga × nova" do relatório e o slide correspondente.
 
 ## #137 · Perfil estatístico dos grupos: qui-quadrado e ANOVA (e óbito × cura só no treino)
 
 - prioridade: P1
 - situação: aberta
 - estratégia: desenvolver
-- marco: M4
-- data ideal: 31/10
+- marco: M3
+- data ideal: 28/10
 - responsável: Pessoa A (dona; revisão cruzada sem edição concorrente)
 - pessoas: A
 - fonte: Orientação de 24/10 (recomendação de ANOVA e qui-quadrado); base de conhecimento v9 §8.3
@@ -4002,23 +4136,22 @@ Os grupos do agrupamento foram descritos só com médias e figuras, sem teste do
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** função e uso 1 em 27/10; uso 2 em 31/10 · **Esforço estimado:** ≈ 4 h · **Revisão:** Pessoa C (função) e Pessoa B (leitura dos resultados)
+> [!decisão] Replanejamento de 26/10: exploração antes da validação
+> A troca para a coorte definitiva é uma base "nova": antes de ajustar e validar modelos, todas as análises que podem mudar decisões (variáveis, representação, limiar, calibração, leitura por região) rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`. Os achados são discutidos no **ponto de decisão do #140 (28/10 à noite)**. Só então começam o ajuste fino (29/10) e a validação. Depois do teste, as mesmas análises são apenas repetidas para o relatório, sem decidir nada.
+
+**Dono:** Pessoa A · **Prazo:** função e uso 1 em 27/10; uso 2 em 28/10 · **Esforço estimado:** ≈ 4 h · **Revisão:** Pessoa C (função) · Pessoa B (leitura, 31/10)
 
 #### Passo a passo
-1. Crie `src/evaluation/cluster_profile.py` com `perfil_estatistico(df, coluna_grupo, numericas, categoricas, min_esperado=5) -> pd.DataFrame`. Uma linha por variável, com: `variavel`, `tipo`, `teste`, `estatistica`, `p`, `p_ajustado` (Benjamini-Hochberg), `efeito` (V de Cramér ou eta²), `leitura` ("pequeno", "médio", "grande") e um resumo por grupo (proporções para qualitativas; média e mediana para numéricas).
-2. Use `scipy.stats.chi2_contingency` (qualitativas; tabela `pd.crosstab`), `scipy.stats.f_oneway` (ANOVA) e `scipy.stats.kruskal`. V de Cramér = √(χ² ÷ (n × (min(linhas, colunas) − 1))). eta² = soma de quadrados entre grupos ÷ soma total.
-3. Categorias com contagem esperada menor que 5: junte em "outras" ou sinalize na coluna `observacao`.
-4. Mantenha vazio como categoria própria (`AUSENTE`), nunca descarte.
-5. Testes em `tests/test_cluster_profile.py`: variável independente do grupo → V perto de 0; variável igual ao grupo → V perto de 1; numérica com médias bem diferentes → eta² alto.
-6. **Uso 1 (27/10): óbito × cura no `train_ref`.** Leia do artefato só `particao`, `alvo_obito_srag` e as variáveis; filtre `train_ref`; rode a função com `coluna_grupo="alvo_obito_srag"`. Salve `outputs/final/perfil_desfecho_train_ref.csv`. Isso fecha o #51.
-7. **Uso 2 (31/10): clusters.** Com os rótulos do #136 (antigos e novos), rode a função para cada solução escolhida. Salve `outputs/final/perfil_clusters_*.csv`.
-8. Ordene cada tabela pelo efeito e escreva três frases: quais variáveis mais separam os grupos e o que isso significa.
+1. Crie `src/evaluation/cluster_profile.py` com `perfil_estatistico(df, coluna_grupo, numericas, categoricas, min_esperado=5) -> pd.DataFrame`. Uma linha por variável: `variavel`, `tipo`, `teste`, `estatistica`, `p`, `p_ajustado` (Benjamini-Hochberg), `efeito` (V de Cramér ou eta²), `leitura` (pequeno, médio, grande), resumo por grupo (proporções para qualitativas; média e mediana para numéricas) e `observacao`.
+2. Use `scipy.stats.chi2_contingency` (sobre `pd.crosstab`), `scipy.stats.f_oneway` e `scipy.stats.kruskal`. V de Cramér = √(χ² ÷ (n × (min(linhas, colunas) − 1))). eta² = soma de quadrados entre grupos ÷ soma total.
+3. Categorias com esperado menor que 5: juntar em "outras" ou sinalizar em `observacao`. Vazio é categoria própria (`AUSENTE`), nunca descartado.
+4. Testes em `tests/test_cluster_profile.py`: variável independente do grupo → V ≈ 0; variável igual ao grupo → V ≈ 1; numérica com médias muito diferentes → eta² alto.
+5. **Uso 1 (27/10): óbito × cura no `train_ref`** (fecha o #51). Salve `outputs/final/perfil_desfecho_train_ref.csv`. Comente no #140 as cinco variáveis com maior efeito e qualquer resultado estranho (efeito enorme numa variável sem sentido clínico pode ser erro de dado).
+6. **Uso 2 (28/10): clusters** com os rótulos do #136 (antiga e nova representação). Salve `outputs/final/perfil_clusters_*.csv` e comente no #140.
+7. Ordene cada tabela pelo efeito e escreva três frases por uso.
 
 #### Pronto quando
-Função testada no `src` e os CSVs dos dois usos gerados.
-
-#### Se der errado
-Se a função não ficar pronta em 27/10, faça o uso 1 em 28/10; o uso 2 depende do #136 de qualquer forma.
+Função testada no `src` e os CSVs dos dois usos gerados, com os comentários no #140.
 
 ## #112 · Atualizar a revisão bibliográfica com busca científica dirigida
 
@@ -4658,7 +4791,7 @@ Falta confirmar em que ano campos como perda de olfato, perda de paladar, fadiga
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A (dados e verificação) + Pessoa C (linhas na ablação) · **Prazo:** 27/10, antes do ajuste fino · **Esforço estimado:** A ≈ 3 h · C ≈ 1 h (dentro do #54) · **Começa quando:** #131 e #135
+**Dono:** Pessoa A (dados e verificação) + Pessoa C (linhas na ablação) · **Prazo:** 27/10 (Fase E), decisão no #140 · **Esforço estimado:** A ≈ 3 h · C ≈ 1 h (dentro do #54) · **Começa quando:** #131 e #135
 
 #### Objetivo
 Decidir, com um critério combinado antes de olhar os números, se os três sintomas ficam ou saem do modelo principal.
