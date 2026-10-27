@@ -329,6 +329,9 @@ models:
     solver: lbfgs
     max_iter: 1000
     class_weight: balanced
+    busca_class_weight:
+    - balanced
+    - null
   decision_tree:
     ativa: true
     max_depth:
@@ -365,20 +368,19 @@ models:
     - 0.1
     max_iter: null
     busca_max_iter:
-    - 300
     - 500
     - 1000
     max_depth: null
     busca_max_depth:
     - null
-    - 4
-    - 6
-    - 8
     max_leaf_nodes: 31
     min_samples_leaf: 20
     l2_regularization: 0.0
     early_stopping: false
     class_weight: balanced
+    busca_class_weight:
+    - balanced
+    - null
 
 tuning:
   metrica_principal: pr_auc
