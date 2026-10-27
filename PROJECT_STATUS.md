@@ -2,15 +2,14 @@
 
 > Arquivo mantido automaticamente pelo **Painel de Pendências** (pasta local `.srag-status-local`).
 > Não edite à mão: use o painel, ou escreva `[done:#ID]`, `[progress:#ID]`, `[reopen:#ID]` ou `tarefa ID` nas mensagens de commit.
-> O texto das pendências (títulos, seções, responsáveis, datas) fica em `PROJECT_STATUS_TEXT.md` — esse sim pode ser editado à mão.
 
-> Atualizado em 2026-10-27T01:39:29Z.
+> Atualizado em 2026-10-27T14:39:39Z.
 
-- Concluídas: **48**
+- Concluídas: **49**
 - Resolvidas pendentes de validação: **0**
 - Precisam revisão: **0**
 - Em andamento: **4**
-- Abertas: **80**
+- Abertas: **79**
 
 ## Precisam revisão (a auditoria encontrou problema) (0)
 
@@ -22,144 +21,144 @@ _Nenhum item._
 
 ## Em andamento (4)
 
-- 🟦 **#10** Regra definitiva para números de notificação repetidos — EM ANDAMENTO · Pessoa A (regra, função e testes) · revisão: Pessoa C · 25/10
-- 🟦 **#131** Levar para o src o artefato de seis blocos que o B_07 já gera (group_id, região, partição, leitura protegida) — EM ANDAMENTO · Pessoa C (dona; revisão cruzada sem edição concorrente) · 25/10
-- 🟦 **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — EM ANDAMENTO · Pessoa A (decisoes.yaml) + Pessoa C (artefato) · 26/10
-- 🟦 **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 28/10
+- 🟦 **#10** Regra definitiva para números de notificação repetidos — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- 🟦 **#102** Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- 🟦 **#70** Dicionário de variáveis desatualizado e com arquivo fantasma — EM ANDAMENTO · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- 🟦 **#131**  — EM ANDAMENTO · — · —
 
-## Abertas (80)
+## Abertas (79)
 
-- ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B até 24/10 → Pessoa C a partir de 26/10 · 25/10
-- ⬜ **#132** Adaptar a cadeia C_11–C_16 aos seis blocos (train_ref, val_tune, val_cal, val_meas) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 26/10
-- ⬜ **#135** Testes das invariantes do protocolo no artefato v3 (§28.4) — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 26/10
-- ⬜ **#139** Fase E: EDA descritiva na coorte definitiva (B_06 parte A apontando para coorte_final) — ABERTA · Pessoa A (executa com roteiro) · Pessoa B (revisa ao voltar) · 26/10
-- ⬜ **#50** Três sintomas vazios em 2019: estudar o "marcador de ano" e decidir se ficam no modelo — ABERTA · Pessoa A (tabela e verificação) + Pessoa C (linha na ablação) · 27/10
-- ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — ABERTA · Pessoa A · 27/10
-- ⬜ **#54** Rodar as sensibilidades de gravidade, contexto e "qualquer óbito" — ABERTA · Pessoa C (execução) + Pessoa A (relatório) · 27/10
-- ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A · 27/10
-- ⬜ **#136** Não supervisionado com one-hot dos quatro estados e normalização: nova representação e nova rodada de agrupamento — ABERTA · Pessoa C (executa na Fase E) · Pessoa B (interpreta ao voltar) · 27/10
-- ⬜ **#137** Perfil estatístico dos grupos: qui-quadrado e ANOVA (e óbito × cura só no treino) — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 28/10
-- ⬜ **#140** Fase E: ponto de decisão dos achados exploratórios (28/10 à noite) — ABERTA · Pessoa A (conduz e registra) + Pessoa C + Pessoa B (por mensagem) · 28/10
-- ⬜ **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
-- ⬜ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
-- ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — ABERTA · Pessoa C (aprova) + Pessoa A (registra) · 29/10
+- ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
+- ⬜ **#127** Função de comparação pareada com bootstrap por grupo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#119** Executar o modelo congelado nas duas janelas de teste (E_02) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 23/10
+- ⬜ **#51** As tabelas de óbito do B_06 usaram também os casos do teste — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#1** Rodar o ajuste fino e preencher os hiperparâmetros no YAML — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#78** Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#79** Aprovar o G7: escolher o método de calibração (proposta do C_15: sigmoid) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
-- ⬜ **#91** Mostrar quais características pesam mais no risco (importância das variáveis) — ABERTA · Pessoa C (tabelas) + Pessoa B (interpretação em 31/10) · 29/10
-- ⬜ **#80** Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 30/10
-- ⬜ **#81** Aprovar o G9 e liberar as duas janelas de teste uma única vez — ABERTA · Pessoa A (conduz o checklist) + Pessoa C (modelagem) + Equipe (aprova) · 30/10
-- ⬜ **#2** Executar o C_16 uma única vez nas duas janelas de teste autorizadas — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#119** Executar o modelo congelado nas duas janelas de teste (E_02) — ABERTA · Pessoa C (execução) + Pessoa B (revisão ao voltar) · 31/10
-- ⬜ **#133** Relatório final: esqueleto, seções e rastreabilidade de cada número — ABERTA · Pessoa A (dona) + Pessoa B (EDA e perfis) + Pessoa C (conferência técnica) · 01/11
-- ⬜ **#9** Saturação, desconforto respiratório e vacina: cada documento diz uma coisa — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 25/10
-- ⬜ **#73** decisoes.md parado em 10/10 — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 25/10
-- ⬜ **#15** Pré-processador e manifesto podem usar listas de variáveis diferentes — ABERTA · Pessoa C (antes: Pessoa A) · 26/10
-- ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa C (Fase E, val_tune) · Pessoa B (teste, 31/10) · Pessoa A (falsos negativos, 31/10) · 28/10
-- ⬜ **#110** Geografia como separação da análise: ponto de corte por região e equidade (sem região como variável) — ABERTA · Pessoa C (execução) + Pessoa B (interpretação em 31/10) · 28/10
-- ⬜ **#26** O manifesto nunca registra que o teste foi aberto — ABERTA · Pessoa A (função e teste) · Pessoa C (chamada no C_16) · 29/10
-- ⬜ **#56** Mostrar por que a data de internação é a âncora, e quem ficou de fora — ABERTA · Pessoa B · 31/10
-- ⬜ **#112** Atualizar a revisão bibliográfica com busca científica dirigida — ABERTA · Pessoa B (busca e matriz) · conferência de citações: Pessoa A · 31/10
-- ⬜ **#71** Cuidados de redação no relatório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 01/11
-- ⬜ **#126** Execução limpa da cadeia final e pacote de reprodução — ABERTA · Pessoa A (reprodução independente e README) + Pessoa C (script) · 01/11
-- ⬜ **#134** Apresentação e defesa: roteiro, slides e perguntas difíceis — ABERTA · Pessoa B (roteiro, slides e respostas) + Pessoa A (números) + Pessoa C (revisão técnica) · 02/11
-- ⬜ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
-- ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa B até 24/10 → Pessoa C · 25/10
-- ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B até 24/10 → Pessoa C · 25/10
-- ⬜ **#59** Documentar 2026 como período parcial e exclusivamente exploratório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 25/10
-- ⬜ **#83** Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar — ABERTA · Pessoa A · revisão: Pessoa C · 25/10
-- ⬜ **#27** O manifesto "mais recente" é escolhido pela data do arquivo — ABERTA · Pessoa C (antes: Pessoa B) · 26/10
-- ⬜ **#29** Itens desatualizados ou sem uso no YAML — ABERTA · Pessoa A · revisão: Pessoa C · 26/10
-- ⬜ **#58** A mesma validação escolhe hiperparâmetros e mede o resultado — ABERTA · Pessoa C (conferência no #132) · 26/10
-- ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (regra e derivação) · revisão: Pessoa C · 26/10
-- ⬜ **#13** A sazonalidade é criada, mas não entra no modelo — ABERTA · Pessoa C (ablação) + Pessoa A (texto) · 27/10
-- ⬜ **#87** Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro — ABERTA · Pessoa A · revisão: Pessoa C · 27/10
-- ⬜ **#40** A construção da coorte provisória não gera os arquivos de rastreio esperados — ABERTA · Pessoa A (tabela) + Pessoa C (conferência) · 28/10
-- ⬜ **#52** Fichas de óbito têm as doenças prévias mais preenchidas — ABERTA · Pessoa A (Fase E, val_tune) · Pessoa B (repete no teste, 31/10) · 28/10
-- ⬜ **#19** O YAML aceita chaves duplicadas em silêncio e fica em cache — ABERTA · Pessoa B (após 30/10) · alternativa: Pessoa C · 31/10
-- ⬜ **#31** configs/paths.local.json aponta para uma pasta que ninguém usa — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#80** Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1) — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#81** Aprovar o G9 e liberar as duas janelas de teste uma única vez — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
+- ⬜ **#83** Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#84** Definir quais doses de vacina contam como anteriores à internação — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#97** Fechar o "assunto da entrega do professor" — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#19** O YAML aceita chaves duplicadas em silêncio e fica em cache — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#99** B_06: terminar a execução do início ao fim depois das correções de memória — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#15** Pré-processador e manifesto podem usar listas de variáveis diferentes — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#55** Desempenho e erros por ano, idade, sexo e UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#57** Associações "protetoras" que são efeito da idade — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#89** Revisar a conclusão do A_09 de que o sorteio é "otimista" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 25/10
+- ⬜ **#110** Estado como variável: comparar sem geografia, com região e com UF — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 26/10
+- ⬜ **#9** Saturação, desconforto respiratório e vacina: cada documento diz uma coisa — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#13** A sazonalidade é criada, mas não entra no modelo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#54** Rodar as sensibilidades de gravidade, contexto e "qualquer óbito" — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 27/10
+- ⬜ **#52** Fichas de óbito têm as doenças prévias mais preenchidas — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
+- ⬜ **#109** UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 28/10
+- ⬜ **#126** Rodar a cadeia final em processos isolados e registrar tempo e pico de memória — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 29/10
 - ⬜ **#45** Vacina contra COVID marcada como "sim" antes de existir a vacina — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#46** 58 linhas repetem 29 números de notificação na base bruta — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#47** Idades, datas e anos impossíveis — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#57** Associações "protetoras" que são efeito da idade — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#56** Mostrar por que a data de internação é a âncora, e quem ficou de fora — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10
 - ⬜ **#69** Plano v2 e orientação de TCC descrevem outro período e outra divisão — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
-- ⬜ **#89** Revisar a conclusão do A_09 de que o sorteio é "otimista" — ABERTA · Pessoa A · 31/10
-- ⬜ **#130** Regerar a referência do projeto ao fim de cada marco — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 02/11
-- ⬜ **#11** A sensibilidade de indicadores de ausência não existe no código — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 25/10
-- ⬜ **#111** Recorte só de São Paulo como entrega mínima — ABERTA · Equipe · 28/10
-- ⬜ **#98** Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório — ABERTA · Pessoa A · 31/10
-- ⬜ **#138** Opcional: "o mundo voltou?" Comparar 2019 com 2023–2025 — ABERTA · Pessoa C ou Pessoa B, se sobrar tempo · 01/11
+- ⬜ **#71** Cuidados de redação no relatório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
+- ⬜ **#112** Atualizar a revisão bibliográfica com busca científica dirigida — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 01/11
+- ⬜ **#59** Documentar 2026 como período parcial e exclusivamente exploratório — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#73** decisoes.md parado em 10/10 — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ⬜ **#29** Itens desatualizados ou sem uso no YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#38** Sobras no B_07: modo de teste sintético e imports sem uso — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#40** A construção da coorte provisória não gera os arquivos de rastreio esperados — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 20/10
+- ⬜ **#98** Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 21/10
+- ⬜ **#22** Funções de avaliação com padrões diferentes do YAML — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#23** A análise por subgrupo não calcula PR-AUC nem Brier — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#27** O manifesto "mais recente" é escolhido pela data do arquivo — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#58** A mesma validação escolhe hiperparâmetros e mede o resultado — ABERTA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 22/10
+- ⬜ **#26** O manifesto nunca registra que o teste foi aberto — ABERTA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 30/10
+- ⬜ **#96** Atualizar os guias e a base de conhecimento do agente — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 01/11
+- ⬜ **#130** Regerar a referência do projeto ao fim de cada marco — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
+- ⬜ **#111** Recorte só de São Paulo como entrega mínima — ABERTA · Equipe · 26/10
 - ⬜ **#53** Exploração opcional: validar o modelo congelado em 2026 — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 02/11
+- ⬜ **#11** A sensibilidade de indicadores de ausência não existe no código — ABERTA · C · Após 03/11
 - ⬜ **#24** Curvas de calibração calculadas de dois jeitos — ABERTA · C · Após 03/11
 - ⬜ **#25** A checagem de vazamento só olha o nome das colunas — ABERTA · C · Após 03/11
+- ⬜ **#31** configs/paths.local.json aponta para uma pasta que ninguém usa — ABERTA · C · Após 03/11
 - ⬜ **#32** Textos antigos no código (dt_notific, nomes de gates) — ABERTA · C · Após 03/11
 - ⬜ **#35** Notebooks B recalculam com código próprio o que já existe em src/ — ABERTA · B · Após 03/11
-- ⬜ **#38** Sobras no B_07: modo de teste sintético e imports sem uso — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Após 03/11
 - ⬜ **#39** Matriz de transição do B_10 com status escritos à mão — ABERTA · B · Após 03/11
 - ⬜ **#41** "provisoria", "provisorio" e "provisional" misturados — ABERTA · B + C · Após 03/11
 - ⬜ **#42** Cada notebook encontra a pasta do projeto de um jeito — ABERTA · B + C · Após 03/11
 - ⬜ **#43** Arquivos e listas que ninguém usa (preprocessor.joblib, lista de coortes no B_06) — ABERTA · B + C · Após 03/11
 - ⬜ **#48** 41 fichas com povo tradicional preenchido sem a pessoa ser de povo tradicional — ABERTA · A · Após 03/11
 - ⬜ **#49** Códigos a confirmar no dicionário — ABERTA · A · Após 03/11
+- ⬜ **#50** Em que ano cada campo entrou na ficha — ABERTA · A · Após 03/11
 - ⬜ **#68** Texto com codificação corrompida — ABERTA · C · Após 03/11
 - ⬜ **#74** Faltam os números do clustering sem saturação e desconforto — ABERTA · B · Após 03/11
 - ⬜ **#88** A exportação da Pessoa A não tem duas variáveis que o modelo exige — ABERTA · A · Após 03/11
 - ⬜ **#90** O A_09 sorteia linhas, e não grupos: a mesma ficha cai em duas partições — ABERTA · A · Após 03/11
 - ⬜ **#93** O A_14 não tem a tabela de candidatos para comparar — ABERTA · A + C · Após 03/11
 - ⬜ **#94** Alertas falsos no relatório automático do projeto — ABERTA · C · Após 03/11
-- ⬜ **#96** Atualizar os guias e a base de conhecimento do agente — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Após 03/11
-- ⬜ **#109** UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada — ABERTA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Após 03/11
 - ⬜ **#128** 29 avisos de depreciação de timedelta sem unidade no NumPy — ABERTA · A · Após 03/11
 - ⬜ **#129** Refatoração completa de performance de B_05, construtor e notebooks A — ABERTA · B · Após 03/11
+- ⬜ **#132**  — ABERTA · — · —
+- ⬜ **#133**  — ABERTA · — · —
+- ⬜ **#134**  — ABERTA · — · —
+- ⬜ **#135**  — ABERTA · — · —
+- ⬜ **#136**  — ABERTA · — · —
+- ⬜ **#137**  — ABERTA · — · —
+- ⬜ **#138**  — ABERTA · — · —
+- ⬜ **#139**  — ABERTA · — · —
+- ⬜ **#140**  — ABERTA · — · —
 
-## Concluídas (48)
+## Concluídas (49)
 
-- ✅ **#72** Quem é responsável pelos próximos passos (passagem de bastão de 24/10) — CONCLUÍDA · Pessoa B (registra e comunica) + Equipe · 24/10
-- ✅ **#3** Garantir que a busca de hiperparâmetros termine a tempo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
+- ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 18/10
+- ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#86** Levar a partição por hash do notebook para src/data/split.py — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#123** Ler o artefato por partição, para o teste nunca chegar à memória por engano — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#118** Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
+- ✅ **#3** Garantir que a busca de hiperparâmetros termine a tempo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ✅ **#5** Decidir se o peso das classes fica, já que ele infla as probabilidades — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 27/10
+- ✅ **#77** Aprovar o G1 com a seleção de features da coorte provisória congelada — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
 - ✅ **#4** O boosting do código central não é o mesmo do piloto — CONCLUÍDA · C · Concluído
-- ✅ **#6** Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva) — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#7** Artefato supervisionado com colunas de auditoria (sg_uf, vacina, saturação…) — CONCLUÍDA · B · Concluído
 - ✅ **#8** Partição estratificada por ano × desfecho — CONCLUÍDA · B · Concluído
 - ✅ **#44** Coorte definitiva inicial: congelar a seleção de features da coorte provisória — CONCLUÍDA · A (validação técnica: C) · Concluído
-- ✅ **#77** Aprovar o G1 com a seleção de features da coorte provisória congelada — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#85** Períodos de treino e teste definidos — CONCLUÍDA · Equipe (conduz: A) · Concluído
-- ✅ **#86** Levar a partição por hash do notebook para src/data/split.py — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#92** Repositório local sincronizado com o GitHub — CONCLUÍDA · B · Concluído
-- ✅ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — CONCLUÍDA · Pessoa B (prepara e registra) + Equipe · Concluído
 - ✅ **#113** O 01_extracao lia o Parquet inteiro (processo de ~13 GB) — CONCLUÍDA · B · Concluído
-- ✅ **#118** Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#120** Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#123** Ler o artefato por partição, para o teste nunca chegar à memória por engano — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#12** Intervalos impossíveis entram no modelo como se fossem válidos — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#14** A variável SRAG_PARQUET_URL não tem efeito — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#16** Nada no código impede abrir o teste antes do G9 — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
+- ✅ **#72** Quem é responsável pelos próximos passos — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ✅ **#82** Decidir o que fazer com intervalos impossíveis entre sintomas e internação — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 18/10
+- ✅ **#16** Nada no código impede abrir o teste antes do G9 — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#18** Carregar só algumas colunas do artefato pula a validação — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#61** pyproject aceita scikit-learn 1.4, mas o código precisa de 1.8+ — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#63** Dependências sem versão e espalhadas em dois arquivos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#14** A variável SRAG_PARQUET_URL não tem efeito — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 20/10 · ⚠ reconfirmar
+- ✅ **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#64** Testes que faltam — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 22/10
+- ✅ **#95** 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 24/10
+- ✅ **#37** O B_10 vai falhar de propósito quando a lista final de variáveis existir — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 29/10
+- ✅ **#12** Intervalos impossíveis entram no modelo como se fossem válidos — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 31/10
 - ✅ **#17** One-hot denso no código central: risco de faltar memória — CONCLUÍDA · C · Concluído
-- ✅ **#18** Carregar só algumas colunas do artefato pula a validação — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#36** Faixas etárias e grafia do sexo diferentes entre EDA e modelo — CONCLUÍDA · Pessoa B (prepara) · execução: quem rodar o #51 · Concluído · ⚠ reconfirmar
-- ✅ **#61** pyproject aceita scikit-learn 1.4, mas o código precisa de 1.8+ — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#62** pyproject.toml inválido — CONCLUÍDA · C · Concluído
-- ✅ **#63** Dependências sem versão e espalhadas em dois arquivos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#64** Testes que faltam — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#82** Decidir o que fazer com intervalos impossíveis entre sintomas e internação — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#114** Precedência errada entre penalty do YAML e l1_ratio explícito na logística — CONCLUÍDA · C · Concluído
-- ✅ **#121** montar_features faz cópia completa da coorte e devolve tipos pesados — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#124** C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#125** B_07: célula 19 com parêntese não fechado e duas células de teste sem execução — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#28** O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes — CONCLUÍDA · Pessoa C (antes: Pessoa A) · Concluído
-- ✅ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído · ⚠ reconfirmar
+- ✅ **#30** Salvar a coorte definitiva com o nome errado a carregaria como provisória — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 18/10
+- ✅ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 19/10
+- ✅ **#20** Nome do finalista diferente no YAML e no código — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#21** A fábrica passa qualquer chave nova do YAML ao modelo — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#122** read_srag sem opção de leitura compacta — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#28** O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · 29/10
+- ✅ **#60** Documentar que os clusters refletem idade e preenchimento, não perfis clínicos — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · 31/10 · ⚠ reconfirmar
 - ✅ **#65** test_temporal.py era cópia de test_leakage.py — CONCLUÍDA · C · Concluído
-- ✅ **#66** Teste lento roda junto com os rápidos — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#67** Rodar a suíte de testes depois das correções — CONCLUÍDA · C · Concluído
 - ✅ **#75** A descrição do G2 não batia com o que foi executado — CONCLUÍDA · A + C · Concluído
-- ✅ **#101** Remover o notebook duplicado A3b (cópia antiga do A_09) — CONCLUÍDA · Pessoa A (dona; revisão cruzada sem edição concorrente) · Concluído
 - ✅ **#115** Mensagem de erro de SRAG_COHORT_KIND fora do contrato do teste — CONCLUÍDA · C · Concluído
 - ✅ **#116** Referência do projeto lenta e incompleta para outra IA (schema v6) — CONCLUÍDA · B · Concluído
-- ✅ **#122** read_srag sem opção de leitura compacta — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#33** normalization.py está vazio — CONCLUÍDA · C · Concluído
-- ✅ **#34** O C_13 manda colar os hiperparâmetros em config.yaml (o certo é supervised.yaml) — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#37** O B_10 vai falhar de propósito quando a lista final de variáveis existir — CONCLUÍDA · Pessoa B (dona; revisão cruzada sem edição concorrente) · Concluído
-- ✅ **#76** Nenhum notebook confere a versão do scikit-learn no início — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · Concluído
+- ✅ **#34** O C_13 manda colar os hiperparâmetros em config.yaml (o certo é supervised.yaml) — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#76** Nenhum notebook confere a versão do scikit-learn no início — CONCLUÍDA · Pessoa C (dona; revisão cruzada sem edição concorrente) · 20/10
+- ✅ **#33** normalization.py está vazio — CONCLUÍDA · C · Após 03/11
 
 ## Última auditoria profunda
 
@@ -171,12 +170,12 @@ _Nenhum item._
 - **HIGH** Marcadores de conflito Git encontrados. — `src/protocolo/verificacoes.py`
 
 <!-- PROJECT_STATUS_DATA
-{"schema_version":3,"generated_at":"2026-10-27T01:39:29Z","scan":{"seen":[],"deep_seen":[]},"audit":{"generated_at":"2026-10-26T06:01:01Z","by":"Mateus","head":"db65718a789bdbf9e62c79e8d4867e75d51e8837","files_scanned":96,"counts":{"critical":0,"high":3,"medium":17,"low":48},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"notebook-saved-error","message":"Notebook contém saídas de erro salvas.","paths":["notebooks/B/B_05_eda_primeira_passagem.ipynb"],"task_ids":["42"]},{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90","135"]}]},"published_by":"Mateus","items":{
+{"schema_version":3,"generated_at":"2026-10-27T14:39:39Z","scan":{"seen":[],"deep_seen":[]},"audit":{"generated_at":"2026-10-26T06:01:01Z","by":"Mateus","head":"db65718a789bdbf9e62c79e8d4867e75d51e8837","files_scanned":96,"counts":{"critical":0,"high":3,"medium":17,"low":48},"tests_ok":true,"tests_executed":true,"top":[{"severity":"high","category":"notebook-saved-error","message":"Notebook contém saídas de erro salvas.","paths":["notebooks/B/B_05_eda_primeira_passagem.ipynb"],"task_ids":["42"]},{"severity":"high","category":"performance-dense-one-hot","message":"OneHotEncoder denso pode causar explosão de memória.","paths":["notebooks/B/B_06_eda_temporal_clustering.ipynb"],"task_ids":["35","36","42","43","45","51","56","57"]},{"severity":"high","category":"merge-conflict","message":"Marcadores de conflito Git encontrados.","paths":["src/protocolo/verificacoes.py"],"task_ids":["87","88","90","135"]}]},"published_by":"Ivan-S-Oliveira","items":{
 "1":{"id":"1","status":"open","done":false,"note":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10.","comments":[{"event_id":"e4999586-d192-5c21-bb29-182cc6d69f12","timestamp":"2026-10-26T07:00:02Z","actor":"Mateus (revisão 26/10)","text":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10."}],"updated_at":"2026-10-26T07:00:01Z","updated_by":"Mateus (revisão 26/10)","origin":"human","evidence":[{"type":"commit_source_match","sha":"a91322865c23","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","author":"mateus-so","when":"2026-10-18T17:23:01-03:00","files":["src/models/pipeline.py"]}],"history":[{"at":"2026-10-26T06:01:01Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"a91322865c23"},{"at":"2026-10-26T07:00:01Z","by":"Mateus (revisão 26/10)","from":"resolved_pending_validation","to":"open","origin":"human","ref":"335cc9b0-a53b-5443-a3f6-1657aad272b7"}],"dismissed":["a91322865c23"],"flags":{},"auto_prev":"open","applied_events":["335cc9b0-a53b-5443-a3f6-1657aad272b7","e4999586-d192-5c21-bb29-182cc6d69f12"]},
 "2":{"id":"2","status":"open","done":false,"note":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10.","comments":[{"event_id":"224dcb72-0253-5804-872c-4eedf62420c6","timestamp":"2026-10-26T07:00:04Z","actor":"Mateus (revisão 26/10)","text":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10."}],"updated_at":"2026-10-26T07:00:03Z","updated_by":"Mateus (revisão 26/10)","origin":"human","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["configs/supervised.yaml"]}],"history":[{"at":"2026-10-26T06:01:01Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"},{"at":"2026-10-26T07:00:03Z","by":"Mateus (revisão 26/10)","from":"resolved_pending_validation","to":"open","origin":"human","ref":"fb892ff3-5e0e-538e-9774-a3122a3b7e49"}],"dismissed":["0f565b58a1b6"],"flags":{},"auto_prev":"open","applied_events":["fb892ff3-5e0e-538e-9774-a3122a3b7e49","224dcb72-0253-5804-872c-4eedf62420c6"]},
 "3":{"id":"3","status":"done","done":true,"note":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído.","comments":[{"event_id":"cdcb288a-3494-502f-8915-49f085190e20","timestamp":"2026-10-26T06:00:02Z","actor":"Mateus (restauração 26/10)","text":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído."}],"updated_at":"2026-10-26T06:00:01Z","updated_by":"Mateus (restauração 26/10)","origin":"human","evidence":[],"history":[{"at":"2026-10-26T06:00:01Z","by":"Mateus (restauração 26/10)","from":"open","to":"done","origin":"human","ref":"635e1503-0636-5342-bede-c9f3cb512897"}],"dismissed":[],"flags":{},"applied_events":["635e1503-0636-5342-bede-c9f3cb512897","cdcb288a-3494-502f-8915-49f085190e20"]},
 "4":{"id":"4","status":"done","done":true,"note":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído.","comments":[{"event_id":"306c8d4f-ef4e-5f35-b6b5-4f71453a7d41","timestamp":"2026-10-26T06:00:38Z","actor":"Mateus (restauração 26/10)","text":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído."}],"updated_at":"2026-10-26T06:00:37Z","updated_by":"Mateus (restauração 26/10)","origin":"human","evidence":[],"history":[{"at":"2026-10-26T06:00:37Z","by":"Mateus (restauração 26/10)","from":"open","to":"done","origin":"human","ref":"175af337-e83c-5aef-894b-31be2524c874"}],"dismissed":[],"flags":{},"applied_events":["175af337-e83c-5aef-894b-31be2524c874","306c8d4f-ef4e-5f35-b6b5-4f71453a7d41"]},
-"5":{"id":"5","status":"open","done":false,"note":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10.","comments":[{"event_id":"1ea54fb6-0d15-521e-b740-fbadfa968e9e","timestamp":"2026-10-26T07:00:06Z","actor":"Mateus (revisão 26/10)","text":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10."}],"updated_at":"2026-10-26T07:00:05Z","updated_by":"Mateus (revisão 26/10)","origin":"human","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["configs/supervised.yaml"]}],"history":[{"at":"2026-10-26T06:01:01Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"},{"at":"2026-10-26T07:00:05Z","by":"Mateus (revisão 26/10)","from":"resolved_pending_validation","to":"open","origin":"human","ref":"eae427e0-f5eb-5ea0-aa27-a067b1b522f9"}],"dismissed":["0f565b58a1b6"],"flags":{},"auto_prev":"open","applied_events":["eae427e0-f5eb-5ea0-aa27-a067b1b522f9","1ea54fb6-0d15-521e-b740-fbadfa968e9e"]},
+"5":{"id":"5","status":"done","done":true,"note":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10.","comments":[{"event_id":"1ea54fb6-0d15-521e-b740-fbadfa968e9e","timestamp":"2026-10-26T07:00:06Z","actor":"Mateus (revisão 26/10)","text":"Revisão 26/10: sugestão automática rejeitada. A evidência é um commit antigo (09 a 21/10), anterior à revisão profunda de 24/10, que já verificou este item contra o código (commit 33af2a8) e concluiu que ele não está feito. A auditoria só voltou a sugerir porque a memória de commits já lidos foi zerada (scan seen/deep_seen = 0) junto com o estado de 25/10."}],"updated_at":"2026-10-27T14:39:29Z","updated_by":"Ivan","origin":"human","evidence":[{"type":"commit_source_match","sha":"0f565b58a1b6","subject":"implementar src/features","author":"Ivan-S-Oliveira","when":"2026-10-09T20:36:25-03:00","files":["configs/supervised.yaml"]}],"history":[{"at":"2026-10-26T06:01:01Z","by":"auditoria profunda automática","from":"open","to":"resolved_pending_validation","origin":"auto","ref":"0f565b58a1b6"},{"at":"2026-10-26T07:00:05Z","by":"Mateus (revisão 26/10)","from":"resolved_pending_validation","to":"open","origin":"human","ref":"eae427e0-f5eb-5ea0-aa27-a067b1b522f9"},{"at":"2026-10-27T14:39:29Z","by":"Ivan","from":"open","to":"done","origin":"human","ref":"a6de13d9-5a43-4263-8779-c97519ebc968"}],"dismissed":["0f565b58a1b6"],"flags":{},"auto_prev":"open","applied_events":["1ea54fb6-0d15-521e-b740-fbadfa968e9e","eae427e0-f5eb-5ea0-aa27-a067b1b522f9","a6de13d9-5a43-4263-8779-c97519ebc968"]},
 "6":{"id":"6","status":"done","done":true,"note":"Commit a91322865c23: fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","comments":[],"updated_at":"2026-10-18T17:23:01-03:00","updated_by":"mateus-so","origin":"commit","evidence":[{"type":"commit","sha":"a91322865c23","subject":"fix: estabiliza B_07 e preprocessamento esparso float32 [done:#6] [done:#125]","author":"mateus-so","when":"2026-10-18T17:23:01-03:00","marker":"done"}],"history":[{"at":"2026-10-18T17:23:01-03:00","by":"mateus-so","from":"open","to":"done","origin":"commit","ref":"a91322865c23"}],"dismissed":[],"flags":{},"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.antes_generalizacao_coorte.ipynb"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
 "7":{"id":"7","status":"done","done":true,"note":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído.","comments":[{"event_id":"6dd79598-d9a9-5574-80c3-8b7358a49d6a","timestamp":"2026-10-26T06:00:40Z","actor":"Mateus (restauração 26/10)","text":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído."}],"updated_at":"2026-10-26T06:00:39Z","updated_by":"Mateus (restauração 26/10)","origin":"human","evidence":[],"history":[{"at":"2026-10-26T06:00:39Z","by":"Mateus (restauração 26/10)","from":"open","to":"done","origin":"human","ref":"aafed22b-7b19-5c26-bcdd-d6d8808248b2"}],"dismissed":[],"flags":{},"applied_events":["aafed22b-7b19-5c26-bcdd-d6d8808248b2","6dd79598-d9a9-5574-80c3-8b7358a49d6a"],"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.antes_generalizacao_coorte.ipynb"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
 "8":{"id":"8","status":"done","done":true,"note":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído.","comments":[{"event_id":"60b0fad1-3de1-5c13-9ceb-007955f81400","timestamp":"2026-10-26T06:00:42Z","actor":"Mateus (restauração 26/10)","text":"Restauração 26/10: o PROJECT_STATUS.md publicado em 25/10 00:41 UTC perdeu as conclusões anteriores (24 confirmadas até 23/10 e 24 da revisão profunda de 24/10). Status recolocado como concluído."}],"updated_at":"2026-10-26T06:00:41Z","updated_by":"Mateus (restauração 26/10)","origin":"human","evidence":[],"history":[{"at":"2026-10-26T06:00:41Z","by":"Mateus (restauração 26/10)","from":"open","to":"done","origin":"human","ref":"41ef9467-cd52-5164-a0f0-98fe0b0f6e35"}],"dismissed":[],"flags":{},"applied_events":["41ef9467-cd52-5164-a0f0-98fe0b0f6e35","60b0fad1-3de1-5c13-9ceb-007955f81400"],"audit":{"blocking":0,"findings":[{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.antes_generalizacao_coorte.ipynb"]},{"severity":"medium","category":"performance-read-parquet-wide","message":"Leitura Parquet sem projeção explícita de colunas.","paths":["notebooks/B/B_07_supervisionado_pilotos.ipynb"]}]}},
