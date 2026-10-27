@@ -19,6 +19,7 @@ from __future__ import annotations
 
 MODULE_VERSION = "0.8"  # incrementar quando a assinatura das funções mudar (os notebooks conferem)
 
+import copy
 import json
 import re
 from pathlib import Path
@@ -173,15 +174,21 @@ ALIASES = {
 _ALT2CANON = {alt: can for can, alts in ALIASES.items() for alt in alts}
 
 
-def _merge_lists() -> None:
-    """Acrescenta a DEFAULT_CONFIG os grupos da EDA (sem duplicar nem conflitar entre classes)."""
-    f, c, a = (DEFAULT_CONFIG[k] for k in ("forbidden_vars", "conditional_vars", "allowed_vars"))
+def _merge_lists(cfg: dict) -> dict:
+    """Acrescenta os grupos da EDA ao `cfg` (sem duplicar nem conflitar entre classes). Retorna NOVO dict.
+
+    Função pura (não muta o argumento). Chamada uma vez no carregamento do módulo.
+    """
+    f = list(cfg["forbidden_vars"])
+    c = list(cfg["conditional_vars"])
+    a = list(cfg["allowed_vars"])
     f += [x for x in _EDA_TRATAMENTO + _EDA_DESFECHO if x not in f]
     c += [x for x in _EDA_GEOGRAFIA + _EDA_VACINACAO + _EDA_SOCIAL_TEXTO if x not in c and x not in f]
     a += [x for x in _EDA_CANDIDATAS_EXTRA if x not in a and x not in f and x not in c]
+    return {**cfg, "forbidden_vars": f, "conditional_vars": c, "allowed_vars": a}
 
 
-_merge_lists()
+DEFAULT_CONFIG = _merge_lists(DEFAULT_CONFIG)
 
 
 def canon(name) -> str:
@@ -238,11 +245,14 @@ def parse_date(s: pd.Series) -> pd.Series:
     if isinstance(s.dtype, pd.CategoricalDtype):  # converte só as categorias únicas (poucos milhares de datas)
         cats = parse_date(pd.Series(s.cat.categories.astype("string")))
         codes = s.cat.codes.to_numpy()
-        arr = cats.to_numpy(dtype="datetime64[ns]") if len(cats) else np.array([], dtype="datetime64[ns]")
-        vals = np.full(len(s), np.datetime64("NaT"), dtype="datetime64[ns]")
-        ok = codes >= 0
-        if ok.any():
-            vals[ok] = arr[codes[ok]]
+        # `np.datetime64("NaT", "ns")`: unidade explícita (senão NumPy emite DeprecationWarning
+        # por conversão implícita de unidade "genérica" para "ns").
+        vals = np.full(len(s), np.datetime64("NaT", "ns"), dtype="datetime64[ns]")
+        if len(cats):
+            arr = cats.to_numpy(dtype="datetime64[ns]")
+            ok = codes >= 0
+            if ok.any():
+                vals[ok] = arr[codes[ok]]
         return pd.Series(vals, index=s.index)
     if pd.api.types.is_datetime64_any_dtype(s):
         out = s
@@ -276,10 +286,7 @@ def code_str(s: pd.Series) -> pd.Series:
 def make_target(evolucao: pd.Series, cfg: dict = DEFAULT_CONFIG) -> pd.Series:
     """1 = óbito, 0 = cura; qualquer outro valor (inclusive 9/ausente) -> NA."""
     e = code_str(evolucao)
-    out = pd.Series(pd.NA, index=e.index, dtype="Int64")
-    out[(e == cfg["target_positive"]).fillna(False).to_numpy(bool)] = 1
-    out[(e == cfg["target_negative"]).fillna(False).to_numpy(bool)] = 0
-    return out
+    return e.map({cfg["target_positive"]: 1, cfg["target_negative"]: 0}).astype("Int64")
 
 
 def age_years(df: pd.DataFrame, cfg: dict) -> pd.Series:
@@ -395,7 +402,7 @@ def a1_waterfall(df, cfg, rep: Report, sufixo: str = "") -> pd.DataFrame:
     rep.save(f"a1_waterfall{sufixo}", wf)
     final = int(remaining.sum())
     status = OK if final > 0 else FAIL
-    rep.add("A1", "Waterfall da coorte" + (f" [{sufixo.strip(chr(95))}]" if sufixo else ""), status,
+    rep.add("A1", "Waterfall da coorte" + (f" [{sufixo.strip('_')}]" if sufixo else ""), status,
             f"{len(df):,} -> {final:,} registros ({100 * final / max(len(df), 1):.1f}%)")
     return wf
 
@@ -500,7 +507,8 @@ def _analytical_path(cfg: dict) -> Path:
         from src.utils import config as C  # noqa: N812
 
         return Path(C.ANALYTICAL_DIR) / nome
-    except Exception:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 — fallback intencional: nem toda base tem src.utils
+        print(f"[_analytical_path] fallback ({type(e).__name__}: {e}) -> {cfg['dataset_analitico']['path']}")
         return Path(cfg["dataset_analitico"]["path"])
 
 
@@ -565,14 +573,17 @@ def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, v
                          if c_ in pedidos and nome_final(c_).lower() != orig.get(c_, c_.lower()).lower()}
     out.columns = [nome_final(col) for col in out.columns]
     tgt_name = nome_final(target_col)
-    assert set(pd.Series(out[tgt_name]).dropna().astype(float).unique()) <= {1.0, 2.0}, "alvo fora de {1,2}"
+    # Falhar ALTO se o alvo sair do contrato {1,2} (assert some com `python -O`; nunca gravar dataset corrompido)
+    vals_alvo = set(pd.Series(out[tgt_name]).dropna().astype(float).unique())
+    if not vals_alvo <= {1.0, 2.0}:
+        raise ValueError(f"alvo fora de {{1,2}} no dataset '{path.name}': {sorted(vals_alvo)}")
 
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.suffix == ".csv":
         out.to_csv(path, index=False)
     else:
         out.to_parquet(path, index=False)
-    meta = dict(versao=versao, criado_em=pd.Timestamp.now().isoformat(timespec="seconds"), arquivo=str(path),
+    meta: dict[str, object] = dict(versao=versao, criado_em=pd.Timestamp.now().isoformat(timespec="seconds"), arquivo=str(path),
                 n_linhas=int(len(out)), colunas=list(out.columns), alvo=tgt_name,
                 coluna_tempo=nome_final(time_col),
                 anos={str(k): int(v_) for k, v_ in out["ano_internacao"].value_counts().sort_index().items()},
@@ -631,7 +642,7 @@ def validar_contrato_c2(path, supervised_config, rep: Report) -> bool:
         import pyarrow.parquet as pq
 
         names = pq.ParquetFile(p).schema_arrow.names
-    wanted = [c for c in dict.fromkeys([target, data_col, *feats]) if c in names]
+    wanted = [c for c in dict.fromkeys([target, data_col, *feats]) if isinstance(c, str) and c in names]
     d = pd.read_csv(p, usecols=wanted) if p.suffix == ".csv" else pd.read_parquet(p, columns=wanted)
     ok = True
     faltam = [c for c in (target, data_col, *feats) if c not in names]
@@ -698,7 +709,7 @@ def verificar_dataset_congelado(path, rep: Report) -> bool:
 
 def cfg_para_anos(cfg: dict, anos) -> dict:
     """Cópia de cfg com o período analítico = `anos` (sem holdout temporal): usada nos cenários."""
-    c2 = json.loads(json.dumps(cfg))
+    c2 = copy.deepcopy(cfg)
     c2["dev_years"] = [int(a) for a in anos]
     c2["holdout_years"] = []
     return c2
@@ -770,7 +781,7 @@ def _relatorio_split(path, meta: dict, cfg: dict, rep: Report, nome: str) -> pd.
     rep.add(st, "Estratificação do alvo" + tag, OK if amp <= 0.5 else WARN,
             f"prevalência de óbito por split: " + ", ".join(f"{r.split}={r.prevalencia_obito_pct}%" for r in t.itertuples())
             + f" (amplitude {amp:.2f} p.p.)")
-    faltam = [(int(a), s) for a in por_ano.index for s in por_ano.columns if por_ano.loc[a, s] == 0]
+    faltam = [(int(a), s) for a in por_ano.index for s in por_ano.columns if por_ano.at[a, s] == 0]
     rep.add(st, "Anos em cada split" + tag, OK if not faltam else WARN,
             "todos os anos aparecem nos 3 splits (split aleatório mistura os períodos)" if not faltam
             else f"anos ausentes em algum split: {faltam[:6]}")
@@ -864,7 +875,8 @@ def a3_benchmark_split(path, supervised_config, cfg: dict, rep: Report, nome: st
     tag = f" [{nome}]"
     lg = res[res["modelo"] == "logistica"].set_index("particao") if len(res) else res
     if len(res) and {"aleatoria", "temporal_por_ordem"} <= set(lg.index):
-        delta = float(lg.loc["aleatoria", "pr_auc"] - lg.loc["temporal_por_ordem", "pr_auc"])
+        pr_auc = lg["pr_auc"].reindex(["aleatoria", "temporal_por_ordem"]).to_numpy(dtype=float)
+        delta = float(pr_auc[0]) - float(pr_auc[1])
         rep.add("A3b", "Split aleatório x temporal" + tag, WARN if delta > 0.02 else OK,
                 f"PR-AUC (validação): aleatório {lg.loc['aleatoria', 'pr_auc']:.3f} vs temporal {lg.loc['temporal_por_ordem', 'pr_auc']:.3f} "
                 f"(Δ {delta:+.3f})" + (" — o aleatório está otimista; decidir pelo temporal" if delta > 0.02 else ""))
@@ -1426,7 +1438,7 @@ def a3_audit_logs(logs_dir: str | Path, cfg, rep: Report) -> None:
     rows = []
     for p in files:
         txt = p.read_text(encoding="utf-8", errors="ignore")
-        row = {"arquivo": str(p)}
+        row: dict[str, str | bool] = {"arquivo": str(p)}
         for k, rx in cfg["log_required_keys"].items():
             row[k] = bool(re.search(rx, txt, flags=re.I))
         rows.append(row)
@@ -1491,7 +1503,7 @@ def a4_decision_table(results: pd.DataFrame, cfg, rep: Report) -> None:
 # =============================================================================
 def load_config(path: str | Path | None = "configs/decisoes.yaml") -> dict:
     """DEFAULT_CONFIG sobreposto pelo YAML de decisões (se existir)."""
-    cfg = json.loads(json.dumps(DEFAULT_CONFIG))
+    cfg = copy.deepcopy(DEFAULT_CONFIG)
     if path and Path(path).exists():
         import yaml
 
@@ -1627,7 +1639,7 @@ def write_ata(out, nome: str, data: str, decisoes=(), pendencias=(), riscos=(), 
         lines += ["## Alertas das verificações automáticas", ""]
         lines += [f"- [{f[2]}] {f[0]} / {f[1]}: {f[3]}" for f in alerts] or ["- nenhum"]
     slug = re.sub(r"[^a-z0-9]+", "_", nome.lower()).strip("_")
-    path = Path(out) / (slug if slug.startswith("ata_") else f"ata_{slug}") 
+    path = Path(out) / (slug if slug.startswith("ata_") else f"ata_{slug}")
     path = path.with_suffix(".md")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines), encoding="utf-8")
