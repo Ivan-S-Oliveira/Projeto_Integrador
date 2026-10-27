@@ -132,8 +132,8 @@ DEFAULT_CONFIG: dict = {
         "cenarios": {
             "todos_2019_2025": {"anos": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
                                 "descricao": "Base completa 2019-2025"},
-            "sem_2020_2021": {"anos": [2019, 2022, 2023, 2024, 2025],
-                              "descricao": "Remove 2020 e 2021 (anos de pandemia)"},
+            "sem_2019_2022": {"anos": [2019, 2022, 2023, 2024, 2025],
+                              "descricao": "Remove 2019, 2020, 2021 e 2022 (anos de pandemia)"},
         },
     },
     # Features derivadas criadas na exportação (só com informação disponível na admissão)
