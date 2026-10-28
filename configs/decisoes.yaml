@@ -61,11 +61,11 @@ cols:
   dt_encerra: DT_ENCERRA
   nu_notific: NU_NOTIFIC
 dev_years:
+- 2019
 - 2023
 - 2024
 - 2025
 pandemic_test_years:
-- 2019
 - 2020
 - 2021
 - 2022
