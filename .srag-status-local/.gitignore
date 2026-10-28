@@ -1,0 +1,17 @@
+# Painel de Pendências SRAG: o CÓDIGO desta pasta é versionado (server.py, project_status_text.py,
+# deep_git_project_audit.py, painel.html, .cmd, LEIA-ME.md). Tudo o que é local de cada máquina fica fora:
+outbox.json
+estado_remoto.json
+conflitos.json
+conteudo_remoto.md
+deep_git_audit_report.json
+verificacao_rapida.json
+painel_gerado.html
+config.json
+cache.json
+baseline.json
+pendencias_md.py
+*.tmp
+backups/
+logs/
+__pycache__/

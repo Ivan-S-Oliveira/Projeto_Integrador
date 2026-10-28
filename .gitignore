@@ -191,7 +191,7 @@ docs/project_reference_parts/*
 
 
 # BEGIN LOCAL PENDENCIAS PANEL
-/.srag-status-local/
+# A pasta .srag-status-local NÃO é ignorada aqui: o .gitignore interno dela decide o que fica local.
 /.project-status-local/
 /SRAG_status_discreto_single_markdown/
 /.scripts/

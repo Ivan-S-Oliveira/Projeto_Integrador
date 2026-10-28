@@ -1,7 +1,7 @@
 <!-- PROJECT_STATUS_TEXT.md · formato 1 · fonte do conteúdo do Painel de Pendências SRAG -->
 # Status do projeto SRAG · conteúdo textual
 
-Este arquivo é a **fonte única de todo o texto** do Painel de Pendências (`.srag-status-local/painel.html`). O painel lê este arquivo do GitHub, converte para HTML e grava o conteúdo **dentro** do `painel.html` sempre que algo muda (só a região de dados; nada é reescrito quando não há mudança). A situação compartilhada de cada item (concluída, a confirmar, precisa revisão…), os comentários e a auditoria continuam em `PROJECT_STATUS.md`, mantido só pelo painel.
+Este arquivo é a **fonte única de todo o texto** do Painel de Pendências (`.srag-status-local/painel.html`). O painel lê este arquivo do GitHub, converte para HTML e grava a página local `painel_gerado.html` sempre que algo muda (o modelo `painel.html` nunca é regravado). A situação compartilhada de cada item (concluída, a confirmar, precisa revisão…), os comentários e o resultado da última verificação continuam em `PROJECT_STATUS.md`, mantido só pelo painel.
 
 **Pode editar à mão** no VS Code ou pelo botão ✎ do painel. Ao salvar aqui, o painel mostra a mudança em ~2 s como prévia local. Para a equipe receber: commit e push normais, ou o botão “Publicar edições locais” do painel.
 
@@ -9,53 +9,12 @@ Regras do formato:
 
 - `## #N · Título` abre um item. O número é fixo e nunca é reutilizado; para tirar um item, use `- removido: motivo`.
 - Logo abaixo do título, uma linha por campo: `prioridade` (P1–P4), `situação` (aberta, parcial, resolvida), `estratégia` (desenvolver, explorar, documentar, despriorizar, resolvida), `marco`, `data ideal` (DD/MM), `responsável`, `pessoas` (A, B, C, Equipe), `fonte`, `depende de` (#12, #30), `tags`, `pilar`, `carga` (número), `novo` (sim/não), `professores` (sim/não) e, opcionais, `arquivos` (caminhos que a auditoria deve ligar ao item) e `removido`. Use `—` para vazio. “Trava” é calculado sozinho a partir de “depende de”.
-- Seções com `###`: `① Para entender`, `② Problema`, `③ O que fazer`. Qualquer outro `### Título` vira uma seção extra no card.
+- Seções com `###`: `① Para entender`, `② Problema`, `③ O que fazer` e `④ Pronto quando`. Qualquer outro `### Título` vira uma seção extra no card.
+- `④ Pronto quando`: um critério por linha, `- verbo: argumentos | descrição detalhada`. Verbos: `existe`, `nao-existe`, `nao-vazio`, `define`, `nao-define`, `contem`, `nao-contem`, `yaml`, `json`, `teste`, `notebook-executado`, `notebook-saida`, `manual`. A gramática completa está no topo de `.srag-status-local/deep_git_project_audit.py`.
 - Texto em Markdown simples: parágrafos, `**negrito**`, `*itálico*`, `` `código` ``, listas com `-` ou `1.`, tabelas `| a | b |`, blocos de código com três crases, links `[texto](url)` e caixas `> [!decisão] Título` (também `atenção`, `exemplo`, `ok` e `pilar`). HTML também é aceito: um bloco que começa com `<` passa sem alteração (é assim que ficam os gráficos de barras e os quadros de números).
 - Dentro das seções, não comece linhas com dois ou três `#` seguidos de espaço (subtítulo: use `####`). `#30` no meio do texto vira link para o item no painel.
 - `## Painel · textos gerais` guarda os textos do topo, entrega, cronograma, pessoas, caminho crítico, aviso, ajuda e rodapé.
 
-### Subtítulo
-
-Revisão de 24/10 (noite), depois da orientação com o professor. Coorte definitiva publicada (3.884.728 notificações) e partição em seis blocos já gerada; agora o caminho é levar o artefato para o código central (#131), conferir as invariantes (#135), adaptar a cadeia C (#132), decidir os três sintomas de 2019 (#50), ajustar, calibrar, escolher o corte e abrir os Testes A e B uma única vez. Não supervisionado refeito com one-hot e testes estatísticos (#136, #137). Entrega: **03/11/2026**.
-
-### Cronograma
-
-- **24–25/10** — Orientação (#95); passagem de bastão (#72); regra de grupo (#10); artefato de seis blocos no src (#131); decisões e YAMLs (#73, #83, #9, #59)
-- **26/10 dom · Fase E** — Invariantes (#135); cadeia C nos seis blocos e previsões do piloto no `val_tune` (#132); **EDA descritiva na coorte definitiva (#139)**; vacina e YAMLs (#84, #102, #29, #87)
-- **27/10 seg · Fase E** — Perfil óbito × cura no treino (#137); sintomas de 2019 (#50); ablações (#54); **não supervisionado com one-hot (#136)**
-- **28/10 ter · Fase E** — Completude (#52), subgrupos (#55) e região (#110) no `val_tune`; perfil dos clusters (#137); **ponto de decisão dos achados (#140)**
-- **29/10 qua** — Ajuste fino e peso de classe (#1, #5); G6 (#78); calibração G7 (#79); importância (#91); marca de teste aberto (#26)
-- **30/10 qui** — Corte global e por região, G8 (#80, #110); checklist e aprovação do G9 (#81); congelamento. Pessoa B volta à noite
-- **31/10 sex** — Testes A e B e 2020–2022, uma única vez, de manhã (#2, #119); repetição no teste para o relatório (#55, #110, #52); interpretação (#91); âncora e excluídos (#56)
-- **01/11 sáb** — Relatório completo (#133); slides (#134); reprodução independente (#126)
-- **02/11 dom** — Conferência de números e ensaio (feriado: contingência)
-- **03/11 seg** — Entrega
-
-### Pessoas
-
-- **A** — protocolo, regras, verificação, Fase E (EDA definitiva, perfil estatístico, completude), relatório e conferência de números (esforço estimado até 03/11: ≈ 55 h, o maior, porque é quem menos entregou até 24/10)
-- **B** — interpretação, não supervisionado (leitura), figuras, relatório e apresentação; fora de 25 a 30/10 (≈ 32 h, concentradas de 31/10 a 02/11)
-- **C** — artefato, pipeline, Fase E (clustering one-hot, subgrupos e região no `val_tune`), modelos, avaliação final e reprodução (≈ 49 h, concentradas até 31/10)
-- **Equipe** — ponto de decisão da Fase E (#140) e aprovações de gates
-
-### Caminho crítico
-
-#10 → #131 → #135 → #132 → Fase E (#139, #137, #50, #54, #136, #52, #55, #110) → #140 → #1 → #78 → #79 → #80 → #81 → #2 → #119 → #133
-
-### Aviso da revisão
-
-> [!atenção] Replanejamento de 26/10: exploração antes da validação
-> Com a troca para a coorte definitiva, todas as análises que podem mudar decisões rodam na **Fase E (26 a 28/10)**, sobre o `train_ref` e o `val_tune`, e são decididas no **#140** (28/10 à noite). Novos: #139 (EDA descritiva na coorte definitiva) e #140 (ponto de decisão). Antecipados: #136, #137, #52, #55, #110. Ajuste fino passa para 29/10 e o teste abre em 31/10 de manhã. Depois do teste, as análises só são repetidas para o relatório.
-
-### Ajuda · Como ler a carga estimada
-
-- O campo **carga** de cada card é o esforço estimado em horas de trabalho focado (arredondado). O "O que fazer" detalha a divisão quando há mais de uma pessoa.
-- O total por pessoa (no quadro de Pessoas e no #72) considera o que cada um já entregou até 24/10: quem entregou menos recebe mais do que falta; quem viaja recebe pouco na viagem e compensa na volta.
-- Estimativas não são prazos rígidos. Se uma tarefa passar do dobro do previsto, comente no card para redistribuir.
-
-### Rodapé
-
-Painel local de acompanhamento do projeto. O conteúdo vem de `PROJECT_STATUS_TEXT.md` e o estado compartilhado de `PROJECT_STATUS.md`, ambos publicados pelo painel direto no GitHub. Planejamento alinhado à Base de Conhecimento v9 (24/10/2026). Painel v5.1.
 
 ## Painel · textos gerais
 
@@ -65,7 +24,7 @@ Projeto SRAG · Pendências
 
 ### Subtítulo
 
-Retrato de 27/10. Coorte definitiva publicada (3.884.728 notificações) e explorada na coorte definitiva (B_05 e B_06). Plano: artefato de modelagem gerado pelo `src` (#142), exploração completa antes do treino (27 a 29/10), ponto de decisão (#140) em 30/10 de manhã, ajuste, calibração e limiar em 30 e 31/10, testes A e B uma única vez em 01/11 de manhã. Entrega: **03/11/2026**.
+Retrato de 28/10 (revisão completa sobre o commit `032a5b65`, painel v6). Coorte definitiva publicada (3.884.728 notificações) e explorada (B_05 e B_06). Antes de tudo, decidir o lugar de 2019 (#102), que bloqueia o artefato de modelagem pelo src (#142). Depois: exploração antes do treino, ponto de decisão (#140) em 30/10 de manhã, ajuste, calibração e limiar em 30 e 31/10, testes A e B uma única vez em 01/11 de manhã. Cada card agora tem o **④ Pronto quando**, conferido pelo verificador. Entrega: **03/11/2026**.
 
 ### Entrega
 
@@ -88,11 +47,7 @@ Retrato de 27/10. Coorte definitiva publicada (3.884.728 notificações) e explo
 
 ### Como ler
 
-Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em linguagem simples, com números do projeto), **② Problema** (o que está errado, com detalhes técnicos), **③ O que fazer** (passos), **④ Ligações** (de quem depende e o que trava) e **⑤ Evidências** (commits, auditoria e histórico). Os números dos itens são fixos e mantêm seus números históricos; o item #108 foi removido por impossibilidade material de recuperar a gravação. Cada card mostra a data ideal mesmo quando fechado.
-
-<div class="legend"><span class="tag" style="background:var(--p1);color:#fff">P1</span>bloqueia o próximo passo ou compromete resultados <span class="tag" style="background:var(--p2);color:#fff">P2</span>afeta a validade ou a defesa <span class="tag" style="background:var(--p3);color:#fff">P3</span>consistência e organização <span class="tag" style="background:var(--p4);color:#fff">P4</span>melhoria <span class="tag" style="background:var(--ok);color:#fff">✓</span>resolvida</div>
-
-<div class="legend"><span class="tag blk">travado</span>depende de item ainda aberto <span class="tag rdy">pronto</span>pode começar já <span class="tag trv">trava N</span>quantos itens esperam por ele <span class="tag new">novo</span>surgiu na revisão de 18/10 <span class="tag mk">M3</span>marco lógico <span class="tag due">24/10</span>data ideal visível no card fechado <span class="tag pil">pilar</span>pilar do plano</div>
+Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em linguagem simples, com números do projeto), **② Problema** (o que está errado, com detalhes técnicos), **③ O que fazer** (passos), **④ Pronto quando** (critérios conferidos pelo verificador, com ✓, ✗, "indisponível nesta máquina" ou "confirmação manual"), **Ligações** (de quem depende e o que trava) e **Evidências** (commits que citam a pendência, commits que só mexeram nos arquivos dela e histórico). Os números dos itens são fixos e mantêm seus números históricos; o item #108 foi removido por impossibilidade material de recuperar a gravação. Cada card mostra a data ideal mesmo quando fechado.
 
 ### Pessoas
 
@@ -107,71 +62,76 @@ Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em lingu
 
 ### Aviso da revisão
 
-> [!atenção] Cronograma revisto por dependências (27/10)
-> Todas as datas foram reordenadas para respeitar as dependências: nada começa antes do que o trava. Exploração em 27 a 29/10, decisão no #140 em 30/10 de manhã, ajuste em 30/10 à tarde, calibração, limiar e G9 em 31/10, testes em 01/11 de manhã. A verificação do fator de risco (#141) passou para a Pessoa A e a completude (#52) para a Pessoa B, para caber na sequência.
+> [!atenção] Revisão completa de 28/10 (commit `032a5b65`) e painel v6
+> Nenhuma tarefa do caminho crítico de 27/10 foi implementada no repositório. Achado grave: os YAMLs passaram a tirar 2019 do desenvolvimento sem decisão registrada (#102, bloqueia o #142). Três testes de `test_regras_pessoa_a.py` falham por um cenário renomeado (#102). As 24 sugestões "a confirmar" e 12 das 13 "precisa revisão" da auditoria de 27/10 eram falsas: cada uma tem a explicação no próprio card. #99 e #139 concluídas; #5 voltou para em andamento. O painel v6 corrige o defeito que reabria sugestões antigas (#94): commit que só mexe nos arquivos de uma pendência nunca muda a situação dela. Todas as 135 pendências ativas ganharam o **④ Pronto quando**; o resultado da primeira verificação completa está na seção **REVISÕES**.
 
 ### Ajuda · Como usar (30 segundos)
 
-- **Abrir:** dois cliques em `.srag-status-local\ABRIR_PAINEL.cmd`. Abre uma janela do terminal que fica aberta rodando o servidor; não feche enquanto usa. Se já estiver aberto, só abre a aba.
-- **Marcar como feito:** a caixa aparece no **topo** do card assim que ele abre e de novo no **fim**; as duas são a mesma marcação.
-- **Outras marcações:** concluir, reabrir, comentar ou confirmar/rejeitar uma sugestão: em ~8 s sai um commit curto só com os arquivos do painel, ex.: `(#status) #10 concluída · Mateus`. “▶ Estou fazendo” é só seu e não gera commit.
+- **Abrir:** dois cliques em `.srag-status-local\ABRIR_PAINEL.cmd`. Abre uma janela do terminal que fica aberta rodando o servidor; não feche enquanto usa. Se já estiver aberto, só abre a aba. O painel só abre a partir da pasta do repositório.
+- **Marcar como feito:** a caixa aparece no **topo** do card e de novo no **fim**; as duas são a mesma marcação. O painel confere o **④ Pronto quando**: se o verificador não confirmar todos os critérios, pede um comentário de pelo menos 15 caracteres explicando por que concluir assim mesmo. Vale também para confirmar uma pendência que estava em revisão.
+- **Outras marcações:** reabrir, comentar ou confirmar/rejeitar uma sugestão. Cerca de 12 s depois do último clique sai um commit curto só com os arquivos do painel, agrupado por tipo e com cada pendência citada uma vez, ex.: `(#status) concluída: #10; conteúdo: #1, #31, #46 +12 · Mateus`. “▶ Estou fazendo” é só seu e não gera commit.
 - **Editar o conteúdo:** botão ✎ no card (ou ➕ Nova pendência). A alteração vai para o `PROJECT_STATUS_TEXT.md` no mesmo tipo de commit curto, campo a campo. Também dá para editar o `PROJECT_STATUS_TEXT.md` direto no VS Code: o painel mostra a prévia em ~2 s.
-- **Atualizar:** automático a cada hora e ao voltar para a aba. **⟳ Buscar** força agora e **nunca gera commit**. **🔎 Buscar + auditar** também varre o código e só gera commit se alguma pendência mudar.
+- **Atualizar:** automático a cada hora e ao voltar para a aba. **⟳ Buscar** força agora e **nunca gera commit**; depois da busca, uma verificação rápida (sem testes) atualiza os ✓/✗ dos cards. **🔎 Verificar pronto quando** confere todos os critérios e roda o pytest rápido numa cópia limpa do commit publicado; só gera commit se alguma pendência mudar.
+- **REVISÕES:** seção no topo, sempre aberta até você recolher. Reúne o que pede atenção: detectadas como concluídas, concluídas que o verificador ainda vê como pendentes, revisões, testes falhando (aviso para todos), configuração crítica alterada, critérios inválidos e referência para IAs desatualizada.
+- **Meu dia:** escolha a pessoa e veja as atrasadas, as prontas para começar, as revisões e o que destravou desde a última visita.
 - **Commits do dia a dia:** continue no VS Code. Escreva `tarefa 30`, `#30` ou `[done:#30]` na mensagem: o painel reconhece sozinho.
 
 > [!ok] Por que o VS Code não reclama
-> O painel **nunca** grava o `PROJECT_STATUS.md` na sua pasta de trabalho. Ele lê o arquivo direto do GitHub e publica o commit “por fora”. Assim o arquivo nunca aparece como modificado e o *pull* não dá erro. Quando a única novidade remota são os arquivos do painel e sua branch não tem commits locais, o painel ainda avança sua branch sozinho. Se encontrar uma versão antiga modificada do `PROJECT_STATUS.md` na pasta (versões anteriores do painel), ele guarda backup, converte as marcações em alterações do painel e devolve o arquivo ao estado do commit. O `PROJECT_STATUS_TEXT.md` é diferente: é seu para editar, e o painel só mexe nele na pasta quando você clica em “Publicar edições locais”.
+> O painel **nunca** grava o `PROJECT_STATUS.md` na sua pasta de trabalho. Ele lê o arquivo direto do GitHub e publica o commit “por fora”. Assim o arquivo nunca aparece como modificado e o *pull* não dá erro. Os arquivos de cada máquina (fila, caches, relatórios, `painel_gerado.html`) ficam fora do Git pelo `.gitignore` da pasta `.srag-status-local`. O `PROJECT_STATUS_TEXT.md` é diferente: é seu para editar, e o painel só mexe nele na pasta quando você clica em “Publicar edições locais”.
 
 > [!atenção] Quando sai commit
-> Só quando há decisão: concluir, reabrir, comentar, confirmar/rejeitar sugestão, escolher num conflito, editar conteúdo pelo painel, ou quando a auditoria muda uma pendência. Buscar, ler commits, “Estou fazendo”, prévia de edições locais e resumo da auditoria nunca geram commit: cada painel lê o mesmo histórico do Git e chega ao mesmo resultado sozinho.
+> Só quando há decisão: concluir, reabrir, comentar, confirmar/rejeitar sugestão, escolher num conflito, editar conteúdo pelo painel, ou quando a verificação muda uma pendência (teste que falha e importa os arquivos dela). Buscar, ler commits, “Estou fazendo”, prévia de edições locais e a verificação rápida nunca geram commit.
 
-> [!atenção] Três pessoas ao mesmo tempo
-> Cada clique vira uma alteração pequena (item + campo). Na hora de publicar, o painel busca a versão mais nova do GitHub e reaplica as suas alterações por cima. Itens ou campos diferentes nunca conflitam; comentários sempre somam. Se duas pessoas mudarem o **mesmo** campo (situação, título, uma seção…) para valores diferentes, vale o que chegou primeiro e a outra recebe um aviso aqui em cima para decidir. Push rejeitado por concorrência é refeito automaticamente; nunca usa `--force`. Sem internet, a fila fica guardada e sai sozinha depois.
+> [!atenção] Três pessoas ao mesmo tempo, ou alguém sem conexão
+> Cada clique vira uma alteração pequena (item + campo) guardada na fila local. Na publicação, o painel busca a versão mais nova do GitHub e reaplica as suas alterações por cima. Campos diferentes do mesmo card somam (uma pessoa muda o título, outra o responsável, outra comenta) e comentários sempre somam. Só o **mesmo campo** mudado por outra pessoa vira conflito: esse campo fica fora do seu commit, o resto sai, e abre um popup com a sua versão, a publicada e a original (“Manter a minha”, “Manter a publicada” ou “Editar e juntar”). Sem internet, a fila fica guardada e sai sozinha quando a conexão voltar; o selo mostra desde quando e a causa provável. Push rejeitado por concorrência é refeito automaticamente; nunca usa `--force`. O painel também se recusa a publicar um estado que perca itens, comentários ou histórico.
 
 ### Ajuda · Instalação e atualização (uma vez por pessoa)
 
-- **Único passo:** extrair o zip na **raiz do repositório** (a pasta que tem `src`, `configs` e `notebooks`) e aceitar substituir os arquivos de `.srag-status-local`. Depois, dois cliques em `.srag-status-local\ABRIR_PAINEL.cmd`.
-- **O que o painel faz sozinho na primeira abertura:** fecha a versão antiga do painel, se estiver aberta (ela publica antes o que tinha na fila); usa o `.venv` do projeto, ou o Python do Windows; mantém sua fila, seus conflitos e suas marcações locais; e, se o `PROJECT_STATUS_TEXT.md` ainda não estiver no GitHub, publica-o uma única vez (quem abrir primeiro publica; os outros já encontram pronto).
-- **Nada aparece no VS Code:** a pasta `.srag-status-local` tem um `.gitignore` próprio com `*` e nunca vai para o Git. O `PROJECT_STATUS_TEXT.md` chega pelo *pull* normal, como qualquer arquivo do projeto.
-- **Nome antigo:** se sobrou um `PENDENCIAS.md` da versão 5.0 na pasta, o painel move para `backups/`. No GitHub, o nome antigo é removido no mesmo commit que publica o novo.
-- **Requisitos:** os mesmos de sempre, isto é, Python 3 e a credencial do GitHub que o VS Code já usa.
+- **Daqui para a frente, pelo Git:** o código do painel (`server.py`, `project_status_text.py`, `deep_git_project_audit.py`, `painel.html`, os `.cmd` e o `LEIA-ME.md`) é versionado. Para atualizar: feche o painel, faça *pull* e abra o `ABRIR_PAINEL.cmd`. Se esquecer de fechar, a versão nova encerra a antiga ao abrir (a antiga publica a fila antes de sair).
+- **O que fica só na sua máquina:** fila (`outbox.json`), caches, relatórios, `config.json`, `backups/`, `logs/` e a página `painel_gerado.html`, que é montada a partir do `painel.html` com o texto deste arquivo. Ela é criada na primeira abertura; ninguém precisa mexer nela.
+- **Conferir a versão:** o rodapé do painel mostra **Painel v6.0.0**.
+- **Requisitos:** os mesmos de sempre, isto é, Python 3 (o `.venv` do projeto) e a credencial do GitHub que o VS Code já usa.
 
 ### Ajuda · Como interpretar os estados
 
 - **ABERTA:** sem evidência suficiente.
-- **EM ANDAMENTO:** commit com `[progress:#ID]` ou commit que só cita a tarefa (lido por cada painel, sem commit). O “▶ Estou fazendo” aparece só para você.
-- **RESOLVIDA — PENDENTE DE VALIDAÇÃO (a confirmar):** commit cita a tarefa com linguagem de conclusão (“tarefa 30 concluída”, “corrige #30”) ou a auditoria achou commit nos arquivos da tarefa, sem problema impeditivo. Um humano confirma com um clique.
-- **PRECISA REVISÃO:** há implementação relacionada, mas a auditoria achou problema grave (notebook com erro salvo, sintaxe, JSON/YAML inválido, conflito de merge, teste falhando, possível vazamento).
-- **CONCLUÍDA:** confirmação humana no painel ou marcador `[done:#ID]` no commit. Automação nunca conclui sozinha.
-- **⚠ Reconfirmar:** item concluído cujos arquivos voltaram a apresentar problema. A conclusão não é apagada.
-- **Situação editorial** (aberta, parcial, resolvida no `PROJECT_STATUS_TEXT.md`) é o que o texto do card descreve; a **situação compartilhada** acima é a que vale para o andamento. Um item concluído no painel aparece como resolvido mesmo que o texto ainda diga “aberta”.
+- **EM ANDAMENTO:** commit com `[progress:#ID]` ou que só cita a tarefa, ou marcação no painel. O “▶ Estou fazendo” aparece só para você.
+- **RESOLVIDA — PENDENTE DE VALIDAÇÃO (a confirmar):** commit que cita a tarefa explicitamente com linguagem de conclusão (“tarefa 30 concluída”, “corrige #30”), mais novo que a última decisão humana. Commit que só mexe nos arquivos da tarefa **nunca** muda a situação: aparece como informação no card. Um humano confirma com um clique (e comenta, se o ④ não estiver todo ✓).
+- **PRECISA REVISÃO:** um teste que falha importa arquivos de uma pendência já iniciada (o teste entra sozinho no ④ dela), ou alguém reabriu para revisão.
+- **CONCLUÍDA:** confirmação humana no painel ou `[done:#ID]` no commit. Automação nunca conclui sozinha.
+- **⚠ Reconfirmar / concluída ainda pendente:** item concluído cujo ④ o verificador ainda não confirma. A conclusão não é apagada; aparece em REVISÕES.
+- **⚠ #N aguardando revisão (aviso rosa):** a pendência da qual este card depende parece concluída, mas aguarda revisão. Pode começar, mas revise o #N antes.
+- **Resultado de cada critério do ④:** ✓ atendido · ✗ não atendido · indisponível nesta máquina (arquivo de `outputs/` ou `data/` que só existe na máquina de quem gerou) · confirmação manual (só uma pessoa confirma) · inválido (critério mal escrito: aparece em REVISÕES).
+- **Situação editorial** (aberta, parcial, resolvida no `PROJECT_STATUS_TEXT.md`) é o que o texto do card descreve; a **situação compartilhada** acima é a que vale para o andamento.
 
 ### Ajuda · Marcadores reconhecidos nos commits
 
 - `[done:#30]`, `[feito:#30]` → concluída. `[progress:#30]` → em andamento. `[reopen:#30]` → reaberta.
 - `tarefa 30`, `tarefas 30, 31 e 32`, `item 30`, `pendência 30`, `task 30`, `#30` → com palavra de conclusão (corrige, implementa, resolve, conclui, finaliza, fecha, feito, pronto, fix, done…) vira “a confirmar”; sem ela, “em andamento”.
-- “Merge pull request #N” é ignorado. Commits do próprio painel e commits que só mexem no `PROJECT_STATUS_TEXT.md` também (editar texto não conta como progresso).
+- Só vale commit **mais novo** que a última decisão humana sobre a pendência. “Merge pull request #N”, commits do próprio painel e commits que só mexem no `PROJECT_STATUS_TEXT.md` são ignorados.
 
 ### Ajuda · Editar o conteúdo (PROJECT_STATUS_TEXT.md)
 
-- **Pelo painel:** ✎ Editar no card abre o editor com todos os campos e as seções em Markdown, com pré-visualização. Salvar enfileira só os campos que você mudou; o commit sai em ~8 s junto com outras marcações.
-- **Pelo VS Code:** edite `PROJECT_STATUS_TEXT.md` na raiz do repositório e salve. O painel detecta em ~2 s, mostra a prévia com o selo “prévia local” e lista os itens alterados no topo. Depois faça commit e push normais, ou clique em **Publicar edições locais** (o painel publica só as suas diferenças, campo a campo, e devolve o arquivo da pasta ao estado do Git).
+- **Pelo painel:** ✎ Editar no card abre o editor com todos os campos e as seções em Markdown, com pré-visualização. Salvar enfileira só os campos que você mudou; o commit sai ~12 s depois, junto com outras marcações.
+- **Pelo VS Code:** edite `PROJECT_STATUS_TEXT.md` na raiz do repositório e salve. O painel detecta em ~2 s, mostra a prévia com o selo “prévia local” e lista os itens alterados no topo. Depois faça commit e push normais, ou clique em **Publicar edições locais**.
+- **④ Pronto quando:** um critério por linha, `- verbo: argumentos | descrição detalhada`. Exemplos: ``- define: `src/data/split.py` :: `criar_group_id` | A função existe…`` · ``- yaml: `configs/supervised.yaml` :: `gates.G6_finalistas_tuning.status` = `aprovado` | O G6 está aprovado…`` · ``- teste: `tests/test_split.py` | Os testes de partição passam…`` · `- manual: | O relatório foi revisado por duas pessoas.` Critério sem descrição é inválido.
 - **Item novo:** ➕ Nova pendência no painel (o número é definido na publicação, sem colisão) ou um novo `## #N · Título` no arquivo usando o próximo número livre.
 - **Remover:** nunca apague a seção; use `- removido: motivo`. O número fica reservado e o card some da lista (filtro “Removidos” mostra).
-- **Erros de formato** (número repetido, dependência inexistente, valor desconhecido) aparecem num aviso no topo; o painel continua funcionando com o resto.
+- **Erros de formato** (número repetido, dependência inexistente, valor desconhecido, critério inválido) aparecem num aviso no topo ou em REVISÕES; o painel continua funcionando com o resto.
 
 ### Ajuda · Se algo parecer errado
 
 - Clique em **⟳ Buscar atualizações**. Nada é perdido: há fila local, backups em `.srag-status-local/backups` e todo o histórico no Git.
+- **“Sem conexão”:** passe o mouse no selo vermelho para ver a causa provável e o erro do Git. Credencial: faça um *pull* pelo VS Code (ele pede o login) e busque de novo. Rede: troque de rede ou ligue/desligue a VPN. A fila fica guardada até a conexão voltar.
 - Sugestão automática errada? Use **✗ Não é isso** no card: ela volta ao estado anterior e aquele commit não será usado de novo para o item.
 - Marcou errado? Desmarque “feito”: a reabertura fica no histórico do card.
-- Se o GitHub recusar (credencial), faça um *push* qualquer pelo VS Code uma vez para salvar a credencial e clique em Buscar.
-- Painel sem texto ou desatualizado? Rode `.\.venv\Scripts\python.exe .srag-status-local\server.py gerar` para regenerar o `painel.html` a partir do `PROJECT_STATUS_TEXT.md`, e `... server.py validar` para listar problemas de formato.
+- Painel sem texto ou desatualizado? Rode `.\.venv\Scripts\python.exe .srag-status-local\server.py gerar` para recriar o `painel_gerado.html` a partir do `PROJECT_STATUS_TEXT.md`, e `... server.py validar` para listar problemas de formato.
+- Verificador no terminal: `.\.venv\Scripts\python.exe .srag-status-local\deep_git_project_audit.py` (`--item 142` para uma pendência, `--self-test` para testar a instalação).
 - Diagnóstico: `DIAGNOSTICO.cmd` e o arquivo `.srag-status-local/logs/painel.log`.
 
 ### Rodapé
 
-Painel local de acompanhamento do projeto. O conteúdo vem de `PROJECT_STATUS_TEXT.md` e o estado compartilhado de `PROJECT_STATUS.md`, ambos publicados pelo painel direto no GitHub. Planejamento alinhado à Base de Conhecimento v10 (27/10/2026). Painel v5.1.
+Painel local de acompanhamento do projeto. O conteúdo vem de `PROJECT_STATUS_TEXT.md` e o estado compartilhado de `PROJECT_STATUS.md`, ambos publicados pelo painel direto no GitHub. Planejamento alinhado à Base de Conhecimento v10 (27/10/2026) e à revisão de 28/10. Painel v6.
 
 ### Ajuda · Como ler a carga estimada
 
@@ -234,6 +194,13 @@ Sem protocolo escrito, o Teste B pode diluir ou inflar o resultado apenas por mu
 
 **Pronto quando:** o #131 publicar o manifesto da partição com os seis blocos e os testes do §28.4 passarem.
 
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `## 28. Decisão temporal` | O docs/decisoes.md tem a seção 28, que registra o protocolo fechado: treino de referência, Teste A (test_ref) e Teste B (test_ref + test_pandemic), com 2026 só como exploração.
+- yaml: `configs/supervised.yaml` :: `gates.G2_janela_temporal.status` = `aprovado` | O gate G2 (janela temporal) está aprovado no supervised.yaml, ou seja, o desenho dos blocos é o oficial.
+- yaml: `configs/supervised.yaml` :: `avaliacao.janelas.teste_b.blocos` contem `test_pandemic` | O YAML declara o Teste B como a união de test_ref com test_pandemic, para que ninguém o calcule à mão.
+- yaml: `configs/supervised.yaml` :: `avaliacao.comparacao_temporal.interpretacao_causal_permitida` = `false` | O YAML proíbe ler a diferença Teste A × Teste B como efeito causal da pandemia (é robustez temporal).
+
 ## #10 · Regra definitiva para números de notificação repetidos
 
 - prioridade: P2
@@ -268,12 +235,21 @@ Três documentos mandam fazer três coisas diferentes. A quarentena é uma solu�
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 18 e 19/10 (`a913228`, `f8e574f`), todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `criar_group_id` não existe em `src/`; o artefato atual ainda chama a coluna de `grupo_split`; `docs/decisoes.md` §6 não registra a regra. A função entra pelo #142 e o registro pelo #73.
+
 Cada documento manda tratar os números de notificação repetidos de um jeito. As decisões dizem para não escolher arbitrariamente a primeira ocorrência e manter registros diferentes. O plano diz para manter a primeira ocorrência com flag. O B_07 coloca em quarentena os grupos cujo identificador aparece em mais de um estrato (2 grupos, 4 linhas).
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > A função `criar_group_id` entra no `src` pelo #142 (Pessoa B) e o registro da regra está no #73. Nada mais a fazer aqui.
+
+### ④ Pronto quando
+
+- define: `src/data/split.py` :: `criar_group_id` | A função criar_group_id existe em src/data/split.py (entra pelo #142): agrupa as fichas pelo nu_notific sem espaços e usa "sem_notific:" + id_registro quando o número está vazio.
+- contem: `docs/decisoes.md` :: `criar_group_id` | O docs/decisoes.md registra a regra definitiva de números de notificação repetidos citando a função criar_group_id (registro feito no pacote do #73).
 
 ## #131 · Ensinar os seis blocos ao módulo de leitura do artefato
 
@@ -313,6 +289,9 @@ A coorte definitiva (3.884.728 notificações, publicada em 23/10) é a **popula
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> Estava "em andamento" desde 26/10 porque a lógica de partição existia no B_07. Com o escopo de 27/10 (só a leitura por bloco), nada foi implementado: `ALLOWED_PARTITIONS` continua `{treino, validacao, teste}` e `cohort_source._DEFAULT_KIND` continua `provisional`. Volta para aberta.
+
 Sem esse artefato, nada do supervisionado roda na coorte definitiva: os notebooks C ainda leem o artefato **provisório**, com a divisão antiga (que incluía 2020–2022 em treino). É o primeiro passo do caminho crítico, e dele dependem tuning, calibração, limiar e testes.
 
 ### ③ O que fazer
@@ -334,6 +313,14 @@ Sem esse artefato, nada do supervisionado roda na coorte definitiva: os notebook
 
 #### Pronto quando
 Testes rápidos passando e o C_11 lendo `train_ref` sem tocar no teste.
+
+### ④ Pronto quando
+
+- contem: `src/data/supervised_artifact.py` :: `train_ref` | O módulo de leitura do artefato (src/data/supervised_artifact.py) conhece os blocos da partição-mestre: o nome train_ref aparece no código, fora de comentários.
+- contem: `src/data/supervised_artifact.py` :: `test_pandemic` | O módulo de leitura conhece o bloco test_pandemic (Teste B), para poder protegê-lo com o G9.
+- nao-contem: `src/data/cohort_source.py` :: `_DEFAULT_KIND: str = "provisional"` | O padrão de SRAG_COHORT_KIND em src/data/cohort_source.py deixou de ser provisional (passa a ser final), para nenhum notebook carregar a coorte provisória por engano.
+- teste: `tests/test_supervised_artifact.py` | Todos os testes de tests/test_supervised_artifact.py passam no pytest rápido, incluindo os novos: leitura padrão sem teste, test_ref com G9 pendente levantando erro e test_ref liberado com G9 aprovado (monkeypatch).
+- teste: `tests/test_cohort_source.py` | Os testes de tests/test_cohort_source.py passam, já ajustados ao novo padrão final da coorte.
 
 ## #135 · Testes das invariantes do protocolo no artefato v3 (§28.4)
 
@@ -374,6 +361,14 @@ A função de partição foi testada só com dados sintéticos. Ninguém conferi
 4. `.\.venv\Scripts\python.exe -m pytest -m slow tests/test_regras_pessoa_a.py -q` e cole a saída aqui.
 
 **Se falhar:** não corrija o artefato; cole a falha no #142.
+
+### ④ Pronto quando
+
+- contem: `tests/test_regras_pessoa_a.py` :: `bloco_mestre` | tests/test_regras_pessoa_a.py tem os testes das invariantes do protocolo que leem a coluna bloco_mestre do artefato real (classe marcada como slow).
+- contem: `tests/test_regras_pessoa_a.py` :: `test_pandemic` | Há teste conferindo que 2020–2022 só aparecem no bloco test_pandemic.
+- contem: `tests/test_regras_pessoa_a.py` :: `sha256` | Há teste conferindo que o SHA-256 do arquivo do artefato é igual ao registrado no manifesto (src/utils/hashing.py).
+- teste: `tests/test_regras_pessoa_a.py` | Os testes rápidos de tests/test_regras_pessoa_a.py passam (os de artefato real são slow e não entram aqui).
+- manual: | A saída de `.\.venv\Scripts\python.exe -m pytest -m slow tests/test_regras_pessoa_a.py -q`, rodada com o artefato real, foi colada como comentário neste card, sem falhas e sem skips das cinco garantias (grupo em um único bloco, 2020–2022 só em test_pandemic, 2026 só em exploracao, prevalência por bloco a no máximo 0,5 p.p. da média, SHA-256 igual ao manifesto).
 
 ## #132 · Adaptar a cadeia C_11–C_16 aos seis blocos (train_ref, val_tune, val_cal, val_meas)
 
@@ -424,6 +419,16 @@ Os notebooks C ainda usam o vocabulário `treino`/`validacao`/`teste` (12 ocorr�
 6. Procurar nos notebooks C por `"validacao"`, `"teste"`, `HONEST_CALIB_SPLIT` e `st_mtime`: a busca deve voltar vazia.
 7. Rodar C_11 a C_13 e salvar com saídas. As métricas do C_12 devem ficar perto das do piloto (logística PR-AUC ≈ 0,30).
 
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `HONEST_CALIB_SPLIT` | O C_15 não divide mais a validação ao meio por conta própria: a variável HONEST_CALIB_SPLIT sumiu do código; calibração e corte usam val_cal e a medição usa val_meas.
+- nao-contem: `notebooks/C/C_16_validacao_final.ipynb` :: `st_mtime` | O C_16 não escolhe mais o manifesto pela data do arquivo (st_mtime); localiza pelo run_id_finalista gravado no YAML.
+- contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `train_ref` | O C_11 lê o bloco train_ref pelo módulo de leitura (#131), e não o vocabulário antigo treino/validacao/teste.
+- contem: `notebooks/C/C_12_baseline_logistica.ipynb` :: `val_tune` | O C_12 treina em train_ref e mede em val_tune.
+- contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `val_cal` | O C_15 calibra e escolhe o corte em val_cal.
+- notebook-executado: `notebooks/C/C_12_baseline_logistica.ipynb` | O C_12 foi executado do início ao fim na coorte definitiva e salvo com as saídas, sem erro gravado.
+- notebook-executado: `notebooks/C/C_13_boosting.ipynb` | O C_13 foi executado do início ao fim e salvo com as saídas, sem erro gravado (a busca do #1 fica pronta para val_tune).
+
 ## #139 · Fase E: EDA descritiva na coorte definitiva (B_06 parte A apontando para coorte_final)
 
 - prioridade: P1
@@ -467,7 +472,13 @@ Sem esta passagem, o ajuste e a validação partem de números descritivos de ou
 
 O comparativo com a provisória foi dispensado: a definitiva é subconjunto da provisória (30.408 linhas a menos), e as diferenças não mudam nenhuma decisão.
 
-## #140 · Fase E: ponto de decisão dos achados exploratórios (28/10 à noite)
+### ④ Pronto quando
+
+- notebook-executado: `notebooks/B/B_06_eda_temporal_clustering.ipynb` | O B_06 está salvo com todas as células de código executadas e nenhuma saída de erro.
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `Tipo de coorte: final` | As saídas salvas do B_06 mostram que ele rodou sobre a coorte definitiva (linha "Tipo de coorte: final" impressa no início).
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `coorte_final.parquet` | As saídas do B_06 mostram o caminho data/analytical/coorte_final.parquet como fonte lida.
+
+## #140 · Fase E: ponto de decisão dos achados exploratórios (30/10, manhã)
 
 - prioridade: P1
 - situação: aberta
@@ -502,6 +513,7 @@ Três linhas por análise: o que encontrou, quão grande é o efeito e se sugere
 #### Roteiro de decisão (a Pessoa A preenche esta tabela neste card)
 | Análise | Pergunta de decisão | Opções | Padrão se não houver consenso |
 |---|---|---|---|
+| Desenho temporal (#102) | 2019 fica no desenvolvimento ou vai para o Teste B? | voltar ao desenho de 18/10 · manter a mudança | **decidir no #102, antes do #142** |
 | Comorbidades × fator de risco (#141) | Recodificar o branco das comorbidades quando `fator_risc` = não? Incluir `fator_risc`? | recodificar · manter | **recodificar, se a hipótese se confirmar** |
 | EDA definitiva (#139, feita) | Algo mudou o suficiente para rever variáveis ou faixas? | manter · ajustar | manter |
 | Sintomas de 2019 (#50) | Retirar `perd_olft`, `perd_pala`, `fadiga`? | manter · retirar | critério objetivo do #50 |
@@ -520,10 +532,15 @@ Três linhas por análise: o que encontrou, quão grande é o efeito e se sugere
 #### Pronto quando
 A tabela estiver preenchida com a decisão de cada linha, registrada no `decisoes.md`, e o YAML refletir as mudanças (se houver).
 
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `ponto de decisão` | O docs/decisoes.md tem a entrada do ponto de decisão da Fase E (#140), com data e a decisão de cada linha da tabela (desenho temporal, comorbidades, sintomas de 2019, ablações, completude, subgrupos, região, não supervisionado).
+- manual: | A tabela de decisão deste card está preenchida linha a linha (decisão + motivo), as três pessoas confirmaram por comentário ou mensagem, e, se alguma decisão mudou variáveis, o supervised.yaml foi atualizado antes do #1.
+
 ## #72 · Quem é responsável pelos próximos passos (passagem de bastão de 24/10)
 
 - prioridade: P1
-- situação: aberta
+- situação: resolvida
 - estratégia: documentar
 - marco: M0
 - data ideal: 27/10
@@ -599,6 +616,10 @@ Pergunta binária no card do item, com prazo. Sem resposta em 24 h, vale o padr�
 #### Pronto quando
 O quadro estiver publicado e as três pessoas tiverem comentado "ok" no card.
 
+### ④ Pronto quando
+
+- manual: | O quadro de responsáveis e de carga por dia está publicado neste card e as três pessoas (A, B e C) comentaram "ok" concordando com a divisão.
+
 ## #82 · Decidir o que fazer com intervalos impossíveis entre sintomas e internação
 
 - prioridade: P2
@@ -636,6 +657,11 @@ Falta decidir como tratar intervalos entre sintomas e internação negativos ou 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
 
+### ④ Pronto quando
+
+- contem: `configs/final_cohort_v1.yaml` :: `intervalo_sintomas_negativo` | O contrato da coorte definitiva tem a regra que exclui intervalos sintomas → internação negativos.
+- contem: `configs/final_cohort_v1.yaml` :: `intervalo_sintomas_maior_limite` | O contrato da coorte definitiva tem a regra que exclui intervalos acima do limite de 60 dias.
+
 ## #83 · Definir o que a sensibilidade "com e sem indicadores de ausência" vai comparar
 
 - prioridade: P3
@@ -664,12 +690,21 @@ Isso importa porque, no clustering, a ausência foi o que mais separou os grupos
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 10/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> A sensibilidade continua ligada no YAML (ver #11). Fecha junto com o #73.
+
 Falta definir o que a sensibilidade de ausência vai comparar, já que a categoria `AUSENTE` já leva a informação de ausência ao modelo principal. Sem essa definição, o item 11 não pode ser implementado.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `sensibilidades.com_sem_indicadores_ausencia.ativa` = `false` | A sensibilidade "com e sem indicadores de ausência" foi desligada no supervised.yaml, porque a categoria AUSENTE já leva a informação de ausência ao modelo principal (substituída pela análise de completude do #52).
+- contem: `docs/decisoes.md` :: `indicadores de ausência` | O docs/decisoes.md registra a decisão sobre os indicadores de ausência (desligados) e o motivo.
 
 ## #84 · Definir quais doses de vacina contam como anteriores à internação
 
@@ -701,12 +736,21 @@ Sem uma regra, o campo `vacina_cov` marca mais o **ano** do que o paciente: o pr
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Não existe `derivar_vacina_cov_antes_admissao`. Continua pós-entrega (enxugamento de 27/10).
+
 Falta a regra que define quais doses de vacina contam como anteriores à admissão, considerando os registros de vacina contra COVID-19 em 2019 e 2020 e as datas de dose ausentes ou posteriores à internação. A derivação do item 45 e a decisão do G1 sobre `vacina_cov` dependem dessa regra.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > **Pós-entrega.** A ablação de contexto usa `vacina` como está; a qualidade da vacinação contra COVID-19 vira uma frase de limitação no relatório (#45).
+
+### ④ Pronto quando
+
+- define: `src/features/engineering.py` :: `derivar_vacina_cov_antes_admissao` | (Pós-entrega) Existe em src/features/engineering.py a função derivar_vacina_cov_antes_admissao, que só conta doses com data anterior à internação e trata 2019–2020 como sem vacina.
+- manual: | A regra de quais doses contam como anteriores à internação está registrada no docs/decisoes.md §17, com data e motivo.
 
 ## #97 · Fechar o "assunto da entrega do professor"
 
@@ -748,20 +792,25 @@ Não há registro do que é a entrega, do prazo nem da forma (individual ou em g
 
 **Pronto quando:** as quatro respostas estiverem neste card e o #133 e o #134 ajustados.
 
-## #102 · Alinhar todos os YAMLs ao treino 2019/2023–2025 e às duas janelas de teste
+### ④ Pronto quando
 
-- prioridade: P2
-- situação: parcial
+- manual: | As quatro respostas do professor (data e hora da entrega, canal de envio, se há relatório escrito separado e duração da apresentação) estão registradas como comentário neste card.
+- manual: | O #133 (relatório) e o #134 (apresentação) foram ajustados ao formato informado, ou foi registrado neste card que o padrão (PDF TRIPOD, 15 minutos, tag entrega-2026-11-03) continua valendo.
+
+## #102 · Desenho temporal: os YAMLs tiraram 2019 do desenvolvimento sem registro — decidir e alinhar tudo
+
+- prioridade: P1
+- situação: aberta
 - estratégia: documentar
 - marco: M2
 - data ideal: 28/10
-- responsável: Pessoa A (decisoes.yaml) + Pessoa C (artefato)
-- pessoas: A, C
+- responsável: Equipe (decide) · Pessoa A (registra) · Pessoa C (código e testes)
+- pessoas: A, C, Equipe
 - fonte: configs/decisoes.yaml v0.4
-- depende de: #73
+- depende de: —
 - tags: Decisão, Documentação
 - pilar: Eficiência + Performance + Valor científico-acadêmico
-- carga: 0
+- carga: 1
 - novo: sim
 - professores: não
 
@@ -774,12 +823,53 @@ O YAML canônico não pode continuar anunciando 2019–2026 ou um único holdout
 
 ### ② Problema
 
-Dois arquivos de configuração contam histórias diferentes; a banca e outra IA não saberão qual vale.
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): divergência grave, bloqueia o #142 e o treino
+`configs/supervised.yaml` e `configs/decisoes.yaml` (versão 0.5) passaram a dizer que o desenvolvimento usa só 2023–2025 e que 2019 vai para `test_pandemic` junto com 2020–2022 (`periodo.desenvolvimento`, `temporal.blocos.*.anos`, `dev_years`, `pandemic_test_years` e a descrição do G2). Todo o resto do projeto continua com 2019 no desenvolvimento: `docs/decisoes.md` §5 e §28, a Base de Conhecimento v10, este painel, o teste `tests/test_split.py` (`TEMPORAL_CFG`), as saídas salvas do B_07 e o artefato atual (`manifesto_supervisionado.json`: teste = 3.035.074 linhas = `test_ref` + 2020–2022). A mudança não está registrada como decisão e o G2 continua com a data de aprovação de 18/10.
+
+| Onde | 2019 está em | Situação |
+|---|---|---|
+| `configs/supervised.yaml` (`periodo`, `temporal.blocos`, descrição do G2) | `test_pandemic` (Teste B) | Mudou depois de 24/10 |
+| `configs/decisoes.yaml` v0.5 (`dev_years`, `pandemic_test_years`, `experimentos_split.blocos`) | `test_pandemic` | Mudou depois de 24/10 |
+| `docs/decisoes.md` §5.1, §28 (decisão de 18/10) | desenvolvimento | Sem alteração |
+| Base de Conhecimento v10, este painel (#50, #140, #142) | desenvolvimento | Sem alteração |
+| `tests/test_split.py` (`TEMPORAL_CFG`) | desenvolvimento | Passa porque usa a própria configuração |
+| Artefato atual (`manifesto_supervisionado.json`, 24/10) e saídas do B_07 | desenvolvimento | Gerados antes da mudança |
+
+**Consequências se a mudança ficar como está:** o Teste A deixa de ter 2019; o `test_pandemic` passa a misturar um ano pré-pandemia (12% de óbitos) com 2020–2022 (≈ 26%), e o nome do bloco fica enganoso; o treino perde ~43 mil fichas de 2019; a partição muda e todos os números de 24/10 deixam de valer; a pergunta do #50 (três sintomas vazios em 2019) muda de natureza. A mudança pode até ser boa (resolve o "marcador de ano" sem tirar variáveis), mas precisa ser uma decisão registrada.
+
+**Teste quebrado na mesma região do código:** em `src/protocolo/verificacoes.py` (`DEFAULT_CONFIG.experimentos_split.cenarios`), o cenário `sem_2020_2021` foi renomeado para `sem_2019_2022`, com `anos: [2019, 2022, 2023, 2024, 2025]` e descrição "Remove 2019, 2020, 2021 e 2022" — a lista contradiz a descrição (mantém 2019 e 2022). Três testes de `tests/test_regras_pessoa_a.py` falham de forma determinística (`test_cenario_sem_2020_2021_exclui_os_anos` com `KeyError: 'sem_2020_2021'`; `test_benchmark_aleatorio_x_temporal_e_comparacao` e `test_graficos_do_split_sao_gerados` com nomes diferentes), porque o fixture usa `load_config(None)`, que lê só o `DEFAULT_CONFIG`. A auditoria de 27/10 registrou "testes ok" no commit `35b90f8`; confirme rodando a suíte na sua máquina.
+
+Dois arquivos de configuração e a documentação contam histórias diferentes; a banca e outra IA não saberão qual vale.
 
 ### ③ O que fazer
 
-> [!decisão] Enxugado em 27/10 (eficiência primeiro)
-> Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
+**Dono:** Equipe decide (quem alterou os YAMLs explica o motivo no card) · Pessoa A registra · Pessoa C ajusta código e testes · **Prazo:** 28/10 (quarta), antes do #142 · **Esforço estimado:** A ≈ 30 min · C ≈ 30 min
+
+#### 1. Decidir (15 min, por mensagem)
+Opção A — **voltar ao desenho de 18/10** (2019 no desenvolvimento): desfazer as mudanças de `periodo`, `temporal.blocos`, descrição do G2 no `supervised.yaml` e `dev_years`/`pandemic_test_years`/`experimentos_split.blocos` no `decisoes.yaml`. Nada mais muda.
+Opção B — **manter 2019 fora do desenvolvimento**: registrar a decisão nova (data, motivo, impacto) no `decisoes.md` §5 e §28; atualizar a descrição e a data de aprovação do G2; renomear ou documentar `test_pandemic` (passa a ter 2019, que não é pandemia); atualizar `TEMPORAL_CFG` em `tests/test_split.py`; refazer #50 e #140 com a nova leitura; avisar que todos os números de 24/10 mudam.
+
+Padrão se não houver resposta até 28/10 às 14h: **Opção A** (é o que está aprovado e documentado).
+
+#### 2. Corrigir o cenário quebrado (Pessoa C, 15 min)
+Em `src/protocolo/verificacoes.py`, no `DEFAULT_CONFIG`, voltar a chave para `"sem_2020_2021"` com `"anos": [2019, 2022, 2023, 2024, 2025]` e `"descricao": "Remove 2020 e 2021 (anos de pandemia)"` — ou, se o A_09 sair no #143, remover o cenário e os três testes juntos. Rodar `.\.venv\Scripts\python.exe -m pytest tests/test_regras_pessoa_a.py -q`.
+
+#### 3. Registrar (Pessoa A, no pacote do #73)
+Uma entrada no `decisoes.md` com a opção escolhida.
+
+#### Pronto quando
+Os dois YAMLs, `decisoes.md`, `tests/test_split.py` e este painel dizem o mesmo sobre 2019, e a suíte rápida passa.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `temporal.blocos.train_ref.anos` contem `2019` | Opção A (padrão sem resposta até 28/10, 14h): o train_ref do supervised.yaml volta a ter 2019, como na decisão de 18/10. Se a equipe escolher a Opção B, troque este critério por `nao-contem 2019` e registre a decisão.
+- yaml: `configs/supervised.yaml` :: `temporal.blocos.test_pandemic.anos` nao-contem `2019` | Opção A: test_pandemic volta a ter só 2020–2022 (nome do bloco coerente com o conteúdo).
+- yaml: `configs/decisoes.yaml` :: `dev_years` contem `2019` | O configs/decisoes.yaml diz o mesmo que o supervised.yaml sobre 2019 (dev_years com 2019 na Opção A).
+- contem: `docs/decisoes.md` :: `2019` | O docs/decisoes.md (§5 e §28) registra a decisão sobre 2019, com data e motivo, coerente com os dois YAMLs.
+- define: `src/protocolo/verificacoes.py` :: `DEFAULT_CONFIG` | O DEFAULT_CONFIG de src/protocolo/verificacoes.py continua existindo (o cenário quebrado sem_2019_2022 foi corrigido para sem_2020_2021, ou removido junto com os testes se o A_09 sair no #143).
+- nao-contem: `src/protocolo/verificacoes.py` :: `sem_2019_2022` | O cenário com nome e lista contraditórios (sem_2019_2022, que mantém 2019 e 2022) não existe mais em verificacoes.py.
+- teste: `tests/test_regras_pessoa_a.py` | Os testes de tests/test_regras_pessoa_a.py passam (hoje 3 falham com KeyError: 'sem_2020_2021').
+- teste: `tests/test_split.py` | Os testes de partição passam com o TEMPORAL_CFG coerente com a decisão sobre 2019.
 
 ## #30 · Salvar a coorte definitiva com o nome errado a carregaria como provisória
 
@@ -819,6 +909,12 @@ Dois arquivos de configuração contam histórias diferentes; a banca e outra IA
 
 **Único cuidado restante:** o artefato supervisionado v3 do #131 deve gravar no manifesto o caminho e o SHA-256 da coorte de origem, e o `cohort_kind` deve ser `final`. Assim nenhum notebook carrega a provisória por engano.
 
+### ④ Pronto quando
+
+- contem: `src/data/cohort_source.py` :: `coorte_final.parquet` | O cohort_source reconhece a coorte definitiva pelo nome canônico coorte_final.parquet.
+- teste: `tests/test_cohort_source.py::test_coorte_parquet_nao_e_mais_candidato` | O teste confirma que coorte.parquet não é mais candidato, então a definitiva nunca é carregada como provisória por causa do nome.
+- json: `data/analytical/manifesto_supervisionado.json` :: `cohort_kind` = `final` | O manifesto do artefato supervisionado registra cohort_kind = final (arquivo local de quem gerou o artefato).
+
 ## #59 · Documentar 2026 como período parcial e exclusivamente exploratório
 
 - prioridade: P3
@@ -857,6 +953,11 @@ Agosto de 2026 pode estar subnotificado por atraso de notificação. 2026 está 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `periodo.exploracao_opcional` contem `2026` | O supervised.yaml declara 2026 só como exploração opcional, fora do desenvolvimento e dos testes.
+- contem: `docs/decisoes.md` :: `parcial` | O docs/decisoes.md registra que 2026 é período parcial (até setembro, com desfechos em aberto) e exclusivamente exploratório (feito no pacote do #73).
+
 ## #73 · decisoes.md parado em 10/10
 
 - prioridade: P2
@@ -882,6 +983,12 @@ Desde 10/10 foram decididas muitas coisas que não estão registradas: quarenten
 > Se a banca perguntar "por que hash?", a resposta precisa estar no registro de decisões, com data.
 
 ### ② Problema
+
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 19/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `docs/decisoes.md` continua com "Última atualização: 21/10" e §28 como última seção; nenhuma das 8 entradas pedidas foi escrita.
+> **Divergência grave encontrada (28/10):** `configs/supervised.yaml` e `configs/decisoes.yaml` (versão 0.5) passaram a dizer que o desenvolvimento usa só 2023–2025 e que 2019 vai para `test_pandemic` junto com 2020–2022 (`periodo.desenvolvimento`, `temporal.blocos.*.anos`, `dev_years`, `pandemic_test_years` e a descrição do G2). Todo o resto do projeto continua com 2019 no desenvolvimento: `docs/decisoes.md` §5 e §28, a Base de Conhecimento v10, este painel, o teste `tests/test_split.py` (`TEMPORAL_CFG`), as saídas salvas do B_07 e o artefato atual (`manifesto_supervisionado.json`: teste = 3.035.074 linhas = `test_ref` + 2020–2022). A mudança não está registrada como decisão e o G2 continua com a data de aprovação de 18/10.
+> Itens a acrescentar ao pacote do #73: (a) registrar a decisão sobre 2019 (manter no desenvolvimento ou mover para o Teste B) e alinhar `decisoes.md` §5/§28 com o YAML, ou desfazer a mudança no YAML; (b) `configs/decisoes.yaml` ainda tem `coorte_estrita`, `acoes_inconsistencias_datas`, `variaveis_condicionais` e `maturidade_evolucao` como `proposta`; (c) `decisoes.yaml` `intervalo_sintomas_internacao` (`manter_com_flag`, `exclusao_automatica: false`) e `supervised.yaml` `engenharia.intervalo_politica: sinalizar` contradizem o contrato da coorte, que exclui intervalos negativos e acima de 60 dias.
 
 As decisões dizem "última atualização 10/10" e não registram o que foi decidido neste ciclo: quarentena dos 2 grupos, lista curta, famílias encerradas, uso de `class_weight` e aprovações de gates.
 
@@ -913,6 +1020,19 @@ Célula de texto no topo de A_03, A_04, A_09, A_14 e B_10: "Histórico da fase p
 
 #### Pronto quando
 Um commit com `decisoes.md`, os dois YAMLs e as células de aviso, testes passando, e os cards #9, #10, #29, #59, #83, #87, #102 e #11 marcados como concluídos.
+
+### ④ Pronto quando
+
+- nao-contem: `docs/decisoes.md` :: `Última atualização: 21/10/2026` | O docs/decisoes.md foi atualizado depois de 21/10 (a linha de última atualização mudou).
+- contem: `docs/decisoes.md` :: `final_cohort_v1` | O docs/decisoes.md tem a entrada do contrato final_cohort_v1 (7 regras; 4.666.910 → 3.884.728 notificações).
+- contem: `docs/decisoes.md` :: `criar_group_id` | O docs/decisoes.md registra a regra de grupo (nu_notific, fichas repetidas no mesmo bloco, 4 linhas fora) citando criar_group_id.
+- yaml: `configs/supervised.yaml` :: `models.decision_tree.ativa` = `false` | A árvore de decisão, família encerrada, está desligada no supervised.yaml.
+- yaml: `configs/supervised.yaml` :: `models.random_forest.ativa` = `false` | A Random Forest, família encerrada, está desligada no supervised.yaml.
+- yaml: `configs/supervised.yaml` :: `models.boosting.early_stopping` = `true` | O early stopping do boosting está ligado no YAML (com false, a fábrica anula o padrão e a busca fica lenta).
+- yaml: `configs/supervised.yaml` :: `limiar.min_recall` = `0.8` | O YAML tem limiar.min_recall = 0,80, a regra de corte orientada pelo professor.
+- yaml: `configs/decisoes.yaml` :: `status_decisoes.coorte_estrita` = `aprovada` | As decisões que estavam como "proposta" no decisoes.yaml (coorte_estrita e as outras três) passaram a aprovada.
+- yaml: `configs/decisoes.yaml` :: `dataset_analitico.path` != `data/analytical/dataset_supervisionado.parquet` | A exportação da Pessoa A deixou de apontar para o mesmo arquivo do artefato oficial (fecha o #87).
+- teste: `tests/test_config.py` | Os testes de configuração passam depois das mudanças nos YAMLs.
 
 ## #6 · Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva)
 
@@ -948,6 +1068,11 @@ Quando a coorte não traz `alvo_obito_srag`, o B_07 chama `criar_alvo_binario` c
 > A chamada foi corrigida no commit `a913228` (18/10).
 
 **Leitura atual:** o B_07 passa a ser histórico da fase provisória (ver #72). A coorte definitiva já traz `alvo_obito_srag` pronto (`int8`, valores 0 e 1, validado na publicação), então o caminho oficial não chama mais `criar_alvo_binario` a partir do B_07. Nada a fazer.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `descartar_nao_rotulados=` | O B_07 não chama mais criar_alvo_binario com o parâmetro descartar_nao_rotulados=, que a função não aceita.
+- nao-contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `ignorados=` | O B_07 não chama mais criar_alvo_binario com o parâmetro ignorados=.
 
 ## #86 · Levar a partição por hash do notebook para src/data/split.py
 
@@ -989,6 +1114,12 @@ A partição oficial do projeto existe só no notebook B_07, junto com a confer�
 
 **O que não está neste item, e sim no #131:** chamar `criar_particao_mestra` sobre a coorte definitiva e gravar o resultado. A função existe; o artefato particionado ainda não.
 
+### ④ Pronto quando
+
+- define: `src/data/split.py` :: `atribuir_particao_estratificada_por_hash` | A partição oficial por hash vive em src/data/split.py, e não só no notebook.
+- define: `src/data/split.py` :: `criar_particao_mestra` | A função criar_particao_mestra existe em src/data/split.py.
+- teste: `tests/test_split.py` | Os testes de partição (inclusive os de hash: grupos não cruzam partições, determinismo com linhas embaralhadas) passam.
+
 ## #87 · Os notebooks A e o B_07 gravam no mesmo arquivo e um apaga o outro
 
 - prioridade: P3
@@ -1019,12 +1150,22 @@ Se os notebooks A rodarem depois do B_07, o hash deixa de bater com o manifesto 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> O problema real continua: `configs/decisoes.yaml` `dataset_analitico.path` e o `DEFAULT_CONFIG` de `src/protocolo/verificacoes.py` ainda apontam para `data/analytical/dataset_supervisionado.parquet`, o mesmo arquivo do artefato oficial. Rodar A_03 ou A_04 apaga o artefato. Fecha no #73.
+
 `a1_export_dataset` grava em `_analytical_path(cfg)`, que resolve para `C.ANALYTICAL_DIR / "dataset_supervisionado.parquet"` (nome definido em `configs/decisoes.yaml`, `dataset_analitico.path`). É o mesmo arquivo de `src/data/supervised_artifact.py` (`DATASET_NAME`). O A_14 registrou **FALHA**: "dataset analítico foi alterado depois da exportação". A ordem atual de execução evita o problema por acaso, não por desenho.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
+
+### ④ Pronto quando
+
+- yaml: `configs/decisoes.yaml` :: `dataset_analitico.path` != `data/analytical/dataset_supervisionado.parquet` | O configs/decisoes.yaml aponta a exportação da Pessoa A para outro arquivo (por exemplo, populacao_analitica_pessoa_a.parquet), diferente do artefato oficial.
+- nao-contem: `src/protocolo/verificacoes.py` :: `"dataset_supervisionado.parquet"` | O DEFAULT_CONFIG de src/protocolo/verificacoes.py também deixou de usar o nome do artefato oficial, então rodar A_03 ou A_04 não apaga mais o artefato.
+- teste: `tests/test_regras_pessoa_a.py` | Os testes de tests/test_regras_pessoa_a.py passam (incluído pelo verificador em 28/10: esses testes importam src/protocolo/verificacoes.py, arquivo desta pendência, e 3 deles falham hoje pelo cenário renomeado do #102).
 
 ## #123 · Ler o artefato por partição, para o teste nunca chegar à memória por engano
 
@@ -1059,6 +1200,12 @@ Também resolve dois problemas antigos: a leitura parcial pulava a validação (
 > `load_supervised_artifact(partitions=...)` filtra no Parquet e exige G9 para `teste`.
 
 **Continuação obrigatória no #131:** o mesmo mecanismo precisa valer para os seis blocos. Leitura padrão: `train_ref`, `val_tune`, `val_cal`, `val_meas`. `test_ref` e `test_pandemic` exigem G9. `exploracao` (2026) exige `exploracao_2026.ativa: true`.
+
+### ④ Pronto quando
+
+- contem: `src/data/supervised_artifact.py` :: `partitions` | load_supervised_artifact aceita o parâmetro partitions= e filtra na leitura do Parquet.
+- teste: `tests/test_supervised_artifact.py::test_default_nao_carrega_teste` | O teste confirma que a leitura padrão não traz o teste para a memória.
+- teste: `tests/test_supervised_artifact.py::test_load_com_teste_sem_g9_falha` | O teste confirma que pedir o teste com o G9 pendente levanta erro.
 
 ## #16 · Nada no código impede abrir o teste antes do G9
 
@@ -1097,6 +1244,12 @@ Também resolve dois problemas antigos: a leitura parcial pulava a validação (
 
 **Continuação no #131:** criar o teste equivalente para `test_ref` e `test_pandemic` (com G9 pendente → `GatePendenteError`; com G9 aprovado via `monkeypatch` → devolve os dois blocos). O C_16 do #132 deve usar só essa função para abrir os testes.
 
+### ④ Pronto quando
+
+- contem: `src/data/supervised_artifact.py` :: `exigir_gate("G9_holdout")` | holdout_partition e load_supervised_artifact chamam exigir_gate("G9_holdout") antes de devolver o teste.
+- teste: `tests/test_supervised_artifact.py::test_holdout_partition_sem_g9_falha` | O teste confirma que holdout_partition falha com o G9 pendente.
+- teste: `tests/test_supervised_artifact.py::test_holdout_partition_apos_g9` | O teste confirma que holdout_partition devolve o teste depois de o G9 ser aprovado.
+
 ## #18 · Carregar só algumas colunas do artefato pula a validação
 
 - prioridade: P2
@@ -1130,6 +1283,12 @@ Quando chamada com `columns=`, a função pula a validação da tabela carregada
 > [!ok] Concluída: a leitura parcial lê alvo e partição por dentro e valida.
 
 **No #131:** manter essa garantia quando os blocos passarem a ser seis. A validação deve conferir os blocos pedidos, e não “três partições presentes”.
+
+### ④ Pronto quando
+
+- define: `src/data/supervised_artifact.py` :: `_validate_partial_load` | Existe a validação da leitura parcial (_validate_partial_load), usada quando o notebook pede só algumas colunas.
+- teste: `tests/test_supervised_artifact.py::test_load_com_columns_valida_particoes` | O teste confirma que a leitura com columns= ainda valida as partições.
+- teste: `tests/test_supervised_artifact.py::test_load_com_columns_valida_alvo_binario` | O teste confirma que a leitura com columns= ainda valida o alvo binário.
 
 ## #61 · pyproject aceita scikit-learn 1.4, mas o código precisa de 1.8+
 
@@ -1166,6 +1325,11 @@ O `pyproject` exige `scikit-learn>=1.4`. Mas `calibrar` usa `FrozenEstimator`, q
 > [!ok] Concluída: `pyproject.toml` exige `scikit-learn>=1.8` e `logistic.py` confere a versão instalada.
 Nada a fazer.
 
+### ④ Pronto quando
+
+- contem: `pyproject.toml` :: `scikit-learn>=1.8` | O pyproject.toml exige scikit-learn 1.8 ou mais novo.
+- teste: `tests/test_model_pipelines.py::test_logistic_falha_com_sklearn_antiga` | O teste confirma que a logística falha com versão antiga do scikit-learn, em vez de trocar L1 por L2 em silêncio.
+
 ## #63 · Dependências sem versão e espalhadas em dois arquivos
 
 - prioridade: P2
@@ -1200,6 +1364,12 @@ O `requirements.txt` não fixa nenhuma versão. O `pyproject` não lista `python
 
 **Para o pacote de entrega (#126):** o `requirements.txt` fixado é o que a banca deve usar. Registrar no README a versão do Python das execuções finais (o manifesto da auditoria da coorte registra 3.14.7).
 
+### ④ Pronto quando
+
+- contem: `requirements.txt` :: `scikit-learn==` | O requirements.txt fixa versões (exemplo: scikit-learn==…).
+- teste: `tests/test_config.py::test_requirements_tem_versao_fixada` | O teste confirma que todas as dependências do requirements.txt têm versão fixada.
+- teste: `tests/test_config.py::test_requirements_cobre_dependencias_de_runtime_do_pyproject` | O teste confirma que o requirements.txt cobre as dependências de execução listadas no pyproject.toml.
+
 ## #125 · B_07: célula 19 com parêntese não fechado e duas células de teste sem execução
 
 - prioridade: P2
@@ -1229,6 +1399,10 @@ Provável resto das colagens com caracteres corrompidos. O B_07 é o gerador do 
 
 > [!ok] Concluída (commit `a913228`). B_07 é histórico da fase provisória (#72); nada a fazer.
 
+### ④ Pronto quando
+
+- notebook-executado: `notebooks/B/B_07_supervisionado_pilotos.ipynb` | O B_07 está salvo com todas as células de código executadas e sem saída de erro (a célula 19 não tem mais parêntese aberto, e as células de teste 10.1 e 10.2 têm saída).
+
 ## #101 · Remover o notebook duplicado A3b (cópia antiga do A_09)
 
 - prioridade: P3
@@ -1257,6 +1431,10 @@ Arquivo duplicado, sem execução. Confunde a ordem da cadeia e a referência do
 ### ③ O que fazer
 
 > [!ok] Concluída: o notebook duplicado não existe mais no repositório. Nada a fazer.
+
+### ④ Pronto quando
+
+- nao-existe: `notebooks/A/A3b_split_aleatorio_cenarios.ipynb` | O notebook duplicado A3b (cópia antiga do A_09) não existe mais no repositório.
 
 ## #14 · A variável SRAG_PARQUET_URL não tem efeito
 
@@ -1290,6 +1468,11 @@ O notebook 01 explica que dá para apontar outro arquivo de dados pela variável
 
 > [!ok] Concluída (19/10). Nada a fazer.
 
+### ④ Pronto quando
+
+- contem: `src/utils/storage.py` :: `C.srag_parquet_url()` | get_parquet usa C.srag_parquet_url(), então a variável de ambiente SRAG_PARQUET_URL tem efeito.
+- teste: `tests/test_config.py::test_srag_parquet_url` | O teste confirma que a URL do Parquet respeita a configuração.
+
 ## #19 · O YAML aceita chaves duplicadas em silêncio e fica em cache
 
 - prioridade: P4
@@ -1319,12 +1502,21 @@ Se o YAML tiver a mesma chave duas vezes, a leitura padrão fica com a última, 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 10/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `src/utils/config.py` continua com `@lru_cache(maxsize=1)` e sem detecção de chave duplicada; não existe `recarregar_supervised`. Continua pós-entrega.
+
 `carregar_supervised` usa `yaml.safe_load`, que aceita chaves duplicadas sem aviso (a última vence). A leitura rigorosa, que barra duplicadas, existe apenas no B_10. Além disso, o resultado fica em cache (`lru_cache`), e alterações no YAML só valem depois de reiniciar o kernel.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > **Pós-entrega.** Os gates G6 a G9 serão editados por uma pessoa só (Pessoa C), com conferência visual no checklist do G9; o risco de chave duplicada fica baixo.
+
+### ④ Pronto quando
+
+- nao-contem: `src/utils/config.py` :: `@lru_cache(maxsize=1)` | (Pós-entrega) carregar_supervised deixou de guardar o YAML em cache permanente (ou ganhou recarregar_supervised), então mudar o YAML vale sem reiniciar o kernel.
+- contem: `src/utils/config.py` :: `duplicada` | (Pós-entrega) A leitura do YAML detecta chave duplicada e avisa, em vez de ficar com a última em silêncio.
 
 ## #36 · Faixas etárias e grafia do sexo diferentes entre EDA e modelo
 
@@ -1361,6 +1553,11 @@ As faixas etárias e a grafia do sexo (maiúscula ou minúscula) do B_06 são di
 > [!ok] Resolvida (revisão de 24/10)
 > O B_06 passou a derivar faixa etária e sexo com `montar_features`, com as faixas do YAML. As tabelas de desfecho do relatório saem do #137 (só treino), já com as faixas oficiais.
 
+### ④ Pronto quando
+
+- contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `montar_features` | O B_06 deriva faixa etária e sexo com montar_features do src, usando as faixas oficiais do YAML.
+- yaml: `configs/supervised.yaml` :: `features.engenharia.faixas_etarias.2.nome` = `5-11` | As faixas oficiais do YAML (1–4, 5–11, 12–17…) são a referência única para EDA e modelo.
+
 ## #99 · B_06: terminar a execução do início ao fim depois das correções de memória
 
 - prioridade: P2
@@ -1394,6 +1591,11 @@ O notebook ainda mistura `dtype_backend="pyarrow"` com código que espera tipos 
 > [!ok] Concluída (21/10, commit `5bdcd8d`): B_06 executado de ponta a ponta com memória validada.
 
 **Atenção para quem usar os números:** as tabelas de desfecho dessa execução usaram a coorte inteira. Para o relatório, valem as do #51, só com `train_ref`. Os números do clustering continuam válidos, porque o clustering não usa o desfecho.
+
+### ④ Pronto quando
+
+- notebook-executado: `notebooks/B/B_06_eda_temporal_clustering.ipynb` | O B_06 está salvo executado do início ao fim (inclusive o clustering), sem saída de erro.
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `Memória após compactação` | As saídas registram a leitura enxuta com compactação de memória (correções de 17/10).
 
 ## #121 · montar_features faz cópia completa da coorte e devolve tipos pesados
 
@@ -1433,6 +1635,11 @@ Para acrescentar 11 colunas, a função copia a coorte inteira (125 colunas no B
 
 **Uso no #131:** chamar `montar_features` uma única vez sobre a coorte definitiva, lendo só as colunas de entrada (`nu_idade_n`, `tp_idade`, `cs_sexo`, `dt_sin_pri`, `dt_interna` + features + alvo + `sg_uf` + `nu_notific` + `id_registro`). O resto das 199 colunas não precisa ir para a memória.
 
+### ④ Pronto quando
+
+- contem: `src/features/engineering.py` :: `df.copy(deep=False)` | montar_features faz cópia rasa (df.copy(deep=False)), sem duplicar a coorte inteira na memória.
+- teste: `tests/test_features.py::test_montar_features_usa_tipos_compactos` | O teste confirma que as colunas derivadas saem com tipos compactos (float32, int8, category).
+
 ## #124 · C_11 deve rodar com o pré-processamento esparso, sem materializar a validação inteira
 
 - prioridade: P2
@@ -1463,6 +1670,11 @@ O notebook ainda faz `fit_transform` do treino e `transform` da validação comp
 > [!ok] Concluída para o artefato provisório.
 
 **No #132:** o C_11 passa a ler `train_ref` e uma amostra de `val_tune`, e nunca a validação inteira. Registrar tempo e pico de memória com `Monitor`, como já faz.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `sparse_output=False` | O C_11 não força mais o one-hot denso (causa do MemoryError de 2,53 GiB); usa o pré-processador esparso do src. A nova execução do C_11 nos seis blocos é conferida no #132.
+- contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | O pré-processador do src usa saída esparsa por padrão.
 
 ## #20 · Nome do finalista diferente no YAML e no código
 
@@ -1496,6 +1708,11 @@ O YAML chama o finalista de `hist_gradient_boosting`, mas a fábrica só aceita 
 
 > [!ok] Concluída (`_FINALISTA_ALIASES` em `factory.py`, 20/10). Nada a fazer.
 
+### ④ Pronto quando
+
+- define: `src/models/factory.py` :: `_FINALISTA_ALIASES` | A fábrica tem o mapeamento único de nomes do finalista (hist_gradient_boosting → boosting), sem cópias nos notebooks.
+- teste: `tests/test_model_pipelines.py::test_build_finalista_aceita_nomes_do_yaml` | O teste confirma que a fábrica aceita os nomes do finalista como estão no YAML.
+
 ## #21 · A fábrica passa qualquer chave nova do YAML ao modelo
 
 - prioridade: P3
@@ -1528,6 +1745,12 @@ A fábrica repassa ao construtor qualquer chave nova de `models.<nome>` que não
 
 > [!ok] Concluída: a fábrica filtra as chaves com `inspect.signature`. Nada a fazer.
 
+### ④ Pronto quando
+
+- contem: `src/models/factory.py` :: `signature` | A fábrica filtra as chaves do YAML pela assinatura do construtor (inspect.signature).
+- teste: `tests/test_model_pipelines.py::test_kwargs_do_yaml_descarta_chave_administrativa` | O teste confirma que uma chave administrativa (como ativa) não chega ao construtor do modelo.
+- teste: `tests/test_model_pipelines.py::test_kwargs_do_yaml_descarta_typo` | O teste confirma que um erro de digitação no YAML não gera TypeError no modelo.
+
 ## #29 · Itens desatualizados ou sem uso no YAML
 
 - prioridade: P3
@@ -1554,12 +1777,23 @@ A fábrica repassa ao construtor qualquer chave nova de `models.<nome>` que não
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> No `supervised.yaml` atual: `decision_tree.ativa: true`, `random_forest.ativa: true`, `boosting.early_stopping: false`, `limiar.metricas_candidatas` sem `recall_minimo`/`youden_j` e sem `limiar.min_recall`. Nada mudou. É feito dentro do #73.
+
 O YAML tem itens desatualizados ou sem uso: `decision_tree` e `random_forest` continuam com `ativa: true`, embora estejam em `familias_encerradas`; não existe gate G3 e não há explicação; `coluna_estratificacao_temporal` e `descartar_outros` não são lidas por nenhum código; `metricas_candidatas` não inclui `youden_j`, que as decisões citam como opção.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `models.decision_tree.ativa` = `false` | Família encerrada desligada no YAML.
+- yaml: `configs/supervised.yaml` :: `models.random_forest.ativa` = `false` | Família encerrada desligada no YAML.
+- yaml: `configs/supervised.yaml` :: `limiar.metricas_candidatas` contem `youden_j` | youden_j, citado nas decisões, passou a ser métrica candidata do limiar.
+- yaml: `configs/supervised.yaml` :: `limiar.metricas_candidatas` contem `recall_minimo` | recall_minimo, a regra principal do #80, é métrica candidata do limiar.
 
 ## #38 · Sobras no B_07: modo de teste sintético e imports sem uso
 
@@ -1587,6 +1821,10 @@ O modo `SRAG_NOTEBOOK_SMOKE` e imports como `GroupShuffleSplit` poluem o noteboo
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 18 e 19/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> O B_07 ainda tem `SRAG_NOTEBOOK_SMOKE` (3 ocorrências) e importa `GroupShuffleSplit` sem usar. Continua pós-entrega.
+
 O B_07 ainda tem o modo `SRAG_NOTEBOOK_SMOKE`, que usa dados sintéticos, e imports sem uso, como `GroupShuffleSplit`, `ColumnTransformer` e funções avulsas de `sklearn.metrics`.
 
 ### ③ O que fazer
@@ -1597,6 +1835,11 @@ O B_07 ainda tem o modo `SRAG_NOTEBOOK_SMOKE`, que usa dados sintéticos, e impo
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Remover o modo de teste com dados sintéticos (os testes de `tests/` já cumprem esse papel) e os imports sem uso. Rodar o notebook do início ao fim para confirmar.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `SRAG_NOTEBOOK_SMOKE` | (Pós-entrega) O modo de teste sintético SRAG_NOTEBOOK_SMOKE foi removido do B_07.
+- nao-contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `GroupShuffleSplit` | (Pós-entrega) O import sem uso de GroupShuffleSplit foi removido do B_07.
 
 ## #40 · A construção da coorte provisória não gera os arquivos de rastreio esperados
 
@@ -1627,6 +1870,10 @@ A coorte provisória fixa a data final em 28/09/2026. A remoção de duplicatas 
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#70** (Pessoa A). Marque como concluído junto com ele.
+
+### ④ Pronto quando
+
+- existe: `outputs/final/variaveis_finais.csv` | A tabela de variáveis finais existe (gerada no #70, a partir do supervised.yaml cruzado com o dicionário).
 
 ## #66 · Teste lento roda junto com os rápidos
 
@@ -1660,6 +1907,11 @@ O teste de identificadores duplicados lê o Parquet inteiro, mas não tem a marc
 
 > [!ok] Concluída. Nada a fazer.
 
+### ④ Pronto quando
+
+- contem: `tests/test_leakage.py` :: `@pytest.mark.slow` | O teste que lê o Parquet inteiro está marcado como slow.
+- contem: `pyproject.toml` :: `not slow` | O pytest padrão do projeto exclui os testes slow (addopts com -m 'not slow ...').
+
 ## #122 · read_srag sem opção de leitura compacta
 
 - prioridade: P3
@@ -1688,6 +1940,10 @@ Falta um parâmetro `compactar=True` em `read_srag` que delegue para `ler_parque
 ### ③ O que fazer
 
 > [!ok] Concluída. Use `read_srag(..., compactar=True)` no #131 se a leitura da coorte pesar.
+
+### ④ Pronto quando
+
+- contem: `src/utils/storage.py` :: `compactar: bool = False` | read_srag tem o parâmetro compactar, que delega para io_eficiente.ler_parquet_enxuto, mantendo o comportamento antigo como padrão.
 
 ## #34 · O C_13 manda colar os hiperparâmetros em config.yaml (o certo é supervised.yaml)
 
@@ -1721,6 +1977,11 @@ O texto da proposta de hiperparâmetros manda colar o resultado em `config.yaml`
 
 > [!ok] Concluída. Nada a fazer.
 
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_13_boosting.ipynb` :: `config.yaml` | O C_13 não manda mais colar hiperparâmetros num arquivo config.yaml, que não existe.
+- contem: `notebooks/C/C_13_boosting.ipynb` :: `supervised.yaml` | O C_13 indica configs/supervised.yaml como destino dos hiperparâmetros.
+
 ## #76 · Nenhum notebook confere a versão do scikit-learn no início
 
 - prioridade: P4
@@ -1749,6 +2010,11 @@ Nem o B_05 nem o C_02 conferem a versão do scikit-learn. Um ambiente desatualiz
 ### ③ O que fazer
 
 > [!ok] Concluída: o C_02 confere a versão. Nada a fazer.
+
+### ④ Pronto quando
+
+- teste: `tests/test_model_pipelines.py::test_scikit_learn_instalado_e_maior_ou_igual_1_8` | O teste rápido confere a versão do scikit-learn (≥ 1.8) logo no começo do uso do projeto; continua valendo mesmo se o C_02 sair no #143.
+- contem: `src/models/logistic.py` :: `SKLEARN_L1_RATIO_MIN` | build_logistic_pipeline confere a versão mínima do scikit-learn e falha com RuntimeError em versões antigas.
 
 ## #98 · Notebooks B sem execução salva: a coorte provisória não é reprodutível pelo repositório
 
@@ -1783,6 +2049,10 @@ Alertas A40 e A41 do relatório. A coorte `coorte_provisoria_b.parquet` (SHA-256
 ### ③ O que fazer
 
 **Pessoa A, 31/10, 15 minutos:** um parágrafo de Métodos (no #133) dizendo que a seleção de variáveis foi feita na coorte provisória e congelada antes da definitiva, e que a definitiva é subconjunto exato da provisória (30.408 linhas a menos, nenhuma nova, alvo idêntico). Não executar o construtor provisório de novo.
+
+### ④ Pronto quando
+
+- manual: | O parágrafo de Métodos do relatório (#133) explica que a seleção de variáveis foi feita na coorte provisória e congelada antes da definitiva, e que a definitiva é subconjunto exato da provisória (30.408 linhas a menos, nenhuma nova, alvo idêntico).
 
 ## #118 · Criar a partição-mestre: treino 2019/2023–2025 e duas janelas de teste
 
@@ -1828,6 +2098,12 @@ A v4 previa três cenários de treino. Essa complexidade foi descartada pela dec
 > [!ok] Função concluída; **artefato ainda não existe**
 > `criar_particao_mestra` está pronta e testada com dados sintéticos. A coorte definitiva publicada **não tem** `group_id`, `regiao_residencia` nem `particao`, e não existe `partitions_master.parquet`. A materialização está no **#131** (novo), para não reabrir este item.
 
+### ④ Pronto quando
+
+- define: `src/data/split.py` :: `criar_particao_mestra` | A função que cria os seis blocos (train_ref, val_tune, val_cal, val_meas, test_ref, test_pandemic) existe em src/data/split.py.
+- contem: `src/data/split.py` :: `test_pandemic` | O split.py conhece o bloco test_pandemic.
+- teste: `tests/test_split.py` | Os testes de partição passam, inclusive os de grupos que não cruzam blocos.
+
 ## #127 · Função de comparação pareada com bootstrap por grupo
 
 - prioridade: P1
@@ -1867,6 +2143,12 @@ Não existe função para isso no `src`. Reamostrar linhas (e não grupos) subes
 2. Troque o padrão fixo de `ic_bootstrap` (200) pela leitura do YAML (fecha o #22).
 3. Teste: A igual a B → diferença 0; mesma semente → mesmo resultado.
 
+### ④ Pronto quando
+
+- define: `src/evaluation/metrics.py` :: `bootstrap_grupo` | A função bootstrap_grupo existe em src/evaluation/metrics.py: sorteia grupos com reposição e devolve o IC de uma métrica ou, com prob_b, o IC da diferença pareada.
+- contem: `tests/test_metrics.py` :: `bootstrap_grupo` | Há testes de bootstrap_grupo (modelos iguais → diferença 0; mesma semente → mesmo resultado).
+- teste: `tests/test_metrics.py` | Os testes de métricas passam.
+
 ## #15 · Pré-processador e manifesto podem usar listas de variáveis diferentes
 
 - prioridade: P2
@@ -1895,6 +2177,12 @@ Do C_11 ao C_16, o X é montado com as features registradas no manifesto do arte
 ### ③ O que fazer
 
 **Resolvido dentro do #132.** Os notebooks C montam o pré-processador com as listas do manifesto (`numeric_columns`, `categorical_columns`) e, no início, conferem `set(manifest["feature_columns"]) == set(cfg("features", "final"))`; se divergir, param com mensagem clara. Blocos extras das ablações são declarados explicitamente.
+
+### ④ Pronto quando
+
+- contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `numeric_columns` | O C_11 monta o pré-processador com as listas numéricas registradas no manifesto do artefato (numeric_columns), e não com as do YAML.
+- contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `categorical_columns` | O C_11 monta o pré-processador com as listas categóricas do manifesto (categorical_columns).
+- manual: | No início da cadeia C, set(manifest["feature_columns"]) é conferido contra features.final do YAML e o notebook para com mensagem clara se divergirem; blocos extras das ablações são declarados explicitamente.
 
 ## #64 · Testes que faltam
 
@@ -1925,6 +2213,12 @@ Faltam testes para: fábrica e mapeamento de nomes (itens 20 e 21); G9 em `holdo
 
 > [!ok] Concluída. Os testes novos de seis blocos ficam no #131.
 
+### ④ Pronto quando
+
+- teste: `tests/test_model_pipelines.py` | Os testes da fábrica e dos pipelines passam (mapeamento de nomes, chaves do YAML, versão do scikit-learn).
+- teste: `tests/test_supervised_artifact.py` | Os testes do artefato passam (G9, leitura parcial, partições).
+- teste: `tests/test_config.py::test_srag_parquet_url` | O teste de SRAG_PARQUET_URL passa.
+
 ## #22 · Funções de avaliação com padrões diferentes do YAML
 
 - prioridade: P3
@@ -1954,6 +2248,11 @@ Os padrões das funções não seguem o YAML: `ic_bootstrap` usa 200 repetiçõe
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do #127 (Pessoa C): os padrões do bootstrap passam a vir do YAML.
+
+### ④ Pronto quando
+
+- nao-contem: `src/evaluation/metrics.py` :: `n_boot: int = 200` | O padrão fixo de 200 repetições do bootstrap saiu; o número vem do YAML (avaliacao.bootstrap.repeticoes = 1000).
+- nao-contem: `src/evaluation/errors.py` :: `min_n: int = 30` | O mínimo de casos por grupo deixou de ser 30 fixo e vem do YAML (avaliacao.min_n_grupo = 100).
 
 ## #23 · A análise por subgrupo não calcula PR-AUC nem Brier
 
@@ -1992,6 +2291,13 @@ A análise por subgrupo não calcula AP (PR-AUC) nem Brier. A métrica principal
 3. Teste em `tests/test_errors.py`: grupo só de curas → PR-AUC vazia.
 4. `.\.venv\Scripts\python.exe -m pytest tests/test_errors.py -q`.
 
+### ④ Pronto quando
+
+- contem: `src/evaluation/errors.py` :: `pr_auc` | metricas_por_grupo calcula PR-AUC por grupo.
+- contem: `src/evaluation/errors.py` :: `brier` | metricas_por_grupo calcula o Brier por grupo.
+- contem: `src/evaluation/errors.py` :: `o_e` | metricas_por_grupo calcula a razão observado/esperado (o_e) por grupo.
+- teste: `tests/test_errors.py` | Os testes de tests/test_errors.py passam, incluindo o caso de grupo com uma classe só (PR-AUC vazia, sem erro).
+
 ## #27 · O manifesto "mais recente" é escolhido pela data do arquivo
 
 - prioridade: P3
@@ -2020,6 +2326,11 @@ O C_16 e o B_10 escolhem o manifesto mais recente pela data de modificação do 
 ### ③ O que fazer
 
 **Resolvido dentro do #132 (passo 5).** O C_16 localiza o manifesto de execução pelo `run_id_finalista` gravado no YAML pelo C_15, e não pela data do arquivo (copiar ou sincronizar a pasta muda a data).
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_16_validacao_final.ipynb` :: `st_mtime` | O C_16 não escolhe mais o manifesto pela data de modificação do arquivo.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `run_id_finalista` | O C_16 localiza o manifesto pelo run_id_finalista gravado no YAML pelo C_15.
 
 ## #58 · A mesma validação escolhe hiperparâmetros e mede o resultado
 
@@ -2058,6 +2369,11 @@ A busca do C_13 usa a validação inteira. O C_15 divide a validação em duas m
 ### ③ O que fazer
 
 **Resolvido por desenho, conferir no #132 (passo 4).** Com `val_tune` (escolhe), `val_cal` (calibra e escolhe o corte) e `val_meas` (só mede), nenhuma fatia escolhe e mede ao mesmo tempo. Falta só confirmar que o `HONEST_CALIB_SPLIT` saiu do C_15. No relatório (Métodos), uma frase explicando os três papéis.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `HONEST_CALIB_SPLIT` | A divisão da validação ao meio saiu do C_15: val_tune escolhe, val_cal calibra e escolhe o corte, val_meas só mede.
+- manual: | O relatório (Métodos, #133) tem a frase explicando os três papéis da validação (val_tune, val_cal, val_meas).
 
 ## #119 · Executar o modelo congelado nas duas janelas de teste (E_02)
 
@@ -2110,6 +2426,15 @@ A PR-AUC do Teste B pode ficar **maior** só porque 2020–2022 têm 26% de óbi
 
 #### Pronto quando
 Os arquivos existirem e o manifesto tiver `test_opened: true`.
+
+### ④ Pronto quando
+
+- existe: `outputs/final/teste_a_metricas.csv` | As métricas do Teste A (test_ref) estão em outputs/final/teste_a_metricas.csv.
+- existe: `outputs/final/teste_b_metricas.csv` | As métricas do Teste B (test_ref + test_pandemic) estão em outputs/final/teste_b_metricas.csv.
+- existe: `outputs/final/pandemico_metricas.csv` | As métricas só de 2020–2022 estão em outputs/final/pandemico_metricas.csv.
+- existe: `outputs/final/por_ano.csv` | As métricas por ano (inclusive 2019) estão em outputs/final/por_ano.csv.
+- existe: `outputs/final/predicoes_teste.parquet` | As previsões do teste foram exportadas com id_registro, grupo, bloco, ano, região, UF, faixa, sexo, y, probabilidade calibrada e classe.
+- json: `data/analytical/manifesto_supervisionado.json` :: `test_opened` = `true` | O manifesto registra que o teste foi aberto (test_opened: true).
 
 ## #95 · 24/10: validar com os professores somente três pontos científicos, sem bloquear a implementação
 
@@ -2164,6 +2489,10 @@ Uma segunda conversa, com outro professor, não foi transcrita. Dela veio a cobr
 
 **Nada mais a fazer neste card.** As consequências estão nos itens citados.
 
+### ④ Pronto quando
+
+- manual: | As respostas da orientação de 24/10 estão registradas neste card, e cada uma aponta para o card onde virou regra (#50, #80, #110, #136, #137, #138, #5).
+
 ## #51 · As tabelas de óbito do B_06 usaram também os casos do teste
 
 - prioridade: P1
@@ -2193,6 +2522,10 @@ As tabelas "mortalidade por variável" do B_06 foram feitas com a coorte inteira
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Confirmado na saída do B_06 executado em 27/10: "Origem da análise do desfecho: coorte_sem_particao · Registros utilizados: 3.884.728". As tabelas `eda_02_obito_*` ainda usam a coorte inteira, inclusive casos de teste. Depende do `partitions_master.parquet` do #142.
+
 As tabelas de desfecho do B_06 (letalidade por variável) usaram a coorte inteira, incluindo os casos que depois foram para o teste. Isso viola o princípio de não olhar o teste antes da avaliação final.
 
 ### ③ O que fazer
@@ -2210,6 +2543,12 @@ As tabelas de óbito × cura do B_06 (27/10) ainda usam a coorte inteira (inclui
 4. Commit com as saídas.
 
 **Pronto quando:** as tabelas `eda_02_obito_*` do relatório vierem só do `train_ref`.
+
+### ④ Pronto quando
+
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `particao_treino` | As saídas salvas do B_06 mostram origem_analise_desfecho = particao_treino, ou seja, as tabelas de óbito × cura vieram só do train_ref.
+- contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `partitions_master.parquet` | O B_06 junta a partição-mestre (partitions_master.parquet) por id_registro antes das tabelas de desfecho.
+- manual: | As variáveis que mudaram de direção entre a versão da coorte inteira e a do train_ref foram anotadas neste card (ou foi registrado que nenhuma mudou).
 
 ## #91 · Mostrar quais características pesam mais no risco (importância das variáveis)
 
@@ -2254,6 +2593,10 @@ Exemplo do que se quer mostrar de forma ajustada: a idade claramente pesa, mas q
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 19 e 20/10 (`0eab341`, `00d7105`), todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Nenhum cálculo de importância nem razão de chances ajustada no repositório; depende do G6.
+
 Nenhum notebook calcula importância de variáveis. O B_06 tem razões de chances **brutas**, que sofrem confundimento (asma e tosse aparecem como "protetoras"). Sem uma análise ajustada, o relatório não responde a segunda metade da pergunta de pesquisa.
 
 ### ③ O que fazer
@@ -2265,6 +2608,12 @@ Nenhum notebook calcula importância de variáveis. O B_06 tem razões de chance
 
 1. **C:** razões de chance da logística (`np.exp(coef_)`) e `permutation_importance` do boosting em `val_meas` (amostra de 50 mil, `n_repeats=3`, `scoring="average_precision"`, colunas originais). Salve `importancia_logistica.csv` e `importancia_permutacao.csv`.
 2. **B:** tabela "bruto × ajustado" para asma, puerpério, tosse, febre, doença renal e diabetes; uma figura com as 15 maiores importâncias; um parágrafo para a Discussão (fecha o #57).
+
+### ④ Pronto quando
+
+- existe: `outputs/final/importancia_logistica.csv` | As razões de chance da logística (np.exp(coef_)) estão em outputs/final/importancia_logistica.csv.
+- existe: `outputs/final/importancia_permutacao.csv` | A importância por permutação do boosting em val_meas está em outputs/final/importancia_permutacao.csv.
+- manual: | A tabela "bruto × ajustado" (asma, puerpério, tosse, febre, doença renal, diabetes), a figura das 15 maiores importâncias e o parágrafo da Discussão estão no relatório (#133).
 
 ## #55 · Desempenho e erros por ano, idade, sexo e UF
 
@@ -2308,6 +2657,12 @@ Faltam o desempenho e a calibração por ano, faixa etária, sexo e UF, e a aná
 3. Pessoa B: o mesmo nas previsões do teste exportadas pelo C_16; três frases.
 4. Pessoa A: perfil dos óbitos sem alerta no Teste A × óbitos com alerta, usando `perfil_estatistico` (#137). Salve `falsos_negativos_perfil.csv`.
 
+### ④ Pronto quando
+
+- existe: `outputs/final/subgrupos_val_tune.csv` | As métricas por ano, faixa etária e sexo no val_tune estão em outputs/final/subgrupos_val_tune.csv.
+- existe: `outputs/final/falsos_negativos_perfil.csv` | O perfil dos óbitos sem alerta no Teste A está em outputs/final/falsos_negativos_perfil.csv.
+- manual: | Os grupos com O/E fora de 0,8–1,2 foram comentados no #140, e as três frases do relatório sobre subgrupos no teste estão escritas.
+
 ## #57 · Associações "protetoras" que são efeito da idade
 
 - prioridade: P3
@@ -2343,11 +2698,19 @@ Uma análise ajustada pela idade (item 91) resolve e é uma das perguntas aos pr
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Feito dentro do #91, que depende do G6.
+
 Associações que parecem "protetoras" (asma, tosse, febre) podem ser efeito da idade: são mais comuns em crianças, que morrem menos.
 
 ### ③ O que fazer
 
 **Resolvido dentro do #91 (passo 5).** A tabela "bruto × ajustado" mostra quais associações "protetoras" (asma 0,30; puerpério 0,34; tosse 0,61) somem ou mudam de sinal depois do ajuste. A Pessoa B escreve o parágrafo da Discussão em 31/10.
+
+### ④ Pronto quando
+
+- manual: | O parágrafo da Discussão mostra quais associações "protetoras" (asma, puerpério, tosse) somem ou mudam de sinal depois do ajuste, usando a tabela "bruto × ajustado" do #91.
 
 ## #89 · Revisar a conclusão do A_09 de que o sorteio é "otimista"
 
@@ -2399,6 +2762,10 @@ No benchmark do A_09 (logística, cerca de 140 mil de treino e 30 mil de valida�
 
 **Pessoa A, 31/10, 20 minutos:** um parágrafo de Métodos: "A PR-AUC depende da prevalência; por isso todas as comparações entre períodos usam também PR-AUC ÷ prevalência e ROC-AUC." Use como exemplo a própria coorte: a PR-AUC da logística caiu de 0,44 (22% de óbitos) para 0,30 (8,4%), mas, medida contra o acaso, subiu de 2,0× para 3,6×. Cite a regra do professor (modelo pelo menos 25% melhor que o acaso). Não rodar o A_09.
 
+### ④ Pronto quando
+
+- manual: | O parágrafo de Métodos explica que a PR-AUC depende da prevalência, por isso todas as comparações entre períodos usam também PR-AUC ÷ prevalência e ROC-AUC, com o exemplo da coorte (0,44 com 22% de óbitos × 0,30 com 8,4%, de 2,0× para 3,6× contra o acaso).
+
 ## #110 · Geografia como separação da análise: ponto de corte por região e equidade (sem região como variável)
 
 - prioridade: P2
@@ -2446,6 +2813,13 @@ Geografia nunca foi testada como variável.
 3. **C, 01/11 (dentro do #119):** o C_16 calcula, por região, sensibilidade e precisão no corte global e no regional.
 4. **B, 01/11:** uma figura de barras por região (dois cortes) e três frases para a Discussão.
 
+### ④ Pronto quando
+
+- existe: `outputs/final/regiao_val_tune.csv` | As métricas por região no val_tune (piloto) estão em outputs/final/regiao_val_tune.csv.
+- existe: `outputs/final/limiares_por_regiao.csv` | Os cortes com sensibilidade ≥ 0,80 por região, escolhidos em val_cal, estão em outputs/final/limiares_por_regiao.csv.
+- yaml: `configs/supervised.yaml` :: `limiar.por_regiao` existe | O supervised.yaml tem limiar.por_regiao com o corte de cada região.
+- manual: | A figura por região (corte global × regional) e as três frases da Discussão estão no relatório.
+
 ## #138 · Opcional: "o mundo voltou?" Comparar 2019 com 2023–2025
 
 - prioridade: P4
@@ -2476,6 +2850,10 @@ Não bloqueia nada; é exploração para a Discussão.
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > **Pós-entrega.** A comparação 2019 × 2023–2025 sai do plano; o desempenho por ano (já no #119) mostra a diferença de 2019.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega, opcional) A comparação 2019 × 2023–2025 foi feita e comentada, ou foi registrado que ficou fora; o desempenho por ano do #119 já mostra a diferença de 2019.
+
 ## #111 · Recorte só de São Paulo como entrega mínima
 
 - prioridade: P4
@@ -2504,6 +2882,10 @@ Fazer agora gastaria tempo num resultado que talvez nem seja necessário.
 ### ③ O que fazer
 
 Continua despriorizado. **Gatilho revisado para o novo calendário:** acionar só se, em 28/10, o finalista calibrado tiver PR-AUC/prevalência abaixo de 1,5 em `val_meas` **e** calibração ruim (O/E fora de 0,9–1,1). Nesse caso, o recorte de SP vira análise de sensibilidade no relatório, e não substituto do resultado nacional. Ninguém precisa fazer nada se o gatilho não disparar.
+
+### ④ Pronto quando
+
+- manual: | Em 28/10 alguém conferiu o gatilho (PR-AUC ÷ prevalência abaixo de 1,5 em val_meas e O/E fora de 0,9–1,1) e registrou neste card que ele não disparou, ou que o recorte de SP virou sensibilidade.
 
 ## #1 · Rodar o ajuste fino e preencher os hiperparâmetros no YAML
 
@@ -2538,6 +2920,13 @@ O C_15 já rodou, mas sobre modelos sem ajuste. Por isso calibração e limiar t
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 18 e 19/10 (`a913228`, `0eab341`), todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Estado real: `models.logistic.C` e `models.boosting.learning_rate`/`max_iter` continuam `null`; `selecao_modelos.finalista_escolhido` é `null`; G6 pendente; C_13 com 0 de 9 células executadas; não existe `outputs/final/tuning_val_tune.csv`.
+> Divergência a resolver antes de rodar: a grade do YAML não é a do card. YAML: `busca_C` com 5 valores (0,001 a 10) × 2 pesos de classe; boosting `busca_learning_rate` 3 × `busca_max_iter` 2 × 2 pesos = 12 configurações. Card: C em {0,01; 0,1; 1} e 8 configurações variando `max_leaf_nodes`, `min_samples_leaf` e `l2_regularization`. O `_candidatos_boosting` do C_13 só varia `learning_rate`, `max_iter`, `max_depth` e `class_weight`.
+> `models.boosting.early_stopping: false` no YAML é repassado pela fábrica (`_kwargs_do_yaml`) e anula o padrão `True` de `build_boosting_pipeline`: com `max_iter` até 1.000, a busca fica bem mais lenta (#73).
+> O YAML agora treina só com 2023–2025 (ver #102): confirme qual desenho vale antes do ajuste.
+
 Os gates `G6_finalistas_tuning`, `G7_calibracao` e `G8_limiar` estão **pendentes**. Os campos que dependem deles estão nulos: `models.logistic.C`, `models.boosting.learning_rate`, `max_iter`, `max_depth`, `calibracao.metodo`, `limiar.metrica` e `limiar.otimo`. O C_13 rodou sem busca ("G6 pendente"), e o C_15 calibrou e escolheu o limiar sobre os modelos com valores padrão (C=1 na logística; 0,05 / 500 no boosting).
 
 ### ③ O que fazer
@@ -2552,6 +2941,14 @@ Os gates `G6_finalistas_tuning`, `G7_calibracao` e `G8_limiar` estão **pendente
 3. Escolha pela PR-AUC em `val_tune`. O boosting só vence se ganhar pelo menos 0,005 da logística.
 4. Peso de classe (#5) só no vencedor.
 5. `outputs/final/tuning_val_tune.csv`, hiperparâmetros no YAML, `del` nos modelos descartados.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `models.logistic.C` != `null` | O C escolhido da logística está preenchido no supervised.yaml.
+- yaml: `configs/supervised.yaml` :: `models.boosting.learning_rate` != `null` | O learning_rate escolhido do boosting está preenchido no YAML.
+- yaml: `configs/supervised.yaml` :: `selecao_modelos.finalista_escolhido` != `null` | O finalista escolhido (logística ou boosting, pela PR-AUC em val_tune com margem de 0,005) está preenchido.
+- notebook-executado: `notebooks/C/C_13_boosting.ipynb` | O C_13 está salvo executado (busca rodada), sem saída de erro.
+- existe: `outputs/final/tuning_val_tune.csv` | A tabela da busca (todas as configurações, métricas e tempo) está em outputs/final/tuning_val_tune.csv.
 
 ## #3 · Garantir que a busca de hiperparâmetros termine a tempo
 
@@ -2593,6 +2990,11 @@ A grade do boosting inclui `max_iter` de até 1.000, com `early_stopping: false`
 
 **Regra para a busca de 27/10 (#1), alinhada com isto:** subamostra estratificada por ano × alvo de até 600 mil linhas de `train_ref` **por grupo** (nunca por linha), early stopping ligado e 12 configurações. Medir primeiro uma configuração: se passar de 6 minutos, cortar para 8 configurações. Registrar no `Run` o tamanho da subamostra e o tempo total.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `tuning.max_configuracoes_por_modelo` existe | O YAML limita o número de configurações por modelo na busca.
+- contem: `src/models/boosting.py` :: `early_stopping: bool = True` | O boosting do src usa early stopping por padrão, o que limita o tempo de cada configuração.
+
 ## #5 · Decidir se o peso das classes fica, já que ele infla as probabilidades
 
 - prioridade: P1
@@ -2630,6 +3032,10 @@ Falta decidir se mantemos o peso + calibração ou se testamos treinar sem peso 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que voltou para "em andamento"
+> Marcada como concluída em 27/10 (14:39). O que foi feito está certo e é útil: o commit `35b90f8` acrescentou `busca_class_weight: [balanced, null]` na logística e no boosting, e o C_13 passou a variar o peso de classe na busca (`_candidatos_boosting` e `_candidatos_logistica`).
+> O que falta para concluir, conforme o "O que fazer": (1) rodar a comparação (o C_13 tem 0 de 9 células executadas); (2) comparar com e sem peso no modelo vencedor, olhando PR-AUC e **Brier depois da calibração**; (3) gravar a escolha no YAML (`class_weight` continua `balanced` fixo nas famílias). Além disso, a busca roda sobre o artefato antigo e o vocabulário antigo (`treino/validacao`), que dependem do #131 e do #132.
+
 Os dois finalistas usam `class_weight="balanced"`. A média das probabilidades previstas ficou em 42,4% (boosting) e 43,0% (logística), contra prevalência real de 21,9%. Isso não afeta a ordenação (ROC-AUC, PR-AUC), mas afeta Brier, calibração e qualquer limiar.
 
 **Atualização 17/10:** o C_15 mostrou que a calibração corrige o problema (boosting: Brier 0,1959 → 0,1409; ECE 0,0018). Ainda não foi testado treinar sem peso.
@@ -2652,6 +3058,12 @@ Com `class_weight="balanced"`, cada óbito vale ≈ 11 casos no treino. O profes
 
 #### Pronto quando
 O YAML refletir a escolha e houver uma tabela com as duas versões.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `models.logistic.busca_class_weight` existe | A busca da logística varia o peso de classe (balanced e None).
+- existe: `outputs/final/peso_classe_val_meas.csv` | A tabela com as duas versões do vencedor (com e sem peso), calibradas em val_cal e medidas em val_meas (PR-AUC, ROC-AUC, Brier calibrado), está em outputs/final/peso_classe_val_meas.csv.
+- manual: | A escolha (balanced só se a PR-AUC subir pelo menos 0,005 e o Brier calibrado não piorar; senão None) foi gravada no class_weight de todas as famílias ativas do YAML e comunicada no #73.
 
 ## #78 · Aprovar o G6 para liberar o ajuste fino (busca de hiperparâmetros)
 
@@ -2687,6 +3099,10 @@ Antes de abrir, três coisas precisam estar certas: o boosting do `src` tem de s
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `gates.G6_finalistas_tuning.status: pendente`; nenhum pré-requisito do checklist (#131, #135, #132, #140, #1, #5) está concluído.
+
 O gate `G6_finalistas_tuning` está `pendente`. Sem ele, o C_13 não faz a busca de hiperparâmetros. Antes de aprovar, o boosting precisa reproduzir o piloto, o uso de `class_weight` precisa estar incluído na busca e o tempo da busca precisa caber no prazo; caso contrário, o ajuste fino é feito sobre um modelo diferente da lista curta.
 
 **Atualização 17/10:** o C_13 rodou e registrou "G6 pendente: busca não executada". O boosting do `src` continua com one-hot denso e sem categóricas nativas (item 4).
@@ -2703,6 +3119,12 @@ O gate `G6_finalistas_tuning` está `pendente`. Sem ele, o C_13 não faz a busca
 5. Finalista e hiperparâmetros no YAML.
 
 **Ação:** `gates.G6_finalistas_tuning.status: aprovado`, `aprovado_por: time_do_projeto`, `data: '2026-10-30'`. A Pessoa A registra a entrada no `decisoes.md`.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G6_finalistas_tuning.status` = `aprovado` | O gate G6 está aprovado no supervised.yaml, com data.
+- yaml: `configs/supervised.yaml` :: `selecao_modelos.finalista_escolhido` != `null` | O finalista e os hiperparâmetros estão no YAML.
+- manual: | O checklist do G6 neste card está todo marcado (#131, #135, #132, #140, #54, #1, #5) e a Pessoa A registrou a aprovação no docs/decisoes.md.
 
 ## #9 · Saturação, desconforto respiratório e vacina: cada documento diz uma coisa
 
@@ -2745,6 +3167,10 @@ Essas variáveis são das mais ligadas ao óbito, mas há dúvida se são conhec
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `docs/decisoes.md` continua com as seções "Modelo A: núcleo clínico de admissão" e "Modelo B" (§11) e §13 sobre saturação; "Última atualização: 21/10". Nada mudou. É feito dentro do #73.
+
 Os três documentos tratam `saturacao`, `desc_resp` e `vacina` de formas diferentes. As decisões colocam saturação no Modelo A, desconforto no Modelo B e vacinação entre as candidatas clínicas. O plano v2 coloca as duas variáveis de gravidade em sensibilidade e a vacinação no modelo. O YAML coloca saturação e desconforto em `sensibilidade_gravidade_admissao` e a vacinação em `contexto_incremental`.
 
 ### ③ O que fazer
@@ -2752,17 +3178,23 @@ Os três documentos tratam `saturacao`, `desc_resp` e `vacina` de formas diferen
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `features.sensibilidade_gravidade_admissao` contem `saturacao` | Saturação fica só na sensibilidade de gravidade na admissão (fora do modelo principal).
+- yaml: `configs/supervised.yaml` :: `features.final` nao-contem `saturacao` | Saturação não está nas 31 features do modelo principal.
+- nao-contem: `docs/decisoes.md` :: `Modelo A: núcleo clínico de admissão` | O docs/decisoes.md deixou de colocar saturação no "Modelo A" e passou a dizer o mesmo que o YAML (§11, §13, §17 alinhadas no pacote do #73).
+
 ## #13 · A sazonalidade é criada, mas não entra no modelo
 
 - prioridade: P3
 - situação: aberta
-- estratégia: explorar
-- marco: M3
-- data ideal: 29/10
+- estratégia: despriorizar
+- marco: Pós-entrega
+- data ideal: Após 03/11
 - responsável: Pessoa C (ablação) + Pessoa A (texto)
 - pessoas: C, A
 - fonte: src/features/engineering.py (sazonalidade); configs/supervised.yaml (features); docs/decisoes.md §7
-- depende de: #54
+- depende de: —
 - tags: Diverge do decidido, Código, Features, Documentação
 - pilar: Eficiência + Performance + Valor científico-acadêmico
 - carga: 0
@@ -2781,12 +3213,21 @@ Os três documentos tratam `saturacao`, `desc_resp` e `vacina` de formas diferen
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Inconsistência do próprio painel corrigida agora: este card dizia "feito dentro do #54", mas o #54 enxugado de 27/10 tirou a linha de sazonalidade. A ablação de sazonalidade passa a ser pós-entrega.
+
 `sin_semana` e `cos_semana` são criadas por `montar_features`, mas não aparecem em `features.numericas`; portanto, a sazonalidade não entra no modelo. As decisões citam nomes que não existem no código: `semana_sen`, `semana_cos` e `flag_intervalo_negativo_inesperado`.
 
 ### ③ O que fazer
 
-> [!decisão] Enxugado em 27/10 (eficiência primeiro)
-> Feito dentro do **#54** (Pessoa C). Marque como concluído junto com ele.
+> [!decisão] Pós-entrega (correção de 28/10)
+> A ablação de sazonalidade saiu do #54 no enxugamento de 27/10. A sazonalidade continua fora do modelo principal (G1). A correção dos nomes antigos na §7 do `decisoes.md` continua no #73.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) A ablação de sazonalidade foi feita ou registrada como trabalho futuro, e os nomes antigos (semana_sen, semana_cos, flag_intervalo_negativo_inesperado) foram corrigidos na §7 do docs/decisoes.md.
+- nao-contem: `docs/decisoes.md` :: `semana_sen` | O docs/decisoes.md não cita mais o nome inexistente semana_sen (o código usa sin_semana).
 
 ## #54 · Rodar as sensibilidades de gravidade, contexto e "qualquer óbito"
 
@@ -2821,6 +3262,11 @@ São versões alternativas do modelo para medir o efeito de decisões polêmicas
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Não existe `outputs/final/ablacoes_val_tune.csv`; depende do #131/#142, que não começaram.
+> Ao rodar, desligar no YAML `target.sensibilidade_qualquer_obito.ativa` e `sensibilidades.alvo_qualquer_obito` (cortados em 27/10) ou registrar que não serão rodados.
+
 Faltam as sensibilidades de gravidade na admissão (com `saturacao` e `desc_resp`), de contexto incremental e de alvo "qualquer óbito". Dependem do item 7, porque as colunas não estão no artefato.
 
 ### ③ O que fazer
@@ -2844,6 +3290,12 @@ Faltam as sensibilidades de gravidade na admissão (com `saturacao` e `desc_resp
 3. Salve `outputs/final/ablacoes_val_tune.csv` e comente no #140.
 
 Sazonalidade e alvo "qualquer óbito" saíram (não mudam decisão).
+
+### ④ Pronto quando
+
+- existe: `outputs/final/ablacoes_val_tune.csv` | A tabela de ablações (P, P − 3 sintomas, P com comorbidades recodificadas, P + gravidade, P + contexto, P + região) com PR-AUC, PR-AUC ÷ prevalência, ROC-AUC, Brier e diferença para P está em outputs/final/ablacoes_val_tune.csv.
+- yaml: `configs/supervised.yaml` :: `sensibilidades.alvo_qualquer_obito.ativa` = `false` | A sensibilidade "qualquer óbito", cortada em 27/10, está desligada no YAML.
+- manual: | O resumo das ablações foi comentado no #140 (três linhas: o que encontrou, tamanho do efeito, se sugere mudança).
 
 ## #52 · Fichas de óbito têm as doenças prévias mais preenchidas
 
@@ -2891,6 +3343,11 @@ As comorbidades estão mais preenchidas nos óbitos (diferença de 13 a 21 ponto
 4. `metricas_por_grupo` por terço. Salve `outputs/final/completude_val_tune.csv` e comente no #140.
 5. Um parágrafo de limitação no relatório.
 
+### ④ Pronto quando
+
+- existe: `outputs/final/completude_val_tune.csv` | As métricas por terço de completude da ficha (23 campos) no val_tune estão em outputs/final/completude_val_tune.csv.
+- manual: | O resultado foi comentado no #140 e o parágrafo de limitação está no relatório.
+
 ## #109 · UMAP em sintomas e comorbidades: clustering no espaço latente e uma ablação supervisionada
 
 - prioridade: P4
@@ -2928,11 +3385,19 @@ O professor apontou que o problema é o número de dimensões (31 variáveis vir
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Continua pós-entrega.
+
 Nenhuma redução além do PCA foi testada; `umap-learn` não está nas dependências.
 
 ### ③ O que fazer
 
 Continua **pós-entrega**. A parte de não supervisionado pedida pelos professores é atendida pelo #136 (one-hot e normalização) e pelo #137 (testes estatísticos). UMAP só se um professor pedir explicitamente: nesse caso, uma figura 2D numa amostra de 50 mil do `train_ref`, colorida pelos grupos do #136 (Pessoa B, 01/11, ≈ 2 h).
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) UMAP só se um professor pedir: figura 2D numa amostra de 50 mil do train_ref colorida pelos grupos do #136; caso contrário, registrar que ficou como trabalho futuro.
 
 ## #2 · Executar o C_16 uma única vez nas duas janelas de teste autorizadas
 
@@ -2963,6 +3428,10 @@ O C_16 abre o teste e calcula o resultado oficial. Ele se recusa a rodar se a li
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10 (`0f565b5`, `c8a9997`), todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Estado real: G9 pendente; `manifesto_supervisionado.json` com `test_opened: false`; C_16 com 0 de 11 células executadas. O C_16 ainda escolhe o manifesto pela data do arquivo (`st_mtime`) e carrega `partitions=("treino", "validacao", "teste")`, vocabulário antigo (#132).
+
 O C_16 interrompe a execução quando `features.final` ou `selecao_modelos.finalista_escolhido` estão vazios. Os dois campos dependem da coorte definitiva e da aprovação do G1, que ainda está pendente. Portanto, o C_16 não pode rodar antes de a coorte definitiva chegar.
 
 ### ③ O que fazer
@@ -2977,6 +3446,13 @@ O C_16 interrompe a execução quando `features.final` ou `selecao_modelos.final
 
 > [!decisão] Acréscimo de 27/10
 > Logo depois de carregar os testes, regravar o manifesto com `test_opened: true`, data e commit (três linhas; substitui a função do #26).
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G9_holdout.n_acessos` = `1` | O G9 registra exatamente um acesso aos testes.
+- json: `data/analytical/manifesto_supervisionado.json` :: `test_opened` = `true` | O manifesto foi regravado com test_opened: true, data e commit logo depois de carregar os testes (substitui o #26).
+- notebook-executado: `notebooks/C/C_16_validacao_final.ipynb` | O C_16 está salvo executado de uma vez, sem saída de erro.
+- manual: | O card registra "testes abertos às HH:MM; nenhuma decisão de modelagem muda a partir daqui".
 
 ## #77 · Aprovar o G1 com a seleção de features da coorte provisória congelada
 
@@ -3020,6 +3496,12 @@ O gate `G1_definicao_alvo_features` está `pendente`. É ele que confirma o sche
 > [!ok] Concluída: G1 aprovado em 22/10 (`configs/supervised.yaml`, commit `da41e2e`), com 31 features em `features.final`, contexto e gravidade separados e lista de proibidas.
 
 **Únicas consequências a acompanhar:** documentos alinhados ao G1 (#9, #70) e lista conferida contra o schema do artefato v3 (#131). Reabrir só por falha material (`reabrir_somente_por` no YAML).
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G1_definicao_alvo_features.status` = `aprovado` | O G1 está aprovado no supervised.yaml.
+- yaml: `configs/supervised.yaml` :: `features.final` existe | A lista final de features (31 variáveis) está preenchida no YAML.
+- teste: `tests/test_leakage.py::test_features_finais_sem_proibidas` | O teste confirma que nenhuma feature final está na lista de proibidas.
 
 ## #79 · Aprovar o G7: escolher o método de calibração (proposta do C_15: sigmoid)
 
@@ -3070,6 +3552,11 @@ Fazer com que "30% de risco" signifique cerca de 30 óbitos em cada 100 fichas p
 
 #### Referência para conferir se faz sentido
 No piloto antigo, o boosting calibrado foi de Brier 0,196 para 0,141. Espera-se o Brier calibrado abaixo de 0,077 (o do modelo nulo).
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `calibracao.metodo` != `null` | O método de calibração (sigmoid ou isotônica, pelo menor Brier em val_meas) está no YAML.
+- yaml: `configs/supervised.yaml` :: `gates.G7_calibracao.status` = `aprovado` | O G7 está aprovado, com data.
 
 ## #80 · Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1)
 
@@ -3127,6 +3614,13 @@ O ponto de corte que transforma probabilidade em "alerta". Mexer nele troca óbi
 #### Pronto quando
 O YAML tiver o corte e houver `outputs/final/limiares_val_cal.csv`.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `limiar.otimo` != `null` | O corte escolhido está no YAML.
+- yaml: `configs/supervised.yaml` :: `limiar.metrica` = `recall_minimo` | A regra do corte é a de maior precisão com sensibilidade ≥ 0,80 (recall_minimo).
+- yaml: `configs/supervised.yaml` :: `gates.G8_limiar.status` = `aprovado` | O G8 está aprovado, com data.
+- existe: `outputs/final/limiares_val_cal.csv` | A tabela de cortes (0,05 a 0,60 e os de referência) está em outputs/final/limiares_val_cal.csv.
+
 ## #81 · Aprovar o G9 e liberar as duas janelas de teste uma única vez
 
 - prioridade: P1
@@ -3158,6 +3652,10 @@ O **teste** é a prova final: 587 mil internações que nenhum modelo viu. O **G
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `gates.G9_holdout.status: pendente`, `n_acessos: 0`. Nenhum pré-requisito concluído.
+
 O gate `G9_holdout` está `pendente`. Ele libera o teste uma única vez e é irreversível: depois de `executado`, nenhuma decisão de modelagem pode mudar. Só pode ser aprovado com modelo, features, calibração e limiar congelados e com a proteção do teste funcionando.
 
 ### ③ O que fazer
@@ -3178,6 +3676,14 @@ O G9 libera o teste **uma única vez**. Depois dele, nada do modelo pode mudar. 
 
 #### Aprovação
 Cada pessoa comenta "aprovo o G9" (pode ser pelo celular). Com as três aprovações (ou duas e nenhuma objeção em 3 horas), a Pessoa C muda `G9_holdout.status: aprovado` e roda o #2 na tarde de 31/10.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G9_holdout.status` != `pendente` | O G9 foi aprovado (ou já executado) no supervised.yaml.
+- yaml: `configs/supervised.yaml` :: `gates.G8_limiar.status` = `aprovado` | Pré-requisito: o G8 está aprovado.
+- yaml: `configs/supervised.yaml` :: `gates.G7_calibracao.status` = `aprovado` | Pré-requisito: o G7 está aprovado.
+- yaml: `configs/supervised.yaml` :: `gates.G6_finalistas_tuning.status` = `aprovado` | Pré-requisito: o G6 está aprovado.
+- manual: | O checklist do G9 está todo marcado neste card, o commit congelado tem a tag congelado-2026-10-31 com o SHA anotado, e as três pessoas comentaram "aprovo o G9" (ou duas, sem objeção em 3 horas).
 
 ## #37 · O B_10 vai falhar de propósito quando a lista final de variáveis existir
 
@@ -3208,6 +3714,10 @@ O B_10 tem uma verificação, `features_finais_ainda_nao_congeladas`, que exige 
 
 > [!ok] Resolvida (revisão de 24/10)
 > A verificação que falhava de propósito foi removida do B_10 (commit 109e046). O B_10 é histórico; basta uma célula no topo "histórico; não executar" quando alguém mexer nele.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` :: `features_finais_ainda_nao_congeladas` | A verificação que falhava de propósito foi removida do B_10 (se o B_10 sair no #143, o critério continua atendido).
 
 ## #126 · Execução limpa da cadeia final e pacote de reprodução
 
@@ -3257,6 +3767,17 @@ Requisito da entrega: qualquer pessoa precisa conseguir rodar os notebooks do in
 - **C:** 00, 01, C_11, C_12, C_13, C_15 (o C_16 não roda de novo: o teste já foi aberto e as saídas ficam salvas).
 - Anotar o tempo de cada um no README. Se algum passar de 20 minutos ou estourar memória, comentar no card para a Pessoa C avaliar.
 
+#### Achados de 28/10 para o README e a reprodução
+- O `README.md` está desatualizado: a árvore e a tabela de notebooks usam nomes antigos (`notebooks/02_eda/01_eda_primeira_passagem.ipynb`, `C/C1_smoke_test.ipynb` … `C/C6_validacao_final.ipynb`), que não existem mais (hoje: `notebooks/B/B_05…B_10`, `notebooks/C/C_02…C_16`, `notebooks/A/A_03…A_14`). A seção de avisos cita `configs/dicionario_variaveis_v1_revisao.csv` como se o `decisoes.md` o citasse (não cita mais) e diz que `normalization.py`/derivadas "não foram encontradas" (texto gerado automaticamente em outubro).
+- A máquina que gerou o snapshot de 28/10 tem `numpy 2.5.3` e `pyarrow 25.0.1`, mas o `requirements.txt` fixa `numpy==2.5.4` e `pyarrow==26.0.0`. Antes da execução completa, rodar `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` em cada máquina.
+
+### ④ Pronto quando
+
+- contem: `README.md` :: `Como reproduzir` | O README tem a seção "Como reproduzir" (versão do Python, pip install -r requirements.txt, download da tag dados-v2 e ordem dos comandos).
+- nao-contem: `README.md` :: `C1_smoke_test` | O README não usa mais os nomes antigos dos notebooks (C/C1_smoke_test … C6_validacao_final).
+- nao-contem: `README.md` :: `dicionario_variaveis_v1_revisao.csv` | O README não cita mais o arquivo inexistente dicionario_variaveis_v1_revisao.csv.
+- manual: | Cada pessoa rodou os próprios notebooks em kernel limpo (A: A_03, A_04; B: B_05, B_06, B_07; C: 00, 01, C_11, C_12, C_13, C_15), anotou o tempo no README, e a tag entrega-2026-11-03 está no commit final.
+
 ## #28 · O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes
 
 - prioridade: P3
@@ -3287,6 +3808,11 @@ O comentário do YAML diz que `finalista_escolhido` é preenchido no fim do C_16
 > [!ok] Resolvida (revisão de 24/10)
 > O YAML não cita mais o C_16 para preencher o finalista; a descrição do G6 manda preencher `finalista_escolhido` ao fim do ajuste, e o C_15 faz isso (#132, passo 4).
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G6_finalistas_tuning.descricao` contem `finalista_escolhido` | A descrição do G6 manda preencher finalista_escolhido ao fim do ajuste (e não no C_16).
+- nao-contem: `configs/supervised.yaml` :: `fim do C_16` | O YAML não diz mais que o finalista é escolhido no fim do C_16.
+
 ## #26 · O manifesto nunca registra que o teste foi aberto
 
 - prioridade: P2
@@ -3310,12 +3836,21 @@ O campo `test_opened` do manifesto fica sempre `false`, mesmo depois do C_16. O 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 12 e 18/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Nenhum código grava `test_opened: true`; `supervised_artifact.py` só escreve `False` (linha do `_build_manifest`). Passa a ser feito dentro do #2 (três linhas no C_16).
+
 O manifesto tem o campo `test_opened`, mas ele nunca muda para `True`, nem depois de o C_16 consultar o teste. O registro de abertura fica só no YAML.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Vira três linhas dentro do C_16 (#2): depois de carregar os testes, regravar o manifesto com `test_opened: true`, a data e o commit. Sem função nova.
+
+### ④ Pronto quando
+
+- json: `data/analytical/manifesto_supervisionado.json` :: `test_opened` = `true` | O manifesto do artefato registra test_opened: true depois que o C_16 carrega os testes (três linhas dentro do C_16, no #2).
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `test_opened` | O C_16 regrava o manifesto com test_opened, data e commit.
 
 ## #12 · Intervalos impossíveis entram no modelo como se fossem válidos
 
@@ -3352,6 +3887,11 @@ Com a política `sinalizar`, `dias_sintomas_ate_internacao` entra no modelo com 
 
 **Ação:** no #131, um teste que confirme `dias_sintomas_ate_internacao` entre 0 e 60 em todas as linhas do artefato. No relatório (Pessoa A), uma frase em Métodos.
 
+### ④ Pronto quando
+
+- contem: `configs/final_cohort_v1.yaml` :: `intervalo_sintomas_negativo` | Os intervalos negativos são excluídos pelo contrato da coorte definitiva.
+- contem: `configs/final_cohort_v1.yaml` :: `intervalo_sintomas_maior_limite` | Os intervalos acima de 60 dias são excluídos pelo contrato, então flag_intervalo_invalido é sempre 0 na coorte de modelagem.
+
 ## #45 · Vacina contra COVID marcada como "sim" antes de existir a vacina
 
 - prioridade: P3
@@ -3380,11 +3920,19 @@ Há 55 fichas de 2019 e 24.284 de 2020 com vacina contra COVID = sim. O YAML usa
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> A frase de limitação no relatório ainda não existe (o relatório não começou, #133).
+
 Há registros com vacina contra COVID-19 marcada como "sim" em 2019 (55) e em 2020 (24.284), antes de a vacina existir. O YAML usa `vacina_cov` bruta, sem considerar a data da dose, o que contraria a seção 17 das decisões.
 
 ### ③ O que fazer
 
 **Pessoa A, 31/10, 15 minutos:** uma frase nas limitações com as contagens (55 "sim" em 2019 e 24.284 em 2020, antes da vacina existir) e a regra adotada (#84). A vacinação está fora do modelo principal.
+
+### ④ Pronto quando
+
+- manual: | A frase de limitação com as contagens (55 "sim" em 2019 e 24.284 em 2020, antes de a vacina existir) e a regra adotada está no relatório (#133).
 
 ## #46 · 58 linhas repetem 29 números de notificação na base bruta
 
@@ -3414,6 +3962,10 @@ Na base bruta, 58 linhas repetem 29 números de notificação.
 ### ③ O que fazer
 
 **Pessoa A, 31/10, 10 minutos:** uma frase no relatório com a contagem de números de notificação repetidos **na coorte definitiva** (do #135) e a regra de grupo (#10). A contagem de 58/29 é da base bruta.
+
+### ④ Pronto quando
+
+- manual: | O relatório traz a contagem de números de notificação repetidos na coorte definitiva (do #135) e a regra de grupo (#10).
 
 ## #47 · Idades, datas e anos impossíveis
 
@@ -3449,6 +4001,10 @@ Há 24 idades implausíveis (mantidas com a idade vazia), 17 internações com d
 
 **Pessoa A, 31/10, 20 minutos:** usar a contagem de `idade_anos` vazia por bloco (#135) numa frase de Métodos ("idades implausíveis foram tratadas como ausentes e imputadas pela mediana do treino, n = …") e as contagens de datas fora do período do manifesto de auditoria numa tabela do apêndice.
 
+### ④ Pronto quando
+
+- manual: | A frase de Métodos sobre idades implausíveis (tratadas como ausentes e imputadas pela mediana do treino, com n) e a tabela de datas fora do período no apêndice estão no relatório.
+
 ## #56 · Mostrar por que a data de internação é a âncora, e quem ficou de fora
 
 - prioridade: P2
@@ -3477,6 +4033,10 @@ Falta a tabela da diferença entre `dt_notific` e `dt_interna`, que sustenta a e
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Não existem `outputs/final/ancora_notificacao.csv` nem `excluidos_vs_incluidos.csv`.
+
 Não foram produzidas a tabela da diferença entre `dt_notific` e `dt_interna`, que sustenta a escolha da internação como âncora, e a comparação entre casos excluídos por falta de desfecho e casos incluídos.
 
 ### ③ O que fazer
@@ -3490,6 +4050,12 @@ Não foram produzidas a tabela da diferença entre `dt_notific` e `dt_interna`, 
 2. **Âncora:** mediana e intervalo interquartil de (`dt_notific` − `dt_interna`) em dias, por ano. A notificação costuma vir depois da internação: por isso a âncora é a internação.
 3. **Quem ficou de fora:** hospitalizados com desfecho fora do alvo (evolução 3, 9 ou vazio) × incluídos, em % por ano e por região.
 4. Salve `outputs/final/ancora_notificacao.csv` e `excluidos_vs_incluidos.csv`, com uma frase de leitura para cada no relatório.
+
+### ④ Pronto quando
+
+- existe: `outputs/final/ancora_notificacao.csv` | A mediana e o intervalo interquartil de (dt_notific − dt_interna) por ano estão em outputs/final/ancora_notificacao.csv.
+- existe: `outputs/final/excluidos_vs_incluidos.csv` | A comparação excluídos (desfecho fora do alvo) × incluídos por ano e região está em outputs/final/excluidos_vs_incluidos.csv.
+- manual: | Uma frase de leitura de cada tabela está no relatório.
 
 ## #69 · Plano v2 e orientação de TCC descrevem outro período e outra divisão
 
@@ -3526,6 +4092,10 @@ O plano v2 ainda descreve treino 2022–2023, validação 2024, teste 2025, 2026
 1. No topo do Plano Unificado v2 e da Orientação Intermediária de 03/10 (se forem para o repositório ou para a pasta da equipe): "HISTÓRICO. Período, divisão e prazo substituídos em 18/10; ver docs/decisoes.md §28."
 2. No relatório (Métodos), um parágrafo de trajetória: "o desenho inicial previa desenvolvimento em 2022–2024 e avaliação em 2025; foi substituído por treino em 2019 e 2023–2025 com duas janelas de teste porque …". Mostrar a evolução conta a favor.
 
+### ④ Pronto quando
+
+- manual: | O Plano Unificado v2 e a Orientação de 03/10 têm o aviso "HISTÓRICO" no topo (se estiverem no repositório ou na pasta da equipe) e o relatório tem o parágrafo de trajetória do desenho.
+
 ## #70 · Dicionário de variáveis desatualizado e com arquivo fantasma
 
 - prioridade: P2
@@ -3549,6 +4119,10 @@ O dicionário ainda põe saturação no "Modelo A" e tem 36 colunas com revisão
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> O dicionário (CSV) não é reproduzido no snapshot, então não foi possível confirmar os papéis; a versão de 27/10 ainda tinha saturação como `modelo_a_nucleo`. O `README.md` (linha ~425) continua citando `configs/dicionario_variaveis_v1_revisao.csv`, arquivo que não existe; `docs/decisoes.md` não o cita mais. Não existe `outputs/final/variaveis_finais.csv`. Fica em andamento.
+
 O dicionário mantém a classificação original (saturação no "Modelo A") e tem 36 colunas com pontos de revisão sem decisão. A seção 25 das decisões diz que o dicionário é o único arquivo editável, mas a introdução das decisões cita um segundo arquivo, `dicionario_variaveis_v1_revisao.csv`.
 
 ### ③ O que fazer
@@ -3562,6 +4136,12 @@ O dicionário mantém a classificação original (saturação no "Modelo A") e t
 2. Gerar `outputs/final/variaveis_finais.csv` com um script de poucas linhas que lê as listas do `supervised.yaml` e cruza com o dicionário (nome amigável, grupo, tipo, % em branco mínima e máxima por ano). Vai para a tabela de variáveis do relatório.
 
 **Pronto quando:** o CSV existir e o dicionário bater com o YAML.
+
+### ④ Pronto quando
+
+- existe: `outputs/final/variaveis_finais.csv` | A tabela de variáveis finais, gerada por script a partir do supervised.yaml cruzado com o dicionário, existe.
+- nao-contem: `README.md` :: `dicionario_variaveis_v1_revisao.csv` | O README não cita mais o arquivo fantasma dicionario_variaveis_v1_revisao.csv.
+- manual: | No configs/dicionario_variaveis_v1.csv, o papel das variáveis usadas (31 principais, 4 de contexto, 2 de gravidade, fator_risc) bate com o supervised.yaml (saturação deixou de ser modelo_a_nucleo). O dicionário não é reproduzido na referência, por isso a conferência é manual.
 
 ## #71 · Cuidados de redação no relatório
 
@@ -3603,6 +4183,10 @@ Pontos de redação: a unidade de análise é a notificação, não a pessoa; as
 - geografia: "heterogeneidade entre regiões, que pode refletir acesso, capacidade e registro";
 - ausência: "ausência de registro", não "ausência da condição";
 - todo número com origem num arquivo de `outputs/final/` ou manifesto.
+
+### ④ Pronto quando
+
+- manual: | A lista de verificação de redação deste card foi aplicada no relatório e nos slides (Pessoa A) e conferida pela Pessoa B: notificações, associação preditiva, robustez temporal, 2026 parcial, heterogeneidade regional, ausência de registro e número com origem.
 
 ## #133 · Relatório final: esqueleto, seções e rastreabilidade de cada número
 
@@ -3660,6 +4244,11 @@ Nenhum item do painel cobria a redação. Com a Pessoa C no caminho crítico e a
 
 **Pronto quando:** documento completo no formato pedido, sem número órfão.
 
+### ④ Pronto quando
+
+- manual: | O relatório está completo no formato pedido (#97), com todas as seções do roteiro TRIPOD deste card.
+- manual: | A planilha de rastreabilidade liga cada número do texto a um arquivo de outputs/final/ ou manifesto, sem número órfão, e a Pessoa C conferiu os números técnicos.
+
 ## #134 · Apresentação e defesa: roteiro, slides e perguntas difíceis
 
 - prioridade: P2
@@ -3714,6 +4303,10 @@ Por que não treinar com 2020–2022? Como garantem que não há vazamento? Por 
 #### Ensaio (02/11)
 Cronometrado, com as três pessoas.
 
+### ④ Pronto quando
+
+- manual: | Os slides (10 a 12) seguem o roteiro deste card, as respostas às perguntas difíceis estão escritas e revisadas pela Pessoa C, e o ensaio cronometrado com as três pessoas foi feito.
+
 ## #60 · Documentar que os clusters refletem idade e preenchimento, não perfis clínicos
 
 - prioridade: P3
@@ -3743,6 +4336,11 @@ Os clusters refletem principalmente fases da vida (bebês e idosos), não perfis
 
 > [!ok] Resolvida (revisão de 24/10)
 > A conclusão do B_06 já documenta que os grupos refletem fase da vida, período e registro, e não perfis clínicos. A nova rodada com one-hot (#136) e os testes estatísticos (#137) substituem esta discussão no relatório (#133, seção 10).
+
+### ④ Pronto quando
+
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `silhouette` | O B_06 salvo registra as métricas do clustering (silhouette), base da conclusão de que os grupos refletem fase da vida, período e registro.
+- manual: | A conclusão do B_06 documenta que os grupos refletem idade, período e preenchimento, e não perfis clínicos; no relatório, a seção 10 usa o #136 e o #137.
 
 ## #136 · Não supervisionado com one-hot dos quatro estados e normalização: nova representação e nova rodada de agrupamento
 
@@ -3807,6 +4405,14 @@ A representação usada no clustering misturou "em branco" com "não" e deu peso
 #### Pronto quando
 Função testada, rótulos das duas técnicas e o dendrograma com o corte justificado.
 
+### ④ Pronto quando
+
+- define: `src/features/normalization.py` :: `construir_preprocessador_clustering` | A função construir_preprocessador_clustering existe em src/features/normalization.py: numéricas com mediana e padronização, categóricas com AUSENTE explícito, one-hot esparso em float32 e peso 1/√k por variável.
+- contem: `tests/test_features.py` :: `construir_preprocessador_clustering` | Há teste com linhas inventadas confirmando que vazio vira a coluna AUSENTE e que o número de colunas é a soma das categorias.
+- teste: `tests/test_features.py` | Os testes de features passam.
+- existe: `outputs/tables/ns_onehot_metricas.csv` | As métricas do agrupamento (K-Means k = 2 a 6, HCA e ARI antiga × nova) estão em outputs/tables/ns_onehot_metricas.csv.
+- existe: `outputs/tables/ns_onehot_rotulos.parquet` | Os rótulos K-Means e HCA por id_registro estão em outputs/tables/ns_onehot_rotulos.parquet, prontos para o #137.
+
 ## #137 · Perfil estatístico dos grupos: qui-quadrado e ANOVA (e óbito × cura só no treino)
 
 - prioridade: P1
@@ -3863,6 +4469,13 @@ Os grupos do agrupamento foram descritos só com médias e figuras, sem teste do
 #### Pronto quando
 Função testada no `src` e os CSVs dos dois usos gerados, com os comentários no #140.
 
+### ④ Pronto quando
+
+- define: `src/evaluation/cluster_profile.py` :: `perfil_estatistico` | A função perfil_estatistico existe em src/evaluation/cluster_profile.py, com qui-quadrado, ANOVA e Kruskal-Wallis, p ajustado (Benjamini-Hochberg) e tamanho do efeito (V de Cramér ou eta²).
+- teste: `tests/test_cluster_profile.py` | Os testes do perfil estatístico passam (variável independente → V ≈ 0; variável igual ao grupo → V ≈ 1; médias muito diferentes → eta² alto).
+- existe: `outputs/final/perfil_desfecho_train_ref.csv` | O perfil óbito × cura no train_ref está em outputs/final/perfil_desfecho_train_ref.csv.
+- manual: | Os perfis dos clusters (outputs/final/perfil_clusters_*.csv) foram gerados e os comentários dos dois usos estão no #140.
+
 ## #112 · Atualizar a revisão bibliográfica com busca científica dirigida
 
 - prioridade: P2
@@ -3902,6 +4515,10 @@ O título do artigo indicado não ficou na transcrição.
 2. Uma linha por referência (população, período, modelo, métrica, validação, limitação).
 3. Parágrafo de lacuna da Introdução.
 
+### ④ Pronto quando
+
+- manual: | Seis a oito referências verificáveis estão na matriz (população, período, modelo, métrica, validação, limitação), as citações foram conferidas pela Pessoa A e o parágrafo de lacuna da Introdução está escrito.
+
 ## #96 · Atualizar os guias e a base de conhecimento do agente
 
 - prioridade: P4
@@ -3934,6 +4551,10 @@ Documentos afetados: Guia Mestre (commit `cab78e8`, nomes 01–04), Guia Rápido
 
 Base de conhecimento atualizada para a **v9** em 24/10 (documento único para IAs, sem anexos históricos). Antes de 03/11, só o README (Pessoa A, 02/11, junto com o #126). Guias e base: atualizar depois da entrega com os resultados finais.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Guias e base de conhecimento atualizados com os resultados finais; antes de 03/11, só o README (no #126).
+
 ## #130 · Regerar a referência do projeto ao fim de cada marco
 
 - prioridade: P3
@@ -3960,6 +4581,10 @@ A referência é o "manual vivo" que impede outra IA (ou outro integrante) de cr
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> É rotina contínua. A referência foi regerada em 27/10 (19:22) e 28/10 (02:45), mas o card só fecha em 02/11, depois do último marco.
+
 Alterações feitas depois da geração não aparecem; buffers não salvos nunca aparecem.
 
 ### ③ O que fazer
@@ -3970,6 +4595,11 @@ Alterações feitas depois da geração não aparecem; buffers não salvos nunca
 2. `.\.venv\Scripts\python.exe tools/update_project_reference.py --run-tests --pytest-args="-m 'not slow'"`.
 3. Conferir: nenhum erro de leitura, testes passando, nenhum código ignorado pelo Git.
 4. Avisar no card com a data e o commit; as IAs de todos passam a usar a nova referência.
+
+### ④ Pronto quando
+
+- existe: `docs/PROJECT_COMPLETE_REFERENCE.txt` | A referência do projeto existe em docs/.
+- manual: | A referência foi regerada nos marcos de 28/10, 30/10 e 02/11, com testes rodando e sem código ignorado pelo Git; cada geração foi avisada neste card com data e commit. O painel avisa em REVISÕES quando a referência está desatualizada.
 
 ## #53 · Exploração opcional: validar o modelo congelado em 2026
 
@@ -4003,6 +4633,11 @@ O resultado deve ser apresentado separadamente, com alerta de maturidade do desf
 
 Só depois de 01/11 e se o relatório estiver completo. É o **primeiro** item a ser cortado. Carregar `exploracao` com `exploracao_2026.ativa: true`, sem recalibrar nem mudar o corte, e reportar métricas com o rótulo "exploratório, ano parcial".
 
+### ④ Pronto quando
+
+- existe: `outputs/final/exploracao_2026_metricas.csv` | (Opcional) As métricas do modelo congelado em 2026, com o rótulo "exploratório, ano parcial", estão em outputs/final/exploracao_2026_metricas.csv.
+- manual: | Só foi feito depois de 01/11 e com o relatório completo; o modelo não foi recalibrado nem o corte mudou.
+
 ## #11 · A sensibilidade de indicadores de ausência não existe no código
 
 - prioridade: P4
@@ -4029,12 +4664,22 @@ O YAML liga uma análise "com e sem indicadores de ausência", mas nenhum códig
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Continuam ligadas sem nenhum código que as use: `features.sensibilidade_indicadores_ausencia.ativa: true`, `sensibilidades.com_sem_indicadores_ausencia.ativa: true` e `missingness.indicadores_ausencia.sensibilidade: true`. Fecha junto com o #73.
+
 O YAML ativa uma sensibilidade com indicadores de ausência (prefixo `missingindicator_`), mas nenhum código cria essas colunas. Além disso, o pré-processador já imputa as categóricas vazias como a categoria `AUSENTE`, o que dá ao modelo principal a mesma informação. Na prática, a comparação "com e sem indicadores" não existe.
 
 ### ③ O que fazer
 
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
+
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `features.sensibilidade_indicadores_ausencia.ativa` = `false` | A sensibilidade de indicadores de ausência, sem código que a implemente, foi desligada no YAML.
+- yaml: `configs/supervised.yaml` :: `sensibilidades.com_sem_indicadores_ausencia.ativa` = `false` | A comparação "com e sem indicadores" foi desligada no YAML.
+- yaml: `configs/supervised.yaml` :: `missingness.indicadores_ausencia.sensibilidade` = `false` | O bloco missingness também deixou de prometer a sensibilidade.
 
 ## #24 · Curvas de calibração calculadas de dois jeitos
 
@@ -4062,6 +4707,10 @@ O `src` divide as probabilidades em faixas de largura igual (0–10%, 10–20%�
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 18 e 19/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `src/evaluation/calibration.py` não mudou (curva por faixas iguais). Continua pós-entrega.
+
 A curva de confiabilidade de `src/evaluation` usa faixas de largura igual. O B_07 usou faixas por quantis. Com probabilidades concentradas em poucos valores, as duas estratégias dão curvas visivelmente diferentes.
 
 ### ③ O que fazer
@@ -4071,6 +4720,11 @@ A curva de confiabilidade de `src/evaluation` usa faixas de largura igual. O B_0
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Acrescentar o parâmetro `strategy` (`"uniform"` ou `"quantile"`), repassado a `calibration_curve`, e padronizar `"quantile"` no projeto, como no B_07.
+
+### ④ Pronto quando
+
+- contem: `src/evaluation/calibration.py` :: `strategy` | (Pós-entrega) A curva de confiabilidade do src aceita o parâmetro strategy (uniform ou quantile), com quantile como padrão do projeto.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `strategy="quantile"` | As curvas de calibração do relatório usam faixas por quantis (strategy="quantile", 10 faixas), coerentes com o ECE do #79.
 
 ## #25 · A checagem de vazamento só olha o nome das colunas
 
@@ -4108,6 +4762,10 @@ Pós-entrega. **Para o relatório (Pessoa A, limitações):** “a verificação
 
 Documentar a limitação na docstring e no relatório. Se houver tempo, acrescentar uma checagem de prefixos (por exemplo, colunas que começam com `dt_evoluca`, `uti`, `evolucao`).
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) A limitação da checagem de vazamento por nome de coluna está documentada na docstring de check_leakage e nas limitações do relatório.
+
 ## #31 · configs/paths.local.json aponta para uma pasta que ninguém usa
 
 - prioridade: P3
@@ -4140,6 +4798,10 @@ O arquivo aponta para `data/raw/`, mas o `storage` lê o Parquet de `data/proces
 
 **Pessoa A, 2 minutos.** Apague `configs/paths.local.json` (nenhum código o lê). É o único alerta alto da referência do projeto (A1) e some na próxima geração (#130).
 
+### ④ Pronto quando
+
+- nao-existe: `configs/paths.local.json` | O arquivo configs/paths.local.json, que ninguém lê e aponta para data/raw/, foi apagado (é local e ignorado pelo Git: confira na sua máquina).
+
 ## #32 · Textos antigos no código (dt_notific, nomes de gates)
 
 - prioridade: P4
@@ -4166,6 +4828,10 @@ Algumas docstrings ainda falam em "split temporal por `dt_notific`" e em `Tempor
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 10/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> `src/evaluation/temporal.py` ainda tem o exemplo `TemporalSplit(df, coluna_tempo="dt_notific")` na docstring. Continua pós-entrega.
+
 Há textos desatualizados: o `config.py` cita `C.exigir_gate("G7_limiar")` e "holdout antes de G7" (os gates atuais são G8_limiar e G9_holdout); o `reproducibility.py` dá como exemplo "split temporal por dt_notific"; o `temporal.py` usa `dt_notific` como coluna de tempo; a docstring de `holdout_partition` cita `TemporalSplit`.
 
 ### ③ O que fazer
@@ -4175,6 +4841,10 @@ Pós-entrega. Não afeta resultados. Se alguém tocar nesses arquivos por outro 
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Atualizar os exemplos e docstrings para `G8_limiar`, `G9_holdout`, `dt_interna` e divisão aleatória estratificada. Indicar no topo do `temporal.py` que ele serve apenas à sensibilidade temporal.
+
+### ④ Pronto quando
+
+- nao-contem: `src/evaluation/temporal.py` :: `coluna_tempo="dt_notific"` | (Pós-entrega) O exemplo da docstring de temporal.py não usa mais dt_notific como coluna de tempo.
 
 ## #33 · normalization.py está vazio
 
@@ -4206,6 +4876,10 @@ Na revisão anterior, `normalization.py` estava vazio, e `sexo_categoria` e `ano
 > [!ok] Mudou de papel (24/10)
 > `src/features/normalization.py` deixa de ser candidato a remoção: passa a receber a função `construir_preprocessador_clustering` do #136. Não apagar.
 
+### ④ Pronto quando
+
+- existe: `src/features/normalization.py` | O arquivo src/features/normalization.py continua no repositório (não foi apagado), porque passou a ter um papel: receberá construir_preprocessador_clustering no #136. Que ele tenha conteúdo é conferido no #136.
+
 ## #35 · Notebooks B recalculam com código próprio o que já existe em src/
 
 - prioridade: P4
@@ -4235,6 +4909,10 @@ O B_06 e o B_07 têm funções próprias para idade, sexo, pipelines e métricas
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> O B_07 ainda tem pipelines e métricas próprios. Continua pós-entrega.
+
 Os B_06 e B_07 calculam idade, sexo, pipelines e métricas com código próprio, duplicando o que existe em `src/` (`montar_features`, `build_*`, `src/evaluation`). Quando o código central mudar, os notebooks vão produzir números diferentes sem aviso.
 
 ### ③ O que fazer
@@ -4244,6 +4922,10 @@ Pós-entrega. Com o B_07 histórico e o B_06 usando o artefato v3 para faixa e s
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 No B_06, trocar as derivações próprias por `montar_features`. No B_07, trocar os pipelines escritos à mão por `build_baseline_pipeline` e `build_logistic_pipeline`, e as métricas por `metricas_completas`. Remover as funções duplicadas e conferir que os números batem com os anteriores (ou explicar a diferença).
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Os B_06 e B_07 usam as funções do src (montar_features, build_*_pipeline, metricas_completas) no lugar das funções locais duplicadas, e os números batem com os anteriores (ou a diferença foi explicada).
 
 ## #39 · Matriz de transição do B_10 com status escritos à mão
 
@@ -4281,6 +4963,10 @@ Pós-entrega. O B_10 é histórico (#37).
 
 Calcular cada status a partir de uma verificação real (por exemplo, existência do artefato, gate aprovado, lista preenchida). Corrigir o texto de abertura.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Os status da matriz de transição do B_10 vêm de verificações reais, ou o B_10 foi removido no #143.
+
 ## #41 · "provisoria", "provisorio" e "provisional" misturados
 
 - prioridade: P4
@@ -4317,6 +5003,10 @@ Pós-entrega. Para os **novos** artefatos desta semana: `final` nos valores inte
 
 Escolher um padrão (por exemplo, `provisional` e `final` para valores internos, e português nos nomes de arquivos) e aplicar nos próximos artefatos. Não renomear arquivos já citados em manifestos sem atualizar os manifestos.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Um padrão único foi escolhido (provisional/final nos valores internos, português nos nomes de arquivos) e aplicado aos artefatos novos, sem renomear arquivos já citados em manifestos.
+
 ## #42 · Cada notebook encontra a pasta do projeto de um jeito
 
 - prioridade: P4
@@ -4340,6 +5030,10 @@ Uns procuram `src` e `configs`, outros `src` e `pyproject.toml`, os da Pessoa A 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Não existe `src/utils/paths.py`; cada notebook acha a raiz do seu jeito. Continua pós-entrega.
+
 Cada notebook encontra a raiz do projeto de um jeito: procurando `src` e `configs`, `src` e `pyproject`, ou pelo nome da pasta atual.
 
 ### ③ O que fazer
@@ -4349,6 +5043,10 @@ Pós-entrega.
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Criar `src/utils/paths.py` com uma função `encontrar_raiz()` e usá-la em todos os notebooks. Como a função precisa existir antes do import, manter no notebook apenas um bloco mínimo que adicione a raiz ao `sys.path`.
+
+### ④ Pronto quando
+
+- define: `src/utils/paths.py` :: `encontrar_raiz` | (Pós-entrega) Existe src/utils/paths.py com a função encontrar_raiz(), usada por todos os notebooks.
 
 ## #43 · Arquivos e listas que ninguém usa (preprocessor.joblib, lista de coortes no B_06)
 
@@ -4373,6 +5071,10 @@ O C_11 salva `preprocessor.joblib`, que nenhum passo seguinte lê. O B_06 tem um
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Metade resolvida: o B_06 passou a usar `resolve_cohort_path` (sem lista própria de coortes). Falta só o C_11, que ainda grava `preprocessor.joblib` e `preprocessor_ajustado.joblib` sem ninguém usar. Continua pós-entrega (ou some no #132).
+
 O C_11 salva `preprocessor.joblib`, que nenhum passo seguinte usa. O B_06 tem uma lista própria de coortes candidatas, que conflita com `cohort_source`.
 
 ### ③ O que fazer
@@ -4382,6 +5084,10 @@ Pós-entrega. O C_11 do #132 pode simplesmente não salvar o `preprocessor.jobli
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Remover o salvamento do `preprocessor.joblib` (ou passar a usá-lo). No B_06, trocar a lista própria por `load_cohort`.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `preprocessor.joblib` | (Pós-entrega, ou dentro do #132) O C_11 não salva mais o preprocessor.joblib que ninguém lê.
 
 ## #48 · 41 fichas com povo tradicional preenchido sem a pessoa ser de povo tradicional
 
@@ -4419,6 +5125,10 @@ Pós-entrega. `tp_pov_ct` não está em nenhum conjunto de features do G1.
 
 Investigar e decidir se o campo é tratado como ausente nesses casos. Registrar a regra.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) A regra para as 41 fichas com povo tradicional preenchido sem pertencimento declarado foi decidida e registrada.
+
 ## #49 · Códigos a confirmar no dicionário
 
 - prioridade: P4
@@ -4445,6 +5155,10 @@ Investigar e decidir se o campo é tratado como ausente nesses casos. Registrar 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Nenhuma confirmação registrada. Continua pós-entrega.
+
 Faltam confirmar códigos: `ave_suino` = 3 (outro animal), `cs_raca` = 5 (indígena) e o código do Brasil em `co_pais`.
 
 ### ③ O que fazer
@@ -4454,6 +5168,10 @@ Pós-entrega. `ave_suino`, `cs_raca` e `co_pais`: só `ave_suino` e `cs_raca` es
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Conferir no dicionário oficial do SIVEP-Gripe e registrar a confirmação no dicionário de variáveis.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Os códigos ave_suino = 3, cs_raca = 5 e o código do Brasil em co_pais foram conferidos no dicionário oficial do SIVEP-Gripe e registrados no dicionário de variáveis.
 
 ## #50 · Três sintomas vazios em 2019: estudar o "marcador de ano" e decidir se ficam no modelo
 
@@ -4498,6 +5216,12 @@ Perda de olfato, perda de paladar e fadiga só passaram a existir na ficha com a
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> Não existem `outputs/final/volume_mensal_2019.csv` nem a ablação P × P − 3.
+> **Divergência grave encontrada (28/10):** `configs/supervised.yaml` e `configs/decisoes.yaml` (versão 0.5) passaram a dizer que o desenvolvimento usa só 2023–2025 e que 2019 vai para `test_pandemic` junto com 2020–2022 (`periodo.desenvolvimento`, `temporal.blocos.*.anos`, `dev_years`, `pandemic_test_years` e a descrição do G2). Todo o resto do projeto continua com 2019 no desenvolvimento: `docs/decisoes.md` §5 e §28, a Base de Conhecimento v10, este painel, o teste `tests/test_split.py` (`TEMPORAL_CFG`), as saídas salvas do B_07 e o artefato atual (`manifesto_supervisionado.json`: teste = 3.035.074 linhas = `test_ref` + 2020–2022). A mudança não está registrada como decisão e o G2 continua com a data de aprovação de 18/10.
+> Se a retirada de 2019 do treino for intencional, ela muda a natureza deste item: com 2019 fora do treino, o modelo não aprende o "marcador de ano" com 2019, mas passa a ser testado em 2019 com campos quase 100% vazios. A decisão precisa passar pelo #140.
+
 Falta confirmar em que ano campos como perda de olfato, perda de paladar, fadiga e `vacina_cov` entraram na ficha. Antes disso, o vazio significa "campo inexistente", não "não informado".
 
 ### ③ O que fazer
@@ -4535,6 +5259,13 @@ Os três CSVs existirem, a decisão estiver registrada com a tabela e, se for o 
 #### Para o relatório
 Seja qual for a decisão, é um achado forte de Engenharia de Dados: mostra que a equipe percebeu que a mudança da ficha ao longo do tempo pode criar atalhos no modelo, e testou isso.
 
+### ④ Pronto quando
+
+- existe: `outputs/final/volume_mensal_2019.csv` | O volume mensal de internações de 2019 está em outputs/final/volume_mensal_2019.csv (mostra se algum mês está faltando).
+- existe: `outputs/final/campos_por_ano.csv` | A % de branco por ano das 31 principais e das 6 de contexto e gravidade está em outputs/final/campos_por_ano.csv.
+- existe: `outputs/final/ablacoes_val_tune.csv` | As linhas P e P − 3 sintomas (sem perd_olft, perd_pala, fadiga) estão na tabela de ablações do #54.
+- manual: | A decisão (manter ou retirar os três sintomas, pelo critério combinado antes de ver os números) está registrada no docs/decisoes.md com a tabela e, se for retirar, o features.final do YAML foi atualizado antes do G6. Se a decisão do #102 tirar 2019 do treino, a leitura deste item muda e precisa passar pelo #140.
+
 ## #68 · Texto com codificação corrompida
 
 - prioridade: P4
@@ -4568,6 +5299,10 @@ Pós-entrega.
 
 Corrigir o texto e salvar o arquivo em UTF-8.
 
+### ④ Pronto quando
+
+- nao-contem: `tests/test_metrics.py` :: `├` | (Pós-entrega) tests/test_metrics.py não tem mais caracteres corrompidos (como "m├ętricas"); o arquivo está em UTF-8.
+
 ## #74 · Faltam os números do clustering sem saturação e desconforto
 
 - prioridade: P4
@@ -4594,6 +5329,10 @@ A análise foi planejada, mas o resultado não foi registrado no B_06. Ela mostr
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Continua pós-entrega.
+
 Faltam os números da sensibilidade do clustering sem saturação e sem desconforto respiratório.
 
 ### ③ O que fazer
@@ -4603,6 +5342,10 @@ Pós-entrega. O relatório usa o clustering principal; a sensibilidade sem satur
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Recuperar os resultados da execução do B_06 (ou rodar de novo a célula) e exportá-los numa tabela para o relatório.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Os números do clustering sem saturação e desconforto foram exportados numa tabela, ou ficaram como trabalho futuro no relatório.
 
 ## #88 · A exportação da Pessoa A não tem duas variáveis que o modelo exige
 
@@ -4632,6 +5375,10 @@ Ou seja, a população analítica da Pessoa A não serve de entrada direta para 
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> Continua pós-entrega (a exportação da Pessoa A não alimenta mais a cadeia oficial).
+
 No A_03 e no A_04, a verificação "C2 exige todas as features" retorna FALHA: "faltam no dataset (o C não vai rodar): \['dias_sintomas_ate_internacao', 'sexo_categoria']". As demais verificações (coluna de tempo, alvo, `check_leakage`, tamanho) estão OK. `a1_export_dataset` cria só as derivadas listadas em `_DERIVADAS_CANON`.
 
 ### ③ O que fazer
@@ -4643,6 +5390,10 @@ Pós-entrega. A exportação da Pessoa A não alimenta mais a cadeia oficial (#8
 1. Em `a1_export_dataset`, aplicar `montar_features` do `src/features` antes de selecionar as colunas, em vez de derivar à parte.
 2. Ou, se a exportação da Pessoa A não for mais usada pelo pipeline, documentar que ela é só para auditoria e remover a verificação "C2 exige".
 3. Rodar A_03 e A_04 e conferir que a verificação passa.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) A exportação da Pessoa A aplica montar_features antes de selecionar as colunas, ou está documentada como só para auditoria (sem a verificação "C2 exige").
 
 ## #90 · O A_09 sorteia linhas, e não grupos: a mesma ficha cai em duas partições
 
@@ -4673,6 +5424,10 @@ No B_07, todas as linhas de um mesmo `nu_notific` vão juntas para a mesma parti
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
+> `split_aleatorio` continua sorteando linhas. O A_09 sai no #143. Continua pós-entrega.
+
 `split_aleatorio` (usado por `a1_export_dataset(split=...)`) estratifica pelo alvo, mas sorteia índices de linha. O A_09 reportou "10 NU_NOTIFIC em mais de uma partição (todos_2019_2025)" e 9 em "sem_2020_2021". O efeito numérico é desprezível, mas o método diverge do oficial.
 
 ### ③ O que fazer
@@ -4684,6 +5439,10 @@ Pós-entrega. Superado pela partição-mestre por grupo (#131). O A_09 é histó
 1. Usar a função oficial de partição por hash (item 86) também nos cenários do A_09.
 2. Se mantiver a função própria, sortear por grupo (`nu_notific`) e não por linha.
 3. Rodar o A_09 de novo e confirmar 0 identificadores em mais de uma partição.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) O A_09 sorteia por grupo (nu_notific), com 0 identificadores em mais de uma partição, ou foi removido no #143.
 
 ## #93 · O A_14 não tem a tabela de candidatos para comparar
 
@@ -4723,9 +5482,13 @@ Pós-entrega. O A_14 é histórico; a tabela de candidatos oficial é a do tunin
 2. Gerar o CSV no fim do C_15 (após o ajuste fino), juntando C_13 e C_15.
 3. Apontar `RESULTS` do A_14 para esse arquivo e rodar.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) O A_14 lê uma tabela de candidatos gerada no fim do C_15, ou foi removido no #143.
+
 ## #94 · Alertas falsos no relatório automático do projeto
 
-- prioridade: P4
+- prioridade: P2
 - situação: aberta
 - estratégia: despriorizar
 - marco: Pós-entrega
@@ -4736,7 +5499,7 @@ Pós-entrega. O A_14 é histórico; a tabela de candidatos oficial é a do tunin
 - depende de: —
 - tags: Código, Documentação
 - pilar: —
-- carga: —
+- carga: 1
 - novo: não
 - professores: não
 
@@ -4749,17 +5512,46 @@ O relatório de atenção marca 7 alertas "altos", mas 4 deles são engano da fe
 
 ### ② Problema
 
+> [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
+> A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
+> **Este item ganhou prioridade prática na revisão de 28/10**: dois defeitos do painel e do auditor geram trabalho falso para o time a cada auditoria (ver ③).
+
 Falsos positivos identificados: A2–A5 (call-signature-mismatch por homonímia com `subprocess.run`), A12–A16 (gate-name-not-in-yaml para variáveis `G6_STATUS`, `G6_APROVADO`, `G7_STATUS`, `G8_STATUS` e o fragmento `G6_fi`), A17 (todas as células de código do B_07 passam em `ast.parse`). O alerta A1 (`criar_alvo_binario`) é verdadeiro (item 6).
 
 ### ③ O que fazer
 
-Pós-entrega. Os alertas de gates (A59–A64 na referência de 24/10) continuam falsos positivos.
+**Dono:** Pessoa C (ou quem cuida do painel) · **Esforço estimado:** ≈ 20 min · **Recomendado agora**, embora o card siga marcado como pós-entrega
 
-**Como fazer, quando for a hora (instruções anteriores mantidas):**
+#### Defeito 1: a auditoria profunda reabre sugestões antigas a cada execução
+Em `.srag-status-local/server.py`, `apply_deep` percorre todos os commits antigos que mexeram nos arquivos da tarefa com palavras como "resolvendo" e marca a tarefa como "a confirmar" com o primeiro commit ainda não rejeitado. Como `save_seen` não grava nada (por desenho) e "✗ Não é isso" só rejeita os commits já anexados, **cada auditoria puxa o próximo commit antigo**. Foi o que aconteceu em 26/10 e de novo em 27/10 (24 itens "a confirmar" com commits de 09 a 21/10).
 
-1. Na checagem de assinatura, resolver o import real (`import subprocess` × `from src.protocolo...`) antes de comparar.
-2. Na checagem de gates, aceitar só nomes completos que casem com `G\d+_[a-z_]+` e ignorar sufixos `_STATUS`/`_APROVADO`.
-3. Rever o parser de células (provavelmente quebra com crases dentro de strings).
+Correção: ignorar commits anteriores à última decisão humana sobre o item. No `apply_deep`, logo depois de `for c in deep["source_hits"].get(iid, []):` e do `s12 = c["sha"][:12]`, acrescentar:
+```python
+            decidido = item.get("updated_at") if item.get("origin") == "human" else None
+            if decidido and _instante(c["when"]) <= _instante(decidido):
+                continue
+```
+e, perto de `def now()`, a função:
+```python
+def _instante(texto: str) -> dt.datetime:
+    """Converte '2026-10-19T10:27:11-03:00' ou '...Z' em datetime com fuso."""
+    return dt.datetime.fromisoformat(str(texto).replace("Z", "+00:00"))
+```
+
+#### Defeito 2: falsos "conflito de merge" e "one-hot denso"
+- Em `deep_git_project_audit.py` (as duas cópias: `tools/` e `.srag-status-local/` — elas estão diferentes entre si), trocar `MERGE_CONFLICT = re.compile(r"^(<{7}|={7}|>{7})", re.M)` por `MERGE_CONFLICT = re.compile(r"^(<{7} |={7}$|>{7} )", re.M)`. A linha decorativa `=====...` de `src/protocolo/verificacoes.py` deixa de ser lida como conflito.
+- O alerta "OneHotEncoder denso" também é disparado pelo próprio `PROJECT_STATUS_TEXT.md` (o auditor lê o texto do painel). Excluir `PROJECT_STATUS_TEXT.md` e `PROJECT_STATUS.md` da varredura de código.
+
+#### Antigos falsos positivos (mantidos)
+1. Na checagem de assinatura, resolver o import real antes de comparar.
+2. Na checagem de gates, aceitar só nomes completos `G\d+_[a-z_]+`.
+3. Rever o parser de células.
+
+### ④ Pronto quando
+
+- contem: `.srag-status-local/deep_git_project_audit.py` :: `={7}$` | O auditor só aceita marcadores reais de conflito de merge: a linha decorativa ===== deixou de ser alarme (verificador v6).
+- nao-existe: `tools/deep_git_project_audit.py` | A cópia antiga e diferente do auditor em tools/ foi apagada; a fonte única é .srag-status-local/deep_git_project_audit.py.
+- manual: | Os falsos positivos antigos do relatório estático do update_project_reference (A2–A5 por homonímia com subprocess.run, A12–A16 com nomes como G6_STATUS, A17) foram corrigidos ou aceitos como limitação conhecida.
 
 ## #128 · 29 avisos de depreciação de timedelta sem unidade no NumPy
 
@@ -4794,6 +5586,10 @@ Pós-entrega.
 
 Despriorizado: corrigir só após a entrega, com teste da Pessoa A.
 
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) Os avisos de timedelta sem unidade em src/protocolo/verificacoes.py foram corrigidos, com teste da Pessoa A.
+
 ## #129 · Refatoração completa de performance de B_05, construtor e notebooks A
 
 - prioridade: P4
@@ -4826,6 +5622,10 @@ Pós-entrega. O construtor definitivo já roda com leitura projetada; não há e
 **Como fazer, quando for a hora (instruções anteriores mantidas):**
 
 Despriorizado. Exceção: se o construtor da coorte não couber na memória (item 98), aplicar só a leitura em duas passadas.
+
+### ④ Pronto quando
+
+- manual: | (Pós-entrega) A refatoração de performance do B_05, do construtor e dos notebooks A foi feita, ou ficou registrada como trabalho futuro.
 
 ## #4 · O boosting do código central não é o mesmo do piloto
 
@@ -4874,6 +5674,12 @@ Resultado: o ajuste fino otimizaria um modelo diferente do que entrou na lista c
 
 > [!ok] Concluída: `boosting.py` usa saída ordinal com categóricas nativas e `early_stopping` (commit `d790b90`). Pode **✓ Confirmar** no painel.
 
+### ④ Pronto quando
+
+- contem: `src/models/boosting.py` :: `early_stopping: bool = True` | O boosting do src usa early stopping por padrão, como o piloto.
+- contem: `src/models/boosting.py` :: `saida="ordinal"` | O boosting do src usa pré-processamento ordinal com categóricas nativas (categorical_features), como o piloto, e não one-hot denso.
+- teste: `tests/test_model_pipelines.py` | Os testes de pipelines passam.
+
 ## #7 · Artefato supervisionado com colunas de auditoria (sg_uf, vacina, saturação…)
 
 - prioridade: P1
@@ -4906,6 +5712,11 @@ O B_07 salva o artefato supervisionado sem `audit_columns`, `numeric_columns` e 
 
 > [!ok] Concluída na fase provisória; **refeita no #131 para a definitiva**
 > O artefato v3 já nasce com `numeric_columns`, `categorical_columns`, colunas de contexto, de gravidade e de auditoria (`sg_uf`, `regiao_residencia`, `faixa_etaria`, `ano_internacao`, `group_id`). Conferir no manifesto quando o #131 terminar e então **✓ Confirmar**.
+
+### ④ Pronto quando
+
+- contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `audit_columns` | O B_07 grava o artefato com audit_columns, numeric_columns e categorical_columns no manifesto.
+- json: `data/analytical/manifesto_supervisionado.json` :: `audit_columns` existe | O manifesto do artefato tem a lista audit_columns (arquivo local de quem gerou o artefato).
 
 ## #8 · Partição estratificada por ano × desfecho
 
@@ -4946,6 +5757,11 @@ A divisão em treino, validação e teste não estratifica pelo ano. O B_07 cria
 > [!ok] Resolvida pela partição-mestre
 > `criar_particao_mestra` estratifica por ano × alvo × região, com fallback registrado no manifesto. Confirmar quando o manifesto do #131 mostrar a estratificação usada.
 
+### ④ Pronto quando
+
+- define: `src/data/split.py` :: `atribuir_particao_estratificada_por_hash` | A partição estratificada por ano × desfecho (hash por grupo) está em src/data/split.py.
+- teste: `tests/test_split.py::test_estratificacao_preserva_proporcao_aproximada` | O teste confirma que a estratificação preserva as proporções.
+
 ## #44 · Coorte definitiva inicial: congelar a seleção de features da coorte provisória
 
 - prioridade: P1
@@ -4980,6 +5796,12 @@ O risco anterior era manter todo o pipeline bloqueado aguardando uma nova coorte
 > Coorte definitiva publicada em 23/10: `data/analytical/coorte_final.parquet`, 3.884.728 notificações, 199 colunas, alvo 0/1, SHA-256 `87f28d39…`, com paridade legada revisada e comparação com a provisória. A definitiva é subconjunto exato da provisória: 30.408 linhas a menos, nenhuma nova e 0 divergências de alvo.
 
 Não reabrir. O próximo passo é o #131.
+
+### ④ Pronto quando
+
+- json: `data/analytical/coorte_final.manifest.json` :: `publication_performed` = `true` | O manifesto da coorte definitiva registra que a publicação foi feita (arquivo local de quem publicou).
+- json: `data/analytical/coorte_final.manifest.json` :: `legacy_parity_reviewed` = `true` | O manifesto registra a paridade com a implementação legada revisada.
+- yaml: `configs/supervised.yaml` :: `features.final` existe | A seleção de features da coorte provisória ficou congelada em features.final.
 
 ## #85 · Períodos de treino e teste definidos
 
@@ -5018,6 +5840,11 @@ A divergência anterior entre 2019–2026, recorte não pandêmico e cenários c
 
 > [!ok] Concluída: decisão de 18/10, G2 aprovado. Implementação no #131 e no #132.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G2_janela_temporal.status` = `aprovado` | O G2 (períodos de treino e teste) está aprovado no YAML.
+- yaml: `configs/supervised.yaml` :: `periodo.exploracao_opcional` contem `2026` | 2026 está declarado só como exploração. (O lugar de 2019 é decidido no #102.)
+
 ## #92 · Repositório local sincronizado com o GitHub
 
 - prioridade: P1
@@ -5049,6 +5876,10 @@ Em 17/10 de manhã, a cópia local estava 4 commits atrás de `origin/main`, com
 ### ③ O que fazer
 
 > [!ok] Concluída. Rotina daqui em diante: `git pull` antes de começar o dia e antes de cada commit.
+
+### ④ Pronto quando
+
+- manual: | Rotina: git pull antes de começar o dia e antes de cada commit. O painel mostra no selo quando a sua pasta está atrás do GitHub.
 
 ## #113 · O 01_extracao lia o Parquet inteiro (processo de ~13 GB)
 
@@ -5084,6 +5915,10 @@ Em 17/10 de manhã, a cópia local estava 4 commits atrás de `origin/main`, com
 ### ③ O que fazer
 
 > [!ok] Concluída. Nada a fazer.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/01_extracao.ipynb` :: `pd.read_parquet(parquet_path)` | O 01_extracao não carrega mais o Parquet inteiro: as seções 4 e 5 usam só os metadados (linhas, colunas, row groups) e uma amostra de 5 linhas.
 
 ## #17 · One-hot denso no código central: risco de faltar memória
 
@@ -5127,6 +5962,11 @@ O `OneHotEncoder` de `src/models/pipeline.py` usa `sparse_output=False`. No C2 (
 
 > [!ok] Concluída: `build_preprocessor(saida="esparsa"|"ordinal")` em `pipeline.py`. Pode **✓ Confirmar**.
 
+### ④ Pronto quando
+
+- contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | build_preprocessor gera matriz esparsa por padrão (CSR em float32), sem guardar os zeros do one-hot.
+- teste: `tests/test_pipeline.py` | Os testes do pipeline passam.
+
 ## #62 · pyproject.toml inválido
 
 - prioridade: P2
@@ -5156,6 +5996,11 @@ Na versão exportada, `license =` está vazio, `authors = [ , ]` não tem valore
 ### ③ O que fazer
 
 > [!ok] Concluída: `pyproject.toml` válido (licença e autores preenchidos). Pode **✓ Confirmar**.
+
+### ④ Pronto quando
+
+- nao-contem: `pyproject.toml` :: `SEU_USUARIO` | O pyproject.toml não tem mais o endereço de modelo SEU_USUARIO/SEU_REPO.
+- contem: `pyproject.toml` :: `authors` | O pyproject.toml tem autores preenchidos e é TOML válido (pip install -e . funciona).
 
 ## #114 · Precedência errada entre penalty do YAML e l1_ratio explícito na logística
 
@@ -5187,6 +6032,10 @@ O YAML forçava `l1_ratio=0` mesmo quando o código pedia L1. Uma combinação i
 
 > [!ok] Concluída. Nada a fazer.
 
+### ④ Pronto quando
+
+- teste: `tests/test_model_pipelines.py::test_logistic_pipeline_solver_invalido` | O teste confirma que um l1_ratio explícito vence o penalty do YAML e que L1 com lbfgs gera erro, em vez de passar em silêncio.
+
 ## #65 · test_temporal.py era cópia de test_leakage.py
 
 - prioridade: P3
@@ -5216,6 +6065,11 @@ O `test_temporal.py` é uma cópia do `test_leakage.py` sem os testes temporais,
 ### ③ O que fazer
 
 > [!ok] Concluída. Nada a fazer.
+
+### ④ Pronto quando
+
+- contem: `tests/test_temporal.py` :: `def test_split_temporal_ordem_correta` | tests/test_temporal.py tem os testes temporais próprios (ordem, frações inválidas, bloqueio do holdout), e não é mais cópia do test_leakage.py.
+- teste: `tests/test_temporal.py` | Os testes temporais passam.
 
 ## #67 · Rodar a suíte de testes depois das correções
 
@@ -5254,6 +6108,12 @@ Depois das correções, é preciso rodar a suíte de testes e regenerar o retrat
 
 > [!ok] Concluída como rotina: ver #130 para os momentos de rodar a suíte e regenerar a referência.
 
+### ④ Pronto quando
+
+- teste: `tests/test_split.py` | A suíte rápida de partição passa.
+- teste: `tests/test_model_pipelines.py` | A suíte rápida de modelos passa.
+- teste: `tests/test_supervised_artifact.py` | A suíte rápida do artefato passa. (Rodar a suíte inteira virou rotina do #130; o painel mostra em REVISÕES qualquer teste falhando.)
+
 ## #75 · A descrição do G2 não batia com o que foi executado
 
 - prioridade: P3
@@ -5284,6 +6144,10 @@ O G2 está aprovado com a descrição "split aleatório estratificado 70/15/15 p
 
 > [!ok] Concluída: a descrição do G2 no YAML agora diz exatamente o desenho vigente. Pode **✓ Confirmar**.
 
+### ④ Pronto quando
+
+- yaml: `configs/supervised.yaml` :: `gates.G2_janela_temporal.descricao` contem `Particao mestra` | A descrição do G2 no YAML descreve o desenho executado (partição-mestre determinística por grupo), e não mais o sorteio 70/15/15. O conteúdo dos anos é conferido no #102.
+
 ## #115 · Mensagem de erro de SRAG_COHORT_KIND fora do contrato do teste
 
 - prioridade: P3
@@ -5313,6 +6177,11 @@ O comportamento já estava certo; só o texto do erro não batia com o teste.
 ### ③ O que fazer
 
 > [!ok] Concluída. Nada a fazer.
+
+### ④ Pronto quando
+
+- contem: `src/data/cohort_source.py` :: `provisional, final ou auto` | A mensagem de erro de SRAG_COHORT_KIND lista as três opções válidas, como o teste espera.
+- teste: `tests/test_cohort_source.py::test_tipo_invalido_falha` | O teste confirma a mensagem para um tipo inválido.
 
 ## #116 · Referência do projeto lenta e incompleta para outra IA (schema v6)
 
@@ -5349,6 +6218,11 @@ A v5 tentava capturar tudo (histórico, fsck, GitHub, hashes) e passou de 15 min
 
 > [!ok] Concluída (schema v9, 24/10). Regerar nos marcos (#130).
 
+### ④ Pronto quando
+
+- existe: `tools/update_project_reference.py` | O gerador da referência do projeto existe em tools/.
+- contem: `tools/update_project_reference.py` :: `## SECTION` | O gerador usa títulos "## SECTION N —" (schema v17), que não colidem com os títulos dentro dos notebooks.
+
 ## #108 · Item removido (número reservado)
 
 - prioridade: P4
@@ -5377,7 +6251,7 @@ A v5 tentava capturar tudo (histórico, fsck, GitHub, hashes) e passou de 15 min
 - responsável: Pessoa B (dona; revisão cruzada sem edição concorrente)
 - pessoas: B
 - fonte: Replanejamento de 27/10; referência de 27/10 (artefato sem id_registro nem regiao_residencia; previsões só com indice_original)
-- depende de: —
+- depende de: #102
 - tags: Dados/Coorte, Partição, Código
 - pilar: Eficiência + Performance
 - carga: 5
@@ -5398,6 +6272,9 @@ O artefato atual também não tem `id_registro` nem `regiao_residencia`, e as pr
 A geração do artefato está num notebook, sem teste e sem identificador. Isso trava a Fase E e soa como improviso para a banca.
 
 ### ③ O que fazer
+
+> [!atenção] Revisão de 28/10: antes de gerar o artefato, resolva o #102
+> Os YAMLs agora mandam 2019 para `test_pandemic`. Gerar o artefato antes da decisão produz uma partição que pode ter de ser refeita. O artefato atual (24/10) tem 2019 no desenvolvimento, `grupo_split` em vez de `group_id`, e não tem `id_registro` nem `regiao_residencia`. As saídas salvas do B_07 versionado são da coorte provisória ("Tipo efetivo: provisional").
 
 > [!decisão] Replanejamento de 27/10: exploração completa antes do treino
 > Tudo o que pode mudar variáveis, representação, alvo ou leitura do modelo roda **antes do ajuste fino (G6)**: primeiro a exploração sem modelo, depois o diagnóstico com o piloto padrão no `val_tune`, depois o ponto de decisão (#140, 30/10, manhã). Só então ajuste, calibração, limiar e teste.
@@ -5429,6 +6306,17 @@ Função e teste no `src`, B_07 chamando a função com saídas da definitiva, `
 
 #### Se apertar
 Prioridade: passos 3, 5, 6 e 7. Os passos 1 e 2 podem começar como funções privadas dentro de `supervised_artifact.py` e ser movidas depois.
+
+### ④ Pronto quando
+
+- define: `src/data/supervised_artifact.py` :: `gerar_artefato_supervisionado` | A função gerar_artefato_supervisionado existe em src/data/supervised_artifact.py e encadeia leitura enxuta da coorte_final, montar_features, região, grupo, criar_particao_mestra e persistência.
+- define: `src/features/engineering.py` :: `regiao_residencia` | A função regiao_residencia (UF → Norte, Nordeste, Centro-Oeste, Sudeste, Sul; vazio ou inválido → AUSENTE) existe em src/features/engineering.py.
+- define: `src/data/split.py` :: `criar_group_id` | A função criar_group_id existe em src/data/split.py.
+- contem: `tests/test_supervised_artifact.py` :: `gerar_artefato_supervisionado` | Há teste rápido com linhas inventadas e pasta temporária: arquivos criados, nenhum group_id em dois blocos e id_registro presente.
+- teste: `tests/test_supervised_artifact.py` | Os testes do artefato passam.
+- contem: `notebooks/B/B_07_supervisionado_pilotos.ipynb` :: `gerar_artefato_supervisionado(` | O B_07 chama gerar_artefato_supervisionado em vez de montar grupo, região, partição e persistência dentro do notebook.
+- existe: `data/analytical/partitions_master.parquet` | A partição-mestre (id_registro, group_id, bloco_mestre, ano_internacao, alvo) foi gravada em data/analytical/partitions_master.parquet.
+- existe: `outputs/final/predicoes_val_tune_piloto.parquet` | As previsões do piloto no val_tune com id_registro estão em outputs/final/predicoes_val_tune_piloto.parquet.
 
 ## #143 · Limpeza mínima do repositório: remover o que não leva a lugar nenhum
 
@@ -5480,6 +6368,24 @@ Arquivos sem papel no projeto final confundem a banca e as IAs que trabalham no 
 
 #### Pronto quando
 Os três commits estiverem no `main` e a suíte rápida passar.
+
+#### Observações da revisão de 28/10
+- Remover o C_02 não deixa o projeto sem checagem de versão: `build_logistic_pipeline` já levanta `RuntimeError` com scikit-learn < 1.8 (#76).
+- Remover o A_09 permite apagar também o cenário quebrado `sem_2019_2022` de `verificacoes.py` e os três testes que falham (ver #102).
+- A pasta `outputs/backup_C2_provisorio/` e `outputs/backup_supervisionado_provisorio/` (cópias da fase provisória) também podem sair; se não forem rastreadas pelo Git, basta apagar localmente.
+
+### ④ Pronto quando
+
+- nao-existe: `notebooks/B/B_07_supervisionado_pilotos.antes_generalizacao_coorte.ipynb` | Pessoa B: a cópia de segurança do B_07 foi apagada.
+- nao-existe: `notebooks/B/___provisorio_construcao_coorte_b.ipynb` | Pessoa B: o construtor da coorte provisória foi apagado (substituído pelo construtor do src).
+- nao-existe: `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` | Pessoa B: o B_10 (ponte da fase provisória) foi apagado.
+- nao-existe: `data/split.py` | Pessoa B: a cópia antiga de split.py dentro de data/ foi apagada.
+- nao-existe: `notebooks/C/C_02_smoke_test.ipynb` | Pessoa C: o C_02 foi apagado (substituído pelos testes automáticos).
+- nao-define: `src/data/split.py` :: `criar_particoes_agrupadas` | Pessoa C: a divisão 70/15/15 antiga (criar_particoes_agrupadas) saiu de src/data/split.py, junto com os testes dela.
+- nao-existe: `notebooks/A/A_09_split_aleatorio_cenarios.ipynb` | Pessoa A: o A_09 foi apagado (a lição vai para o relatório pelo #89).
+- nao-existe: `notebooks/A/A_08_desenho_experimental.ipynb` | Pessoa A: o A_08 foi apagado.
+- nao-existe: `notebooks/A/A_14_decisao_candidatos.ipynb` | Pessoa A: o A_14 foi apagado.
+- teste: `tests/test_split.py` | A suíte de partição passa depois das remoções.
 
 ## #141 · "Fatores de risco" no SIVEP: as comorbidades em branco são "não"? (verificar antes do treino)
 
@@ -5542,3 +6448,11 @@ Se o branco das comorbidades for "não tem", o modelo e o clustering estão trat
 
 #### Pronto quando
 As três tabelas existirem, a decisão estiver no #140 e, se aprovada, a função e a ablação estiverem prontas antes do G6.
+
+### ④ Pronto quando
+
+- existe: `notebooks/A/A_15_fator_risco.ipynb` | O notebook curto da verificação (A_15_fator_risco) existe.
+- existe: `outputs/tables/eda_02_fator_risc_comorbidades.csv` | As tabelas fator_risc × comorbidade em branco (e as de mortalidade e ausência por desfecho) estão em outputs/tables/eda_02_fator_risc_*.csv.
+- manual: | As três tabelas foram comentadas neste card e a decisão (recodificar ou não) está no #140.
+- define: `src/features/engineering.py` :: `recodificar_comorbidades_por_fator_risco` | Se a regra for aprovada: a função recodificar_comorbidades_por_fator_risco existe em src/features/engineering.py e é chamada por montar_features, com teste dos quatro casos.
+
