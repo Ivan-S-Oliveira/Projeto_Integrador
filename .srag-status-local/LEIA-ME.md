@@ -1,4 +1,4 @@
-# Painel de Pendências SRAG — v6
+# Painel de Pendências SRAG — v6.1
 
 ## Instalação (uma única vez, por quem publica a atualização)
 
@@ -23,6 +23,7 @@ nenhum arquivo desta pasta vai aparecer como modificado no VS Code.
 | Ação | Como |
 |---|---|
 | Abrir | `ABRIR_PAINEL.cmd`. A janela do terminal fica aberta enquanto você usa. O painel só abre a partir da pasta `.srag-status-local` do repositório |
+| Conferir uma pendência | Botão **🔎 Conferir esta pendência**, na seção ④ do card. Confere só aquela pendência no que está salvo na sua pasta (antes ou depois do commit), roda só os testes dela (os do “④ Pronto quando” e todo teste que importa arquivos dela) e lista os arquivos que ainda precisam de commit. Não gera commit e não muda a situação |
 | Concluir | Caixa “Marcar como feito” ou “✓ Confirmar conclusão”. O painel confere o “④ Pronto quando”; se o verificador não confirmar, pede um comentário de pelo menos 15 caracteres |
 | Editar texto | ✎ no card, ➕ Nova pendência, ✎ Textos do painel, ou direto no `PROJECT_STATUS_TEXT.md` |
 | Buscar | ⟳ Buscar atualizações. Nunca gera commit sozinho; depois da busca, uma verificação rápida (sem testes) atualiza os ✓/✗ dos cards |
@@ -33,6 +34,14 @@ nenhum arquivo desta pasta vai aparecer como modificado no VS Code.
 
 Commits saem ~12 s depois do último clique, agrupados por tipo e com cada pendência citada uma vez:
 `(#status) concluída: #10; conteúdo: #1, #31, #46 +12 · Mateus`.
+
+## Rotina de uma pendência
+
+1. Faça as alterações e salve.
+2. No card, clique em **🔎 Conferir esta pendência**. Corrija o que der ✗ e confira de novo.
+3. Com “✓ Pronta para commit”, faça commit e push pelo VS Code dos arquivos listados (cite `tarefa N` na mensagem;
+   evite `[done:#N]`, que conclui sem passar pelo verificador).
+4. Marque como feita. O painel confere de novo, agora no commit publicado; se tudo estiver no Git, conclui sem pedir comentário.
 
 ## Sem conexão e conflitos
 

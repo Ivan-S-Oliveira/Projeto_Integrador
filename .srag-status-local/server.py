@@ -59,7 +59,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "6.0.0"
+VERSION = "6.1.0"
 LOCAL = Path(__file__).resolve().parent
 MD_NAME = "PROJECT_STATUS.md"
 BASE = LOCAL / "baseline.json"
@@ -1027,6 +1027,24 @@ def quick_check(iid: str) -> dict[str, Any]:
     if task is None:
         return {"ok": True, "verdict": "sem_criterios", "verdict_text": "Pendência sem critérios.", "criteria": [], "sha": report["sha"]}
     return {"ok": True, "sha": report["sha"], "ref": report["ref"], **task}
+
+
+LOCAL_CHECK_LOCK = threading.Lock()
+
+
+def local_check(iid: str) -> dict[str, Any]:
+    """Botão "Conferir na minha pasta" do card: confere UMA pendência na pasta de trabalho, antes ou depois do
+    commit, rodando só os testes dela. Não grava relatório, não gera commit e não muda a situação compartilhada."""
+    mod = load_audit_module()
+    if not hasattr(mod, "check_task_local"):
+        raise RuntimeError("deep_git_project_audit.py é de uma versão antiga: atualize a pasta .srag-status-local.")
+    doc = CONTENT.get("doc") or (compute_content("conferência local") and CONTENT["doc"])
+    if not LOCAL_CHECK_LOCK.acquire(timeout=1):
+        raise RuntimeError("Já existe uma conferência em andamento nesta máquina. Aguarde ela terminar.")
+    try:
+        return mod.check_task_local(ROOT, str(iid), doc=doc, test_timeout=int(CFG["pytest_timeout_seconds"]))
+    finally:
+        LOCAL_CHECK_LOCK.release()
 
 
 def regression_problems(remote: dict[str, Any] | None, new: dict[str, Any], explained: set[str]) -> list[str]:
@@ -2082,6 +2100,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             iid = parse_qs(urlparse(self.path).query).get("id", [""])[0].lstrip("#")
             try:
                 return self.send_json(quick_check(iid))
+            except Exception as exc:
+                log(traceback.format_exc())
+                return self.send_json({"ok": False, "error": str(exc)}, 500)
+        if path == "/api/check-local":
+            iid = parse_qs(urlparse(self.path).query).get("id", [""])[0].lstrip("#")
+            try:
+                return self.send_json(local_check(iid))
             except Exception as exc:
                 log(traceback.format_exc())
                 return self.send_json({"ok": False, "error": str(exc)}, 500)

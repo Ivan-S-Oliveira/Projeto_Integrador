@@ -416,6 +416,62 @@ class RepoView:
         """Ausente num caminho que o Git ignora (outputs/, data/...): não dá para concluir nada nesta máquina."""
         return not self.is_tracked(path) and self.is_ignored(path)
 
+    def where(self, source: str) -> str:
+        return f"commit {self.sha[:7]}" if source == "commit" else "arquivo local desta máquina"
+
+    def absent_text(self) -> str:
+        return f"no commit {self.sha[:7]}"
+
+
+class WorkdirView(RepoView):
+    """Leitura da PASTA DE TRABALHO (versão salva dos arquivos, commitada ou não), para conferir uma pendência
+    antes do commit. Usada só pelo botão "Conferir na minha pasta"; nunca alimenta o estado compartilhado.
+
+    - arquivo rastreado: lido do disco (inclui mudanças ainda não commitadas);
+    - arquivo novo fora do Git (nem commitado, nem ignorado): lido do disco, com o aviso "falta git add";
+    - arquivo ignorado: lido do disco, como na verificação normal (código escondido pelo .gitignore continua reprovado).
+    """
+
+    def __init__(self, root: Path):
+        self.root = root
+        self.rev = "WORKTREE"
+        self.sha = git(root, "rev-parse", "HEAD").stdout.strip() or "0000000"
+        listing = git(root, "ls-files", "--cached", timeout=120)
+        self.tracked = set(listing.stdout.splitlines())
+        self._cache: dict[str, bytes | None] = {}
+        self._ignored: dict[str, bool] = {}
+
+    def source(self, path: str) -> str:
+        exists = (self.root / path).exists()
+        if self.is_tracked(path):
+            return "pasta" if exists else "ausente"
+        if exists:
+            return "local" if self.is_ignored(path) else "nao_commitado"
+        return "ausente"
+
+    def read(self, path: str) -> bytes | None:
+        if path not in self._cache:
+            target = self.root / path
+            try:
+                self._cache[path] = target.read_bytes() if target.is_file() else None
+            except OSError:
+                self._cache[path] = None
+        return self._cache[path]
+
+    def dir_has_files(self, path: str) -> bool:
+        folder = self.root / path
+        return folder.is_dir() and any(p.is_file() for p in folder.rglob("*"))
+
+    def where(self, source: str) -> str:
+        if source == "nao_commitado":
+            return "na sua pasta; ATENÇÃO: arquivo novo ainda fora do Git, falta git add"
+        if source == "local":
+            return "arquivo local desta máquina"
+        return "na sua pasta, versão salva"
+
+    def absent_text(self) -> str:
+        return "na sua pasta"
+
 
 # =========================================================================== Python e notebooks
 def python_without_comments(text: str) -> str:
@@ -697,7 +753,7 @@ def evaluate(c: Criterion, repo: RepoView, tests: dict[str, Any] | None) -> dict
         if c.verb == "teste":
             return _evaluate_test(c, tests, done)
         source = repo.source(c.path)
-        where = f"commit {repo.sha[:7]}" if source == "commit" else "arquivo local desta máquina"
+        where = repo.where(source)
         data = repo.read(c.path)
         exists = data is not None or (c.verb in ("existe", "nao-existe") and repo.dir_has_files(c.path))
         if c.verb == "nao-existe":
@@ -705,7 +761,7 @@ def evaluate(c: Criterion, repo: RepoView, tests: dict[str, Any] | None) -> dict
                 return done(FAIL, f"O arquivo existe ({where}).", source)
             if repo.absent_means_unknown(c.path):
                 return done(PASS, "Não existe nesta máquina (caminho ignorado pelo Git: confira também nas outras máquinas).", "local")
-            return done(PASS, f"Não existe no commit {repo.sha[:7]}.", "commit")
+            return done(PASS, f"Não existe {repo.absent_text()}.", "commit")
         if source == "local" and is_shared_path(c.path):
             # Código/configuração/teste/notebook escondido pelo .gitignore: só existe aqui, não vale para o time.
             return done(FAIL, "O arquivo só existe nesta máquina porque o .gitignore o ignora; ele precisa ir para o "
@@ -847,7 +903,7 @@ def _evaluate_test(c, tests, done):
     if len(skipped) == len(selected):
         return done(FAIL, f"Os {len(selected)} teste(s) foram pulados (skip): não contam como aprovados.", "pytest")
     return done(PASS, f"{len(selected) - len(skipped)} teste(s) passaram" + (f", {len(skipped)} pulado(s)" if skipped else "")
-                + f" no {tests.get('where')}.", "pytest")
+                + f" ({tests.get('where')}).", "pytest")
 
 
 def verdict_of(results: list[dict[str, Any]], affected: bool) -> str:
@@ -1322,6 +1378,119 @@ def audit(root: Path, *, ref: str | None = None, only: set[str] | None = None, w
     return report
 
 
+def _disk_python_files(root: Path) -> set[str]:
+    p = git(root, "ls-files", "--cached", "--others", "--exclude-standard", timeout=120)
+    return {x for x in p.stdout.splitlines() if x.endswith(".py") and (root / x).is_file()}
+
+
+def run_pytest_local(root: Path, targets: list[str], timeout: int = 600, python: str | None = None) -> dict[str, Any]:
+    """Roda o pytest NA PASTA DE TRABALHO, só nos alvos indicados (arquivos ou nodeids). Não toca no Git."""
+    python = python or sys.executable
+    where = "sua pasta (versão salva, inclusive o que ainda não foi commitado)"
+    if not targets:
+        return {"executed": False, "where": where, "detail": "nenhum teste ligado a esta pendência", "cases": {},
+                "summary": {}, "failed": [], "targets": []}
+    started = dt.datetime.now(dt.timezone.utc)
+    temp = Path(tempfile.mkdtemp(prefix="srag_conferencia_"))
+    junit = temp / "junit.xml"
+    try:
+        args = [python, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-m", "not slow and not net",
+                "--continue-on-collection-errors", "-o", "junit_family=xunit1", f"--junitxml={junit}", *targets]
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONPATH=str(root))
+        p = run(args, root, timeout=timeout, env=env)
+        tail = (p.stdout + "\n" + p.stderr).strip()[-4000:]
+        if not junit.exists():
+            return {"executed": False, "where": where, "returncode": p.returncode, "targets": targets,
+                    "detail": "pytest não produziu resultado (veja a saída)", "output_tail": tail,
+                    "cases": {}, "summary": {}, "failed": []}
+        cases = parse_junit(junit, root)
+        for case in cases.values():
+            case["message"] = case["message"].replace(str(root) + os.sep, "").replace(str(root), "<repositório>")
+        summary = Counter(v["outcome"] for v in cases.values())
+        failed = [{"nodeid": k, "outcome": v["outcome"], "message": v["message"], "kind": failure_kind(v["message"])}
+                  for k, v in cases.items() if v["outcome"] in ("failed", "error")]
+        for path in re.findall(r"^ERROR (\S+)", p.stdout, re.M):
+            if not any(f["nodeid"].startswith(path) for f in failed):
+                failed.append({"nodeid": path, "outcome": "error", "message": "erro ao coletar (import falhou)",
+                               "kind": "codigo"})
+        return {"executed": True, "where": where, "returncode": p.returncode, "cases": cases, "targets": targets,
+                "summary": {"passed": summary.get("passed", 0), "failed": summary.get("failed", 0),
+                            "errors": sum(1 for f in failed if f["outcome"] == "error"), "skipped": summary.get("skipped", 0)},
+                "failed": failed, "output_tail": tail,
+                "seconds": round((dt.datetime.now(dt.timezone.utc) - started).total_seconds(), 1)}
+    finally:
+        shutil.rmtree(temp, ignore_errors=True)
+
+
+def check_task_local(root: Path, iid: str, *, doc: dict[str, Any] | None = None, with_tests: bool = True,
+                     test_timeout: int = 600) -> dict[str, Any]:
+    """Confere UMA pendência na pasta de trabalho, antes (ou depois) do commit. Não grava nada e não muda situação.
+
+    1. Lê os arquivos como estão salvos na pasta (commitados ou não).
+    2. Roda só os testes da pendência: os critérios "teste:" e todo arquivo de teste que importa arquivos dela.
+    3. Lista os arquivos da pendência que ainda precisam de commit (modificados, novos ou escondidos pelo .gitignore).
+    """
+    root = root.resolve()
+    iid = str(iid).lstrip("#")
+    if doc is None:
+        doc, _pm = load_content(root)
+    item = doc["items"].get(iid)
+    if item is None:
+        raise AuditError(f"Pendência #{iid} não existe no PROJECT_STATUS_TEXT.md.")
+    repo = WorkdirView(root)
+    section = criteria_section(item)
+    criteria, parse_warnings = parse_criteria(section[1]) if section else ([], [])
+    files = task_files_of(item, criteria)
+    disk_py = _disk_python_files(root)
+    # testes da pendência: critérios "teste:" + arquivos de teste que importam arquivos dela
+    declared = [c.path for c in criteria if c.verb == "teste" and not c.problem]
+    related: list[str] = []
+    for test_file in sorted(x for x in disk_py if PurePosixPath(x).name.startswith("test")):
+        if test_file in declared:  # o arquivo inteiro já está nos critérios
+            continue
+        hit = files & project_imports(repo.text(test_file) or "", disk_py)
+        if hit:
+            related.append(test_file)
+    targets = [d for d in declared if (root / d.split("::", 1)[0]).is_file()] + related
+    if with_tests:
+        tests = run_pytest_local(root, targets, timeout=test_timeout)
+    else:
+        tests = {"executed": False, "detail": "conferência sem testes", "cases": {}, "summary": {}, "failed": []}
+    affected = []
+    for failure in tests.get("failed", []):
+        if failure.get("kind") == "ambiente":
+            continue
+        test_file = failure["nodeid"].split("::", 1)[0]
+        hit = files & project_imports(repo.text(test_file) or "", disk_py)
+        if hit or failure["nodeid"] in declared or test_file in declared:
+            affected.append({"nodeid": failure["nodeid"], "message": failure["message"], "files": sorted(hit)})
+    results = [evaluate(c, repo, tests) for c in criteria]
+    for r in results:  # "teste:" sem resultado local (arquivo de teste inexistente) vira não atendido
+        if r["verb"] == "teste" and r["status"] == LOCAL_MISSING and tests.get("executed"):
+            r.update(status=FAIL, status_text=STATUS_TEXT[FAIL], detail="Nenhum teste coletado na sua pasta para este alvo.")
+    verdict = verdict_of(results, bool(affected))
+    # arquivos da pendência que ainda precisam ir para o Git
+    involved = sorted(files | {c.path.split("::", 1)[0] for c in criteria if c.path})
+    status_lines = git(root, "status", "--porcelain", "--untracked-files=all", "--", *involved).stdout.splitlines() if involved else []
+    labels = {"M": "modificado", "A": "adicionado (falta commit)", "D": "apagado", "R": "renomeado", "?": "novo, fora do Git (falta git add)"}
+    to_commit = []
+    for line in status_lines:
+        code, path = line[:2], line[3:].strip().strip('"')
+        key = "?" if code == "??" else (code.strip()[:1] or "M")
+        to_commit.append({"path": path, "state": labels.get(key, code.strip())})
+    hidden = [p for p in involved if (root / p).exists() and repo.is_ignored(p) and is_shared_path(p)]
+    ahead = git(root, "rev-list", "--count", "@{upstream}..HEAD")
+    unpushed = int(ahead.stdout.strip()) if ahead.returncode == 0 and ahead.stdout.strip().isdigit() else None
+    counts = Counter(r["status"] for r in results)
+    return {
+        "ok": True, "mode": "pasta", "id": iid, "title": item["title"], "generated_at": utc_now(), "head": repo.sha,
+        "verdict": verdict, "verdict_text": VERDICT_TEXT[verdict], "criteria": results, "counts": dict(counts),
+        "warnings": parse_warnings, "files": sorted(files), "affected_by_tests": affected,
+        "tests": {k: v for k, v in tests.items() if k != "cases"},
+        "to_commit": to_commit, "hidden_by_gitignore": hidden, "unpushed_commits": unpushed,
+    }
+
+
 def apply_suggestions(root: Path, report: dict[str, Any]) -> list[str]:
     """Acrescenta ao PROJECT_STATUS_TEXT.md local os critérios 'teste:' sugeridos. Devolve os itens alterados."""
     doc, pm = load_content(root)
@@ -1557,6 +1726,21 @@ def self_test() -> int:
                   "imports do teste ligados aos arquivos")
             check(failed["nodeid"] == "tests/test_a.py::test_quebra", "nodeid do teste que falhou")
             check(git(root, "worktree", "list").stdout.count("\n") == 1, "cópia limpa removida")
+            # conferência na pasta (botão do card): vê mudança não commitada, roda só os testes da pendência
+            (root / "src" / "a.py").write_text('"""Mod."""\n\ndef soma(a, b):\n    return a + b\n\ndef nova():\n    return 1\n', encoding="utf-8")
+            (root / "src" / "b_novo.py").write_text("z = 3\n", encoding="utf-8")
+            doc = {"items": {"7": {"title": "t", "meta": {}, "sections": [[CRITERIA_HEADING,
+                   "- define: src/a.py :: nova | a função nova existe\n- existe: src/b_novo.py | arquivo novo\n"
+                   "- teste: tests/test_a.py::test_ok | o teste passa"]]}}}
+            res = check_task_local(root, "7", doc=doc, test_timeout=180)
+            st = [r["status"] for r in res["criteria"]]
+            check(st == [PASS, PASS, PASS], "conferência na pasta lê o que ainda não foi commitado")
+            check("falta git add" in res["criteria"][1]["detail"], "aviso de arquivo novo fora do Git")
+            check(res["tests"]["targets"] == ["tests/test_a.py::test_ok", "tests/test_a.py"],
+                  "testes da pendência: os declarados e os que importam os arquivos dela")
+            check(any(f["path"] == "src/a.py" for f in res["to_commit"]) and any(f["path"] == "src/b_novo.py" for f in res["to_commit"]),
+                  "lista o que falta commitar")
+            check(res["affected_by_tests"] and res["verdict"] == V_TEST, "teste relacionado que falha marca revisar")
     print(f"[verificador] Self-test passed: {len(checks)} checks.")
     return 0
 
@@ -1573,6 +1757,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--aplicar-sugestoes", action="store_true",
                    help="Acrescenta ao PROJECT_STATUS_TEXT.md local os critérios 'teste:' sugeridos.")
     p.add_argument("--detalhado", action="store_true", help="Mostra também os critérios atendidos.")
+    p.add_argument("--pasta", action="store_true",
+                   help="Com --item: confere a pendência na sua pasta de trabalho (antes do commit), sem gravar nada.")
     p.add_argument("--self-test", action="store_true")
     for legacy in ("--write", "--dry-run", "--no-tests", "--since-commit", "--fail-on-high", "--test-timeout"):
         p.add_argument(legacy, nargs="?", const=True, help=argparse.SUPPRESS)
@@ -1591,6 +1777,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.write:
         print("O modo --write foi removido: o verificador nunca grava o PROJECT_STATUS.md (o painel publica).")
         return 1
+    if args.pasta:
+        if len(args.item) != 1:
+            print("[verificador] --pasta exige exatamente um --item.")
+            return 1
+        try:
+            res = check_task_local(repo_root(Path(__file__).resolve().parent), args.item[0],
+                                   with_tests=not args.sem_testes, test_timeout=args.timeout_testes)
+        except AuditError as exc:
+            print(f"[verificador] {exc}")
+            return 1
+        print(f"#{res['id']} na sua pasta: {res['verdict_text']}")
+        for r in res["criteria"]:
+            print(f"    {r['status_text']}: {r['raw'][:120]} — {r['detail']}")
+        for f in res["to_commit"]:
+            print(f"    ! {f['path']}: {f['state']}")
+        return 0
     try:
         root = repo_root(Path(__file__).resolve().parent)
         report = audit(root, ref=args.ref, only=set(args.item) or None,

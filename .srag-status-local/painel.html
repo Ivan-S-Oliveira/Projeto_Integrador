@@ -270,6 +270,15 @@ dialog.pop::backdrop{background:rgba(10,15,25,.55)}.pophead{display:flex;align-i
 @media(max-width:700px){.cmp3{grid-template-columns:1fr}}
 .cfx .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cfx textarea{min-height:120px}
 #pver{margin:4px 0 0}
+/* v6.1: conferir uma pendência na própria pasta (antes ou depois do commit) */
+.lcbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
+.lcbar button{font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--pq);background:var(--pq);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
+.lcbar button:disabled{opacity:.6;cursor:progress}
+.lcbar small{color:var(--mute);font-size:.76rem}
+.lcres{border:1px dashed var(--pq);border-radius:10px;padding:6px 10px;margin:6px 0 10px;background:var(--card)}
+.lcres h6{margin:8px 0 3px;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+.lcres ul{margin:4px 0;padding-left:18px;font-size:.84rem}
+.lcgo{font-weight:800;margin:4px 0}.lcgo.ok{color:var(--ok)}.lcgo.no{color:var(--p1)}.lcgo.man{color:#9a5b00}
 </style>
 </head>
 <body>
@@ -918,7 +927,38 @@ function inReview(id){const s=SH[id];if(!s)return false;if(s.status==="resolved_
 const reviewDeps=d=>d.dep.filter(x=>BY[x]&&inReview(x));
 function critLine(r){const code=[r.verb,r.path,r.arg?"::":"",r.arg,r.op,r.value].filter(Boolean).join(" ");
  return `<li class="crit c-${escapeHtml(r.status)}"><span class="ci">${CICON[r.status]||"•"}</span><div><b>${escapeHtml(r.description||r.raw||"")}</b><small><code>${escapeHtml(code)}</code> · ${escapeHtml(r.status_text||"")}${r.detail?" — "+escapeHtml(r.detail):""}</small></div></li>`}
-function pqHtml(d){const t=taskOf(d.id);const md=d.pq||"<p class='src'>Sem “④ Pronto quando”. Edite o card e acrescente os critérios.</p>";
+/* ---- v6.1: conferência da pendência na pasta de trabalho (botão do card) ---- */
+const LC={};const LCBUSY=new Set();
+function lcHtml(d){const r=LC[d.id];const busy=LCBUSY.has(d.id);
+ let h=`<div class="lcbar"><button type="button" data-checklocal ${busy?"disabled":""}>${busy?"Conferindo…":"🔎 Conferir esta pendência"}</button><small>Confere só esta pendência no que está salvo na sua pasta (antes ou depois do commit) e roda só os testes dela. Não gera commit.</small></div>`;
+ if(!r)return h;
+ if(r.error)return h+`<div class="lcres"><p class="lcgo no">Não consegui conferir: ${escapeHtml(r.error)}</p></div>`;
+ const tc=r.to_commit||[],hid=r.hidden_by_gitignore||[],t=r.tests||{},s=t.summary||{};
+ const okCrit=r.verdict==="atendida",man=r.verdict==="depende_de_confirmacao_manual";
+ let go;if(hid.length)go=`<p class="lcgo no">✗ Há arquivo desta pendência escondido pelo .gitignore: ele nunca chega ao Git.</p>`;
+ else if(okCrit||man)go=tc.length?`<p class="lcgo ${man?"man":"ok"}">✓ Pronta para commit${man?" (falta só a confirmação manual, pedida ao concluir)":""}: faça commit e push dos arquivos abaixo e depois marque como feita.</p>`:(r.unpushed_commits?`<p class="lcgo ok">✓ Pronta. Falta só o push (${r.unpushed_commits} commit(s) local(is)); depois marque como feita.</p>`:`<p class="lcgo ok">✓ Pronta e já no Git${man?" (falta só a confirmação manual)":""}: pode marcar como feita.</p>`);
+ else go=`<p class="lcgo no">✗ Ainda não está pronta: corrija os itens com ✗ e confira de novo.</p>`;
+ h+=`<div class="lcres">${go}<div class="verdict ${VCLS[r.verdict]||""}"><b>${escapeHtml(VTXT[r.verdict]||r.verdict)}</b> · ${escapeHtml(r.verdict_text||"")}</div>`;
+ if((r.criteria||[]).length)h+=`<ul class="crits">${r.criteria.map(critLine).join("")}</ul>`;
+ h+=`<h6>Testes desta pendência</h6><p class="src">${t.executed?`${(t.targets||[]).length} alvo(s): ${s.passed||0} passaram · ${s.failed||0} falharam · ${s.errors||0} erro(s) · ${s.skipped||0} pulados (${t.seconds||0} s)`:escapeHtml(t.detail||"não executados")}</p>`;
+ if((t.targets||[]).length)h+=`<ul>${t.targets.map(x=>`<li><code>${escapeHtml(x)}</code></li>`).join("")}</ul>`;
+ if((r.affected_by_tests||[]).length)h+=`<div class="box at"><b class="l">Testes que falharam</b><ul>${r.affected_by_tests.map(a=>`<li><code>${escapeHtml(a.nodeid)}</code> — ${escapeHtml(a.message||"")}</li>`).join("")}</ul></div>`;
+ const env=(t.failed||[]).filter(f=>f.kind==="ambiente");if(env.length)h+=`<p class="src">${env.length} teste(s) não rodaram por causa da instalação desta máquina (ex.: ${escapeHtml(env[0].message||"")}). Rode <code>.\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt</code>.</p>`;
+ if(tc.length)h+=`<h6>Arquivos desta pendência que ainda precisam de commit</h6><ul>${tc.map(f=>`<li><code>${escapeHtml(f.path)}</code> · ${escapeHtml(f.state)}</li>`).join("")}</ul>`;
+ if(hid.length)h+=`<h6>Escondidos pelo .gitignore</h6><ul>${hid.map(f=>`<li><code>${escapeHtml(f)}</code></li>`).join("")}</ul>`;
+ if((r.warnings||[]).length)h+=`<div class="box at"><b class="l">Linhas ignoradas</b>${r.warnings.map(escapeHtml).join("<br>")}</div>`;
+ h+=`<p class="src">Conferido em ${fmtWhen(r.generated_at)} na sua pasta (HEAD <code>${escapeHtml(String(r.head||"").slice(0,7))}</code> + o que ainda não foi commitado). Resultado só seu: não vai para o GitHub.</p></div>`;
+ return h}
+async function checkLocal(id){if(!SERVER){smsg("Abra pelo ABRIR_PAINEL.cmd para conferir.","err");return}
+ if(LCBUSY.has(id))return;LCBUSY.add(id);redrawPq(id);smsg(`Conferindo o #${id} na sua pasta (critérios e testes dele)…`,"busy");
+ try{const r=await api("/api/check-local?id="+encodeURIComponent(id),{},1800000);LC[id]=r;
+  smsg(`#${id}: ${VTXT[r.verdict]||r.verdict}${(r.to_commit||[]).length?` · ${r.to_commit.length} arquivo(s) para commitar`:""}.`,r.verdict==="atendida"?"ok":"warn")}
+ catch(e){LC[id]={error:e.message};smsg("Falha na conferência: "+e.message,"err")}
+ finally{LCBUSY.delete(id);redrawPq(id)}}
+function redrawPq(id){const el=$("item-"+id);const pq=el&&el.querySelector("[data-pq]");if(pq){pq.innerHTML=pqHtml(BY[id]);linkify(pq)}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-checklocal]");if(!b)return;e.preventDefault();const q=b.closest(".q");if(q)checkLocal(q.dataset.id)});
+function pqHtml(d){return lcHtml(d)+pqHtmlBase(d)}
+function pqHtmlBase(d){const t=taskOf(d.id);const md=d.pq||"<p class='src'>Sem “④ Pronto quando”. Edite o card e acrescente os critérios.</p>";
  if(!t)return `${md}<p class="src">Ainda não conferido nesta máquina. A verificação rápida roda sozinha depois de cada busca; <b>🔎 Verificar pronto quando</b> faz a completa (com testes).</p>`;
  const crit=(t.criteria||[]);const when=REP.generated_at?fmtWhen(REP.generated_at):"—";
  let h=`<div class="verdict ${VCLS[t.verdict]||""}"><b>${escapeHtml(VTXT[t.verdict]||t.verdict)}</b> · ${escapeHtml(t.verdict_text||"")}</div>`;
