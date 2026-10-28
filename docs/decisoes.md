@@ -11,7 +11,7 @@ em `outputs/tables/`, mas não constituem uma segunda fonte editável.
 Este documento registra somente decisões gerais ou com impacto em várias
 etapas do projeto.
 
-Última atualização: 21/10/2026.
+Última atualização: 28/10/2026.
 
 ---
 
@@ -35,18 +35,17 @@ etapas do projeto.
 - Testes fechados: `test_ref` e `test_pandemic` permanecem inacessíveis até G9.
 - Partição-mestre: seis blocos (`train_ref`, `val_tune`, `val_cal`, `val_meas`, `test_ref`, `test_pandemic`) materializados por `criar_particao_mestra` com o método `hash_grupo_estratificado_mestre_v1`. Frações nos anos compartilhados: `0.70/0.05/0.05/0.05/0.15`; `min_grupos_por_estrato: 5`.
 - 2026 é marcado como `exploracao`, rótulo separado do fluxo principal.
+- G1 aprovado em 22/10/2026: 31 variáveis em `features.final`. `saturacao` e `desc_resp` ficam em sensibilidade de gravidade na admissão; `vacina`, `vacina_cov`, `cs_escol_n` e `sg_uf` ficam em `contexto_incremental`. Reabrir só por falha material (`reabrir_somente_por` no YAML).
 - Tratamentos: somente EDA e auditoria até a conclusão do modelo principal.
 - Textos livres: EDA, sem NLP completo antes do Fine Tuning.
 - Geografia: UF de residência preservada; comparação sem geografia × região obrigatória, e UF como preditora é condicional.
 - Município de residência: extensão posterior ao modelo principal.
-- `saturacao` e `desc_resp`: sensibilidade de gravidade no cenário vencedor, fora do modelo principal até o contrato final de features.
 - Internações anteriores aos sintomas: auditoria com `nosocomial` antes de qualquer exclusão.
 - `sem_pri`: auditoria e descrição epidemiológica, sem uso direto nas matrizes.
 
 ### 1.2 Decisões pendentes
 
 - Regra definitiva para identificadores repetidos e destino dos grupos em quarentena.
-- Aprovação do G1 com alvo e lista final de features.
 - Escolha final do método de calibração no G7, após o ajuste fino.
 - Escolha final do critério e valor do limiar no G8, usando somente validação.
 - Aprovação conjunta do G9 depois do congelamento de features, modelo, hiperparâmetros, calibrador, limiar, commit e manifestos.
@@ -208,16 +207,24 @@ indica linhas de um mesmo grupo em anos pandêmicos e não pandêmicos.
 - Datas podem gerar ano, mês, semana, representação cíclica de
   sazonalidade, intervalos e flags de coerência.
 
-Poderão ser derivados:
+Poderão ser derivados (nomes canônicos em `src/features/engineering.py`):
 
-- `ano_internacao`;
-- `mes_internacao`;
-- `semana_sintomas`;
-- `semana_sen`;
-- `semana_cos`;
-- `dias_sintomas_ate_internacao`;
-- `flag_internacao_antes_sintomas`;
-- `flag_intervalo_negativo_inesperado`.
+- `ano_internacao` — extraído de `dt_interna`.
+- `mes_internacao` — extraído de `dt_interna`.
+- `sin_semana`, `cos_semana` — codificação circular da semana ISO de
+  `dt_sin_pri`.
+- `dias_sintomas_ate_internacao` — diferença `dt_interna − dt_sin_pri`
+  em dias.
+- `flag_intervalo_invalido` — marca `NaN`, `< 0` ou `> intervalo_max_dias`.
+- `flag_internacao_antes_sintomas` — marca apenas `< 0`.
+
+A coluna `semana_sintomas` (inteiro) **não é produzida** pelo código; a
+informação semanal vive em `sin_semana`/`cos_semana`.
+
+`sin_semana` e `cos_semana` ficam na coorte analítica e em EDA, mas
+**não entram nas 31 features do modelo principal** por decisão do G1
+(`features.final`). A ablação que mediria o ganho da sazonalidade
+ficou como trabalho pós-entrega.
 
 ---
 
@@ -231,11 +238,11 @@ anterior a `dt_sin_pri`.
 preditora, pois pode representar condição definida depois da
 internação.
 
-Serão derivados:
+Serão derivados (nomes canônicos em `src/features/engineering.py`):
 
-- `dias_sintomas_ate_internacao`;
-- `flag_internacao_antes_sintomas`;
-- `flag_intervalo_negativo_inesperado`.
+- `dias_sintomas_ate_internacao`.
+- `flag_internacao_antes_sintomas` — marca apenas intervalos `< 0`.
+- `flag_intervalo_invalido` — marca `NaN`, `< 0` ou `> intervalo_max_dias`.
 
 Registros com intervalo negativo entre sintomas e internação não são
 excluídos automaticamente antes da avaliação de `nosocomial`.
@@ -277,7 +284,7 @@ transformado em cura.
 
 Uma análise alternativa com `evolucao = 3` pode ser explorada somente se
 houver tempo depois da conclusão do modelo principal. A extensão não faz
-parte do caminho crítico até o Fine Tuning.
+parte do caminho crítico até a entrega.
 
 ---
 
@@ -298,30 +305,20 @@ parte do caminho crítico até o Fine Tuning.
 
 ## 11. Estratégia geral de variáveis
 
-As variáveis são organizadas em camadas.
+O modelo principal (congelado no G1 em 22/10/2026) usa **31 features**
+listadas em `configs/supervised.yaml` → `features.final`.
 
-### Modelo A: núcleo clínico de admissão
+Variáveis que não entram no modelo principal são organizadas em camadas
+de exploração, sensibilidade ou trabalho posterior:
 
-Informações clínicas, demográficas e derivadas mais diretamente
-associadas ao ponto de previsão.
-
-### Modelo B: ampliado epidemiológico, social e geográfico
-
-Acrescenta contexto social, epidemiológico e territorial ao núcleo
-clínico.
-
-### Modelo C: sensibilidade
-
-Pode incorporar variáveis condicionais com temporalidade e
-aplicabilidade validadas. Tratamentos só são avaliados nessa camada
-depois da conclusão do modelo principal e se a temporalidade estiver
-comprovada.
-
-### Modelo D: exploração
-
-Pode incluir campos de texto, variáveis muito esparsas, códigos
-territoriais de alta cardinalidade e extensões que não passem pelo
-processo completo de Fine Tuning.
+- **Sensibilidade de gravidade na admissão**: `saturacao`, `desc_resp`
+  (ver §13).
+- **Contexto incremental**: `cs_escol_n`, `vacina`, `vacina_cov`,
+  `sg_uf` (ver §14, §15, §17).
+- **EDA e auditoria**: textos livres, tratamentos, `obes_imc`, `tabag`,
+  códigos territoriais de alta cardinalidade.
+- **Trabalho pós-entrega**: tratamentos com temporalidade comprovada
+  (§19), município de residência (§15), NLP (§16).
 
 A seleção final não é determinada apenas pelo percentual global de
 ausência. Também entram:
@@ -341,8 +338,8 @@ permanecem semanticamente distintas.
 
 ## 12. Variáveis clínicas
 
-- Sintomas e comorbidades estruturados são inicialmente preservados no
-  modelo clínico.
+- Sintomas e comorbidades estruturados estão entre as 31 features do
+  modelo principal (G1).
 - `nu_idade_n` e `tp_idade` são combinadas para produzir `idade_anos`.
 - Poderão ser derivados: `n_sintomas`, `n_comorbidades`,
   `flag_multimorbidade`, `flag_outro_sintoma` e
@@ -358,33 +355,31 @@ permanecem semanticamente distintas.
 
 ## 13. Saturação e desconforto respiratório
 
-Papéis nos experimentos iniciais:
+**Status:** decisão alinhada ao G1 em 22/10/2026.
 
-- `saturacao` (saturação abaixo de 95%): Modelo A;
-- `desc_resp` (desconforto respiratório): Modelo B.
+`saturacao` (saturação abaixo de 95%) e `desc_resp` (desconforto
+respiratório) são medidas clínicas com risco de documentação posterior
+à admissão. Por isso, **não entram nas 31 features do modelo principal
+(G1)** e ficam na camada `features.sensibilidade_gravidade_admissao`.
 
-A saturação é tratada como medida clínica objetiva potencialmente
-disponível na avaliação inicial. O desconforto respiratório é avaliado
-no modelo ampliado por depender de registro mais subjetivo e por ainda
-existir incerteza sobre o momento exato da documentação.
+Permanecem na coorte analítica para:
 
-Será executada comparação entre:
+- sensibilidade de gravidade na admissão;
+- EDA e discussão de limitações no relatório.
 
-1. Modelo A com `saturacao`;
-2. Modelo A sem `saturacao`;
-3. Modelo B acrescido de `desc_resp`.
-
-Se houver evidência de que alguma dessas informações representa o pior
-estado durante a internação, em vez da condição na admissão, a variável
-é removida do modelo correspondente e mantida apenas em análise de
-sensibilidade ou EDA.
+Se houver evidência de que alguma delas representa o pior estado
+durante a internação, e não a condição na admissão, permanece fora do
+modelo e é registrada como limitação. A promoção para o modelo
+principal exigiria reabrir o G1 por falha material
+(`reabrir_somente_por`).
 
 ---
 
 ## 14. Variáveis sociais
 
-- Escolaridade é avaliada no Modelo B, não no núcleo clínico.
-- `pov_ct` pode entrar como indicador binário no Modelo B.
+- `cs_escol_n` (escolaridade) está em `features.contexto_incremental`,
+  avaliada como ganho incremental fora das 31 features do G1.
+- `pov_ct` pode entrar como indicador binário na análise de subgrupos.
 - `tp_pov_ct` fica inicialmente em EDA e análises de subgrupo.
 - `cs_etinia` é avaliada no denominador aplicável, correspondente aos
   registros indígenas.
@@ -401,9 +396,8 @@ sensibilidade ou EDA.
 
 ## 15. Variáveis geográficas
 
-A primeira versão do Modelo B utiliza `sg_uf` (UF de residência). A UF
-de residência foi escolhida por oferecer contexto territorial com
-cardinalidade controlável e implementação mais rápida.
+`sg_uf` (UF de residência) está em `features.contexto_incremental` e é
+avaliada como ganho incremental fora das 31 features do G1.
 
 Na primeira versão:
 
@@ -429,7 +423,7 @@ A comparação futura avalia:
    controlada.
 
 O município de residência não faz parte do caminho crítico até
-17/10/2026, mas permanece como extensão prioritária.
+03/11/2026, mas permanece como extensão prioritária.
 
 `co_pais` pode virar um indicador de residência no Brasil, depois da
 confirmação do código correspondente no dicionário.
@@ -456,11 +450,15 @@ na coorte auditável para análise futura.
 
 ## 17. Vacinação
 
-- `vacina` e `vacina_cov` permanecem entre as candidatas clínicas.
+**Status:** decisão alinhada ao G1 em 22/10/2026.
+
+- `vacina` (influenza) e `vacina_cov` (COVID-19) ficam em
+  `features.contexto_incremental`, avaliadas em sensibilidade,
+  **fora das 31 features do modelo principal**.
 - Datas brutas de vacinação não entram diretamente nos modelos.
 - Somente doses anteriores ou iguais a `dt_interna` contribuem para
   atributos preditores.
-- Datas posteriores à internação são sinalizadas e desconsideradas na
+- Datas posteriores à admissão são sinalizadas e desconsideradas na
   criação das features de admissão.
 
 Poderão ser derivados:
@@ -498,9 +496,9 @@ modelo principal esteja concluído. Aplica-se a:
 - `antiviral`, `tp_antivir`, `dt_antivir`, `out_antiv`;
 - `trat_cov`, `tipo_trat`, `dt_trt_cov`, `out_trat`.
 
-Essas variáveis não entram no Modelo A nem no Modelo B.
+Essas variáveis não entram nas 31 features do modelo principal.
 
-Depois do modelo principal, um Modelo C de sensibilidade pode avaliar
+Depois do modelo principal, uma camada de sensibilidade pode avaliar
 tratamentos somente se:
 
 - houver tempo disponível;
@@ -513,7 +511,8 @@ Tratamentos iniciados depois da internação permanecem excluídos das
 features. `out_antiv` e `out_trat` não entram nos modelos e ficam apenas
 em auditoria ou exploração.
 
-A criação do Modelo C não faz parte do caminho crítico até 17/10/2026.
+A avaliação de tratamentos não faz parte do caminho crítico até
+03/11/2026.
 
 ---
 
@@ -648,6 +647,9 @@ distribuição das probabilidades.
   conjunto de teste.
 - Textos livres e códigos geográficos de alta cardinalidade não entram
   na primeira matriz de clustering.
+- Os clusters foram encerrados como análise exploratória de estrutura,
+  missingness e drift temporal (B_06, 27/10). Não são aplicados à
+  coorte completa nem usados como preditores, alvo ou fenótipos.
 
 ---
 
@@ -775,17 +777,14 @@ A decisão estará implementada quando:
 - [x] nenhuma configuração ativa permitir 2020–2022 ou 2026 em
       desenvolvimento;
 - [ ] testes automatizados bloquearem anos proibidos e sobreposição de
-      grupos;
+      grupos (item **#135** do painel);
 - [x] o manifesto implementado em `criar_particao_mestra` registrar
       anos, contagens, prevalência, grupos e hash por bloco;
 - [ ] documentação, configuração e implementação estiverem sem
-      conflito.
+      conflito (itens **#102** e **#73** do painel).
 
-Os dois itens em aberto (testes automatizados e verificação final de
-consistência) são o que resta para transformar a decisão em código
-verificado e reproduzível. A implementação
-(`src/data/split.py::criar_particao_mestra`) já existe; falta cobri-la
-com testes e rodar o fluxo ponta a ponta no Notebook 03.
+Os dois itens em aberto são o que resta para transformar a decisão em
+código verificado e reproduzível.
 
 ### 28.5 Relação com a implementação
 
