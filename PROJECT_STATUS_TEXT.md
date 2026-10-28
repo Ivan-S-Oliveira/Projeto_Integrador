@@ -321,6 +321,7 @@ Testes rápidos passando e o C_11 lendo `train_ref` sem tocar no teste.
 - nao-contem: `src/data/cohort_source.py` :: `_DEFAULT_KIND: str = "provisional"` | O padrão de SRAG_COHORT_KIND em src/data/cohort_source.py deixou de ser provisional (passa a ser final), para nenhum notebook carregar a coorte provisória por engano.
 - teste: `tests/test_supervised_artifact.py` | Todos os testes de tests/test_supervised_artifact.py passam no pytest rápido, incluindo os novos: leitura padrão sem teste, test_ref com G9 pendente levantando erro e test_ref liberado com G9 aprovado (monkeypatch).
 - teste: `tests/test_cohort_source.py` | Os testes de tests/test_cohort_source.py passam, já ajustados ao novo padrão final da coorte.
+- json: `data/analytical/manifesto_supervisionado.json` :: `cohort_kind` = `final` | O manifesto do artefato supervisionado v3 registra cohort_kind = final (herdado do #30).
 
 ## #135 · Testes das invariantes do protocolo no artefato v3 (§28.4)
 
@@ -913,7 +914,6 @@ Os dois YAMLs, `decisoes.md`, `tests/test_split.py` e este painel dizem o mesmo 
 
 - contem: `src/data/cohort_source.py` :: `coorte_final.parquet` | O cohort_source reconhece a coorte definitiva pelo nome canônico coorte_final.parquet.
 - teste: `tests/test_cohort_source.py::test_coorte_parquet_nao_e_mais_candidato` | O teste confirma que coorte.parquet não é mais candidato, então a definitiva nunca é carregada como provisória por causa do nome.
-- json: `data/analytical/manifesto_supervisionado.json` :: `cohort_kind` = `final` | O manifesto do artefato supervisionado registra cohort_kind = final (arquivo local de quem gerou o artefato).
 
 ## #59 · Documentar 2026 como período parcial e exclusivamente exploratório
 
