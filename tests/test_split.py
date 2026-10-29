@@ -23,9 +23,78 @@ from src.data.split import (
     PARTICOES_CANONICAS,
     SplitWarning,
     atribuir_particao_estratificada_por_hash,
+    criar_group_id,
     criar_particao_mestra,
     criar_particoes_agrupadas,
 )
+
+
+def test_criar_group_id_usa_notificacao_valida_e_fallback() -> None:
+    df = pd.DataFrame(
+        {
+            "nu_notific": [" 123 456 ", None, "", pd.NA, "nan"],
+            "id_registro": [10, 11, 12, 13, 14],
+        },
+        index=[50, 40, 30, 20, 10],
+    )
+    esperado = pd.Series(
+        [
+            "123456",
+            "sem_notific:11",
+            "sem_notific:12",
+            "sem_notific:13",
+            "sem_notific:14",
+        ],
+        index=df.index,
+        dtype="string",
+        name="group_id",
+    )
+    pd.testing.assert_series_equal(criar_group_id(df), esperado)
+
+
+def test_criar_group_id_mesma_notificacao_mesmo_grupo() -> None:
+    df = pd.DataFrame(
+        {"nu_notific": ["123", " 123 ", "456"], "id_registro": [1, 2, 3]}
+    )
+    resultado = criar_group_id(df)
+    assert resultado.iloc[0] == resultado.iloc[1]
+    assert resultado.iloc[0] != resultado.iloc[2]
+
+
+def test_criar_group_id_independe_do_indice_e_da_ordem() -> None:
+    df = pd.DataFrame(
+        {
+            "id_registro": [101, 102, 103, 104],
+            "nu_notific": ["900", None, "901", ""],
+        },
+        index=[7, 7, 99, -4],
+    )
+    original = dict(zip(df["id_registro"], criar_group_id(df), strict=True))
+    reordenado = df.iloc[[3, 1, 0, 2]].copy()
+    reordenado.index = [1000, 2000, 3000, 4000]
+    novo = dict(
+        zip(reordenado["id_registro"], criar_group_id(reordenado), strict=True)
+    )
+    assert original == novo
+
+
+def test_criar_group_id_exige_id_registro_apenas_no_fallback() -> None:
+    resultado = criar_group_id(pd.DataFrame({"nu_notific": ["123", "456"]}))
+    assert resultado.tolist() == ["123", "456"]
+
+    with pytest.raises(KeyError, match="id_registro"):
+        criar_group_id(pd.DataFrame({"nu_notific": [None, "123"]}))
+
+
+def test_criar_group_id_rejeita_id_invalido_no_fallback() -> None:
+    df = pd.DataFrame({"nu_notific": [None, "123"], "id_registro": [pd.NA, 2]})
+    with pytest.raises(ValueError, match="exigem fallback"):
+        criar_group_id(df)
+
+
+def test_criar_group_id_exige_nu_notific() -> None:
+    with pytest.raises(KeyError, match="nu_notific"):
+        criar_group_id(pd.DataFrame({"id_registro": [1]}))
 
 
 # ---------------------------------------------------------------------------

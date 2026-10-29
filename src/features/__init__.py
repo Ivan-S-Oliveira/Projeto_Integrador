@@ -7,6 +7,7 @@ from src.features.engineering import (
     idade_em_anos,
     intervalo_sintomas_internacao,
     montar_features,
+    regiao_residencia,
     sazonalidade,
     sexo_categoria,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "idade_em_anos",
     "intervalo_sintomas_internacao",
     "montar_features",
+    "regiao_residencia",
     "sazonalidade",
     "sexo_categoria",
 ]

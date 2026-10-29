@@ -16,6 +16,7 @@ __all__ = [
     "SplitWarning",
     "atribuir_blocos_por_hash",
     "atribuir_particao_estratificada_por_hash",
+    "criar_group_id",
     "criar_particao_mestra",
     "criar_particoes_agrupadas",
 ]
@@ -44,6 +45,57 @@ PoliticaGrupoHeterogeneo = Literal["raise", "warn"]
 
 _POLITICAS_ESTRATOS_PEQUENOS = frozenset(get_args(PoliticaEstratosPequenos))
 _POLITICAS_GRUPO_HETEROGENEO = frozenset(get_args(PoliticaGrupoHeterogeneo))
+_VALORES_TEXTUAIS_AUSENTES = frozenset({"", "nan", "none", "null", "<na>"})
+
+
+def criar_group_id(df: pd.DataFrame) -> pd.Series:
+    """Cria o identificador estável usado no particionamento agrupado.
+
+    Usa ``nu_notific`` sem espaços quando o valor é válido. Apenas nas linhas
+    sem notificação válida exige ``id_registro`` e usa o prefixo
+    ``sem_notific:``. O resultado independe da ordem e do índice das linhas.
+    """
+    if "nu_notific" not in df.columns:
+        raise KeyError("Coluna necessária para criar group_id ausente: 'nu_notific'")
+
+    nu_notific = (
+        df["nu_notific"]
+        .astype("string")
+        .str.replace(r"\s+", "", regex=True)
+    )
+    notific_normalizada = nu_notific.str.lower()
+    notific_valida = (
+        nu_notific.notna()
+        & ~notific_normalizada.isin(_VALORES_TEXTUAIS_AUSENTES)
+    )
+
+    if notific_valida.all():
+        return nu_notific.rename("group_id")
+
+    if "id_registro" not in df.columns:
+        raise KeyError(
+            "Coluna necessária para fallback de group_id ausente: 'id_registro'"
+        )
+
+    id_registro = df["id_registro"].astype("string").str.strip()
+    id_normalizado = id_registro.str.lower()
+    id_invalido = (
+        id_registro.isna()
+        | id_normalizado.isin(_VALORES_TEXTUAIS_AUSENTES)
+    )
+    fallback_necessario = ~notific_valida
+    fallback_invalido = fallback_necessario & id_invalido
+
+    if fallback_invalido.any():
+        quantidade = int(fallback_invalido.sum())
+        raise ValueError(
+            "id_registro ausente ou inválido em "
+            f"{quantidade} registro(s) que exigem fallback de group_id."
+        )
+
+    fallback = "sem_notific:" + id_registro
+    group_id = nu_notific.where(notific_valida, fallback)
+    return group_id.astype("string").rename("group_id")
 
 
 class SplitWarning(UserWarning):

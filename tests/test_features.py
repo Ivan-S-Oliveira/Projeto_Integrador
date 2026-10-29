@@ -18,9 +18,70 @@ from src.features.engineering import (
     idade_em_anos,
     intervalo_sintomas_internacao,
     montar_features,
+    regiao_residencia,
     sazonalidade,
     sexo_categoria,
 )
+
+
+@pytest.mark.parametrize(
+    ("uf", "esperado"),
+    [
+        ("AC", "NORTE"),
+        ("BA", "NORDESTE"),
+        ("DF", "CENTRO-OESTE"),
+        ("SP", "SUDESTE"),
+        ("RS", "SUL"),
+    ],
+)
+def test_regiao_residencia_mapeia_cinco_regioes(
+    uf: str,
+    esperado: str,
+) -> None:
+    assert regiao_residencia(pd.Series([uf])).iloc[0] == esperado
+
+
+def test_regiao_residencia_normaliza_espacos_e_caixa() -> None:
+    entrada = pd.Series([" sp ", "ba", " dF", "sc "])
+    resultado = regiao_residencia(entrada)
+    assert resultado.astype("string").tolist() == [
+        "SUDESTE", "NORDESTE", "CENTRO-OESTE", "SUL",
+    ]
+
+
+def test_regiao_residencia_trata_ausentes_e_invalidos() -> None:
+    entrada = pd.Series(
+        [None, pd.NA, "", "  ", "XX", "nan"],
+        index=[10, 20, 30, 40, 50, 60],
+    )
+    resultado = regiao_residencia(entrada)
+    assert resultado.index.equals(entrada.index)
+    assert resultado.astype("string").tolist() == ["AUSENTE"] * 6
+
+
+def test_regiao_residencia_cobre_as_27_ufs() -> None:
+    ufs = pd.Series([
+        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
+        "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
+        "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+    ])
+    resultado = regiao_residencia(ufs).astype("string")
+    assert not resultado.eq("AUSENTE").any()
+    assert set(resultado) == {
+        "NORTE", "NORDESTE", "CENTRO-OESTE", "SUDESTE", "SUL",
+    }
+
+
+def test_regiao_residencia_retorna_categoria_nomeada() -> None:
+    resultado = regiao_residencia(pd.Series(["SP"], index=[8]))
+    assert isinstance(resultado.dtype, pd.CategoricalDtype)
+    assert resultado.name == "regiao_residencia"
+    assert resultado.index.tolist() == [8]
+
+
+def test_regiao_residencia_rejeita_entrada_que_nao_seja_series() -> None:
+    with pytest.raises(TypeError, match="pandas.Series"):
+        regiao_residencia(["SP", "BA"])  # type: ignore[arg-type]
 
 
 # Conjunto mínimo de entradas exigido por ``montar_features``, alinhado

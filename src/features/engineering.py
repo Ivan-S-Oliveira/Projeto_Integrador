@@ -27,6 +27,7 @@ __all__ = [
     "sexo_categoria",
     "ano_mes_internacao",
     "montar_features",
+    "regiao_residencia",
 ]
 
 PoliticaIntervalo = Literal["sinalizar", "descartar"]
@@ -34,6 +35,21 @@ PoliticaIntervalo = Literal["sinalizar", "descartar"]
 _INTERVALO_MAX_DIAS_PADRAO = 60.0
 _SEMANAS_POR_ANO           = 52.18
 _POLITICAS_VALIDAS         = frozenset(get_args(PoliticaIntervalo))
+
+_MAPA_UF_REGIAO: dict[str, str] = {
+    "AC": "NORTE", "AP": "NORTE", "AM": "NORTE", "PA": "NORTE",
+    "RO": "NORTE", "RR": "NORTE", "TO": "NORTE",
+    "AL": "NORDESTE", "BA": "NORDESTE", "CE": "NORDESTE",
+    "MA": "NORDESTE", "PB": "NORDESTE", "PE": "NORDESTE",
+    "PI": "NORDESTE", "RN": "NORDESTE", "SE": "NORDESTE",
+    "DF": "CENTRO-OESTE", "GO": "CENTRO-OESTE",
+    "MT": "CENTRO-OESTE", "MS": "CENTRO-OESTE",
+    "ES": "SUDESTE", "MG": "SUDESTE", "RJ": "SUDESTE", "SP": "SUDESTE",
+    "PR": "SUL", "RS": "SUL", "SC": "SUL",
+}
+_REGIOES_RESIDENCIA: tuple[str, ...] = (
+    "NORTE", "NORDESTE", "CENTRO-OESTE", "SUDESTE", "SUL", "AUSENTE",
+)
 
 _FAIXAS_PADRAO: tuple[tuple[str, float, float | None], ...] = (
     ("<1",    0.0,   1.0),
@@ -227,6 +243,24 @@ def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
         "ano_internacao": dt.dt.year.astype("float64"),
         "mes_internacao": dt.dt.month.astype("float64"),
     })
+
+
+def regiao_residencia(sg_uf: pd.Series) -> pd.Series:
+    """Mapeia a UF de residência para região e preserva o índice.
+
+    Valores nulos, vazios ou diferentes das 27 siglas oficiais recebem a
+    categoria explícita ``AUSENTE``.
+    """
+    if not isinstance(sg_uf, pd.Series):
+        raise TypeError("sg_uf deve ser uma pandas.Series.")
+
+    uf_normalizada = sg_uf.astype("string").str.strip().str.upper()
+    regiao = uf_normalizada.map(_MAPA_UF_REGIAO).fillna("AUSENTE")
+    return pd.Series(
+        pd.Categorical(regiao, categories=_REGIOES_RESIDENCIA),
+        index=sg_uf.index,
+        name="regiao_residencia",
+    )
 
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
