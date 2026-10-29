@@ -203,6 +203,10 @@ a.xref{color:var(--acc2);text-decoration:none;border-bottom:1px dotted currentCo
 .card-edit button:hover{color:var(--fg);border-style:solid}
 .guide-edit{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
 .guide-edit button{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 10px;cursor:pointer}
+.cfgc{border-top:1px solid var(--line);padding:7px 0 4px}.cfgc:first-of-type{border-top:0}
+.cfgc .imp{margin:5px 0 2px;font-size:.82rem}.cfgc .imp b.h{color:var(--p1)}.cfgc .imp b.m{color:#9a5b00}.cfgc .imp b.l{color:var(--mute)}
+.cfgc .ck{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}.cfgc.done{opacity:.7}
+.cfgc .add{color:var(--ok)}.cfgc .rem{color:var(--p1)}
 .alert.lp{border-left-color:#0f766e;background:var(--card)}.alert.iss{border-left-color:var(--p2)}.alert.cc pre{white-space:pre-wrap;max-height:160px;overflow:auto}
 .alert.cc .cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.alert.cc .cmp b{font-size:.75rem;color:var(--mute)}
 @media(max-width:640px){.alert.cc .cmp{grid-template-columns:1fr}}
@@ -1013,6 +1017,44 @@ $("confbody").addEventListener("click",async e=>{const b=e.target.closest("[data
 
 /* ---- REVISÕES ---- */
 function revGroup(cls,titleHtml,body,acts=""){return `<div class="alert ${cls}"><b>${titleHtml}</b>${body}${acts?`<div class="acts">${acts}</div>`:""}</div>`}
+/* ---- v6.2: "Configuração crítica mudou" — ciência LOCAL (só desta máquina, nunca vai para o GitHub) e pendências afetadas ---- */
+const CFG_ACK_KEY="srag_cfg_ciente";
+function cfgAcks(){try{return JSON.parse(localStorage.getItem(CFG_ACK_KEY)||"{}")||{}}catch(_){return {}}}
+function cfgId(c){return String(c.commit||"").slice(0,12)+"|"+c.file}
+function cfgAck(ids){const a=cfgAcks();const now=new Date().toISOString();ids.forEach(i=>{a[i]=now});localStorage.setItem(CFG_ACK_KEY,JSON.stringify(a))}
+function cfgUnack(id){const a=cfgAcks();delete a[id];localStorage.setItem(CFG_ACK_KEY,JSON.stringify(a))}
+let CFG_SHOW_ACKED=false;
+const CFG_GENERIC=new Set(["anos","descricao","status","data","papel","aprovado_por","responsavel","observacoes","fracao","influencia_decisoes","requer_gate","blocos","gates","periodo","features","final","temporal","audit","rules","action","rationale","decision_id","status_decisoes","experimentos_split","selecao_modelos","calibracao","metodo","limiar","target","coluna_ano","incluir_limites"]);
+function cfgTokens(key){const out=new Set();key.split(".").forEach(seg=>{const g=seg.match(/^(G\d+)_/i);if(g)out.add(g[1].toLowerCase());if(!CFG_GENERIC.has(seg.toLowerCase())&&seg.includes("_"))out.add(seg.toLowerCase())});
+ const parts=key.split(".");if(parts.length>=2)out.add(parts.slice(-2).join(".").toLowerCase());out.add(key.toLowerCase());return [...out]}
+function cfgItemText(d){if(!d._cfgtxt)d._cfgtxt=((d.t||"")+" "+(d.intro||"")+" "+(d.u||"")+" "+(d.pb||"")+" "+(d.fz||"")+" "+(d.pq||"")+" "+(d.x||[]).map(x=>x[0]+" "+x[1]).join(" ")).replace(/<[^>]+>/g," ").toLowerCase();return d._cfgtxt}
+function cfgHas(txt,tok){const e=tok.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return new RegExp("(^|[^a-z0-9_])"+e+"($|[^a-z0-9_])").test(txt)}
+/* Pendências abertas afetadas por uma mudança, da mais crítica para a menos:
+   alta  = um critério do ④ confere exatamente essa chave (ou uma chave pai/filha) desse arquivo;
+   média = o texto da pendência cita a chave ou um nome específico dela (ex.: G6, train_ref, dev_years);
+   baixa = a pendência lista o arquivo de configuração entre os arquivos dela. */
+function cfgImpact(c){const keys=(c.keys||[]).map(k=>k.key);const file=String(c.file||"").toLowerCase();const res=[];
+ LIVE().forEach(d=>{if(isDone(d.id))return;let lvl=0,why="";
+  String(d.pq||"").split(/<\/li>|\n|<br\s*\/?>/i).map(x=>x.replace(/<[^>]+>/g," ").replace(/&amp;/g,"&")).forEach(line=>{const m=line.match(/(?:yaml|json)\s*:\s*`?([^`\s]+)`?\s*::\s*`?([^`\s]+)`?/i);if(!m||m[1].replace(/^\.\//,"").toLowerCase()!==file)return;
+   const ck=m[2];const hit=keys.find(k=>k===ck||k.startsWith(ck+".")||ck.startsWith(k+"."));if(hit&&lvl<3){lvl=3;why="critério do ④ confere "+hit}});
+  if(lvl<2){const txt=cfgItemText(d);for(const k of keys){const tok=cfgTokens(k).find(t=>cfgHas(txt,t));if(tok){lvl=2;why="cita "+tok;break}}}
+  if(lvl<1&&((d.files||[]).some(f=>String(f).replace(/^\.\//,"").toLowerCase()===file)||cfgItemText(d).includes(file))){lvl=1;why="usa "+c.file}
+  if(lvl)res.push({id:d.id,lvl,why})});
+ return res.sort((a,b)=>b.lvl-a.lvl||Number(a.id)-Number(b.id))}
+function cfgKeyLine(k){let v;if(k.added||k.removed){const a=(k.added||[]).map(x=>`<span class="add">+${escapeHtml(x)}</span>`),r=(k.removed||[]).map(x=>`<span class="rem">−${escapeHtml(x)}</span>`);v=[...a,...r].join(" ")||escapeHtml(k.note||"")}
+ else v=`${escapeHtml(k.before)} → <b>${escapeHtml(k.after)}</b>${k.note?` (${escapeHtml(k.note)})`:""}`;return `<li><code>${escapeHtml(k.key)}</code>: ${v}</li>`}
+function cfgCard(c,acked){const id=cfgId(c);const imp=cfgImpact(c);const L={3:["h","alta"],2:["m","média"],1:["l","baixa"]};
+ const impHtml=imp.length?`<div class="imp">Pendências abertas afetadas: ${imp.slice(0,10).map(x=>`<b class="${L[x.lvl][0]}" title="${escapeHtml(x.why)}">●</b> <a href="#item-${x.id}" class="lnk">#${x.id}</a> <small>(${L[x.lvl][1]}: ${escapeHtml(x.why)})</small>`).join(" · ")}${imp.length>10?` · +${imp.length-10}`:""}</div>`:`<div class="imp"><small>Nenhuma pendência aberta cita essas chaves ou este arquivo.</small></div>`;
+ const keys=c.keys||[];
+ return `<div class="cfgc${acked?" done":""}"><code>${escapeHtml(c.file)}</code> em <code>${escapeHtml(String(c.commit).slice(0,7))}</code> por ${escapeHtml(c.author)} (${fmtWhen(c.when)}): ${escapeHtml(c.subject)} — ${(c.cites_tasks||[]).length?"cita "+c.cites_tasks.map(x=>`<a href="#item-${x}" class="lnk">#${x}</a>`).join(" "):"<b>nenhuma pendência citada</b>"}
+ <ul>${keys.slice(0,8).map(cfgKeyLine).join("")}${keys.length>8||c.more_keys?`<li><small>+${keys.length-8>0?keys.length-8:0}${c.more_keys?"+"+c.more_keys:""} chave(s)</small></li>`:""}</ul>${impHtml}
+ <div class="ck">${acked?`<small>✓ Ciente nesta máquina em ${fmtWhen(acked)}</small> <button type="button" data-cfgunack="${escapeHtml(id)}">Desfazer</button>`:`<button type="button" data-cfgack="${escapeHtml(id)}">✓ Estou ciente</button>`}</div></div>`}
+function cfgGroup(cfg){const acks=cfgAcks();const open=cfg.filter(c=>!acks[cfgId(c)]),done=cfg.filter(c=>acks[cfgId(c)]);
+ const note=`<p class="src">Mudanças em chaves críticas das configurações (anos, features, alvo, gates…). A ciência é registrada só nesta máquina e não gera commit: cada pessoa confirma no próprio painel.</p>`;
+ const showBtn=done.length?`<button type="button" data-cfgshow>${CFG_SHOW_ACKED?"Ocultar":"Ver"} as ${done.length} já confirmada(s)</button>`:"";
+ if(!open.length)return revGroup("iss",`Configuração crítica: ${done.length} mudança(s), todas confirmadas nesta máquina`,CFG_SHOW_ACKED?note+done.map(c=>cfgCard(c,acks[cfgId(c)])).join(""):"",showBtn);
+ return revGroup("conf",`Configuração crítica mudou — ${open.length} mudança(s) aguardando sua ciência`,note+open.map(c=>cfgCard(c,null)).join("")+(CFG_SHOW_ACKED?done.map(c=>cfgCard(c,acks[cfgId(c)])).join(""):""),
+  (open.length>1?`<button type="button" data-cfgackall="${escapeHtml(open.map(cfgId).join(","))}">✓ Ciente de todas (${open.length})</button>`:"")+showBtn)}
 function renderRevisoes(){const box=$("revbody");if(!box)return;const out=[];const L=LIVE();const A=window.AUDIT||{};const R=REP||{};
  const b=META.blocked;if(b)out.push(revGroup("conf",b.reason==="unreadable"?"O PROJECT_STATUS.md do GitHub está ilegível — publicação suspensa":"Publicação bloqueada pela proteção contra regressão",`<ul>${(b.problems||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("")}</ul><p class="src">Nada foi enviado e sua fila está guardada. ${b.reason==="unreadable"?"Restaure o arquivo pelo histórico do Git e clique em Buscar.":"Clique em ⟳ Buscar; se persistir, avise a equipe antes de qualquer pull."}</p>`));
  const tv=id=>(taskOf(id)||{}).verdict;const st=id=>(SH[id]||{}).status;
@@ -1026,7 +1068,7 @@ function renderRevisoes(){const box=$("revbody");if(!box)return;const out=[];con
  if(failed.length)out.push(revGroup("conf",`${failed.length} teste(s) falhando no commit publicado (aviso para todos)`,`<ul>${failed.slice(0,30).map(f=>`<li><code>${escapeHtml(f.nodeid)}</code> — ${escapeHtml(f.message||"")}${(f.tasks||[]).length?" · afeta "+f.tasks.map(x=>`<a href="#item-${x}" class="lnk">#${x}</a>`).join(" "):""}</li>`).join("")}</ul>`));
  const env=A.tests_env&&A.tests_env.count?A.tests_env:null;if(env)out.push(revGroup("iss",`${env.count} teste(s) não rodaram por causa da instalação da máquina que verificou`,`<p>Ex.: ${escapeHtml(env.example||"")}. Não afetam nenhuma pendência. Rode <code>.\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt</code>.</p>`));
  const cfg=(A.config_changes&&A.config_changes.length?A.config_changes:R.config_changes||[]);
- if(cfg.length)out.push(revGroup(cfg.some(c=>!(c.cites_tasks||[]).length)?"conf":"iss",`Configuração crítica mudou (${cfg.length} commit(s))`,`<ul>${cfg.slice(0,8).map(c=>`<li><code>${escapeHtml(c.file)}</code> em <code>${escapeHtml(String(c.commit).slice(0,7))}</code> por ${escapeHtml(c.author)} (${fmtWhen(c.when)}): ${escapeHtml(c.subject)} — ${(c.cites_tasks||[]).length?"cita "+c.cites_tasks.map(x=>`<a href="#item-${x}" class="lnk">#${x}</a>`).join(" "):"<b>nenhuma pendência citada</b>"}<ul>${(c.keys||[]).slice(0,6).map(k=>`<li><code>${escapeHtml(k.key)}</code>: ${escapeHtml(k.before)} → <b>${escapeHtml(k.after)}</b></li>`).join("")}</ul></li>`).join("")}</ul>`));
+ if(cfg.length)out.push(cfgGroup(cfg));
  const inv=Object.entries(R.tasks||{}).filter(([,t])=>t.verdict==="criterio_invalido").map(([i])=>i).filter(i=>BY[i]);
  if(inv.length)out.push(revGroup("iss",`${inv.length} pendência(s) com critério escrito em formato inválido`,chips(inv)));
  const ref=META.reference||{};if(!ref.exists)out.push(revGroup("iss","Referência para IAs não gerada nesta máquina","<p>Rode <code>.\\.venv\\Scripts\\python.exe tools\\update_project_reference.py</code> antes de pedir código a uma IA.</p>"));
@@ -1035,6 +1077,8 @@ function renderRevisoes(){const box=$("revbody");if(!box)return;const out=[];con
  const v=R.generated_at?`Última verificação: ${fmtWhen(R.generated_at)} sobre <code>${escapeHtml(String(R.sha||"").slice(0,7))}</code> (${R.quick?"rápida":"completa"})${R.full_at&&R.quick?` · completa em ${fmtWhen(R.full_at)}`:""}${META.quick_running?" · verificação rápida em andamento…":""}`:"Nenhuma verificação nesta máquina ainda.";
  const serious=out.filter(x=>/alert (conf|sug|rev)/.test(x)).length;
  $("revcount").textContent=serious?`· ${serious} grupo(s) para olhar`:"· nada urgente";box.innerHTML=`<p class="src">${v}</p>`+(out.join("")||"<p>Nada para revisar agora.</p>")}
+$("revbody").addEventListener("click",e=>{const ca=e.target.closest("[data-cfgack],[data-cfgackall],[data-cfgunack],[data-cfgshow]");
+ if(ca){e.preventDefault();if(ca.dataset.cfgack)cfgAck([ca.dataset.cfgack]);else if(ca.dataset.cfgackall)cfgAck(ca.dataset.cfgackall.split(","));else if(ca.dataset.cfgunack)cfgUnack(ca.dataset.cfgunack);else CFG_SHOW_ACKED=!CFG_SHOW_ACKED;renderRevisoes();return}});
 $("revbody").addEventListener("click",e=>{const f=e.target.closest("[data-fil]");if(f){clearF();$("fs").value="";$("fauto").value=f.dataset.fil;apply();$("bar").scrollIntoView({behavior:"smooth"})}});
 $("revisoes").open=localStorage.getItem("srag_rev_closed")!=="1";$("revisoes").addEventListener("toggle",()=>localStorage.setItem("srag_rev_closed",$("revisoes").open?"0":"1"));
 

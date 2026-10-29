@@ -43,6 +43,17 @@ Commits saem ~12 s depois do último clique, agrupados por tipo e com cada pend�
    evite `[done:#N]`, que conclui sem passar pelo verificador).
 4. Marque como feita. O painel confere de novo, agora no commit publicado; se tudo estiver no Git, conclui sem pedir comentário.
 
+## Configuração crítica mudou
+
+Na seção REVISÕES, cada mudança em chave crítica das configurações (anos dos blocos, features, alvo, gates,
+calibração, limiar…) aparece com quem mudou, o que entrou e saiu e as **pendências abertas mais afetadas**:
+alta (um critério do ④ confere essa chave), média (a pendência cita a chave, ex.: `train_ref`, `G6`) e baixa
+(a pendência usa o arquivo). Mudanças só de formatação (quebra de linha, espaços) não aparecem.
+
+Clique em **✓ Estou ciente** (ou **Ciente de todas**). A ciência fica só no navegador desta máquina e **não gera
+commit**: cada pessoa precisa confirmar no próprio painel para o aviso sair. “Ver já confirmadas” mostra o histórico
+e permite desfazer.
+
 ## Sem conexão e conflitos
 
 Cada clique vira uma alteração pequena (item + campo) guardada na fila local. Sem conexão, a fila fica guardada

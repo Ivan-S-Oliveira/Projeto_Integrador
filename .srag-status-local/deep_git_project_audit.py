@@ -1108,6 +1108,55 @@ def flatten(data: Any, prefix: str = "") -> dict[str, Any]:
     return {prefix.rstrip("."): data}
 
 
+def _canon(value: Any) -> Any:
+    """Valor para COMPARAÇÃO: só formatação não conta como mudança.
+
+    Strings: espaços e quebras de linha colapsados (um bloco YAML "descricao: >" termina em "\n" e a mesma frase
+    em uma linha não termina; para o projeto são o mesmo texto). Números: 1 == 1.0. Listas e dicionários: recursivo.
+    """
+    if isinstance(value, str):
+        return re.sub(r"\s+", " ", value).strip()
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, (list, tuple)):
+        return [_canon(v) for v in value]
+    if isinstance(value, dict):
+        return {str(k): _canon(v) for k, v in value.items()}
+    return value
+
+
+MISSING = object()
+
+
+def _change_view(before: Any, after: Any, limit: int = 200) -> dict[str, Any]:
+    """Antes/depois legíveis: listas mostram só o que entrou e saiu; textos longos mostram o trecho que mudou."""
+    view: dict[str, Any] = {
+        "before": "(ausente)" if before is MISSING else _short(before, limit),
+        "after": "(ausente)" if after is MISSING else _short(after, limit),
+    }
+    if isinstance(before, list) and isinstance(after, list):
+        cb, ca = [_canon(v) for v in before], [_canon(v) for v in after]
+        added = [v for v, c in zip(after, ca) if c not in cb]
+        removed = [v for v, c in zip(before, cb) if c not in ca]
+        if added or removed:
+            view["added"] = [_short(v, 80) for v in added[:30]]
+            view["removed"] = [_short(v, 80) for v in removed[:30]]
+        elif cb != ca:
+            view["note"] = "mesmos elementos, ordem diferente"
+    elif isinstance(before, str) and isinstance(after, str):
+        b, a = _canon(before), _canon(after)
+        if len(b) > limit or len(a) > limit:
+            start = 0
+            while start < min(len(a), len(b)) and a[start] == b[start]:
+                start += 1
+            cut = max(0, start - 40)
+            view["before"] = ("…" if cut else "") + _short(b[cut:], limit)
+            view["after"] = ("…" if cut else "") + _short(a[cut:], limit)
+    return view
+
+
 def config_changes(root: Path, commits: list[Commit], max_per_file: int = 30) -> list[dict[str, Any]]:
     """Mudanças de valor em chaves críticas, commit a commit, com quem mudou e se citou pendência."""
     if yaml is None:
@@ -1125,16 +1174,16 @@ def config_changes(root: Path, commits: list[Commit], max_per_file: int = 30) ->
                 b = flatten(yaml.safe_load(before) or {}) if before is not None else {}
             except Exception:
                 continue
-            keys = sorted(k for k in set(a) | set(b)
-                          if any(p == "" or k == p or k.startswith(p + ".") for p in prefixes) and a.get(k) != b.get(k))
+            critical = [k for k in set(a) | set(b) if any(p == "" or k == p or k.startswith(p + ".") for p in prefixes)]
+            # chave criada/removida sempre conta; valor alterado só conta se não for só formatação
+            keys = sorted(k for k in critical if (k in a) != (k in b) or _canon(a[k]) != _canon(b[k]))
             if not keys:
                 continue
             explicit, mentions = commit_claims(commit.message)
             changes.append({
                 "file": path, "commit": commit.sha[:12], "when": commit.when, "author": commit.author,
                 "subject": commit.subject, "cites_tasks": sorted({i for _, i in explicit} | mentions, key=int),
-                "keys": [{"key": k, "before": _short(b.get(k, "(ausente)"), 200), "after": _short(a.get(k, "(ausente)"), 200)}
-                         for k in keys[:40]],
+                "keys": [{"key": k, **_change_view(b.get(k, MISSING), a.get(k, MISSING))} for k in keys[:40]],
                 "more_keys": max(0, len(keys) - 40),
             })
     return sorted(changes, key=lambda x: x["when"], reverse=True)
@@ -1708,7 +1757,17 @@ def self_test() -> int:
         check(ev("- manual: | Relatório revisado por duas pessoas.") == MANUAL, "critério manual")
         hidden, pending = git_hygiene(root)
         check(hidden == ["src/ignorado.py"] and "src/nao_commitado.py" in pending, "higiene do .gitignore")
-        changes = config_changes(root, read_commits(root, "HEAD"))
+        # só formatação (bloco "descricao: >" vira linha simples): não é mudança
+        cfg = (root / "configs" / "supervised.yaml").read_text(encoding="utf-8")
+        (root / "configs" / "supervised.yaml").write_text(cfg + "  G7:\n    descricao: >\n      Escolher o metodo.\n", encoding="utf-8")
+        git(root, "commit", "-qam", "acrescenta G7")
+        (root / "configs" / "supervised.yaml").write_text(cfg + "  G7:\n    descricao: Escolher o metodo.\n", encoding="utf-8")
+        git(root, "commit", "-qam", "so formatacao")
+        changes = [c for c in config_changes(root, read_commits(root, "HEAD")) if c["subject"] == "muda anos sem citar"]
+        check(not [c for c in config_changes(root, read_commits(root, "HEAD")) if c["subject"] == "so formatacao"],
+              "mudança só de formatação não aparece")
+        check(changes and changes[0]["keys"][0].get("removed") == ["2019"] and changes[0]["keys"][0].get("added") == [],
+              "listas mostram o que entrou e saiu")
         check(len(changes) == 1 and changes[0]["keys"][0]["key"] == "temporal.blocos.train_ref.anos" and not changes[0]["cites_tasks"],
               "mudança de configuração crítica sem pendência citada")
         try:
