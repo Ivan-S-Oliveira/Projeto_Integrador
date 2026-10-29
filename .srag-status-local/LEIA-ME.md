@@ -1,4 +1,4 @@
-# Painel de Pendências SRAG — v6.1
+# Painel de Pendências SRAG — v6.2
 
 ## Instalação (uma única vez, por quem publica a atualização)
 
@@ -27,7 +27,7 @@ nenhum arquivo desta pasta vai aparecer como modificado no VS Code.
 | Concluir | Caixa “Marcar como feito” ou “✓ Confirmar conclusão”. O painel confere o “④ Pronto quando”; se o verificador não confirmar, pede um comentário de pelo menos 15 caracteres |
 | Editar texto | ✎ no card, ➕ Nova pendência, ✎ Textos do painel, ou direto no `PROJECT_STATUS_TEXT.md` |
 | Buscar | ⟳ Buscar atualizações. Nunca gera commit sozinho; depois da busca, uma verificação rápida (sem testes) atualiza os ✓/✗ dos cards |
-| Verificar | 🔎 Verificar pronto quando: confere todos os critérios e roda o pytest rápido numa cópia limpa do commit publicado. Só gera commit se alguma pendência mudar |
+| Verificar | 🔄 Atualizar, auditar e validar: confere todos os critérios e roda o pytest rápido numa cópia limpa do commit publicado. Só gera commit se alguma pendência mudar |
 | Revisar | Seção **REVISÕES** (sempre aberta até você recolher): detectadas como concluídas, concluídas que o verificador ainda vê como pendentes, revisões, testes falhando, configuração crítica alterada, critérios inválidos e referência para IAs desatualizada |
 | Meu dia | Escolha a pessoa: atrasadas, prontas para começar, revisões e o que destravou desde a última visita |
 | Encerrar | ⏻ Encerrar no painel ou `ENCERRAR_PAINEL.cmd` |

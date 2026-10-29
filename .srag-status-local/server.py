@@ -59,7 +59,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "6.1.0"
+VERSION = "6.2.0"
 LOCAL = Path(__file__).resolve().parent
 MD_NAME = "PROJECT_STATUS.md"
 BASE = LOCAL / "baseline.json"
@@ -1915,7 +1915,12 @@ def resolve_conflict(payload: dict[str, Any]) -> dict[str, Any]:
 # =============================================================== jobs em segundo plano
 def start_job(kind: str, actor: str) -> dict[str, Any]:
     if not JOB_LOCK.acquire(blocking=False):
-        return {"ok": True, "job": job_public(), "detail": "Já existe uma verificação em andamento."}
+        if JOB["running"]:  # um trabalho visível (clique) já está rodando: o painel acompanha esse
+            return {"ok": True, "job": job_public(), "detail": "Já existe um trabalho em andamento."}
+        # trava ocupada por trabalho em segundo plano (busca automática): espera ela terminar
+        if not JOB_LOCK.acquire(timeout=180):
+            return {"ok": False, "busy": True, "job": None,
+                    "error": "A busca automática ainda está rodando. Tente de novo em instantes."}
     JOB.update(id=str(uuid.uuid4()), running=True, kind=kind, log=[], result=None, error=None, started=now(), finished=None)
 
     def progress(msg: str) -> None:
@@ -2018,7 +2023,7 @@ def periodic_loop() -> None:
                     log("Busca automática: " + r.get("detail", ""))
                     schedule_quick_verification()
                 finally:
-                    JOB_LOCK.release()
+                    JOB_LOCK.release()  # sem mexer em JOB: o último trabalho clicado continua sendo o exibido
         except Exception:
             log(traceback.format_exc())
         # se houver fila pendente (ex.: sem internet), tenta de novo em 5 min

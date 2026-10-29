@@ -31,7 +31,7 @@ main{max-width:980px;margin:auto;padding:10px 12px 100px}
 .bar button.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
 .lbl{font-size:.7rem;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 #cnt{font-size:.8rem;color:var(--mute);margin-left:auto}.progress{height:7px;background:var(--line);border-radius:999px;overflow:hidden;margin:4px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--acc2));width:0}
-#tgf{display:inline-block}
+#tgf{display:inline-block;background:#6c4cb5;border-color:#6c4cb5;color:#fff;font-weight:700}#tgf:hover{filter:brightness(1.12)}#tgf:focus-visible{outline:2px solid #b9a5ee;outline-offset:2px}
 .more{display:none}.bar.open .more{display:flex}
 .filter-groups{display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:8px 0;align-items:stretch}.bar.open .filter-groups{display:grid}.filter-group{min-width:0;min-height:264px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:10px;display:flex;flex-direction:column}.filter-group h3{margin:0 0 8px;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}.filter-group .row{margin:0;display:flex;flex-direction:column;flex-wrap:nowrap;gap:8px;align-items:stretch;flex:1}.filter-group select{width:100%;flex:0 0 auto;min-width:0}.filter-group label{width:100%;box-sizing:border-box;background:var(--soft);border-color:transparent}.filter-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0}.filter-actions .lbl{margin-right:2px}@media(max-width:980px){.filter-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.filter-groups{grid-template-columns:1fr}.filter-group{min-height:0}.filter-group label{padding:8px}.filter-actions button,.filter-actions select{flex:1}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}
@@ -296,7 +296,7 @@ dialog.pop::backdrop{background:rgba(10,15,25,.55)}.pophead{display:flex;align-i
 <section class="guide" id="guide"><h3>Painel compartilhado · como funciona</h3>
 <div class="syncbar" role="toolbar" aria-label="Sincronização">
  <button id="btnfetch" class="primary" title="Traz o PROJECT_STATUS.md e o PROJECT_STATUS_TEXT.md mais recentes do GitHub e lê os commits novos. Não gera commit (só envia marcações e edições suas que ainda estejam na fila).">⟳ Buscar atualizações</button>
- <button id="btnaudit" title="Busca no GitHub e confere o “④ Pronto quando” de todas as pendências, rodando o pytest rápido numa cópia limpa do commit publicado. Teste que falha e importa arquivos de uma pendência já iniciada a coloca em revisão. Só gera commit se alguma pendência mudar.">🔎 Verificar pronto quando</button>
+ <button id="btnaudit" title="Busca no GitHub e confere o “④ Pronto quando” de todas as pendências, rodando o pytest rápido numa cópia limpa do commit publicado. Teste que falha e importa arquivos de uma pendência já iniciada a coloca em revisão. Só gera commit se alguma pendência mudar.">🔄 Atualizar, auditar e validar</button>
  <label class="who-in">Você: <input id="syncactor" placeholder="Seu nome" autocomplete="name"></label>
  <span class="pill" id="pillnet" title="Situação da conexão com o GitHub">…</span>
  <span class="pill" id="pillq" title="Alterações suas aguardando publicação" hidden></span>
@@ -672,15 +672,18 @@ async function refreshState(force=false){if(!SERVER)return;try{const j=await api
  if(force||META.version_key!==LASTKEY){LASTKEY=META.version_key;applyState(j.state)}renderMeta();handleJob(j.job);loadReport();openConflicts();renderRevisoes();
  if(META.content&&META.content.hash&&META.content.hash!==CONTENT_META.hash)syncContent()}catch(e){smsg("Serviço local indisponível: "+e.message+". Abra o ABRIR_PAINEL.cmd.","err");$("pillnet").textContent="● Serviço local parado";$("pillnet").className="pill err"}}
 function setBusy(b){$("btnfetch").disabled=b;$("btnaudit").disabled=b}
-const JOBT={audit:["Verificando o “Pronto quando” (com testes)…","Última verificação"],fetch:["Buscando atualizações…","Última busca"],publish_local:["Publicando edições locais do PROJECT_STATUS_TEXT.md…","Última publicação de edições locais"]};
-function handleJob(job){if(!job||!job.id)return;const box=$("jobbox");const t=JOBT[job.kind]||JOBT.fetch;
+const JOBT={audit:["Atualizando, auditando e validando todas as pendências (com testes)…","Última atualização, auditoria e validação"],fetch:["Buscando atualizações…","Última busca"],publish_local:["Publicando edições locais do PROJECT_STATUS_TEXT.md…","Última publicação de edições locais"]};
+function handleJob(job){if(!job||!job.id){if(!(job&&job.running)){setBusy(false);const b=$("jobbox");if(b&&!LASTJOB)b.hidden=true}return}const box=$("jobbox");const t=JOBT[job.kind]||JOBT.fetch;
  if(job.running){box.hidden=false;$("jobtitle").textContent=t[0];$("jobpre").textContent=(job.log||[]).join("\n");$("jobpre").scrollTop=1e9;setBusy(true);smsg((job.log||[]).slice(-1)[0]||"Trabalhando…","busy");schedulePoll(1500)}
  else{setBusy(false);if(LASTJOB!==job.id+job.finished){LASTJOB=job.id+job.finished;$("jobpre").textContent=(job.log||[]).join("\n");$("jobtitle").textContent=t[1];box.querySelector(".spin").hidden=true;
    if(job.error)smsg("Falhou: "+job.error,"err");else if(job.result){const r=job.result;smsg((r.detail||"Concluído.")+(r.published&&r.changes&&r.changes.length?` · ${r.changes.length} mudança(s) publicada(s).`:""),r.ok?"ok":"warn")}
    refreshState(true)}schedulePoll()}}
 function schedulePoll(ms){clearTimeout(POLL);POLL=setTimeout(async()=>{if(document.hidden&&!ms){schedulePoll();return}if(ms){try{const j=await api("/api/job",{},10000);handleJob(j.job);if(!j.job.running)return}catch(e){schedulePoll(4000)}}else{await refreshState();schedulePoll()}},ms||20000)}
 async function startJob(kind){if(!SERVER){smsg("Abra pelo ABRIR_PAINEL.cmd para sincronizar.","err");return}
- try{setBusy(true);$("jobbox").hidden=false;$("jobbox").querySelector(".spin").hidden=false;$("jobpre").textContent="";const j=await post(kind==="audit"?"/api/audit":kind==="publish_local"?"/api/publish-local":"/api/fetch");handleJob(j.job)}catch(e){setBusy(false);smsg("Falha: "+e.message,"err")}}
+ try{setBusy(true);$("jobbox").hidden=false;$("jobbox").querySelector(".spin").hidden=false;$("jobpre").textContent="";$("jobtitle").textContent=(JOBT[kind]||JOBT.fetch)[0];$("jobpre").textContent="Aguardando o serviço local (se a busca automática estiver rodando, a verificação começa logo depois)…";
+  const j=await post(kind==="audit"?"/api/audit":kind==="publish_local"?"/api/publish-local":"/api/fetch");
+  if(!j.job||!j.job.id){setBusy(false);$("jobbox").querySelector(".spin").hidden=true;$("jobtitle").textContent="Não iniciou";$("jobpre").textContent=j.error||j.detail||"O serviço não iniciou o trabalho.";smsg(j.error||j.detail||"O serviço não iniciou o trabalho.","warn");return}
+  handleJob(j.job)}catch(e){setBusy(false);$("jobbox").querySelector(".spin").hidden=true;$("jobtitle").textContent="Falhou";smsg("Falha: "+e.message,"err")}}
 async function sendEvent(id,action,note="",button=null,extra={}){if(!SERVER){smsg("Modo leitura: abra pelo ABRIR_PAINEL.cmd para registrar.","err");refreshAll();return}
  if(button)button.disabled=true;try{await post("/api/event",{item_id:String(id),action,note,event_id:(crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random()),...extra});
   smsg(`Registrado. Commit em ~${+META.publish_delay_seconds||12} s (cliques próximos viram um único commit)…`,"busy");await refreshState(true);setTimeout(()=>refreshState(),(+META.publish_delay_seconds||12)*1000+4000)}
@@ -963,7 +966,7 @@ function redrawPq(id){const el=$("item-"+id);const pq=el&&el.querySelector("[dat
 document.addEventListener("click",e=>{const b=e.target.closest("[data-checklocal]");if(!b)return;e.preventDefault();const q=b.closest(".q");if(q)checkLocal(q.dataset.id)});
 function pqHtml(d){return lcHtml(d)+pqHtmlBase(d)}
 function pqHtmlBase(d){const t=taskOf(d.id);const md=d.pq||"<p class='src'>Sem “④ Pronto quando”. Edite o card e acrescente os critérios.</p>";
- if(!t)return `${md}<p class="src">Ainda não conferido nesta máquina. A verificação rápida roda sozinha depois de cada busca; <b>🔎 Verificar pronto quando</b> faz a completa (com testes).</p>`;
+ if(!t)return `${md}<p class="src">Ainda não conferido nesta máquina. A verificação rápida roda sozinha depois de cada busca; <b>🔄 Atualizar, auditar e validar</b> faz a completa (com testes).</p>`;
  const crit=(t.criteria||[]);const when=REP.generated_at?fmtWhen(REP.generated_at):"—";
  let h=`<div class="verdict ${VCLS[t.verdict]||""}"><b>${escapeHtml(VTXT[t.verdict]||t.verdict)}</b> · ${escapeHtml(t.verdict_text||"")}</div>`;
  h+=crit.length?`<ul class="crits">${crit.map(critLine).join("")}</ul>`:md;
