@@ -554,3 +554,379 @@ def test_split_partitions_agrega_blocos(
     }
     assert len(treino) == 2
     assert len(validacao) == 3
+
+
+# ===========================================================================
+# Gera??o central do artefato
+# ===========================================================================
+
+def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercita a orquestra??o central sem acessar a coorte populacional."""
+    from src.data.cohort_source import CohortSource
+    from src.data import supervised_artifact as sa
+    from src.utils.hashing import sha256_file
+
+    n_base = 42
+    ids = list(range(1, n_base + 1))
+
+    anos = (
+        [2019] * 30
+        + [2020] * 6
+        + [2026] * 6
+    )
+
+    base = pd.DataFrame(
+        {
+            "id_registro": ids,
+            "nu_notific": [f"{valor:012d}" for valor in ids],
+            "sg_uf": ["SP", "BA", "DF", "RS", "AM", "XX"] * 7,
+            "nu_idade_n": [20 + valor % 70 for valor in ids],
+            "tp_idade": [3] * n_base,
+            "cs_sexo": ["M", "F", "I"] * 14,
+            "dt_sin_pri": [
+                f"{ano}-01-01"
+                for ano in anos
+            ],
+            "dt_interna": [
+                f"{ano}-01-05"
+                for ano in anos
+            ],
+            "evolucao": [
+                1 if valor % 2 == 0 else 2
+                for valor in ids
+            ],
+        }
+    )
+
+    conflito = base.iloc[[0]].copy()
+    conflito["id_registro"] = 10_001
+    conflito["dt_sin_pri"] = "2023-01-01"
+    conflito["dt_interna"] = "2023-01-05"
+
+    frame_sintetico = pd.concat(
+        [base, conflito],
+        ignore_index=True,
+    )
+
+    source = CohortSource(
+        kind="final",
+        path=str(
+            tmp_path
+            / "data"
+            / "analytical"
+            / "coorte_final.parquet"
+        ),
+        sha256="hash-coorte-sintetica",
+        size_bytes=1234,
+        rows=len(frame_sintetico),
+        columns=frame_sintetico.shape[1],
+    )
+
+    temporal_cfg = {
+        "seed": 42,
+        "coluna_particao": "particao",
+        "min_grupos_por_estrato": 5,
+        "blocos": {
+            "train_ref": {
+                "anos": [2019, 2023, 2024, 2025],
+                "fracao": 0.70,
+            },
+            "val_tune": {
+                "anos": [2019, 2023, 2024, 2025],
+                "fracao": 0.05,
+            },
+            "val_cal": {
+                "anos": [2019, 2023, 2024, 2025],
+                "fracao": 0.05,
+            },
+            "val_meas": {
+                "anos": [2019, 2023, 2024, 2025],
+                "fracao": 0.05,
+            },
+            "test_ref": {
+                "anos": [2019, 2023, 2024, 2025],
+                "fracao": 0.15,
+            },
+            "test_pandemic": {
+                "anos": [2020, 2021, 2022],
+            },
+        },
+    }
+
+    config_sintetica = {
+        "seed": 42,
+        "target": {
+            "coluna": "evolucao",
+            "coluna_modelagem": "alvo_obito_srag",
+            "positivos": [2],
+            "negativos": [1],
+            "descartar_outros": True,
+        },
+        "features": {
+            "final": [
+                "idade_anos",
+                "sexo_categoria",
+            ],
+            "numericas": [
+                "idade_anos",
+            ],
+            "categoricas": [
+                "sexo_categoria",
+            ],
+            "engenharia": {
+                "entradas": [
+                    "nu_idade_n",
+                    "tp_idade",
+                    "cs_sexo",
+                    "dt_sin_pri",
+                    "dt_interna",
+                ],
+                "derivadas": [
+                    "idade_anos",
+                    "sexo_categoria",
+                ],
+            },
+        },
+        "temporal": temporal_cfg,
+    }
+
+    artefato_cfg = {
+        "config": config_sintetica,
+        "features_cfg": config_sintetica["features"],
+        "feature_columns": [
+            "idade_anos",
+            "sexo_categoria",
+        ],
+        "numeric_columns": [
+            "idade_anos",
+        ],
+        "categorical_columns": [
+            "sexo_categoria",
+        ],
+        "target_cfg": config_sintetica["target"],
+        "target_column": "alvo_obito_srag",
+        "source_target_column": "evolucao",
+        "temporal_cfg": temporal_cfg,
+        "partition_column": "particao",
+        "seed": 42,
+    }
+
+    def fake_load_cohort(
+        root: Path,
+        *,
+        kind: str,
+        columns: list[str] | None = None,
+        **_kwargs: Any,
+    ) -> tuple[pd.DataFrame, CohortSource]:
+        assert root == tmp_path.resolve()
+        assert kind == "final"
+
+        if columns is None:
+            selected = frame_sintetico.copy()
+        else:
+            selected = frame_sintetico.loc[:, columns].copy()
+
+        return selected, source
+
+    def fake_criar_particao_mestra(
+        frame: pd.DataFrame,
+        *,
+        temporal_cfg: dict[str, Any],
+        group_column: str,
+        year_column: str,
+        target_column: str,
+        region_column: str | None,
+        partition_column: str,
+    ) -> tuple[pd.DataFrame, dict[str, Any]]:
+        assert temporal_cfg == artefato_cfg["temporal_cfg"]
+        assert group_column == "group_id"
+        assert year_column == "ano_internacao"
+        assert target_column == "alvo_obito_srag"
+        assert region_column == "regiao_residencia"
+
+        out = frame.copy()
+        out[partition_column] = "exploracao"
+
+        pandemic_mask = out[year_column].isin([2020, 2021, 2022])
+        out.loc[pandemic_mask, partition_column] = "test_pandemic"
+
+        shared_mask = out[year_column].isin(
+            [2019, 2023, 2024, 2025]
+        )
+        shared_blocks = [
+            "train_ref",
+            "val_tune",
+            "val_cal",
+            "val_meas",
+            "test_ref",
+        ]
+
+        shared_index = out.index[shared_mask]
+        assignment = [
+            shared_blocks[position % len(shared_blocks)]
+            for position in range(len(shared_index))
+        ]
+        out.loc[shared_index, partition_column] = assignment
+
+        blocks_manifest = {}
+        for block in [
+            "train_ref",
+            "val_tune",
+            "val_cal",
+            "val_meas",
+            "test_ref",
+            "test_pandemic",
+            "exploracao",
+        ]:
+            subset = out.loc[out[partition_column].eq(block)]
+            blocks_manifest[block] = {
+                "n_linhas": int(len(subset)),
+                "n_grupos": int(
+                    subset[group_column].nunique()
+                ),
+            }
+
+        return out, {
+            "metodo": "particao_sintetica_deterministica",
+            "seed": 42,
+            "partition_column": partition_column,
+            "blocos": blocks_manifest,
+        }
+
+    monkeypatch.setattr(
+        sa,
+        "_configuracao_artefato",
+        lambda: artefato_cfg,
+    )
+    monkeypatch.setattr(
+        sa,
+        "load_cohort",
+        fake_load_cohort,
+    )
+    monkeypatch.setattr(
+        sa,
+        "criar_particao_mestra",
+        fake_criar_particao_mestra,
+    )
+    monkeypatch.setattr(
+        sa.C,
+        "supervised_yaml_sha256",
+        lambda: "hash-configuracao-sintetica",
+    )
+
+    resultado = sa.gerar_artefato_supervisionado(
+        tmp_path,
+        cohort_kind="final",
+        exportar_particao=True,
+        overwrite=False,
+    )
+
+    analytical = tmp_path / "data" / "analytical"
+    dataset_path = analytical / DATASET_NAME
+    manifest_path = analytical / MANIFEST_NAME
+    partition_path = analytical / "partitions_master.parquet"
+    partition_manifest_path = (
+        analytical / "manifesto_particao.json"
+    )
+
+    assert dataset_path.is_file()
+    assert manifest_path.is_file()
+    assert partition_path.is_file()
+    assert partition_manifest_path.is_file()
+
+    dataset = pd.read_parquet(dataset_path)
+    partitions = pd.read_parquet(partition_path)
+
+    manifest = json.loads(
+        manifest_path.read_text(encoding="utf-8")
+    )
+    partition_manifest = json.loads(
+        partition_manifest_path.read_text(encoding="utf-8")
+    )
+
+    assert {
+        "id_registro",
+        "group_id",
+        "regiao_residencia",
+        "alvo_obito_srag",
+        "particao",
+    }.issubset(dataset.columns)
+
+    assert {
+        "id_registro",
+        "group_id",
+        "ano_internacao",
+        "alvo_obito_srag",
+        "particao",
+    }.issubset(partitions.columns)
+
+    assert manifest["cohort_kind"] == "final"
+    assert manifest["test_opened"] is False
+    assert manifest["dataset_sha256"] == sha256_file(dataset_path)
+
+    assert (
+        partition_manifest["partition_sha256"]
+        == sha256_file(partition_path)
+    )
+
+    assert resultado["cohort_kind"] == "final"
+    assert resultado["test_opened"] is False
+    assert resultado["rows_loaded"] == len(frame_sintetico)
+    assert resultado["rows_quarantined"] == 2
+    assert resultado["groups_quarantined"] == 1
+    assert resultado["rows_modelable"] == 35
+
+    assert not any(
+        isinstance(value, pd.DataFrame)
+        for value in resultado.values()
+    )
+
+    group_block_counts = (
+        partitions.groupby("group_id", observed=True)["particao"]
+        .nunique()
+    )
+    assert int((group_block_counts > 1).sum()) == 0
+
+    conflict_group = base.loc[0, "nu_notific"]
+    assert conflict_group not in set(partitions["group_id"])
+
+    assert set(dataset["particao"]) == {
+        "train_ref",
+        "val_tune",
+        "val_cal",
+        "val_meas",
+        "test_ref",
+        "test_pandemic",
+    }
+
+    assert "exploracao" not in set(dataset["particao"])
+    assert "exploracao" in set(partitions["particao"])
+
+    with pytest.raises(FileExistsError):
+        sa.gerar_artefato_supervisionado(
+            tmp_path,
+            cohort_kind="final",
+            exportar_particao=True,
+            overwrite=False,
+        )
+
+
+def test_gerar_artefato_supervisionado_rejeita_coorte_nao_final(
+    tmp_path: Path,
+) -> None:
+    """A gera??o definitiva rejeita fontes provis?rias antes da leitura."""
+    from src.data.supervised_artifact import (
+        gerar_artefato_supervisionado,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="cohort_kind='final'",
+    ):
+        gerar_artefato_supervisionado(
+            tmp_path,
+            cohort_kind="provisional",
+        )

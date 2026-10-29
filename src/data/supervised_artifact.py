@@ -27,6 +27,9 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from src.data.cohort_source import load_cohort
+from src.data.split import criar_group_id, criar_particao_mestra
+from src.features.engineering import montar_features, regiao_residencia
 from src.utils import config as C
 from src.utils.config import GatePendenteError, exigir_gate
 from src.utils.hashing import sha256_file
@@ -40,6 +43,7 @@ __all__ = [
     "MANIFEST_NAME",
     "SCHEMA_VERSION",
     "GatePendenteError",
+    "gerar_artefato_supervisionado",
     "holdout_partition",
     "load_supervised_artifact",
     "persist_supervised_artifact",
@@ -444,6 +448,433 @@ def persist_supervised_artifact(
         encoding="utf-8",
     )
     return dataset_path, manifest_path
+
+
+
+def _configuracao_artefato() -> dict[str, Any]:
+    """Resolve o contrato ativo do artefato a partir do supervised.yaml."""
+    config = C.carregar_supervised()
+
+    features_cfg = config.get("features") or {}
+    feature_columns = list(
+        features_cfg.get("final")
+        or [
+            *features_cfg.get("numericas", []),
+            *features_cfg.get("categoricas", []),
+        ]
+    )
+    numeric_columns = list(features_cfg.get("numericas") or [])
+    categorical_columns = list(features_cfg.get("categoricas") or [])
+
+    if not feature_columns:
+        raise ValueError("Nenhuma feature definida em features.final.")
+
+    target_cfg = config.get("target") or {}
+    target_column = str(
+        target_cfg.get("coluna_modelagem") or "alvo_obito_srag"
+    )
+    source_target_column = str(
+        target_cfg.get("coluna") or target_column
+    )
+
+    temporal_cfg = config.get("temporal") or {}
+    partition_column = str(
+        temporal_cfg.get("coluna_particao") or "particao"
+    )
+    seed = int(temporal_cfg.get("seed", config.get("seed", 42)))
+
+    return {
+        "config": config,
+        "features_cfg": features_cfg,
+        "feature_columns": feature_columns,
+        "numeric_columns": numeric_columns,
+        "categorical_columns": categorical_columns,
+        "target_cfg": target_cfg,
+        "target_column": target_column,
+        "source_target_column": source_target_column,
+        "temporal_cfg": temporal_cfg,
+        "partition_column": partition_column,
+        "seed": seed,
+    }
+
+
+def _colunas_fisicas_necessarias(
+    artefato_cfg: Mapping[str, Any],
+) -> list[str]:
+    """Lista colunas f?sicas necess?rias antes da engenharia."""
+    features_cfg = artefato_cfg["features_cfg"]
+    engenharia_cfg = features_cfg.get("engenharia") or {}
+
+    derivadas = set(engenharia_cfg.get("derivadas") or [])
+    entradas = set(engenharia_cfg.get("entradas") or [])
+
+    feature_columns = set(artefato_cfg["feature_columns"])
+    features_fisicas = feature_columns - derivadas
+
+    obrigatorias = {
+        "id_registro",
+        "nu_notific",
+        "sg_uf",
+        artefato_cfg["source_target_column"],
+    }
+
+    return sorted(features_fisicas | entradas | obrigatorias)
+
+
+def _construir_alvo(
+    frame: pd.DataFrame,
+    *,
+    source_column: str,
+    target_column: str,
+    target_cfg: Mapping[str, Any],
+) -> pd.DataFrame:
+    """Constr?i o alvo bin?rio de acordo com a configura??o ativa."""
+    if target_column in frame.columns:
+        target = pd.to_numeric(frame[target_column], errors="coerce")
+    else:
+        if source_column not in frame.columns:
+            raise KeyError(
+                "N?o foi poss?vel construir o alvo: "
+                f"coluna fonte {source_column!r} ausente."
+            )
+
+        source = pd.to_numeric(frame[source_column], errors="coerce")
+        positivos = {
+            float(valor) for valor in target_cfg.get("positivos", [])
+        }
+        negativos = {
+            float(valor) for valor in target_cfg.get("negativos", [])
+        }
+
+        if not positivos or not negativos:
+            raise ValueError(
+                "target.positivos e target.negativos devem estar preenchidos."
+            )
+
+        target = pd.Series(pd.NA, index=frame.index, dtype="Int8")
+        target.loc[source.isin(positivos)] = 1
+        target.loc[source.isin(negativos)] = 0
+
+    out = frame.copy(deep=False)
+    out[target_column] = pd.to_numeric(target, errors="coerce").astype("Int8")
+
+    descartar_outros = bool(target_cfg.get("descartar_outros", True))
+    if descartar_outros:
+        out = out.loc[out[target_column].notna()].copy(deep=False)
+    elif out[target_column].isna().any():
+        raise ValueError(
+            f"Alvo {target_column!r} cont?m valores n?o classificados."
+        )
+
+    return out
+
+
+def _periodo_do_ano(
+    anos: pd.Series,
+    temporal_cfg: Mapping[str, Any],
+) -> pd.Series:
+    """Classifica anos em compartilhado, pand?mico ou explora??o."""
+    blocos = temporal_cfg.get("blocos") or {}
+
+    anos_pandemia = {
+        int(ano)
+        for ano in (blocos.get("test_pandemic") or {}).get("anos", [])
+    }
+    anos_compartilhados = {
+        int(ano)
+        for nome, bloco in blocos.items()
+        if nome != "test_pandemic"
+        for ano in (bloco or {}).get("anos", [])
+    }
+
+    ano_numeric = pd.to_numeric(anos, errors="coerce")
+    periodo = pd.Series("exploracao", index=anos.index, dtype="string")
+    periodo.loc[ano_numeric.isin(anos_compartilhados)] = "compartilhado"
+    periodo.loc[ano_numeric.isin(anos_pandemia)] = "pandemico"
+    periodo.loc[ano_numeric.isna()] = "ano_ausente"
+    return periodo
+
+
+def _separar_grupos_temporais_incompativeis(
+    frame: pd.DataFrame,
+    *,
+    temporal_cfg: Mapping[str, Any],
+    group_column: str,
+    year_column: str,
+    target_column: str,
+    region_column: str | None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Separa grupos que n?o podem receber uma ?nica parti??o-mestre.
+
+    Um grupo ? incompat?vel quando suas linhas pertencem a categorias
+    temporais diferentes ou, dentro dos anos compartilhados, formam mais
+    de um estrato de ano, alvo e regi?o. A separa??o ocorre antes da
+    parti??o para impedir que registros do mesmo grupo sejam distribu?dos
+    entre blocos diferentes.
+    """
+    required = {group_column, year_column, target_column}
+    if region_column:
+        required.add(region_column)
+
+    missing = sorted(required - set(frame.columns))
+    if missing:
+        raise KeyError(
+            "Colunas ausentes para auditar grupos temporais: "
+            f"{missing}"
+        )
+
+    periodo = _periodo_do_ano(frame[year_column], temporal_cfg)
+
+    estrato = pd.DataFrame(
+        {
+            "periodo": periodo,
+            "ano": pd.to_numeric(
+                frame[year_column],
+                errors="coerce",
+            ).astype("Int64"),
+            "alvo": pd.to_numeric(
+                frame[target_column],
+                errors="coerce",
+            ).astype("Int8"),
+        },
+        index=frame.index,
+    )
+
+    if region_column:
+        estrato["regiao"] = (
+            frame[region_column]
+            .astype("string")
+            .fillna("AUSENTE")
+        )
+
+    assinatura = estrato.astype("string").agg("|".join, axis=1)
+    n_estratos = assinatura.groupby(
+        frame[group_column],
+        observed=True,
+    ).nunique()
+
+    grupos_incompativeis = n_estratos[n_estratos > 1].index
+    mascara = frame[group_column].isin(grupos_incompativeis)
+
+    quarentena = frame.loc[mascara].copy()
+    modelavel = frame.loc[~mascara].copy()
+
+    return modelavel, quarentena
+
+
+def _escrever_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, default=str),
+        encoding="utf-8",
+    )
+
+
+def gerar_artefato_supervisionado(
+    root: Path,
+    *,
+    cohort_kind: str = "final",
+    exportar_particao: bool = True,
+    overwrite: bool = False,
+) -> dict[str, Any]:
+    """Gera e persiste o artefato supervisionado can?nico.
+
+    A fun??o aceita exclusivamente a coorte final, aplica a engenharia
+    central, cria identificadores est?veis, separa grupos temporalmente
+    incompat?veis, materializa a parti??o-mestre e persiste dataset e
+    manifestos sem expor os blocos de teste para modelagem.
+    """
+    root = Path(root).resolve()
+
+    kind_normalizado = str(cohort_kind).strip().lower()
+    if kind_normalizado != "final":
+        raise ValueError(
+            "A gera??o definitiva exige cohort_kind='final'. "
+            f"Recebido: {cohort_kind!r}."
+        )
+
+    artefato_cfg = _configuracao_artefato()
+    temporal_cfg = artefato_cfg["temporal_cfg"]
+    target_column = artefato_cfg["target_column"]
+    source_target_column = artefato_cfg["source_target_column"]
+    partition_column = artefato_cfg["partition_column"]
+    seed = artefato_cfg["seed"]
+
+    colunas_fisicas = _colunas_fisicas_necessarias(artefato_cfg)
+    frame, source = load_cohort(
+        root,
+        kind="final",
+        columns=colunas_fisicas,
+    )
+
+    if source.kind != "final":
+        raise RuntimeError(
+            f"Fonte resolvida como {source.kind!r}; esperado 'final'."
+        )
+
+    frame = montar_features(frame)
+
+    if "sg_uf" not in frame.columns:
+        raise KeyError("Coluna obrigat?ria ausente: 'sg_uf'.")
+
+    frame["regiao_residencia"] = regiao_residencia(frame["sg_uf"])
+    frame["group_id"] = criar_group_id(frame)
+
+    frame = _construir_alvo(
+        frame,
+        source_column=source_target_column,
+        target_column=target_column,
+        target_cfg=artefato_cfg["target_cfg"],
+    )
+
+    if "ano_internacao" not in frame.columns:
+        raise KeyError(
+            "montar_features n?o produziu a coluna 'ano_internacao'."
+        )
+
+    frame_modelavel, quarentena = _separar_grupos_temporais_incompativeis(
+        frame,
+        temporal_cfg=temporal_cfg,
+        group_column="group_id",
+        year_column="ano_internacao",
+        target_column=target_column,
+        region_column="regiao_residencia",
+    )
+
+    particionado, manifesto_particao = criar_particao_mestra(
+        frame_modelavel,
+        temporal_cfg=dict(temporal_cfg),
+        group_column="group_id",
+        year_column="ano_internacao",
+        target_column=target_column,
+        region_column="regiao_residencia",
+        partition_column=partition_column,
+    )
+
+    modelavel = particionado.loc[
+        particionado[partition_column].astype(str) != "exploracao"
+    ].copy()
+
+    feature_columns = list(artefato_cfg["feature_columns"])
+    numeric_columns = list(artefato_cfg["numeric_columns"])
+    categorical_columns = list(artefato_cfg["categorical_columns"])
+
+    audit_candidates = [
+        "id_registro",
+        "nu_notific",
+        "group_id",
+        "ano_internacao",
+        "sg_uf",
+        "regiao_residencia",
+        "faixa_etaria",
+        "sexo_categoria",
+    ]
+    audit_columns = [
+        coluna
+        for coluna in audit_candidates
+        if coluna in modelavel.columns
+        and coluna not in feature_columns
+        and coluna not in {target_column, partition_column}
+    ]
+
+    output_columns = list(
+        dict.fromkeys(
+            [
+                *feature_columns,
+                *audit_columns,
+                target_column,
+                partition_column,
+            ]
+        )
+    )
+    dataset_frame = modelavel[output_columns].copy()
+
+    dataset_path, manifest_path = persist_supervised_artifact(
+        dataset_frame,
+        root=root,
+        source=source.to_dict(),
+        feature_columns=feature_columns,
+        numeric_columns=numeric_columns,
+        categorical_columns=categorical_columns,
+        audit_columns=audit_columns,
+        target_column=target_column,
+        partition_column=partition_column,
+        cohort_kind="final",
+        seed=seed,
+        overwrite=overwrite,
+    )
+
+    analytical_dir = root / "data" / "analytical"
+    partition_path = analytical_dir / "partitions_master.parquet"
+    partition_manifest_path = analytical_dir / "manifesto_particao.json"
+
+    if exportar_particao:
+        if not overwrite and (
+            partition_path.exists() or partition_manifest_path.exists()
+        ):
+            raise FileExistsError(
+                "Parti??o-mestre j? existe. Use overwrite=True somente "
+                "em reconstru??o deliberada."
+            )
+
+        partition_columns = [
+            coluna
+            for coluna in [
+                "id_registro",
+                "group_id",
+                "ano_internacao",
+                target_column,
+                partition_column,
+            ]
+            if coluna in particionado.columns
+        ]
+        particionado[partition_columns].to_parquet(
+            partition_path,
+            index=False,
+        )
+
+        manifesto_particao = {
+            **manifesto_particao,
+            "source": source.to_dict(),
+            "rows_before_quarantine": int(len(frame)),
+            "rows_quarantined": int(len(quarentena)),
+            "groups_quarantined": int(
+                quarentena["group_id"].nunique()
+            ) if not quarentena.empty else 0,
+            "rows_partitioned": int(len(particionado)),
+            "rows_modelable": int(len(modelavel)),
+            "partition_path": str(partition_path),
+            "partition_sha256": sha256_file(partition_path),
+            "configuration_sha256": C.supervised_yaml_sha256(),
+            }
+        _escrever_json(partition_manifest_path, manifesto_particao)
+
+    return {
+        "dataset_path": str(dataset_path),
+        "manifest_path": str(manifest_path),
+        "partition_path": (
+            str(partition_path) if exportar_particao else None
+        ),
+        "partition_manifest_path": (
+            str(partition_manifest_path) if exportar_particao else None
+        ),
+        "cohort_kind": source.kind,
+        "source_path": source.path,
+        "source_sha256": source.sha256,
+        "dataset_sha256": sha256_file(dataset_path),
+        "rows_loaded": int(len(frame)),
+        "rows_quarantined": int(len(quarentena)),
+        "groups_quarantined": int(
+            quarentena["group_id"].nunique()
+        ) if not quarentena.empty else 0,
+        "rows_modelable": int(len(modelavel)),
+        "partition_counts": {
+            str(nome): int(quantidade)
+            for nome, quantidade in modelavel[
+                partition_column
+            ].value_counts().sort_index().items()
+        },
+        "test_opened": False,
+    }
 
 
 # ---------------------------------------------------------------------------

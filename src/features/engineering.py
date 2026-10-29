@@ -1,12 +1,11 @@
 """Engenharia de atributos do pipeline supervisionado.
 
-Centraliza as derivadas aplicadas pela Pessoa A / Notebook 03. Cada função
-transforma colunas disponíveis na admissão hospitalar em atributos prontos
-para o modelo — nenhuma usa informação posterior ao desfecho.
+Centraliza as transformações aplicadas às variáveis disponíveis na admissão
+hospitalar. Nenhuma função utiliza informação registrada após o desfecho.
 
-As regras (faixas etárias, política de intervalos, sazonalidade) vêm de
-``features.engenharia`` no ``configs/supervised.yaml``, com defaults locais
-quando o YAML não define nada.
+As regras de faixas etárias, intervalo temporal e sazonalidade vêm de
+``features.engenharia`` em ``configs/supervised.yaml``, com valores padrão
+locais quando a configuração não define uma regra.
 """
 
 from __future__ import annotations

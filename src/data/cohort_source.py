@@ -32,7 +32,7 @@ from src.utils.hashing import sha256_file
 CohortKind = Literal["provisional", "final", "auto"]
 
 _ENV_VAR: str = "SRAG_COHORT_KIND"
-_DEFAULT_KIND: str = "provisional"
+_DEFAULT_KIND: str = "final"
 _VALID_KINDS: frozenset[str] = frozenset(get_args(CohortKind))
 
 _ANALYTICAL_DIR = Path("data") / "analytical"
