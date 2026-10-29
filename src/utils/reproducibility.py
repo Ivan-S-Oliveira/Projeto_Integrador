@@ -400,3 +400,91 @@ class Run:
             dataset_sha256=_resolver_dataset_sha256(self.dataset_sha256, self.dataset_path),
         )
         return False
+    
+    def buscar_runs(
+    *,
+    modelo: str | None = None,
+    dataset_sha256: str | None = None,
+    status: Status | None = None,
+    output_dir: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Filtra execuções por critérios, ordenadas por run_id decrescente.
+
+    Parâmetros
+    ----------
+    modelo:
+        Nome do modelo (match exato, case-insensitive).
+    dataset_sha256:
+        SHA-256 do dataset de entrada.
+    status:
+        ``"success"`` ou ``"error"``.
+    output_dir:
+        Diretório raiz das execuções (default: ``RUNS_DIR``).
+
+    Retorna
+    -------
+    Lista de metadados (dicts) das execuções que casam com os filtros.
+    """
+    runs = listar_runs(output_dir=output_dir)
+
+    if modelo is not None:
+        modelo_lower = modelo.lower()
+        runs = [r for r in runs if str(r.get("modelo", "")).lower() == modelo_lower]
+
+    if dataset_sha256 is not None:
+        runs = [r for r in runs if r.get("dataset_sha256") == dataset_sha256]
+
+    if status is not None:
+        runs = [r for r in runs if r.get("status") == status]
+
+    return runs
+
+
+def localizar_artefato(
+    run_id: str,
+    nome_artefato: str,
+    *,
+    output_dir: Path | None = None,
+) -> Path | None:
+    """Busca um arquivo pelo nome em uma execução específica.
+
+    Varre o diretório da execução e subdiretórios, procurando o arquivo
+    pelo sufixo. Retorna ``None`` se não encontrar.
+    """
+    base = Path(output_dir) if output_dir else RUNS_DIR
+    pasta_run = base / run_id
+
+    if not pasta_run.is_dir():
+        return None
+
+    alvo = Path(nome_artefato).name
+    for caminho in pasta_run.rglob(alvo):
+        if caminho.is_file():
+            return caminho
+    return None
+
+
+def ultimo_run_com_artefato(
+    nome_artefato: str,
+    *,
+    modelo: str | None = None,
+    dataset_sha256: str | None = None,
+    output_dir: Path | None = None,
+) -> tuple[dict[str, Any], Path] | None:
+    """Localiza a execução mais recente que possui o artefato e o caminho dele.
+
+    Retorna ``(metadata, caminho_artefato)`` ou ``None``.
+    """
+    runs = buscar_runs(
+        modelo=modelo,
+        dataset_sha256=dataset_sha256,
+        status="success",
+        output_dir=output_dir,
+    )
+
+    for meta in runs:
+        run_id = str(meta.get("run_id"))
+        caminho = localizar_artefato(run_id, nome_artefato, output_dir=output_dir)
+        if caminho is not None:
+            return meta, caminho
+    return None
