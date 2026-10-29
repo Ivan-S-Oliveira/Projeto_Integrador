@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-from functools import lru_cache
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -114,12 +114,118 @@ def _get_nested(mapping: Any, *chaves: str, default: Any = None) -> Any:
     return atual
 
 
-@lru_cache(maxsize=1)
-def carregar_supervised() -> dict[str, Any]:
-    """Lê ``configs/supervised.yaml`` e devolve o dict parseado (cacheado).
+# ---------------------------------------------------------------------------
+# Leitura do YAML com validação de chave duplicada e cache por hash
+# ---------------------------------------------------------------------------
 
-    Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError`` se o
-    YAML não existir e ``ValueError`` se a raiz não for mapping.
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """Carregador YAML que rejeita chaves duplicadas.
+
+    ``yaml.safe_load`` aceita duplicatas silenciosamente (a última
+    ocorrência vence). Este carregador levanta ``ValueError`` com o
+    nome e a linha da chave duplicada, para o erro aparecer no arquivo
+    certo em vez de virar comportamento estranho depois.
+    """
+
+
+def _construct_unique_mapping(
+    loader: _UniqueKeyLoader,
+    node: yaml.MappingNode,
+    deep: bool = False,
+) -> dict[Any, Any]:
+    """Constrói um mapeamento YAML e falha em chave duplicada.
+
+    Chaves que não são hasháveis são ignoradas aqui; o PyYAML reporta
+    o erro dele ao montar o ``dict`` final.
+    """
+    vistos: set[Any] = set()
+
+    for key_node, _value_node in node.value:
+        chave = loader.construct_object(key_node, deep=False)
+        try:
+            ja_existe = chave in vistos
+        except TypeError:
+            # Chave não-hashável: o PyYAML vai falhar em construct_mapping.
+            continue
+
+        if ja_existe:
+            linha = key_node.start_mark.line + 1
+            raise ValueError(
+                f"Chave duplicada em {SUPERVISED_YAML}: "
+                f"{chave!r} (linha {linha})."
+            )
+        vistos.add(chave)
+
+    return loader.construct_mapping(node, deep=deep)
+
+
+_UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_unique_mapping,
+)
+
+
+@dataclass
+class _SupervisedCache:
+    """Estado do cache do ``supervised.yaml``."""
+
+    file_hash: str | None = None
+    data: dict[str, Any] | None = None
+
+    def invalidate(self) -> None:
+        self.file_hash = None
+        self.data = None
+
+    def is_valid_for(self, file_hash: str) -> bool:
+        return self.file_hash == file_hash and self.data is not None
+
+
+_supervised_cache = _SupervisedCache()
+
+
+def _ler_yaml_supervisionado(raw: bytes) -> dict[str, Any]:
+    """Decodifica, interpola ``${VAR}`` e faz o parse do YAML.
+
+    Recebe os bytes crus (já lidos por ``carregar_supervised``) para
+    que o arquivo não seja lido duas vezes.
+    """
+    try:
+        texto = _interpolar_env(raw.decode("utf-8-sig"))
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            f"{SUPERVISED_YAML} não está em UTF-8 válido: {exc}"
+        ) from exc
+
+    try:
+        dados = yaml.load(texto, Loader=_UniqueKeyLoader) or {}
+    except yaml.YAMLError as exc:
+        raise ValueError(
+            f"{SUPERVISED_YAML} não pôde ser interpretado: {exc}"
+        ) from exc
+
+    if not isinstance(dados, dict):
+        raise ValueError(
+            f"{SUPERVISED_YAML} deve conter um mapeamento (dict) na raiz, "
+            f"mas veio {type(dados).__name__}."
+        )
+    return dados
+
+
+def carregar_supervised() -> dict[str, Any]:
+    """Lê ``configs/supervised.yaml`` e devolve o dict parseado.
+
+    Comportamento em relação à versão anterior:
+
+    - **Sem ``lru_cache``**: o cache é indexado pelo SHA-256 do
+      conteúdo. Alterar o YAML passa a valer na próxima chamada, sem
+      reiniciar o kernel do notebook.
+    - **Chave duplicada falha alto**: ``_UniqueKeyLoader`` levanta
+      ``ValueError`` apontando a linha, em vez de deixar a última
+      silenciosamente vencer.
+    - ``recarregar_supervised()`` força a releitura do disco.
+
+    Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError``
+    se o YAML não existir e ``ValueError`` se a raiz não for mapping.
     """
     if not SUPERVISED_YAML.exists():
         raise FileNotFoundError(
@@ -128,15 +234,33 @@ def carregar_supervised() -> dict[str, Any]:
             f"ou ajuste CONFIGS_DIR / SUPERVISED_YAML em config.py."
         )
 
-    texto = _interpolar_env(SUPERVISED_YAML.read_text(encoding="utf-8"))
-    dados = yaml.safe_load(texto) or {}
+    try:
+        raw = SUPERVISED_YAML.read_bytes()
+    except OSError as exc:
+        raise OSError(
+            f"Falha ao ler {SUPERVISED_YAML}: {exc}"
+        ) from exc
 
-    if not isinstance(dados, dict):
-        raise ValueError(
-            f"{SUPERVISED_YAML} deve conter um mapeamento (dict) na raiz, "
-            f"mas veio {type(dados).__name__}."
-        )
+    file_hash = hashlib.sha256(raw).hexdigest()
+
+    if _supervised_cache.is_valid_for(file_hash):
+        return _supervised_cache.data  # type: ignore[return-value]
+
+    dados = _ler_yaml_supervisionado(raw)
+    _supervised_cache.file_hash = file_hash
+    _supervised_cache.data = dados
     return dados
+
+
+def recarregar_supervised() -> dict[str, Any]:
+    """Descarta o cache e relê o YAML do disco.
+
+    Use quando for necessário garantir que a configuração lida é a do
+    disco neste instante (ex.: depois de aprovar um gate) e não apenas
+    a versão em memória.
+    """
+    _supervised_cache.invalidate()
+    return carregar_supervised()
 
 
 def supervised_yaml_sha256() -> str | None:
