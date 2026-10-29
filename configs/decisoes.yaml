@@ -5,9 +5,9 @@ status_decisoes:
     responsavel: time_do_projeto
     data: '2026-10-18'
   coorte_estrita:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-22'
   alvo:
     status: aprovada
     responsavel: time_do_projeto
@@ -21,17 +21,17 @@ status_decisoes:
     responsavel: time_do_projeto
     data: '2026-10-18'
   acoes_inconsistencias_datas:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-22'
   variaveis_proibidas:
     status: aprovada
     responsavel: time_do_projeto
     data: '2026-10-18'
   variaveis_condicionais:
-    status: proposta
-    responsavel: a_definir
-    data: null
+    status: aprovada
+    responsavel: time_do_projeto
+    data: '2026-10-22'
   maturidade_evolucao:
     status: proposta
     responsavel: a_definir
@@ -271,7 +271,7 @@ decision_min_pr_auc_gain: 0.01
 decision_max_cv_ratio: 0.1
 exclusion_sample_rows: 50
 dataset_analitico:
-  path: data/analytical/dataset_supervisionado.parquet
+  path: data/analytical/populacao_analitica_pessoa_a.parquet
 experimentos_split:
   versao: temporal_v1
   seed: 42
@@ -385,11 +385,14 @@ derivadas:
     - 60-69
     - 70-79
     - 80+
+  # A coorte final_cohort_v1 (D_COORTE_006 e 007) exclui registros com
+  # intervalo negativo ou acima de 60 dias. Este bloco é histórico e
+  # não é aplicado novamente na coorte já filtrada.
 intervalo_sintomas_internacao:
   limite_sinalizacao_dias: 60
-  politica_acima_limite: manter_com_flag
-  politica_intervalo_negativo: auditar_nosocomial_antes_de_excluir
-  exclusao_automatica: false
+  politica_acima_limite: excluir_na_coorte_final_v1
+  politica_intervalo_negativo: excluir_na_coorte_final_v1
+  exclusao_automatica: true
 duplicidades:
   remover_duplicidades_exatas: true
   repeticoes_nao_identicas: manter_sinalizar_e_agrupar

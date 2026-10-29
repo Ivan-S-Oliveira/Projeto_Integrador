@@ -1055,7 +1055,7 @@ deve ser consultado nas fichas.
 
 ### 29.5 24/10 · Orientação
 
-- Pontos: ficha #95.
+- Pontos: ficha #95. Uma segunda conversa, com outro professor, não foi transcrita. Dela veio a cobrança de testar o não supervisionado depois de passar tudo o que fosse possível por one-hot.
 
 ### 29.6 24/10 · Indicadores de ausência desativados no supervisionado
 
