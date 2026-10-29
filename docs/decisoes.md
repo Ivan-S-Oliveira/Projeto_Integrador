@@ -1529,3 +1529,23 @@ deve ser consultado nas fichas.
      A tabela 2 (mortalidade por valor de `fator_risc`, por ano) mostra isso.
   5. Afeta o #54 (linha "P com comorbidades recodificadas"), o #52 e o #136
      (não supervisionado).
+
+
+### 29.25 29/10 · Reversão da mudança não registrada sobre 2019
+
+- **Decisão:** 2019 permanece no desenvolvimento (`train_ref`, `val_tune`,
+  `test_ref`) e **não** entra em `test_pandemic`. Os YAMLs
+  `configs/supervised.yaml` e `configs/decisoes.yaml` foram revertidos
+  para o estado descrito em §5, §21 e §28.
+- **Motivo:** A mudança que colocava 2019 no `test_pandemic` foi feita
+  nos YAMLs sem registro no `decisoes.md` (§29.13, item 0). Como toda a
+  documentação oficial, os testes (`tests/test_split.py`) e as saídas
+  salvas do `B_07` pressupõem 2019 no desenvolvimento, a alteração é
+  tratada como erro de configuração, não como decisão.
+- **Impacto:** O card #50 mantém a leitura original: o modelo pode
+  aprender o "marcador de ano" com 2019 no treino, e a decisão sobre
+  retirar `perd_olft`, `perd_pala` e `fadiga` segue o critério combinado.
+- **Implementado em:** `configs/supervised.yaml` (seção `periodo` e
+  `temporal.blocos`), `configs/decisoes.yaml` (`dev_years`,
+  `pandemic_test_years`), e esta entrada.
+- **Substitui:** §29.13, item 0.

@@ -497,13 +497,16 @@ gates:
     data: '2026-10-22'
   G2_janela_temporal:
     descricao: >-
-      Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referencia nos
+      Desenvolvimento em 2019, 2023, 2024 e 2025; teste de referência nos
       mesmos anos com grupos nao vistos; 2020 a 2022 apenas no teste pandemico;
       2026 apenas como exploracao posterior. Particao mestra deterministica
       por grupo, seed 42.
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-18'
+    # Revisado em 29/10: revertida a mudança não registrada que colocava
+    # 2019 no test_pandemic (ver decisoes.md §29.25). Desenho original
+    # reafirmado.
   G4_baseline:
     descricao: Rodar DummyClassifier e registrar as metricas de referencia.
     status: aprovado
