@@ -20,6 +20,8 @@ from src.evaluation.metrics import (
     f1,
     precision,
     recall,
+    average_precision_score,
+    brier_score_loss,
 )
 
 __all__ = [
@@ -111,13 +113,21 @@ def metricas_por_grupo(
     coluna_grupo: str,
     *,
     limiar: float = 0.5,
-    min_n: int = 30,
+    min_n: int = 100,
 ) -> pd.DataFrame:
-    """
+       """
     Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
 
-    Ignora grupos com menos de ``min_n`` amostras (evita métricas instáveis).
-    Colunas: ``grupo, n, taxa_positivos, auc, f1, precision, recall``.
+    Grupos com menos de ``min_n`` amostras são mantidos na tabela com
+    ``suprimido=True`` e métricas probabilísticas vazias (``n`` e
+    ``prevalencia`` continuam preenchidos).
+
+    Grupos com uma classe só (só curas ou só óbitos) devolvem ``pr_auc``,
+    ``roc_auc`` e ``brier`` vazios, sem erro.
+
+    Colunas: ``grupo, n, prevalencia, taxa_positivos, pr_auc,
+    pr_auc_sobre_prev, auc, roc_auc, brier, o_e, f1, precision, recall,
+    suprimido``.
     """
     if coluna_grupo not in df.columns:
         raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
@@ -131,30 +141,77 @@ def metricas_por_grupo(
 
     linhas: list[dict[str, float | str]] = []
 
-    for g in grupos.dropna().unique():
+     for g in grupos.dropna().unique():
         m = (grupos == g).to_numpy()
         n = int(m.sum())
 
-        if n < min_n:
-            continue
-
         y_g    = y[m]
         p_g    = p[m]
+
+        duas_classes = len(np.unique(y_g)) >= 2
+
+        if n < min_n:
+            linhas.append({
+                "grupo":            str(g),
+                "n":                float(n),
+                "prevalencia":      float(y_g.mean()) if n > 0 else np.nan,
+                "taxa_positivos":   float(y_g.mean()) if n > 0 else np.nan,
+                "pr_auc":           np.nan,
+                "pr_auc_sobre_prev":np.nan,
+                "auc":              np.nan,
+                "roc_auc":          np.nan,
+                "brier":            np.nan,
+                "o_e":              np.nan,
+                "f1":               np.nan,
+                "precision":        np.nan,
+                "recall":           np.nan,
+                "suprimido":        True,
+            })
+            continue
+
         y_pred = (p_g >= limiar).astype(int)
 
+        pr_auc = (
+            float(average_precision_score(y_g, p_g))
+            if duas_classes else np.nan
+        )
+        prevalencia = float(y_g.mean()) if n > 0 else np.nan
+        pr_auc_sobre_prev = (
+            pr_auc / prevalencia
+            if not np.isnan(pr_auc) and prevalencia > 0
+            else np.nan
+        )
+        roc_auc = auc(y_g, p_g) if duas_classes else np.nan
+        brier   = (
+            float(brier_score_loss(y_g, p_g))
+            if duas_classes else np.nan
+        )
+        soma_p  = float(p_g.sum())
+        o_e     = (
+            float(y_g.sum()) / soma_p
+            if soma_p > 0 else np.nan
+        )
+
         linhas.append({
-            "grupo":          str(g),
-            "n":              float(n),
-            "taxa_positivos": float(y_g.mean()),
-            "auc":            auc(y_g, p_g) if len(np.unique(y_g)) >= 2 else np.nan,
-            "f1":             f1(y_g, y_pred),
-            "precision":      precision(y_g, y_pred),
-            "recall":         recall(y_g, y_pred),
+            "grupo":            str(g),
+            "n":                float(n),
+            "prevalencia":      prevalencia,
+            "taxa_positivos":   prevalencia,   # alias de compatibilidade
+            "pr_auc":           pr_auc,
+            "pr_auc_sobre_prev":pr_auc_sobre_prev,
+            "auc":              roc_auc,       # alias de compatibilidade
+            "roc_auc":          roc_auc,
+            "brier":            brier,
+            "o_e":              o_e,
+            "f1":               f1(y_g, y_pred),
+            "precision":        precision(y_g, y_pred),
+            "recall":           recall(y_g, y_pred),
+            "suprimido":        False,
         })
 
     return (
         pd.DataFrame(linhas)
-        .sort_values("n", ascending=False)
+        .sort_values(["suprimido", "n"], ascending=[True, False])
         .reset_index(drop=True)
     )
 

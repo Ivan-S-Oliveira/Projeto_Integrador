@@ -156,3 +156,70 @@ def test_top_erros_criterio_invalido() -> None:
     # Valor viola intencionalmente o Literal CriterioTop.
     with pytest.raises(ValueError, match="criterio inválido"):
         top_erros(df, np.array([0, 1]), np.array([0.1, 0.9]), criterio="xxx")  # type: ignore[arg-type]
+        import numpy as np
+import pandas as pd
+
+from src.evaluation.errors import metricas_por_grupo
+
+
+def test_grupo_so_de_curas_devolve_pr_auc_vazia():
+    """Card #? — grupo com uma classe só devolve PR-AUC/Brier vazios, sem erro."""
+    df = pd.DataFrame({"uf": ["SP"] * 200})
+    y_true = np.zeros(200, dtype=np.int8)
+    y_prob = np.full(200, 0.1, dtype=np.float64)
+
+    out = metricas_por_grupo(
+        df, y_true, y_prob, "uf", limiar=0.5, min_n=100,
+    )
+
+    assert len(out) == 1
+    linha = out.iloc[0]
+    assert linha["n"] == 200
+    assert linha["prevalencia"] == 0.0
+    assert pd.isna(linha["pr_auc"])
+    assert pd.isna(linha["pr_auc_sobre_prev"])
+    assert pd.isna(linha["roc_auc"])
+    assert pd.isna(linha["brier"])
+    assert pd.isna(linha["o_e"])
+    assert linha["suprimido"] == False  # noqa: E712
+
+
+def test_grupo_pequeno_e_suprimido_sem_desaparecer():
+    """Card #? — grupo com n < min_n aparece com suprimido=True."""
+    df = pd.DataFrame({"uf": ["SP"] * 50 + ["RJ"] * 200})
+    y_true = np.array([0] * 50 + [0, 1] * 100, dtype=np.int8)
+    y_prob = np.random.default_rng(42).random(250)
+
+    out = metricas_por_grupo(
+        df, y_true, y_prob, "uf", limiar=0.5, min_n=100,
+    )
+
+    assert set(out["grupo"]) == {"SP", "RJ"}
+    sp = out.set_index("grupo").loc["SP"]
+    rj = out.set_index("grupo").loc["RJ"]
+    assert sp["suprimido"] == True  # noqa: E712
+    assert pd.isna(sp["pr_auc"])
+    assert rj["suprimido"] == False  # noqa: E712
+    assert not pd.isna(rj["pr_auc"])
+    assert not pd.isna(rj["brier"])
+    assert not pd.isna(rj["o_e"])
+
+
+def test_duas_classes_calcula_tudo():
+    """Sanidade — grupo com duas classes preenche todas as métricas."""
+    df = pd.DataFrame({"uf": ["SP"] * 200})
+    rng = np.random.default_rng(42)
+    y_true = rng.integers(0, 2, size=200, dtype=np.int8)
+    y_prob = rng.random(200)
+
+    out = metricas_por_grupo(
+        df, y_true, y_prob, "uf", limiar=0.5, min_n=100,
+    )
+
+    linha = out.iloc[0]
+    assert not pd.isna(linha["pr_auc"])
+    assert not pd.isna(linha["pr_auc_sobre_prev"])
+    assert not pd.isna(linha["roc_auc"])
+    assert not pd.isna(linha["brier"])
+    assert not pd.isna(linha["o_e"])
+    assert linha["suprimido"] == False  # noqa: E712
