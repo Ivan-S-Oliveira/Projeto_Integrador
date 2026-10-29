@@ -248,6 +248,7 @@ temporal:
       influencia_decisoes: true
     val_cal:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -256,6 +257,7 @@ temporal:
       influencia_decisoes: true
     val_meas:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -263,7 +265,8 @@ temporal:
       papel: confirmacao_intermediaria_pre_teste
       influencia_decisoes: false
     test_ref:
-      anos:    
+      anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -273,7 +276,6 @@ temporal:
       requer_gate: G9_holdout
     test_pandemic:
       anos:
-      - 2019
       - 2020
       - 2021
       - 2022

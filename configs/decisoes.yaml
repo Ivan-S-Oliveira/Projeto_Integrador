@@ -285,10 +285,11 @@ experimentos_split:
     - alvo_obito_srag
     - regiao_residencia
     fallback: documentado_no_manifesto
-    min_grupos_por_estrato: 3
+    min_grupos_por_estrato: 5
   blocos:
     train_ref:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -296,6 +297,7 @@ experimentos_split:
       influencia_decisoes: true
     val_tune:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -303,6 +305,7 @@ experimentos_split:
       influencia_decisoes: true
     val_cal:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -310,6 +313,7 @@ experimentos_split:
       influencia_decisoes: true
     val_meas:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -317,6 +321,7 @@ experimentos_split:
       influencia_decisoes: false
     test_ref:
       anos:
+      - 2019
       - 2023
       - 2024
       - 2025
@@ -325,7 +330,6 @@ experimentos_split:
       requer_gate: G9_holdout
     test_pandemic:
       anos:
-      - 2019
       - 2020
       - 2021
       - 2022
