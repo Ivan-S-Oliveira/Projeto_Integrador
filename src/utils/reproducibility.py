@@ -399,7 +399,10 @@ class Run:
             erro=erro,
             dataset_sha256=_resolver_dataset_sha256(self.dataset_sha256, self.dataset_path),
         )
-        def buscar_runs(
+        return False
+
+
+def buscar_runs(
     *,
     modelo: str | None = None,
     dataset_sha256: str | None = None,
