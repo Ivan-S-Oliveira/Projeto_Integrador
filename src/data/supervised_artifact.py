@@ -52,6 +52,8 @@ __all__ = [
     "validate_supervised_frame",
 ]
 
+# DONO ÚNICO deste arquivo: gerar_artefato_supervisionado.
+# Nenhum notebook A deve gravar aqui (ver #73).
 DATASET_NAME = "dataset_supervisionado.parquet"
 MANIFEST_NAME = "manifesto_supervisionado.json"
 SCHEMA_VERSION = 2

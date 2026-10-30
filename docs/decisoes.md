@@ -1572,3 +1572,23 @@ deve ser consultado nas fichas.
   `temporal.blocos`), `configs/decisoes.yaml` (`dev_years`,
   `pandemic_test_years`), e esta entrada.
 - **Substitui:** §29.13, item 0.
+
+### 29.26 30/10 · Separação do dataset provisório (fluxo A) do artefato oficial (#73)
+
+- **Decisão:** `configs/decisoes.yaml` e `DEFAULT_CONFIG` em
+  `src/protocolo/verificacoes.py` passam a apontar para
+  `data/analytical/dataset_provisorio_pessoa_a.parquet`. O artefato
+  oficial continua em `data/analytical/dataset_supervisionado.parquet`,
+  gerado exclusivamente por `gerar_artefato_supervisionado`
+  (`src/data/supervised_artifact.py`).
+- **Motivo:** `A_03` e `A_04` sobrescreviam o artefato oficial, quebrando
+  o hash do manifesto e derrubando `B_10` e `C_*` com "Hash do dataset
+  supervisionado difere do manifesto". A separação era feita por ordem de
+  execução, não por desenho (#73).
+- **Impacto:** o `A_14` passa a conferir o hash do arquivo provisório,
+  não do artefato. Nenhum notebook `A`, `B` ou `C` muda de lógica.
+- **Implementado em:** `configs/decisoes.yaml`
+  (`dataset_analitico.path`), `src/protocolo/verificacoes.py`
+  (`DEFAULT_CONFIG` e docstring de `_analytical_path`),
+  `src/data/supervised_artifact.py` (comentário em `DATASET_NAME`).
+- **Fecha:** #73.

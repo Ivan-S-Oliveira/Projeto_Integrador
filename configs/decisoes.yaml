@@ -271,7 +271,7 @@ decision_min_pr_auc_gain: 0.01
 decision_max_cv_ratio: 0.1
 exclusion_sample_rows: 50
 dataset_analitico:
-  path: data/analytical/populacao_analitica_pessoa_a.parquet
+  path: data/analytical/dataset_provisorio_pessoa_a.parquet
 experimentos_split:
   versao: temporal_v1
   seed: 42
