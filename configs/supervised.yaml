@@ -191,7 +191,7 @@ features:
     - nome: 80+
       min: 80
       max: null
-      recodificar_comorbidades_fator_risco: false   # decisão pendente no #140
+    recodificar_comorbidades_fator_risco: false   # decisão pendente no #140
     derivadas:
     - idade_anos
     - dias_sintomas_ate_internacao

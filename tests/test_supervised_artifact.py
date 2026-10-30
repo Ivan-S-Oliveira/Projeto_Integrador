@@ -557,14 +557,14 @@ def test_split_partitions_agrega_blocos(
 
 
 # ===========================================================================
-# Gera??o central do artefato
+# Geração central do artefato
 # ===========================================================================
 
 def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Exercita a orquestra??o central sem acessar a coorte populacional."""
+    """Exercita a orquestração central sem acessar a coorte populacional."""
     from src.data.cohort_source import CohortSource
     from src.data import supervised_artifact as sa
     from src.utils.hashing import sha256_file
@@ -598,6 +598,9 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
                 1 if valor % 2 == 0 else 2
                 for valor in ids
             ],
+            "fator_risc": ["1", "2", None] * 14,
+            "vacina": ["1", "2", "9"] * 14,
+            "saturacao": ["1", "2", None] * 14,
         }
     )
 
@@ -689,6 +692,8 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
                     "sexo_categoria",
                 ],
             },
+            "contexto_incremental": ["vacina", "sg_uf"],
+            "sensibilidade_gravidade_admissao": ["saturacao"],
         },
         "temporal": temporal_cfg,
     }
@@ -861,7 +866,24 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
         "ano_internacao",
         "alvo_obito_srag",
         "particao",
+        "bloco_mestre",
+        "regiao_residencia",
     }.issubset(partitions.columns)
+    assert (
+        partitions["bloco_mestre"].astype(str)
+        == partitions["particao"].astype(str)
+    ).all()
+
+    # Colunas de auditoria e sensibilidade (#142): no artefato, fora das features.
+    for coluna in ("fator_risc", "vacina", "saturacao", "sg_uf"):
+        assert coluna in dataset.columns
+        assert coluna in manifest["audit_columns"]
+        assert coluna not in manifest["feature_columns"]
+    assert set(resultado["prevalence_by_partition"]) == set(
+        resultado["partition_counts"]
+    )
+    assert resultado["rows_exploracao"] == 6
+    assert len(manifest["audit_columns"]) == len(set(manifest["audit_columns"]))
 
     assert manifest["cohort_kind"] == "final"
     assert manifest["test_opened"] is False
@@ -917,7 +939,7 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
 def test_gerar_artefato_supervisionado_rejeita_coorte_nao_final(
     tmp_path: Path,
 ) -> None:
-    """A gera??o definitiva rejeita fontes provis?rias antes da leitura."""
+    """A geração definitiva rejeita fontes provisórias antes da leitura."""
     from src.data.supervised_artifact import (
         gerar_artefato_supervisionado,
     )
