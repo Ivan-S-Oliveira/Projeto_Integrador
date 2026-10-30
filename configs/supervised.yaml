@@ -115,6 +115,8 @@ features:
   - desc_resp
   sensibilidade_indicadores_ausencia:
     ativa: false
+    # desativada em 28/10: nenhum código cria as colunas;
+    # AUSENTE já é categoria no pré-processador (ver decisoes.md §29.6)
     incluir_no_pipeline_principal: false
     prefixo_esperado: missingindicator_
   sensibilidade_contadores_clinicos:
@@ -319,7 +321,7 @@ missingness:
     valor_ausente: AUSENTE
   indicadores_ausencia:
     pipeline_principal: false
-    sensibilidade: true
+    sensibilidade: false # desativada em 28/10: ver features.sensibilidade_indicadores_ausencia
 
 models:
   baseline:
@@ -474,7 +476,7 @@ sensibilidades:
   temporal:
     ativa: true
   com_sem_indicadores_ausencia:
-    ativa: false
+    ativa: false # desativada em 28/10: sem código, sem contraste real (ver decisoes.md §29.6)
   sem_saturacao_desc_resp:
     ativa: true
   contexto_incremental:

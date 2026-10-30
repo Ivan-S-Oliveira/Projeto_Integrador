@@ -505,3 +505,162 @@ def test_colunas_minimas_sao_menos_que_as_classificadas(cfg):
     assert {"hospital", "evolucao", "dt_interna", "nu_idade_n", "tp_idade", "dt_sin_pri"} <= set(minimas)
     assert not ({"antiviral", "vacina_cov", "coluna_x"} & set(minimas))
     assert {"antiviral", "vacina_cov"} <= set(classif)
+
+    # ---------------------------------------------------------------------------
+# Auditoria da partição-mestra sobre o artefato real (#142) — §28.4
+# ---------------------------------------------------------------------------
+#
+# Substitui a auditoria só com dados sintéticos de `test_particao_mestra_*`
+# em `test_split.py`: aqui lemos o artefato real do #142 e provamos, sobre
+# ele, as 5 garantias do §28.4:
+#   (a) cada group_id em um único bloco;
+#   (b) 2020–2022 somente em test_pandemic;
+#   (c) 2026 somente em exploracao;
+#   (d) prevalência dos blocos de 2019/2023–2025 a ≤ 0,5 p.p. de 8,44%;
+#   (e) SHA-256 do arquivo igual ao do manifesto.
+#
+# Se o artefato do #142 não existir, a classe é pulada (pytest.skip) — não
+# falha o CI de quem ainda não rodou o #142.
+
+import json
+
+from src.utils.hashing import sha256_file
+
+
+_ARTEFATO_PARTICAO = (
+    Path(__file__).resolve().parents[1]
+    / "data"
+    / "analytical"
+    / "partitions_master.parquet"
+)
+
+_MANIFESTO_PARTICAO = (
+    Path(__file__).resolve().parents[1]
+    / "data"
+    / "analytical"
+    / "manifesto_particao.json"
+)
+
+_PREVALENCIA_ESPERADA = 0.0844      # 8,44% (§29.1, coorte definitiva)
+_TOLERANCIA_PP        = 0.005       # 0,5 ponto percentual
+_BLOCOS_DESENVOLVIMENTO = (
+    "train_ref", "val_tune", "val_cal", "val_meas", "test_ref",
+)
+_ANOS_DESENVOLVIMENTO = (2019, 2023, 2024, 2025)
+
+
+@pytest.fixture(scope="class")
+def particao_mestra_real():
+    """Carrega o artefato real do #142 (só 4 colunas).
+
+    Faz ``pytest.skip`` se o artefato ou o manifesto ainda não existirem —
+    o artefato é produzido pelo card #142 e não é versionado no Git.
+    """
+    if not _ARTEFATO_PARTICAO.is_file() or not _MANIFESTO_PARTICAO.is_file():
+        pytest.skip(
+            "Artefato do #142 ausente: "
+            f"{_ARTEFATO_PARTICAO} / {_MANIFESTO_PARTICAO}. "
+            "Rode o #142 antes desta auditoria."
+        )
+
+    df = pd.read_parquet(
+        _ARTEFATO_PARTICAO,
+        columns=[
+            "bloco_mestre",
+            "group_id",
+            "ano_internacao",
+            "alvo_obito_srag",
+        ],
+    )
+    manifesto = json.loads(
+        _MANIFESTO_PARTICAO.read_text(encoding="utf-8")
+    )
+    return df, manifesto
+
+
+@pytest.mark.slow
+class TestParticaoMestraArtefatoReal:
+    """Auditoria do §28.4 sobre o artefato real do #142 (não sintético)."""
+
+    def test_a_cada_group_id_em_um_unico_bloco(
+        self,
+        particao_mestra_real,
+    ) -> None:
+        """(a) Nenhum ``group_id`` aparece em mais de um bloco."""
+        df, _ = particao_mestra_real
+        n_blocos_por_grupo = (
+            df.groupby("group_id", observed=True)["bloco_mestre"].nunique()
+        )
+        conflitos = n_blocos_por_grupo[n_blocos_por_grupo > 1]
+        assert conflitos.empty, (
+            "Grupos em mais de um bloco "
+            f"({len(conflitos)}): {conflitos.head(10).to_dict()}"
+        )
+
+    def test_b_2020_2022_somente_em_test_pandemic(
+        self,
+        particao_mestra_real,
+    ) -> None:
+        """(b) Anos 2020–2022 exclusivamente em ``test_pandemic``."""
+        df, _ = particao_mestra_real
+        m = df["ano_internacao"].isin([2020, 2021, 2022])
+        assert m.any(), "Nenhum registro de 2020–2022 no artefato."
+        blocos = set(df.loc[m, "bloco_mestre"].astype(str).unique())
+        assert blocos == {"test_pandemic"}, (
+            "Anos pandêmicos fora de test_pandemic: "
+            f"{sorted(blocos)}"
+        )
+
+    def test_c_2026_somente_em_exploracao(
+        self,
+        particao_mestra_real,
+    ) -> None:
+        """(c) Ano 2026 exclusivamente em ``exploracao``."""
+        df, _ = particao_mestra_real
+        m = df["ano_internacao"].eq(2026)
+        if not m.any():
+            pytest.skip("Artefato não contém 2026 (cobertura parcial).")
+        blocos = set(df.loc[m, "bloco_mestre"].astype(str).unique())
+        assert blocos == {"exploracao"}, (
+            "2026 fora de exploracao: "
+            f"{sorted(blocos)}"
+        )
+
+    def test_d_prevalencia_por_bloco_proxima_de_8_44_pct(
+        self,
+        particao_mestra_real,
+    ) -> None:
+        """(d) Prevalência dos blocos de desenvolvimento a ≤ 0,5 p.p. de 8,44%."""
+        df, _ = particao_mestra_real
+        sub = df[
+            df["bloco_mestre"].astype(str).isin(_BLOCOS_DESENVOLVIMENTO)
+            & df["ano_internacao"].isin(_ANOS_DESENVOLVIMENTO)
+        ]
+        prev = sub.groupby("bloco_mestre", observed=True)[
+            "alvo_obito_srag"
+        ].mean()
+        desvio_pp = (prev - _PREVALENCIA_ESPERADA).abs() * 100
+        fora = desvio_pp[desvio_pp > _TOLERANCIA_PP * 100]
+        assert fora.empty, (
+            "Prevalência fora de ±0,5 p.p. de 8,44%: "
+            f"{prev.round(4).to_dict()} "
+            f"(desvios em p.p.: {desvio_pp.round(3).to_dict()})"
+        )
+
+    def test_e_sha256_do_artefato_igual_ao_manifesto(
+        self,
+        particao_mestra_real,
+    ) -> None:
+        """(e) SHA-256 do ``partitions_master.parquet`` bate com o manifesto."""
+        _, manifesto = particao_mestra_real
+        esperado = manifesto.get("partition_sha256")
+        assert esperado, (
+            "Manifesto não contém 'partition_sha256'. "
+            "Verifique o #142."
+        )
+        obtido = sha256_file(_ARTEFATO_PARTICAO)
+        assert obtido == esperado, (
+            "SHA-256 divergente:\n"
+            f"  esperado={esperado}\n"
+            f"  obtido  ={obtido}"
+        )

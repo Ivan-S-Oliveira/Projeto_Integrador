@@ -1077,6 +1077,29 @@ deve ser consultado nas fichas.
 - **Substitui:** a proposta de 18/10 (comparar o conjunto completo com o
   subconjunto de comorbidades preenchidas).
 
+### 29.6.1 28/10 · Correção: as três chaves de indicadores de ausência foram para `false`
+
+- **Problema:** o texto de §29.6 afirmava que as três chaves estavam em `false`,
+  mas o `supervised.yaml` (commit 032a5b65) ainda trazia `ativa: true` em
+  `features.sensibilidade_indicadores_ausencia` e em
+  `sensibilidades.com_sem_indicadores_ausencia`, e `sensibilidade: true` em
+  `missingness.indicadores_ausencia`. Nenhum código cria as colunas
+  `missingindicator_`, então a sensibilidade não existia na prática.
+- **Decisão:** as três chaves passam a `false` no `supervised.yaml`:
+  `features.sensibilidade_indicadores_ausencia.ativa`,
+  `sensibilidades.com_sem_indicadores_ausencia.ativa` e
+  `missingness.indicadores_ausencia.sensibilidade`. Motivo duplo:
+  (1) não há código que crie os indicadores, e (2) não haveria contraste real,
+  porque `AUSENTE` já é categoria no pré-processador — o modelo principal já
+  recebe a informação de ausência.
+- **Impacto:** a linha "com × sem indicadores de ausência" sai da tabela de
+  sensibilidades. A pergunta sobre ausência é respondida pela análise de
+  completude (#52).
+- **Implementado em:** `configs/supervised.yaml`; card #83 (fechado) e card P4
+  (este item).
+- **Decidiu:** Pessoa A (dona), com revisão cruzada.
+- **Fecha:** card P4 e item #83.
+
 ### 29.7 24/10 · Não supervisionado
 
 - **Decisão:** one-hot dos quatro estados (#136) e perfil dos grupos por
