@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
-from src.evaluation.errors import metricas_por_grupo
+from src.protocolo.metricas_por_grupo import metricas_por_grupo
 
 
 def _dados(n=400, seed=0):

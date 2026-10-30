@@ -189,7 +189,7 @@ def metricas_por_grupo(
         soma_p  = float(p_g.sum())
         o_e     = (
             float(y_g.sum()) / soma_p
-            if soma_p > 0 else np.nan
+            if duas_classes and soma_p > 0 else np.nan
         )
 
         linhas.append({

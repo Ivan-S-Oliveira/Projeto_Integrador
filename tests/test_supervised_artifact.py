@@ -459,7 +459,7 @@ def test_particao_solicitada_ausente_no_artefato_falha(tmp_path: Path) -> None:
 
 
 # ===========================================================================
-# ``columns=`` não pula a validação (#18)
+# ``columns=`` não pula a validação do alvo
 # ===========================================================================
 
 def test_load_com_columns_devolve_apenas_o_pedido(tmp_path: Path) -> None:
@@ -874,7 +874,7 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
         == partitions["particao"].astype(str)
     ).all()
 
-    # Colunas de auditoria e sensibilidade (#142): no artefato, fora das features.
+    # Colunas de auditoria e sensibilidade permanecem fora das features.
     for coluna in ("fator_risc", "vacina", "saturacao", "sg_uf"):
         assert coluna in dataset.columns
         assert coluna in manifest["audit_columns"]

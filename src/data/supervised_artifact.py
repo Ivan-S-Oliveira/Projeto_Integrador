@@ -502,9 +502,9 @@ def _configuracao_artefato() -> dict[str, Any]:
 def _colunas_auditoria_extras(
     artefato_cfg: Mapping[str, Any],
 ) -> list[str]:
-    """Colunas físicas guardadas para auditoria e sensibilidades (#142).
+    """Colunas físicas guardadas para auditoria e análises de sensibilidade.
 
-    ``fator_risc`` (decisão de recodificação das comorbidades, #140/#141),
+    ``fator_risc`` (indicador agregado de fatores de risco),
     ``features.contexto_incremental`` e
     ``features.sensibilidade_gravidade_admissao``. Nenhuma delas entra em
     ``feature_columns``: ficam em ``audit_columns`` para as análises de
@@ -861,8 +861,8 @@ def gerar_artefato_supervisionado(
             ]
             if coluna in particionado.columns
         ]
-        # bloco_mestre é o nome combinado nos cards #131, #135 e #142; a
-        # coluna de partição do YAML continua gravada por compatibilidade.
+                # Preserva o nome explícito do bloco mestre e mantém a coluna de
+        # partição configurada para compatibilidade com os consumidores.
         particao_mestre = particionado[partition_columns].copy()
         particao_mestre["bloco_mestre"] = (
             particao_mestre[partition_column].astype("string")
