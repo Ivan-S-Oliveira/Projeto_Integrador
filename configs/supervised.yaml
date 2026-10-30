@@ -498,7 +498,7 @@ gates:
       As variaveis saturacao e desc_resp permanecem na analise de sensibilidade
       de gravidade na admissao; vacina e vacina_cov permanecem como contexto
       incremental, fora do conjunto principal.
-    status: aprovado
+    status: responsavel
     aprovado_por: time_do_projeto
     data: '2026-10-22'
   G2_janela_temporal:
@@ -507,7 +507,7 @@ gates:
       mesmos anos com grupos nao vistos; 2020 a 2022 apenas no teste pandemico;
       2026 apenas como exploracao posterior. Particao mestra deterministica
       por grupo, seed 42.
-    status: aprovado
+    status: responsavel
     aprovado_por: time_do_projeto
     data: '2026-10-18'
     # Revisado em 29/10: revertida a mudança não registrada que colocava
@@ -515,12 +515,12 @@ gates:
     # reafirmado.
   G4_baseline:
     descricao: Rodar DummyClassifier e registrar as metricas de referencia.
-    status: aprovado
+    status: responsavel
     aprovado_por: time_do_projeto
     data: '2026-10-11'
   G5_pilotos:
     descricao: Rodar regressao logistica, arvore, random forest e boosting sem consultar o teste.
-    status: aprovado
+    status: responsavel
     aprovado_por: time_do_projeto
     data: '2026-10-11'
   G6_finalistas_tuning:
