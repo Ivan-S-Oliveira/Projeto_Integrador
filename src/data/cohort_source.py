@@ -4,7 +4,7 @@ A troca entre coorte provisória e definitiva acontece por parâmetro ou
 pela variável de ambiente ``SRAG_COHORT_KIND``.
 
 Contrato:
-- ``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``provisional``).
+- ``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``final``).
 - ``auto`` prefere a definitiva quando existir.
 - ``explicit_path`` exige nome canônico; se ``kind`` também for informado
   e divergir da classificação pelo nome, a chamada falha em vez de

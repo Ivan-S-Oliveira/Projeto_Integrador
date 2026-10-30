@@ -87,15 +87,18 @@ def test_metricas_por_grupo_coluna_renomeada() -> None:
     assert "positivos" not in r.columns
 
 
-def test_metricas_por_grupo_ignora_abaixo_de_min_n() -> None:
-    """Grupo com menos de ``min_n`` é excluído do resultado."""
+def test_metricas_por_grupo_suprime_abaixo_de_min_n() -> None:
+    """Grupo com menos de ``min_n`` continua na tabela com ``suprimido=True``."""
     df = pd.DataFrame({"grupo": ["A"] * 5 + ["B"] * 300})
     y = pd.Series([0, 1] * 152 + [0])
     p = pd.Series([0.1, 0.9] * 152 + [0.5])
 
-    r = metricas_por_grupo(df, y, p, "grupo", min_n=30)
-    assert set(r["grupo"]) == {"B"}
-    assert r.loc[r["grupo"] == "B", "n"].iloc[0] == 300
+    r = metricas_por_grupo(df, y, p, "grupo", min_n=30).set_index("grupo")
+    assert set(r.index) == {"A", "B"}
+    assert bool(r.loc["A", "suprimido"]) is True
+    assert pd.isna(r.loc["A", "pr_auc"])
+    assert bool(r.loc["B", "suprimido"]) is False
+    assert r.loc["B", "n"] == 300
 
 
 def test_metricas_por_grupo_coluna_ausente() -> None:
@@ -156,10 +159,6 @@ def test_top_erros_criterio_invalido() -> None:
     # Valor viola intencionalmente o Literal CriterioTop.
     with pytest.raises(ValueError, match="criterio inválido"):
         top_erros(df, np.array([0, 1]), np.array([0.1, 0.9]), criterio="xxx")  # type: ignore[arg-type]
-        import numpy as np
-import pandas as pd
-
-from src.evaluation.errors import metricas_por_grupo
 
 
 def test_grupo_so_de_curas_devolve_pr_auc_vazia():

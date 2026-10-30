@@ -20,6 +20,7 @@ Proteção do teste:
 
 from __future__ import annotations
 
+import gc
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -498,10 +499,35 @@ def _configuracao_artefato() -> dict[str, Any]:
     }
 
 
+def _colunas_auditoria_extras(
+    artefato_cfg: Mapping[str, Any],
+) -> list[str]:
+    """Colunas físicas guardadas para auditoria e análises de sensibilidade.
+
+    ``fator_risc`` (indicador agregado de fatores de risco),
+    ``features.contexto_incremental`` e
+    ``features.sensibilidade_gravidade_admissao``. Nenhuma delas entra em
+    ``feature_columns``: ficam em ``audit_columns`` para as análises de
+    sensibilidade previstas em ``sensibilidades`` no YAML.
+    """
+    features_cfg = artefato_cfg["features_cfg"]
+    feature_columns = set(artefato_cfg["feature_columns"])
+    candidatas = [
+        "fator_risc",
+        *(features_cfg.get("contexto_incremental") or []),
+        *(features_cfg.get("sensibilidade_gravidade_admissao") or []),
+    ]
+    return [
+        str(coluna)
+        for coluna in dict.fromkeys(candidatas)
+        if str(coluna) not in feature_columns
+    ]
+
+
 def _colunas_fisicas_necessarias(
     artefato_cfg: Mapping[str, Any],
 ) -> list[str]:
-    """Lista colunas f?sicas necess?rias antes da engenharia."""
+    """Lista colunas físicas necessárias antes da engenharia."""
     features_cfg = artefato_cfg["features_cfg"]
     engenharia_cfg = features_cfg.get("engenharia") or {}
 
@@ -517,8 +543,9 @@ def _colunas_fisicas_necessarias(
         "sg_uf",
         artefato_cfg["source_target_column"],
     }
+    extras = set(_colunas_auditoria_extras(artefato_cfg))
 
-    return sorted(features_fisicas | entradas | obrigatorias)
+    return sorted(features_fisicas | entradas | obrigatorias | extras)
 
 
 def _construir_alvo(
@@ -528,13 +555,13 @@ def _construir_alvo(
     target_column: str,
     target_cfg: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Constr?i o alvo bin?rio de acordo com a configura??o ativa."""
+    """Constrói o alvo binário de acordo com a configuração ativa."""
     if target_column in frame.columns:
         target = pd.to_numeric(frame[target_column], errors="coerce")
     else:
         if source_column not in frame.columns:
             raise KeyError(
-                "N?o foi poss?vel construir o alvo: "
+                "Não foi possível construir o alvo: "
                 f"coluna fonte {source_column!r} ausente."
             )
 
@@ -563,7 +590,7 @@ def _construir_alvo(
         out = out.loc[out[target_column].notna()].copy(deep=False)
     elif out[target_column].isna().any():
         raise ValueError(
-            f"Alvo {target_column!r} cont?m valores n?o classificados."
+            f"Alvo {target_column!r} contém valores não classificados."
         )
 
     return out
@@ -573,7 +600,7 @@ def _periodo_do_ano(
     anos: pd.Series,
     temporal_cfg: Mapping[str, Any],
 ) -> pd.Series:
-    """Classifica anos em compartilhado, pand?mico ou explora??o."""
+    """Classifica anos em compartilhado, pandêmico ou exploração."""
     blocos = temporal_cfg.get("blocos") or {}
 
     anos_pandemia = {
@@ -604,12 +631,12 @@ def _separar_grupos_temporais_incompativeis(
     target_column: str,
     region_column: str | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Separa grupos que n?o podem receber uma ?nica parti??o-mestre.
+    """Separa grupos que não podem receber uma única partição-mestre.
 
-    Um grupo ? incompat?vel quando suas linhas pertencem a categorias
+    Um grupo é incompatível quando suas linhas pertencem a categorias
     temporais diferentes ou, dentro dos anos compartilhados, formam mais
-    de um estrato de ano, alvo e regi?o. A separa??o ocorre antes da
-    parti??o para impedir que registros do mesmo grupo sejam distribu?dos
+    de um estrato de ano, alvo e região. A separação ocorre antes da
+    partição para impedir que registros do mesmo grupo sejam distribuídos
     entre blocos diferentes.
     """
     required = {group_column, year_column, target_column}
@@ -676,11 +703,11 @@ def gerar_artefato_supervisionado(
     exportar_particao: bool = True,
     overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Gera e persiste o artefato supervisionado can?nico.
+    """Gera e persiste o artefato supervisionado canônico.
 
-    A fun??o aceita exclusivamente a coorte final, aplica a engenharia
-    central, cria identificadores est?veis, separa grupos temporalmente
-    incompat?veis, materializa a parti??o-mestre e persiste dataset e
+    A função aceita exclusivamente a coorte final, aplica a engenharia
+    central, cria identificadores estáveis, separa grupos temporalmente
+    incompatíveis, materializa a partição-mestre e persiste dataset e
     manifestos sem expor os blocos de teste para modelagem.
     """
     root = Path(root).resolve()
@@ -688,7 +715,7 @@ def gerar_artefato_supervisionado(
     kind_normalizado = str(cohort_kind).strip().lower()
     if kind_normalizado != "final":
         raise ValueError(
-            "A gera??o definitiva exige cohort_kind='final'. "
+            "A geração definitiva exige cohort_kind='final'. "
             f"Recebido: {cohort_kind!r}."
         )
 
@@ -714,7 +741,7 @@ def gerar_artefato_supervisionado(
     frame = montar_features(frame)
 
     if "sg_uf" not in frame.columns:
-        raise KeyError("Coluna obrigat?ria ausente: 'sg_uf'.")
+        raise KeyError("Coluna obrigatória ausente: 'sg_uf'.")
 
     frame["regiao_residencia"] = regiao_residencia(frame["sg_uf"])
     frame["group_id"] = criar_group_id(frame)
@@ -728,7 +755,7 @@ def gerar_artefato_supervisionado(
 
     if "ano_internacao" not in frame.columns:
         raise KeyError(
-            "montar_features n?o produziu a coluna 'ano_internacao'."
+            "montar_features não produziu a coluna 'ano_internacao'."
         )
 
     frame_modelavel, quarentena = _separar_grupos_temporais_incompativeis(
@@ -767,10 +794,11 @@ def gerar_artefato_supervisionado(
         "regiao_residencia",
         "faixa_etaria",
         "sexo_categoria",
+        *_colunas_auditoria_extras(artefato_cfg),
     ]
     audit_columns = [
         coluna
-        for coluna in audit_candidates
+        for coluna in dict.fromkeys(audit_candidates)
         if coluna in modelavel.columns
         and coluna not in feature_columns
         and coluna not in {target_column, partition_column}
@@ -788,6 +816,20 @@ def gerar_artefato_supervisionado(
     )
     dataset_frame = modelavel[output_columns].copy()
 
+    analytical_dir = root / "data" / "analytical"
+    partition_path = analytical_dir / "partitions_master.parquet"
+    partition_manifest_path = analytical_dir / "manifesto_particao.json"
+
+    # Confere a sobrescrita antes de gravar qualquer arquivo, para não
+    # deixar dataset novo ao lado de partição-mestre antiga.
+    if exportar_particao and not overwrite and (
+        partition_path.exists() or partition_manifest_path.exists()
+    ):
+        raise FileExistsError(
+            "Partição-mestre já existe. Use overwrite=True somente "
+            "em reconstrução deliberada."
+        )
+
     dataset_path, manifest_path = persist_supervised_artifact(
         dataset_frame,
         root=root,
@@ -803,34 +845,34 @@ def gerar_artefato_supervisionado(
         overwrite=overwrite,
     )
 
-    analytical_dir = root / "data" / "analytical"
-    partition_path = analytical_dir / "partitions_master.parquet"
-    partition_manifest_path = analytical_dir / "manifesto_particao.json"
+    del dataset_frame
+    gc.collect()
 
     if exportar_particao:
-        if not overwrite and (
-            partition_path.exists() or partition_manifest_path.exists()
-        ):
-            raise FileExistsError(
-                "Parti??o-mestre j? existe. Use overwrite=True somente "
-                "em reconstru??o deliberada."
-            )
-
         partition_columns = [
             coluna
             for coluna in [
                 "id_registro",
                 "group_id",
                 "ano_internacao",
+                "regiao_residencia",
                 target_column,
                 partition_column,
             ]
             if coluna in particionado.columns
         ]
-        particionado[partition_columns].to_parquet(
+                # Preserva o nome explícito do bloco mestre e mantém a coluna de
+        # partição configurada para compatibilidade com os consumidores.
+        particao_mestre = particionado[partition_columns].copy()
+        particao_mestre["bloco_mestre"] = (
+            particao_mestre[partition_column].astype("string")
+        )
+        particao_mestre.to_parquet(
             partition_path,
             index=False,
         )
+        del particao_mestre
+        gc.collect()
 
         manifesto_particao = {
             **manifesto_particao,
@@ -848,6 +890,30 @@ def gerar_artefato_supervisionado(
             }
         _escrever_json(partition_manifest_path, manifesto_particao)
 
+    alvo_modelavel = pd.to_numeric(
+        modelavel[target_column], errors="coerce"
+    )
+    blocos_modelaveis = modelavel[partition_column].astype(str)
+    partition_counts = {
+        str(nome): int(quantidade)
+        for nome, quantidade in blocos_modelaveis.value_counts().sort_index().items()
+    }
+    prevalence_by_partition = {
+        str(nome): float(valor)
+        for nome, valor in alvo_modelavel.groupby(blocos_modelaveis).mean().sort_index().items()
+    }
+    rows_loaded = int(len(frame))
+    rows_quarantined = int(len(quarentena))
+    groups_quarantined = (
+        int(quarentena["group_id"].nunique()) if not quarentena.empty else 0
+    )
+    rows_exploracao = int(len(particionado) - len(modelavel))
+    rows_modelable = int(len(modelavel))
+
+    del frame, frame_modelavel, quarentena, particionado, modelavel
+    del alvo_modelavel, blocos_modelaveis
+    gc.collect()
+
     return {
         "dataset_path": str(dataset_path),
         "manifest_path": str(manifest_path),
@@ -861,18 +927,15 @@ def gerar_artefato_supervisionado(
         "source_path": source.path,
         "source_sha256": source.sha256,
         "dataset_sha256": sha256_file(dataset_path),
-        "rows_loaded": int(len(frame)),
-        "rows_quarantined": int(len(quarentena)),
-        "groups_quarantined": int(
-            quarentena["group_id"].nunique()
-        ) if not quarentena.empty else 0,
-        "rows_modelable": int(len(modelavel)),
-        "partition_counts": {
-            str(nome): int(quantidade)
-            for nome, quantidade in modelavel[
-                partition_column
-            ].value_counts().sort_index().items()
-        },
+        "rows_loaded": rows_loaded,
+        "rows_quarantined": rows_quarantined,
+        "groups_quarantined": groups_quarantined,
+        "rows_exploracao": rows_exploracao,
+        "rows_modelable": rows_modelable,
+        "partition_counts": partition_counts,
+        "prevalence_by_partition": prevalence_by_partition,
+        "audit_columns": list(audit_columns),
+        "estratificacao": manifesto_particao.get("estratificacao"),
         "test_opened": False,
     }
 

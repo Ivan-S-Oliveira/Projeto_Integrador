@@ -3,10 +3,10 @@
 Cobrem:
 
 - descoberta por ``kind`` (``provisional``, ``final``, ``auto``);
-- o novo default ``final`` do ``_DEFAULT_KIND`` (herdado da revisão do #131);
+- o uso de ``final`` como valor padrão de ``_DEFAULT_KIND``;
 - a variável de ambiente ``SRAG_COHORT_KIND`` sobrescrevendo o default;
 - validação de ``explicit_path`` (nome canônico + coerência com ``kind``);
-- regressão #30: ``coorte.parquet`` não é mais engolido como provisório.
+- rejeição do nome ambíguo ``coorte.parquet`` como origem provisória.
 """
 
 from __future__ import annotations
@@ -59,7 +59,7 @@ def _candidatos(tmp_path: Path) -> dict[str, tuple[Path, ...]]:
 
 
 # ---------------------------------------------------------------------------
-# Novo default: ``_DEFAULT_KIND`` = ``final`` (#131)
+# A coorte final é a origem padrão
 # ---------------------------------------------------------------------------
 
 def test_default_busca_final(tmp_path: Path) -> None:
@@ -189,11 +189,11 @@ def test_nenhum_candidato_falha(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Regressão #30: nomes ambíguos não são aceitos
+# Nomes ambíguos não são aceitos
 # ---------------------------------------------------------------------------
 
 def test_coorte_parquet_nao_e_mais_candidato(tmp_path: Path) -> None:
-    """``coorte.parquet`` não é engolido como provisório (regressão #30)."""
+    """``coorte.parquet`` não é classificado como origem provisória."""
     _write(tmp_path / "data" / "analytical" / "coorte.parquet", 2)
 
     with pytest.raises(FileNotFoundError):

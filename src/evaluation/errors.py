@@ -115,7 +115,7 @@ def metricas_por_grupo(
     limiar: float = 0.5,
     min_n: int = 100,
 ) -> pd.DataFrame:
-       """
+    """
     Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
 
     Grupos com menos de ``min_n`` amostras são mantidos na tabela com
@@ -141,7 +141,7 @@ def metricas_por_grupo(
 
     linhas: list[dict[str, float | str]] = []
 
-     for g in grupos.dropna().unique():
+    for g in grupos.dropna().unique():
         m = (grupos == g).to_numpy()
         n = int(m.sum())
 
@@ -189,7 +189,7 @@ def metricas_por_grupo(
         soma_p  = float(p_g.sum())
         o_e     = (
             float(y_g.sum()) / soma_p
-            if soma_p > 0 else np.nan
+            if duas_classes and soma_p > 0 else np.nan
         )
 
         linhas.append({

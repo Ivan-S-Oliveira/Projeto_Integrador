@@ -363,80 +363,9 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     ano_mes = ano_mes_internacao(df)
     out["ano_internacao"] = ano_mes["ano_internacao"].astype("Int16")
     out["mes_internacao"] = ano_mes["mes_internacao"].astype("Int8")
- def montar_features(df: pd.DataFrame) -> pd.DataFrame:
-    # ... (código existente)
-    out = df.copy(deep=False)
 
-    # ... (derivações existentes)
-
-    # Recodificação opcional via flag de config (padrão: False, até #140)
+    # Recodificação opcional via flag de config (padrão: desligada, até o #140).
     if C.cfg("features", "engenharia", "recodificar_comorbidades_fator_risc") is True:
         out = recodificar_comorbidades_por_fator_risco(out)
-
-    return out   
-def recodificar_comorbidades_por_fator_risco(
-    df: pd.DataFrame,
-    *,
-    comorbidades: tuple[str, ...] | None = None,
-) -> pd.DataFrame:
-    """Recodifica comorbidade em branco quando fator_risc = não.
-
-    Se a ficha do SIVEP só preenche a lista de comorbidades quando a
-    pergunta-mãe ("Possui fatores de risco/comorbidades?") é "sim",
-    então o branco com fator_risc = não significa "não tem", e não
-    "não informado". Hoje o pré-processador transforma os dois em
-    AUSENTE.
-
-    Regra (decisão do #140, 30/10):
-    - Comorbidade em branco + fator_risc = não  → "2" (não).
-    - Comorbidade em branco + fator_risc = sim,
-      ignorado ou branco                        → continua em branco
-                                                  (vira AUSENTE depois).
-
-    Não mexe em comorbidades já preenchidas (1, 2 ou 9).
-    Não usa o alvo, não acessa informação posterior à admissão.
-
-    Parâmetros
-    ----------
-    df:
-        DataFrame com ``fator_risc`` e as colunas de comorbidade.
-    comorbidades:
-        Lista de colunas a recodificar. Se ``None``, usa a lista
-        canônica do projeto (12 comorbidades + puerpera).
-
-    Retorna
-    -------
-    Cópia rasa de ``df`` com as comorbidades recodificadas.
-    """
-    if comorbidades is None:
-        comorbidades = (
-            "cardiopati", "hematologi", "sind_down", "hepatica", "asma",
-            "diabetes", "neurologic", "pneumopati", "imunodepre", "renal",
-            "obesidade", "out_morbi", "puerpera",
-        )
-
-    if "fator_risc" not in df.columns:
-        raise KeyError("Coluna 'fator_risc' ausente; não é possível recodificar.")
-
-    faltantes = [c for c in comorbidades if c not in df.columns]
-    if faltantes:
-        raise KeyError(f"Comorbidades ausentes no DataFrame: {faltantes}")
-
-    out = df.copy(deep=False)
-
-    # Classifica fator_risc em sim/nao/ignorado/branco
-    fator = out["fator_risc"].astype("string").str.strip().str.upper()
-    sim = fator.isin(["1", "1.0", "S", "SIM"])
-    nao = fator.isin(["2", "2.0", "N", "NAO", "NÃO"])
-
-    for col in comorbidades:
-        s = out[col]
-        # Branco = NaN ou string vazia. Código 9 (ignorado) NÃO é branco.
-        branco = s.isna() | (s.astype("string").str.strip() == "")
-        # Recodifica só os brancos com fator_risc = não
-        recodificar = branco & nao
-        if recodificar.any():
-            out.loc[recodificar, col] = "2"
-
 
     return out

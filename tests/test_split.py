@@ -498,3 +498,13 @@ def test_particao_mestra_manifesto_tem_hash_por_bloco():
     for nome in ("train_ref", "val_tune", "val_cal", "val_meas", "test_ref", "test_pandemic"):
         assert m["blocos"][nome]["n_linhas"] > 0
         assert m["blocos"][nome]["hash_bloco"]
+
+
+def test_particao_mestra_aceita_regiao_categorica():
+    """regiao_residencia chega categórica de montar_features (#142)."""
+    df = _df_master()
+    df["regiao_residencia"] = df["regiao_residencia"].astype("category")
+    out, m = criar_particao_mestra(df, temporal_cfg=TEMPORAL_CFG)
+    referencia, m_ref = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
+    assert m["estratificacao"] == m_ref["estratificacao"]
+    assert out["particao"].tolist() == referencia["particao"].tolist()

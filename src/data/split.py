@@ -492,7 +492,9 @@ def criar_particao_mestra(
         sub = out.loc[mascara_compartilhada]
         estrato = sub[year_column].astype(str) + "|" + sub[target_column].astype(str)
         if region_column and region_column in sub.columns:
-            estrato = estrato + "|" + sub[region_column].fillna("__NA__").astype(str)
+            # astype("string") antes do fillna: regiao_residencia chega
+            # categórica e fillna com categoria nova levanta TypeError.
+            estrato = estrato + "|" + sub[region_column].astype("string").fillna("__NA__")
 
         try:
             blocos = atribuir_blocos_por_hash(
