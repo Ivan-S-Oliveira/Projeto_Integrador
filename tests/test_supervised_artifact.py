@@ -218,14 +218,14 @@ def test_persistencia_mistura_de_esquemas_falha(tmp_path: Path) -> None:
 # ===========================================================================
 
 def test_default_nao_carrega_teste(tmp_path: Path) -> None:
-     """Sem ``partitions``, o loader devolve só treino+validação."""
-     _persistir(tmp_path, _frame_legado(), source={"kind": "provisional", "sha256": "abc"})
+    """Sem ``partitions``, o loader devolve só treino+validação."""
+    _persistir(tmp_path, _frame_legado(), source={"kind": "provisional", "sha256": "abc"})
  
-     loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
+    loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
  
-     assert set(loaded["particao"]) == {"treino", "validacao"}
-     assert manifest["test_opened"] is False
-     assert manifest["seed"] == 42
+    assert set(loaded["particao"]) == {"treino", "validacao"}
+    assert manifest["test_opened"] is False
+    assert manifest["seed"] == 42
 
 
 def test_roundtrip_legado_completo_apos_g9(
