@@ -50,7 +50,7 @@ Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em lingu
 
 ### Pessoas
 
-- **A (≈ 20,5 h)** — suíte, gates e ferramenta de medição (#144), decisões (#73), bootstrap e calibração (#127), ablações (#54), ponto de decisão e G6 (#140, #78), C_16 (#148), dicionário e âncora (#70, #56), checklist do G9 (#81), subgrupos, falsos negativos e regiões (#55), relatório (#133), limpeza e renomeação (#146), pacote (#147)
+- **A (≈ 20,75 h)** — suíte, gates e ferramenta de medição (#144), decisões (#73), bootstrap e calibração (#127), ablações (#54), ponto de decisão e G6 (#140, #78), C_16 (#148), dicionário e âncora (#70, #56), checklist do G9 (#81), subgrupos, falsos negativos e regiões (#55), relatório (#133), limpeza e renomeação (#146), pacote (#147)
 - **B (≈ 16,5 h)** — óbitos só no treino (#51), agrupamento (#136), completude (#52), C_15 (#148), literatura (#112), interpretação (#91), limpeza dos notebooks B (#146), seções do relatório e apresentação (#133, #134)
 - **C (≈ 18,3 h)** — C_11 a C_13 (#132), ajuste fino (#1), peso de classe (#5), calibração (#79), limiar (#80), testes e conferência (#2, #119), tabelas de importância (#91), seções do relatório (#133)
 - **Equipe** — ponto de decisão (#140) e aprovações dos gates (#78, #81)
@@ -2774,6 +2774,7 @@ Uma segunda conversa, com outro professor, não foi transcrita. Dela veio a cobr
 - carga: 0.5
 - novo: não
 - professores: não
+- arquivos: notebooks/B/B_06_eda_temporal_clustering.ipynb
 
 ### ① Para entender
 
@@ -2788,7 +2789,7 @@ As tabelas "mortalidade por variável" do B_06 foram feitas com a coorte inteira
 ### ② Problema
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
-> Sábado, 17h às 18h. Continua **P1**: usar os casos de teste numa tabela de associação é o tipo de crítica que a banca faz na hora. A execução do B_06 acontece **uma vez**, junto com o #136, para não rodar o notebook mais pesado duas vezes.
+> **Passo a passo corrigido em 31/10, 19h, depois de ler o B_06 e a execução de ensaio.** O texto anterior tinha três erros: (1) o notebook lia `kind="provisional"` e não a coorte definitiva; (2) a partição-mestra grava o bloco na coluna `particao`, com o vocabulário novo (`train_ref`), e não em `bloco_mestre` mapeado para "treino"; (3) faltava conferir as contagens por bloco com o manifesto. As edições já foram aplicadas e a execução de ensaio passou (ver "Estado"). Faltam três ajustes pequenos e a execução final, junto com o #136.
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
 > A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
@@ -2798,20 +2799,56 @@ As tabelas de desfecho do B_06 (letalidade por variável) usaram a coorte inteir
 
 ### ③ O que fazer
 
-> [!decisão] Replanejamento de 31/10
-> Mudança pequena no B_06 e **uma** execução (a mesma do #136 e do #145). A mortalidade base cai de 21,8% (coorte inteira) para ≈ 8,4% (`train_ref`); anote qualquer variável que mude de direção.
+> [!decisão] Replanejamento de 31/10 · versão 2 (corrigido em 31/10, 19h)
+> Mudança pequena no B_06 e **uma** execução final (a mesma do #136 e do #145). A mortalidade base cai de 21,8% (coorte inteira) para ≈ 8,4% (`train_ref`); anote qualquer variável que mude de direção.
 
-**Dono:** Pessoa B · **Prazo:** 31/10 (sábado), 17h às 18h · **Esforço estimado:** ≈ 30 min de edição + execução do B_06 (tempo de máquina) · **Começa quando:** #142 (já concluído)
+**Dono:** Pessoa B · **Prazo:** 31/10 (sábado), 17h às 18h30 · **Esforço estimado:** ≈ 30 min (edições já aplicadas; falta só os três ajustes e a execução final) · **Começa quando:** #142 (já concluído)
 
-1. No B_06, logo depois da leitura da coorte, leia `data/analytical/partitions_master.parquet` só com `id_registro` e `bloco_mestre` e junte por `id_registro` (inclua `id_registro` na lista de colunas lidas). Crie `coorte["particao"] = coorte["bloco_mestre"].map({"train_ref": "treino"})`; as demais ficam vazias. O notebook já filtra `particao == "treino"` quando a coluna existe.
-2. Execute o B_06 com `.\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/B/B_06_eda_temporal_clustering.ipynb` (cópia executada em `outputs/notebooks/`; a execução final com `--salvar-no-lugar` fica no #126). Confira na saída: `origem_analise_desfecho = particao_treino` e ≈ 556 mil fichas.
-3. Compare as tabelas `eda_02_obito_*` com a versão da coorte inteira: as direções devem se manter. Escreva no card as variáveis que mudaram de direção (ou "nenhuma mudou").
-4. Commit: `fix: tabelas de obito do B_06 so com train_ref [done:#51]`.
+#### Estado em 31/10 (execução de ensaio do B_06)
+- A célula 2 leu `coorte_final.parquet` (3.884.728 linhas), imprimiu `Fichas sem bloco na partição-mestra: 4` e `Fichas em train_ref: 556462`; o `raise` de divergência com o manifesto não disparou.
+- A célula 71 imprimiu `Origem da análise do desfecho: particao_treino`, `Registros utilizados: 556462` e `Óbitos por SRAG: 46961` (8,44%, a prevalência do `train_ref`).
+- As quatro tabelas `eda_02_obito_*` saem só dessa base. As células de descrição temporal (volume, série mensal, preenchimento) e o agrupamento antigo continuam usando todas as fichas, porque descrevem a base e não escolhem variáveis.
+
+#### O que mudou no B_06 (já aplicado)
+1. **Célula 2, leitura:** `resolve_cohort_path(..., kind="final")`; `id_registro` entrou em `COLUNAS_ESTRUTURA` e em `COLUNAS_OBRIGATORIAS_COORTE`.
+2. **Célula 2, partição-mestra:** depois da leitura, o notebook lê `data/analytical/partitions_master.parquet` (colunas `id_registro` e `particao`), confere que `id_registro` é único, alinha por `id_registro` (`reindex`, não pela posição das linhas) e confere as contagens por bloco com `manifesto_particao.json`; divergiu, levanta `ValueError`. As 4 fichas que a partição deixou de fora ficam sem bloco.
+3. **Célula 71:** filtra `particao == "train_ref"`. Sem a coluna `particao` ou sem nenhuma ficha em `train_ref`, levanta erro; o caminho silencioso que usava a coorte inteira foi removido.
+4. **Nomes:** os nove `COLUNAS_*_B06` viraram `COLUNAS_*` (nenhum nome do notebook cita pessoa ou número de notebook).
+
+#### Três ajustes que faltam (≈ 10 min)
+1. **Célula 1 (Markdown).** O parágrafo atual diz que "nenhuma tabela" usa fichas de validação e teste, o que é falso para o agrupamento (a célula 104 sorteia 10 mil fichas por ano, de 2019 a 2026) e para a série mensal. Substitua o parágrafo que começa em "A descrição temporal usa todas as fichas" e termina em "validação e ao teste." por:
+
+```markdown
+A descrição temporal (volume, composição, preenchimento e série mensal) e a
+exploração de agrupamento usam todas as fichas da coorte, porque descrevem a
+evolução da base e não são usadas para escolher variáveis ou hiperparâmetros.
+As tabelas de associação entre o desfecho e as variáveis (sintomas,
+comorbidades, faixa etária e número de comorbidades) usam apenas o bloco
+`train_ref` da partição-mestra
+(`data/analytical/partitions_master.parquet`).
+```
+2. **Aviso de depreciação na série mensal** (célula que converte `dt_interna_convertida` para `datetime64[ns]`): troque `na_value=np.datetime64("NaT"),` por `na_value=np.datetime64("NaT", "ns"),`. É a única ocorrência no notebook.
+3. **Comentário velho na célula 3** (a que cria `dt_interna_convertida`): troque as duas primeiras linhas, "Compatibilidade com a coorte definitiva… a coorte provisória já trazia prontas", por:
+
+```python
+# Cria as colunas derivadas que a coorte definitiva não traz prontas.
+# Não altera linhas nem valores originais.
+```
+
+#### Execução final (junto com o #136, uma vez só)
+1. Faça a execução do #136 e deste card no mesmo `.\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/B/B_06_eda_temporal_clustering.ipynb` (cópia executada em `outputs/notebooks/`; a execução com `--salvar-no-lugar` fica no #126). Meta: ≤ 6 GB e ≤ 20 min.
+2. Confira na saída os quatro números do "Estado" acima (`Fichas sem bloco: 4`, `train_ref: 556462`, `particao_treino`, `Óbitos por SRAG: 46961`).
+3. **Compare as tabelas `eda_02_obito_*` com a versão da coorte inteira.** A execução de ensaio já sobrescreveu os CSV em `outputs/tables/`; a versão antiga está no `RESULTADOS_COMPLETOS.docx` (compilado de 24/10, coorte inteira). As direções devem se manter. Escreva no card as variáveis que mudaram de direção (ou "nenhuma mudou").
+4. O texto final do notebook cita 2,5% a 2,6% e 26,3% a 26,7% (mortalidade dos dois grupos do agrupamento antigo): reconfira esses números na seção de agrupamento depois da execução, porque a coorte definitiva tem 30 mil fichas a menos.
+5. Commit: `fix: tabelas de obito do B_06 so com train_ref [done:#51]`.
 
 ### ④ Pronto quando
 
 - notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `particao_treino` | As saídas salvas do B_06 mostram origem_analise_desfecho = particao_treino, ou seja, as tabelas de óbito × cura vieram só do train_ref.
-- contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `partitions_master.parquet` | O B_06 junta a partição-mestre (partitions_master.parquet) por id_registro antes das tabelas de desfecho.
+- notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `Fichas em train_ref: 556462` | As saídas do B_06 mostram as 556.462 fichas do train_ref, o mesmo número do manifesto da partição.
+- contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `partitions_master.parquet` | O B_06 junta a partição-mestra (partitions_master.parquet) por id_registro antes das tabelas de desfecho.
+- nao-contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `coorte_sem_particao` | O caminho silencioso que usava a coorte inteira (coorte_sem_particao) foi removido do B_06.
+- nao-contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `COLUNAS_ESTRUTURA_B06` | Os nomes de variáveis do B_06 não carregam mais o sufixo do número do notebook.
 - manual: | As variáveis que mudaram de direção entre a versão da coorte inteira e a do train_ref foram anotadas neste card (ou foi registrado que nenhuma mudou).
 
 ## #91 · Mostrar quais características pesam mais no risco (importância das variáveis)
@@ -3729,7 +3766,7 @@ Faltam as sensibilidades de gravidade na admissão (com `saturacao` e `desc_resp
 | P_mais_regiao | P + `regiao_residencia` | logística |
 
 #### Passo a passo
-1. `git pull`. Crie `notebooks/C/C_14_ablacoes_variaveis.ipynb` (kernel `.venv`). Célula 1 (Markdown): título "C_14 — Ablações de variáveis em val_tune", três linhas (o que faz, lê `train_ref` e `val_tune`, grava duas tabelas). Célula 2 (código): copie **a segunda célula do C_12** (localiza a raiz do projeto e importa `from src.utils import config as C`).
+1. `git pull`. Crie `notebooks/C/C_14_ablacoes_variaveis.ipynb` (kernel `.venv`). Célula 1 (Markdown): título "Ablações de variáveis em val_tune" (sem código de notebook; o número entra na limpeza do #146), três linhas (o que faz, lê `train_ref` e `val_tune`, grava duas tabelas). Célula 2 (código): copie **a segunda célula do C_12** (localiza a raiz do projeto e importa `from src.utils import config as C`).
 2. Célula 3 (código), leitura. Todas as 46 colunas (≈ 600 mil linhas, cabem na memória):
 
 ```python
@@ -7440,8 +7477,8 @@ def test_gates_historicos_aprovados():
 r"""Executa um notebook em processo isolado e mede tempo e pico de memória.
 
 Uso (na raiz do repositório):
-    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/C/C_12_baseline_logistica.ipynb
-    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/B/B_06_eda_temporal_clustering.ipynb --salvar-no-lugar
+    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/<nome>.ipynb
+    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/<nome>.ipynb --salvar-no-lugar
 
 Sem --salvar-no-lugar, a cópia executada vai para outputs/notebooks/<nome>_executado.ipynb
 e o notebook original não muda. Com --salvar-no-lugar, o próprio arquivo é regravado
@@ -7644,13 +7681,13 @@ Uso: `.\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/C/C_12_baseli
 - estratégia: desenvolver
 - marco: M6
 - data ideal: 03/11
-- responsável: Pessoa A (1,75 h) + Pessoa B (2,5 h) + Pessoa C (1 h)
+- responsável: Pessoa A (2 h) + Pessoa B (2,5 h) + Pessoa C (1 h)
 - pessoas: A, B, C
 - fonte: Diagnóstico de 31/10: marcas de processo em notebooks, src, testes e docs
 - depende de: #143, #148, #136, #51
 - tags: Notebook, Limpeza, Entrega
 - pilar: Documentação + Valor científico-acadêmico
-- carga: 5.25
+- carga: 5.5
 - novo: sim
 - professores: não
 - arquivos: tools/auditar_marcas.py, tools/renomear_notebooks.py
@@ -7676,10 +7713,12 @@ Números da varredura de 31/10 (arquivos do repositório no commit `1e02321`):
 > [!atenção] O que nunca se faz
 > Não apagar comentário que explica uma decisão metodológica (por que 2019 fica no treino, por que o teste só abre uma vez, por que o boosting usa categóricas nativas). Limpar é trocar história por justificativa, não deixar o código mudo.
 
+**Regra do pacote (31/10):** nenhum arquivo entregue cita A, B ou C: nem em código, comentário, docstring ou Markdown, nem em nome de variável, de arquivo ou de pasta. A varredura de 31/10 (com os padrões ampliados do passo 1) achou, só em `src`, `tests`, `scripts`, `configs` e `README.md`: 32 referências a pendências, 8 "Pessoa X", 25 códigos de notebook (`B_07`, `A6`, títulos "# A1 —"), 250 linhas decorativas e 1 arquivo com nome de pessoa (`tests/test_regras_pessoa_a.py`). Em dados: `dataset_provisorio_pessoa_a.parquet` aparece em `configs/decisoes.yaml` e em `src/protocolo/verificacoes.py`.
+
 ### ② Problema
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
-> Terça-feira, 03/11. **Muda em relação à versão anterior:** (1) A6 e A_15 são **unidos ao notebook 04** com um script testado; (2) o conjunto final tem **13 notebooks**, incluindo as ablações (C_14); (3) as referências aos nomes antigos são atualizadas por um **script** (`tools/renomear_notebooks.py`, testado), que **não toca** nas linhas `nao-existe` do painel (a versão anterior reescreveria os próprios critérios deste card e os deixaria ✗); (4) C_15 e C_16 saem já limpos do #148 e as ablações (C_14) do #54; (5) a ferramenta de varredura é criada de manhã, e B e C só começam depois do push dela.
+> Terça-feira, 03/11. **Corrigido em 31/10, 19h, depois da varredura do repositório e do ensaio no B_06.** Regra nova e explícita: **nenhum arquivo do pacote cita A, B ou C** (código, comentário, docstring, Markdown, nome de variável, nome de arquivo ou de pasta). A versão anterior da ferramenta de varredura só procurava "Pessoa A" e "(#NN)"; ela deixaria passar os nomes com sufixo de notebook (`COLUNAS_ESTRUTURA_B06`), os códigos `B_06`, `C_13`, `A6`, os títulos "# A1 — ..." e **arquivos com nome de pessoa** (`tests/test_regras_pessoa_a.py`, `dataset_provisorio_pessoa_a.parquet`, `outputs/tables/pessoa_a/`). Mudanças: (1) a ferramenta ganhou esses padrões e confere os nomes de arquivo; (2) o script de renomeação troca também esses nomes em `src`, `tests`, `configs`, `docs`, `scripts` e notebooks; (3) A6 e A_15 são **unidos ao notebook 04**; (4) o conjunto final tem **13 notebooks**; (5) o script **não toca** nas linhas `nao-existe` do painel.
 
 A limpeza só funciona se for **feita por uma ferramenta de busca** (não de memória) e **depois** das mudanças de código, porque cada edição de notebook pode reintroduzir marcas. Por isso a ordem é: remoções (#143) → adaptação dos notebooks (#132, #148, #136, #51) → este card → execução final (#126).
 
@@ -7690,26 +7729,40 @@ Também não se pode reexecutar o C_16 (o teste abre uma vez). Por isso o C_16 �
 > [!decisão] Replanejamento de 31/10
 > Limpeza **automatizada onde é segura** (linhas decorativas, `(#NN)`, emojis) e **manual onde exige leitura** (frases, "Pessoa X", datas, comentários excessivos). Cada pessoa limpa os arquivos que já editou; a Pessoa A cuida do que não tem dono e da renomeação final.
 
-**Dono:** Pessoa A (src, testes, configuração, docs, ferramentas, união do A6 e do A_15 e renomeação) · Pessoa B (B_05, B_06, B_07) · Pessoa C (00, 01, C_11 a C_13) · **Prazo:** ferramenta às 8h; limpeza em 03/11 até as 19h; renomeação às 20h · **Esforço estimado:** A ≈ 1 h 45 · B ≈ 2 h 30 · C ≈ 1 h · **Começa quando:** #143, #148, #136 e #51
+**Dono:** Pessoa A (src, testes, configuração, docs, ferramentas, união do A6 e do A_15 e renomeação) · Pessoa B (B_05, B_06, B_07) · Pessoa C (00, 01, C_11 a C_13) · **Prazo:** ferramenta às 8h; limpeza em 03/11 até as 19h; renomeação às 20h · **Esforço estimado:** A ≈ 2 h · B ≈ 2 h 30 · C ≈ 1 h · **Começa quando:** #143, #148, #136 e #51
 
-#### 1. Ferramenta de varredura (Pessoa A, 03/11 às 8h, 15 min; B e C só começam depois do push)
-Crie `tools/auditar_marcas.py` (testado em notebook e em `.py` de exemplo). Sem argumento só relata; com `--aplicar` remove apenas linhas decorativas, `(#NN)` em comentários e Markdown e emojis, preservando saídas e ordem das células. Commit: `chore: ferramenta de varredura de marcas`.
+#### 1. Ferramenta de varredura (Pessoa A, 03/11 às 8h, 20 min; B e C só começam depois do push)
+Crie `tools/auditar_marcas.py` (testada em notebook e em `.py` de exemplo, e conferida no repositório de 31/10). Sem argumento só relata; com `--aplicar` remove apenas linhas decorativas, `(#NN)` em comentários e Markdown, emojis e o código no início de títulos de comentário ("# A1 — alvo" vira "# Alvo"), preservando saídas e ordem das células. O que ela procura e o que fazer com cada achado:
+
+| Achado | Exemplo | Ação |
+|---|---|---|
+| `ref_pendencia` | `(#73)`, "ficha #81" | `--aplicar` tira os parênteses; o resto é manual |
+| `pessoa` | "Pessoa A", `pessoa_a` | manual (reescrever) ou pelo script do passo 6 |
+| `codigo_notebook` | `B_06`, `C_13`, `A6`, "# A1 — ..." | títulos de comentário: `--aplicar`; o resto é manual |
+| `sufixo_identificador` | `COLUNAS_ESTRUTURA_B06` | manual: tirar o sufixo |
+| `nome_de_arquivo` | `tests/test_regras_pessoa_a.py` | `git mv` + script do passo 6 |
+| `decorativa`, `emoji`, `etapa_numerada` | `# =====`, `# Passo 1` | `--aplicar` (as duas primeiras) |
+
+Commit: `chore: ferramenta de varredura de marcas`.
 
 ```python
 r"""Procura (e, se pedido, remove) marcas de processo interno nos arquivos que serão entregues.
 
-Procura: referências a pendências ((#73), ficha #81, card 12), "Pessoa A/B/C", linhas decorativas
-(# =====, # -----), emojis e setas decorativas, TODO/FIXME e menções a IA.
-Mostra também a proporção de linhas de comentário em células de código.
+Procura: referências a pendências ((#73), ficha #81, card 12), "Pessoa A/B/C" e "pessoa_a" em
+nomes, códigos de notebook (B_06, C_13, A6) e sufixos de identificador (COLUNAS_X_B06),
+títulos do tipo "# A1 — ...", linhas decorativas (# =====), emojis, "Passo N", TODO/FIXME
+e menções a IA. Confere também os NOMES de arquivos e pastas.
+Mostra a proporção de linhas de comentário em células de código.
 
 Uso (na raiz do repositório):
     .\.venv\Scripts\python.exe tools/auditar_marcas.py                 # só relatório
     .\.venv\Scripts\python.exe tools/auditar_marcas.py notebooks src   # só estas pastas
     .\.venv\Scripts\python.exe tools/auditar_marcas.py --aplicar       # remove o que é seguro
 
---aplicar só mexe em COMENTÁRIOS e em células Markdown: apaga linhas decorativas, tira "(#NN)" e emojis.
-"Pessoa X", datas e frases explicativas continuam como aviso: exigem leitura e reescrita humana.
-Notebooks mantêm as saídas e a ordem das células; o arquivo só é regravado se algo mudou.
+--aplicar só mexe em COMENTÁRIOS e em células Markdown: apaga linhas decorativas, tira "(#NN)" e emojis
+e troca o início de títulos de comentário como "# A1 — alvo" por "# Alvo".
+Pessoa, códigos de notebook, nomes de arquivo, datas e frases explicativas continuam como aviso:
+exigem leitura e reescrita humana. Saída 0 = nada a corrigir.
 """
 from __future__ import annotations
 
@@ -7723,17 +7776,20 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 PADROES = {
     "ref_pendencia": re.compile(r"\(\s*#\d{1,3}(?:\s*[,e/]\s*#?\d{1,3})*\s*\)|\b(?:ficha|card|tarefa|pendência|item)\s*#?\d{1,3}\b|(?<![\w&/])#\d{2,3}\b"),
-    "pessoa": re.compile(r"\bPessoa\s+[ABC]\b"),
+    "pessoa": re.compile(r"(?<![A-Za-z])[Pp]essoa[_ ][ABCabc]\b"),
+    "codigo_notebook": re.compile(r"\b[ABC]_\d{2}\b|\bA6\b|^\s*#+\s*[ABC]\d\b|(?<=\[)[ABC]\d(?=\])", re.M),
+    "sufixo_identificador": re.compile(r"\b[A-Za-z]\w*_[ABC]_?\d{1,2}\b"),
     "decorativa": re.compile(r"^\s*#\s*(?:[=\-─━_*~]{4,}.*[=\-─━_*~]{4,}|[=\-─━_*~]{6,})\s*$", re.M),
     "emoji": re.compile("[\u2705\u274c\u26a0\u2714\u2716\u2b50\U0001F300-\U0001FAFF]"),
     "etapa_numerada": re.compile(r"^\s*#\s*(?:PASSO|Passo|ETAPA|Etapa|STEP|Step|PARTE|Parte)\s*\d+", re.M),
     "todo": re.compile(r"\b(?:TODO|FIXME|XXX|HACK)\b"),
     "ia": re.compile(r"\b(?:IA|Copilot|ChatGPT|Claude|GPT|LLM|assistente)\b"),
 }
+NOME_ARQUIVO = re.compile(r"[Pp]essoa_[abcABC]|(?:^|/)[ABC](?:/|_\d)|(?:^|/)[ABC]\d_")
 SEGURO = ("decorativa", "emoji")
 EXTENSOES = {".ipynb", ".py", ".md", ".yaml", ".yml", ".toml"}
 IGNORAR = {".venv", ".git", "outputs", "data", "__pycache__", ".srag-status-local"}
-IGNORAR_ARQ = {"PROJECT_STATUS.md", "PROJECT_STATUS_TEXT.md", "auditar_marcas.py"}
+IGNORAR_ARQ = {"PROJECT_STATUS.md", "PROJECT_STATUS_TEXT.md", "auditar_marcas.py", "renomear_notebooks.py"}
 
 
 def _limpar_comentarios(texto: str) -> str:
@@ -7745,6 +7801,7 @@ def _limpar_comentarios(texto: str) -> str:
         if linha.lstrip().startswith("#"):
             linha = re.sub(r"\s*\(\s*#\d{1,3}(?:\s*[,e/]\s*#?\d{1,3})*\s*\)", "", linha)
             linha = PADROES["emoji"].sub("", linha).rstrip()
+            linha = re.sub(r"^(\s*#\s*)[ABC]\d\s*[—–-]\s*(\S)", lambda m: m.group(1) + m.group(2).upper(), linha)
         else:
             linha = re.sub(r"\s+#\s*\(\s*#\d{1,3}(?:\s*[,e/]\s*#?\d{1,3})*\s*\)\s*$", "", linha)
         saida.append(linha)
@@ -7768,6 +7825,8 @@ def _fonte(c) -> str:
 
 def auditar(caminho: Path) -> tuple[Counter, dict]:
     achados, info = Counter(), {}
+    if NOME_ARQUIVO.search(caminho.relative_to(RAIZ).as_posix()):
+        achados["nome_de_arquivo"] += 1
     if caminho.suffix == ".ipynb":
         _, cels = _celulas(caminho)
         linhas_cod = com = 0
@@ -7884,6 +7943,9 @@ Saem do pacote (já tratados no #143): `B_10`, `A_08`, `A_09`, `A_14`, `C_02`, o
 | `TODO`, `FIXME`, código comentado, `print` de depuração | apagar ou resolver |
 | Mais de uma em cada seis linhas de uma célula de código em comentário | reduzir para o essencial |
 | Texto que descreve a gestão do projeto ("Enxugado", "Replanejamento", "Gate pendente") | apagar |
+| Código de notebook (`B_06`, `C_13`, `A6`) em texto, comentário ou título | trocar pelo nome novo (`06`, `10`, "notebook 04") ou apagar |
+| Sufixo de notebook em nome de variável (`COLUNAS_X_B06`) | tirar o sufixo (conferir que o nome novo não colide com outro) |
+| Nome de arquivo ou pasta com letra de pessoa (`pessoa_a`, `/A/`) | renomear com `git mv` e trocar as referências (passo 6) |
 
 #### 5. Execução (cada pessoa, com a ferramenta do passo 1)
 1. `git pull`; `.\.venv\Scripts\python.exe tools/auditar_marcas.py notebooks src tests configs docs README.md` (só relatório) e copie as linhas dos **seus** arquivos para um bloco de notas.
@@ -7894,12 +7956,12 @@ Saem do pacote (já tratados no #143): `B_10`, `A_08`, `A_09`, `A_14`, `C_02`, o
 
 | Pessoa | Arquivos |
 |---|---|
-| A | `src/`, `tests/`, `configs/`, `docs/decisoes.md` (tirar `(#NN)`, "Pessoa X" e os trechos de gestão; **manter as datas das decisões**), `README.md`, `03_...` e `04_...` (com A6 e A_15 incorporados); o `08_...` (ablações) já nasce limpo |
-| B | `05_...`, `06_...`, `07_...` (os três são os maiores: 76, 54 e 10 cabeçalhos decorativos) |
+| A | `src/`, `tests/`, `configs/`, `scripts/`, `docs/decisoes.md` (tirar `(#NN)`, "Pessoa X" e os trechos de gestão; **manter as datas das decisões**), `README.md`, `03_...` e `04_...` (com A6 e A_15 incorporados); o `08_...` (ablações) já nasce limpo. Sobram à mão, depois do script do passo 6: as "Pessoa A" em docstrings de `src/protocolo/verificacoes.py`, o rótulo `[A6]` e as menções a `B_07` em `scripts/*.py` |
+| B | `05_...`, `06_...`, `07_...` (os três são os maiores: 76, 54 e 10 cabeçalhos decorativos; o `06_...` já está sem sufixo `_B06` desde o #51) |
 | C | `01_...`, `02_...`, `09_...` a `11_...` (já saíram limpos do #132; confira); o `12_...` e o `13_...` já saíram limpos do #148 |
 
 #### 6. Unir, renomear e fechar (Pessoa A, 03/11 às 20h, depois que B e C fizeram push)
-1. `git pull`; confira que a varredura não acusa mais nada.
+1. `git pull`; `.\.venv\Scripts\python.exe tools/auditar_marcas.py notebooks src tests configs scripts docs README.md` e guarde a saída: é o "antes".
 2. **Unir A6 e A_15 ao A_04** (script testado com notebooks inventados; roda na raiz, grava no próprio A_04 e mantém as saídas salvas). Salve num arquivo temporário e rode:
 
 ```python
@@ -7924,13 +7986,14 @@ destino_path.write_text(json.dumps(destino, ensure_ascii=False, indent=1) + "\n"
 print(len(destino["cells"]), "células em", destino_path.name)
 ```
    Depois apague `notebooks/A/A6_ancora_e_selecao.ipynb` e `notebooks/A/A_15_fator_risco.ipynb`. Abra o A_04 e confira que a sequência de títulos faz sentido (qualidade → âncora → fator de risco).
-3. `git mv` de cada notebook para o nome novo do passo 2; remova as pastas `notebooks/A`, `notebooks/B` e `notebooks/C`.
-4. Crie `tools/renomear_notebooks.py` com o código abaixo (testado) e rode `.\.venv\Scripts\python.exe tools/renomear_notebooks.py`. Ele troca os nomes antigos no `README.md`, em `docs/decisoes.md` e nas linhas de critério e de `arquivos:` do `PROJECT_STATUS_TEXT.md`; **não** altera as linhas `nao-existe`, as tabelas nem os blocos de código.
+3. **Renomear com `git mv`:** `git mv tests/test_regras_pessoa_a.py tests/test_regras_protocolo.py`; depois cada notebook para o nome novo do passo 2; remova as pastas `notebooks/A`, `notebooks/B` e `notebooks/C`.
+4. Crie `tools/renomear_notebooks.py` com o código abaixo (testado: depois do renomeio, `tests/test_regras_protocolo.py` tem o mesmo resultado que o arquivo antigo) e rode `.\.venv\Scripts\python.exe tools/renomear_notebooks.py`. Ele troca em `README.md`, `src`, `tests`, `scripts`, `configs`, `docs` e notebooks: os caminhos antigos dos notebooks pelos novos e estes nomes ligados a pessoas: `dataset_provisorio_pessoa_a` → `dataset_provisorio_protocolo`, `relatorio_pessoa_a` → `relatorio_protocolo`, `outputs/figures/pessoa_a` → `outputs/figures/protocolo`, `outputs/tables/pessoa_a` → `outputs/tables/protocolo` e `test_regras_pessoa_a` → `test_regras_protocolo`, além da frase do docstring de `src/protocolo/__init__.py`. No `PROJECT_STATUS_TEXT.md` só mexe nas linhas de critério e de `arquivos:`; **não** altera as linhas `nao-existe`, as tabelas nem os blocos de código.
 
 ```python
-r"""Atualiza as referências aos notebooks renomeados: README, decisões e critérios do painel.
+r"""Atualiza as referências aos notebooks renomeados e troca nomes ligados a pessoas por nomes neutros.
 
-Uso (na raiz do repositório, depois do `git mv`): .\.venv\Scripts\python.exe tools/renomear_notebooks.py
+Uso (na raiz do repositório, depois dos `git mv`): .\.venv\Scripts\python.exe tools/renomear_notebooks.py
+Troca em README, src, tests, scripts, configs, docs e notebooks (os dois mapas) e, no PROJECT_STATUS_TEXT.md, só nas linhas de critério.
 No PROJECT_STATUS_TEXT.md só mudam as linhas de critério (``- verbo: ...``) e de ``- arquivos:``;
 as linhas ``- nao-existe:`` (que citam os nomes antigos de propósito), as tabelas e os blocos de código ficam como estão.
 """
@@ -7953,20 +8016,46 @@ MAPA = {
     "notebooks/C/C_13_boosting": "notebooks/11_boosting_e_ajuste_fino",
     "notebooks/C/C_15_calibracao_limiar": "notebooks/12_calibracao_e_limiar",
     "notebooks/C/C_16_validacao_final": "notebooks/13_validacao_final",
+    "tests/test_regras_pessoa_a": "tests/test_regras_protocolo",
+}
+NOMES = {
+    "dataset_provisorio_pessoa_a": "dataset_provisorio_protocolo",
+    "relatorio_pessoa_a": "relatorio_protocolo",
+    "outputs/figures/pessoa_a": "outputs/figures/protocolo",
+    "outputs/tables/pessoa_a": "outputs/tables/protocolo",
+    "test_regras_pessoa_a": "test_regras_protocolo",
+    "Verificações e registros da Pessoa A (protocolo, coorte, qualidade, decisões).": "Verificações e registros do protocolo (coorte, qualidade e decisões).",
 }
 RAIZ = Path(__file__).resolve().parents[1]
-PADRAO = re.compile("|".join(map(re.escape, sorted(MAPA, key=len, reverse=True))))
+PASTAS_CODIGO = ("src", "tests", "scripts", "configs", "docs", "notebooks")
+SUFIXOS = {".py", ".yaml", ".yml", ".md", ".ipynb", ".toml"}
+
+
+def _padrao(mapa: dict) -> re.Pattern:
+    return re.compile("|".join(map(re.escape, sorted(mapa, key=len, reverse=True))))
+
+
+PADRAO = _padrao({**MAPA, **NOMES})
+TODOS = {**MAPA, **NOMES}
 
 
 def trocar(texto: str) -> str:
-    return PADRAO.sub(lambda m: MAPA[m.group(0)], texto)
+    return PADRAO.sub(lambda m: TODOS[m.group(0)], texto)
 
 
 def main() -> None:
-    for nome in ("README.md", "docs/decisoes.md"):
-        caminho = RAIZ / nome
-        if caminho.exists():
-            caminho.write_text(trocar(caminho.read_text(encoding="utf-8")), encoding="utf-8")
+    alvos = [RAIZ / "README.md"]
+    for pasta in PASTAS_CODIGO:
+        base = RAIZ / pasta
+        if base.is_dir():
+            alvos += [p for p in sorted(base.rglob("*")) if p.is_file() and p.suffix in SUFIXOS and ".ipynb_checkpoints" not in p.parts]
+    for caminho in alvos:
+        if not caminho.exists():
+            continue
+        antes = caminho.read_text(encoding="utf-8")
+        depois = trocar(antes)
+        if depois != antes:
+            caminho.write_text(depois, encoding="utf-8")
     painel = RAIZ / "PROJECT_STATUS_TEXT.md"
     if painel.exists():
         saida = []
@@ -7974,14 +8063,15 @@ def main() -> None:
             e_criterio = re.match(r"^- (?!nao-existe:)[a-z\-]+: ", linha) or linha.startswith("- arquivos:")
             saida.append(trocar(linha) if e_criterio else linha)
         painel.write_text("\n".join(saida), encoding="utf-8")
-    print("Referências atualizadas em README.md, docs/decisoes.md e PROJECT_STATUS_TEXT.md.")
+    print("Referências atualizadas em README, src, tests, scripts, configs, docs, notebooks e PROJECT_STATUS_TEXT.md.")
 
 
 if __name__ == "__main__":
     main()
 ```
-5. `.\.venv\Scripts\python.exe -m pytest -m "not slow" -q` e `.\.venv\Scripts\python.exe .srag-status-local\server.py validar` (o painel não pode apontar problema de formato).
-6. Commit: `chore: unifica a numeracao dos notebooks`. Avise B e C para `git pull` antes do #126.
+5. Escreva à mão o que sobrou: `.\.venv\Scripts\python.exe tools/auditar_marcas.py notebooks src tests configs scripts docs README.md --aplicar` e leia o relatório; reescreva as "Pessoa A" restantes e os rótulos `[A6]` e `B_07` dos `scripts/*.py`. O alvo é `TOTAL` zerado, com saída 0.
+6. `.\.venv\Scripts\python.exe -m pytest -m "not slow" -q` e `.\.venv\Scripts\python.exe .srag-status-local\server.py validar` (o painel não pode apontar problema de formato). Os dois nomes de dado que mudaram (`dataset_provisorio_protocolo.parquet` e `outputs/tables/protocolo/`) só passam a existir quando o 03 e o 04 forem executados de novo no #126; os arquivos antigos, se existirem na sua máquina, podem ser apagados (a pasta `data/` e `outputs/` não vai para o Git).
+7. Commit: `chore: unifica a numeracao dos notebooks e tira nomes de pessoa`. Avise B e C para `git pull` antes do #126.
 
 ### ④ Pronto quando
 
@@ -7996,6 +8086,11 @@ if __name__ == "__main__":
 - existe: `tools/renomear_notebooks.py` | O script que atualiza as referências aos nomes novos existe.
 - manual: | `tools/auditar_marcas.py notebooks src tests configs docs README.md` termina com ref_pendencia, pessoa, decorativa, emoji e etapa_numerada zerados (em docs/decisoes.md, as datas das decisões foram mantidas), e cada notebook segue o padrão do item 3 deste card.
 - manual: | `.srag-status-local\server.py validar` não aponta problema de formato e o pytest rápido passa depois da renomeação.
+- existe: `tests/test_regras_protocolo.py` | O arquivo de testes do protocolo foi renomeado para um nome sem pessoa.
+- nao-existe: `tests/test_regras_pessoa_a.py` | O nome antigo do arquivo de testes (com pessoa) não existe mais.
+- nao-contem: `configs/decisoes.yaml` :: `pessoa_a` | O configs/decisoes.yaml não cita mais pessoa em nome de arquivo de dados.
+- nao-contem: `src/protocolo/verificacoes.py` :: `pessoa_a` | O src/protocolo/verificacoes.py não usa mais pessoa_a em nomes de arquivo, de relatório ou de pasta.
+- nao-contem: `src/protocolo/__init__.py` :: `Pessoa A` | O docstring do pacote src/protocolo não cita pessoa.
 
 ## #147 · Congelar e conferir o pacote entregue em 04/11 (e zerar as pendências de verificação)
 
