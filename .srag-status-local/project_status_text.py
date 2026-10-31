@@ -897,6 +897,15 @@ def _people_from_owner(own: str) -> list[str]:
     return found
 
 
+def _num_carga(valor: Any) -> int | float | None:
+    """Carga em horas: aceita inteiro ou decimal com ponto ou vírgula ("2", "1.5", "1,5"); senão None."""
+    texto = str(valor).strip().replace(",", ".")
+    if not re.fullmatch(r"\d+(?:\.\d+)?", texto):
+        return None
+    numero = float(texto)
+    return int(numero) if numero.is_integer() else numero
+
+
 def item_view(it: dict[str, Any], flags: dict[str, Any] | None = None) -> dict[str, Any]:
     m = it.get("meta", {})
     def g(k, default=""):
@@ -914,7 +923,7 @@ def item_view(it: dict[str, Any], flags: dict[str, Any] | None = None) -> dict[s
         "m": g("marco", "—") or "—", "due": g("data ideal", "—") or "—", "own": g("responsável", "—") or "—", "ow": ow,
         "src": g("fonte", "—") or "—", "dep": parse_ids(g("depende de")), "tags": split_list(g("tags")),
         "pillar": "" if fold(g("pilar")) in EMPTY else g("pilar"),
-        "load": int(load) if re.fullmatch(r"\d+", str(load).strip()) else None,
+        "load": _num_carga(load),
         "new": parse_bool(g("novo", "não")), "prof": parse_bool(g("professores", "não")),
         "files": split_list(g("arquivos")), "rm": "" if fold(g("removido")) in EMPTY else g("removido"),
         "intro": render_cached(it["intro"]) if it.get("intro") else "",
