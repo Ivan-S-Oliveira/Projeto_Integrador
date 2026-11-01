@@ -8433,3 +8433,65 @@ Reabertos nesta revisão: **#50** (a tabela de ablações e a decisão dos três
 - manual: | A tabela de reconferência (card, valor registrado, valor reconferido, a conclusão mudou?) está comentada neste card, com R1 a R5 e, se o #140 mudou variáveis, o bloco condicional.
 - manual: | Cada card da tabela do ② continua com número e texto atualizados, ou foi reaberto com um comentário que diz o que mudou.
 - manual: | O #133 usa os números reconferidos: parágrafo do #52 com "piloto", k=2 principal e k=3 segundo nível no agrupamento, e tabelas de óbito só do train_ref.
+
+
+## #150 · Condensar a documentação do pacote e fechar as sobras que o #146 não cobre
+- prioridade: P2
+- situação: aberta
+- estratégia: documentar
+- marco: M6
+- data ideal: 03/11
+- responsável: Pessoa A (2 h) + Pessoa C (0,25 h)
+- pessoas: A, C
+- fonte: Levantamento de 01/11 (git grep de referências e contagem de palavras por arquivo)
+- depende de: #146
+- tags: Documentação, Limpeza, Entrega
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 2.25
+- novo: sim
+- professores: não
+- arquivos: docs/decisoes.md, src/protocolo/verificacoes.py, notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv
+
+### ① Para entender
+Complementa o #146 e o #147. O #146 tira as marcas de processo (números de card e "Pessoa X") e renomeia os arquivos; este card cuida do que ele não cobre: documentação mais longa do que a banca precisa, um arquivo de saída versionado e um arquivo interno que ficaria no pacote. **Nada que seja método sai:** decisões, critérios e planos registrados antes dos resultados ficam; muda a forma, não o conteúdo.
+
+### ② Problema
+- docs/decisoes.md tem 11.348 palavras (o README tem 1.990). A §29 ocupa as linhas 972 a 1617, cerca de 40% do arquivo, e repete em cada entrada o mesmo molde de campos (Decisão, Motivo, Impacto, Implementado em, Fecha).
+- src/protocolo/verificacoes.py tem 5,2 palavras por linha, contra 1,6 a 3,3 nos outros arquivos de src/: docstrings longas.
+- docs/decisoes.md ainda tem "Responsável pelo registro: Pessoa X" (linhas 888 e 964) e uma nota de gestão na linha 969.
+- notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv está versionado no Git (parece saída de medição) e carrega o código do notebook no nome.
+- tools/read_outputs.py está no Git e não consta no .gitattributes do #147.
+
+### ③ O que fazer
+Cada pessoa trabalha só nos próprios arquivos. A Pessoa A pode começar a condensação do decisoes.md na segunda (02/11), depois que o #140, o #78, o #79 e o #80 registrarem as entradas deles.
+
+#### Condensar a §29 do docs/decisoes.md (Pessoa A)
+- **Não renumere nem mude títulos.** Outros textos citam §28, §29.1, §29.4, §29.10, §29.24 e §29.25, e a §29.28 a §29.31 ficam reservadas para #140, #78, #79 e #80.
+- Cada entrada com no máximo Decisão, Motivo e Impacto. "Implementado em" só quando aponta uma chave de configuração.
+- Funda a §29.6.1 na §29.6, deixando o estado final e uma frase sobre a correção. A §29.25 (reversão sobre 2019) vira uma frase dentro da entrada que ela corrige, se couber sem perder a decisão de 29/10.
+- Planos registrados antes dos resultados (§29.17, §29.19, §29.21, §29.22): mantenha **todas** as decisões e todos os critérios; corte só a narrativa. Meta sugerida: metade das linhas da §29.
+- **Mantenha estes textos**, que critérios do painel conferem: "final_cohort_v1", "criar_group_id", "indicadores de ausência", "parcial", "ponto de decisão", "## 28. Decisão temporal", a menção a 2019 nas §5 e §28, e uma linha "Última atualização" diferente de 21/10/2026.
+- Apague "Responsável pelo registro: Pessoa X" (linhas 888 e 964) e reescreva a nota da linha 969 sem citar card ou pessoa.
+- Depois, no painel, **Atualizar, auditar e validar**: os critérios de #73, #9, #10, #13, #59, #83, #102, #120 e #140 sobre o decisoes.md precisam continuar ✓.
+
+#### Docstrings do verificacoes.py (Pessoa A, com o arquivo à mão)
+Reduza as docstrings com mais de 6 linhas ao essencial: o que a função faz, os parâmetros e a regra de negócio. Mantenha as que explicam uma decisão (por exemplo, por que o arquivo provisório não é o artefato oficial).
+
+#### Arquivo versionado que não deveria estar (Pessoa C, 5 min)
+`git rm notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv`. A pasta notebooks/C deixa de existir no #146; sem este passo o arquivo ficaria órfão no pacote.
+
+#### Pacote (Pessoa A)
+Acrescente `tools/read_outputs.py export-ignore` ao .gitattributes do #147.
+
+#### Fechamento
+Rode o pytest rápido e `.\.venv\Scripts\python.exe .srag-status-local\server.py validar`.
+
+### ④ Pronto quando
+- nao-existe: `notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv` | O arquivo de saída com o código do notebook no nome não está mais no repositório.
+- nao-contem: `docs/decisoes.md` :: `Responsável pelo registro` | O decisoes.md não tem mais as linhas "Responsável pelo registro: Pessoa X".
+- contem: `docs/decisoes.md` :: `final_cohort_v1` | O contrato da coorte continua registrado depois da condensação.
+- contem: `docs/decisoes.md` :: `criar_group_id` | A regra de grupo continua registrada depois da condensação.
+- contem: `docs/decisoes.md` :: `## 28. Decisão temporal` | O protocolo temporal (§28) continua registrado.
+- manual: | A §29 do decisoes.md foi condensada sem mudar números nem títulos, com todas as decisões e todos os critérios de método preservados, e os critérios do painel sobre o decisoes.md seguem ✓.
+- manual: | As docstrings longas do verificacoes.py foram reduzidas ao essencial e o pytest rápido passa.
+- manual: | O .gitattributes do #147 exclui o tools/read_outputs.py do pacote da banca.
