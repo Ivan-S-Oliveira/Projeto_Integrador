@@ -511,18 +511,6 @@ def _analytical_path(cfg: dict) -> Path:
         print(f"[_analytical_path] fallback ({type(e).__name__}: {e}) -> {cfg['dataset_analitico']['path']}")
         return Path(cfg["dataset_analitico"]["path"])
 
-def _analytical_path(cfg: dict) -> Path:
-    """Caminho do dataset PROVISÓRIO do fluxo A (A_03 / A_04).
-
-    NÃO é o artefato oficial supervisionado (gerado por
-    ``src/data/supervised_artifact.py`` em ``DATASET_NAME``). Se
-    ``dataset_analitico.path`` no YAML apontar para o mesmo arquivo do
-    artefato oficial, os notebooks A sobrescrevem o artefato e quebram
-    o hash do manifesto (ver #73).
-    """
-    nome = Path(cfg["dataset_analitico"]["path"]).name
-    ...
-
 def a1_export_dataset(df, cfg, rep: Report, supervised_config=None, path=None, versao="0.1",
                       excluir_proibidas=False, extra_cols=(), split=None, rotulo="") -> dict:
     """Grava a população analítica (coorte + alvo + tempo + features) para o C2.
