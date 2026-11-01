@@ -401,3 +401,64 @@ def test_montar_features_preserva_nan_em_ano_mes() -> None:
     assert out["mes_internacao"].isna().tolist() == [False, True]
     assert int(out["ano_internacao"].iloc[0]) == 2024
     assert int(out["mes_internacao"].iloc[0]) == 1
+
+
+def test_preprocessador_clustering_ausente_explicito_e_esparso():
+    from scipy import sparse
+
+    from src.features.normalization import construir_preprocessador_clustering
+
+    df = pd.DataFrame({
+        "idade": [10.0, 20.0, None, 40.0, 50.0, 60.0, 70.0, 80.0],
+        "febre": ["1", "2", None, "9", "1", "2", None, "1"],
+        "tosse": ["1", "1", "2", "2", None, "1", "2", "9"],
+    })
+    pre = construir_preprocessador_clustering(["idade"], ["febre", "tosse"])
+    matriz = pre.fit_transform(df)
+    nomes = list(pre.get_feature_names_out())
+    assert sparse.issparse(matriz)
+    assert any(n.startswith("febre_AUSENTE") for n in nomes) and any(n.startswith("tosse_AUSENTE") for n in nomes)
+    # febre tem 4 categorias (1, 2, 9, AUSENTE): peso 1/2 em cada coluna dela
+    colunas_febre = [i for i, n in enumerate(nomes) if n.startswith("febre_")]
+    assert len(colunas_febre) == 4 and np.isclose(matriz[:, colunas_febre].max(), 0.5)
+
+
+def test_preprocessador_clustering_categoria_nova_e_tipos_do_pandas():
+    from src.features.normalization import construir_preprocessador_clustering
+
+    treino = pd.DataFrame({
+        "idade": [10.0, 20.0, 30.0, 40.0],
+        "febre": pd.Categorical(["1", "2", None, "1"]),
+        "tosse": pd.array(["1", "2", "9", None], dtype="string"),
+    })
+    pre = construir_preprocessador_clustering(["idade"], ["febre", "tosse"]).fit(treino)
+    novo = pd.DataFrame({"idade": [25.0], "febre": pd.Categorical(["1"]), "tosse": pd.array(["7"], dtype="string")})
+    matriz = pre.transform(novo)  # categoria nunca vista (tosse = "7") não pode dar erro
+    assert matriz.shape == (1, len(pre.get_feature_names_out()))
+    assert np.isclose(matriz[:, [i for i, n in enumerate(pre.get_feature_names_out()) if n.startswith("tosse_")]].sum(), 0.0)
+
+
+def test_preprocessador_clustering_equilibra_a_variancia_das_numericas():
+    from src.features.normalization import construir_preprocessador_clustering
+
+    rng = np.random.default_rng(0)
+    n = 4000
+    df = pd.DataFrame({
+        "idade": rng.normal(50, 20, n),
+        "dias": rng.integers(0, 30, n).astype(float),
+        "febre": rng.choice(["1", "2", "9", None], n, p=[0.5, 0.3, 0.05, 0.15]),
+        "tosse": rng.choice(["1", "2", "9", None], n, p=[0.6, 0.2, 0.05, 0.15]),
+    })
+    equilibrado = construir_preprocessador_clustering(["idade", "dias"], ["febre", "tosse"]).fit(df)
+    sem_ajuste = construir_preprocessador_clustering(["idade", "dias"], ["febre", "tosse"], equilibrar_numericas=False).fit(df)
+
+    def variancia(matriz, coluna):
+        return float(np.var(matriz[:, [coluna]].toarray()))
+
+    x, y = equilibrado.transform(df), sem_ajuste.transform(df)
+    assert sem_ajuste.peso_numericas_ == 1.0 and np.isclose(variancia(y, 0), 1.0) and np.isclose(variancia(y, 1), 1.0)
+    variancia_categorica = sum(variancia(x, j) for j in range(2, x.shape[1])) / 2
+    assert 0 < equilibrado.peso_numericas_ < 1
+    assert np.isclose(variancia(x, 0), variancia_categorica, rtol=1e-4)
+    assert np.isclose(variancia(x, 1), variancia_categorica, rtol=1e-4)
+    assert np.isclose(variancia_categorica, equilibrado.variancia_media_categorica_, rtol=1e-4)

@@ -552,7 +552,7 @@ Sem um ponto de decisão explícito, os achados exploratórios viram só "texto 
 | Os três sintomas de 2019 (`perd_olft`, `perd_pala`, `fadiga`) saem? | `ablacoes_roc_por_ano.csv`, linha 2019 | Retirar **só** se a ROC-AUC de 2019 sobe ≥ 0,01 sem eles, com IC pareado que exclui zero, na logística e no boosting (#54, passo 6) | **manter** e documentar |
 | Recodificar o branco das comorbidades quando `fator_risc` = 2? | `ablacoes_val_tune.csv`, linhas P e P_comorbidades_recodificadas (boosting) | Recodificar só se a PR-AUC do boosting sobe ≥ 0,005 (#54, passo 7) | **manter** (`false`) |
 | Gravidade, contexto ou região entram no modelo principal? | linhas P_mais_* | Não: saturação e desconforto são medidos depois da admissão; contexto e região ficam como sensibilidade no relatório | **só relatório** |
-| Algum achado do #51 ou do #52 exige ação? | tabelas `eda_02_obito_*` só com `train_ref`; completude por terços | Só se uma variável do modelo inverter o sentido da associação em relação à coorte inteira | **nada**; registrar |
+| Algum achado do #51 ou do #52 exige ação? | `eda_02_obito_*` só com `train_ref` e a comparação do #51: duas variáveis do modelo trocaram de sentido na razão bruta, ambas perto de 1 (dor abdominal 0,96 para 1,10; hematologia 1,01 para 0,90); completude por terços (#52) | Só se uma variável do modelo tiver sentido contrário ao esperado **e** a versão ajustada do #91 não o explicar pela idade; razão bruta perto de 1 e as "protetoras" brutas (asma, puerpério, tosse, febre) já são esperadas | **nada**; registrar as duas |
 | O agrupamento (#136) sugere variável derivada? | perfis dos grupos | Não, se os grupos separarem só idade e preenchimento (#60) | **só relatório** |
 
 #### Depois da reunião (até 9h45)
@@ -2789,7 +2789,7 @@ As tabelas "mortalidade por variável" do B_06 foram feitas com a coorte inteira
 ### ② Problema
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
-> **Passo a passo corrigido em 31/10, 19h, depois de ler o B_06 e a execução de ensaio.** O texto anterior tinha três erros: (1) o notebook lia `kind="provisional"` e não a coorte definitiva; (2) a partição-mestra grava o bloco na coluna `particao`, com o vocabulário novo (`train_ref`), e não em `bloco_mestre` mapeado para "treino"; (3) faltava conferir as contagens por bloco com o manifesto. As edições já foram aplicadas e a execução de ensaio passou (ver "Estado"). Faltam três ajustes pequenos e a execução final, junto com o #136.
+> **Executado e conferido em 31/10, 23h.** O B_06 rodou do início ao fim (120 de 120 células, sem erro) com a coorte definitiva e as tabelas de óbito só com o `train_ref`. A comparação com a versão anterior está feita para as 26 variáveis (ver "Comparação com a versão anterior"). Falta apenas colar o comentário final no card.
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
 > A auditoria automática (27/10, 14:40) marcou "precisa revisão" por achados que não tratam deste item: a linha decorativa `=====` no cabeçalho de `src/protocolo/verificacoes.py` (lida como conflito de merge) e o `OneHotEncoder` denso do B_06, que roda numa amostra de 80 mil fichas e será substituído pelo #136 (detalhes no #94).
@@ -2799,48 +2799,72 @@ As tabelas de desfecho do B_06 (letalidade por variável) usaram a coorte inteir
 
 ### ③ O que fazer
 
-> [!decisão] Replanejamento de 31/10 · versão 2 (corrigido em 31/10, 19h)
-> Mudança pequena no B_06 e **uma** execução final (a mesma do #136 e do #145). A mortalidade base cai de 21,8% (coorte inteira) para ≈ 8,4% (`train_ref`); anote qualquer variável que mude de direção.
+> [!decisão] Replanejamento de 31/10 · versão 2 (concluído em 31/10, 23h)
+> Mudança pequena no B_06 e uma execução completa. A mortalidade base cai de 21,8% (coorte inteira) para 8,44% (`train_ref`).
 
-**Dono:** Pessoa B · **Prazo:** 31/10 (sábado), 17h às 18h30 · **Esforço estimado:** ≈ 30 min (edições já aplicadas; falta só os três ajustes e a execução final) · **Começa quando:** #142 (já concluído)
+**Dono:** Pessoa B · **Prazo:** 31/10 (sábado), 17h às 18h30 · **Esforço estimado:** ≈ 30 min (tudo feito; falta só colar o comentário final) · **Começa quando:** #142 (já concluído)
 
-#### Estado em 31/10 (execução de ensaio do B_06)
-- A célula 2 leu `coorte_final.parquet` (3.884.728 linhas), imprimiu `Fichas sem bloco na partição-mestra: 4` e `Fichas em train_ref: 556462`; o `raise` de divergência com o manifesto não disparou.
-- A célula 71 imprimiu `Origem da análise do desfecho: particao_treino`, `Registros utilizados: 556462` e `Óbitos por SRAG: 46961` (8,44%, a prevalência do `train_ref`).
-- As quatro tabelas `eda_02_obito_*` saem só dessa base. As células de descrição temporal (volume, série mensal, preenchimento) e o agrupamento antigo continuam usando todas as fichas, porque descrevem a base e não escolhem variáveis.
+#### Estado em 31/10, 23h (execução completa do B_06, conferida)
+- **Execução:** 120 de 120 células de código executadas, nenhuma saída de erro e nenhum aviso de depreciação.
+- **Célula 2:** leu `coorte_final.parquet` (3.884.728 linhas); `Fichas sem bloco na partição-mestra: 4`; `Fichas em train_ref: 556462`. O `raise` de divergência com o manifesto não disparou.
+- **Célula 71:** `Origem da análise do desfecho: particao_treino`; `Registros utilizados: 556462`; `Óbitos por SRAG: 46961` (8,44%).
+- **Tabelas de óbito:** faixa etária, número de comorbidades e sexo somam, cada uma, 556.462 fichas, 46.961 óbitos e 509.501 curas. Os sintomas e as comorbidades têm as 13 linhas esperadas cada. A tabela "faixa × ano" mostra 30 linhas porque a célula imprime `.head(30)`; é exibição, não perda de dados.
+- **Não aparece mais** `B06`, `B_06`, `Pessoa A/B/C`, `(#NN)`, "coorte provisória" nem `coorte_sem_particao`.
 
-#### O que mudou no B_06 (já aplicado)
+#### O que mudou no B_06 (aplicado e executado)
 1. **Célula 2, leitura:** `resolve_cohort_path(..., kind="final")`; `id_registro` entrou em `COLUNAS_ESTRUTURA` e em `COLUNAS_OBRIGATORIAS_COORTE`.
-2. **Célula 2, partição-mestra:** depois da leitura, o notebook lê `data/analytical/partitions_master.parquet` (colunas `id_registro` e `particao`), confere que `id_registro` é único, alinha por `id_registro` (`reindex`, não pela posição das linhas) e confere as contagens por bloco com `manifesto_particao.json`; divergiu, levanta `ValueError`. As 4 fichas que a partição deixou de fora ficam sem bloco.
+2. **Célula 2, partição-mestra:** o notebook lê `data/analytical/partitions_master.parquet` (colunas `id_registro` e `particao`), confere que `id_registro` é único, alinha por `id_registro` (`reindex`, não pela posição das linhas) e confere as contagens por bloco com `manifesto_particao.json`; divergiu, levanta `ValueError`. As 4 fichas que a partição deixou de fora ficam sem bloco.
 3. **Célula 71:** filtra `particao == "train_ref"`. Sem a coluna `particao` ou sem nenhuma ficha em `train_ref`, levanta erro; o caminho silencioso que usava a coorte inteira foi removido.
-4. **Nomes:** os nove `COLUNAS_*_B06` viraram `COLUNAS_*` (nenhum nome do notebook cita pessoa ou número de notebook).
+4. **Nomes:** os nove `COLUNAS_*_B06` viraram `COLUNAS_*`.
+5. **Texto da célula 1:** a descrição temporal e o agrupamento usam todas as fichas (descrevem a base; não escolhem variáveis nem hiperparâmetros); as tabelas de associação com o desfecho usam só o `train_ref`.
+6. **Série mensal:** `np.datetime64("NaT", "ns")` (acabou o aviso de depreciação). **Célula 3:** o comentário agora diz que cria as colunas que a coorte definitiva não traz prontas.
 
-#### Três ajustes que faltam (≈ 10 min)
-1. **Célula 1 (Markdown).** O parágrafo atual diz que "nenhuma tabela" usa fichas de validação e teste, o que é falso para o agrupamento (a célula 104 sorteia 10 mil fichas por ano, de 2019 a 2026) e para a série mensal. Substitua o parágrafo que começa em "A descrição temporal usa todas as fichas" e termina em "validação e ao teste." por:
+#### Comparação com a versão anterior (26 variáveis)
+**Antes:** coorte provisória inteira, 3.915.136 fichas e 21,87% de óbitos (compilado de 31/10 às 18h56, de antes da correção). **Agora:** `train_ref` da coorte definitiva, 556.462 fichas e 8,44%. As tabelas antigas foram sobrescritas na pasta `outputs/`, mas a cópia no compilado de resultados permitiu comparar sem recalcular nada na coorte inteira (portanto, sem nova consulta ao desfecho dos blocos de teste). **Os números "antes" incluem as fichas de teste: use-os só nesta comparação, nunca no relatório.** ★ = trocou de sentido.
 
-```markdown
-A descrição temporal (volume, composição, preenchimento e série mensal) e a
-exploração de agrupamento usam todas as fichas da coorte, porque descrevem a
-evolução da base e não são usadas para escolher variáveis ou hiperparâmetros.
-As tabelas de associação entre o desfecho e as variáveis (sintomas,
-comorbidades, faixa etária e número de comorbidades) usam apenas o bloco
-`train_ref` da partição-mestra
-(`data/analytical/partitions_master.parquet`).
+| Variável | Razão de chances bruta antes (coorte inteira) | Agora (`train_ref`) | IC 95% agora | Sentido |
+|---|---|---|---|---|
+| Saturação < 95% (`saturacao`) | 2,62 | 2,70 | 2,63 a 2,77 | risco |
+| Dispneia (`dispneia`) | 2,16 | 2,46 | 2,39 a 2,53 | risco |
+| Doença hepática (`hepatica`) | 1,80 | 1,98 | 1,83 a 2,15 | risco |
+| Doença cardiovascular (`cardiopati`) | 1,63 | 1,87 | 1,82 a 1,91 | risco |
+| Doença renal (`renal`) | 1,87 | 1,79 | 1,72 a 1,87 | risco |
+| Fadiga (`fadiga`) | 1,32 | 1,66 | 1,62 a 1,70 | risco |
+| Diabetes (`diabetes`) | 1,59 | 1,66 | 1,61 a 1,70 | risco |
+| Desconforto respiratório (`desc_resp`) | 1,67 | 1,60 | 1,56 a 1,64 | risco |
+| Imunodepressão (`imunodepre`) | 1,34 | 1,54 | 1,48 a 1,61 | risco |
+| Pneumopatia (`pneumopati`) | 1,20 | 1,46 | 1,41 a 1,50 | risco |
+| Obesidade (`obesidade`) | 1,32 | 1,26 | 1,20 a 1,32 | risco |
+| Doença neurológica (`neurologic`) | 1,33 | 1,24 | 1,20 a 1,29 | risco |
+| Perda do olfato (`perd_olft`) | 1,09 | 1,21 | 1,11 a 1,31 | risco |
+| Outras morbidades (`out_morbi`) | 1,25 | 1,20 | 1,17 a 1,23 | risco |
+| Perda do paladar (`perd_pala`) | 1,08 | 1,18 | 1,08 a 1,28 | risco |
+| Dor abdominal ★ (`dor_abd`) | 0,96 | 1,10 | 1,06 a 1,15 | menor → risco |
+| Diarreia (`diarreia`) | 1,00 | 1,06 | 1,02 a 1,09 | risco |
+| Doença hematológica ★ (`hematologi`) | 1,01 | 0,90 | 0,84 a 0,98 | risco → menor |
+| Outros sintomas (`outro_sin`) | 0,90 | 0,83 | 0,81 a 0,85 | menor |
+| Dor de garganta (`garganta`) | 0,92 | 0,79 | 0,76 a 0,81 | menor |
+| Vômito (`vomito`) | 0,72 | 0,63 | 0,61 a 0,65 | menor |
+| Síndrome de Down (`sind_down`) | 0,58 | 0,52 | 0,47 a 0,57 | menor |
+| Febre (`febre`) | 0,76 | 0,49 | 0,48 a 0,50 | menor |
+| Puérpera (`puerpera`) | 0,34 | 0,37 | 0,29 a 0,45 | menor |
+| Tosse (`tosse`) | 0,61 | 0,32 | 0,32 a 0,33 | menor |
+| Asma (`asma`) | 0,30 | 0,22 | 0,21 a 0,23 | menor |
+
+**Leitura:**
+- **Sentido:** 24 das 26 variáveis mantêm o sentido; em 23 delas o intervalo de confiança fica longe de 1 nas duas versões. A correlação de postos entre as duas listas é 0,97, ou seja, a ordem de importância praticamente não mudou.
+- **Duas trocaram de sentido, ambas perto de 1 e ambas entre as 31 variáveis do modelo:** dor abdominal (0,96, IC 0,95 a 0,97, para 1,10, IC 1,06 a 1,15) e doença hematológica (1,01, IC 0,99 a 1,04, para 0,90, IC 0,84 a 0,98). Em nenhuma das duas há associação forte em nenhuma das versões; o modelo é multivariado e a razão bruta perto de 1 não pede ação. O #140 só registra.
+- **Mudanças de magnitude:** a mediana das variações é de 10,5%; cinco variáveis variaram mais de 20%: tosse (−47%), febre (−35%), asma (−27%), fadiga (+26%) e pneumopatia (+21%). A explicação provável, **não testada**, é a mudança de composição: o `train_ref` só tem 2019 e 2023 a 2025 e deixa de fora 2020 a 2022, quando 26% das internações terminavam em óbito. Não afirme isso no relatório sem testar (por exemplo, comparando as razões por ano).
+- **Leitura para o #140 e o #91:** das 26 variáveis, 17 têm razão de chances bruta acima de 1 (associadas a maior risco) e 9 abaixo; em nenhuma o IC inclui 1. As abaixo de 1 são **brutas** e podem refletir confundimento pela idade; o #91 mostra a versão ajustada, e a redação escreve "associado a maior risco previsto", nunca "protege".
+
+#### Para concluir o card
+1. Abra o #51 no painel, cole o comentário abaixo e marque como concluído (o critério manual exige comentário):
+
+```text
+B_06 executado do início ao fim (120/120 células, sem erro) na coorte definitiva. Tabelas de óbito só com o train_ref: 556.462 fichas, 509.501 curas e 46.961 óbitos (8,44%); as tabelas de faixa etária, número de comorbidades e sexo somam esses totais. Comparação com a versão anterior (coorte inteira, 21,87% de óbitos) feita para as 26 variáveis: 24 mantêm o sentido e em 23 o IC fica longe de 1 nas duas versões. Duas trocaram de sentido, ambas perto de 1: dor abdominal (0,96 para 1,10) e doença hematológica (1,01 para 0,90). Maiores mudanças de magnitude: tosse, febre e asma. Nada exige ação no #140; as duas que trocaram de sentido só serão registradas.
 ```
-2. **Aviso de depreciação na série mensal** (célula que converte `dt_interna_convertida` para `datetime64[ns]`): troque `na_value=np.datetime64("NaT"),` por `na_value=np.datetime64("NaT", "ns"),`. É a única ocorrência no notebook.
-3. **Comentário velho na célula 3** (a que cria `dt_interna_convertida`): troque as duas primeiras linhas, "Compatibilidade com a coorte definitiva… a coorte provisória já trazia prontas", por:
-
-```python
-# Cria as colunas derivadas que a coorte definitiva não traz prontas.
-# Não altera linhas nem valores originais.
-```
-
-#### Execução final (junto com o #136, uma vez só)
-1. Faça a execução do #136 e deste card no mesmo `.\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/B/B_06_eda_temporal_clustering.ipynb` (cópia executada em `outputs/notebooks/`; a execução com `--salvar-no-lugar` fica no #126). Meta: ≤ 6 GB e ≤ 20 min.
-2. Confira na saída os quatro números do "Estado" acima (`Fichas sem bloco: 4`, `train_ref: 556462`, `particao_treino`, `Óbitos por SRAG: 46961`).
-3. **Compare as tabelas `eda_02_obito_*` com a versão da coorte inteira.** A execução de ensaio já sobrescreveu os CSV em `outputs/tables/`; a versão antiga está no `RESULTADOS_COMPLETOS.docx` (compilado de 24/10, coorte inteira). As direções devem se manter. Escreva no card as variáveis que mudaram de direção (ou "nenhuma mudou").
-4. O texto final do notebook cita 2,5% a 2,6% e 26,3% a 26,7% (mortalidade dos dois grupos do agrupamento antigo): reconfira esses números na seção de agrupamento depois da execução, porque a coorte definitiva tem 30 mil fichas a menos.
-5. Commit: `fix: tabelas de obito do B_06 so com train_ref [done:#51]`.
+2. O #136 (agrupamento) altera o B_06 de novo; a execução que fica salva no notebook é a do #126, em 04/11. Este card não espera por ela.
+3. Commit (quando for a hora): `fix: tabelas de obito do B_06 so com train_ref [done:#51]`.
 
 ### ④ Pronto quando
 
@@ -2849,7 +2873,7 @@ comorbidades, faixa etária e número de comorbidades) usam apenas o bloco
 - contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `partitions_master.parquet` | O B_06 junta a partição-mestra (partitions_master.parquet) por id_registro antes das tabelas de desfecho.
 - nao-contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `coorte_sem_particao` | O caminho silencioso que usava a coorte inteira (coorte_sem_particao) foi removido do B_06.
 - nao-contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `COLUNAS_ESTRUTURA_B06` | Os nomes de variáveis do B_06 não carregam mais o sufixo do número do notebook.
-- manual: | As variáveis que mudaram de direção entre a versão da coorte inteira e a do train_ref foram anotadas neste card (ou foi registrado que nenhuma mudou).
+- manual: | O comentário final foi registrado neste card: totais do train_ref (556.462 fichas, 46.961 óbitos), a comparação das 26 variáveis com a versão anterior (24 mantêm o sentido) e as duas variáveis que trocaram de sentido (dor abdominal e doença hematológica), ambas perto de 1.
 
 ## #91 · Mostrar quais características pesam mais no risco (importância das variáveis)
 
