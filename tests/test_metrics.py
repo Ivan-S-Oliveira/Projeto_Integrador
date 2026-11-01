@@ -183,3 +183,62 @@ def test_ic_bootstrap_metrica_customizada(
         seed=1,
     )
     assert inf <= est <= sup
+
+
+    np
+    pytest
+
+    def test_bootstrap_grupo_igual_ao_sklearn_com_pesos_um():
+    from sklearn.metrics import average_precision_score, roc_auc_score
+
+    from src.evaluation.metrics import _ap_ponderada, _auc_ponderada, _niveis
+
+    rng = np.random.default_rng(0)
+    p = np.round(rng.beta(1, 10, 20_000), 2)
+    y = (rng.random(20_000) < np.clip(p * 1.2, 0, 1)).astype(float)
+    cod, k = _niveis(p)
+    um = np.ones(len(y))
+    assert abs(_auc_ponderada(cod, k, y, um) - roc_auc_score(y, p)) < 1e-9
+    assert abs(_ap_ponderada(cod, k, y, um) - average_precision_score(y, p)) < 1e-9
+    pesos = rng.integers(0, 3, len(y)).astype(float)
+    repetido = np.repeat(np.arange(len(y)), pesos.astype(int))
+    assert abs(_auc_ponderada(cod, k, y, pesos) - roc_auc_score(y[repetido], p[repetido])) < 1e-9
+    assert abs(_ap_ponderada(cod, k, y, pesos) - average_precision_score(y[repetido], p[repetido])) < 1e-9
+
+
+def test_bootstrap_grupo_diferenca_nula_e_semente():
+    from src.evaluation.metrics import bootstrap_grupo
+
+    rng = np.random.default_rng(1)
+    p = rng.beta(1, 10, 4_000)
+    y = (rng.random(4_000) < p).astype(int)
+    grupos = np.arange(4_000)
+    r = bootstrap_grupo(y, p, grupos, metrica="ap", prob_b=p, n=50, seed=7)
+    assert r["estimativa_diferenca"] == 0 and r["ic_inferior"] <= 0 <= r["ic_superior"]
+    r1 = bootstrap_grupo(y, p, grupos, metrica="auc", n=50, seed=7)
+    r2 = bootstrap_grupo(y, p, grupos, metrica="auc", n=50, seed=7)
+    assert r1 == r2 and r1["ic_inferior"] < r1["estimativa"] < r1["ic_superior"]
+
+
+def test_bootstrap_grupo_ic_mais_largo_com_fichas_repetidas():
+    from src.evaluation.metrics import bootstrap_grupo
+
+    rng = np.random.default_rng(2)
+    base = rng.beta(1, 10, 1_000)
+    p = np.repeat(base, 3)
+    y = np.repeat((rng.random(1_000) < base).astype(int), 3)
+    grupos = np.repeat(np.arange(1_000), 3)
+    por_linha = bootstrap_grupo(y, p, np.arange(3_000), metrica="auc", n=300, seed=3)
+    por_grupo = bootstrap_grupo(y, p, grupos, metrica="auc", n=300, seed=3)
+    assert (por_grupo["ic_superior"] - por_grupo["ic_inferior"]) > (por_linha["ic_superior"] - por_linha["ic_inferior"])
+
+
+def test_bootstrap_grupo_brier_e_metrica_invalida():
+    from src.evaluation.metrics import bootstrap_grupo
+
+    p = np.array([0.1, 0.2, 0.8, 0.9] * 50)
+    y = np.array([0, 0, 1, 1] * 50)
+    r = bootstrap_grupo(y, p, np.arange(200), metrica="brier", n=30, seed=1)
+    assert abs(r["estimativa"] - np.mean((y - p) ** 2)) < 1e-12
+    with pytest.raises(ValueError):
+        bootstrap_grupo(y, p, np.arange(200), metrica="f1")

@@ -167,3 +167,40 @@ def brier_decomposicao(
         "uncertainty": float(uncertainty),
         "n":           float(n),
     }
+
+
+def calibracao_intercepto_inclinacao(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    eps: float = 1e-6,
+) -> tuple[float, float]:
+    """Regressão logística de y em logit(p): intercepto ideal 0 e inclinação ideal 1."""
+    from sklearn.linear_model import LogisticRegression
+
+    p = np.clip(_to_np(y_prob), eps, 1 - eps)
+    z = np.log(p / (1 - p)).reshape(-1, 1)
+    modelo = LogisticRegression(C=1e6, solver="lbfgs", max_iter=200).fit(z, _to_int_labels(y_true))
+    return float(modelo.intercept_[0]), float(modelo.coef_[0, 0])
+
+
+def ece_quantis(y_true: ArrayLike, y_prob: ArrayLike, n_bins: int = 10) -> float:
+    """ECE com faixas de tamanho igual (quantis da probabilidade prevista)."""
+    y, p = _to_int_labels(y_true), _to_np(y_prob)
+    partes = np.array_split(np.argsort(p, kind="stable"), n_bins)
+    return float(sum(len(i) * abs(y[i].mean() - p[i].mean()) for i in partes if len(i)) / len(y))
+
+
+def test_calibracao_intercepto_inclinacao_e_ece_quantis():
+    from src.evaluation.calibration import calibracao_intercepto_inclinacao, ece_quantis
+
+    rng = np.random.default_rng(0)
+    p = rng.beta(1, 10, 100_000)
+    y = (rng.random(100_000) < p).astype(int)
+
+    intercepto, inclinacao = calibracao_intercepto_inclinacao(y, p)
+    assert abs(intercepto) < 0.1 and 0.9 < inclinacao < 1.1
+    assert ece_quantis(y, p) < 0.01
+
+    inflada = np.clip(p * 2.5, 0, 1)
+    assert calibracao_intercepto_inclinacao(y, inflada)[1] < 0.5
+    assert ece_quantis(y, inflada) > 0.05
