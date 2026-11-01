@@ -640,55 +640,51 @@ def _separar_grupos_temporais_incompativeis(
     de um estrato de ano, alvo e região. A separação ocorre antes da
     partição para impedir que registros do mesmo grupo sejam distribuídos
     entre blocos diferentes.
+
+    Os estratos são comparados por códigos inteiros (sem montar uma string
+    por linha), o que mantém o resultado e reduz memória e tempo. Quando
+    nenhum grupo é incompatível, devolve o próprio ``frame`` sem cópia.
     """
     required = {group_column, year_column, target_column}
     if region_column:
         required.add(region_column)
-
     missing = sorted(required - set(frame.columns))
     if missing:
         raise KeyError(
             "Colunas ausentes para auditar grupos temporais: "
             f"{missing}"
         )
-
     periodo = _periodo_do_ano(frame[year_column], temporal_cfg)
-
-    estrato = pd.DataFrame(
-        {
-            "periodo": periodo,
-            "ano": pd.to_numeric(
-                frame[year_column],
-                errors="coerce",
-            ).astype("Int64"),
-            "alvo": pd.to_numeric(
-                frame[target_column],
-                errors="coerce",
-            ).astype("Int8"),
-        },
-        index=frame.index,
-    )
-
+    codigos_grupo, _ = pd.factorize(frame[group_column])
+    codigos = {
+        "grupo": codigos_grupo,
+        "periodo": pd.factorize(periodo)[0],
+        "ano": pd.factorize(
+            pd.to_numeric(frame[year_column], errors="coerce")
+        )[0],
+        "alvo": pd.factorize(
+            pd.to_numeric(frame[target_column], errors="coerce")
+        )[0],
+    }
+    del periodo
     if region_column:
-        estrato["regiao"] = (
-            frame[region_column]
-            .astype("string")
-            .fillna("AUSENTE")
-        )
-
-    assinatura = estrato.astype("string").agg("|".join, axis=1)
-    n_estratos = assinatura.groupby(
-        frame[group_column],
-        observed=True,
-    ).nunique()
-
-    grupos_incompativeis = n_estratos[n_estratos > 1].index
-    mascara = frame[group_column].isin(grupos_incompativeis)
-
-    quarentena = frame.loc[mascara].copy()
-    modelavel = frame.loc[~mascara].copy()
-
-    return modelavel, quarentena
+        codigos["regiao"] = pd.factorize(
+            frame[region_column].astype("string").fillna("AUSENTE")
+        )[0]
+    estrato = pd.DataFrame(
+        {nome: valores.astype("int32") for nome, valores in codigos.items()}
+    )
+    estratos_por_grupo = estrato.drop_duplicates().groupby("grupo").size()
+    del estrato, codigos
+    grupos_incompativeis = estratos_por_grupo.index[
+        estratos_por_grupo.to_numpy() > 1
+    ]
+    if len(grupos_incompativeis) == 0:
+        return frame, frame.iloc[0:0]
+    mascara = pd.Series(codigos_grupo, index=frame.index).isin(
+        grupos_incompativeis
+    )
+    return frame.loc[~mascara], frame.loc[mascara]
 
 
 def _escrever_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -711,55 +707,48 @@ def gerar_artefato_supervisionado(
     central, cria identificadores estáveis, separa grupos temporalmente
     incompatíveis, materializa a partição-mestre e persiste dataset e
     manifestos sem expor os blocos de teste para modelagem.
+
+    Os DataFrames largos são liberados assim que deixam de ser usados,
+    para manter baixo o pico de memória.
     """
     root = Path(root).resolve()
-
     kind_normalizado = str(cohort_kind).strip().lower()
     if kind_normalizado != "final":
         raise ValueError(
             "A geração definitiva exige cohort_kind='final'. "
             f"Recebido: {cohort_kind!r}."
         )
-
     artefato_cfg = _configuracao_artefato()
     temporal_cfg = artefato_cfg["temporal_cfg"]
     target_column = artefato_cfg["target_column"]
     source_target_column = artefato_cfg["source_target_column"]
     partition_column = artefato_cfg["partition_column"]
     seed = artefato_cfg["seed"]
-
     colunas_fisicas = _colunas_fisicas_necessarias(artefato_cfg)
     frame, source = load_cohort(
         root,
         kind="final",
         columns=colunas_fisicas,
     )
-
     if source.kind != "final":
         raise RuntimeError(
             f"Fonte resolvida como {source.kind!r}; esperado 'final'."
         )
-
     frame = montar_features(frame)
-
     if "sg_uf" not in frame.columns:
         raise KeyError("Coluna obrigatória ausente: 'sg_uf'.")
-
     frame["regiao_residencia"] = regiao_residencia(frame["sg_uf"])
     frame["group_id"] = criar_group_id(frame)
-
     frame = _construir_alvo(
         frame,
         source_column=source_target_column,
         target_column=target_column,
         target_cfg=artefato_cfg["target_cfg"],
     )
-
     if "ano_internacao" not in frame.columns:
         raise KeyError(
             "montar_features não produziu a coluna 'ano_internacao'."
         )
-
     frame_modelavel, quarentena = _separar_grupos_temporais_incompativeis(
         frame,
         temporal_cfg=temporal_cfg,
@@ -768,7 +757,13 @@ def gerar_artefato_supervisionado(
         target_column=target_column,
         region_column="regiao_residencia",
     )
-
+    rows_loaded = int(len(frame))
+    rows_quarantined = int(len(quarentena))
+    groups_quarantined = (
+        int(quarentena["group_id"].nunique()) if not quarentena.empty else 0
+    )
+    del frame, quarentena
+    gc.collect()
     particionado, manifesto_particao = criar_particao_mestra(
         frame_modelavel,
         temporal_cfg=dict(temporal_cfg),
@@ -778,15 +773,11 @@ def gerar_artefato_supervisionado(
         region_column="regiao_residencia",
         partition_column=partition_column,
     )
-
-    modelavel = particionado.loc[
-        particionado[partition_column].astype(str) != "exploracao"
-    ].copy()
-
+    del frame_modelavel
+    gc.collect()
     feature_columns = list(artefato_cfg["feature_columns"])
     numeric_columns = list(artefato_cfg["numeric_columns"])
     categorical_columns = list(artefato_cfg["categorical_columns"])
-
     audit_candidates = [
         "id_registro",
         "nu_notific",
@@ -801,11 +792,10 @@ def gerar_artefato_supervisionado(
     audit_columns = [
         coluna
         for coluna in dict.fromkeys(audit_candidates)
-        if coluna in modelavel.columns
+        if coluna in particionado.columns
         and coluna not in feature_columns
         and coluna not in {target_column, partition_column}
     ]
-
     output_columns = list(
         dict.fromkeys(
             [
@@ -816,40 +806,12 @@ def gerar_artefato_supervisionado(
             ]
         )
     )
-    dataset_frame = modelavel[output_columns].copy()
-
-    analytical_dir = root / "data" / "analytical"
-    partition_path = analytical_dir / "partitions_master.parquet"
-    partition_manifest_path = analytical_dir / "manifesto_particao.json"
-
-    # Confere a sobrescrita antes de gravar qualquer arquivo, para não
-    # deixar dataset novo ao lado de partição-mestre antiga.
-    if exportar_particao and not overwrite and (
-        partition_path.exists() or partition_manifest_path.exists()
-    ):
-        raise FileExistsError(
-            "Partição-mestre já existe. Use overwrite=True somente "
-            "em reconstrução deliberada."
-        )
-
-    dataset_path, manifest_path = persist_supervised_artifact(
-        dataset_frame,
-        root=root,
-        source=source.to_dict(),
-        feature_columns=feature_columns,
-        numeric_columns=numeric_columns,
-        categorical_columns=categorical_columns,
-        audit_columns=audit_columns,
-        target_column=target_column,
-        partition_column=partition_column,
-        cohort_kind="final",
-        seed=seed,
-        overwrite=overwrite,
-    )
-
-    del dataset_frame
-    gc.collect()
-
+    # Só as colunas gravadas no dataset são copiadas; a exploração (2026)
+    # fica de fora.
+    mascara_modelavel = particionado[partition_column].astype(str) != "exploracao"
+    modelavel = particionado.loc[mascara_modelavel, output_columns]
+    rows_partitioned = int(len(particionado))
+    particao_mestre = None
     if exportar_particao:
         partition_columns = [
             coluna
@@ -863,35 +825,15 @@ def gerar_artefato_supervisionado(
             ]
             if coluna in particionado.columns
         ]
-                # Preserva o nome explícito do bloco mestre e mantém a coluna de
+        # Preserva o nome explícito do bloco mestre e mantém a coluna de
         # partição configurada para compatibilidade com os consumidores.
         particao_mestre = particionado[partition_columns].copy()
         particao_mestre["bloco_mestre"] = (
             particao_mestre[partition_column].astype("string")
         )
-        particao_mestre.to_parquet(
-            partition_path,
-            index=False,
-        )
-        del particao_mestre
-        gc.collect()
-
-        manifesto_particao = {
-            **manifesto_particao,
-            "source": source.to_dict(),
-            "rows_before_quarantine": int(len(frame)),
-            "rows_quarantined": int(len(quarentena)),
-            "groups_quarantined": int(
-                quarentena["group_id"].nunique()
-            ) if not quarentena.empty else 0,
-            "rows_partitioned": int(len(particionado)),
-            "rows_modelable": int(len(modelavel)),
-            "partition_path": str(partition_path),
-            "partition_sha256": sha256_file(partition_path),
-            "configuration_sha256": C.supervised_yaml_sha256(),
-            }
-        _escrever_json(partition_manifest_path, manifesto_particao)
-
+    del particionado, mascara_modelavel
+    gc.collect()
+    rows_modelable = int(len(modelavel))
     alvo_modelavel = pd.to_numeric(
         modelavel[target_column], errors="coerce"
     )
@@ -904,18 +846,56 @@ def gerar_artefato_supervisionado(
         str(nome): float(valor)
         for nome, valor in alvo_modelavel.groupby(blocos_modelaveis).mean().sort_index().items()
     }
-    rows_loaded = int(len(frame))
-    rows_quarantined = int(len(quarentena))
-    groups_quarantined = (
-        int(quarentena["group_id"].nunique()) if not quarentena.empty else 0
-    )
-    rows_exploracao = int(len(particionado) - len(modelavel))
-    rows_modelable = int(len(modelavel))
-
-    del frame, frame_modelavel, quarentena, particionado, modelavel
     del alvo_modelavel, blocos_modelaveis
+    analytical_dir = root / "data" / "analytical"
+    partition_path = analytical_dir / "partitions_master.parquet"
+    partition_manifest_path = analytical_dir / "manifesto_particao.json"
+    # Confere a sobrescrita antes de gravar qualquer arquivo, para não
+    # deixar dataset novo ao lado de partição-mestre antiga.
+    if exportar_particao and not overwrite and (
+        partition_path.exists() or partition_manifest_path.exists()
+    ):
+        raise FileExistsError(
+            "Partição-mestre já existe. Use overwrite=True somente "
+            "em reconstrução deliberada."
+        )
+    dataset_path, manifest_path = persist_supervised_artifact(
+        modelavel,
+        root=root,
+        source=source.to_dict(),
+        feature_columns=feature_columns,
+        numeric_columns=numeric_columns,
+        categorical_columns=categorical_columns,
+        audit_columns=audit_columns,
+        target_column=target_column,
+        partition_column=partition_column,
+        cohort_kind="final",
+        seed=seed,
+        overwrite=overwrite,
+    )
+    del modelavel
     gc.collect()
-
+    if exportar_particao and particao_mestre is not None:
+        particao_mestre.to_parquet(
+            partition_path,
+            index=False,
+        )
+        del particao_mestre
+        gc.collect()
+        manifesto_particao = {
+            **manifesto_particao,
+            "source": source.to_dict(),
+            "rows_before_quarantine": rows_loaded,
+            "rows_quarantined": rows_quarantined,
+            "groups_quarantined": groups_quarantined,
+            "rows_partitioned": rows_partitioned,
+            "rows_modelable": rows_modelable,
+            "partition_path": str(partition_path),
+            "partition_sha256": sha256_file(partition_path),
+            "configuration_sha256": C.supervised_yaml_sha256(),
+        }
+        _escrever_json(partition_manifest_path, manifesto_particao)
+    rows_exploracao = rows_partitioned - rows_modelable
     return {
         "dataset_path": str(dataset_path),
         "manifest_path": str(manifest_path),
@@ -940,9 +920,9 @@ def gerar_artefato_supervisionado(
         "estratificacao": manifesto_particao.get("estratificacao"),
         "test_opened": False,
     }
-
-
-# ---------------------------------------------------------------------------
+    
+    
+# ---------------------------------------------------------------------------    
 # Leitura
 # ---------------------------------------------------------------------------
 

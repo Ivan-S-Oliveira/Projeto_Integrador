@@ -297,17 +297,17 @@ def criar_particao_mestra(
 
     Retorna ``(df_com_particao, manifesto)``. O manifesto registra, por
     bloco, contagem, nº de grupos, anos, prevalência do alvo e hash.
+    A entrada não é alterada; as colunas originais são compartilhadas
+    com ``df`` (cópia rasa), sem duplicar a memória do DataFrame.
     """
     partition_column = str(
         partition_column or temporal_cfg.get("coluna_particao") or "particao"
     )
     seed = int(temporal_cfg.get("seed", 42))
     sal = f"srag_particao_mestra_v1_seed{seed}"
-
     blocos_cfg = temporal_cfg.get("blocos") or {}
     if not blocos_cfg:
         raise ValueError("temporal.blocos vazio no supervised.yaml.")
-
     anos_por_bloco = {
         nome: {int(a) for a in cfg.get("anos", [])}
         for nome, cfg in blocos_cfg.items()
@@ -317,14 +317,12 @@ def criar_particao_mestra(
             f"Blocos do YAML {sorted(anos_por_bloco)} "
             f"não conferem com MASTER_BLOCKS {sorted(MASTER_BLOCKS)}."
         )
-
     anos_pandemia = anos_por_bloco["test_pandemic"]
     blocos_compartilhados = [n for n in MASTER_BLOCKS if n != "test_pandemic"]
     anos_compartilhados = set().union(
         *(anos_por_bloco[n] for n in blocos_compartilhados)
     )
     fracoes = _resolver_fracoes_master(blocos_cfg, blocos_compartilhados)
-
     min_grupos = int(temporal_cfg.get("min_grupos_por_estrato", 5))
     if min_grupos < len(blocos_compartilhados):
         raise ValueError(
@@ -332,23 +330,24 @@ def criar_particao_mestra(
             f"para {len(blocos_compartilhados)} blocos compartilhados; "
             f"use >= {len(blocos_compartilhados)}."
         )
-
-    out = df.copy()
+    usar_regiao = bool(region_column and region_column in df.columns)
+    colunas_estrato = [group_column, year_column, target_column]
+    if usar_regiao:
+        colunas_estrato.append(region_column)
+    out = df.copy(deep=False)
     out[partition_column] = pd.NA
-
     mascara_pandemia = out[year_column].isin(anos_pandemia)
     out.loc[mascara_pandemia, partition_column] = "test_pandemic"
-
     mascara_compartilhada = out[year_column].isin(anos_compartilhados)
     usado_fallback = False
     if mascara_compartilhada.any():
-        sub = out.loc[mascara_compartilhada]
+        # Só as colunas necessárias ao sorteio são copiadas.
+        sub = df.loc[mascara_compartilhada, colunas_estrato]
         estrato = sub[year_column].astype(str) + "|" + sub[target_column].astype(str)
-        if region_column and region_column in sub.columns:
+        if usar_regiao:
             # astype("string") antes do fillna: regiao_residencia chega
             # categórica e fillna com categoria nova levanta TypeError.
             estrato = estrato + "|" + sub[region_column].astype("string").fillna("__NA__")
-
         try:
             blocos = atribuir_blocos_por_hash(
                 sub[group_column], estrato,
@@ -361,16 +360,17 @@ def criar_particao_mestra(
                 sal=sal, fracoes=fracoes, min_grupos_por_estrato=min_grupos,
             )
             usado_fallback = True
-
+        del sub, estrato
         out.loc[mascara_compartilhada, partition_column] = blocos
-
     mascara_fora = ~(mascara_pandemia | mascara_compartilhada)
     out.loc[mascara_fora, partition_column] = "exploracao"
-
     if out[partition_column].isna().any():
         raise RuntimeError("Há linhas sem bloco atribuído.")
-
-    blocos_por_grupo = out.groupby(group_column)[partition_column].nunique()
+    blocos_por_grupo = (
+        out[[group_column, partition_column]]
+        .groupby(group_column)[partition_column]
+        .nunique()
+    )
     cruzados = blocos_por_grupo[blocos_por_grupo > 1]
     if not cruzados.empty:
         raise RuntimeError(
@@ -378,7 +378,6 @@ def criar_particao_mestra(
             f"{cruzados.index.tolist()[:5]}. Verifique se algum group_id "
             "tem linhas em anos pandêmicos e não pandêmicos."
         )
-
     manifesto: dict[str, Any] = {
         "metodo": "hash_grupo_estratificado_mestre_v1",
         "salt": sal,
@@ -395,8 +394,9 @@ def criar_particao_mestra(
         ),
         "blocos": {},
     }
+    resumo = out[[group_column, year_column, target_column, partition_column]]
     for nome in (*MASTER_BLOCKS, "exploracao"):
-        sub = out.loc[out[partition_column] == nome]
+        sub = resumo.loc[resumo[partition_column] == nome]
         manifesto["blocos"][nome] = {
             "n_linhas": int(len(sub)),
             "n_grupos": int(sub[group_column].nunique()) if len(sub) else 0,
