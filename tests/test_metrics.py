@@ -185,9 +185,6 @@ def test_ic_bootstrap_metrica_customizada(
     assert inf <= est <= sup
 
 
-    np
-    pytest
-
     def test_bootstrap_grupo_igual_ao_sklearn_com_pesos_um():
     from sklearn.metrics import average_precision_score, roc_auc_score
 
