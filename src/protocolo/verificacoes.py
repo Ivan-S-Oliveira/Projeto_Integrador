@@ -501,7 +501,12 @@ def add_derived(df: pd.DataFrame, cfg: dict, wanted=None) -> list[str]:
 
 
 def _analytical_path(cfg: dict) -> Path:
-    """Usa C.ANALYTICAL_DIR do projeto (como o C1/C2); senão, o caminho de configs/decisoes.yaml."""
+    """Caminho do dataset provisório do protocolo (notebooks de coorte e de qualidade).
+    Não é o artefato oficial supervisionado, gerado só por
+    ``src/data/supervised_artifact.py`` (``DATASET_NAME``). Se ``dataset_analitico.path``
+    apontar para o mesmo arquivo do artefato, os notebooks o sobrescrevem e o hash
+    do manifesto deixa de bater.
+    """
     nome = Path(cfg["dataset_analitico"]["path"]).name
     try:
         from src.utils import config as C  # noqa: N812

@@ -1592,3 +1592,26 @@ deve ser consultado nas fichas.
   (`DEFAULT_CONFIG` e docstring de `_analytical_path`),
   `src/data/supervised_artifact.py` (comentário em `DATASET_NAME`).
 - **Fecha:** #73.
+
+### 29.27 01/11 · Suíte rápida e gates históricos restaurados (#144)
+
+- **Decisão:** os gates G1, G2, G4 e G5 voltam a `status: aprovado` em
+  `configs/supervised.yaml`; os testes que gravam datasets de demonstração
+  passam a usar uma pasta temporária; passa a existir um teste que impede
+  funções duplicadas em `src/`; e a medição de tempo e memória dos
+  notebooks passa a ser feita por `tools/medir_notebook.py`.
+- **Motivo:** G1, G2, G4 e G5 já estavam aprovados (G4 e G5 em 2026-10-11,
+  por `time_do_projeto`), mas o YAML os mostrava como `responsavel`. Os
+  testes do fluxo A gravavam arquivos `dataset_supervisionado_*` em
+  `data/analytical/`, a mesma pasta do artefato oficial. A docstring de
+  `_analytical_path` não deixava claro que o arquivo é o provisório e não o
+  artefato oficial.
+- **Impacto:** a suíte rápida passa sem falhas. Nenhuma decisão de
+  modelagem muda, e os gates G6 a G9 continuam `pendente`.
+- **Implementado em:** `configs/supervised.yaml` (gates),
+  `src/protocolo/verificacoes.py` (docstring de `_analytical_path`),
+  `tests/test_regras_pessoa_a.py` (fixture `_analytical_dir_temporario` e
+  testes `test_analytical_path_devolve_caminho` e
+  `test_src_sem_funcoes_duplicadas`), `tests/test_config.py`
+  (`test_gates_historicos_aprovados`) e `tools/medir_notebook.py`.
+- **Fecha:** #144.

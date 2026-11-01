@@ -265,3 +265,16 @@ def test_requirements_tem_versao_fixada() -> None:
             sem_versao.append(limpa)
 
     assert not sem_versao, f"requirements.txt tem pacotes sem versão: {sem_versao}"
+
+def test_gates_historicos_aprovados():
+    """G1, G2, G4 e G5 são históricos e ficam aprovados; G6 a G9 só podem avançar."""
+    from pathlib import Path
+
+    import yaml
+
+    caminho = Path(__file__).resolve().parents[1] / "configs" / "supervised.yaml"
+    gates = yaml.safe_load(caminho.read_text(encoding="utf-8"))["gates"]
+    for nome in ("G1_definicao_alvo_features", "G2_janela_temporal", "G4_baseline", "G5_pilotos"):
+        assert gates[nome]["status"] == "aprovado", nome
+    for nome in ("G6_finalistas_tuning", "G7_calibracao", "G8_limiar", "G9_holdout"):
+        assert gates[nome]["status"] in {"pendente", "aprovado", "executado"}, nome

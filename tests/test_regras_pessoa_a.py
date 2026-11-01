@@ -28,6 +28,12 @@ def cfg() -> dict:
 def demo() -> pd.DataFrame:
     return v.prepare(v.make_demo(n=3000)[0])
 
+@pytest.fixture(autouse=True)
+def _analytical_dir_temporario(tmp_path, monkeypatch):
+    """Os testes gravam datasets de demonstração: nunca na pasta de dados do projeto."""
+    from src.utils import config as C  # noqa: N812
+
+    monkeypatch.setattr(C, "ANALYTICAL_DIR", tmp_path)
 
 def _escrever_yaml(
     tmp_path: Path,
@@ -432,6 +438,19 @@ def test_graficos_do_split_sao_gerados(cfg, tmp_path):
         assert p.exists() and p.stat().st_size > 10_000 and p.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
     assert {p.name for p in pngs} == {"split_todos_2019_2025.png", "split_sem_2020_2021.png", "split_comparacao_cenarios.png"}
 
+def test_analytical_path_devolve_caminho(cfg):
+    assert isinstance(v._analytical_path(cfg), Path)
+
+
+def test_src_sem_funcoes_duplicadas():
+    """Duas funções de topo com o mesmo nome no mesmo arquivo: a última apaga a primeira."""
+    import ast
+
+    for arquivo in Path(v.__file__).resolve().parents[1].rglob("*.py"):
+        arvore = ast.parse(arquivo.read_text(encoding="utf-8-sig"))
+        nomes = [n.name for n in arvore.body if isinstance(n, ast.FunctionDef)]
+        repetidos = sorted({n for n in nomes if nomes.count(n) > 1})
+        assert not repetidos, f"{arquivo.name}: funções definidas mais de uma vez: {repetidos}"
 
 # ---------------------------------------------------------------------------
 # A4 — tabela de decisão e registo
