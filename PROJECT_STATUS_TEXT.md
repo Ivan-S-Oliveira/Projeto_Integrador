@@ -25,7 +25,7 @@ Projeto SRAG · Pendências
 
 Retrato de 31/10, tarde, sobre o commit `9f63cb0`. A coorte definitiva (3.884.728 notificações), a partição-mestre em seis blocos, o artefato supervisionado e as previsões do piloto em `val_tune` existem; a análise exploratória existe **na coorte inteira** (tabelas de 26/10), mas **ainda faltam** as explorações que podem mudar decisões antes do treino: óbitos só no treino (#51), completude (#52), ablações de variáveis (#54) e agrupamento com one-hot (#136). Os notebooks C ainda usam o vocabulário antigo (treino, validação e teste), o ajuste fino, a calibração, o limiar e o teste não rodaram, e a suíte rápida tem 4 falhas (#144). **Trabalho entregue em 04/11/2026; apresentação em 05/11/2026.**
 
-**Regra de ordem:** toda exploração e toda decisão que pode mudar variáveis vem **antes** de qualquer ajuste de modelo. A estrutura de treino e de teste é construída em paralelo, mas a lista de variáveis só se congela no ponto de decisão (#140, domingo 8h30). Em seguida: G6, ajuste fino, peso de classe, calibração, limiar e G9 (#78, #1, #5, #79, #80, #81; domingo) → **testes A e B uma única vez, na manhã de 02/11 (#2)** → relatório (#133), limpeza e unificação dos notebooks (#146) e pacote final (#126, #147).
+**Regra de ordem:** toda exploração e toda decisão que pode mudar variáveis vem **antes** de qualquer ajuste de modelo. A estrutura de treino e de teste é construída em paralelo, mas a lista de variáveis só se congela no ponto de decisão (#140, domingo 8h30). Em seguida: G6, ajuste fino, peso de classe, calibração e limiar (#78, #1, #5, #79, #80; domingo) → G9 (#81; segunda, 02/11, à noite) → **testes A e B uma única vez, na manhã de 03/11 (#2)** → relatório (#133), limpeza e unificação dos notebooks (#146) e pacote final (#126, #147).
 
 ### Entrega
 
@@ -33,10 +33,10 @@ Retrato de 31/10, tarde, sobre o commit `9f63cb0`. A coorte definitiva (3.884.72
 
 ### Cronograma
 
-- **31/10 sáb (tarde e noite)** — 16h: A: suíte, gates e ferramenta de medição (#144) · C: C_11 a C_13 (#132) · 17h: limpeza do repositório (#143: B, C, A) · B: óbitos só no treino (#51) · 17h30: A: bootstrap e calibração (#127) · 18h: B: agrupamento (#136) · 18h30: A: ablações (#54) · 21h: B: completude (#52)
-- **01/11 dom** — 8h: A: decisões (#73) · **8h30: ponto de decisão (#140)** · 9h15: G6 e grade de busca (#78: A e C) · 9h: B: C_15 e A: C_16 (#148) · 9h30: C: **ajuste fino (#1)** · 12h: A: dicionário (#70) · 12h30: C: peso de classe (#5) · 13h: A: âncora (#56) · 14h: C: calibração e G7 (#79) · B: literatura (#112) · 16h: C: limiar global e regional e G8 (#80) · **20h: checklist e aprovação do G9 (#81)**
-- **02/11 seg (feriado)** — **8h: testes A e B uma única vez (#2)** · 10h: conferência das saídas (#119) · C: tabelas de importância (#91) · tarde: A: subgrupos, falsos negativos e regiões (#55) e Resultados (#133) · B: interpretação (#91) · C: seções de modelos, calibração e limiar (#133)
-- **03/11 ter** — 8h: A: ferramenta de varredura (#146) · limpeza dos notebooks e do código (#146: A, B, C) · medições de tempo e memória (#145) · Introdução e agrupamento no relatório (B), Discussão, Limitações e Reprodutibilidade (A) · redação (#71) · 20h: A: união, renomeação e referências (#146)
+- **31/10 sáb (tarde e noite)** — 16h: B: suíte, gates e ferramenta de medição (#144, assumido por B em 01/11) · C: C_11 a C_13 (#132) · 17h: limpeza do repositório (#143: B, C, A) · B: óbitos só no treino (#51) · 17h30: A: bootstrap e calibração (#127) · 18h: B: agrupamento (#136) · 18h30: A: ablações (#54) · 21h: B: completude (#52)
+- **01/11 dom** — 8h: A: decisões (#73) · **8h30: ponto de decisão (#140)** · 9h15: G6 e grade de busca (#78: A e C) · 9h: B: C_15 e A: C_16 (#148) · 9h30: C: **ajuste fino (#1)** · 12h: A: dicionário (#70) · 12h30: C: peso de classe (#5) · 13h: A: âncora (#56) · 14h: C: calibração e G7 (#79) · B: literatura (#112) · 16h: C: limiar global e regional e G8 (#80)
+- **02/11 seg (feriado)** — C: tabelas de importância (#91) · tarde: B: interpretação (#91) · C: seções de modelos, calibração e limiar (#133) · A: folga (o que depende do teste só começa em 03/11) · **20h: checklist e aprovação do G9 (#81)**
+- **03/11 ter** — **8h: C: testes A e B uma única vez (#2)** · 8h: A: ferramenta de varredura (#146) · 10h: conferência das saídas (#119) · limpeza dos notebooks e do código (#146: A, B, C) · medições de tempo e memória (#145) · 14h: A: subgrupos, falsos negativos e regiões (#55) · depois: Resultados (A, #133), Introdução e agrupamento no relatório (B), Discussão, Limitações e Reprodutibilidade (A) · redação (#71) · 20h: A: união, renomeação e referências (#146) · 21h: B, A e C: reconferência final dos resultados (#149)
 - **04/11 qua** — **ENTREGA do trabalho** · manhã: execução limpa e README (#126), conferência dos números (#133) · 12h: congelar e empacotar (#147) · tarde: B monta a apresentação (#134)
 - **05/11 qui** — ensaio e **entrega da apresentação** (#134)
 
@@ -50,16 +50,22 @@ Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em lingu
 
 ### Pessoas
 
-- **A (≈ 20,75 h)** — suíte, gates e ferramenta de medição (#144), decisões (#73), bootstrap e calibração (#127), ablações (#54), ponto de decisão e G6 (#140, #78), C_16 (#148), dicionário e âncora (#70, #56), checklist do G9 (#81), subgrupos, falsos negativos e regiões (#55), relatório (#133), limpeza e renomeação (#146), pacote (#147)
-- **B (≈ 16,5 h)** — óbitos só no treino (#51), agrupamento (#136), completude (#52), C_15 (#148), literatura (#112), interpretação (#91), limpeza dos notebooks B (#146), seções do relatório e apresentação (#133, #134)
-- **C (≈ 18,3 h)** — C_11 a C_13 (#132), ajuste fino (#1), peso de classe (#5), calibração (#79), limiar (#80), testes e conferência (#2, #119), tabelas de importância (#91), seções do relatório (#133)
+- **A (≈ 19,75 h)** — decisões (#73), bootstrap e calibração (#127), ablações (#54), ponto de decisão e G6 (#140, #78), C_16 (#148), dicionário e âncora (#70, #56), checklist do G9 (#81), subgrupos, falsos negativos e regiões (#55), relatório (#133), limpeza e renomeação (#146), reconferência (#149), pacote (#147)
+- **B (≈ 19 h)** — suíte, gates e ferramenta de medição (#144), óbitos só no treino (#51), agrupamento (#136), completude (#52), C_15 (#148), literatura (#112), interpretação (#91), limpeza dos notebooks B (#146), reconferência final (#149), seções do relatório e apresentação (#133, #134)
+- **C (≈ 18,5 h)** — C_11 a C_13 (#132), ajuste fino (#1), peso de classe (#5), calibração (#79), limiar (#80), testes e conferência (#2, #119), tabelas de importância (#91), finalista (#149), seções do relatório (#133)
 - **Equipe** — ponto de decisão (#140) e aprovações dos gates (#78, #81)
 
 ### Caminho crítico
 
-#127 → #54 → #140 → #78 → #1 → #5 → #79 → #80 → #81 → #2 → #146 → #126 → #133 → #147
+#127 → #54 → #140 → #78 → #1 → #5 → #79 → #80 → #81 → #2 → #146 → #149 → #126 → #133 → #147
 
 ### Aviso da revisão
+
+> [!decisão] Decisões de equipe de 01/11 (informadas pela Pessoa B)
+> (1) A **Pessoa B assume o #144** (era da Pessoa A; 1 h 15): é o primeiro da fila, porque dele dependem #73, #70, #145, #148, #149 e o G9. (2) **#102: Opção A**, 2019 permanece no desenvolvimento; o registro vai no pacote do #73 (a §29.25 do `decisoes.md` já tem a decisão de 29/10). (3) O **G9 (#81) passa para segunda, 02/11, das 20h às 21h30**; o teste (#2) passa para **terça, 03/11, às 8h**, e com ele #119, #55 e #110. A tag de congelamento passa a ser `congelado-2026-11-02`. Antes, o teste tinha 02/11 e 03/11 de folga até a execução limpa (#126, 04/11 de manhã); agora tem só 03/11. As datas de #78, #1, #5, #79 e #80 (01/11) não foram alteradas e ganham um dia de folga.
+
+> [!atenção] Revisão de volatilidade de 01/11 · regra e resultado
+> Um card concluído só volta para ABERTA se uma decisão pendente ou um resultado ainda por vir puder **mudar a conclusão** (ou se foi fechado sem o registro que o próprio critério exige). Se só os números ou o texto puderem mudar, ele fica concluído e a reconferência entra no **#149** (03/11, 21h, depois da renomeação do #146 e antes da execução limpa do #126). **Reabertos:** #50 (a tabela de ablações e a decisão dos três sintomas dependem do #54 e do #140) e #97 (fechado sem as respostas do professor; o padrão do card cita 03/11, e o plano é 04/11). O #5 saiu de "resolvida" porque depende do #1 e do #148. Os cards #102, #73, #144 e #140 ganharam um comentário com o que depende deles.
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (commit `9f63cb0`): entrega em 04/11
 > Nada do caminho crítico foi executado desde 30/10. O plano foi refeito com o escopo **menor** e com as tarefas redistribuídas entre as três pessoas (a divisão por área deixou de valer). **Exploração antes do treino:** #51, #52, #54 e #136 terminam no sábado; o ponto de decisão (#140) é no domingo às 8h30; só depois vêm o G6 e o ajuste fino. **Achados da leitura do código e do diagnóstico:** (1) 4 falhas na suíte rápida (função repetida em `verificacoes.py`) e G1, G2, G4 e G5 com `status: responsavel` no YAML (#144); (2) `engineering.py` lê `recodificar_comorbidades_fator_risc`, mas o YAML tem `..._fator_risco`: ligar a regra pelo YAML não teria efeito (#140); (3) `src/evaluation/cluster_profile.py` (#137) **não está no Git** e `normalization.py` está vazio (#136); (4) o `escolher_limiar` não aceita `recall_minimo` (#80); (5) o C_16 carregaria de uma vez as 3.035.074 linhas do teste, o que exige leitura em lotes (#145, #148); (6) as tabelas de óbito do B_06 usam a coorte inteira (#51). **Cortado ou simplificado:** #110 e #119 absorvidos por outros cards, literatura curta, agrupamento em amostra, perfil dos óbitos sem alerta como tabela simples, e 2026, SP, UMAP e refatorações ficam para depois de 05/11. Cada card alterado tem, no início do **② Problema**, uma caixa "Replanejamento de 31/10 · versão 2".
@@ -144,6 +150,7 @@ Painel local de acompanhamento do projeto. O conteúdo vem de `PROJECT_STATUS_TE
 - Quando dois cards ligados caem no mesmo dia, o prazo indica o turno (manhã, tarde, noite) e o que vem antes termina primeiro.
 - Cards absorvidos por outro (esforço 0) têm a mesma data do card que os contém.
 - Se um card atrasar, os que dependem dele atrasam junto: avise no card e use o filtro "Só prontos para começar".
+- Um card concluído só volta para ABERTA se uma decisão pendente ou um resultado ainda por vir puder mudar a conclusão (revisão de volatilidade de 01/11); se só os números mudarem, ele fica concluído e a reconferência entra no #149.
 
 ## #120 · Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste
 
@@ -808,6 +815,10 @@ Na reunião de 16/10, foi sugerido fazer o trabalho de um dos professores juntos
 
 ### ② Problema
 
+> [!atenção] Reaberto em 01/11 (revisão de volatilidade)
+> Fechado sem nenhuma resposta registrada. O padrão do card cita a entrega em 03/11 e a tag `entrega-2026-11-03`; o plano usa 04/11 e `entrega-2026-11-04`. Se você já tem as respostas, cole-as e conclua.
+> O comentário de 01/11 deste card tem o motivo completo, o que pode mudar, o que continua válido, de que depende e como concluir de novo.
+
 Não há registro do que é a entrega, do prazo nem da forma (individual ou em grupo).
 
 ### ③ O que fazer
@@ -829,6 +840,7 @@ Não há registro do que é a entrega, do prazo nem da forma (individual ou em g
 
 - manual: | As quatro respostas do professor (data e hora da entrega, canal de envio, se há relatório escrito separado e duração da apresentação) estão registradas como comentário neste card.
 - manual: | O #133 (relatório) e o #134 (apresentação) foram ajustados ao formato informado, ou foi registrado neste card que o padrão (PDF TRIPOD, 15 minutos, tag entrega-2026-11-03) continua valendo.
+- manual: | Reconfirmado: as quatro respostas (data e hora, canal, relatório separado e duração) estão registradas em comentário, ou foi registrado que vale o padrão atualizado (PDF TRIPOD, 15 minutos, tag entrega-2026-11-04, data 04/11), e o #133 e o #134 foram avisados.
 
 ## #102 · Desenho temporal: os YAMLs tiraram 2019 do desenvolvimento sem registro — decidir e alinhar tudo
 
@@ -855,6 +867,9 @@ Não há registro do que é a entrega, do prazo nem da forma (individual ou em g
 O YAML canônico não pode continuar anunciando 2019–2026 ou um único holdout 70/15/15. Ele deve declarar explicitamente os blocos e anos da decisão atual.
 
 ### ② Problema
+
+> [!decisão] Decisão de 01/11 (equipe, informada pela Pessoa B): Opção A
+> 2019 permanece no desenvolvimento (train_ref, val_tune, val_cal, val_meas e test_ref) e fica fora do `test_pandemic` (só 2020 a 2022). É o padrão deste card e o que o `docs/decisoes.md` §29.25 (29/10) já registra, com os YAMLs alinhados. O card só fecha com a suíte rápida sem as 4 falhas (#144, agora da Pessoa B) e o registro da confirmação de 01/11 no pacote do #73 (Pessoa A).
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): divergência grave, bloqueia o #142 e o treino
 `configs/supervised.yaml` e `configs/decisoes.yaml` (versão 0.5) passaram a dizer que o desenvolvimento usa só 2023–2025 e que 2019 vai para `test_pandemic` junto com 2020–2022 (`periodo.desenvolvimento`, `temporal.blocos.*.anos`, `dev_years`, `pandemic_test_years` e a descrição do G2). Todo o resto do projeto continua com 2019 no desenvolvimento: `docs/decisoes.md` §5 e §28, a Base de Conhecimento v10, este painel, o teste `tests/test_split.py` (`TEMPORAL_CFG`), as saídas salvas do B_07 e o artefato atual (`manifesto_supervisionado.json`: teste = 3.035.074 linhas = `test_ref` + 2020–2022). A mudança não está registrada como decisão e o G2 continua com a data de aprovação de 18/10.
@@ -1016,6 +1031,9 @@ Desde 10/10 foram decididas muitas coisas que não estão registradas: quarenten
 
 ### ② Problema
 
+> [!decisão] Decisão de 01/11 (equipe): #102 = Opção A
+> Acrescente ao `docs/decisoes.md` uma linha com a confirmação de 01/11 e a referência ao #102 (a §29.25 já tem a decisão de 29/10). A reaprovação das decisões em `proposta` (`alvo`, `coorte_estrita`, `evolucao_desconhecida`, `periodos` e `ponto_de_previsao`) continua pendente: a equipe não a decidiu em 01/11.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Passa para **domingo de manhã** (meia hora). A verificação de 30/10 mostrou 8 de 10 critérios atendidos; faltam `status_decisoes.coorte_estrita` e o teste de configuração, que volta com o #144. As entradas de G6 a G9 e do ponto de decisão são registradas **por quem aprova cada gate**, nos cards respectivos.
 
@@ -1145,8 +1163,8 @@ A partição oficial do projeto existe só no notebook B_07, junto com a confer�
 - estratégia: desenvolver
 - marco: M3
 - data ideal: 31/10
-- responsável: Pessoa A (dentro do #144)
-- pessoas: A
+- responsável: Pessoa B (dentro do #144)
+- pessoas: B
 - fonte: src/protocolo/verificacoes.py (a1_export_dataset, _analytical_path); notebooks A_03, A_04, A_14; configs/decisoes.yaml (dataset_analitico.path)
 - depende de: #144
 - tags: Diverge do decidido, Código, Dados/Coorte, Notebook
@@ -1168,6 +1186,9 @@ Se os notebooks A rodarem depois do B_07, o hash deixa de bater com o manifesto 
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11
+> O #144, em que este card está contido, passou para a Pessoa B. A parte do #73 continua com a Pessoa A.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Replanejamento v2: este card é **resolvido dentro do card indicado em "responsável"**; sem esforço próprio. Marque como concluído junto com ele.
 
@@ -1179,7 +1200,7 @@ Se os notebooks A rodarem depois do B_07, o hash deixa de bater com o manifesto 
 
 ### ③ O que fazer
 
-**Resolvido pelo #73 e pelo #144** (Pessoa A). O A_03 e o A_04 gravam em `data/analytical/dataset_provisorio_pessoa_a.parquet`, e o artefato oficial continua só com `gerar_artefato_supervisionado`. Confirme com a suíte verde (`tests/test_regras_pessoa_a.py`) e marque como concluído.
+**Resolvido pelo #73** (Pessoa A) **e pelo #144** (Pessoa B). O A_03 e o A_04 gravam em `data/analytical/dataset_provisorio_pessoa_a.parquet`, e o artefato oficial continua só com `gerar_artefato_supervisionado`. Confirme com a suíte verde (`tests/test_regras_pessoa_a.py`) e marque como concluído.
 
 ### ④ Pronto quando
 
@@ -2639,7 +2660,7 @@ A busca do C_13 usa a validação inteira. O C_15 divide a validação em duas m
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 02/11
+- data ideal: 03/11
 - responsável: Pessoa C (0,5 h) + Pessoa B (0,25 h)
 - pessoas: C, B
 - fonte: Plano integrado v2, seções 3 e 4; notebooks/E/E_02
@@ -2665,6 +2686,9 @@ O E_02 deixa de treinar três cenários. Ele treina uma única vez com 2019, 202
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11
+> Passou de 02/11 para **03/11, das 10h às 11h**, porque depende do teste (#2), agora em 03/11 às 8h.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Vira **só a conferência** das saídas do C_16 (as tabelas agora saem em **um** arquivo, `teste_metricas.csv`) e a comparação pareada em `val_meas`, logo depois do #2. Nada é recalculado com o teste.
 
@@ -2675,7 +2699,7 @@ As duas janelas têm prevalências e composição temporal diferentes. Comparar 
 > [!decisão] Replanejamento de 31/10 · versão 2
 > O C_16 (#148, #2) gera tudo numa execução. Aqui se **confere**, sem abrir o teste de novo, e se acrescenta a comparação em `val_meas`.
 
-**Dono:** Pessoa C (conferência e comparação) + Pessoa B (leitura das tabelas) · **Prazo:** 02/11 (segunda, feriado), 10h às 11h · **Esforço estimado:** C ≈ 30 min · B ≈ 15 min · **Começa quando:** #2 e #127
+**Dono:** Pessoa C (conferência e comparação) + Pessoa B (leitura das tabelas) · **Prazo:** 03/11 (terça), 10h às 11h · **Esforço estimado:** C ≈ 30 min · B ≈ 15 min · **Começa quando:** #2 e #127
 
 #### O que precisa existir (nomes fixos em `outputs/final/`)
 | Arquivo | Conteúdo |
@@ -2956,7 +2980,7 @@ Nenhum notebook calcula importância de variáveis. O B_06 tem razões de chance
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 02/11
+- data ideal: 03/11
 - responsável: Pessoa A (1,25 h)
 - pessoas: A
 - fonte: notebooks C_16
@@ -2976,6 +3000,9 @@ Exemplo do B_07: a PR-AUC do boosting varia de 0,22 (2026) a 0,52 (2020) entre a
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11
+> Passou de 02/11 para **03/11, das 14h às 15h15**, porque depende do teste (#2), agora em 03/11 às 8h. O #110, contido neste card, acompanha.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Absorve o **#110** (figura e texto de regiões) e passa a ler `predicoes_teste.parquet` do C_16, sem depender do arquivo `cluster_profile.py` do #137 (que não está no Git). Os **falsos negativos** viram uma tabela simples (média e % por classe), com código testado. Segunda-feira à tarde.
 
@@ -2986,7 +3013,7 @@ Faltam o desempenho e a calibração por ano, faixa etária, sexo e UF, e a aná
 > [!decisão] Replanejamento de 31/10 · versão 2
 > Um modelo pode ir bem na média e mal num grupo. Uma tabela por dimensão no Teste A, uma figura por região e a comparação dos óbitos que o alerta pegou e dos que não pegou. Nada é reescolhido com dados do teste.
 
-**Dono:** Pessoa A · **Prazo:** 02/11 (segunda, feriado), 14h às 15h15 · **Esforço estimado:** ≈ 1 h 15 · **Começa quando:** #2 e #23
+**Dono:** Pessoa A · **Prazo:** 03/11 (terça), 14h às 15h15 · **Esforço estimado:** ≈ 1 h 15 · **Começa quando:** #2 e #23
 
 #### Passo a passo
 1. Leia `outputs/final/predicoes_teste.parquet` e filtre `particao == "test_ref"` (Teste A). Use um notebook descartável fora do pacote (`outputs/notebooks/apoio_subgrupos.ipynb`, pasta que o Git ignora); **não** edite o C_16 depois do teste.
@@ -3169,7 +3196,7 @@ No benchmark do A_09 (logística, cerca de 140 mil de treino e 30 mil de valida�
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 02/11
+- data ideal: 03/11
 - responsável: Pessoa A (dentro do #55)
 - pessoas: A
 - fonte: artefato supervisionado (sg_uf); E_03; orientação de 17/10
@@ -3195,6 +3222,9 @@ O Brasil tem realidades muito diferentes entre regiões ("vários Brasis"). Colo
 | Métricas e calibração por região e UF | Equidade: o modelo erra mais ou superestima o risco em algum lugar? |
 
 ### ② Problema
+
+> [!decisão] Replanejamento de 01/11
+> Acompanha o #55: passou de 02/11 para 03/11, depois do teste (#2).
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > **Absorvido pelo #55** (figura e texto de regiões) e pelo #80 (cálculo dos cortes por região). Sem esforço próprio.
@@ -4018,7 +4048,7 @@ Continua **pós-entrega**. A parte de não supervisionado pedida pelos professor
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 02/11
+- data ideal: 03/11
 - responsável: Pessoa C (1,5 h)
 - pessoas: C
 - fonte: notebooks C_16; configs/supervised.yaml (features.final, selecao_modelos.finalista_escolhido)
@@ -4041,8 +4071,11 @@ O C_16 abre o teste e calcula o resultado oficial. Ele se recusa a rodar se a li
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11: teste movido para terça, 03/11
+> Antes: segunda, 02/11, 8h. Agora: **terça, 03/11, das 8h às 9h30**, depois do G9 de 02/11 à noite (#81). Tag esperada: `congelado-2026-11-02`. A execução limpa (#126) segue em 04/11 de manhã: se o teste falhar ou estourar o tempo, só há a tarde de 03/11, e o teste só pode ser aberto uma vez.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
-> Segunda-feira (02/11, feriado), 8h às 9h30, com a tag `congelado-2026-11-01` já criada no #81. Uma execução, kernel limpo, máquina com 8 GB livres e nada mais aberto. O C_16 chega pronto e **revisado em ensaio**; aqui só se roda.
+> Terça-feira (03/11), 8h às 9h30, com a tag `congelado-2026-11-02` já criada no #81. Uma execução, kernel limpo, máquina com 8 GB livres e nada mais aberto. O C_16 chega pronto e **revisado em ensaio**; aqui só se roda.
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
 > A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10 (`0f565b5`, `c8a9997`), todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
@@ -4055,9 +4088,9 @@ O C_16 interrompe a execução quando `features.final` ou `selecao_modelos.final
 > [!decisão] Replanejamento de 31/10
 > Uma execução, kernel limpo, máquina com ≥ 8 GB livres e nada mais aberto. O C_16 já foi revisado em ensaio no #81; aqui só se roda.
 
-**Dono:** Pessoa C · **Prazo:** 02/11 (segunda, feriado), 8h às 9h30 (≈ 30 min de máquina) · **Esforço estimado:** ≈ 1 h 30 · **Começa quando:** #81 (G9 aprovado, com tag `congelado-2026-11-01`)
+**Dono:** Pessoa C · **Prazo:** 03/11 (terça), 8h às 9h30 (≈ 30 min de máquina) · **Esforço estimado:** ≈ 1 h 30 · **Começa quando:** #81 (G9 aprovado, com tag `congelado-2026-11-02`)
 
-1. Feche o Excel e o navegador pesado; `git pull`; `git status` limpo; confira que `git describe --tags` mostra `congelado-2026-11-01`.
+1. Feche o Excel e o navegador pesado; `git pull`; `git status` limpo; confira que `git describe --tags` mostra `congelado-2026-11-02`.
 2. Kernel limpo; rode o C_16 **inteiro de uma vez**: `.\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/C/C_16_validacao_final.ipynb --salvar-no-lugar --limite-s 1800` (a ferramenta registra duração e pico de memória em `outputs/final/performance_notebooks.csv`).
 3. Se quebrar **antes** de carregar o teste (passos 9 a 12 do #148): corrija e rode de novo. Se quebrar **depois**: corrija **só** o código de relatório (nunca modelo, calibrador, corte ou lista de variáveis), registre no card o que mudou e por quê, e rode apenas a parte de relatório a partir das previsões salvas (`predicoes_teste.parquet`).
 4. Confirme as saídas do contrato do #119 e que o manifesto tem `test_opened: true`, `test_opened_utc` e `test_opened_commit`.
@@ -4350,7 +4383,7 @@ O YAML tiver os cortes e existirem `limiares_val_cal.csv` e `limiares_por_regiao
 - situação: aberta
 - estratégia: desenvolver
 - marco: M5
-- data ideal: 01/11
+- data ideal: 02/11
 - responsável: Pessoa A (1 h) + Pessoa C (0,5 h) + Equipe (0 h)
 - pessoas: A, C, Equipe
 - fonte: configs/supervised.yaml (gates.G9_holdout); notebooks C_16
@@ -4375,8 +4408,11 @@ O **teste** é a prova final: 587 mil internações que nenhum modelo viu. O **G
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11: G9 movido para segunda, 02/11, à noite
+> Antes: domingo, 01/11, 20h. Agora: **segunda, 02/11, das 20h às 21h30** (data no YAML: `2026-11-02`; tag `congelado-2026-11-02`). O #2 passa para terça, 03/11, às 8h. Os pré-requisitos não mudaram (#77, #79, #80, #135, #144, #148 e #127).
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
-> Domingo, 20h às 21h (a Pessoa A confere, a Pessoa C revisa o C_16 em ensaio). Tag de congelamento: `congelado-2026-11-01`. O C_16 é revisado em ensaio (`SRAG_DRY_RUN=1`) **antes** de abrir o teste, porque depois ele não roda de novo.
+> Segunda-feira (02/11, feriado), 20h às 21h (a Pessoa A confere, a Pessoa C revisa o C_16 em ensaio). Tag de congelamento: `congelado-2026-11-02`. O C_16 é revisado em ensaio (`SRAG_DRY_RUN=1`) **antes** de abrir o teste, porque depois ele não roda de novo.
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
 > A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 09 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
@@ -4389,7 +4425,7 @@ O gate `G9_holdout` está `pendente`. Ele libera o teste uma única vez e é irr
 > [!decisão] Replanejamento de 31/10
 > O G9 libera o teste **uma única vez**. Depois dele, **nada** do modelo muda. É o envelope da nota final.
 
-**Dono:** Pessoa A (conduz) + Pessoa C (modelagem e revisão do C_16) + Equipe (aprova) · **Prazo:** 01/11 (domingo), 20h às 21h30 · **Esforço estimado:** A ≈ 1 h · C ≈ 30 min · **Começa quando:** #77, #79, #80, #135, #144, #148 e #127
+**Dono:** Pessoa A (conduz) + Pessoa C (modelagem e revisão do C_16) + Equipe (aprova) · **Prazo:** 02/11 (segunda, feriado), 20h às 21h30 · **Esforço estimado:** A ≈ 1 h · C ≈ 30 min · **Começa quando:** #77, #79, #80, #135, #144, #148 e #127
 
 #### Estado do congelamento: um comando só
 `.\.venv\Scripts\python.exe -c "import yaml,json; y=yaml.safe_load(open('configs/supervised.yaml',encoding='utf-8')); g=y['gates']; s=y['selecao_modelos']; print({k:g[k]['status'] for k in ('G1_definicao_alvo_features','G2_janela_temporal','G6_finalistas_tuning','G7_calibracao','G8_limiar','G9_holdout')}); print(s['finalista_escolhido'], s.get('run_id_finalista'), y['calibracao']['metodo'], y['limiar']['otimo'], y['limiar'].get('por_regiao')); print(json.load(open('data/analytical/manifesto_supervisionado.json'))['test_opened'])"`
@@ -4404,10 +4440,10 @@ Esperado: G1, G2, G6, G7 e G8 `aprovado`; G9 `pendente`; finalista, `run_id_fina
 5. `.\.venv\Scripts\python.exe -m pytest -m "not slow" -q` com 0 falhas (inclui o teste da proteção do teste).
 6. **C_16 em ensaio:** `$env:SRAG_DRY_RUN="1"` e executado até o passo 11 (#148) **sem abrir o teste**; a Pessoa C revisou o diff. O manifesto continua com `test_opened: false`.
 7. Leitura do teste em **lotes de 250 mil linhas** conferida no código do C_16 (#145) e memória livre da máquina de execução ≥ 8 GB.
-8. `git status` limpo; commit de congelamento com a tag **`congelado-2026-11-01`** (`git tag congelado-2026-11-01`; `git push --tags`) e o SHA anotado aqui.
+8. `git status` limpo; commit de congelamento com a tag **`congelado-2026-11-02`** (`git tag congelado-2026-11-02`; `git push --tags`) e o SHA anotado aqui.
 
 #### Aprovação
-Cada pessoa comenta "aprovo o G9" (pode ser pelo celular). Com as três aprovações (ou duas e nenhuma objeção em 2 horas), a Pessoa C muda `G9_holdout.status: aprovado` (com `aprovado_por`, `data: '2026-11-01'`) e roda o #2 na manhã de 02/11.
+Cada pessoa comenta "aprovo o G9" (pode ser pelo celular). Com as três aprovações (ou duas e nenhuma objeção em 2 horas), a Pessoa C muda `G9_holdout.status: aprovado` (com `aprovado_por`, `data: '2026-11-02'`) e roda o #2 na manhã de 03/11.
 
 ### ④ Pronto quando
 
@@ -4417,7 +4453,7 @@ Cada pessoa comenta "aprovo o G9" (pode ser pelo celular). Com as três aprovaç
 - yaml: `configs/supervised.yaml` :: `gates.G6_finalistas_tuning.status` = `aprovado` | Pré-requisito: o G6 está aprovado.
 - yaml: `configs/supervised.yaml` :: `gates.G1_definicao_alvo_features.status` = `aprovado` | Pré-requisito: o G1 está aprovado.
 - yaml: `configs/supervised.yaml` :: `gates.G2_janela_temporal.status` = `aprovado` | Pré-requisito: o G2 está aprovado.
-- manual: | O checklist do G9 está todo marcado neste card, o commit de congelamento tem a tag congelado-2026-11-01 com o SHA anotado, e as três pessoas comentaram "aprovo o G9" (ou duas, sem objeção em 2 horas).
+- manual: | O checklist do G9 está todo marcado neste card, o commit de congelamento tem a tag congelado-2026-11-02 com o SHA anotado, e as três pessoas comentaram "aprovo o G9" (ou duas, sem objeção em 2 horas).
 
 ## #37 · O B_10 vai falhar de propósito quando a lista final de variáveis existir
 
@@ -4463,7 +4499,7 @@ O B_10 tem uma verificação, `features_finais_ainda_nao_congeladas`, que exige 
 - responsável: Pessoa A (0,5 h) + Pessoa B (0,5 h) + Pessoa C (0,5 h)
 - pessoas: A, B, C
 - fonte: tools/executar_cadeia.py (do Plano de Performance)
-- depende de: #2, #146
+- depende de: #2, #146, #149
 - tags: Memória/Desempenho, Ambiente, Testes
 - pilar: Eficiência + Performance + Valor científico-acadêmico
 - carga: 1.5
@@ -4481,6 +4517,9 @@ No dia do congelamento, a prova de reprodutibilidade é: cada notebook do caminh
 | Falha aparece no notebook certo | para na primeira erro |
 
 ### ② Problema
+
+> [!atenção] Revisão de volatilidade de 01/11
+> Depende também do #149 (reconferência dos números dos cards concluídos, 03/11 às 21h). A execução limpa salva as saídas finais; o #149 confere antes que os números citados nos cards não mudaram.
 
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Quarta-feira, 04/11, de manhã, **depois do #146** (renomeação e limpeza): vale como a prova de reprodução do pacote. O C_16 (agora `13_validacao_final`) **não** roda de novo. A tag passa a ser `entrega-2026-11-04`. Notebooks finais: 13 (inclui as ablações).
@@ -4513,7 +4552,7 @@ Hoje a cadeia é rodada à mão, no mesmo kernel, e a memória se acumula.
 - contem: `README.md` :: `Como reproduzir` | O README tem a seção "Como reproduzir" (versão do Python, pip install -r requirements.txt, download da tag dados-v2, ordem dos notebooks e tempos).
 - nao-contem: `README.md` :: `C1_smoke_test` | O README não usa mais os nomes antigos dos notebooks (C1_smoke_test … C6_validacao_final).
 - nao-contem: `README.md` :: `dicionario_variaveis_v1_revisao.csv` | O README não cita mais o arquivo inexistente dicionario_variaveis_v1_revisao.csv.
-- manual: | Cada pessoa rodou os próprios notebooks em kernel limpo (A: 03, 04, 08; B: 05, 06, 07; C: 01, 02, 09 a 12), com saídas salvas, e anotou tempo e memória; o 13 manteve as saídas de 02/11.
+- manual: | Cada pessoa rodou os próprios notebooks em kernel limpo (A: 03, 04, 08; B: 05, 06, 07; C: 01, 02, 09 a 12), com saídas salvas, e anotou tempo e memória; o 13 manteve as saídas de 03/11.
 
 ## #28 · O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes
 
@@ -4968,6 +5007,9 @@ O relatório é a entrega avaliada. Ele precisa existir em paralelo à modelagem
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11
+> A seção 8 (Resultados, Pessoa A) passou de 02/11 para **03/11, depois do #119**, porque o teste (#2) agora roda em 03/11 às 8h. As seções 5 a 7 e 9 seguem em 02/11.
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > O relatório é a **entrega de 04/11**. Passa a ter **três autores por seção** (A: dados, partição, resultados, discussão e montagem; C: representação, modelos, calibração e limiar; B: introdução, agrupamento e "o que pesa no risco"), para que ninguém concentre a escrita. Esforço total ≈ 9 h 15 (A 5 h 30 · B 2 h · C 1 h 45): cada seção sai **das tabelas e dos cards** (as frases obrigatórias abaixo já estão prontas).
 
@@ -4978,7 +5020,7 @@ Nenhum item do painel cobria a redação. Com a Pessoa C no caminho crítico e a
 > [!decisão] Replanejamento de 31/10
 > O texto vem **das tabelas e dos cards**, nunca de memória: cada número aponta para um arquivo de `outputs/final/` ou para um manifesto. Número sem origem sai do texto.
 
-**Dono:** Pessoa A (dados, partição, resultados, discussão, limitações e montagem) + Pessoa C (representação, modelos, calibração e limiar; conferência técnica) + Pessoa B (introdução, agrupamento e "o que pesa no risco") · **Prazo:** 01/11 seções 2 a 4 (A) · 02/11 seções 5 a 7 (C), 8 (A) e 9 (B) · 03/11 seções 1 e 10 (B), 11, 12 e Reprodutibilidade (A) · 04/11 conferência final · **Esforço estimado:** A ≈ 5 h 30 · B ≈ 2 h · C ≈ 1 h 45 · **Começa quando:** #97 (formato); a seção Resultados espera o #119
+**Dono:** Pessoa A (dados, partição, resultados, discussão, limitações e montagem) + Pessoa C (representação, modelos, calibração e limiar; conferência técnica) + Pessoa B (introdução, agrupamento e "o que pesa no risco") · **Prazo:** 01/11 seções 2 a 4 (A) · 02/11 seções 5 a 7 (C) e 9 (B) · 03/11 seção 8 (A, depois do #119), seções 1 e 10 (B), 11, 12 e Reprodutibilidade (A) · 04/11 conferência final · **Esforço estimado:** A ≈ 5 h 30 · B ≈ 2 h · C ≈ 1 h 45 · **Começa quando:** #97 (formato); a seção Resultados espera o #119
 
 #### Roteiro (TRIPOD adaptado) e de onde vem cada parte
 | Seção | Conteúdo | Fonte | Quem · quando |
@@ -4990,7 +5032,7 @@ Nenhum item do painel cobria a redação. Com a Pessoa C no caminho crítico e a
 | 5. Representação | One-hot e escala na logística; categóricas nativas no boosting; AUSENTE explícito | §29.24 | C · 02/11 |
 | 6. Modelos e ajuste | Nulo, logística (L2 e rodada L1), boosting; busca; peso de classe | #1, #5, `tuning_val_tune.csv` | C · 02/11 |
 | 7. Calibração e limiar | Método, regra de corte (sens. ≥ 0,80), corte global e por região | #79, #80 | C · 02/11 |
-| 8. Resultados | Teste A, Teste B, 2020–2022, por ano; ablações; IC | `teste_metricas.csv`, #54 | A · 02/11 |
+| 8. Resultados | Teste A, Teste B, 2020–2022, por ano; ablações; IC | `teste_metricas.csv`, #54 | A · 03/11 |
 | 9. O que pesa no risco | Bruto × ajustado; permutação | #91 | B · 02/11 |
 | 10. Não supervisionado | One-hot dos quatro estados; K-Means e HCA; perfis dos grupos; "agrupam idade e preenchimento, não perfis clínicos" | #136, #60 | B · 03/11 |
 | 11. Discussão | Mudança de período, sintomas de 2019, viés de documentação, equidade regional, subgrupos | #50, #52, #55 | A · 03/11 |
@@ -6087,11 +6129,11 @@ Conferir no dicionário oficial do SIVEP-Gripe e registrar a confirmação no di
 - situação: aberta
 - estratégia: desenvolver
 - marco: M3
-- data ideal: 27/10
+- data ideal: 01/11
 - responsável: Pessoa A (dados) + Pessoa C (ablação)
 - pessoas: A, C
 - fonte: configs/dicionario_variaveis_v1.csv
-- depende de: —
+- depende de: #54, #140
 - tags: Features, Vazamento, Metodologia, Dados/Coorte
 - pilar: —
 - carga: 2
@@ -6123,6 +6165,10 @@ Perda de olfato, perda de paladar e fadiga só passaram a existir na ficha com a
 > O professor pediu para **estudar** as três variáveis e retirar só se o efeito for "muito determinístico", sem tirar "só por tirar".
 
 ### ② Problema
+
+> [!atenção] Reaberto em 01/11 (revisão de volatilidade)
+> O critério exige a tabela de ablações do #54 e a decisão do #140, ambos abertos; a data ideal passou de 27/10 para 01/11, junto com o #140. A equipe já tinha avisado que este card deve ser reaberto se 2019 mudar de lado.
+> O comentário de 01/11 deste card tem o motivo completo, o que pode mudar, o que continua válido, de que depende e como concluir de novo.
 
 > [!atenção] Revisão de 28/10 (commit `032a5b65`): por que esta pendência está aberta
 > A auditoria automática do painel (27/10, 14:40) marcou este item como resolvido com base em commits de 10 e 11/10, todos anteriores às revisões de 24 e 26/10 e sem relação com a entrega descrita aqui. Isso acontece por um defeito do painel: a cada auditoria, um commit antigo ainda não rejeitado reabre a sugestão (detalhes no #94).
@@ -6173,6 +6219,7 @@ Seja qual for a decisão, é um achado forte de Engenharia de Dados: mostra que 
 - existe: `outputs/final/campos_por_ano.csv` | A % de branco por ano das 31 principais e das 6 de contexto e gravidade está em outputs/final/campos_por_ano.csv.
 - existe: `outputs/final/ablacoes_val_tune.csv` | As linhas P e P − 3 sintomas (sem perd_olft, perd_pala, fadiga) estão na tabela de ablações do #54.
 - manual: | A decisão (manter ou retirar os três sintomas, pelo critério combinado antes de ver os números) está registrada no docs/decisoes.md com a tabela e, se for retirar, o features.final do YAML foi atualizado antes do G6. Se a decisão do #102 tirar 2019 do treino, a leitura deste item muda e precisa passar pelo #140.
+- manual: | Reconfirmado depois do #54 e do #140: `ablacoes_val_tune.csv` tem as linhas P e P − 3 sintomas, e a decisão de manter ou retirar `perd_olft`, `perd_pala` e `fadiga` está no `decisoes.md` com a tabela.
 
 ## #68 · Texto com codificação corrompida
 
@@ -7377,8 +7424,8 @@ As três tabelas existirem, a decisão estiver no #140 e, se aprovada, a funçã
 - estratégia: desenvolver
 - marco: M1
 - data ideal: 31/10
-- responsável: Pessoa A (1,25 h)
-- pessoas: A
+- responsável: Pessoa B (1,25 h)
+- pessoas: B
 - fonte: Diagnóstico de 31/10 (pytest rápido e auditoria do commit 1e02321)
 - depende de: —
 - tags: Código, Testes, Gate
@@ -7402,6 +7449,9 @@ A suíte rápida do projeto (`pytest -m "not slow"`) tinha 383 testes verdes em 
 
 ### ② Problema
 
+> [!decisão] Replanejamento de 01/11: a Pessoa B assume este card
+> Era da Pessoa A (1 h 15). É o primeiro da fila de hoje: dele dependem #73, #70, #145, #148, #149 e #87, e ele é pré-requisito do G9 (#81). O conteúdo não mudou: as 4 falhas e os 4 gates continuam como no diagnóstico de 30/10. A data ideal continua 31/10 (atrasado).
+
 > [!atenção] Replanejamento de 31/10 · versão 2 (entrega em 04/11)
 > Primeira tarefa desta tarde. Acrescenta a **ferramenta de medição de tempo e memória** (passo 11), que B e C usam ainda hoje, e fecha o #87. Nada mais mudou: as 4 falhas e os 4 gates continuam como no diagnóstico de 30/10.
 
@@ -7421,7 +7471,7 @@ Há ainda um efeito colateral: o caminho correto (`Path(C.ANALYTICAL_DIR) / nome
 > [!decisão] Replanejamento de 31/10
 > Primeira tarefa do sábado, antes de qualquer outra: sem a suíte verde ninguém consegue validar mudanças no `src`.
 
-**Dono:** Pessoa A · **Prazo:** 31/10 (sábado), 16h às 17h15 · **Esforço estimado:** ≈ 1 h 15 · **Começa quando:** imediatamente
+**Dono:** Pessoa B (assumiu em 01/11; era da Pessoa A) · **Prazo:** atrasado desde 31/10 (sábado, 16h às 17h15); fazer primeiro, em 01/11 · **Esforço estimado:** ≈ 1 h 15 · **Começa quando:** imediatamente
 
 #### Passo a passo
 1. `git pull` e reproduza as falhas com um comando só: `.\.venv\Scripts\python.exe -m pytest tests/test_regras_pessoa_a.py -q -x`. Deve falhar em `test_cenario_sem_2020_2021_exclui_os_anos` com o `AttributeError` descrito acima.
@@ -8307,3 +8357,79 @@ def medir_janela(nome, y, prob, grupos, cortes, prev_treino, n_boot=300):
 - contem: `notebooks/C/C_16_validacao_final.ipynb` :: `test_opened` | O C_16 regrava o manifesto com test_opened logo depois de carregar o teste.
 - contem: `notebooks/C/C_16_validacao_final.ipynb` :: `250_000` | O C_16 prevê o teste em lotes de 250 mil linhas.
 - manual: | Os dois notebooks seguem o padrão de limpeza do #146, escrevem só em outputs/final com nomes fixos e a Pessoa C revisou o diff do C_16 com SRAG_DRY_RUN=1, antes do G9.
+
+## #149 · Reconferência final dos resultados dos cards concluídos (antes da execução limpa)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M6
+- data ideal: 03/11
+- responsável: Pessoa B (1,25 h) + Pessoa A (0,25 h) + Pessoa C (0,25 h)
+- pessoas: B, A, C
+- fonte: Revisão de volatilidade de 01/11: cards concluídos cujo resultado ainda pode ser recalculado
+- depende de: #140, #144, #73, #102, #146
+- tags: Reprodutibilidade, Entrega, Checklist
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 1.75
+- novo: sim
+- professores: não
+
+### ① Para entender
+
+Vários cards concluídos descrevem resultados que ainda podem ser recalculados por motivos previstos no plano: o ponto de decisão (#140) pode retirar variáveis, o ajuste fino (#1) e o peso de classe (#5) mudam o modelo, o #144 e o #73 devolvem gates e decisões ao YAML, e a execução limpa (#126) salva os notebooks de novo.
+
+Na revisão de volatilidade de 01/11 só **dois** cards voltaram para ABERTA (#50 e #97). Os outros ficaram concluídos porque, se os números mudarem, a **conclusão** não deve mudar. Este card é a rede de segurança: uma passada única, depois da renomeação do #146 e antes da execução do #126, que reconfere os valores citados e deixa registrado, para cada um, o que mudou ou que "nada mudou".
+
+> [!exemplo] Exemplo
+> Se o #140 retirar a `fadiga`, o ROC-AUC do piloto no #52 muda na terceira casa decimal e a frase "o desempenho não sobe com o preenchimento" continua verdadeira. Mas o número que vai para o relatório tem de ser o novo.
+
+### ② Problema
+
+> [!decisão] Critério da revisão de 01/11
+> Um card concluído só volta para ABERTA se uma decisão pendente ou um resultado ainda por vir puder **mudar a conclusão** (ou se foi fechado sem o registro que o critério exige). Se só os números ou o texto puderem mudar, ele fica concluído e a reconferência entra aqui.
+
+Cards concluídos que este card reconfere, e por que não foram reabertos:
+
+| Card concluído | O que pode mudar | Muda a conclusão? | Item |
+|---|---|---|---|
+| #142, #118, #10, #75 | `dataset_sha256`, colunas e contagens por bloco; quarentena de 4 linhas e 2 grupos | Só se o #140 mudar variáveis (hash e colunas) ou o #102 virar a Opção B (contagens) | R1 |
+| #77, #85, #120, #44 | `status` dos gates e das decisões no YAML; lista `features.final` | Não, a menos que o #140 retire variáveis (#77 e #44) | R2 |
+| #9, #10, #11, #29, #59, #82, #83, #12, #33 | registro no `decisoes.md` (pacote do #73) e textos | Não | R2 e R5 |
+| #51, #136, #60, #99, #139 | tabelas de óbito do train_ref, agrupamento e notebook 06 salvo | Não; o #51 só mudaria se o #102 virasse a Opção B | R3 |
+| #52, #125 | desempenho do piloto por padrão de preenchimento e notebook 07 salvo | Não deve mudar com o #1 e o #5 | R4 |
+| #8, #9, #28, #82, #60 | textos com números de outra base | Não | R5 |
+| #52, #136 | frases do relatório (piloto; k=2 principal e k=3 segundo nível) | Não | R6 |
+| #141 | chave do código x YAML e teste da recodificação | Só se o #140 aprovar a recodificação (então reabra o #141) | #140 |
+| #72 | divisão de 24/10, substituída pelo plano da versão 2 | Não; vale a divisão de cada card | n/d |
+
+Reabertos nesta revisão: **#50** (a tabela de ablações e a decisão dos três sintomas dependem do #54 e do #140) e **#97** (fechado sem as respostas do professor). O #5 saiu de "resolvida" porque depende do #1 e do #148.
+
+### ③ O que fazer
+
+> [!decisão] Revisão de volatilidade de 01/11
+> Uma hora de trabalho antes da execução limpa. Se o #140 mudar variáveis, o bloco condicional (comentário do #140) deve ser feito logo, sem esperar este card.
+
+**Dono:** Pessoa B (reconferência, textos e relatório) + Pessoa A (manifestos, gates e decisões) + Pessoa C (finalista) · **Prazo:** 03/11 (terça), 21h às 22h30, depois da renomeação do #146 · **Esforço estimado:** B ≈ 1 h 15 · A ≈ 15 min · C ≈ 15 min · **Começa quando:** #140, #144, #73, #102 e #146
+
+**Regra para decidir se um card reabre** (sugestão; combine antes de olhar os números):
+- Padrões de preenchimento (#52): reabre se o `sim_e_nao` passar a ter ROC-AUC maior que os outros dois em alguma faixa etária, com intervalos que não se sobrepõem.
+- Agrupamento (#136): reabre se o K-Means deixar de escolher k=2 ou o V de Cramér das 13 comorbidades cair abaixo de 0,5 (hoje, de 0,86 a 0,99).
+- Tabelas de óbito (#51): reabre se mais de 3 das 26 razões de chances trocarem de sentido em relação à tabela registrada no card.
+- Artefato (#142): reabre se o hash ou as contagens mudarem sem decisão registrada.
+
+1. **R1 (A, 10 min). Manifestos.** Em `data/analytical/manifesto_supervisionado.json` e `manifesto_particao.json`: anote o `dataset_sha256`; `rows` = 3.710.779; train_ref 556.462, val_tune 39.748, val_cal 39.746, val_meas 39.749, test_ref 119.245, test_pandemic 2.915.829, exploracao 173.945; `rows_quarantined` = 4 e `groups_quarantined` = 2.
+2. **R2 (A, 5 min). Gates, decisões e variáveis.** No `configs/supervised.yaml`: G1, G2, G4 e G5 com `status: aprovado`. No `configs/decisoes.yaml`: `alvo`, `coorte_estrita`, `evolucao_desconhecida`, `periodos` e `ponto_de_previsao` com `status: aprovada`. `features.final` com a lista do #140 (31 variáveis se nada mudou) e igual a `feature_columns` do manifesto. Painel: **Atualizar, auditar e validar** e ✓ nos critérios de #77, #85, #120, #75, #29 e #59.
+3. **R3 (B, 15 min). Notebook 06.** Nas saídas da última execução: `Fichas em train_ref: 556462` e `Óbitos por SRAG: 46961` (8,44%); `k escolhido no K-Means: 2`; corte principal do hierárquico em k=2 e nível de descrição em k=3; ARI entre os dois métodos em k=2 de 0,998; 126 de 126 células executadas e sem erro.
+4. **R4 (B, 15 min). Notebook 07, seção 23.** ROC-AUC do boosting de 0,872 (`comorbidades_sem_nao`), 0,868 (`sintomas_em_branco`) e 0,766 (`sim_e_nao`); 74,9% contra 39,1% de fichas com alguma comorbidade respondida (óbitos contra as demais); as cinco tabelas em `outputs/final/`. Se a seção 23 ainda não estiver no notebook, aplique-a antes (o #52 se apoia nela).
+5. **R5 (B 10 min, C 10 min). Textos.** B atualiza os textos de #8 (partição-mestre), #9 (mortalidade de 11,3% e 4,5% no train_ref), #82 (coorte final) e #60 (números do agrupamento de 01/11). C atualiza o #28 (finalista e AUC vigentes, depois do #1 e do G6).
+6. **R6 (B, 15 min). Relatório (#133).** (a) Parágrafo do #52 dizendo "piloto (hiperparâmetros padrão, treinado só no train_ref)"; (b) agrupamento: K-Means e corte principal do hierárquico em k=2, com k=3 como segundo nível; (c) tabelas de óbito só do train_ref (556.462 fichas, 8,44%), sem a comparação com a coorte inteira, que inclui blocos de teste; (d) resultados do piloto identificados como tal.
+7. **R7 (B, 10 min). Tabela de reconferência.** Comente neste card: card, valor registrado, valor reconferido, "a conclusão mudou?". Para cada "sim": reabra o card com um comentário (o que mudou, valor antigo, valor novo e o que refazer) e avise o #133.
+
+**O #102 foi decidido em 01/11 pela Opção A** (2019 no desenvolvimento; §29.25 do `decisoes.md`). Se a equipe voltasse atrás (Opção B), todos os cards da tabela voltariam para ABERTA e os números de 24/10 em diante seriam refeitos: comente aqui e reabra em bloco.
+
+### ④ Pronto quando
+
+- manual: | A tabela de reconferência (card, valor registrado, valor reconferido, a conclusão mudou?) está comentada neste card, com R1 a R5 e, se o #140 mudou variáveis, o bloco condicional.
+- manual: | Cada card da tabela do ② continua com número e texto atualizados, ou foi reaberto com um comentário que diz o que mudou.
+- manual: | O #133 usa os números reconferidos: parágrafo do #52 com "piloto", k=2 principal e k=3 segundo nível no agrupamento, e tabelas de óbito só do train_ref.
