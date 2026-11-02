@@ -8572,7 +8572,7 @@ Acrescente tools/read_outputs.py export-ignore ao .gitattributes do #147.
 - manual: | A escolha sobre o fallback GITHUB_TOKEN do storage.py (release pública ou privada) foi comentada neste card e aplicada.
 - manual: | A busca --auditar-caminhos não encontra olivem85, Pfizer nem `C:\Users` em arquivo versionado, os notebooks 00 e 01 imprimem só nomes de arquivo, e a busca foi repetida depois do #126.
 
-## #151 · Atualizar para a coorte definitiva o que o script não alcança
+## #151 · Atualizar para a coorte definitiva o que os scripts não alcançam
 - prioridade: P1
 - situação: aberta
 - estratégia: documentar
@@ -8580,80 +8580,75 @@ Acrescente tools/read_outputs.py export-ignore ao .gitattributes do #147.
 - data ideal: 03/11
 - responsável: Pessoa B (0,5 h) + Pessoa A (1 h) + Pessoa C (0,5 h)
 - pessoas: A, B, C
-- fonte: Levantamento de 01/11 (142 ocorrências de "provis" em 19 arquivos, pelo levantar_coorte_provisoria.py) e execução do atualizar_coorte_definitiva.py
+- fonte: Auditoria de 02/11 (82 arquivos varridos, 651 ocorrências, 9 pontos para decisão), leitura do contrato da coorte e execução do consolidar_coorte_definitiva.py
 - depende de: #150
 - tags: Coorte, Documentação, Entrega
 - pilar: Documentação + Valor científico-acadêmico
 - carga: 2
 - novo: sim
 - professores: não
-- arquivos: src/data/cohort_source.py, tests/test_cohort_source.py, docs/decisoes.md, README.md, configs/final_cohort_v1.yaml, _backup_limpeza/
+- arquivos: configs/final_cohort_v1.yaml, tests/test_cohort_contract.py, configs/supervised.yaml, configs/feature_contract_v1.json, docs/decisoes.md, configs/decisoes.yaml, README.md
 
 ### ① Para entender
   
-Complementa o #150. O pacote passa a ter **uma única coorte, a definitiva** (`coorte_final.parquet`). O script `atualizar_coorte_definitiva.py` cuida do que é código: o resolvedor (`src/data/cohort_source.py`) só aceita `final`, os testes dele foram reescritos e os notebooks que ainda usavam `provisional` como padrão passaram para `final`. Este card cobre o que o script **não pode decidir sozinho**: textos, números e registros históricos.
+O pacote passa a ter **uma única coorte, a definitiva** (`coorte_final.parquet`). O resolvedor e o padrão dos notebooks C já foram trocados. O `consolidar_coorte_definitiva.py` fecha o que é automático: contrato com `status: approved`, sensibilidade "qualquer óbito" desativada, nova entrada no decisoes.md e parquets provisórios fora do repositório. Este card cobre o que continua manual.
 > [!decisão] Decisão de 02/11 (Pessoa B)
-> A coorte provisória sai do fluxo principal. O que conta a história do projeto (como a seleção de variáveis foi construída, a comparação provisória × definitiva, o dataset provisório do fluxo A) **permanece como registro** e não é reescrito para parecer que nunca existiu. Só se atualiza o que ainda **usa** ou **cita como atual** a coorte provisória.
+> O que conta a história do projeto (como a seleção de variáveis foi construída, a comparação provisória × definitiva, o dataset provisório do fluxo A) permanece como registro rotulado. Só se atualiza o que ainda **usa** ou **cita como atual** a coorte provisória.
 
 ### ② Problema
-- Das 142 ocorrências de "provis", o script cobre o resolvedor, o teste dele e os notebooks C_11, C_12, C_13, C_15 e C_16 (padrão `provisional`). As 23 ocorrências do B_06 são o rótulo `manter_provisoriamente` do clustering e **não têm relação com a coorte**; as de `shortlist_provisoria` também não.
-- docs/decisoes.md ainda cita números da coorte provisória nas linhas 1166 ("Números da coorte provisória (não valem para a definitiva)"), 1452, 1474 e 1477 (21,9% de óbitos na provisória contra 8,4% na definitiva). As linhas 25, 134, 1026 e 1027 são registro histórico da promoção e da comparação.
-- README.md, linhas 69 e 180, citam o notebook `_provisorio_construcao_coorte_b.ipynb` (nome antigo; a correção é do #126).
-- configs/decisoes.yaml (linha 274) e src/protocolo/verificacoes.py (linhas 126 e 504) apontam o `dataset_provisorio_pessoa_a.parquet`, que é o dataset do **fluxo A** e tem decisão própria (§29.26).
-- configs/supervised.yaml, linha 216, diz `origem: selecao_auditada_da_coorte_provisoria_b`: é a origem **histórica** da seleção de variáveis, que foi promovida à definitiva.
-- src/data/supervised_artifact.py ainda descreve o esquema **legado** (treino, validacao, teste) para a coorte provisória, e o tests/test_supervised_artifact.py tem 8 ocorrências disso. Remover exige mexer em código e testes que o script não vê por inteiro.
-- src/data/final_cohort_cli.py, linha 966, grava a chave `provisional_comparison_reviewed` no manifesto da coorte.
-- Arquivos de dados locais, se existirem: `coorte_provisoria.parquet`, `coorte_provisoria_b.parquet` e `dataset_provisorio_pessoa_a.parquet`, em data/analytical/.
-- Os notebooks C_12 a C_16 nunca foram executados com a coorte definitiva: o padrão mudou para `final`, mas ninguém conferiu se os blocos que eles leem seguem o esquema novo.
-- O hits_coorte_provisoria.txt traz o caminho da máquina (linha do A_04) e os scripts auxiliares estão na raiz do repositório.
+- decisoes.md: os números da coorte provisória em §29.12 ("Números da coorte provisória"), §29.21 (referência numérica) e §29.22 (21,9% de óbitos) estão rotulados como histórico, mas só podem ser trocados pelos da definitiva depois dos resultados do G6, G7 e G8 (#78, #79 e #80).
+- README.md cita `_provisorio_construcao_coorte_b.ipynb` nas linhas 69 e 180 (nome antigo; fica com o #126).
+- configs/decisoes.yaml está na versão 0.5, e o decisoes.md §29.13 registra a versão 0.7: a regra "sintomas depois da internação" ainda é "manter com flag"; CS_ZONA, OUTRO_SIN e OUT_MORBI ainda estão em conditional_vars e fora de allowed_vars; ponto_de_previsao, coorte_estrita, alvo, evolucao_desconhecida e periodos ainda constam como "proposta", embora a coorte definitiva já os implemente.
+- supervised.yaml e feature_contract_v1.json: o contexto incremental ainda lista `vacina_cov`, e o decisoes.md (§17 e §29.2) diz `vacina_cov_previa`. Depende de a coluna existir na coorte (#45 e #84).
+- `dataset_provisorio_pessoa_a.parquet` (fluxo A, §29.26) não é a coorte provisória. Renomeá-lo mexe em decisoes.yaml, verificacoes.py e no teste dele.
+- C_12 a C_16 nunca foram executados com a coorte definitiva: o padrão mudou para `final`, mas ninguém conferiu o esquema dos blocos que eles leem.
+- Sobras na raiz do repositório: scripts auxiliares, hits_coorte_v2.txt e a pasta `_backup_limpeza/`.
 
 ### ③ O que fazer
   
-#### Rodar os scripts (Pessoa B, 30 min)
-- Salve `trazer_backup_limpeza.py` e `atualizar_coorte_definitiva.py` na raiz do repositório. O primeiro copia para `_backup_limpeza/` (com sufixo .bak) o que o limpar_projeto_v2.py arquivou fora do repositório; o segundo mostra o plano sem alterar nada:
+#### Rodar o consolidar_coorte_definitiva.py (Pessoa B, 20 min)
+- Salve o script na raiz do repositório e veja o plano sem alterar nada:
 ```powershell
-.\.venv\Scripts\python.exe .\trazer_backup_limpeza.py; .\.venv\Scripts\python.exe .\atualizar_coorte_definitiva.py --simular
+.\.venv\Scripts\python.exe .\consolidar_coorte_definitiva.py --simular
 ```
-- Se o plano estiver certo, aplique. O script roda os testes que dependem do resolvedor antes e depois; se aparecer falha **nova**, desfaz tudo sozinho e mostra o motivo:
+- Se o plano estiver certo, aplique, valide o painel e confira tudo numa linha só (a suíte rápida roda antes e depois, então pode levar alguns minutos):
 ```powershell
-.\.venv\Scripts\python.exe .\atualizar_coorte_definitiva.py
+.\.venv\Scripts\python.exe .\consolidar_coorte_definitiva.py; .\.venv\Scripts\python.exe .srag-status-local\server.py validar; .\.venv\Scripts\python.exe .\verificar_antes_do_commit.py
 ```
-- Confirme com o pytest rápido e faça o commit só do que importa (não use `git add -A` na raiz: ele levaria os scripts auxiliares):
+- O verificador vai listar os arquivos do contrato, do supervised.yaml, do feature_contract e do decisoes.md como "outras alterações": é esperado.
+- Se a saída disser **DESFEITO**, cole-a neste card. Um teste ou arquivo ainda depende do valor antigo, e o script não deixa o repositório pior.
+- Commit sem os scripts auxiliares e sem concluir nenhum card:
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; git add -A src tests notebooks .scripts _backup_limpeza; git commit -m "chore: aposenta a coorte provisória e guarda backups em _backup_limpeza"
+git add -A -- . ':!verificar_antes_do_commit.py' ':!corrigir_criterios_coorte.py' ':!auditar_coorte_provisoria.py' ':!consolidar_coorte_definitiva.py' ':!hits_coorte_v2.txt'; git commit -m "chore: contrato da coorte aprovado, sensibilidade de qualquer óbito desativada e decisoes.md atualizado [progress:#151]"
 ```
-- O que sobrar com "provis" aparece no fim da execução, com um rótulo por grupo. Qualquer linha marcada **REVISAR** é Pessoa B: leia a linha e registre aqui a decisão.
 
-#### Números e textos do docs/decisoes.md (Pessoa A, 1 h)
-- Linhas 1166, 1452, 1474 e 1477: onde o número citado é da coorte provisória e a frase ainda pode ser lida como atual, troque pelo número da definitiva (fonte: as execuções definitivas do B_07, com 8,4% de óbitos) ou deixe explícito "(coorte provisória, só histórico)". Não apague a comparação das linhas 1026 e 1027.
-- Acrescente uma entrada curta ao final da §29 (sem usar as §29.28 a §29.31, reservadas): "coorte provisória aposentada; resolvedor só aceita `final`; esquema legado do artefato supervisionado mantido por custo". Não renumere nem mude títulos.
-- Depois, no painel, **Atualizar, auditar e validar**: os critérios dos cards que leem o decisoes.md precisam continuar ✓.
+#### Decisões da Pessoa A (1 h)
+- decisoes.yaml (#73): decida se as cinco decisões em "proposta" passam a "aprovada" (e com qual data e responsável), se a regra "sintomas depois da internação" passa a excluir (como o decisoes.md §29.13 registra) e se CS_ZONA, OUTRO_SIN e OUT_MORBI passam a allowed_vars. Rode o pytest rápido depois: a regra de datas é lida pelos testes do fluxo A.
+- Depois do G6, G7 e G8, troque os números da coorte provisória das §29.12, §29.21 e §29.22 pelos da definitiva, ou deixe só a marca "histórico".
 
-#### Notebooks C e configuração da coorte (Pessoa C, 30 min)
-- Abra C_12, C_13, C_15 e C_16 e procure `treino`, `validacao` e `teste` (esquema legado). Se aparecerem, troque pelos blocos `train_ref`, `val_tune`, `val_cal` e `test_ref`, como o C_14 já faz. Não execute o C_16 (abre o teste).
-- Abra o configs/final_cohort_v1.yaml e confira se o campo de status e a pasta de saída ainda descrevem a coorte como candidata. Só altere se o carregador do contrato (src/data/cohort_contract.py) aceitar o novo valor; rode `.\.venv\Scripts\python.exe -m pytest tests/test_final_cohort.py -q` depois.
-
-#### Decisões de manter (sem ação, só conferir)
-- `dataset_provisorio_pessoa_a` (decisoes.yaml, verificacoes.py, A_03, A_04): fluxo A com decisão registrada na §29.26; os notebooks A_03 e A_04 já avisam "Histórico da fase provisória. Não executar".
-- `origem: selecao_auditada_da_coorte_provisoria_b` (supervised.yaml): fato histórico.
-- Esquema legado do `supervised_artifact` e `provisional_comparison_reviewed` do `final_cohort_cli`: tirar exige mexer em código e testes sem ganho para a banca. Só reabra se sobrar tempo.
-- Dados locais `coorte_provisoria*.parquet` e `dataset_provisorio_pessoa_a.parquet`: apague ou mova para fora do repositório quando quiser; não entram no pacote.
+#### Pessoa C (30 min)
+- Abra C_12, C_13, C_15 e C_16 e procure `treino`, `validacao` e `teste` (esquema legado). Se aparecerem, troque pelos blocos `train_ref`, `val_tune`, `val_cal` e `test_ref`, como o C_14 já faz. Não execute o C_16: ele abre o teste.
+- Confirme se a coluna `vacina_cov_previa` já existe na coorte (#45). Se existir, troque `vacina_cov` por ela no contexto incremental do supervised.yaml e do feature_contract_v1.json e rode o pytest rápido.
 
 #### Fechamento (Pessoa B)
 - README: as linhas 69 e 180 ficam com o #126.
-- Mova para fora do repositório (ou apague) o hits_coorte_provisoria.txt, o limpar_projeto_v2.py, o levantar_coorte_provisoria.py, o atualizar_coorte_definitiva.py e o trazer_backup_limpeza.py.
-- Quando tudo estiver conferido, remova os backups e acrescente a linha `_backup_limpeza/ export-ignore` ao .gitattributes do #147:
+- Mova para fora do repositório os scripts auxiliares e o hits_coorte_v2.txt. Depois, remova os backups e acrescente `_backup_limpeza/ export-ignore` ao .gitattributes do #147:
 ```powershell
 git rm -r _backup_limpeza; git commit -m "chore: remove backups da limpeza antes da entrega"
 ```
 
 ### ④ Pronto quando
-- contem: src/data/cohort_source.py :: _RETIRED_KINDS | O resolvedor só aceita a coorte definitiva e rejeita os tipos aposentados com erro explicativo.
-- contem: tests/test_cohort_source.py :: test_kind_provisional_e_rejeitado | Os testes do resolvedor cobrem a rejeição do tipo provisório.
+- contem: configs/final_cohort_v1.yaml :: status: approved | O contrato da coorte consta como aprovado.
+- nao-contem: configs/final_cohort_v1.yaml :: status: candidate | O contrato não consta mais como candidato.
+- contem: tests/test_cohort_contract.py :: contract.status == "approved" | O teste do contrato espera o status aprovado.
+- contem: tests/test_cohort_contract.py :: test_contract_rejects_unknown_status | O teste rejeita o status que o código não aceita.
+- contem: src/data/cohort_source.py :: _RETIRED_KINDS | O resolvedor só aceita a coorte definitiva.
+- teste: tests/test_cohort_contract.py | Os testes do contrato passam.
 - teste: tests/test_cohort_source.py | Os testes do resolvedor passam.
-- nao-existe: hits_coorte_provisoria.txt | O levantamento com caminho da máquina não está no repositório.
+- contem: docs/decisoes.md :: Coorte provisória aposentada | O decisoes.md registra a aposentadoria da coorte provisória.
+- nao-existe: hits_coorte_v2.txt | O levantamento com caminho da máquina não está no repositório.
 - nao-existe: _backup_limpeza/LEIA-ME.txt | A pasta de backups da limpeza foi removida antes da entrega.
-- manual: | O atualizar_coorte_definitiva.py rodou primeiro com --simular e depois sem ele, terminou com "CONCLUÍDO" (ou desfez tudo com o motivo comentado neste card) e cada linha marcada REVISAR foi decidida e comentada aqui.
-- manual: | Os números da coorte provisória nas linhas 1166, 1452, 1474 e 1477 do decisoes.md foram trocados pelos da definitiva ou marcados como histórico, e a entrada de §29 sobre a aposentadoria da coorte provisória foi escrita sem renumerar nada.
-- manual: | Os notebooks C_12, C_13, C_15 e C_16 não leem mais o esquema legado (treino, validacao, teste), e o status do final_cohort_v1.yaml foi conferido.
-- manual: | O pytest rápido passa, a validação do painel segue ✓ e os scripts auxiliares não estão mais na raiz do repositório.
+- manual: | O consolidar_coorte_definitiva.py rodou primeiro com --simular e depois sem ele, terminou em "CONCLUÍDO", e qualquer pacote "DESFEITO" está comentado neste card com o teste que falhou.
+- manual: | A Pessoa A decidiu e registrou o que fazer com o decisoes.yaml (versão 0.5 contra 0.7 e as cinco decisões em "proposta"), e a validação do painel segue ✓.
+- manual: | Os números da coorte provisória das §29.12, §29.21 e §29.22 foram trocados pelos da definitiva depois do G6, G7 e G8, ou ficaram marcados como histórico.
+- manual: | C_12 a C_16 não leem mais o esquema legado (treino, validacao, teste), e o pytest rápido passa.
