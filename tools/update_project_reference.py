@@ -2693,6 +2693,7 @@ def build_reference(root, args):
         f"{out_prefix}{LEGACY_MD_NAME}",
         f"{out_prefix}{PARTS_DIR_NAME}/*",
         f"{out_prefix}{LEGACY_ASSETS_DIR_NAME}/*",
+        f"{out_prefix}{MD_DIR_NAME}/*",
     ]
     generated_patterns = list(own_patterns)
     if not args.include_generated:
@@ -3575,6 +3576,8 @@ def parse_args():
                         help=f"Also write the optional per-file JSONL.")
     parser.add_argument("--coverage-csv", dest="coverage_csv", action="store_true", default=False,
                         help=f"Also write the optional coverage CSV (the register stays in the TXT).")
+    parser.add_argument("--no-md", dest="md", action="store_false",
+                        help="Não gerar o pacote Markdown (no máximo 7 arquivos .md) ao lado do TXT.")
     parser.add_argument("--allow-gaps", action="store_true",
                         help="Exit 0 even when the coverage verification finds gaps.")
     parser.add_argument("--run-tests", action="store_true",
@@ -3716,8 +3719,306 @@ def run_generator_self_tests():
     check(not FORBIDDEN_LINE_BREAKS_RE.search(normalize_text("a\r\nb\x0cc\u2028d")),
           "only LF line breaks after normalisation")
     RENDERED_BODIES.clear()
+    md_self_test(check)
     print(f"[reference] Self-test passed: {len(checks)} checks.")
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Pacote Markdown: o mesmo snapshot do TXT, dividido em vários arquivos .md
+# (complementa o TXT único; o TXT continua sendo gerado normalmente)
+# ---------------------------------------------------------------------------
+MD_DIR_NAME = "project_reference_md"
+MD_MAX_FILES = 7  # limite fixo e definitivo: nunca mais de 7 arquivos .md
+MD_SUPPORT_FILES = 2  # 00_LEIA_PRIMEIRO.md e 01_mapa_e_simbolos.md
+MD_MAX_CODE_PARTS = MD_MAX_FILES - MD_SUPPORT_FILES  # 5 partes de código, no máximo
+MD_BEGIN = "===== BEGIN FILE: {path} ====="
+MD_END = "===== END OF FILE: {path} ====="
+MD_PART_END = ("===== FIM DA PARTE {number}/{total} ({name}) — SNAPSHOT ID: {snapshot} "
+               "— nada segue esta linha =====")
+MD_MAP_SECTIONS = (1, 2, 3, 4, 5, 7, 8, 9)  # a 6 (conteúdo dos arquivos) vai para as partes de código
+MD_LEXERS = {
+    ".py": "python", ".pyi": "python", ".yaml": "yaml", ".yml": "yaml", ".json": "json",
+    ".jsonl": "json", ".toml": "toml", ".md": "markdown", ".markdown": "markdown",
+    ".ipynb": "markdown", ".ps1": "powershell", ".sh": "bash", ".sql": "sql", ".ini": "ini",
+    ".cfg": "ini", ".xml": "xml", ".js": "javascript", ".ts": "typescript", ".css": "css",
+}
+MD_FILE_HEADING_RE = re.compile(r"^## FILE: `(.+)`$")
+MD_SECTION_RE = re.compile(r"^## (\d+)\. ")
+MD_FENCE_OPEN_RE = re.compile(r"^(`{3,})[A-Za-z0-9_+-]*$")
+
+
+def md_headers_by_file(text):
+    """Caminho -> linhas de metadados do cabeçalho de cada arquivo no TXT (sem título nem marcadores)."""
+    headers = {}
+    current = None
+    for line, protected in iter_structure(text):
+        bare = line.rstrip("\n")
+        if protected:
+            current = None  # entrou no bloco do arquivo (marcador BEGIN) ou numa cerca
+            continue
+        if bare.startswith("## "):
+            match = MD_FILE_HEADING_RE.match(bare)
+            current = match.group(1) if match else None
+            if current is not None:
+                headers[current] = []
+            continue
+        if current is not None and bare.strip():
+            headers[current].append(bare)
+    return headers
+
+
+def md_numbered_sections(text):
+    """Número -> texto de cada seção numerada (## N. ...) do TXT, ignorando o conteúdo dos arquivos."""
+    sections = {}
+    current = None
+    for line, protected in iter_structure(text):
+        bare = line.rstrip("\n")
+        if not protected and bare.startswith("## "):
+            match = MD_SECTION_RE.match(bare)
+            current = int(match.group(1)) if match else None
+            if current is not None:
+                sections[current] = []
+        if current is not None and not bare.startswith("END OF PROJECT_COMPLETE_REFERENCE.txt"):
+            sections[current].append(bare)
+    return {n: "\n".join(lines).rstrip() + "\n" for n, lines in sections.items()}
+
+
+def md_file_block(record, header, body):
+    """Um arquivo do projeto no pacote: título, metadados, marcador, bloco de código exato, marcador final."""
+    path = record["path"]
+    fence = fence_for(body)  # sempre maior que qualquer sequência de crases do conteúdo
+    lexer = MD_LEXERS.get(Path(path).suffix.lower(), "text")
+    lines = [f"## FILE: `{path}`", ""] + list(header) + ["", MD_BEGIN.format(path=path), f"{fence}{lexer}"]
+    if not record.get("empty"):
+        lines.append(body)
+    lines += [fence, MD_END.format(path=path), ""]
+    return "\n".join(lines) + "\n"
+
+
+def md_partition(sizes, k):
+    """Divide a lista, sem mudar a ordem, em no máximo k grupos contíguos, minimizando o maior grupo.
+    Devolve uma lista de listas de índices. Nunca devolve mais de k grupos."""
+    count = len(sizes)
+    if count == 0:
+        return []
+    k = max(1, min(k, count))
+
+    def groups_for(cap):
+        groups, total = [[]], 0
+        for index, size in enumerate(sizes):
+            if groups[-1] and total + size > cap:
+                groups.append([])
+                total = 0
+            groups[-1].append(index)
+            total += size
+        return groups
+
+    low, high = max(sizes), sum(sizes)
+    while low < high:
+        middle = (low + high) // 2
+        if len(groups_for(middle)) <= k:
+            high = middle
+        else:
+            low = middle + 1
+    return groups_for(low)
+
+
+def md_line_count(body):
+    """Número de linhas de um corpo (0 para corpo vazio)."""
+    return len(body.split("\n")) if body else 0
+
+
+def md_part_text(name, number, total, items):
+    """Texto de um arquivo de parte de código. items = lista de (registro, bloco, corpo)."""
+    lines = [
+        f"# Código do projeto — parte {number}/{total}", "",
+        f"- SNAPSHOT ID: `{SNAPSHOT_ID}`",
+        "- Leia antes `00_LEIA_PRIMEIRO.md`. Cada arquivo do projeto fica entre "
+        "`===== BEGIN FILE: caminho =====` e `===== END OF FILE: caminho =====`; a linha 1 do arquivo "
+        "é a primeira linha dentro do bloco de código.",
+        "", "Arquivos desta parte:", "",
+    ]
+    for record, _block, body in items:
+        lines.append(f"- `{record['path']}` · {md_line_count(body)} linhas no bloco")
+    lines += ["", ""]
+    footer = MD_PART_END.format(number=number, total=total, name=name, snapshot=SNAPSHOT_ID)
+    return "\n".join(lines) + "".join(block for _r, block, _b in items) + footer + "\n"
+
+
+def md_extract_bodies(text):
+    """Lê um arquivo de parte e devolve ({caminho: corpo}, [erros]). Respeita as cercas de código."""
+    found, errors = {}, []
+    lines = text.split("\n")
+    prefix, suffix = "===== BEGIN FILE: ", " ====="
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith(prefix) and line.endswith(suffix):
+            path = line[len(prefix):len(line) - len(suffix)]
+            opening = MD_FENCE_OPEN_RE.match(lines[i + 1]) if i + 1 < len(lines) else None
+            if opening is None:
+                errors.append(f"cerca de abertura ausente: {path}")
+                i += 1
+                continue
+            fence = opening.group(1)
+            j = i + 2
+            body = []
+            while j < len(lines) and lines[j] != fence:
+                body.append(lines[j])
+                j += 1
+            if j >= len(lines):
+                errors.append(f"cerca de fechamento ausente: {path}")
+                break
+            end = lines[j + 1] if j + 1 < len(lines) else ""
+            if end != MD_END.format(path=path):
+                errors.append(f"marcador de fim ausente ou trocado: {path}")
+            if path in found:
+                errors.append(f"arquivo duplicado no pacote: {path}")
+            found[path] = "\n".join(body)
+            i = j + 2
+            continue
+        i += 1
+    return found, errors
+
+
+def md_clear(md_dir, keep):
+    """Apaga os .md antigos da pasta dedicada ao pacote (a pasta só contém saídas desta ferramenta)."""
+    removed = []
+    if md_dir.is_dir():
+        for old in md_dir.glob("*.md"):
+            if old.name not in keep:
+                old.unlink()
+                removed.append(old)
+        if not any(md_dir.iterdir()):
+            md_dir.rmdir()
+    return removed
+
+
+def write_markdown_pack(out_dir, text, machine, args):
+    """Grava o pacote Markdown ao lado do TXT (no máximo 7 arquivos .md, sempre), relê tudo e
+    compara cada arquivo com o capturado."""
+    md_dir = out_dir / MD_DIR_NAME
+    headers = md_headers_by_file(text)
+    sections = md_numbered_sections(text)
+    records = sorted((r for r in machine["coverage"] if r["path"] in RENDERED_BODIES),
+                     key=lambda r: (folder_rank(r["path"]), r["path"].lower()))
+    blocks = []
+    for record in records:
+        body = RENDERED_BODIES[record["path"]]
+        blocks.append((record, md_file_block(record, headers.get(record["path"], []), body), body))
+    groups = md_partition([len(block.encode("utf-8")) for _r, block, _b in blocks], MD_MAX_CODE_PARTS)
+    total = len(groups)
+    outputs = {}
+    manifest = []
+    expected_parts = {}
+    for number, indexes in enumerate(groups, 1):
+        items = [blocks[i] for i in indexes]
+        name = f"{MD_SUPPORT_FILES + number - 1:02d}_codigo_parte{number}de{total}.md"
+        outputs[name] = md_part_text(name, number, total, items)
+        expected_parts[name] = [r["path"] for r, _b, _c in items]
+        for record, _block, body in items:
+            manifest.append([f"`{name}`", f"`{record['path']}`", md_line_count(body),
+                             len(body.encode("utf-8")), sha256_text(body)[:12]])
+    note = ("> Texto copiado do TXT. Onde ele citar a \"Seção 6\" ou `<<< BEGIN FILE: ... >>>`, neste pacote "
+            "use o `.md` indicado no manifesto de `00_LEIA_PRIMEIRO.md` e o marcador "
+            "`===== BEGIN FILE: caminho =====`.\n")
+    map_parts = [f"# Mapa do repositório e índice de símbolos\n\n- SNAPSHOT ID: `{SNAPSHOT_ID}`\n\n{note}"]
+    map_parts += [sections[n] for n in MD_MAP_SECTIONS if n in sections]
+    outputs["01_mapa_e_simbolos.md"] = "\n".join(map_parts)
+    repo = machine.get("repository", {})
+    head = [
+        "# Referência completa do projeto SRAG — pacote Markdown (LEIA PRIMEIRO)", "",
+        f"- SNAPSHOT ID: `{SNAPSHOT_ID}`",
+        f"- Repositório: branch `{repo.get('branch')}`, commit `{str(repo.get('commit', ''))[:12]}`, "
+        f"gerado (UTC) `{machine.get('generated_utc')}`",
+        f"- Mesmo conteúdo de `{args.output_dir.as_posix()}/{OUTPUT_TXT_NAME}` (mesmo snapshot), em "
+        f"{len(outputs) + 1} arquivos `.md` (limite fixo: {MD_MAX_FILES}): este, `01_mapa_e_simbolos.md` e {total} "
+        "partes de código. Não misture arquivos de SNAPSHOT IDs diferentes.",
+        "", "## Como trabalhar", "",
+        "1. Leia este manifesto: ele diz em qual parte está cada arquivo do projeto.",
+        "2. Mapa do repositório, índice de símbolos (função/classe, arquivo e linha), dependências, notebooks, problemas "
+        "detectados e arquivos NÃO copiados: `01_mapa_e_simbolos.md`.",
+        "3. Cada arquivo do projeto aparece como: título `## FILE: caminho`, metadados (com o Outline e o número de linha "
+        "de cada função), `===== BEGIN FILE: caminho =====`, um bloco de código com o conteúdo exato e "
+        "`===== END OF FILE: caminho =====`.",
+        "4. Notebooks aparecem renderizados (um `### Cell N` por célula, com as saídas textuais salvas, que podem ser "
+        "antigas); imagens e saídas binárias foram omitidas.",
+        "5. Cite o código exatamente como está entre os marcadores. Se algo não estiver no pacote, diga que falta; "
+        "nunca invente arquivos, funções ou resultados.",
+        "6. Contra truncamento: toda parte de código termina com `===== FIM DA PARTE N/M ... =====`. Se essa linha não "
+        "aparecer no fim do que você leu, o arquivo foi cortado: avise e peça o reenvio.",
+        "", "Comandos úteis (na pasta do pacote):", "",
+        "- Listar todos os arquivos: `grep -rn '^## FILE: ' .`",
+        "- Achar um arquivo: `grep -rnF '===== BEGIN FILE: src/x.py =====' .`",
+        "", "## Verificação feita na geração", "",
+        f"- {len(manifest)} arquivos do projeto em {total} partes; os `.md` foram relidos e cada bloco foi comparado, "
+        "caractere a caractere, com o conteúdo capturado para o TXT (a execução falha se algo diferir).",
+        "- Arquivos NÃO copiados (CSV/TSV, HTML, imagens, binários, Office/PDF, .txt/.log, schema de Parquet): "
+        "ver a Seção 7 em `01_mapa_e_simbolos.md`.",
+        "", "## Manifesto (onde está cada arquivo)", "",
+        render_table(["Parte", "Arquivo do projeto", "Linhas do bloco", "Bytes", "SHA-256 (12)"], manifest), "",
+    ]
+    outputs["00_LEIA_PRIMEIRO.md"] = "\n".join(head)
+    if len(outputs) > MD_MAX_FILES:
+        raise RuntimeError(f"Pacote Markdown com {len(outputs)} arquivos; o limite é {MD_MAX_FILES}.")
+    written = {}
+    for name, content in outputs.items():
+        atomic_write(md_dir / name, content)
+        written[name] = md_dir / name
+    removed = md_clear(md_dir, set(outputs))
+    leftovers = sorted(p.name for p in md_dir.glob("*.md"))
+    errors = []
+    if len(leftovers) > MD_MAX_FILES:
+        errors.append(f"a pasta tem {len(leftovers)} arquivos .md (limite {MD_MAX_FILES}): {leftovers}")
+    seen = {}
+    for name, paths in expected_parts.items():
+        reread = written[name].read_text(encoding="utf-8")
+        found, found_errors = md_extract_bodies(reread)
+        errors += [f"{name}: {e}" for e in found_errors]
+        if not reread.rstrip("\n").split("\n")[-1].startswith("===== FIM DA PARTE "):
+            errors.append(f"{name}: rodapé da parte ausente (arquivo truncado?)")
+        if sorted(found) != sorted(paths):
+            errors.append(f"{name}: lista de arquivos difere do esperado")
+        for path, body in found.items():
+            seen[path] = body
+    for record in records:
+        path = record["path"]
+        if path not in seen:
+            errors.append(f"arquivo ausente do pacote Markdown: {path}")
+        elif seen[path] != RENDERED_BODIES[path]:
+            errors.append(f"bloco difere do capturado: {path}")
+    total_bytes = sum(p.stat().st_size for p in written.values())
+    print(f"Pacote Markdown: {len(written)} arquivos .md (máx. {MD_MAX_FILES}) em {md_dir} "
+          f"({human_bytes(total_bytes)}); {len(records)} arquivos do projeto em {total} partes; "
+          f"verificação: {'ok' if not errors else 'FALHOU'}")
+    if removed:
+        print(f"Removidos {len(removed)} .md antigos do pacote Markdown.")
+    return {"errors": errors, "files": sorted(written), "parts": expected_parts}
+
+
+def md_self_test(check):
+    """Testes rápidos do pacote Markdown, sem depender do repositório."""
+    bodies = {"a.py": "x = 1\n\n", "b.md": "```\nabc\n```\n", "vazio.py": "", "nl.py": ""}
+    blocks = "".join(md_file_block({"path": p, "empty": p == "vazio.py"}, ["- Kind: x"], b)
+                     for p, b in bodies.items())
+    found, errors = md_extract_bodies(blocks)
+    check(not errors and found == bodies, "pacote Markdown: ida e volta exata dos blocos")
+    check("````markdown" in blocks, "pacote Markdown: cerca maior quando o arquivo contém cerca")
+    txt = "\n".join([
+        "## 1. Mapa", "", "## FILE: `a.py`", "", "- Kind: python", "",
+        BEGIN_OF_FILE.format(path="a.py"), "## FILE: `falso.py`", END_OF_FILE.format(path="a.py"),
+        "## 9. Fim", "texto", "",
+    ])
+    check(md_headers_by_file(txt) == {"a.py": ["- Kind: python"]}, "pacote Markdown: cabeçalhos por arquivo")
+    check(sorted(md_numbered_sections(txt)) == [1, 9], "pacote Markdown: seções numeradas")
+    for quantidade in (1, 2, 5, 6, 40, 500):
+        tamanhos = [(i * 7919) % 1000 + 1 for i in range(quantidade)]
+        grupos = md_partition(tamanhos, MD_MAX_CODE_PARTS)
+        plano = [i for g in grupos for i in g]
+        check(len(grupos) <= MD_MAX_CODE_PARTS and plano == list(range(quantidade)),
+              f"pacote Markdown: {quantidade} arquivos cabem em no máximo {MD_MAX_CODE_PARTS} partes, em ordem")
+    check(MD_SUPPORT_FILES + MD_MAX_CODE_PARTS == MD_MAX_FILES == 7, "pacote Markdown: limite total de 7 arquivos")
 
 
 def main():
@@ -3775,6 +4076,12 @@ def main():
 
     print("[reference] 8/8 Gravando artefatos auxiliares e removendo saídas antigas...", flush=True)
     removed = remove_legacy_outputs(out_dir, keep_parts=split)
+    if args.md:
+        md_result = write_markdown_pack(out_dir, text, machine, args)
+        if md_result["errors"]:
+            raise RuntimeError("Verificação do pacote Markdown falhou:\n" + "\n".join(md_result["errors"]))
+    else:
+        md_clear(out_dir / MD_DIR_NAME, set())
     written_parts = []
     if split:
         parts_dir = out_dir / PARTS_DIR_NAME
