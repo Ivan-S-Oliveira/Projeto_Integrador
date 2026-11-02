@@ -960,7 +960,7 @@ Os dois YAMLs, `decisoes.md`, `tests/test_split.py` e este painel dizem o mesmo 
 ### ④ Pronto quando
 
 - contem: `src/data/cohort_source.py` :: `coorte_final.parquet` | O cohort_source reconhece a coorte definitiva pelo nome canônico coorte_final.parquet.
-- teste: `tests/test_cohort_source.py::test_coorte_parquet_nao_e_mais_candidato` | O teste confirma que coorte.parquet não é mais candidato, então a definitiva nunca é carregada como provisória por causa do nome.
+- teste: `tests/test_cohort_source.py::test_explicit_path_com_nome_ambiguo_e_rejeitado` | O teste confirma que coorte.parquet não é mais candidato, então a definitiva nunca é carregada como provisória por causa do nome.
 
 ## #59 · Documentar 2026 como período parcial e exclusivamente exploratório
 
@@ -7141,8 +7141,8 @@ O comportamento já estava certo; só o texto do erro não batia com o teste.
 
 ### ④ Pronto quando
 
-- contem: `src/data/cohort_source.py` :: `provisional, final ou auto` | A mensagem de erro de SRAG_COHORT_KIND lista as três opções válidas, como o teste espera.
-- teste: `tests/test_cohort_source.py::test_tipo_invalido_falha` | O teste confirma a mensagem para um tipo inválido.
+- contem: `src/data/cohort_source.py` :: `deve ser final` | A mensagem de erro de SRAG_COHORT_KIND lista as três opções válidas, como o teste espera.
+- teste: `tests/test_cohort_source.py::test_kind_desconhecido_e_rejeitado` | O teste confirma a mensagem para um tipo inválido.
 
 ## #116 · Referência do projeto lenta e incompleta para outra IA (schema v6)
 
@@ -8441,19 +8441,22 @@ Reabertos nesta revisão: **#50** (a tabela de ablações e a decisão dos três
 - estratégia: documentar
 - marco: M6
 - data ideal: 03/11
-- responsável: Pessoa A (2 h) + Pessoa C (0,25 h)
+- responsável: Pessoa A (2,5 h) + Pessoa C (0,5 h)
 - pessoas: A, C
-- fonte: Levantamento de 01/11 (git grep de referências e contagem de palavras por arquivo)
+- fonte: Levantamento de 01/11 (git grep de referências e contagem de palavras por arquivo); revisão de 01/11 sobre o nível esperado de uma entrega de pós-graduação
 - depende de: #146
 - tags: Documentação, Limpeza, Entrega
 - pilar: Documentação + Valor científico-acadêmico
-- carga: 2.25
+- carga: 3
 - novo: sim
 - professores: não
-- arquivos: docs/decisoes.md, src/protocolo/verificacoes.py, notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv
+- arquivos: docs/decisoes.md, src/protocolo/verificacoes.py, requirements.txt, pyproject.toml, notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv
 
 ### ① Para entender
-Complementa o #146 e o #147. O #146 tira as marcas de processo (números de card e "Pessoa X") e renomeia os arquivos; este card cuida do que ele não cobre: documentação mais longa do que a banca precisa, um arquivo de saída versionado e um arquivo interno que ficaria no pacote. **Nada que seja método sai:** decisões, critérios e planos registrados antes dos resultados ficam; muda a forma, não o conteúdo.
+  
+Complementa o #146 e o #147. O #146 tira as marcas de processo (números de card e "Pessoa X") e renomeia os arquivos; este card cuida do que ele não cobre: documentação mais longa do que a banca precisa, código de governança de produção que a coorte já publicada não usa mais, um arquivo de saída versionado e dependências e caminhos que atrapalham quem reproduzir o trabalho. **Nada que seja método sai:** decisões, critérios e planos registrados antes dos resultados ficam; muda a forma, não o conteúdo.
+> [!decisão] Decisão de 01/11 (Pessoa B)
+> O pacote não deve exigir mais do que uma turma de pós-graduação dedicada entregaria: técnicas, estruturas de segurança e documentação acima desse nível saem, **desde que a limpeza não custe horas de adaptação**. O painel (.srag-status-local, PROJECT_STATUS.md, PROJECT_STATUS_TEXT.md) e as ferramentas de tools/ ficam **fora desta rodada**: o painel e os arquivos de status já saem do pacote da banca pelo .gitattributes do #147 (ver "Adiado" no ③).
 
 ### ② Problema
 - docs/decisoes.md tem 11.348 palavras (o README tem 1.990). A §29 ocupa as linhas 972 a 1617, cerca de 40% do arquivo, e repete em cada entrada o mesmo molde de campos (Decisão, Motivo, Impacto, Implementado em, Fecha).
@@ -8461,9 +8464,41 @@ Complementa o #146 e o #147. O #146 tira as marcas de processo (números de card
 - docs/decisoes.md ainda tem "Responsável pelo registro: Pessoa X" (linhas 888 e 964) e uma nota de gestão na linha 969.
 - notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv está versionado no Git (parece saída de medição) e carrega o código do notebook no nome.
 - tools/read_outputs.py está no Git e não consta no .gitattributes do #147.
+- **Cadeia de publicação da coorte:** src/data/cohort_publication.py (901 linhas, com testes de 500 linhas), src/data/cohort_transition.py e src/data/cohort_parity.py (382 linhas) são governança de produção (gates com hash, promoção atômica, desfazer em caso de erro) para uma coorte que já está publicada com manifesto. A coorte definitiva é construída por final_cohort.py e final_cohort_cli.py, que **ficam**.
+- src/protocolo/metricas_por_grupo.py (49 linhas) é uma cópia antiga da função que vive em src/evaluation/errors.py e ainda traz no cabeçalho um aviso deixado por assistente ("não vi a versão atual de metricas_por_grupo").
+- configs/feature_contract_v1.json repete a lista de variáveis que já está em features.final do supervised.yaml.
+- O notebook do pipeline (C_11) usa cloudpickle, que não está declarado no requirements.txt nem no pyproject.toml: quem instalar do zero no #126 pode falhar.
+- src/utils/storage.py tem um caminho de download com GITHUB_TOKEN para release privada, além do download público com tentativas repetidas.
+- Os notebooks 00 e 01 imprimem ROOT_DIR e o caminho do Parquet; depois da execução final (#126), essas saídas ficam salvas com o caminho da máquina de quem rodou.
 
 ### ③ O que fazer
-Cada pessoa trabalha só nos próprios arquivos. A Pessoa A pode começar a condensação do decisoes.md na segunda (02/11), depois que o #140, o #78, o #79 e o #80 registrarem as entradas deles.
+  
+Cada pessoa trabalha só nos próprios arquivos. A Pessoa A pode começar na segunda (02/11, dia de folga dela): o script de limpeza primeiro e a condensação do decisoes.md depois que o #140, o #78, o #79 e o #80 registrarem as entradas deles.
+
+#### Rodar o script de limpeza (Pessoa A, 30 min)
+- Salve o limpar_projeto_v2.py **fora** do repositório (por exemplo em Documentos), para ele não entrar no pacote. Ele não toca em .srag-status-local, tools/, PROJECT_STATUS.md, PROJECT_STATUS_TEXT.md nem em PROJECT_COMPLETE_REFERENCE.txt, e **não renomeia nada** (a renomeação é do #146).
+- git pull; git status limpo (ou commit do que estiver pendente). Na pasta do repositório, veja o plano sem alterar nada:
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\limpar_projeto_v2.py --simular
+```
+- Se o plano estiver certo, rode sem o --simular (o script arquiva tudo em uma pasta fora do repositório, valida com compileall e com a coleta do pytest, e grava o RELATORIO_LIMPEZA.txt):
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\limpar_projeto_v2.py
+```
+- O que ele move **só se nenhum arquivo mantido usar** (se algum usar, o item fica e o motivo aparece no plano):
+
+| Item | Motivo |
+|---|---|
+| src/data/cohort_publication.py, cohort_transition.py, cohort_parity.py e os testes deles | governança de publicação da coorte já publicada |
+| src/protocolo/metricas_por_grupo.py e o teste dele | cópia antiga da função de src/evaluation/errors.py |
+| configs/feature_contract_v1.json (só se ninguém o citar) | lista de variáveis duplicada |
+| .scripts/read_outputs.py (só se idêntico ao de tools/) | cópia |
+| notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv | saída de medição versionada |
+
+- **Se o final_cohort_cli.py usar algum desses módulos, não mexa no CLI:** é o que reconstrói a coorte para quem reproduzir o trabalho. Registre o motivo neste card e siga; não vale horas de adaptação.
+- Fique com os manifestos da coorte (coorte_final.manifest.json e o da paridade): são a evidência do que o relatório cita; só o código de publicação sai.
+- O script lista as referências de texto pendentes (README, docs) aos itens movidos: corrija à mão. Commit: chore: remove governanca de publicacao da coorte e duplicatas.
+- Para desfazer qualquer item, mova-o de volta da pasta de arquivo para o mesmo caminho relativo.
 
 #### Condensar a §29 do docs/decisoes.md (Pessoa A)
 - **Não renumere nem mude títulos.** Outros textos citam §28, §29.1, §29.4, §29.10, §29.24 e §29.25, e a §29.28 a §29.31 ficam reservadas para #140, #78, #79 e #80.
@@ -8475,23 +8510,150 @@ Cada pessoa trabalha só nos próprios arquivos. A Pessoa A pode começar a cond
 - Depois, no painel, **Atualizar, auditar e validar**: os critérios de #73, #9, #10, #13, #59, #83, #102, #120 e #140 sobre o decisoes.md precisam continuar ✓.
 
 #### Docstrings do verificacoes.py (Pessoa A, com o arquivo à mão)
+  
 Reduza as docstrings com mais de 6 linhas ao essencial: o que a função faz, os parâmetros e a regra de negócio. Mantenha as que explicam uma decisão (por exemplo, por que o arquivo provisório não é o artefato oficial).
 
 #### Arquivo versionado que não deveria estar (Pessoa C, 5 min)
-`git rm notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv`. A pasta notebooks/C deixa de existir no #146; sem este passo o arquivo ficaria órfão no pacote.
+  
+`git rm notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv` (se o script já o moveu, só confirme). A pasta notebooks/C deixa de existir no #146; sem este passo o arquivo ficaria órfão no pacote. Se ele reaparecer depois da execução do #126, acrescente `notebooks/**/outputs/` ao .gitignore.
 
-#### Pacote (Pessoa A)
-Acrescente `tools/read_outputs.py export-ignore` ao .gitattributes do #147.
+#### Dependência que falta (Pessoa C, 10 min)
+- Descubra a versão instalada:
+```powershell
+.\.venv\Scripts\python.exe -c "import cloudpickle; print(cloudpickle.__version__)"
+```
+- Acrescente `cloudpickle==X.Y.Z` ao requirements.txt e `cloudpickle>=X.Y.Z` às dependências do pyproject.toml, com X.Y.Z igual à versão impressa (o teste de configuração exige versão fixada no requirements e cobertura das dependências do pyproject). Confira com `.\.venv\Scripts\python.exe -m pytest tests/test_config.py -q`.
+
+#### Fallback de token no storage.py (Pessoa C, decisão de 15 min)
+- Abra a release dos dados numa janela anônima do navegador. **Pública:** em get_parquet, tire o ramo que usa GITHUB_TOKEN (as funções _token e _private_asset_url e o except que as chama), mantenha o download com tentativas repetidas e a verificação PAR1 e do SHA-256, e apague do notebook 00 a frase "Para repositório privado". **Privada:** mantenha o código e escreva no README (#126) que a banca precisa do token.
+- Qualquer que seja a escolha, comente-a neste card. Se mexer no código: `.\.venv\Scripts\python.exe -m pytest -m "not slow" -q`.
+
+#### Caminho pessoal (Pessoa A agora; Pessoa C nos notebooks 00 e 01)
+- Procure caminho pessoal, o nome da empresa e `C:\Users` em todo arquivo versionado (a busca não altera nada):
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\limpar_projeto_v2.py --auditar-caminhos
+```
+- Em código ou configuração: troque por caminho relativo. **Pessoa C:** nos notebooks 00 e 01, imprima só o nome (ROOT_DIR.name e parquet_path.name) em vez do caminho completo, antes do #126.
+- **Repita a busca depois da execução final do #126 e antes da tag do #147**: as saídas salvas de cada notebook trazem o caminho da máquina de quem rodou.
+
+#### Já coberto por outros cards (não repetir aqui)
+- Marcas de processo, "Pessoa A/B/C", nomes de arquivo com pessoa e a renomeação (inclusive tests/test_regras_pessoa_a.py): #146.
+- Notebooks com erro salvo ou sem execução (C_11 a C_16, A6, A_15): #132, #148, #146 e #126.
+- Nomes antigos de notebooks e arquivo inexistente citado no README: #126.
+- Decisões em "proposta" no decisoes.yaml: #73.
+- Os avisos G6_STATUS, G7_STATUS e G8_STATUS do auditor são falsos alertas (#94): nome de variável de notebook, não gate. Nada a fazer.
+- Células de verificação repetidas no B_06 (uma checagem por seção basta): Pessoa B, dentro da limpeza do #146, só se sobrar tempo.
+
+#### Adiado (fora desta rodada por decisão de 01/11; sem critério neste card)
+- **Painel e status:** .srag-status-local/ (inclusive backups/, que o Git já ignora), PROJECT_STATUS.md, PROJECT_STATUS_TEXT.md e docs/PROJECT_COMPLETE_REFERENCE.txt continuam como estão e saem do pacote da banca pelo .gitattributes do #147.
+- **tools/:** clean_project.py (limpa DNS, pasta temporária e cache do pip, fora do escopo; já está no .gitattributes), update_project_reference.py e read_outputs.py (saem do pacote; ficam enquanto a equipe os usa) e perfil_celulas.py (**não** está no .gitattributes: acrescente a linha tools/perfil_celulas.py export-ignore ou apague depois da entrega).
 
 #### Fechamento
-Rode o pytest rápido e `.\.venv\Scripts\python.exe .srag-status-local\server.py validar`.
+  
+Rode o pytest rápido e a validação do painel num comando só:
+```powershell
+.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; .\.venv\Scripts\python.exe .srag-status-local\server.py validar
+```
+Acrescente tools/read_outputs.py export-ignore ao .gitattributes do #147.
 
 ### ④ Pronto quando
-- nao-existe: `notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv` | O arquivo de saída com o código do notebook no nome não está mais no repositório.
-- nao-contem: `docs/decisoes.md` :: `Responsável pelo registro` | O decisoes.md não tem mais as linhas "Responsável pelo registro: Pessoa X".
-- contem: `docs/decisoes.md` :: `final_cohort_v1` | O contrato da coorte continua registrado depois da condensação.
-- contem: `docs/decisoes.md` :: `criar_group_id` | A regra de grupo continua registrada depois da condensação.
-- contem: `docs/decisoes.md` :: `## 28. Decisão temporal` | O protocolo temporal (§28) continua registrado.
+- nao-existe: notebooks/C/outputs/performance/C_11_pipeline_supervisionado.csv | O arquivo de saída com o código do notebook no nome não está mais no repositório.
+- nao-contem: docs/decisoes.md :: Responsável pelo registro | O decisoes.md não tem mais as linhas "Responsável pelo registro: Pessoa X".
+- contem: docs/decisoes.md :: final_cohort_v1 | O contrato da coorte continua registrado depois da condensação.
+- contem: docs/decisoes.md :: criar_group_id | A regra de grupo continua registrada depois da condensação.
+- contem: docs/decisoes.md :: ## 28. Decisão temporal | O protocolo temporal (§28) continua registrado.
+- contem: requirements.txt :: cloudpickle | O requirements.txt declara o cloudpickle, que o notebook do pipeline usa.
+- contem: pyproject.toml :: cloudpickle | O pyproject.toml também declara o cloudpickle.
+- teste: tests/test_config.py | Os testes de configuração passam com o cloudpickle declarado nos dois arquivos.
 - manual: | A §29 do decisoes.md foi condensada sem mudar números nem títulos, com todas as decisões e todos os critérios de método preservados, e os critérios do painel sobre o decisoes.md seguem ✓.
 - manual: | As docstrings longas do verificacoes.py foram reduzidas ao essencial e o pytest rápido passa.
 - manual: | O .gitattributes do #147 exclui o tools/read_outputs.py do pacote da banca.
+- manual: | O limpar_projeto_v2.py rodou primeiro com --simular e depois sem ele, o plano e o RELATORIO_LIMPEZA.txt foram comentados neste card, os itens que ficaram têm o motivo registrado (sem mexer no final_cohort_cli.py) e o pytest rápido passa.
+- manual: | A escolha sobre o fallback GITHUB_TOKEN do storage.py (release pública ou privada) foi comentada neste card e aplicada.
+- manual: | A busca --auditar-caminhos não encontra olivem85, Pfizer nem `C:\Users` em arquivo versionado, os notebooks 00 e 01 imprimem só nomes de arquivo, e a busca foi repetida depois do #126.
+
+## #151 · Atualizar para a coorte definitiva o que o script não alcança
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M6
+- data ideal: 03/11
+- responsável: Pessoa B (0,5 h) + Pessoa A (1 h) + Pessoa C (0,5 h)
+- pessoas: A, B, C
+- fonte: Levantamento de 01/11 (142 ocorrências de "provis" em 19 arquivos, pelo levantar_coorte_provisoria.py) e execução do atualizar_coorte_definitiva.py
+- depende de: #150
+- tags: Coorte, Documentação, Entrega
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 2
+- novo: sim
+- professores: não
+- arquivos: src/data/cohort_source.py, tests/test_cohort_source.py, docs/decisoes.md, README.md, configs/final_cohort_v1.yaml, _backup_limpeza/
+
+### ① Para entender
+  
+Complementa o #150. O pacote passa a ter **uma única coorte, a definitiva** (`coorte_final.parquet`). O script `atualizar_coorte_definitiva.py` cuida do que é código: o resolvedor (`src/data/cohort_source.py`) só aceita `final`, os testes dele foram reescritos e os notebooks que ainda usavam `provisional` como padrão passaram para `final`. Este card cobre o que o script **não pode decidir sozinho**: textos, números e registros históricos.
+> [!decisão] Decisão de 02/11 (Pessoa B)
+> A coorte provisória sai do fluxo principal. O que conta a história do projeto (como a seleção de variáveis foi construída, a comparação provisória × definitiva, o dataset provisório do fluxo A) **permanece como registro** e não é reescrito para parecer que nunca existiu. Só se atualiza o que ainda **usa** ou **cita como atual** a coorte provisória.
+
+### ② Problema
+- Das 142 ocorrências de "provis", o script cobre o resolvedor, o teste dele e os notebooks C_11, C_12, C_13, C_15 e C_16 (padrão `provisional`). As 23 ocorrências do B_06 são o rótulo `manter_provisoriamente` do clustering e **não têm relação com a coorte**; as de `shortlist_provisoria` também não.
+- docs/decisoes.md ainda cita números da coorte provisória nas linhas 1166 ("Números da coorte provisória (não valem para a definitiva)"), 1452, 1474 e 1477 (21,9% de óbitos na provisória contra 8,4% na definitiva). As linhas 25, 134, 1026 e 1027 são registro histórico da promoção e da comparação.
+- README.md, linhas 69 e 180, citam o notebook `_provisorio_construcao_coorte_b.ipynb` (nome antigo; a correção é do #126).
+- configs/decisoes.yaml (linha 274) e src/protocolo/verificacoes.py (linhas 126 e 504) apontam o `dataset_provisorio_pessoa_a.parquet`, que é o dataset do **fluxo A** e tem decisão própria (§29.26).
+- configs/supervised.yaml, linha 216, diz `origem: selecao_auditada_da_coorte_provisoria_b`: é a origem **histórica** da seleção de variáveis, que foi promovida à definitiva.
+- src/data/supervised_artifact.py ainda descreve o esquema **legado** (treino, validacao, teste) para a coorte provisória, e o tests/test_supervised_artifact.py tem 8 ocorrências disso. Remover exige mexer em código e testes que o script não vê por inteiro.
+- src/data/final_cohort_cli.py, linha 966, grava a chave `provisional_comparison_reviewed` no manifesto da coorte.
+- Arquivos de dados locais, se existirem: `coorte_provisoria.parquet`, `coorte_provisoria_b.parquet` e `dataset_provisorio_pessoa_a.parquet`, em data/analytical/.
+- Os notebooks C_12 a C_16 nunca foram executados com a coorte definitiva: o padrão mudou para `final`, mas ninguém conferiu se os blocos que eles leem seguem o esquema novo.
+- O hits_coorte_provisoria.txt traz o caminho da máquina (linha do A_04) e os scripts auxiliares estão na raiz do repositório.
+
+### ③ O que fazer
+  
+#### Rodar os scripts (Pessoa B, 30 min)
+- Salve `trazer_backup_limpeza.py` e `atualizar_coorte_definitiva.py` na raiz do repositório. O primeiro copia para `_backup_limpeza/` (com sufixo .bak) o que o limpar_projeto_v2.py arquivou fora do repositório; o segundo mostra o plano sem alterar nada:
+```powershell
+.\.venv\Scripts\python.exe .\trazer_backup_limpeza.py; .\.venv\Scripts\python.exe .\atualizar_coorte_definitiva.py --simular
+```
+- Se o plano estiver certo, aplique. O script roda os testes que dependem do resolvedor antes e depois; se aparecer falha **nova**, desfaz tudo sozinho e mostra o motivo:
+```powershell
+.\.venv\Scripts\python.exe .\atualizar_coorte_definitiva.py
+```
+- Confirme com o pytest rápido e faça o commit só do que importa (não use `git add -A` na raiz: ele levaria os scripts auxiliares):
+```powershell
+.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; git add -A src tests notebooks .scripts _backup_limpeza; git commit -m "chore: aposenta a coorte provisória e guarda backups em _backup_limpeza"
+```
+- O que sobrar com "provis" aparece no fim da execução, com um rótulo por grupo. Qualquer linha marcada **REVISAR** é Pessoa B: leia a linha e registre aqui a decisão.
+
+#### Números e textos do docs/decisoes.md (Pessoa A, 1 h)
+- Linhas 1166, 1452, 1474 e 1477: onde o número citado é da coorte provisória e a frase ainda pode ser lida como atual, troque pelo número da definitiva (fonte: as execuções definitivas do B_07, com 8,4% de óbitos) ou deixe explícito "(coorte provisória, só histórico)". Não apague a comparação das linhas 1026 e 1027.
+- Acrescente uma entrada curta ao final da §29 (sem usar as §29.28 a §29.31, reservadas): "coorte provisória aposentada; resolvedor só aceita `final`; esquema legado do artefato supervisionado mantido por custo". Não renumere nem mude títulos.
+- Depois, no painel, **Atualizar, auditar e validar**: os critérios dos cards que leem o decisoes.md precisam continuar ✓.
+
+#### Notebooks C e configuração da coorte (Pessoa C, 30 min)
+- Abra C_12, C_13, C_15 e C_16 e procure `treino`, `validacao` e `teste` (esquema legado). Se aparecerem, troque pelos blocos `train_ref`, `val_tune`, `val_cal` e `test_ref`, como o C_14 já faz. Não execute o C_16 (abre o teste).
+- Abra o configs/final_cohort_v1.yaml e confira se o campo de status e a pasta de saída ainda descrevem a coorte como candidata. Só altere se o carregador do contrato (src/data/cohort_contract.py) aceitar o novo valor; rode `.\.venv\Scripts\python.exe -m pytest tests/test_final_cohort.py -q` depois.
+
+#### Decisões de manter (sem ação, só conferir)
+- `dataset_provisorio_pessoa_a` (decisoes.yaml, verificacoes.py, A_03, A_04): fluxo A com decisão registrada na §29.26; os notebooks A_03 e A_04 já avisam "Histórico da fase provisória. Não executar".
+- `origem: selecao_auditada_da_coorte_provisoria_b` (supervised.yaml): fato histórico.
+- Esquema legado do `supervised_artifact` e `provisional_comparison_reviewed` do `final_cohort_cli`: tirar exige mexer em código e testes sem ganho para a banca. Só reabra se sobrar tempo.
+- Dados locais `coorte_provisoria*.parquet` e `dataset_provisorio_pessoa_a.parquet`: apague ou mova para fora do repositório quando quiser; não entram no pacote.
+
+#### Fechamento (Pessoa B)
+- README: as linhas 69 e 180 ficam com o #126.
+- Mova para fora do repositório (ou apague) o hits_coorte_provisoria.txt, o limpar_projeto_v2.py, o levantar_coorte_provisoria.py, o atualizar_coorte_definitiva.py e o trazer_backup_limpeza.py.
+- Quando tudo estiver conferido, remova os backups e acrescente a linha `_backup_limpeza/ export-ignore` ao .gitattributes do #147:
+```powershell
+git rm -r _backup_limpeza; git commit -m "chore: remove backups da limpeza antes da entrega"
+```
+
+### ④ Pronto quando
+- contem: src/data/cohort_source.py :: _RETIRED_KINDS | O resolvedor só aceita a coorte definitiva e rejeita os tipos aposentados com erro explicativo.
+- contem: tests/test_cohort_source.py :: test_kind_provisional_e_rejeitado | Os testes do resolvedor cobrem a rejeição do tipo provisório.
+- teste: tests/test_cohort_source.py | Os testes do resolvedor passam.
+- nao-existe: hits_coorte_provisoria.txt | O levantamento com caminho da máquina não está no repositório.
+- nao-existe: _backup_limpeza/LEIA-ME.txt | A pasta de backups da limpeza foi removida antes da entrega.
+- manual: | O atualizar_coorte_definitiva.py rodou primeiro com --simular e depois sem ele, terminou com "CONCLUÍDO" (ou desfez tudo com o motivo comentado neste card) e cada linha marcada REVISAR foi decidida e comentada aqui.
+- manual: | Os números da coorte provisória nas linhas 1166, 1452, 1474 e 1477 do decisoes.md foram trocados pelos da definitiva ou marcados como histórico, e a entrada de §29 sobre a aposentadoria da coorte provisória foi escrita sem renumerar nada.
+- manual: | Os notebooks C_12, C_13, C_15 e C_16 não leem mais o esquema legado (treino, validacao, teste), e o status do final_cohort_v1.yaml foi conferido.
+- manual: | O pytest rápido passa, a validação do painel segue ✓ e os scripts auxiliares não estão mais na raiz do repositório.

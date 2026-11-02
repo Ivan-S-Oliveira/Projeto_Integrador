@@ -1,18 +1,17 @@
-"""Resolve a fonte de coorte sem acoplar notebooks ao nome do arquivo.
+"""Resolve a coorte definitiva sem acoplar notebooks ao nome do arquivo.
 
-A troca entre coorte provisória e definitiva acontece por parâmetro ou
-pela variável de ambiente ``SRAG_COHORT_KIND``.
+O projeto usa uma única coorte: a definitiva (``coorte_final.parquet``).
+A coorte provisória foi aposentada e não é mais aceita por este módulo.
+A variável de ambiente ``SRAG_COHORT_KIND`` continua existindo por
+compatibilidade com os notebooks e só aceita ``final``.
 
 Contrato:
 - ``kind=None`` consulta ``SRAG_COHORT_KIND`` (default ``final``).
-- ``auto`` prefere a definitiva quando existir.
-- ``explicit_path`` exige nome canônico; se ``kind`` também for informado
-  e divergir da classificação pelo nome, a chamada falha em vez de
-  prosseguir com o tipo errado.
+- ``kind="provisional"`` e ``kind="auto"`` falham com erro explicativo.
+- ``explicit_path`` exige o nome canônico ``coorte_final.parquet``.
 
 Não transforma a coorte, não cria partições e não altera o alvo.
 """
-
 from __future__ import annotations
 
 import os
@@ -24,29 +23,25 @@ import pandas as pd
 
 from src.utils.hashing import sha256_file
 
-
 # ---------------------------------------------------------------------------
 # Tipo e constantes
 # ---------------------------------------------------------------------------
-
-CohortKind = Literal["provisional", "final", "auto"]
+CohortKind = Literal["final"]
 
 _ENV_VAR: str = "SRAG_COHORT_KIND"
 _DEFAULT_KIND: str = "final"
 _VALID_KINDS: frozenset[str] = frozenset(get_args(CohortKind))
-
+# Tipos que existiram antes: geram erro explicativo em vez de "valor inválido".
+_RETIRED_KINDS: frozenset[str] = frozenset({"provisional", "auto"})
 _ANALYTICAL_DIR = Path("data") / "analytical"
 
-# Nomes canônicos por tipo. Só estes são aceitos em `explicit_path` e na
-# descoberta automática. Nomes ambíguos (ex.: "coorte.parquet") foram
-# deliberadamente removidos para impedir que uma coorte definitiva salva
-# com nome errado seja carregada como provisória.
+# Nome canônico por tipo. Só este é aceito em ``explicit_path`` e na descoberta
+# automática. Nomes ambíguos (ex.: "coorte.parquet") continuam rejeitados.
 _FILENAMES_BY_KIND: dict[str, tuple[str, ...]] = {
-    "final":       ("coorte_final.parquet",),
-    "provisional": ("coorte_provisoria.parquet", "coorte_provisoria_b.parquet"),
+    "final": ("coorte_final.parquet",),
 }
 
-# Índice reverso (nome em minúsculas → tipo), preenchido uma única vez.
+# Índice reverso (nome em minúsculas -> tipo), preenchido uma única vez.
 _KIND_BY_FILENAME: dict[str, str] = {
     name.lower(): kind
     for kind, names in _FILENAMES_BY_KIND.items()
@@ -57,7 +52,6 @@ _KIND_BY_FILENAME: dict[str, str] = {
 # ---------------------------------------------------------------------------
 # Modelo de metadados
 # ---------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class CohortSource:
     """Metadados imutáveis da coorte selecionada."""
@@ -76,7 +70,6 @@ class CohortSource:
 # ---------------------------------------------------------------------------
 # API pública
 # ---------------------------------------------------------------------------
-
 def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
     """Candidatos de coorte por tipo, na ordem de preferência."""
     analytical = root / _ANALYTICAL_DIR
@@ -92,26 +85,25 @@ def resolve_cohort_path(
     kind: CohortKind | None = None,
     explicit_path: Path | None = None,
 ) -> tuple[str, Path]:
-    """Resolve a coorte sem alternar silenciosamente de provisória para final.
+    """Resolve o caminho da coorte definitiva.
 
     Parâmetros
     ----------
     root:
         Raiz do projeto (contém ``data/analytical``).
     kind:
-        ``provisional``, ``final`` ou ``auto``. ``None`` consulta a
-        variável de ambiente ``SRAG_COHORT_KIND``.
+        ``final``. ``None`` consulta a variável de ambiente
+        ``SRAG_COHORT_KIND``. ``provisional`` e ``auto`` falham.
     explicit_path:
-        Caminho explícito para uma coorte. Quando informado, o nome do
-        arquivo precisa estar na lista canônica do tipo; se ``kind`` for
-        ``provisional`` ou ``final`` e divergir do nome, a chamada falha.
+        Caminho explícito para a coorte. O nome do arquivo precisa ser o
+        canônico (``coorte_final.parquet``).
     """
     if explicit_path is not None:
         return _resolve_explicit_path(explicit_path, requested_kind=kind)
 
     selected = _resolve_kind(kind)
     candidates = cohort_candidates(root)
-    preference = ("final", "provisional") if selected == "auto" else (selected,)
+    preference = (selected,)
 
     for effective_kind in preference:
         for path in candidates[effective_kind]:
@@ -147,20 +139,24 @@ def load_cohort(
 # ---------------------------------------------------------------------------
 # Helpers privados
 # ---------------------------------------------------------------------------
-
 def _resolve_kind(kind: CohortKind | None) -> str:
     """Normaliza o tipo solicitado (parâmetro ou env var)."""
     selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
+    if selected in _RETIRED_KINDS:
+        raise ValueError(
+            f"Tipo de coorte {selected!r} não é mais aceito: a coorte "
+            "provisória foi aposentada e o projeto usa apenas a definitiva. "
+            f"Use 'final' (parâmetro kind ou variável {_ENV_VAR})."
+        )
     if selected not in _VALID_KINDS:
         raise ValueError(
-            f"{_ENV_VAR} deve ser provisional, final ou auto. "
-            f"Recebido: {selected!r}."
+            f"{_ENV_VAR} deve ser final. Recebido: {selected!r}."
         )
     return selected
 
 
 def _kind_from_path(path: Path) -> str:
-    """Classifica uma coorte pelo nome canônico. Nome desconhecido → ``ValueError``."""
+    """Classifica uma coorte pelo nome canônico. Nome desconhecido -> ``ValueError``."""
     kind = _KIND_BY_FILENAME.get(path.name.lower())
     if kind is not None:
         return kind
@@ -172,26 +168,15 @@ def _resolve_explicit_path(
     *,
     requested_kind: CohortKind | None,
 ) -> tuple[str, Path]:
-    """Valida existência, nome canônico e coerência com ``kind`` explícito."""
+    """Valida o tipo pedido, a existência e o nome canônico do arquivo."""
+    if requested_kind is not None:
+        _resolve_kind(requested_kind)
+
     path = Path(explicit_path).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"Coorte explícita não encontrada: {path}")
 
-    declared = _kind_from_path(path)
-
-    if (
-        requested_kind is not None
-        and requested_kind != "auto"
-        and declared != requested_kind
-    ):
-        raise ValueError(
-            f"Coorte em {path.name!r} classificada como {declared!r} pelo "
-            f"nome, mas kind={requested_kind!r} foi solicitado. "
-            "Renomeie o arquivo para um nome canônico do tipo desejado "
-            "ou remova `kind` para aceitar a classificação pelo nome."
-        )
-
-    return declared, path
+    return _kind_from_path(path), path
 
 
 def _unknown_filename_message(path: Path) -> str:
@@ -200,10 +185,13 @@ def _unknown_filename_message(path: Path) -> str:
         for kind, names in _FILENAMES_BY_KIND.items()
         for name in names
     )
+    aposentada = ""
+    if path.name.lower().startswith("coorte_provisoria"):
+        aposentada = " A coorte provisória foi aposentada."
     return (
         f"Nome de coorte não reconhecido: {path.name!r}. "
-        f"Esperado um de: {known}. "
-        "Renomeie o arquivo ou passe `kind` explicitamente."
+        f"Esperado um de: {known}.{aposentada} "
+        "Renomeie o arquivo para o nome canônico da coorte definitiva."
     )
 
 

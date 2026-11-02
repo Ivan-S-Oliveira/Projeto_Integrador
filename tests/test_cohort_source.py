@@ -1,14 +1,13 @@
-"""Testes do resolvedor de coorte (provisória, final, auto, explicit_path).
+"""Testes do resolvedor de coorte (somente a definitiva é aceita).
 
 Cobrem:
-
-- descoberta por ``kind`` (``provisional``, ``final``, ``auto``);
-- o uso de ``final`` como valor padrão de ``_DEFAULT_KIND``;
-- a variável de ambiente ``SRAG_COHORT_KIND`` sobrescrevendo o default;
-- validação de ``explicit_path`` (nome canônico + coerência com ``kind``);
-- rejeição do nome ambíguo ``coorte.parquet`` como origem provisória.
+- descoberta do arquivo canônico ``coorte_final.parquet``;
+- a variável de ambiente ``SRAG_COHORT_KIND`` (aceita apenas ``final``);
+- rejeição dos tipos aposentados (``provisional`` e ``auto``);
+- ``explicit_path`` com nome canônico e rejeição de nomes desconhecidos,
+  inclusive os nomes antigos da coorte provisória;
+- ``load_cohort`` devolvendo dados e metadados da fonte.
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,155 +16,106 @@ import pandas as pd
 import pytest
 
 from src.data.cohort_source import (
+    CohortSource,
     cohort_candidates,
     load_cohort,
     resolve_cohort_path,
 )
 
+_FINAL = "coorte_final.parquet"
+_NOMES_ANTIGOS = ("coorte_provisoria.parquet", "coorte_provisoria_b.parquet")
 
-# ---------------------------------------------------------------------------
-# Constantes dos nomes canônicos (evitam strings mágicas nos asserts)
-# ---------------------------------------------------------------------------
-
-_CANONICAL_PROVISIONAL = "coorte_provisoria.parquet"
-_CANONICAL_PROVISIONAL_B = "coorte_provisoria_b.parquet"
-_CANONICAL_FINAL = "coorte_final.parquet"
-
-
-# ---------------------------------------------------------------------------
-# Fixtures e helpers
-# ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
-def _sem_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Limpa ``SRAG_COHORT_KIND`` antes de cada teste.
+def _limpar_variavel_de_ambiente(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove ``SRAG_COHORT_KIND`` antes de cada teste.
 
-    Sem isto, um ``SRAG_COHORT_KIND`` definido no shell do runner tornaria
-    os testes dependentes do estado local. Cada teste decide explicitamente
-    qual ``kind`` quer exercitar (parâmetro ou ``monkeypatch.setenv``).
+    Sem isto, uma variável definida no shell do runner mudaria o default
+    ``final`` e tornaria os testes dependentes do ambiente.
     """
     monkeypatch.delenv("SRAG_COHORT_KIND", raising=False)
 
 
-def _write(path: Path, value: int) -> None:
-    """Grava um Parquet 1×1 com uma coluna ``value``."""
+def _criar(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame({"value": [value]}).to_parquet(path, index=False)
+    path.write_bytes(b"conteudo")
+    return path
 
 
-def _candidatos(tmp_path: Path) -> dict[str, tuple[Path, ...]]:
-    """Atalho para ``cohort_candidates`` (evita a repetição de 4 caracteres)."""
-    return cohort_candidates(tmp_path)
+def _coorte_final(root: Path) -> Path:
+    return _criar(root / "data" / "analytical" / _FINAL)
 
 
 # ---------------------------------------------------------------------------
-# A coorte final é a origem padrão
+# Descoberta pelo tipo
 # ---------------------------------------------------------------------------
+def test_candidatos_existem_apenas_para_a_definitiva(tmp_path: Path) -> None:
+    candidatos = cohort_candidates(tmp_path)
 
-def test_default_busca_final(tmp_path: Path) -> None:
-    """Sem ``kind`` e sem env var, o default é ``final``."""
-    _write(_candidatos(tmp_path)["final"][0], 2)
+    assert set(candidatos) == {"final"}
+    assert candidatos["final"] == (tmp_path / "data" / "analytical" / _FINAL,)
+
+
+def test_default_resolve_a_coorte_final(tmp_path: Path) -> None:
+    esperado = _coorte_final(tmp_path)
 
     kind, path = resolve_cohort_path(tmp_path)
 
     assert kind == "final"
-    assert path.name == _CANONICAL_FINAL
+    assert path == esperado.resolve()
 
 
-def test_default_final_nao_cai_em_provisional(tmp_path: Path) -> None:
-    """Sem ``kind`` e sem coorte final, falha — não há fallback para provisória."""
-    _write(_candidatos(tmp_path)["provisional"][0], 1)
+def test_kind_final_explicito(tmp_path: Path) -> None:
+    _coorte_final(tmp_path)
 
-    with pytest.raises(FileNotFoundError, match="final"):
+    kind, path = resolve_cohort_path(tmp_path, kind="final")
+
+    assert kind == "final"
+    assert path.name == _FINAL
+
+
+def test_sem_coorte_final_falha_com_candidatos(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="Nenhuma coorte do tipo 'final'"):
         resolve_cohort_path(tmp_path)
 
 
-def test_provisional_exige_kind_explicito(tmp_path: Path) -> None:
-    """Para carregar a provisória, é preciso informar ``kind='provisional'``."""
-    _write(_candidatos(tmp_path)["provisional"][0], 1)
+def test_coorte_provisoria_nao_e_usada_nem_como_fallback(tmp_path: Path) -> None:
+    for nome in _NOMES_ANTIGOS:
+        _criar(tmp_path / "data" / "analytical" / nome)
 
-    kind, path = resolve_cohort_path(tmp_path, kind="provisional")
-
-    assert kind == "provisional"
-    assert path.name == _CANONICAL_PROVISIONAL
-
-
-def test_provisional_usa_fallback_b(tmp_path: Path) -> None:
-    """Sem ``coorte_provisoria.parquet``, cai em ``coorte_provisoria_b.parquet``."""
-    _write(_candidatos(tmp_path)["provisional"][1], 1)
-
-    kind, path = resolve_cohort_path(tmp_path, kind="provisional")
-
-    assert kind == "provisional"
-    assert path.name == _CANONICAL_PROVISIONAL_B
+    with pytest.raises(FileNotFoundError):
+        resolve_cohort_path(tmp_path)
 
 
 # ---------------------------------------------------------------------------
-# ``kind="auto"``
+# Tipos aposentados
 # ---------------------------------------------------------------------------
+def test_kind_provisional_e_rejeitado(tmp_path: Path) -> None:
+    _coorte_final(tmp_path)
 
-def test_auto_prefere_final(tmp_path: Path) -> None:
-    paths = _candidatos(tmp_path)
-    _write(paths["provisional"][0], 1)
-    _write(paths["final"][0], 2)
-
-    kind, path = resolve_cohort_path(tmp_path, kind="auto")
-
-    assert kind == "final"
-    assert path.name == _CANONICAL_FINAL
+    with pytest.raises(ValueError, match="não é mais aceito"):
+        resolve_cohort_path(tmp_path, kind="provisional")  # type: ignore[arg-type]
 
 
-def test_auto_cai_em_provisional_quando_so_ela_existe(tmp_path: Path) -> None:
-    _write(_candidatos(tmp_path)["provisional"][0], 1)
+def test_kind_auto_e_rejeitado(tmp_path: Path) -> None:
+    _coorte_final(tmp_path)
 
-    kind, path = resolve_cohort_path(tmp_path, kind="auto")
+    with pytest.raises(ValueError, match="não é mais aceito"):
+        resolve_cohort_path(tmp_path, kind="auto")  # type: ignore[arg-type]
 
-    assert kind == "provisional"
-    assert path.name == _CANONICAL_PROVISIONAL
+
+def test_kind_desconhecido_e_rejeitado(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="deve ser final"):
+        resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
-# ``kind="final"`` explícito + metadados de ``load_cohort``
+# SRAG_COHORT_KIND (variável de ambiente)
 # ---------------------------------------------------------------------------
-
-def test_load_cohort_final_expoe_metadados(tmp_path: Path) -> None:
-    _write(_candidatos(tmp_path)["final"][0], 2)
-
-    frame, source = load_cohort(tmp_path, kind="final")
-
-    assert frame["value"].tolist() == [2]
-    assert source.kind == "final"
-    assert source.rows == 1
-    assert len(source.sha256) == 64
-
-
-# ---------------------------------------------------------------------------
-# ``SRAG_COHORT_KIND`` (env var) — contrato explícito do resolvedor
-# ---------------------------------------------------------------------------
-
-def test_env_var_sobrescreve_default(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+def test_variavel_de_ambiente_final_e_aceita_em_maiusculas(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``SRAG_COHORT_KIND=provisional`` vence o default ``final``."""
-    paths = _candidatos(tmp_path)
-    _write(paths["provisional"][0], 1)
-    _write(paths["final"][0], 2)
-
-    monkeypatch.setenv("SRAG_COHORT_KIND", "provisional")
-
-    kind, path = resolve_cohort_path(tmp_path)
-
-    assert kind == "provisional"
-    assert path.name == _CANONICAL_PROVISIONAL
-
-
-def test_env_var_case_insensitive(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write(_candidatos(tmp_path)["final"][0], 2)
-
+    _coorte_final(tmp_path)
     monkeypatch.setenv("SRAG_COHORT_KIND", "FINAL")
 
     kind, _ = resolve_cohort_path(tmp_path)
@@ -173,74 +123,121 @@ def test_env_var_case_insensitive(
     assert kind == "final"
 
 
-# ---------------------------------------------------------------------------
-# Validações de ``kind``
-# ---------------------------------------------------------------------------
+def test_variavel_de_ambiente_provisional_e_rejeitada(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _coorte_final(tmp_path)
+    monkeypatch.setenv("SRAG_COHORT_KIND", "provisional")
 
-def test_tipo_invalido_falha(tmp_path: Path) -> None:
-    # Valor viola intencionalmente o Literal CohortKind.
-    with pytest.raises(ValueError, match="provisional, final ou auto"):
-        resolve_cohort_path(tmp_path, kind="desconhecida")  # type: ignore[arg-type]
-
-
-def test_nenhum_candidato_falha(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError, match="Nenhuma coorte"):
-        resolve_cohort_path(tmp_path, kind="provisional")
+    with pytest.raises(ValueError, match="não é mais aceito"):
+        resolve_cohort_path(tmp_path)
 
 
-# ---------------------------------------------------------------------------
-# Nomes ambíguos não são aceitos
-# ---------------------------------------------------------------------------
+def test_parametro_kind_vence_a_variavel_de_ambiente(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _coorte_final(tmp_path)
+    monkeypatch.setenv("SRAG_COHORT_KIND", "provisional")
 
-def test_coorte_parquet_nao_e_mais_candidato(tmp_path: Path) -> None:
-    """``coorte.parquet`` não é classificado como origem provisória."""
-    _write(tmp_path / "data" / "analytical" / "coorte.parquet", 2)
-
-    with pytest.raises(FileNotFoundError):
-        resolve_cohort_path(tmp_path, kind="provisional")
-
-
-# ---------------------------------------------------------------------------
-# ``explicit_path``: nome canônico + coerência com ``kind``
-# ---------------------------------------------------------------------------
-
-def test_explicit_path_sem_kind_usa_nome(tmp_path: Path) -> None:
-    path = _candidatos(tmp_path)["final"][0]
-    _write(path, 2)
-
-    kind, resolved = resolve_cohort_path(tmp_path, explicit_path=path)
+    kind, _ = resolve_cohort_path(tmp_path, kind="final")
 
     assert kind == "final"
-    assert resolved.name == _CANONICAL_FINAL
 
 
-def test_explicit_path_com_kind_consistente_ok(tmp_path: Path) -> None:
-    path = _candidatos(tmp_path)["final"][0]
-    _write(path, 2)
+# ---------------------------------------------------------------------------
+# explicit_path
+# ---------------------------------------------------------------------------
+def test_explicit_path_com_nome_canonico(tmp_path: Path) -> None:
+    caminho = _criar(tmp_path / "qualquer_pasta" / _FINAL)
 
-    kind, resolved = resolve_cohort_path(tmp_path, kind="final", explicit_path=path)
+    kind, resolvido = resolve_cohort_path(tmp_path, explicit_path=caminho)
 
     assert kind == "final"
-    assert resolved.name == _CANONICAL_FINAL
+    assert resolvido == caminho.resolve()
 
 
-def test_explicit_path_com_kind_conflitante_falha(tmp_path: Path) -> None:
-    """Coorte final passada como ``provisional`` falha em vez de mascarar o tipo."""
-    path = _candidatos(tmp_path)["final"][0]
-    _write(path, 2)
+def test_explicit_path_com_kind_final(tmp_path: Path) -> None:
+    caminho = _criar(tmp_path / _FINAL)
 
-    with pytest.raises(ValueError, match="classificada como"):
-        resolve_cohort_path(tmp_path, kind="provisional", explicit_path=path)
+    kind, _ = resolve_cohort_path(tmp_path, kind="final", explicit_path=caminho)
 
-
-def test_explicit_path_com_nome_desconhecido_falha(tmp_path: Path) -> None:
-    path = tmp_path / "coorte_definitiva.parquet"
-    _write(path, 2)
-
-    with pytest.raises(ValueError, match="Nome de coorte não reconhecido"):
-        resolve_cohort_path(tmp_path, explicit_path=path)
+    assert kind == "final"
 
 
-def test_explicit_path_inexistente_falha(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError, match="Coorte explícita"):
-        resolve_cohort_path(tmp_path, explicit_path=tmp_path / "nao_existe.parquet")
+def test_explicit_path_com_kind_provisional_e_rejeitado(tmp_path: Path) -> None:
+    caminho = _criar(tmp_path / _FINAL)
+
+    with pytest.raises(ValueError, match="não é mais aceito"):
+        resolve_cohort_path(
+            tmp_path, kind="provisional", explicit_path=caminho  # type: ignore[arg-type]
+        )
+
+
+def test_explicit_path_com_nome_ambiguo_e_rejeitado(tmp_path: Path) -> None:
+    caminho = _criar(tmp_path / "coorte.parquet")
+
+    with pytest.raises(ValueError, match="não reconhecido"):
+        resolve_cohort_path(tmp_path, explicit_path=caminho)
+
+
+@pytest.mark.parametrize("nome", _NOMES_ANTIGOS)
+def test_explicit_path_com_nome_da_coorte_provisoria_e_rejeitado(
+    tmp_path: Path, nome: str
+) -> None:
+    caminho = _criar(tmp_path / nome)
+
+    with pytest.raises(ValueError, match="aposentada"):
+        resolve_cohort_path(tmp_path, explicit_path=caminho)
+
+
+def test_explicit_path_inexistente(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="não encontrada"):
+        resolve_cohort_path(tmp_path, explicit_path=tmp_path / _FINAL)
+
+
+# ---------------------------------------------------------------------------
+# load_cohort
+# ---------------------------------------------------------------------------
+def test_load_cohort_devolve_dados_e_metadados(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    caminho = _coorte_final(tmp_path)
+    quadro = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    chamadas: dict[str, object] = {}
+
+    def _ler(path: object, columns: list[str] | None = None) -> pd.DataFrame:
+        chamadas["path"] = Path(str(path))
+        chamadas["columns"] = columns
+        return quadro if columns is None else quadro[columns]
+
+    monkeypatch.setattr(pd, "read_parquet", _ler)
+
+    frame, fonte = load_cohort(tmp_path)
+
+    assert isinstance(fonte, CohortSource)
+    assert chamadas["path"] == caminho.resolve()
+    assert chamadas["columns"] is None
+    assert fonte.kind == "final"
+    assert fonte.path == str(caminho.resolve())
+    assert fonte.rows == 3
+    assert fonte.columns == 2
+    assert fonte.size_bytes == len(b"conteudo")
+    assert len(fonte.sha256) == 64
+    assert fonte.to_dict()["kind"] == "final"
+    assert list(frame.columns) == ["a", "b"]
+
+
+def test_load_cohort_respeita_a_lista_de_colunas(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _coorte_final(tmp_path)
+    quadro = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+    monkeypatch.setattr(
+        pd, "read_parquet",
+        lambda path, columns=None: quadro if columns is None else quadro[columns],
+    )
+
+    frame, fonte = load_cohort(tmp_path, columns=["a"])
+
+    assert list(frame.columns) == ["a"]
+    assert fonte.columns == 1

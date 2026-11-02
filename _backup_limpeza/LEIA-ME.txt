@@ -1,0 +1,9 @@
+Esta pasta guarda copias de seguranca (.bak) de arquivos removidos ou alterados na
+limpeza do projeto. Nada aqui e usado pelo codigo, pelos testes ou pelos notebooks:
+os arquivos terminam em .bak justamente para nao serem importados nem coletados pelo pytest.
+
+REMOVER ANTES DA ENTREGA:
+    git rm -r _backup_limpeza
+e acrescentar a linha `_backup_limpeza/ export-ignore` ao .gitattributes.
+
+Para recuperar um arquivo: copie-o para o mesmo caminho relativo, sem o sufixo .bak.
