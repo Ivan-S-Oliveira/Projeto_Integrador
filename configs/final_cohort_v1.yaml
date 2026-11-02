@@ -1,7 +1,7 @@
 contract:
   id: final_cohort_v1
   version: 1
-  status: candidate
+  status: approved  # coorte publicada em data/analytical/coorte_final.parquet
   description: Contrato populacional da coorte definitiva inicial do projeto SRAG.
 
 source:

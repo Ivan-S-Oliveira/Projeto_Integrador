@@ -11,7 +11,7 @@ em `outputs/tables/`, mas não constituem uma segunda fonte editável.
 Este documento registra somente decisões gerais ou com impacto em várias
 etapas do projeto.
 
-Última atualização: 27/10/2026 (entradas de 22–24/10 redigidas em 27/10; ver §29).
+Última atualização: 02/11/2026 (entradas de 22–24/10 redigidas em 27/10; ver §29).
 
 ---
 
@@ -23,6 +23,10 @@ etapas do projeto.
 - Ponto de previsão: admissão hospitalar, operacionalizada por `dt_interna`.
 - Ano de `dt_interna`, e não de `dt_notific`, como referência de elegibilidade temporal.
 - Coorte definitiva inicial: seleção de features construída e auditada na coorte provisória B, promovida e congelada para o fluxo principal.
+Atualizado em 02/11: a coorte definitiva é
+data/analytical/coorte_final.parquet (contrato final_cohort_v1, status
+approved); a coorte provisória foi aposentada e o resolvedor só aceita a
+definitiva (§29.32).
 - Alvo principal: `evolucao = 1` versus `evolucao = 2`.
 - Desenvolvimento: apenas 2019, 2023, 2024 e 2025.
 - Blocos de desenvolvimento: `train_ref`, `val_tune`, `val_cal` e `val_meas`.
@@ -135,6 +139,8 @@ e auditada na coorte provisória B. Sua promoção gera
 `coorte_final.parquet`, `coorte_waterfall.csv`, `variaveis_finais.csv` e
 `manifesto_coorte.json`, acompanhados de SHA-256, commit, schema,
 cobertura temporal, contagens e versão.
+Atualizado em 02/11: a coorte provisória foi aposentada; os notebooks e
+o resolvedor usam somente coorte_final.parquet (§29.32).
 
 A coorte auditável preserva variáveis amplas para EDA, auditoria,
 transformação e experimentos. Permanecer na coorte não significa
@@ -1029,6 +1035,7 @@ deve ser consultado nas fichas.
 - **Impacto:** arquivo em `data/analytical/coorte_final.parquet`. O
   contrato ainda consta como `status: candidate` e precisa ser atualizado
   (§29.13).
+Substituído em 02/11: o contrato passou a status: approved (§29.32).
 
 ### 29.4 24/10 · Regra de grupo (#10) e partição em seis blocos
 
@@ -1235,6 +1242,11 @@ deve ser consultado nas fichas.
    ausência do G3 está explicada no YAML (absorvido pelo G2 em 18/10).
 2. Confirmar o `status: published` do contrato da coorte e o `ativa: false` da
    sensibilidade de "qualquer óbito" contra o código que lê esses arquivos.
+Atualizado em 02/11: o código (VALID_CONTRACT_STATUSES em
+src/data/cohort_contract.py) aceita candidate, approved e retired;
+published não é aceito. O contrato passou a approved (§29.32).
+Verificado em 02/11: sensibilidade_qualquer_obito e alvo_qualquer_obito
+passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
 
 ### 29.14 27/10 · Alinhamento de saturação, desconforto respiratório e vacina
 
@@ -1615,3 +1627,43 @@ deve ser consultado nas fichas.
   `test_src_sem_funcoes_duplicadas`), `tests/test_config.py`
   (`test_gates_historicos_aprovados`) e `tools/medir_notebook.py`.
 - **Fecha:** #144.
+
+#### 29.32 02/11 · Coorte provisória aposentada; resolvedor e contrato só aceitam a definitiva (#151)
+- **Decisão:** o projeto usa uma única coorte, a definitiva
+(data/analytical/coorte_final.parquet, contrato final_cohort_v1). O
+resolvedor src/data/cohort_source.py só aceita kind="final";
+"provisional" e "auto" falham com erro explicativo e os nomes antigos da
+coorte provisória são rejeitados. O contrato passou de status: candidate
+para status: approved.
+- **Motivo:** a definitiva já está publicada e conferida (nenhuma
+divergência de alvo nas linhas em comum e 30.408 linhas a menos que a
+provisória; §29.3). Manter dois caminhos de coorte no código e nos
+notebooks aumenta a complexidade e o risco de misturar números de
+coortes diferentes (21,9% de óbitos na provisória e 8,4% na definitiva).
+- **Status do contrato:** o código aceita candidate, approved e retired
+(VALID_CONTRACT_STATUSES em src/data/cohort_contract.py). O valor
+published, citado em §29.13, não é aceito; foi adotado approved.
+tests/test_cohort_contract.py passou a esperar approved e a rejeitar
+published.
+- **Sensibilidade "qualquer óbito":** passou a ativa: false em
+configs/supervised.yaml (target.sensibilidade_qualquer_obito e
+sensibilidades.alvo_qualquer_obito) e em
+configs/feature_contract_v1.json, porque a coorte definitiva exclui o
+código 3 (D_COORTE_003; §9 e §29.13). Os arquivos ainda traziam true,
+embora §9 e §29.13 registrassem a desativação.
+- **Impacto:** o padrão de SRAG_COHORT_KIND passou a ser final nos
+notebooks C_11, C_12, C_13, C_15 e C_16, e os testes do resolvedor foram
+reescritos. Os números da coorte provisória em §29.12, §29.21 e §29.22
+ficam só como histórico e serão refeitos na definitiva no G6, no G7 e no
+G8.
+- **Mantido de propósito:** o esquema legado do artefato supervisionado
+(src/data/supervised_artifact.py); o dataset provisório do fluxo A
+(§29.26); a origem histórica da seleção de variáveis
+(final_metadata.origem em supervised.yaml e feature_contract_v1.json); e
+as chaves candidate_* do contrato, que nomeiam a pasta de trabalho do
+construtor da coorte e são exigidas por src/data/cohort_contract.py.
+- **Implementado em:** src/data/cohort_source.py;
+tests/test_cohort_source.py; notebooks C_11, C_12, C_13, C_15 e C_16;
+configs/final_cohort_v1.yaml; tests/test_cohort_contract.py;
+configs/supervised.yaml; configs/feature_contract_v1.json.
+- **Decidiu:** Pessoa B.

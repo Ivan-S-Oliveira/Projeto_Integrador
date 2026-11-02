@@ -14,7 +14,7 @@
     ],
     "descartar_outros": true,
     "sensibilidade_qualquer_obito": {
-      "ativa": true,
+      "ativa": false,
       "positivos": [
         2.0,
         3.0

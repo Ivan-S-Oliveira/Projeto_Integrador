@@ -10,7 +10,7 @@ target:
   - 1.0
   descartar_outros: true
   sensibilidade_qualquer_obito:
-    ativa: true
+    ativa: false  # desativada: a coorte definitiva exclui evolucao 3 (decisoes.md §29.13)
     positivos:
     - 2.0
     - 3.0
@@ -482,7 +482,7 @@ sensibilidades:
   contexto_incremental:
     ativa: true
   alvo_qualquer_obito:
-    ativa: true
+    ativa: false  # desativada: a coorte definitiva exclui evolucao 3 (decisoes.md §29.13)
 
 artefatos_coorte:
   parquet: coorte_final.parquet

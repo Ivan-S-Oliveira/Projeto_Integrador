@@ -26,7 +26,7 @@ def test_contract_file_loads() -> None:
 
     assert contract.contract_id == "final_cohort_v1"
     assert contract.version == 1
-    assert contract.status == "candidate"
+    assert contract.status == "approved"
 
 
 def test_contract_exposes_approved_exclusions() -> None:
@@ -151,4 +151,14 @@ def test_inverted_period_fails(
         ValueError,
         match="period_start nao pode ser posterior",
     ):
+        parse_cohort_contract(raw)
+
+
+def test_contract_rejects_unknown_status(
+    valid_contract_raw: dict,
+) -> None:
+    """O contrato só aceita candidate, approved e retired (published não vale)."""
+    raw = deepcopy(valid_contract_raw)
+    raw["contract"]["status"] = "published"
+    with pytest.raises(ValueError, match="Status de contrato invalido"):
         parse_cohort_contract(raw)
