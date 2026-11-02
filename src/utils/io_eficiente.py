@@ -32,11 +32,21 @@ def compactar_dataframe(df, limite_categoria=1000, colunas_texto_livre=()):
             df[col]=pd.to_numeric(s,downcast="integer")
     return df
 
-def ler_parquet_enxuto(caminho,columns=None,filters=None,colunas_texto_livre=()):
-    tabela=pq.read_table(caminho,columns=list(columns) if columns else None,filters=filters)
-    df=tabela.to_pandas(strings_to_categorical=True,self_destruct=True,split_blocks=True)
-    del tabela
-    return compactar_dataframe(df,colunas_texto_livre=colunas_texto_livre)
+def ler_parquet_enxuto(caminho,columns=None,filters=None,colunas_texto_livre=(),colunas_por_lote=12):
+    nomes=list(columns) if columns else pq.read_schema(caminho).names
+    tamanho=max(1,int(colunas_por_lote))
+    partes=[]
+    for inicio in range(0,len(nomes),tamanho):
+        lote=nomes[inicio:inicio+tamanho]
+        tabela=pq.read_table(caminho,columns=lote,filters=filters)
+        parte=tabela.to_pandas(strings_to_categorical=True,self_destruct=True,split_blocks=True)
+        del tabela
+        partes.append(compactar_dataframe(parte,colunas_texto_livre=colunas_texto_livre))
+    if not partes:
+        return pd.DataFrame()
+    if len(partes)==1:
+        return partes[0]
+    return pd.concat(partes,axis=1)
 
 def matriz_para_plot(df):
     return pd.DataFrame(df.to_numpy(dtype=np.float64,na_value=np.nan),index=df.index.copy(),columns=df.columns.copy())
