@@ -1712,3 +1712,26 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Impacto:** o artefato supervisionado é regerado (mesmas fichas e blocos;
   `feature_columns` e hash novos) e os notebooks de modelagem e de agrupamento
   são reexecutados. Substitui, nestes pontos, as §13, §29.2, §29.14 e §29.19.
+
+#### 29.35 03/11 · G6: hiperparâmetros e finalista
+
+- **Decisão:** congelar os hiperparâmetros e o finalista a partir da busca do C_13 em `val_ref`, sob o G6 aprovado em 03/11.
+- **Grade usada (resumo da §29.17):** logística com `C` em {0,001; 0,01; 0,1; 1; 10} × `class_weight` em {balanced; null}; boosting com `learning_rate` em {0,03; 0,05; 0,1} × `max_iter` em {500; 1000} × `class_weight` em {balanced; null}. Métrica principal: PR-AUC em `val_ref`. `max_configuracoes_por_modelo` conforme o YAML.
+- **Regra aplicada (decidida antes dos números):**
+  1. dentro da família, maior PR-AUC; diferença < 0,002 → configuração mais simples (menos iterações, C maior);
+  2. entre famílias, o boosting só vence se superar a logística em ≥ 0,005 de PR-AUC; caso contrário, logística;
+  3. `class_weight: balanced` só fica se ganhar ≥ 0,005 de PR-AUC sobre `None`; caso contrário, `None` (o Brier calibrado é conferido no G7).
+
+**Tabela das duas melhores configurações por família (val_ref):**
+
+| Família | Configuração | PR-AUC | ROC-AUC | Brier |
+|---|---|---|---|---|
+| logística | `C=…`, `class_weight=…` | … | … | … |
+| logística (2ª) | `C=…`, `class_weight=…` | … | … | … |
+| boosting | `learning_rate=…`, `max_iter=…`, `class_weight=…` | … | … | … |
+| boosting (2ª) | `learning_rate=…`, `max_iter=…`, `class_weight=…` | … | … | … |
+
+- **Resultado:** finalista congelado = **`<logistic|boosting>`**, com `class_weight` final `<balanced|null>`; hiperparâmetros gravados em `configs/supervised.yaml`.
+- **Implementado em:** `configs/supervised.yaml` (`models.logistic`, `models.boosting`, `selecao_modelos.finalista_escolhido`, `selecao_modelos.status: finalista_congelado`) e `docs/decisoes.md` (esta entrada).
+- **Depende de:** #132 (artefato com 30 variáveis) e #140 (lista de variáveis).
+- **Abre:** #79 (G7 e G8) e #155 (exploração em equipe).

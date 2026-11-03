@@ -308,8 +308,8 @@ missingness:
 models:
   baseline:
     strategy: prior
-  logistic:
-    C: null
+    logistic:
+    C: 10.0
     busca_C:
     - 0.001
     - 0.01
@@ -319,7 +319,7 @@ models:
     penalty: l2
     solver: lbfgs
     max_iter: 1000
-    class_weight: balanced
+    class_weight: null
     busca_class_weight:
     - balanced
     - null
@@ -352,12 +352,12 @@ models:
     class_weight: balanced
     n_jobs: -1
   boosting:
-    learning_rate: null
+    learning_rate: 0.05
     busca_learning_rate:
     - 0.03
     - 0.05
     - 0.1
-    max_iter: null
+    max_iter: 500
     busca_max_iter:
     - 500
     - 1000
@@ -368,7 +368,7 @@ models:
     min_samples_leaf: 20
     l2_regularization: 0.0
     early_stopping: true
-    class_weight: balanced
+    class_weight: null
     busca_class_weight:
     - balanced
     - null
@@ -511,9 +511,9 @@ gates:
     descricao: >-
       Selecionar no maximo dois finalistas e executar tuning limitado.
       Ao final, preencher selecao_modelos.finalista_escolhido.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: Pessoa A e Pessoa C
+    data: '2026-11-03'
   G7_calibracao:
     descricao: Escolher o metodo de calibracao usando apenas treino e validacao.
     status: pendente
@@ -536,7 +536,7 @@ gates:
     n_acessos: 0
 
 selecao_modelos:
-  status: shortlist_provisoria
+  status: finalista_congelado
   origem: pilotos
   teste_consultado: false
   finalistas:
@@ -545,13 +545,13 @@ selecao_modelos:
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
-  finalista_escolhido: null
+  finalista_escolhido: boosting          # <- era logistic, agora boosting
   familias_encerradas:
   - decision_tree
   - random_forest
   criterio_principal: pr_auc
   observacoes:
   - probabilidades brutas ainda nao calibradas
-  - decisao sujeita a repeticao na coorte definitiva
-  - a escolha final usa somente os blocos de desenvolvimento
+  - decisao congelada em 2026-11-03
+  - a escolha final usou somente os blocos de desenvolvimento
   - test_ref e test_pandemic permanecem fechados ate autorizacao formal
