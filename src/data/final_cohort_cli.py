@@ -882,6 +882,9 @@ def execute_candidate(
             "schema_version": 1,
             "kind": "final_cohort_candidate",
             "generated_at_utc": generated_at,
+            "publication_performed": False,
+            "legacy_parity_reviewed": False,
+            "provisional_comparison_reviewed": False,
             "contract": {
                 "id": contract.contract_id,
                 "version": contract.version,
