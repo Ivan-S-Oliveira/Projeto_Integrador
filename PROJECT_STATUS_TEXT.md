@@ -25,7 +25,7 @@ Projeto SRAG · Pendências
 
 Retrato de 03/11, madrugada, sobre o commit `9f3322b`. A coorte definitiva (3.884.728 notificações) e o artefato supervisionado no desenho **70/15/15** (`train_ref` 556.462 · `val_ref` 119.243 · `test_ref` 119.245 · `test_pandemic` 2.915.829) foram regerados e conferidos em 03/11 às 04:20 UTC; a coorte provisória está aposentada no código (§29.32). Os notebooks C_12 a C_15 rodaram em 02/11 sobre o artefato anterior (mesmas fichas, outro hash) e precisam rodar de novo; o **C_16 ainda lê o esquema antigo** (`treino`, `validacao`, `teste`) e quebraria. G6 a G9 continuam pendentes. **Trabalho: 05/11 (em negociação com os professores; se ficar em 04/11, vale o plano de corte do aviso). Apresentação: 05/11.**
 
-**Regra de ordem:** variáveis congeladas (#140) → G6 e ajuste fino (#1) → G7 e G8 (#79) → **exploração de hiperparâmetros em equipe, 04/11 (#155)** → execução limpa (#126) → **05/11: G9, teste aberto uma vez (#2), resultados, relatório, pacote e apresentação** (#55, #133, #147, #134). Limpeza de rastros (#152, #153) corre em paralelo e termina antes da execução limpa.
+**Regra de ordem:** variáveis congeladas, com saturação e desconforto e sem os três sintomas da era COVID (#140) → artefato regerado (#132) → G6 e ajuste fino (#1) → G7 e G8 (#79) → **exploração de hiperparâmetros em equipe, 04/11 (#155)** → execução limpa (#126) → **05/11: G9, teste aberto uma vez (#2), resultados, relatório, pacote e apresentação** (#55, #133, #157, #147, #134). Limpeza de rastros (#152, #153) corre em paralelo e termina antes da execução limpa.
 
 ### Entrega
 
@@ -33,9 +33,9 @@ Retrato de 03/11, madrugada, sobre o commit `9f3322b`. A coorte definitiva (3.88
 
 ### Cronograma
 
-- **03/11 ter** — 9h: C reexecuta C_11, C_12 e C_14 (#132) · A adapta o C_16 (#148) · B limpa os rastros (#152, #153) · **10h: ponto de decisão (#140: A e C)** · 10h30: C: G6 e ajuste fino de referência (#1) · 14h: B: C_15, G7 e G8 (#79) · 16h30: A: registros no decisoes.md (#73) · noite: cada pessoa prepara a sua frente do #155 (código pronto, sem rodar a grade grande)
-- **04/11 qua** — **9h às 16h: exploração de hiperparâmetros em equipe (#155: A logística, B variáveis derivadas, C boosting)** · 16h: escolha final e congelamento no YAML (#155) · 16h30: C_15 de novo com o modelo final (#155, passo 6) · 18h: B: nomes da entrega (#146) · 19h: execução limpa e README (#126) · em paralelo: relatório sem os números do teste (#133), importância das variáveis (#91), referências (#112), dicionário (#70)
-- **05/11 qui** — **8h: checklist do G9 e abertura única do teste (#2)** · 9h30: conferência das saídas · 10h: subgrupos e regiões (#55) · 10h às 14h: números do teste no relatório (#133) · 14h: slides e ensaio (#134) · 16h: congelar e empacotar (#147) · **apresentação**
+- **03/11 ter** — **9h: decisão de variáveis aplicada (#140: A e C)** · 9h: B limpa os rastros (#152, #153) · A adapta o C_16 (#148) · 9h45: C regera o artefato e reexecuta C_11, C_12 e C_14 (#132) · 10h45: C: G6 e ajuste fino de referência (#1) · 11h45: B: ANOVA no B_04 (#137) · 14h: B: C_15, G7 e G8 (#79) · 16h30: A: registros no decisoes.md (#73) · noite: cada pessoa prepara a sua frente do #155
+- **04/11 qua** — **9h às 16h: exploração de hiperparâmetros em equipe (#155: A logística, B variáveis derivadas, C boosting)** · 16h: escolha final e congelamento no YAML (#155) · 16h30: C_15 de novo com o modelo final (#155, passo 6) · 18h: B: nomes da entrega (#146) · 19h: execução limpa e README (#126) e caminhos locais (#156) · em paralelo: relatório sem os números do teste (#133), importância das variáveis (#91), referências (#112), dicionário (#70)
+- **05/11 qui** — **8h: checklist do G9 e abertura única do teste (#2)** · 9h30: conferência das saídas · 10h: subgrupos e regiões (#55) · 10h às 14h: números do teste no relatório (#133) · 9h30: caminhos locais no C_16 (#156) · 14h: resultados no pacote (#157) · 14h30: slides e ensaio (#134) · 16h: congelar e empacotar (#147) · **apresentação**
 
 ### Legenda das estratégias
 
@@ -47,16 +47,48 @@ Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em lingu
 
 ### Pessoas
 
-- **A (≈ 15 h)** — ponto de decisão (#140), C_16 (#148), registros no decisoes.md (#73), frente da logística no #155, checklist do G9 (#2), subgrupos e regiões (#55), dicionário (#70), relatório (#133, dona), congelamento (#147)
-- **B (≈ 14,5 h)** — rastros (#152, #153), C_15 com G7 e G8 (#79), frente de variáveis derivadas no #155, nomes da entrega (#146), README (#126), referências (#112), relatório (#133), apresentação (#134, dona)
+- **A (≈ 15 h)** — decisão de variáveis (#140), C_16 (#148), registros no decisoes.md (#73), frente da logística no #155, checklist do G9 (#2), subgrupos e regiões (#55), dicionário (#70), relatório (#133, dona), congelamento (#147)
+- **B (≈ 15 h)** — rastros (#152, #153), C_15 com G7 e G8 (#79), ANOVA no B_04 (#137), frente de variáveis derivadas no #155, nomes da entrega (#146), README (#126), referências (#112), relatório (#133), apresentação (#134, dona)
 - **C (≈ 10 h)** — reexecução (#132), ajuste fino de referência (#1), frente do boosting no #155, execução do teste (#2), importância das variáveis (#91), execução limpa (#126), relatório (#133)
 - **Equipe** — exploração e escolha final (#155), aprovação do G9 (#2)
 
 ### Caminho crítico
 
-#132 → #140 → #1 → #79 → #155 → #126 → #2 → #133 → #147 → #134
+#140 → #132 → #1 → #79 → #155 → #126 → #2 → #133 → #157 → #147 → #134
 
 ### Aviso da revisão
+
+> [!decisão] Revisão de 03/11 · versão 3.4: variáveis e ANOVA
+> **Variáveis (#140):** saturação e desconforto respiratório entram no modelo principal (estão na definição de caso de SRAG hospitalizado e no campo 34 da ficha; maior ganho das ablações); perda de olfato, perda de paladar e fadiga saem (campos da era COVID, marcador de período, custo nulo). O modelo passa a ter 30 variáveis. A sensibilidade "sem saturação e desconforto" foi desativada, e o C_14 passa a medir "P − gravidade" e "P + 3 sintomas".
+> **Ordem nova:** o #140 vem **antes** do #132, porque o artefato precisa ser regerado com a lista nova (mesmas fichas e blocos, hash novo).
+> **ANOVA (#137, reaberto):** o professor pediu ANOVA e qui-quadrado no perfil dos grupos; o B_04 tinha só o qui-quadrado e o Kruskal-Wallis. Entra a ANOVA com η², e o Kruskal-Wallis fica como conferência.
+> **Cards ajustados:** #132, #1, #155 (saturação deixa de ser proibida; nova variável derivada `sinal_gravidade`), #133, #134, #73, #70 e o #9 (concluído: critérios atualizados para a decisão nova).
+> **Ferramenta:** `aplicar_decisoes_03_11.py` aplica as duas mudanças com conferência de cada troca (`--variaveis`, `--anova`, `--simular`). Salve fora do repositório.
+
+> [!decisão] Revisão de 03/11 · versão 3.3: conferência dos removidos e varredura dos notebooks
+> **Removidos conferidos um a um contra o repositório.** Nenhum precisa voltar, mas cinco motivos estavam errados ou incompletos e foram corrigidos: #35, #38, #74 e #137 citavam o "B_06/B_07" como inexistente, e eles só **mudaram de nome** para B_04/B_05 (o #35, o #38 e o #137 já estão resolvidos no código: o B_04 tem qui-quadrado, V de Cramér e Kruskal-Wallis); o #109 era sugestão de professor e ganhou resposta pronta no #134. Três textos do `decisoes.md` ainda dependiam de cards removidos e foram para o #73 (§7 sazonalidade, §29.7 ANOVA, §29.24 notebook A_15).
+>
+> **Necessidades que não estavam mapeadas (varredura dos 15 notebooks):**
+> - **#156 (novo, P1):** 165 caminhos locais com o nome do usuário e da empresa nas saídas salvas dos notebooks.
+> - **#157 (novo, P1):** `outputs/` e `reports/figures/` são ignorados pelo Git: sem uma pasta `resultados/`, nenhuma tabela ou figura citada no relatório chega à banca.
+> - **#126:** o A_03 republica a coorte e regera o artefato por padrão (os três interruptores estão `True`): roda primeiro, e nunca depois do teste (#2). O medidor para a sequência se um notebook passar de 6 GB; o comando agora usa 12 GB.
+> - **#146:** os títulos dos notebooks C ainda dizem C2 a C6 e há mensagens "Execute o Notebook 03" e "O B_07 exige…"; os **prefixos dos arquivos de saída não podem ser renomeados**, porque o C_16 encontra o manifesto do C_15 por eles.
+> - **#70:** o dicionário completo já existe em `configs/dicionario_variaveis_v1.csv`; o card passa a filtrá-lo em vez de escrever do zero.
+> - **#147:** `tools/read_outputs.py` e `tools/perfil_celulas.py` usam bibliotecas fora das dependências e saem do pacote; a conferência final inclui a busca por caminhos locais.
+
+> [!decisão] Revisão de 03/11 · versão 3.2: cada pendência aberta conferida contra o código (commit `863dd45`)
+> **20 cards ficam** (14 P1, 5 P2, 1 P3). **21 cards pós-entrega foram removidos**: o projeto termina em 05/11, então "depois da entrega" não tem janela. Cada um tem o motivo no campo "removido" (filtro "Removidos" do painel) e pode ser reaberto se o trabalho continuar como TCC. O que eles tinham de útil virou frase de limitação ou de trabalho futuro no #133; os códigos do #49 foram para o #70.
+>
+> | Motivo da remoção | Cards |
+> |---|---|
+> | já resolvido no código | #38 (modo de teste sintético), #137 (B_04 já usa só o `train_ref`) |
+> | cita notebooks que não existem mais (A_08, B_06, B_07, notebooks A da coorte provisória) | #25, #35, #74, #129 |
+> | variável fora do modelo | #48 (`tp_pov_ct`), #84 (vacina) |
+> | gatilho vencido ou já coberto por outro card | #111, #138, #145, #49 |
+> | trabalho futuro, agora frase no relatório | #13, #53, #109 |
+> | sem efeito na entrega (cosmético ou ferramenta interna) | #24, #32, #42, #94, #96, #128 |
+>
+> **Restos do desenho de três blocos de validação, corrigidos nos textos dos cards:** #132, #140 e #133 não falam mais em "seis blocos"; o #153 deixou de pedir para apagar o script de troca (ele já não está no repositório), passou a renomear todas as tabelas `*_val_tune.csv` do B_05 e a marcar como histórico as §29.4, §29.16, §29.17, §29.19, §29.21 e §29.22; o #79 ganhou a correção do texto do C_15 que ainda cita 21,9% de óbitos (prevalência da coorte provisória). Nos C_15 e C_16, `val_cal` e `val_meas` são as **duas metades internas do `val_ref`** e continuam com esses nomes.
 
 > [!decisão] Ajuste de 03/11 · versão 3.1: um dia de exploração antes do teste
 > Em 04/11 a equipe se reúne para explorar hiperparâmetros e variáveis derivadas (#155), com orçamento fixo e regra de escolha registrada **antes** de rodar. O **teste passa para 05/11 de manhã** (#2), junto com tudo o que depende dele e da apresentação: resultados por grupo (#55), números do teste no relatório (#133), congelamento (#147) e apresentação (#134). A execução limpa (#126) e os nomes da entrega (#146) ficam em 04/11 à noite, depois da exploração.
@@ -392,20 +424,20 @@ A função de partição foi testada só com dados sintéticos. Ninguém conferi
 - teste: `tests/test_regras_pessoa_a.py` | Os testes rápidos de tests/test_regras_pessoa_a.py passam (os de artefato real são slow e não entram aqui).
 - manual: | A saída de `.\.venv\Scripts\python.exe -m pytest -m slow tests/test_regras_pessoa_a.py -q`, rodada com o artefato real, foi colada como comentário neste card, sem falhas e sem skips das cinco garantias (grupo em um único bloco, 2020–2022 só em test_pandemic, 2026 só em exploracao, prevalência por bloco a no máximo 0,5 p.p. da média, SHA-256 igual ao manifesto).
 
-## #132 · Reexecutar C_11, C_12 e C_14 no artefato 70/15/15 (o C_13 roda no #1)
+## #132 · Regerar o artefato com as 30 variáveis e reexecutar C_11, C_12 e C_14 (o C_13 roda no #1)
 
 - prioridade: P1
 - situação: parcial
 - estratégia: desenvolver
 - marco: M2
 - data ideal: 03/11
-- responsável: Pessoa C (0,75 h)
+- responsável: Pessoa C (1 h)
 - pessoas: C
 - fonte: Revisão de 03/11 (commit 9f3322b): manifesto_supervisionado.json de 03/11 04:20 UTC; 02_fluxo_e_estado §11.4
-- depende de: —
+- depende de: #140
 - tags: Notebook, Partição, Modelagem
 - pilar: Eficiência + Valor científico-acadêmico
-- carga: 0.75
+- carga: 1
 - novo: não
 - professores: não
 - arquivos: notebooks/C/C_11_pipeline_supervisionado.ipynb, notebooks/C/C_12_baseline_logistica.ipynb, notebooks/C/C_14_ablacoes_variaveis.ipynb
@@ -418,36 +450,35 @@ Tudo o que foi calculado em 02/11 continua numericamente válido, mas aponta par
 
 ### ② Problema
 
-> [!atenção] Revisão de 03/11 · versão 3
-> A adaptação de código prevista aqui (C_11 a C_13 nos seis blocos) ficou obsoleta: o desenho virou 70/15/15 e os três notebooks já leem o artefato pelo padrão atual. Sobrou só executar.
-
 - **C_11:** lê `split_partitions` com `expected_kind="final"`, mas está salvo **sem execução** (0 de 6 células).
 - **C_12:** executado em 02/11 sobre o hash antigo (manifesto `C3_baseline_logistica_final_20261102T042124Z` diverge, §11.4 do pacote).
-- **C_14:** o código já lê `("train_ref", "val_ref")`, mas a saída salva mostra `{'train_ref': 556462, 'val_tune': 39748}` e ele grava `ablacoes_val_tune.csv`. As ablações precisam ser refeitas no `val_ref` antes do #140.
+- **Lista de variáveis nova (#140):** o artefato precisa ser regerado para trocar `feature_columns` (30 variáveis, com saturação e desconforto) e guardar os três sintomas como auditoria. As fichas e os blocos não mudam.
+- **C_14:** a saída salva ainda é da validação de 39.748 fichas; depois do #140 ele mede "P + 3 sintomas" e "P − gravidade" no `val_ref` inteiro.
 - O C_13 não entra aqui: ele roda uma vez só, já com o G6 aprovado (#1).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Prazo:** 03/11, 9h às 9h45 · **Esforço:** ≈ 45 min (a maior parte é máquina)
+**Dono:** Pessoa C · **Prazo:** 03/11, 9h45 às 10h45 · **Esforço:** ≈ 1 h (a maior parte é máquina) · **Começa quando:** #140
 
-1. `git pull`. Confira o artefato (deve imprimir `119243`; se não, rode o A_03 antes):
+1. `git pull`. Regere o artefato e confira num comando (esperado: `119243 30 True False`, isto é, val_ref, número de variáveis, saturação dentro e fadiga fora):
 ```powershell
-.\.venv\Scripts\python.exe -c "import json;print(json.load(open('data/analytical/manifesto_supervisionado.json'))['partition_counts']['val_ref'])"
+.\.venv\Scripts\python.exe -c "from pathlib import Path;import json;from src.data.supervised_artifact import gerar_artefato_supervisionado as g;g(Path('.'),cohort_kind='final',exportar_particao=True,overwrite=True);m=json.load(open('data/analytical/manifesto_supervisionado.json',encoding='utf-8'));print(m['partition_counts']['val_ref'],len(m['feature_columns']),'saturacao' in m['feature_columns'],'fadiga' in m['feature_columns'])"
 ```
-2. No C_14, na linha que grava a tabela, troque `ablacoes_val_tune.csv` por `ablacoes_val_ref.csv` (é a única ocorrência).
-3. Execute e salve os três, nesta ordem, num comando:
+2. Execute e salve os três, nesta ordem, num comando:
 ```powershell
-foreach ($n in 'C_11_pipeline_supervisionado','C_12_baseline_logistica','C_14_ablacoes_variaveis') { .\.venv\Scripts\python.exe tools\medir_notebook.py "notebooks\C\$n.ipynb" --salvar-no-lugar; if ($LASTEXITCODE) { break } }
+foreach ($n in 'C_11_pipeline_supervisionado','C_12_baseline_logistica','C_14_ablacoes_variaveis') { .\.venv\Scripts\python.exe tools\medir_notebook.py "notebooks\C\$n.ipynb" --salvar-no-lugar --limite-mb 12288; if ($LASTEXITCODE) { break } }
 ```
-4. Avise a Pessoa A no grupo (o #140 começa às 10h) e faça o commit: `chore: reexecuta C_11, C_12 e C_14 no artefato 70/15/15 [done:#132]`.
+3. No C_14, confira e cole no card: Δ PR-AUC de "P − gravidade" (esperado: negativo, perto de −0,02) e de "P + 3 sintomas" (esperado: perto de zero). Se "P + 3 sintomas" ganhar ≥ 0,005, avise a equipe antes do #1.
+4. Commit: `chore: artefato com 30 variáveis; reexecuta C_11, C_12 e C_14 [done:#132]`. Avise a Pessoa C do #1 (é você mesma) e a Pessoa A.
 
 ### ④ Pronto quando
 
-- notebook-executado: `notebooks/C/C_11_pipeline_supervisionado.ipynb` | O C_11 foi executado do início ao fim no artefato 70/15/15 e salvo com as saídas, sem erro gravado.
-- notebook-executado: `notebooks/C/C_12_baseline_logistica.ipynb` | O C_12 foi reexecutado no artefato 70/15/15 e salvo com as saídas, sem erro gravado.
-- notebook-executado: `notebooks/C/C_14_ablacoes_variaveis.ipynb` | O C_14 foi reexecutado e salvo com as saídas, sem erro gravado.
-- notebook-saida: `notebooks/C/C_14_ablacoes_variaveis.ipynb` :: `'val_ref': 119243` | A saída salva do C_14 mostra a contagem do val_ref (119.243 fichas), prova de que as ablações rodaram na validação nova.
-- contem: `notebooks/C/C_14_ablacoes_variaveis.ipynb` :: `ablacoes_val_ref.csv` | O C_14 grava a tabela com o nome novo, ablacoes_val_ref.csv.
+- json: `data/analytical/manifesto_supervisionado.json` :: `feature_columns` contem `saturacao` | O artefato regerado tem a saturação entre as variáveis do modelo.
+- notebook-executado: `notebooks/C/C_11_pipeline_supervisionado.ipynb` | O C_11 foi executado no artefato novo e salvo com as saídas, sem erro gravado.
+- notebook-executado: `notebooks/C/C_12_baseline_logistica.ipynb` | O C_12 foi reexecutado no artefato novo e salvo, sem erro gravado.
+- notebook-executado: `notebooks/C/C_14_ablacoes_variaveis.ipynb` | O C_14 foi reexecutado e salvo, sem erro gravado.
+- notebook-saida: `notebooks/C/C_14_ablacoes_variaveis.ipynb` :: `P_menos_gravidade` | A saída salva do C_14 mostra a linha sem saturação e desconforto.
+- contem: `notebooks/C/C_14_ablacoes_variaveis.ipynb` :: `ablacoes_val_ref.csv` | O C_14 grava a tabela com o nome novo.
 
 ## #139 · Fase E: EDA descritiva na coorte definitiva (B_06 parte A apontando para coorte_final)
 
@@ -498,17 +529,17 @@ O comparativo com a provisória foi dispensado: a definitiva é subconjunto da p
 - notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `Tipo de coorte: final` | As saídas salvas do B_06 mostram que ele rodou sobre a coorte definitiva (linha "Tipo de coorte: final" impressa no início).
 - notebook-saida: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `coorte_final.parquet` | As saídas do B_06 mostram o caminho data/analytical/coorte_final.parquet como fonte lida.
 
-## #140 · Ponto de decisão: congelar a lista de variáveis com as ablações no val_ref
+## #140 · Aplicar a decisão de variáveis: entram saturação e desconforto respiratório, saem perda de olfato, perda de paladar e fadiga
 
 - prioridade: P1
 - situação: aberta
-- estratégia: documentar
+- estratégia: desenvolver
 - marco: M3
 - data ideal: 03/11
 - responsável: Pessoa A (0,5 h) + Pessoa C (0,25 h)
 - pessoas: A, C
-- fonte: Replanejamento de 26/10; revisão de 03/11 (absorve #54 e #50); saída do C_14 de 02/11
-- depende de: #132
+- fonte: Alinhamento da equipe em 03/11; ablação do C_14 de 02/11; ficha do SIVEP-Gripe (definição de caso e campo 34); orientação de 24/10
+- depende de: —
 - tags: Decisão, Metodologia, Gate
 - pilar: Valor científico-acadêmico
 - carga: 0.75
@@ -517,54 +548,69 @@ O comparativo com a provisória foi dispensado: a definitiva é subconjunto da p
 
 ### ① Para entender
 
-Antes do ajuste fino, a equipe olha os achados exploratórios juntos e decide se alguma variável entra ou sai. Depois do G6 isso fica caro; depois do G9, proibido. Este card absorveu as ablações (#54) e a decisão dos três sintomas vazios em 2019 (#50).
+A lista de variáveis do modelo foi decidida pela equipe em 03/11, antes do ajuste fino:
+
+| Variável | Antes | Agora | Motivo |
+|---|---|---|---|
+| `saturacao`, `desc_resp` | só sensibilidade | **modelo principal** | fazem parte da definição de caso de SRAG hospitalizado e estão no campo 34 da ficha ("Sinais e Sintomas"), junto com febre e tosse; maior ganho das ablações (+0,0195 de PR-AUC) |
+| `perd_olft`, `perd_pala`, `fadiga` | modelo principal | **fora** | campos da era COVID: 99,5% a 99,7% em branco em 2019; marcam o período; retirá-los não custou desempenho |
+
+O modelo passa de 31 para 30 variáveis. A sensibilidade "sem saturação e desconforto" deixa de existir (o C_14 mostra a linha "P − gravidade"), e os três sintomas ficam guardados no artefato só para a linha "P + 3 sintomas". Este card absorveu as ablações (#54) e a decisão dos três sintomas (#50).
 
 ### ② Problema
 
-> [!decisão] Revisão de 03/11 · versão 3
-> As ablações já rodaram em 02/11 (no `val_tune`, 39.748 fichas). O resultado aponta para **não mudar nada**; a reexecução no `val_ref` (#132) só confirma os números no desenho atual.
+> [!decisão] Alinhamento de 03/11 · versão 3.4
+> O professor pediu para estudar os três sintomas e tirar se ficassem "muito determinísticos" (orientação de 24/10). A ablação de 02/11 é o estudo: o critério de desempenho registrado na §29.19 (ROC-AUC de 2019 subir ≥ 0,01) **não** foi atingido, então a retirada é registrada como decisão de **validade** (marcador de período), com a mudança de critério declarada na §29.34.
 
-Resultado de 02/11 (diferença contra a lista atual P, 31 variáveis):
+Resultado de 02/11 (diferença contra a lista anterior P, 31 variáveis; validação de 39.748 fichas):
 
 | Linha | Família | Δ PR-AUC | Δ ROC-AUC |
 |---|---|---|---|
-| Sem os 3 sintomas de 2019 | logística / boosting | −0,0002 / −0,0004 | −0,0003 / −0,0004 |
+| Sem os 3 sintomas | logística / boosting | −0,0002 / −0,0004 | −0,0003 / −0,0004 |
 | Comorbidades recodificadas (`fator_risc`) | logística / boosting | 0,0000 / 0,0000 | 0,0000 / 0,0000 |
 | + gravidade (saturação, desconforto) | logística | +0,0195 | +0,0088 |
 | + contexto (escolaridade, vacina) | logística | +0,0033 | +0,0018 |
 | + região | logística | +0,0033 | +0,0012 |
 
-ROC-AUC de 2019 sem os 3 sintomas: +0,0001 (logística) e +0,0005 (boosting), intervalos pareados que cruzam zero. O efeito **exatamente nulo** da recodificação é suspeito: precisa confirmar que a função mudou alguma célula.
+O que muda no código (o script `aplicar_decisoes_03_11.py --variaveis` faz tudo, com conferência de cada troca):
+- `configs/supervised.yaml`: listas `categoricas` e `final`; `sensibilidade_gravidade_admissao: []`; nova chave `sensibilidade_marcador_periodo`; `sensibilidades.sem_saturacao_desc_resp.ativa: false`; texto do G1.
+- `configs/feature_contract_v1.json`: as mesmas listas.
+- `src/data/supervised_artifact.py`: uma linha para guardar `sensibilidade_marcador_periodo` como coluna de auditoria (senão o C_14 não acha os três sintomas).
+- C_14: "P − 3 sintomas" vira "P + 3 sintomas" e "P + gravidade" vira "P − gravidade"; a tabela passa a se chamar `ablacoes_val_ref.csv`.
+- `docs/decisoes.md`: entrada 29.34 e um aviso nas §13 e §29.19.
+
+O efeito **exatamente nulo** da recodificação continua suspeito e é conferido no passo 1.
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A (conduz e registra) + Pessoa C · **Prazo:** 03/11, 10h às 10h30 · **Começa quando:** #132 (C_14 reexecutado) · **Padrão se não houver consenso: nada muda.**
+**Dono:** Pessoa A (script e registro) + Pessoa C (conferência do `fator_risc`) · **Prazo:** 03/11, 9h às 9h45 · **Começa quando:** já (é o primeiro card do dia: o #132 regera o artefato com a lista nova)
 
-1. **Conferir a recodificação (C, 10 min).** O Δ exatamente zero pode ser real (nenhum branco com `fator_risc = 2`) ou um efeito colateral: a função faz `df.copy(deep=False)` e grava com `.loc`; sem copy-on-write no pandas, isso altera também o quadro original, e a linha P passa a usar as comorbidades já recodificadas. Conte os casos que a regra mudaria:
+1. **Conferir a recodificação (C, 10 min).** O Δ exatamente zero pode ser real (nenhum branco com `fator_risc = 2`) ou efeito colateral de `copy(deep=False)` com `.loc`. Conte os casos que a regra mudaria:
 ```powershell
 .\.venv\Scripts\python.exe -c "from pathlib import Path;import pandas as pd;from src.data.supervised_artifact import load_supervised_artifact as L;df,_=L(Path('.'),expected_kind='final',partitions=('train_ref',));f=df['fator_risc'].astype('string').str.strip().isin(['2','2.0']);print(pd.__version__,{c:int(((df[c].isna())|(df[c].astype('string').str.strip()=='')).__and__(f).sum()) for c in ['cardiopati','diabetes','obesidade','asma','renal','puerpera']})"
 ```
-   - Todas as contagens 0: a recodificação não tem o que mudar nesta coorte. Registre esse motivo (e não "sem ganho").
-   - Contagens > 0: no C_14, troque `recodificar_comorbidades_por_fator_risco(base)` por `recodificar_comorbidades_por_fator_risco(base.copy())`, rode o C_14 de novo (≈ 3 min) e decida com a tabela nova.
-2. **Decidir com a tabela do C_14 reexecutado** (regras registradas antes dos números, §29.18 e §29.19):
-
-| Pergunta | Regra | Decisão esperada |
-|---|---|---|
-| Os 3 sintomas de 2019 saem? | só se a ROC-AUC de 2019 subir ≥ 0,01 sem eles, com IC que exclui zero, nas duas famílias | **manter** |
-| Recodificar as comorbidades? | só se a PR-AUC do boosting subir ≥ 0,005 | **não** (`false`) |
-| Gravidade entra? | não: saturação e desconforto são medidos depois da admissão (vazamento do momento de previsão) | **só relatório** (sensibilidade) |
-| Contexto ou região entram? | ganho ≤ 0,005 e risco de equidade | **só relatório** |
-| Óbitos só no treino (#51) e completude (#52) exigem ação? | só com variável de sentido contrário não explicado pela idade (#91) | **nada** |
-| Agrupamento (#136) sugere variável? | não, se os grupos separarem idade e preenchimento (#60) | **só relatório** |
-
-3. **Registrar (A, 15 min):** nova entrada no `docs/decisoes.md`: `#### 29.34 03/11 · Ponto de decisão: lista de variáveis congelada (#140)` com uma linha por pergunta (decisão, número e motivo). Se nada mudou, o YAML não muda.
-4. Avise a Pessoa C: o #1 começa às 10h30. Commit: `docs: registra o ponto de decisão das variáveis [done:#140]`.
+   Todas 0: a regra não tem o que mudar nesta coorte (é esse o motivo a registrar). Alguma > 0: a recodificação também não entra agora (o ganho medido foi nulo e não há tempo para medir de novo); registre a contagem como limitação.
+2. **Aplicar (A, 10 min).** Salve o `aplicar_decisoes_03_11.py` **fora** do repositório (por exemplo, em Documentos). Na raiz do projeto, simule e confira a lista de arquivos (são 5):
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\aplicar_decisoes_03_11.py --variaveis --simular
+```
+   Se aparecer `PARADO`, nada foi gravado: me mande a linha. Se estiver certo, aplique e rode a suíte rápida num comando:
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\aplicar_decisoes_03_11.py --variaveis; .\.venv\Scripts\python.exe -m pytest -m "not slow" -q
+```
+3. **Completar a §29.34 (A, 5 min).** No fim do `docs/decisoes.md`, troque a frase que começa com "PREENCHER" pelo resultado do passo 1 (contagens e "não adotada").
+4. Commit: `feat: saturação e desconforto no modelo principal; sem os três sintomas da era COVID [done:#140]`. Avise a Pessoa C: o #132 começa já (regera o artefato).
 
 ### ④ Pronto quando
 
-- contem: `docs/decisoes.md` :: `Ponto de decisão: lista de variáveis congelada` | O docs/decisoes.md tem a entrada 29.34 do ponto de decisão, com a decisão e o número de cada linha da tabela (três sintomas, recodificação, gravidade, contexto, região, achados do #51, #52 e #136).
-- yaml: `configs/supervised.yaml` :: `features.final` contem `perd_olft` | A lista final de variáveis continua com os três sintomas de 2019 (ou o registro 29.34 explica a retirada, e este critério é ajustado no mesmo commit).
-- manual: | A Pessoa C confirmou por comentário neste card que a decisão está registrada e que o ajuste fino (#1) pode começar.
+- yaml: `configs/supervised.yaml` :: `features.final` contem `saturacao` | A saturação está no modelo principal.
+- yaml: `configs/supervised.yaml` :: `features.final` contem `desc_resp` | O desconforto respiratório está no modelo principal.
+- yaml: `configs/supervised.yaml` :: `features.final` nao-contem `perd_olft` | A perda de olfato saiu do modelo principal (o mesmo vale para perd_pala e fadiga, retiradas juntas).
+- yaml: `configs/supervised.yaml` :: `sensibilidades.sem_saturacao_desc_resp.ativa` = `false` | A sensibilidade sem saturação e desconforto foi desativada.
+- contem: `src/data/supervised_artifact.py` :: `sensibilidade_marcador_periodo` | O artefato guarda os três sintomas como colunas de auditoria, para a linha "P + 3 sintomas" do C_14.
+- contem: `docs/decisoes.md` :: `Ponto de decisão: lista de variáveis congelada` | O decisoes.md tem a entrada 29.34 com as duas decisões, os números da ablação e a definição de caso.
+- nao-contem: `docs/decisoes.md` :: `PREENCHER com o resultado` | A conferência do fator_risc foi registrada na §29.34.
+- teste: `tests/test_supervised_artifact.py` | Os testes do artefato passam com a lista nova.
 
 ## #72 · Quem é responsável pelos próximos passos (passagem de bastão de 24/10)
 
@@ -751,6 +797,7 @@ Falta definir o que a sensibilidade de ausência vai comparar, já que a categor
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): vacina não está em features.final e ficou proibida na exploração do #155; limitação no #133
 
 ### ① Para entender
 
@@ -1019,16 +1066,21 @@ O `decisoes.md` é o registro que a banca pode ler para entender cada escolha. E
 ### ② Problema
 
 - As entradas 29.34 a 29.37 (#140, G6, G7/G8, G9) ainda não existem; cada card do caminho crítico escreve a sua, e este card confere o conjunto no fim do dia.
-- §29.12, §29.21 e §29.22 citam números da coorte provisória (21,9% de óbitos; Brier 0,196 → 0,141; corte 0,255). Precisam de uma frase "histórico: substituído pela §29.36".
-- Linhas 888 e 964 ainda têm "Responsável pelo registro: Pessoa X" e há uma nota de gestão na linha 969 (regra do pacote: nenhum nome de pessoa).
+- §29.12, §29.21 e §29.22 citam números da coorte provisória (21,9% de óbitos; Brier 0,196 → 0,141; corte 0,255). Precisam de uma frase "histórico: substituído pelas §29.36 e §29.37".
+- Linhas 891 e 967 ainda têm "Responsável pelo registro: Pessoa X" e há uma nota de gestão na linha 969 (regra do pacote: nenhum nome de pessoa).
 - A §21 e a §23 (rastros do 70/5+5+5/15) ficam no #153, porque precisam do texto novo.
+
+> [!atenção] Revisão de 03/11 · versão 3.3: dois textos do decisoes.md prometem ou citam o que não existe (a §29.7 é corrigida pelo #137)
+> - **§7 (sazonalidade):** diz que `sin_semana` e `cos_semana` "serão testadas na linha P + sazonalidade da tabela de ablações". O C_14 não tem essa linha.
+> - **§29.24 (fator de risco):** cita `notebooks/A/A_15_fator_risco.ipynb`, que sai do pacote no #152.
 
 ### ③ O que fazer
 
 **Dono:** Pessoa A · **Prazo:** 03/11, 16h30; conferência final em 05/11, 10h (depois do #2) · **Começa quando:** #153
 
-1. No início da §29.12, da §29.21 e da §29.22, acrescente uma linha: `> Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão na §29.36.`
-2. Apague "Responsável pelo registro: …" (linhas 888 e 964) e a nota de gestão da linha 969.
+1. No início da §29.12, da §29.21 e da §29.22, acrescente uma linha: `> Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão nas §29.36 e §29.37.`
+2. Apague "Responsável pelo registro: …" (linhas 891 e 967) e a nota de gestão da linha 969.
+2b. **§7:** troque "Serão testadas na linha \"P + sazonalidade\" da tabela de ablações (#54). Se a PR-AUC subir pelo menos 0,005, vira achado da Discussão: a sazonalidade carrega informação de onda epidêmica; o modelo principal continua o do G1." por "Não foram testadas: a sazonalidade fica como limitação declarada no relatório." **§29.24:** na linha da verificação, troque o caminho do notebook por "verificação exploratória feita num notebook auxiliar (retirado do pacote; histórico no Git)" e apague "(Pessoa A)".
 3. Em 05/11, confira que as entradas 29.34 a 29.38 (ponto de decisão, G6, G7/G8, exploração do #155 e G9) existem, em ordem, e que cada número citado bate com a saída salva do notebook correspondente.
 4. Commit: `docs: decisoes.md coerente com o desenho final [done:#73]`.
 
@@ -1038,7 +1090,9 @@ O `decisoes.md` é o registro que a banca pode ler para entender cada escolha. E
 - contem: `docs/decisoes.md` :: `29.37` | A entrada da exploração de hiperparâmetros (#155) existe.
 - contem: `docs/decisoes.md` :: `29.38` | A entrada da abertura do teste (#2) existe.
 - nao-contem: `docs/decisoes.md` :: `Responsável pelo registro` | O decisoes.md não tem mais linhas com nome de pessoa responsável.
-- contem: `docs/decisoes.md` :: `os valores finais estão na §29.36` | As entradas com números da coorte provisória estão marcadas como histórico.
+- contem: `docs/decisoes.md` :: `os valores finais estão nas §29.36 e §29.37` | As entradas com números da coorte provisória estão marcadas como histórico.
+- nao-contem: `docs/decisoes.md` :: `P + sazonalidade` | A §7 não promete mais uma ablação de sazonalidade que não foi feita.
+- nao-contem: `docs/decisoes.md` :: `A_15_fator_risco` | O decisoes.md não cita mais o notebook auxiliar retirado do pacote.
 
 ## #6 · Corrigir a chamada de criar_alvo_binario no B_07 (vai quebrar na coorte definitiva)
 
@@ -1822,6 +1876,7 @@ O YAML tem itens desatualizados ou sem uso: `decision_tree` e `random_forest` co
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.3): resolvido; o modo SRAG_NOTEBOOK_SMOKE saiu do B_05 (antigo B_07); sobrou só um import sem uso de GroupShuffleSplit, sem efeito
 
 ### ① Para entender
 
@@ -3142,6 +3197,7 @@ Geografia nunca foi testada como variável.
 - carga: —
 - novo: sim
 - professores: sim
+- removido: removido na revisão de 03/11 (v3.2): o desempenho por ano do Teste B (#2 e #55) já mostra 2019 contra 2023–2025
 
 ### ① Para entender
 
@@ -3176,6 +3232,7 @@ Não bloqueia nada; é exploração para a Discussão.
 - carga: —
 - novo: sim
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): o gatilho (01/11, medido em val_meas como bloco) passou e não foi acionado; o modelo é avaliado na coorte inteira
 
 ### ① Para entender
 
@@ -3206,7 +3263,7 @@ Continua despriorizado. **Gatilho revisado:** acionar só se, em 01/11 (#79), o 
 - responsável: Pessoa C (2 h) + Pessoa A (0,25 h)
 - pessoas: C, A
 - fonte: §29.17 (plano do G6); revisão de 03/11 (absorve #78)
-- depende de: #140
+- depende de: #132
 - tags: Modelagem, Gate, Tuning
 - pilar: Performance + Valor científico-acadêmico
 - carga: 2.25
@@ -3227,7 +3284,7 @@ Situação no código: o C_13 só busca com `gates.G6_finalistas_tuning.status =
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C (A aprova o G6 com ela) · **Prazo:** 03/11, 10h30 às 13h30 (inclui máquina) · **Começa quando:** #140
+**Dono:** Pessoa C (A aprova o G6 com ela) · **Prazo:** 03/11, 10h45 às 13h45 (inclui máquina) · **Começa quando:** #132 (artefato com as 30 variáveis)
 
 1. **Aprovar o G6 (A e C, 5 min).** Em `configs/supervised.yaml`, no bloco `G6_finalistas_tuning`: `status: aprovado`, `aprovado_por: Pessoa A e Pessoa C`, `data: "2026-11-03"`.
 2. **Rodar a busca (C):**
@@ -3572,14 +3629,17 @@ Os três documentos tratam `saturacao`, `desc_resp` e `vacina` de formas diferen
 
 ### ③ O que fazer
 
+> [!decisão] Atualizado em 03/11
+> A decisão mudou: saturação e desconforto respiratório entraram no modelo principal (#140, §29.34). Os critérios do ④ foram atualizados para o estado novo; o card continua concluído.
+
 > [!decisão] Enxugado em 27/10 (eficiência primeiro)
 > Feito dentro do **#73** (Pessoa A). Marque como concluído junto com ele.
 
 ### ④ Pronto quando
 
-- yaml: `configs/supervised.yaml` :: `features.sensibilidade_gravidade_admissao` contem `saturacao` | Saturação fica só na sensibilidade de gravidade na admissão (fora do modelo principal).
-- yaml: `configs/supervised.yaml` :: `features.final` nao-contem `saturacao` | Saturação não está nas 31 features do modelo principal.
-- nao-contem: `docs/decisoes.md` :: `Modelo A: núcleo clínico de admissão` | O docs/decisoes.md deixou de colocar saturação no "Modelo A" e passou a dizer o mesmo que o YAML (§11, §13, §17 alinhadas no pacote do #73).
+- yaml: `configs/supervised.yaml` :: `features.final` contem `saturacao` | Atualizado em 03/11 (#140): saturação e desconforto respiratório estão no modelo principal, e os documentos dizem o mesmo (§13 e §29.34).
+- yaml: `configs/supervised.yaml` :: `sensibilidades.sem_saturacao_desc_resp.ativa` = `false` | A sensibilidade sem as duas variáveis foi desativada.
+- nao-contem: `docs/decisoes.md` :: `Modelo A: núcleo clínico de admissão` | O docs/decisoes.md deixou de colocar saturação no "Modelo A" e passou a dizer o mesmo que o YAML.
 
 ## #13 · A sazonalidade é criada, mas não entra no modelo
 
@@ -3597,6 +3657,7 @@ Os três documentos tratam `saturacao`, `desc_resp` e `vacina` de formas diferen
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.3): a sazonalidade fica fora do modelo; a frase de limitação está no #133 e o parágrafo da §7 que promete uma ablação de sazonalidade (não feita) é corrigido no #73
 
 ### ① Para entender
 
@@ -3878,6 +3939,7 @@ As comorbidades estão mais preenchidas nos óbitos (diferença de 13 a 21 ponto
 - carga: —
 - novo: sim
 - professores: não
+- removido: removido na revisão de 03/11 (v3.3): sugestão de um professor, não obrigatória; o agrupamento usa PCA; UMAP vira trabalho futuro no #133 e tem resposta pronta no #134
 
 ### ① Para entender
 
@@ -3961,6 +4023,7 @@ Hoje o `G9_holdout` está `pendente`, com `executado_em: null` e `n_acessos: 0`.
 ```
    Se falhar **antes** da célula de abertura, corrija e rode de novo. Se falhar **depois**, não rode de novo: avise a equipe, anote a falha num comentário e siga a guarda do notebook (reabertura só com `SRAG_ALLOW_TEST_REOPEN=1` e registro no decisoes.md).
 4. **Conferir (A e C, 30 min):** a tabela de janelas tem Teste A, Teste B e 2020–2022 com n = 119.245, 3.035.074 e 2.915.829; prevalências perto de 8,4%, 25,5% e 26,4%; o finalista e o limiar impressos são os do YAML; o YAML ficou com `G9_holdout.status: executado` e `n_acessos: 1`.
+4b. **Depois da abertura, não rode o A_03 (nem `gerar_artefato_supervisionado`):** ele regrava o manifesto do artefato e apaga o registro `test_opened`. Rode o comando do #156 (caminhos locais) no C_16 salvo.
 5. Registre `#### 29.38 05/11 · G9: teste aberto uma vez` no decisoes.md (data e hora UTC, commit, as três linhas da tabela de janelas). Commit: `feat: teste aberto uma vez no C_16 [done:#2]`.
 
 ### ④ Pronto quando
@@ -4051,7 +4114,7 @@ Este card absorveu o G8 (#80), o peso de classe (#5) e o aviso de "a mesma valid
 
 1. **Finalista errado:** a célula 12 escolhe o "melhor" por `max(resultados, key=lambda n: resultados[n]["limiar"]["auc"])`, ignorando `selecao_modelos.finalista_escolhido`.
 2. **Regra do G8 não aplicada:** a chamada de `escolher_limiar` passa só `min_precision`; a regra decidida (§29.22: maior precisão com sensibilidade ≥ 0,80) precisa de `min_recall`. `escolher_limiar` já aceita esse argumento; `recall_minimo` **não** é uma métrica válida da função (use `precision` + `min_recall`).
-3. **Números antigos nos títulos:** "sigmoid" e "0,255 pelo F1" eram da coorte provisória; a última execução (02/11, definitiva, sem ajuste fino) deu 0,206.
+3. **Texto de outra coorte no próprio C_15:** o Markdown da célula 7 diz que o peso de classe infla as probabilidades para "~42–43% vs 21,9% reais"; 21,9% era a prevalência da coorte provisória (a definitiva tem 8,4%). A célula 12 imprime "finalista sugerido (maior AUC em val_meas)", que deixa de ser verdade com a correção 1.
 
 ### ③ O que fazer
 
@@ -4065,6 +4128,7 @@ melhor_nome = C.cfg("selecao_modelos", "finalista_escolhido")
 if melhor_nome not in resultados:
     raise RuntimeError(f"Finalista {melhor_nome!r} do YAML não foi calibrado neste notebook.")
 ```
+3b. **C_15, Markdown da célula 7:** troque a frase com "~42–43% vs 21,9% reais" por "O `class_weight="balanced"` desloca as probabilidades brutas para cima da prevalência real (8,4% na coorte definitiva); a calibração em `val_cal` corrige." Na célula 12, troque o texto `finalista sugerido (maior AUC em val_meas)` por `finalista congelado no YAML`.
 4. Execute: `.\.venv\Scripts\python.exe tools\medir_notebook.py notebooks\C\C_15_calibracao_limiar.ipynb --salvar-no-lugar`
 5. **Decidir (regras registradas antes dos números):**
    - **Peso de classe (#5):** na tabela de comparação, `balanced` só fica se a PR-AUC subir ≥ 0,005 **e** o Brier calibrado não piorar; senão `class_weight: null` no finalista. Se mudar, ajuste o YAML e **rode o C_15 de novo** (o calibrador depende do modelo).
@@ -4388,6 +4452,7 @@ A banca precisa conseguir entender a estrutura e, em tese, reproduzir os resulta
 ### ② Problema
 
 - **README desatualizado:** descreve notebooks que não existem (`02_eda/…`, `C1_smoke_test` a `C6_validacao_final`, `_provisorio_construcao_coorte_b`) e diz que a partição é "aleatória estratificada… 70/15/15… não corresponde a uma separação cronológica", sem o Teste B nem a pandemia.
+- **O A_03 republica e regera por padrão:** `GERAR_CANDIDATA`, `PUBLICAR` e `GERAR_ARTEFATO` estão `True`. Rodá-lo copia a coorte por cima (com `.bak`) e regrava o artefato supervisionado. É determinístico, mas qualquer notebook C rodado **antes** dele fica com o hash antigo; por isso ele roda primeiro, e nunca depois do teste (#2).
 - **Notebooks desatualizados (§11.5 do pacote):** B_04 executado em 27/10 e B_05 em 30/10, antes de mudanças em `src/`; B_02, A_03, 00 e 01 sem execução salva.
 - **Dependência faltando:** o C_11 importa `cloudpickle`, que não está no `requirements.txt` nem no `pyproject.toml`.
 - **Não executar o C_16 aqui:** ele roda uma vez só, em 05/11 (#2), depois desta execução limpa.
@@ -4397,7 +4462,8 @@ A banca precisa conseguir entender a estrutura e, em tese, reproduzir os resulta
 **Dono:** Pessoa C (execução) + Pessoa B (README) · **Prazo:** 04/11, 19h às 22h · **Começa quando:** #155 (modelo final congelado), #152 e #153 (e depois do #146, se ele for feito)
 
 1. **Dependência (C, 2 min):** acrescente `cloudpickle` ao `requirements.txt` e às dependências do `pyproject.toml`.
-2. **Execução (C):** com os nomes finais do #146 (ou os atuais, se ele for cortado), rode em ordem, cada um com `tools\medir_notebook.py <arquivo> --salvar-no-lugar`: coorte (A_03, só conferência; não republica se nada mudou), EDA primeira passagem (B_02), EDA temporal e agrupamento (B_04), pilotos (B_05), pipeline, baseline, ablações, boosting e calibração (C_11, C_12, C_14, C_13, C_15). **Não rode o C_16, o 00 nem o 01** (o 00 e o 01 baixam dados: deixe sem saídas e explique no README). Anote tempo e pico de memória (o medidor grava em `outputs/final/performance_notebooks.csv`).
+2. **Execução (C):** com os nomes finais do #146 (ou os atuais, se ele for cortado), rode em ordem, cada um com `tools\medir_notebook.py <arquivo> --salvar-no-lugar --limite-mb 12288` (o limite padrão de 6 GB devolve código 2 e interromperia a sequência): coorte (A_03, **primeiro**, com os interruptores como estão; ao terminar, confira que `dataset_sha256` em `data/analytical/manifesto_supervisionado.json` é o mesmo de antes: se mudou, siga normalmente, porque todos os C rodam depois), EDA primeira passagem (B_02), EDA temporal e agrupamento (B_04), pilotos (B_05), pipeline, baseline, ablações, boosting e calibração (C_11, C_12, C_14, C_13, C_15). **Não rode o C_16, o 00 nem o 01** (o 00 e o 01 baixam dados: deixe sem saídas e explique no README). Anote tempo e pico de memória (o medidor grava em `outputs/final/performance_notebooks.csv`).
+2b. **Caminhos locais (C, 2 min):** logo depois da execução, rode o comando do #156.
 3. **README (B, 1 h 30), seções curtas:** objetivo e pergunta; dados (SIVEP-Gripe, dados-v2, coorte definitiva 3.884.728); desenho (70/15/15 por grupo, Teste A, Teste B, 2020–2022 isolado, 2026 fora); estrutura de pastas real; ordem de execução dos notebooks (a lista do #146, com o que cada um lê e grava, tirada da §10 do pacote de referência); como instalar (`python -m venv .venv`, `pip install -e .`), como rodar os testes (`pytest -m "not slow"`); onde estão as decisões (`docs/decisoes.md`) e os resultados (`outputs/tables`); limitações em três linhas. Nenhum nome de pessoa nem número de card.
 4. Commit: `docs: README da entrega e execução limpa da cadeia [done:#126]`.
 
@@ -4768,15 +4834,16 @@ O relatório e o README precisam de uma tabela que diga, para cada variável do 
 ### ② Problema
 
 > [!decisão] Revisão de 03/11 · versão 3 · escopo reduzido
-> Em vez de atualizar o dicionário inteiro da base (199 colunas), o card entrega só as 31 variáveis de `features.final` (mais o alvo e as colunas de auditoria), que é o que a banca precisa.
+> Em vez de atualizar o dicionário inteiro da base (199 colunas), o card entrega só as 30 variáveis de `features.final` (lista do #140) (mais o alvo e as colunas de auditoria), que é o que a banca precisa.
 
 ### ③ O que fazer
 
 **Dono:** Pessoa A · **Prazo:** 04/11 · **Começa quando:** #140
 
-1. Gere a lista a partir do YAML (`features.final`, `target.coluna`, `audit_columns` do manifesto do artefato).
-2. Crie `docs/dicionario_variaveis.md` com uma linha por variável: nome, descrição no SIVEP-Gripe, tipo (numérica/categórica), códigos, tratamento (branco, 9 = ignorado, recodificação) e motivo de entrar.
-3. Cite o arquivo no README (#126) e no relatório (#133). Se existir `configs/dicionario_variaveis_v1.csv` citado no README e não existir no repositório, tire a citação. Commit: `docs: dicionário das variáveis do modelo [done:#70]`.
+1. **Fonte:** o dicionário completo já existe em `configs/dicionario_variaveis_v1.csv` (68 KB, usado pelo B_04). Filtre as linhas das variáveis do modelo; não escreva descrições do zero. Gere a lista a partir do YAML (`features.final`, `target.coluna`, `audit_columns` do manifesto do artefato).
+2. Confirme no dicionário oficial do SIVEP-Gripe os dois códigos que ficaram em aberto (do #49): `ave_suino` = 3 (outro animal) e `cs_raca` = 5 (indígena).
+3. Crie `docs/dicionario_variaveis.md` com uma linha por variável: nome, descrição no SIVEP-Gripe, tipo (numérica/categórica), códigos, tratamento (branco, 9 = ignorado, recodificação) e motivo de entrar.
+4. Cite o arquivo no README (#126) e no relatório (#133). Se existir `configs/dicionario_variaveis_v1.csv` citado no README e não existir no repositório, tire a citação. Commit: `docs: dicionário das variáveis do modelo [done:#70]`.
 
 ### ④ Pronto quando
 
@@ -4862,7 +4929,10 @@ O relatório é a peça que a banca lê. Ele precisa contar uma história curta 
 > [!decisão] Revisão de 03/11 · versão 3
 > Seis cards pequenos eram só parágrafos deste relatório e foram absorvidos: âncora e quem ficou de fora (#56, §29.23), cuidados de redação (#71, §29.20), vacina marcada antes de existir (#45), 58 linhas com 29 números repetidos (#46, §29.10), idades e datas impossíveis (#47) e a diferença entre o plano v2 e a orientação e o desenho final (#69).
 
-O desenho mudou duas vezes (seis blocos → 70/15/15; provisória → definitiva). O texto precisa descrever **só o desenho final**, com uma frase de histórico nas limitações.
+O texto descreve **só o desenho final** (70/15/15 e coorte definitiva); versões intermediárias não entram no relatório.
+
+> [!decisão] Revisão de 03/11 · versão 3.2
+> Os cards pós-entrega foram removidos (o projeto termina em 05/11). O que eles tinham de útil para a banca virou uma frase de **Limitações** ou de **Trabalhos futuros** neste card (lista no ③).
 
 ### ③ O que fazer
 
@@ -4875,7 +4945,8 @@ O desenho mudou duas vezes (seis blocos → 70/15/15; provisória → definitiva
 | Introdução e pergunta | revisão (#112) | B |
 | Dados e coorte (âncora em `dt_interna`, exclusões em cascata, quem ficou de fora; #45, #46, #47 como qualidade dos dados) | `final_cohort_v1.yaml`, `outputs/coorte_candidata/manifesto_coorte.json`, §29.10 e §29.23 | A |
 | Desenho: 70/15/15 por grupo, Teste A, Teste B e 2020–2022, 2026 fora, teste aberto uma vez | `manifesto_particao.json`, §21, §22, §29.33 e §29.37 | A |
-| Exploração e agrupamento (clusters refletem idade e preenchimento) | B_04, §29.7 | B |
+| Variáveis do modelo (30; entram saturação e desconforto, saem os três sintomas da era COVID) | §29.34, C_14 | A |
+| Exploração e agrupamento (clusters refletem idade e preenchimento; perfil por qui-quadrado e ANOVA) | B_04, §29.7, #137 | B |
 | Modelos e ajuste (G6 e exploração de 04/11), peso de classe, calibração (G7), limiar (G8) | C_13, C_15, §29.35 a §29.37 | C |
 | Resultados: tabela das três janelas, por ano, por região e faixa etária, falsos negativos | `C6_*_janelas.csv`, #55 | A |
 | Importância das variáveis | #91 | C |
@@ -4888,6 +4959,17 @@ O desenho mudou duas vezes (seis blocos → 70/15/15; provisória → definitiva
 - **Limitação do desenho:** "A seleção de variáveis e de hiperparâmetros e a calibração e a escolha do limiar usaram a mesma validação (`val_ref`), em metades disjuntas para calibrar e medir. Por isso as métricas de validação são otimistas; as estimativas de referência são as do teste, aberto uma única vez."
 
 **Rastreabilidade:** cada tabela e cada número no texto tem, em nota ou legenda, o arquivo de origem (`outputs/tables/...`). Em 05/11 às 14h, A e C conferem cada número contra o arquivo (lista no comentário do card).
+
+**Limitações e trabalhos futuros (uma frase cada; vieram dos cards removidos em 03/11):**
+- A sazonalidade (semana do ano em seno e cosseno) é calculada, mas não entra no modelo principal.
+- A checagem automática de vazamento compara nomes de colunas com a lista proibida; a proteção principal é o contrato de variáveis congelado e a revisão da temporalidade de cada variável.
+- 2026 é ano parcial, com desfechos pendentes: fica fora do desenvolvimento e do teste. Aplicar o modelo congelado a 2026 é trabalho futuro.
+- O agrupamento usa PCA; UMAP é trabalho futuro.
+- Saturação e desconforto respiratório fazem parte da definição de caso, mas a ficha não registra a hora da medição.
+- Perda de olfato, perda de paladar e fadiga saíram do modelo por serem campos da era COVID (marcador de período); a linha "P + 3 sintomas" do C_14 mostra que não faziam falta.
+- Vacinação não entra no modelo, porque não há regra confiável para saber quais doses são anteriores à internação.
+
+**Texto que só pode ser escrito depois da reexecução:** o parágrafo de desempenho por padrão de preenchimento do B_05 (célula 52) ainda cita a validação de 39.748 fichas, e os números do agrupamento do B_04 mudam com a lista nova de variáveis; reescreva os dois com a execução limpa (#126).
 
 ### ④ Pronto quando
 
@@ -4930,8 +5012,10 @@ A banca deve perguntar justamente sobre os pontos que mudaram nesta reta final. 
 - Por que 70/15/15, e não validação cruzada? (base grande; divisão por grupo evita a mesma pessoa em dois blocos; referências do #112)
 - A mesma validação escolhe e mede? (sim, em metades disjuntas para calibrar e medir; a medida honesta é o teste, aberto uma vez)
 - Por que 2020–2022 só no teste? (robustez a mudança de período, sem interpretação causal)
-- Por que não usar saturação? (medida depois da admissão: vazaria o momento de previsão)
-- O que mudou da coorte provisória para a definitiva? (regras de exclusão aprovadas; 21,9% → 8,4% de óbitos; só a definitiva é usada)
+- Saturação e desconforto respiratório não vazam informação do futuro? (fazem parte da definição de caso de SRAG hospitalizado e estão no campo 34 da ficha, "Sinais e Sintomas", junto com febre e tosse; limitação: a ficha não registra a hora da medição)
+- Por que tirar perda de olfato, perda de paladar e fadiga? (são campos da era COVID: 99,7% em branco em 2019; marcavam o período, e tirá-los não custou desempenho; o professor pediu para estudar antes de tirar, e a ablação é esse estudo)
+- Se alguém citar números de versões intermediárias (por exemplo, 21,9% de óbitos): eram de uma coorte preliminar, substituída pela definitiva com as regras de exclusão aprovadas (8,4% de óbitos); só a definitiva é usada.
+- Por que PCA e não UMAP no agrupamento? (um professor sugeriu UMAP; os grupos encontrados refletem idade e padrão de preenchimento, e o perfil por qui-quadrado e ANOVA já mostra isso; UMAP fica como trabalho futuro)
 - O modelo é justo entre regiões? (tabela do #55)
 
 A e C revisam o roteiro (15 min cada) e cada pessoa ensaia a sua parte uma vez.
@@ -5159,71 +5243,64 @@ Função e teste no `src`, rótulos das duas técnicas, perfil em CSV e o dendro
 - existe: `outputs/final/perfil_clusters_hca.csv` | O perfil estatístico dos grupos do HCA está em outputs/final/perfil_clusters_hca.csv.
 - manual: | As duas frases do relatório (variáveis de maior efeito; grupos descrevem preenchimento e idade, não perfis clínicos) e o corte do dendrograma estão escritos no notebook e comentados no #140.
 
-## #137 · Perfil estatístico dos grupos: qui-quadrado e ANOVA (e óbito × cura só no treino)
+## #137 · ANOVA no perfil dos grupos do agrupamento (pedido do professor), com Kruskal-Wallis como conferência
 
-- prioridade: P4
+- prioridade: P2
 - situação: aberta
-- estratégia: despriorizar
-- marco: Pós-entrega
-- data ideal: Após 05/11
-- responsável: Pessoa A (dona; revisão cruzada sem edição concorrente)
-- pessoas: A
-- fonte: Orientação de 24/10 (recomendação de ANOVA e qui-quadrado); base de conhecimento v9 §8.3
-- depende de: #136, #142
-- tags: Não supervisionado, Estatística, Código
+- estratégia: desenvolver
+- marco: M3
+- data ideal: 03/11
+- responsável: Pessoa B (0,5 h)
+- pessoas: B
+- fonte: Orientação de 24/10 (ANOVA para numéricas, qui-quadrado para qualitativas); B_04 no commit 863dd45; alinhamento de 03/11
+- depende de: —
+- tags: Não supervisionado, Estatística, Notebook
 - pilar: Valor científico-acadêmico
-- carga: 4
-- novo: sim
+- carga: 0.5
+- novo: não
 - professores: sim
-- arquivos: src/evaluation/cluster_profile.py, tests/test_cluster_profile.py
+- arquivos: notebooks/B/B_04_eda_temporal_clustering.ipynb
 
 ### ① Para entender
 
-Depois de formar grupos, é preciso dizer **em que eles diferem**. O professor sugeriu testes estatísticos clássicos.
+Na orientação de 24/10, o professor pediu para descrever em que os grupos do agrupamento diferem: **ANOVA** para as variáveis numéricas (idade, dias até a internação) e **qui-quadrado** para as qualitativas.
 
-| Teste | Para que tipo de variável | Pergunta que responde | Tamanho do efeito (o que ler) |
-|---|---|---|---|
-| **Qui-quadrado** | Qualitativa (sexo, sintoma sim/não/ignorado/branco) | A distribuição da variável é a mesma em todos os grupos? | **V de Cramér**: 0 = nenhuma associação; 0,1 pequena; 0,3 média; 0,5 grande |
-| **ANOVA** | Numérica (idade, dias até internar) | A média é a mesma em todos os grupos? | **eta²**: % da variação explicada pelo grupo; 0,01 pequeno; 0,06 médio; 0,14 grande |
-| **Kruskal-Wallis** | Numérica com distribuição torta | Versão sem suposição de normalidade da ANOVA (compara medianas e postos) | Mesmo eta² ou épsilon² |
+| Teste | Para | Tamanho do efeito |
+|---|---|---|
+| Qui-quadrado | qualitativas | V de Cramér (0,1 pequeno; 0,3 médio; 0,5 grande) |
+| ANOVA de um fator | numéricas | η² (0,01 pequeno; 0,06 médio; 0,14 grande) |
+| Kruskal-Wallis | numéricas, conferência | η² por postos (não supõe normalidade) |
 
-> [!atenção] Com milhares de linhas, quase tudo é "significativo"
-> Com 80 mil fichas, até diferenças minúsculas dão p < 0,001. Por isso o que se lê é o **tamanho do efeito** (V de Cramér, eta²), não o p. Também se corrige o p para muitos testes (Benjamini-Hochberg).
-
-A mesma função serve para comparar **óbito × cura** no treino, o que substitui as tabelas de desfecho do B_06, que usaram a coorte inteira (#51).
+Com 80 mil fichas, quase todo p-valor sai abaixo de 0,05: a leitura é pelo tamanho do efeito.
 
 ### ② Problema
 
-> [!decisão] Revisão de 03/11 · versão 3
-> Despriorizado em 03/11: o agrupamento já está concluído e documentado (#136, #60); o perfil estatístico dos grupos não muda nenhuma decisão.
+> [!decisão] Reaberto em 03/11 · versão 3.4
+> O card tinha sido removido como "resolvido" porque o B_04 já tem o qui-quadrado. Mas a ANOVA, que o professor citou nominalmente, não existe: as numéricas usam só Kruskal-Wallis. São 20 minutos para responder ao pedido como foi feito.
 
-Os grupos do agrupamento foram descritos só com médias e figuras, sem teste do que realmente difere entre eles. E as tabelas de óbito × cura do B_06 usaram a coorte inteira, incluindo casos que hoje são teste.
+No B_04, a função `ns_perfil_grupos` (célula `agrupamento-02`) calcula qui-quadrado com V de Cramér e Kruskal-Wallis. O script acrescenta a ANOVA (`f_oneway` e η²), mantém o Kruskal-Wallis em colunas de conferência e preserva os nomes das colunas antigas, então as células seguintes funcionam sem mudança. A §29.7 do `decisoes.md` passa a dizer o que o código faz.
+
+Como o modelo agora tem saturação e desconforto e não tem os três sintomas (#140), o agrupamento do B_04 (que usa as variáveis do manifesto) também muda um pouco: os números novos saem na execução limpa (#126).
 
 ### ③ O que fazer
 
-> [!decisão] Replanejamento de 27/10: exploração completa antes do treino
-> Tudo o que pode mudar variáveis, representação, alvo ou leitura do modelo roda **antes do ajuste fino (G6)**: primeiro a exploração sem modelo, depois o diagnóstico com o piloto padrão no `val_tune`, depois o ponto de decisão (#140, 30/10, manhã). Só então ajuste, calibração, limiar e teste.
+**Dono:** Pessoa B · **Prazo:** 03/11, 11h45 às 12h15 · **Começa quando:** já (não depende de nenhum card; pode rodar antes ou depois do #140)
 
-**Dono:** Pessoa A · **Prazo:** função e uso 1 em 28/10 (quarta, tarde); uso 2 (clusters) em 29/10 (quinta) · **Esforço estimado:** ≈ 4 h · **Revisão:** Pessoa C (função) · Pessoa B (leitura, 31/10)
-
-#### Passo a passo
-1. Crie `src/evaluation/cluster_profile.py` com `perfil_estatistico(df, coluna_grupo, numericas, categoricas, min_esperado=5) -> pd.DataFrame`. Uma linha por variável: `variavel`, `tipo`, `teste`, `estatistica`, `p`, `p_ajustado` (Benjamini-Hochberg), `efeito` (V de Cramér ou eta²), `leitura` (pequeno, médio, grande), resumo por grupo (proporções para qualitativas; média e mediana para numéricas) e `observacao`.
-2. Use `scipy.stats.chi2_contingency` (sobre `pd.crosstab`), `scipy.stats.f_oneway` e `scipy.stats.kruskal`. V de Cramér = √(χ² ÷ (n × (min(linhas, colunas) − 1))). eta² = soma de quadrados entre grupos ÷ soma total.
-3. Categorias com esperado menor que 5: juntar em "outras" ou sinalizar em `observacao`. Vazio é categoria própria (`AUSENTE`), nunca descartado.
-4. Testes em `tests/test_cluster_profile.py`: variável independente do grupo → V ≈ 0; variável igual ao grupo → V ≈ 1; numérica com médias muito diferentes → eta² alto.
-5. **Uso 1 (28/10): óbito × cura no `train_ref`** (filtre por `partitions_master.parquet` do #142). Complementa o #51 com tamanho de efeito. Salve `outputs/final/perfil_desfecho_train_ref.csv`. Comente no #140 as cinco variáveis com maior efeito e qualquer resultado estranho (efeito enorme numa variável sem sentido clínico pode ser erro de dado).
-6. **Uso 2 (29/10): clusters** com os rótulos do #136 (antiga e nova representação). Salve `outputs/final/perfil_clusters_*.csv` e comente no #140.
-7. Ordene cada tabela pelo efeito e escreva três frases por uso.
-
-#### Pronto quando
-Função testada no `src` e os CSVs dos dois usos gerados, com os comentários no #140.
+1. Na raiz do projeto, com o mesmo script do #140 (salvo fora do repositório), simule e aplique:
+```powershell
+.\.venv\Scripts\python.exe C:\caminho\aplicar_decisoes_03_11.py --anova --simular; .\.venv\Scripts\python.exe C:\caminho\aplicar_decisoes_03_11.py --anova
+```
+   Ele edita só a célula `agrupamento-02` do B_04 (a saída dela fica vazia até a execução limpa) e a frase da §29.7.
+2. **Não** execute o B_04 agora (leva tempo): ele roda na execução limpa (#126).
+3. Commit: `feat: ANOVA no perfil dos grupos do agrupamento [done:#137]`. Se o #140 foi aplicado ao mesmo tempo por outra pessoa, faça `git pull` antes: os dois mexem no `docs/decisoes.md` em linhas diferentes.
+4. Depois do #126, leve para o relatório (#133) a tabela das 10 variáveis de maior efeito, com V de Cramér ou η².
 
 ### ④ Pronto quando
 
-- define: `src/evaluation/cluster_profile.py` :: `perfil_estatistico` | A função perfil_estatistico existe em src/evaluation/cluster_profile.py, com qui-quadrado, ANOVA e Kruskal-Wallis, p ajustado (Benjamini-Hochberg) e tamanho do efeito (V de Cramér ou eta²).
-- teste: `tests/test_cluster_profile.py` | Os testes do perfil estatístico passam (variável independente → V ≈ 0; variável igual ao grupo → V ≈ 1; médias muito diferentes → eta² alto).
-- existe: `outputs/final/perfil_desfecho_train_ref.csv` | O perfil óbito × cura no train_ref está em outputs/final/perfil_desfecho_train_ref.csv.
-- manual: | Os perfis dos clusters (outputs/final/perfil_clusters_*.csv) foram gerados e os comentários dos dois usos estão no #140.
+- contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `f_oneway` | O B_04 calcula a ANOVA de um fator no perfil dos grupos.
+- contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `eta2_ANOVA` | O perfil registra o η² da ANOVA como tamanho do efeito das numéricas.
+- contem: `docs/decisoes.md` :: `ANOVA (η²)` | A §29.7 descreve o que o código faz (qui-quadrado e ANOVA, com Kruskal-Wallis como conferência).
+- manual: | Depois da execução limpa (#126), a tabela das variáveis de maior efeito está no relatório.
 
 ## #112 · Revisão bibliográfica dirigida: SIVEP-Gripe, teste temporal e separação treino/validação/teste
 
@@ -5278,6 +5355,7 @@ Cada referência precisa ser conferida no texto completo antes de citar um núme
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): guias e base de conhecimento são internos; o README da entrega está no #126
 
 ### ① Para entender
 
@@ -5359,6 +5437,7 @@ Alterações feitas depois da geração não aparecem; buffers não salvos nunca
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): 2026 está fora do protocolo (exploracao_2026.ativa: false); trabalho futuro no #133
 
 ### ① Para entender
 
@@ -5442,6 +5521,7 @@ O YAML ativa uma sensibilidade com indicadores de ausência (prefixo `missingind
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): não afeta a entrega; o C_15 usa uma só função de curva de calibração (curva_confiabilidade)
 
 ### ① Para entender
 
@@ -5487,6 +5567,7 @@ Acrescentar o parâmetro `strategy` (`"uniform"` ou `"quantile"`), repassado a `
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): a frase de limitação está no #133; o notebook A_08 citado não existe mais
 
 ### ① Para entender
 
@@ -5563,6 +5644,7 @@ O arquivo aponta para `data/raw/`, mas o `storage` lê o Parquet de `data/proces
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): docstrings sem efeito nos resultados; o dt_notific restante está no código legado do #154
 
 ### ① Para entender
 
@@ -5641,6 +5723,7 @@ Na revisão anterior, `normalization.py` estava vazio, e `sexo_categoria` e `ano
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.3): resolvido; os antigos B_06 e B_07 viraram B_04 e B_05, e ambos já usam o src (montar_features, build_preprocessor e os construtores de pipeline)
 
 ### ① Para entender
 
@@ -5773,6 +5856,7 @@ Escolher um padrão (por exemplo, `provisional` e `final` para valores internos,
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): cosmético, sem efeito na entrega
 
 ### ① Para entender
 
@@ -5862,6 +5946,7 @@ Remover o salvamento do `preprocessor.joblib` (ou passar a usá-lo). No B_06, tr
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): tp_pov_ct não é variável do modelo
 
 ### ① Para entender
 
@@ -5902,6 +5987,7 @@ Investigar e decidir se o campo é tratado como ausente nesses casos. Registrar 
 - carga: —
 - novo: não
 - professores: não
+- removido: absorvido pelo #70 em 03/11 (v3.2): os dois códigos são confirmados no dicionário das variáveis do modelo
 
 ### ① Para entender
 
@@ -5946,7 +6032,7 @@ Conferir no dicionário oficial do SIVEP-Gripe e registrar a confirmação no di
 - carga: 2
 - novo: não
 - professores: não
-- removido: absorvido pelo #140 em 03/11 (decisão dos três sintomas de 2019)
+- removido: absorvido pelo #140 em 03/11: os três sintomas saíram do modelo por decisão de validade (§29.34)
 
 ### ① Para entender
 
@@ -6082,6 +6168,7 @@ Corrigir o texto e salvar o arquivo em UTF-8.
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.4): sem objeto; saturação e desconforto entraram no modelo principal (§29.34)
 
 ### ① Para entender
 
@@ -6271,6 +6358,7 @@ Pós-entrega. O A_14 é histórico; a tabela de candidatos oficial é a do tunin
 - carga: —
 - novo: não
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): defeito da ferramenta do painel, não do projeto entregue
 
 ### ① Para entender
 
@@ -6338,6 +6426,7 @@ def _instante(texto: str) -> dt.datetime:
 - carga: —
 - novo: sim
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): avisos de depreciação sem efeito nos resultados
 
 ### ① Para entender
 
@@ -6375,6 +6464,7 @@ Despriorizado: corrigir só após a entrega, com teste da Pessoa A.
 - carga: —
 - novo: sim
 - professores: não
+- removido: removido na revisão de 03/11 (v3.2): os notebooks A e o construtor da coorte provisória citados não existem mais
 
 ### ① Para entender
 
@@ -7484,6 +7574,7 @@ if __name__ == "__main__":
 - novo: sim
 - professores: não
 - arquivos: tools/medir_notebook.py, outputs/final/performance_notebooks.csv
+- removido: removido na revisão de 03/11 (v3.2): picos já reduzidos em 01/11; o medidor do #126 registra tempo e memória da execução limpa
 
 ### ① Para entender
 
@@ -7597,6 +7688,8 @@ A banca lê os notebooks na ordem dos nomes. Hoje os nomes misturam letras de pe
 $m = [ordered]@{'A/A_03_coorte_protocolo'='02_coorte_definitiva';'B/B_02_eda_primeira_passagem'='03_eda_primeira_passagem';'B/B_04_eda_temporal_clustering'='04_eda_temporal_agrupamento';'B/B_05_supervisionado_pilotos'='05_supervisionado_pilotos';'C/C_11_pipeline_supervisionado'='06_pipeline_supervisionado';'C/C_12_baseline_logistica'='07_baseline_logistica';'C/C_14_ablacoes_variaveis'='08_ablacoes_variaveis';'C/C_13_boosting'='09_ajuste_fino';'C/C_15_calibracao_limiar'='10_calibracao_limiar';'C/C_16_validacao_final'='11_validacao_final'}; foreach ($k in $m.Keys) { git mv "notebooks/$k.ipynb" "notebooks/$($m[$k]).ipynb" }
 ```
 2. Atualize as referências aos nomes antigos: `git grep -n -E "A_03|B_02|B_04|B_05|C_1[1-6]" -- README.md docs src tests configs notebooks` e troque pelo nome novo (as entradas históricas do decisoes.md ficam, com uma nota de mapeamento no fim da §25).
+2b. **Títulos e mensagens:** os títulos ainda dizem `# C2 — Pipeline Supervisionado` … `# C6 — Validação Final`, há mensagens "Execute o Notebook 03" (C_11 e `src/data/supervised_artifact.py`), "O B_07 exige…" (B_05) e "Notebook 01" (B_02). Troque pelo número e nome novos (`# 06 · Pipeline supervisionado` etc.; "Execute o notebook 02_coorte_definitiva").
+   **Não renomeie** os prefixos dos arquivos de saída (`C3_baseline_logistica_*`, `C4_boosting_*`, `C5_calibracao_limiar_*`, `C6_validacao_final_*`) nem os nomes de execução em `Run(modelo=...)`: o C_16 localiza o manifesto do C_15 e a guarda contra reabertura pelo prefixo. No README, uma linha explica o mapeamento.
 3. No Markdown dos notebooks, apague "Pessoa A/B/C" e "(#NN)" que aparecerem no `git grep -n -E "Pessoa [ABC]|\(#[0-9]{2,3}\)" -- notebooks`.
 4. Rode `pytest -m "not slow" -q` (há testes que citam caminhos de notebook) e o `server.py validar` (os ④ do painel citam caminhos antigos: atualize os dos cards abertos). Commit: `chore: notebooks numerados na ordem de execução [done:#146]`.
 
@@ -7616,7 +7709,7 @@ $m = [ordered]@{'A/A_03_coorte_protocolo'='02_coorte_definitiva';'B/B_02_eda_pri
 - responsável: Pessoa A (0,75 h)
 - pessoas: A
 - fonte: Revisão de 03/11 (absorve #149 e #130)
-- depende de: #2, #126, #133
+- depende de: #2, #126, #133, #156, #157
 - tags: Entrega, Reprodutibilidade
 - pilar: Eficiência + Documentação
 - carga: 0.75
@@ -7638,10 +7731,10 @@ Se a entrega for o link do GitHub, o que estiver no `main` naquela hora é o que
 
 1. `git pull`; `git status` limpo. Um comando para o resumo:
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; .\.venv\Scripts\python.exe .srag-status-local\server.py validar; git grep -n -E "Pessoa [ABC]|\(#[0-9]{2,3}\)" -- notebooks src tests configs README.md
+.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; .\.venv\Scripts\python.exe .srag-status-local\server.py validar; git grep -n -E "Pessoa [ABC]|\(#[0-9]{2,3}\)" -- notebooks src tests configs README.md; git grep -n -I -i -E "olivem85|OneDrive - " -- notebooks docs README.md resultados
 ```
 2. Regerar a referência (fecha o antigo #130): `.\.venv\Scripts\python.exe tools\update_project_reference.py --run-tests --pytest-args="-m 'not slow'"`.
-3. Pacote: crie o `.gitattributes` com `export-ignore` para `.srag-status-local/**`, `PROJECT_STATUS.md`, `PROJECT_STATUS_TEXT.md`, `docs/PROJECT_COMPLETE_REFERENCE.txt`, `docs/project_reference_md/**`, `tools/update_project_reference.py`, `tools/clean_project.py` e `.gitattributes`. Gere o zip: `git archive -o entrega_srag.zip HEAD`. Se a entrega for o link, crie o branch `entrega` a partir do `main` e apague nele esses mesmos arquivos.
+3. Pacote: crie o `.gitattributes` com `export-ignore` para `.srag-status-local/**`, `PROJECT_STATUS.md`, `PROJECT_STATUS_TEXT.md`, `docs/PROJECT_COMPLETE_REFERENCE.txt`, `docs/project_reference_md/**`, `tools/update_project_reference.py`, `tools/clean_project.py`, `tools/read_outputs.py` e `tools/perfil_celulas.py` (ferramentas internas; usam `python-docx` e `jupyter_client`, fora das dependências) e `.gitattributes`. Gere o zip: `git archive -o entrega_srag.zip HEAD`. Se a entrega for o link, crie o branch `entrega` a partir do `main` e apague nele esses mesmos arquivos.
 4. Tag: `git tag entrega-2026-11-05; git push --tags`. Commit final: `chore: pacote da entrega [done:#147]`.
 
 ### ④ Pronto quando
@@ -8123,11 +8216,11 @@ Varredura do commit `9f3322b` (fora de outputs, do painel e das entradas histór
 | `docs/decisoes.md` §21 | diz "A divisão 70/15/15 foi supersedida", a linha do `val_ref` ficou "Sim; Somente confirmação", o parágrafo "Atualizado em 27/10 (#118)" descreve três validações e o texto fala em "cinco blocos compartilhados" | reescrever (texto abaixo) |
 | `docs/decisoes.md` §23 | a proposta do G8 diz "escolhido em `val_cal`… medidos em `val_meas`" | reescrever (texto abaixo) |
 | `data/manifest_dados-v2.yaml` linhas 38 a 40 | lista `val_tune`, `val_cal` e `val_meas` | trocar pelas duas linhas `- "train_ref"` e `- "val_ref"` (o conteúdo não é lido por código; só o caminho) |
-| `notebooks/B/B_05_supervisionado_pilotos.ipynb` | variável e arquivo `predicoes_val_tune_piloto` (30 linhas) e saídas salvas com os seis blocos | renomear para `predicoes_val_ref_piloto` e reexecutar no #126 |
+| `notebooks/B/B_05_supervisionado_pilotos.ipynb` | variável `predicoes_val_tune_piloto`, chaves `val_tune_fase_e_*` e cinco tabelas `*_val_tune.csv` (o código já filtra `val_ref`; só os nomes ficaram) e saídas salvas da validação de 39.748 fichas | renomear para `val_ref` e reexecutar no #126; o texto da célula 52 (números de 39.748 fichas) é reescrito no #133 depois da reexecução |
 | `notebooks/B/B_02_eda_primeira_passagem.ipynb` | texto `"val_tune_para_decisao; "` numa tabela de papéis | trocar por `"val_ref_para_decisao; "` |
 | `notebooks/C/C_15` e `C_16` | `val_cal` e `val_meas` são as **metades internas** do `val_ref` | ficam; o Markdown do C_15 ganha a frase abaixo |
-| `tools/trocar_validacao_70_15_15.py` | ferramenta de uso único | apagar |
-| `.docx` da base de conhecimento e da orientação | descrevem os seis blocos | não entram no pacote; o relatório (#133) descreve o desenho atual |
+| `docs/decisoes.md` §29.4, §29.16, §29.17, §29.19, §29.21 e §29.22 | entradas históricas escritas para os três blocos de validação | ficam como histórico, com uma linha de aviso no início de cada uma |
+| `.docx` da base de conhecimento e da orientação | descrevem os três blocos de validação | não entram no pacote; o relatório (#133) descreve o desenho atual |
 
 ### ③ O que fazer
 
@@ -8143,8 +8236,9 @@ Varredura do commit `9f3322b` (fora de outputs, do painel e das entradas histór
 2. **§23.** Troque o parágrafo "Proposta do G8 (card #80, 27/10)…" por: "Decisão do G8 (§29.36): o corte principal é o de maior precisão entre os que têm sensibilidade de pelo menos 0,80, escolhido na metade `val_meas` do `val_ref`, com as probabilidades calibradas na metade `val_cal`. Cortes de referência, só para mostrar: sensibilidade de pelo menos 0,70, F1 máximo e Youden."
 3. **Arquivos** (num comando; o `-replace` só troca os nomes listados):
 ```powershell
-(Get-Content data\manifest_dados-v2.yaml -Raw -Encoding UTF8) -replace '(?m)^(\s*)- "val_tune"\r?\n\s*- "val_cal"\r?\n\s*- "val_meas"', '$1- "val_ref"' | Set-Content data\manifest_dados-v2.yaml -Encoding UTF8 -NoNewline; foreach ($f in 'notebooks\B\B_05_supervisionado_pilotos.ipynb','notebooks\B\B_02_eda_primeira_passagem.ipynb') { (Get-Content $f -Raw -Encoding UTF8) -replace 'predicoes_val_tune_piloto','predicoes_val_ref_piloto' -replace 'caminho_predicoes_val_tune','caminho_predicoes_val_ref' -replace 'val_tune_para_decisao','val_ref_para_decisao' | Set-Content $f -Encoding UTF8 -NoNewline }; git rm -q tools/trocar_validacao_70_15_15.py
+(Get-Content data\manifest_dados-v2.yaml -Raw -Encoding UTF8) -replace '(?m)^(\s*)- "val_tune"\r?\n\s*- "val_cal"\r?\n\s*- "val_meas"', '$1- "val_ref"' | Set-Content data\manifest_dados-v2.yaml -Encoding UTF8 -NoNewline; foreach ($f in 'notebooks\B\B_05_supervisionado_pilotos.ipynb','notebooks\B\B_02_eda_primeira_passagem.ipynb') { (Get-Content $f -Raw -Encoding UTF8) -replace 'predicoes_val_tune_piloto','predicoes_val_ref_piloto' -replace 'caminho_predicoes_val_tune','caminho_predicoes_val_ref' -replace 'val_tune_fase_e','val_ref_fase_e' -replace '_val_tune\.csv','_val_ref.csv' -replace 'val_tune_para_decisao','val_ref_para_decisao' | Set-Content $f -Encoding UTF8 -NoNewline }
 ```
+3b. **Entradas históricas do decisoes.md:** logo abaixo dos títulos §29.4, §29.16, §29.17, §29.19, §29.21 e §29.22, acrescente a linha `> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.`
 4. **C_15, primeira célula de Markdown:** troque "Se `HONEST_CALIB_SPLIT = True`, a validação é dividida em `val_cal` (ajusta calibrador) e `val_meas` (mede Brier, escolhe limiar)" por "A validação (`val_ref`) é dividida em duas metades estratificadas: `val_cal` ajusta o calibrador e `val_meas` mede o Brier e escolhe o limiar (§29.33)".
 5. Confira: `git grep -n -E "val_tune|val_cal|val_meas|70/5|5\+5\+5|seis blocos" -- . ':!docs/decisoes.md' ':!PROJECT_STATUS*' ':!.srag-status-local' ':!notebooks/C/C_15_calibracao_limiar.ipynb' ':!notebooks/C/C_16_validacao_final.ipynb'` só pode listar saídas salvas do B_05 (somem na reexecução do #126).
 6. Commit: `docs: remove os rastros do desenho 70/5+5+5/15 [done:#153]`.
@@ -8156,19 +8250,20 @@ Varredura do commit `9f3322b` (fora de outputs, do painel e das entradas histór
 - nao-contem: `docs/decisoes.md` :: `as três validações são disjuntas` | O parágrafo das três validações saiu da §21.
 - nao-contem: `data/manifest_dados-v2.yaml` :: `val_tune` | O manifesto dos dados lista só train_ref e val_ref no desenvolvimento.
 - nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `predicoes_val_tune_piloto` | O B_05 usa o nome novo das previsões do piloto.
-- nao-existe: `tools/trocar_validacao_70_15_15.py` | A ferramenta de uso único saiu do repositório.
+- nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `completude_val_tune.csv` | As tabelas de preenchimento do B_05 usam o nome novo.
+- contem: `docs/decisoes.md` :: `escrita para o desenho anterior, com três blocos de validação` | As entradas históricas da §29 têm o aviso de que o desenho vigente é o da §29.33.
 
 ## #154 · Remover o código legado da coorte provisória: fluxo A e esquema treino/validacao/teste
 
 - prioridade: P3
 - situação: aberta
 - estratégia: despriorizar
-- marco: Pós-entrega
-- data ideal: Após 05/11
+- marco: M6
+- data ideal: 04/11
 - responsável: Pessoa C (1,5 h) + Pessoa A (0,5 h)
 - pessoas: C, A
 - fonte: Revisão de 03/11; §29.26 e §29.32 ("mantido de propósito")
-- depende de: #2
+- depende de: #152, #153
 - tags: Limpeza, Código
 - pilar: Eficiência
 - carga: 2
@@ -8182,7 +8277,8 @@ Dois pedaços de código só existem por causa da coorte provisória: o esquema 
 
 ### ② Problema
 
-Removê-los mexe em dezenas de testes (`tests/test_supervised_artifact.py`, `tests/test_regras_pessoa_a.py`) e em funções usadas pelos testes de invariantes do protocolo. Fazer isso na véspera da entrega troca risco por estética: fica para depois de 05/11, ou para a manhã de 04/11 só se tudo do caminho crítico estiver pronto.
+Removê-los mexe em dezenas de testes (`tests/test_supervised_artifact.py`, `tests/test_regras_pessoa_a.py`) e em funções usadas pelos testes de invariantes do protocolo. > [!decisão] Revisão de 03/11 · versão 3.2
+> O projeto termina em 05/11, então "depois da entrega" não existe. Este card só é feito se #152 e #153 estiverem prontos **antes** da execução limpa (#126, 04/11, 19h) e com o pytest verde; senão, fica como está e o README cita o módulo como legado. Fazer isso na véspera da entrega troca risco por estética: fica para depois de 05/11, ou para a manhã de 04/11 só se tudo do caminho crítico estiver pronto.
 
 ### ③ O que fazer
 
@@ -8221,7 +8317,7 @@ O risco é escolher "o que deu mais sorte" na validação. Por isso o card tem t
 
 ### ② Problema
 
-**Ponto de partida (para comparar):** a melhor configuração de cada família do #1, com PR-AUC, ROC-AUC e Brier no `val_ref`. Referência de 02/11 (sem ajuste fino, validação inteira): logística PR-AUC ≈ 0,303 e ROC-AUC ≈ 0,848; boosting PR-AUC ≈ 0,335 e ROC-AUC ≈ 0,860; prevalência 8,4%.
+**Ponto de partida (para comparar):** a melhor configuração de cada família do #1, com PR-AUC, ROC-AUC e Brier no `val_ref`, já com as 30 variáveis do #140. Referência antiga (02/11, lista de 31 variáveis, sem ajuste fino): logística PR-AUC ≈ 0,303 e ROC-AUC ≈ 0,848; boosting PR-AUC ≈ 0,335 e ROC-AUC ≈ 0,860; prevalência 8,4%. Com saturação e desconforto, espere a logística perto de 0,32.
 
 **Por que não testar direto no `val_ref`:** cada configuração medida no `val_ref` gasta um pouco da sua honestidade, e ele ainda vai servir para calibrar e escolher o limiar. Com 50 a 100 configurações, o "melhor" no `val_ref` fica otimista. A solução simples é separar um **recorte interno do treino** (`train_ref` dividido por grupo em 85% para ajustar e 15% para comparar) e levar ao `val_ref` só as 3 melhores de cada frente.
 
@@ -8237,7 +8333,7 @@ O risco é escolher "o que deu mais sorte" na validação. Por isso o card tem t
 - **Orçamento:** no máximo **40 configurações por frente** na pré-seleção, com sorteio de semente fixa (`random_state=42`). Nada de "só mais uma".
 - **Confirmação:** as **3 melhores de cada frente** vão ao `val_ref`, com a mesma semente.
 - **Regra de troca:** uma configuração nova só substitui a do #1 se ganhar **≥ 0,005 de PR-AUC no `val_ref`** e **não piorar a ROC-AUC em mais de 0,002**; se duas empatarem dentro de 0,002, fica a mais simples. Mudança de família (logística ↔ boosting) segue a regra da §29.17 (boosting só vence com ≥ 0,005).
-- **Proibido:** olhar ou carregar `test_ref` e `test_pandemic`; usar `saturacao` ou `desc_resp` (vazamento do momento de previsão); usar o alvo em qualquer variável derivada.
+- **Proibido:** olhar ou carregar `test_ref` e `test_pandemic`; usar o alvo em qualquer variável derivada.
 
 #### 1. Recorte interno do treino (C, 9h15, 10 min; os três usam o mesmo)
 ```python
@@ -8288,8 +8384,9 @@ Variáveis simples, calculadas só com o que existe na internação, sem usar o 
 | `faixa_etaria_10` | idade em faixas de 10 anos | alternativa ao spline para o boosting |
 | `idoso_com_comorbidade` | idade ≥ 60 e `n_comorbidades` ≥ 1 | grupo de risco clássico |
 | `sintomas_respiratorios` | dispneia, tosse e garganta somados | separa quadro respiratório de quadro geral |
+| `sinal_gravidade` | saturação < 95% **ou** desconforto respiratório = 1 | resume os dois sinais da definição de caso numa variável |
 
-Para cada variável: modelo de referência **com** e **sem** ela, no recorte interno (2 famílias × 6 variáveis = 12 ajustes) e uma rodada com **todas juntas**. Só vai para o `val_ref` o que ganhar ≥ 0,002 no recorte. Se alguma entrar no modelo final, a função vai para `src/features/engineering.py` com teste, e o artefato **não** precisa ser regerado (as colunas são derivadas na hora).
+Para cada variável: modelo de referência **com** e **sem** ela, no recorte interno (2 famílias × 7 variáveis = 14 ajustes) e uma rodada com **todas juntas**. Só vai para o `val_ref` o que ganhar ≥ 0,002 no recorte. Se alguma entrar no modelo final, a função vai para `src/features/engineering.py` com teste, e o artefato **não** precisa ser regerado (as colunas são derivadas na hora).
 
 #### 5. Confirmação e escolha (15h às 16h, todos)
 - Cada frente traz as suas 3 melhores; a Pessoa C roda as 9 no `val_ref` (mesma semente) e grava `outputs/final/exploracao_04_11.csv`: frente, configuração, PR-AUC e ROC-AUC no recorte interno e no `val_ref`, Brier bruto, segundos de ajuste.
@@ -8311,7 +8408,7 @@ foreach ($n in 'C_13_boosting','C_15_calibracao_limiar') { .\.venv\Scripts\pytho
 - Média das probabilidades da logística e do boosting (ensemble simples), avaliada no recorte interno.
 
 #### Não testar agora
-Mudar a coorte ou a partição; reamostragem (SMOTE ou subamostragem da classe majoritária: estragam a calibração); variáveis do momento depois da internação; qualquer coisa que exija regerar o artefato.
+Mudar a coorte ou a partição; `vacina` e `vacina_cov` (sem regra de doses anteriores à internação); reamostragem (SMOTE ou subamostragem da classe majoritária: estragam a calibração); variáveis do momento depois da internação; qualquer coisa que exija regerar o artefato.
 
 ### ④ Pronto quando
 
@@ -8320,3 +8417,84 @@ Mudar a coorte ou a partição; reamostragem (SMOTE ou subamostragem da classe m
 - yaml: `configs/supervised.yaml` :: `selecao_modelos.finalista_escolhido` != `null` | O finalista final está congelado no YAML depois da exploração.
 - notebook-executado: `notebooks/C/C_15_calibracao_limiar.ipynb` | O C_15 foi executado de novo com o modelo final, para que calibração e limiar correspondam a ele.
 - manual: | Ninguém carregou test_ref nem test_pandemic durante a exploração (o G9 só foi aprovado em 05/11, no #2); cada pessoa confirmou por comentário neste card.
+
+## #156 · Tirar caminhos locais (pasta do usuário e da empresa) das saídas salvas dos notebooks
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M7
+- data ideal: 04/11
+- responsável: Pessoa C (0,25 h)
+- pessoas: C
+- fonte: Revisão dos notebooks de 03/11 (v3.3): 165 caminhos absolutos nas saídas de B_02, B_04, B_05, C_12, C_13 e C_15
+- depende de: —
+- tags: Notebook, Entrega, Privacidade
+- pilar: Documentação
+- carga: 0.25
+- novo: sim
+- professores: não
+
+### ① Para entender
+
+Os notebooks imprimem caminhos como `C:\Users\<usuário>\OneDrive - <empresa>\Documents\GitHub\Projeto_Integrador\outputs\…` (em "Run registrado em", "fonte", "Gravado:" etc.). O pacote de referência mascara isso como `<REPO>` e `<HOME>`, mas **os arquivos .ipynb reais guardam o caminho completo**, com o nome do usuário e da empresa. A banca veria isso em qualquer notebook aberto no GitHub.
+
+### ② Problema
+
+Contagem nas saídas salvas do commit `863dd45`: B_02 37, B_04 58, B_05 18, C_12 16, C_13 16, C_15 17, `acesso_verificacao_srag` 3. A reexecução do #126 e a do C_16 (#2) gravam tudo de novo, então a limpeza é feita **depois** de cada execução, e não antes. O comando abaixo troca a raiz do repositório por `.` e a pasta do usuário por `~`, sem mexer em código nem em números, e preserva as quebras de linha do arquivo.
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Quando:** em 04/11, logo depois da execução limpa (#126); em 05/11, logo depois do C_16 (#2) · **Esforço:** 2 min por vez
+
+1. Na raiz do repositório, um comando (limpa e já confere; a conferência no fim deve sair vazia):
+```powershell
+.\.venv\Scripts\python.exe -c "import pathlib,functools;R=str(pathlib.Path.cwd());H=str(pathlib.Path.home());S=[(v.replace('\\',e),k) for v,k in ((R,'.'),(H,'~')) for e in ('\\\\\\\\','\\\\','\\')];m=[p for p in pathlib.Path('notebooks').rglob('*.ipynb') if (lambda t0:(lambda t:t!=t0 and p.write_bytes(t.encode('utf-8'))>0)(functools.reduce(lambda a,s:a.replace(*s),S,t0)))(p.read_bytes().decode('utf-8'))];print(len(m),'notebook(s) sem caminhos locais')"; git grep -n -I -i -E "olivem85|OneDrive - |C:.{1,4}Users" -- notebooks
+```
+2. Se o `git grep` listar alguma linha, ela é um formato que o comando não cobriu: troque à mão no notebook (abra, apague a saída da célula e rode a célula de novo) ou me mande a linha.
+3. Commit junto com o da execução: `chore: remove caminhos locais das saídas dos notebooks [done:#156]` (o `[done]` só no de 05/11).
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `OneDrive - ` | O B_04 não mostra mais a pasta local nas saídas.
+- nao-contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `OneDrive - ` | O C_15 não mostra mais a pasta local nas saídas.
+- manual: | O git grep por olivem85 e "OneDrive - " em notebooks ficou vazio depois da execução limpa e depois do C_16.
+
+## #157 · Pôr os resultados finais no pacote: tabelas e figuras citadas no relatório (outputs/ é ignorado pelo Git)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M8
+- data ideal: 05/11
+- responsável: Pessoa A (0,5 h)
+- pessoas: A
+- fonte: Revisão do repositório de 03/11 (v3.3): .gitignore ignora outputs/*, reports/figures/* e data/analytical/*
+- depende de: #2, #55, #91
+- tags: Entrega, Reprodutibilidade, Relatório
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: não
+
+### ① Para entender
+
+O relatório cita cada número com o arquivo de origem (`outputs/tables/...`). Mas o `.gitignore` ignora `outputs/*`, `outputs/tables/*`, `outputs/predictions/*`, `reports/figures/*` e `data/analytical/*`: **nenhuma tabela, figura ou manifesto de resultado entra no repositório**, nem no zip do `git archive`. A banca só veria os números dentro das saídas salvas dos notebooks.
+
+### ② Problema
+
+Os dados (coorte, artefato e previsões linha a linha) **não** devem ir: são grandes e são dados de pacientes, ainda que públicos e anonimizados. Vão só as tabelas agregadas, as figuras e os manifestos (hashes, contagens), que permitem conferir o que o relatório diz.
+
+### ③ O que fazer
+
+**Dono:** Pessoa A · **Prazo:** 05/11, 14h às 14h30 (depois do #2, #55 e #91; antes do #147)
+
+1. Crie a pasta `resultados/` e copie para ela, sem renomear, só o que o relatório cita: a tabela de janelas e as tabelas por ano, grupo e calibração do C_16 (`C6_*_janelas.csv`, `*_metricas_por_ano.csv`, `*_por_grupo_*.csv`, `*_ic_bootstrap.csv`, `*_matriz_confusao.csv`), a tabela de escolhas do C_15 (`C5_*_escolhas.csv`), a busca do C_13 e o `exploracao_04_11.csv` (#155), a tabela de ablações (`ablacoes_val_ref.csv`), as tabelas do #55 e do #91, os manifestos `C5_*_manifesto.json` e `C6_*_manifesto.json`, `data/analytical/manifesto_particao.json`, `manifesto_supervisionado.json` e `coorte_final.manifest.json`, e as figuras que entram no relatório (`reports/figures/...`).
+2. **Nada de `.parquet`** (previsões linha a linha e dados ficam de fora). Rode nesta pasta o comando de caminhos locais do #156 adaptado (troque `notebooks` por `resultados` e `*.ipynb` por `*.json`) e confira com `git grep -n -i olivem85 -- resultados`.
+3. Escreva `resultados/LEIA-ME.md`: uma linha por arquivo dizendo qual notebook o gerou e em que seção do relatório aparece.
+4. `git add resultados` (a pasta não é ignorada). No relatório (#133), troque as legendas `outputs/tables/...` por `resultados/...`. Commit: `docs: resultados finais no pacote [done:#157]`.
+
+### ④ Pronto quando
+
+- existe: `resultados/LEIA-ME.md` | A pasta de resultados do pacote tem o índice dos arquivos.
+- manual: | Todas as tabelas e figuras citadas no relatório estão em resultados/, nenhum .parquet entrou e as legendas do relatório apontam para resultados/.

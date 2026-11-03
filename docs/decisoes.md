@@ -445,6 +445,8 @@ permanecem semanticamente distintas.
 
 ## 13. Saturação e desconforto respiratório
 
+> Atualizado em 03/11 (§29.34): `saturacao` e `desc_resp` passaram ao modelo principal. O texto abaixo é o registro anterior.
+
 Saturação abaixo de 95% (`saturacao`) e desconforto respiratório
 (`desc_resp`) são sinais fortes de gravidade, mas a ficha não registra
 quando foram anotados: podem ser da admissão ou do pior momento da
@@ -1107,7 +1109,7 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
 ### 29.7 24/10 · Não supervisionado
 
 - **Decisão:** one-hot dos quatro estados (#136) e perfil dos grupos por
-  qui-quadrado/ANOVA (#137).
+  qui-quadrado (V de Cramér) e ANOVA (η²), com Kruskal-Wallis como conferência, no B_04 (#137).
 - **Detalhes:** fichas #136 e #137.
 
 ### 29.8 24/10 · Geografia como separação da análise (#110)
@@ -1367,6 +1369,8 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   alvo_qualquer_obito). Alinhar o YAML ao que será rodado.
 
 ### 29.19 27/10 · Três sintomas vazios em 2019 (#50): critério registrado antes dos números
+
+> Atualizado em 03/11 (§29.34): os três sintomas saíram do modelo por decisão de validade (marcador de período), e não pelo critério de desempenho abaixo.
 
 - **Problema:** `perd_olft`, `perd_pala` e `fadiga` só existem na ficha a partir
   da COVID-19. Em 2019 vêm quase sempre em branco (cerca de 99,7%, 99,7% e
@@ -1672,3 +1676,35 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Limitação:** a seleção de variáveis e de hiperparâmetros (C_12 a C_14) e a calibração e a escolha do limiar (C_15) usam o mesmo bloco `val_ref`: não há bloco exclusivo para calibrar e escolher o limiar. Mitigação: o C_15 divide `val_ref` em duas metades disjuntas (`val_cal` ajusta o calibrador; `val_meas` mede o Brier e escolhe o limiar) e o teste segue fechado até o G9.
 - **Efeito:** a partição-mestra e o artefato supervisionado precisam ser regerados, e os resultados do B_05 e do C_11 ao C_16 precisam ser reexecutados antes de serem citados.
 - **Registro anterior:** as entradas acima descrevem o desenho 70/5+5+5/15 e foram mantidas como histórico, sem alteração.
+
+#### 29.34 03/11 · Ponto de decisão: lista de variáveis congelada
+
+- **Decisão:** o modelo principal passa a ter 30 variáveis. Entram `saturacao` e
+  `desc_resp`; saem `perd_olft`, `perd_pala` e `fadiga`. Contexto (escolaridade,
+  vacina) e região continuam fora do modelo.
+- **Saturação e desconforto respiratório:** fazem parte da definição de caso de
+  SRAG hospitalizado (síndrome gripal com dispneia ou desconforto respiratório,
+  ou saturação de O2 abaixo de 95% em ar ambiente) e são registradas no campo 34
+  da ficha do SIVEP-Gripe, "Sinais e Sintomas", junto com febre e tosse: são
+  sinais que classificam o caso na chegada ao hospital. Na ablação de 02/11
+  (logística, validação de 39.748 fichas), acrescentá-las elevou a PR-AUC em
+  0,0195 e a ROC-AUC em 0,0088, o maior ganho entre as ablações. Limitação
+  mantida: a ficha não registra a hora da medição.
+- **Três sintomas (perda de olfato, perda de paladar e fadiga):** os campos
+  passam a ser preenchidos com a pandemia; em 2019 ficam em branco em 99,5% a
+  99,7% das fichas (19% a 32% em 2023 a 2025) e funcionam como marcador de
+  período. Retirá-los custou −0,0002 (logística) e −0,0004 (boosting) de PR-AUC
+  na ablação de 02/11; a ROC-AUC de 2019 sem eles variou +0,0001 e +0,0005, com
+  intervalos que cruzam zero. A retirada é uma decisão de validade, e não de
+  desempenho: o critério de desempenho da §29.19 não foi atingido, e a mudança
+  de critério fica registrada aqui. As três colunas ficam no artefato
+  (`features.sensibilidade_marcador_periodo`) só para a linha "P + 3 sintomas"
+  do C_14.
+- **Recodificação das comorbidades por `fator_risc`:** PREENCHER com o resultado
+  da conferência (contagem de brancos com `fator_risc` = 2) e a decisão.
+- **Sensibilidade "sem saturação e desconforto":** desativada
+  (`sensibilidades.sem_saturacao_desc_resp.ativa: false`); a linha
+  "P − gravidade" do C_14 mostra o efeito de retirá-las.
+- **Impacto:** o artefato supervisionado é regerado (mesmas fichas e blocos;
+  `feature_columns` e hash novos) e os notebooks de modelagem e de agrupamento
+  são reexecutados. Substitui, nestes pontos, as §13, §29.2, §29.14 e §29.19.

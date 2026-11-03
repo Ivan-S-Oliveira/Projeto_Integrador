@@ -501,7 +501,8 @@ def _colunas_auditoria_extras(
 
     ``fator_risc`` (indicador agregado de fatores de risco),
     ``features.contexto_incremental`` e
-    ``features.sensibilidade_gravidade_admissao``. Nenhuma delas entra em
+    ``features.sensibilidade_gravidade_admissao`` e
+    ``features.sensibilidade_marcador_periodo``. Nenhuma delas entra em
     ``feature_columns``: ficam em ``audit_columns`` para as análises de
     sensibilidade previstas em ``sensibilidades`` no YAML.
     """
@@ -511,6 +512,7 @@ def _colunas_auditoria_extras(
         "fator_risc",
         *(features_cfg.get("contexto_incremental") or []),
         *(features_cfg.get("sensibilidade_gravidade_admissao") or []),
+        *(features_cfg.get("sensibilidade_marcador_periodo") or []),
     ]
     return [
         str(coluna)

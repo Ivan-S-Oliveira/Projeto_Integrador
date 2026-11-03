@@ -37,12 +37,11 @@
       "tosse",
       "garganta",
       "dispneia",
+      "saturacao",
+      "desc_resp",
       "diarreia",
       "vomito",
       "dor_abd",
-      "fadiga",
-      "perd_olft",
-      "perd_pala",
       "outro_sin",
       "puerpera",
       "cardiopati",
@@ -64,10 +63,7 @@
       "vacina",
       "vacina_cov"
     ],
-    "sensibilidade_gravidade_admissao": [
-      "saturacao",
-      "desc_resp"
-    ],
+    "sensibilidade_gravidade_admissao": [],
     "proibidas": [
       "evolucao",
       "alvo_obito_srag",
@@ -103,6 +99,11 @@
       "sem_pri",
       "group_id",
       "particao"
+    ],
+    "sensibilidade_marcador_periodo": [
+      "fadiga",
+      "perd_olft",
+      "perd_pala"
     ]
   },
   "invariants": {

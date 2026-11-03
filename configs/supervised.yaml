@@ -53,12 +53,11 @@ features:
   - tosse
   - garganta
   - dispneia
+  - saturacao
+  - desc_resp
   - diarreia
   - vomito
   - dor_abd
-  - fadiga
-  - perd_olft
-  - perd_pala
   - outro_sin
   - puerpera
   - cardiopati
@@ -85,12 +84,11 @@ features:
   - tosse
   - garganta
   - dispneia
+  - saturacao
+  - desc_resp
   - diarreia
   - vomito
   - dor_abd
-  - fadiga
-  - perd_olft
-  - perd_pala
   - outro_sin
   - puerpera
   - cardiopati
@@ -110,9 +108,11 @@ features:
   - sg_uf
   - vacina
   - vacina_cov
-  sensibilidade_gravidade_admissao:
-  - saturacao
-  - desc_resp
+  sensibilidade_gravidade_admissao: []  # 03/11: saturacao e desc_resp entraram no modelo principal (decisoes.md §29.34)
+  sensibilidade_marcador_periodo:  # 03/11: fora do modelo; guardadas no artefato só para a linha "P + 3 sintomas" do C_14
+  - perd_olft
+  - perd_pala
+  - fadiga
   sensibilidade_indicadores_ausencia:
     ativa: false
     # desativada em 28/10: nenhum código cria as colunas;
@@ -460,7 +460,7 @@ sensibilidades:
   com_sem_indicadores_ausencia:
     ativa: false # desativada em 28/10: sem código, sem contraste real (ver decisoes.md §29.6)
   sem_saturacao_desc_resp:
-    ativa: true
+    ativa: false  # 03/11: as duas variáveis entraram no modelo principal (decisoes.md §29.34)
   contexto_incremental:
     ativa: true
   alvo_qualquer_obito:
@@ -479,8 +479,8 @@ gates:
   G1_definicao_alvo_features:
     descricao: >-
       Confirmar schema da coorte definitiva, alvo e lista final de features.
-      As variaveis saturacao e desc_resp permanecem na analise de sensibilidade
-      de gravidade na admissao; vacina e vacina_cov permanecem como contexto
+      Em 03/11, saturacao e desc_resp entraram no conjunto principal e perd_olft,
+      perd_pala e fadiga sairam (decisoes.md 29.34); vacina e vacina_cov permanecem como contexto
       incremental, fora do conjunto principal.
     status: aprovado
     aprovado_por: time_do_projeto
