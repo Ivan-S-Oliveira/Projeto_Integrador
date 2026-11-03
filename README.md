@@ -244,10 +244,12 @@ calibração ou limiar.
 ### Modelos e seleção
 
 A configuração prevê baseline, regressão logística, árvore de decisão,
-random forest e boosting. A shortlist provisória registrada aponta
-`hist_gradient_boosting` e `logistic` como finalistas candidatos; isso
-não equivale a uma escolha final de modelo. A métrica principal
-configurada para comparação é `PR-AUC`.
+random forest e boosting. O finalista foi congelado no G6 (§29.35 de
+`docs/decisoes.md`): `boosting`. A regressão logística permanece como
+baseline interpretável. A calibração, o limiar e a avaliação final
+dependem dos gates seguintes; consulte `configs/supervised.yaml` para o
+estado atual. A métrica principal configurada para comparação é
+`PR-AUC`.
 
 ### Calibração, limiar e avaliação
 
