@@ -61,19 +61,19 @@ Projeto_Integrador/
 ├── notebooks/
 │   ├── 00_acesso_dados_parquet.ipynb
 │   ├── 01_extracao.ipynb
-│   ├── 02_eda/
-│   │   ├── 01_eda_primeira_passagem.ipynb
-│   │   ├── 02_eda_temporal_clustering.ipynb
-│   │   ├── 03_supervisionado_pilotos.ipynb
-│   │   ├── 04_consolidacao_shortlist_transicao_coorte.ipynb
-│   │   └── _provisorio_construcao_coorte_b.ipynb
+│   ├── A/
+│   │   └── A_03_coorte_protocolo.ipynb
+│   ├── B/
+│   │   ├── B_02_eda_primeira_passagem.ipynb
+│   │   ├── B_04_eda_temporal_clustering.ipynb
+│   │   └── B_05_supervisionado_pilotos.ipynb
 │   └── C/
-│       ├── C1_smoke_test.ipynb
-│       ├── C2_pipeline_supervisionado.ipynb
-│       ├── C3_baseline_logistica.ipynb
-│       ├── C4_boosting.ipynb
-│       ├── C5_calibracao_limiar.ipynb
-│       └── C6_validacao_final.ipynb
+│       ├── C_11_pipeline_supervisionado.ipynb
+│       ├── C_12_baseline_logistica.ipynb
+│       ├── C_13_boosting.ipynb
+│       ├── C_14_ablacoes_variaveis.ipynb
+│       ├── C_15_calibracao_limiar.ipynb
+│       └── C_16_validacao_final.ipynb
 ├── src/
 │   ├── data/
 │   │   ├── cohort_source.py
@@ -157,56 +157,26 @@ repositório para a lista completa.
 
 ## Notebooks
 
-  -----------------------------------------------------------------------------------------------
-  Notebook                                                    Finalidade
-  ----------------------------------------------------------- -----------------------------------
-  `00_acesso_dados_parquet.ipynb`                             Verificar o acesso aos dados
-                                                              Parquet.
+| Notebook | Finalidade |
+|---|---|
+| `00_acesso_dados_parquet.ipynb` | Verificar o acesso aos dados Parquet. |
+| `01_extracao.ipynb` | Documentar a etapa de extração. |
+| `A/A_03_coorte_protocolo.ipynb` | Aplicar o protocolo da coorte definitiva: publicar a coorte e gerar o artefato supervisionado e a partição-mestre. |
+| `B/B_02_eda_primeira_passagem.ipynb` | Primeira exploração e diagnóstico dos dados. |
+| `B/B_04_eda_temporal_clustering.ipynb` | Análises temporais e agrupamento exploratório (K-Means e HCA). |
+| `B/B_05_supervisionado_pilotos.ipynb` | Pilotos supervisionados, sem consultar o teste. |
+| `C/C_11_pipeline_supervisionado.ipynb` | Orquestrar e validar o pipeline supervisionado. |
+| `C/C_12_baseline_logistica.ipynb` | Referências e regressão logística. |
+| `C/C_13_boosting.ipynb` | Busca limitada e avaliação do boosting. |
+| `C/C_14_ablacoes_variaveis.ipynb` | Ablações de variáveis. |
+| `C/C_15_calibracao_limiar.ipynb` | Peso de classe, calibração (G7) e limiar (G8) na validação (`val_ref`). |
+| `C/C_16_validacao_final.ipynb` | Validação final: Teste A, Teste B e 2020–2022 em separado; só roda depois da aprovação do G9. |
 
-  `01_extracao.ipynb`                                         Documentar a etapa de extração.
-
-  `02_eda/01_eda_primeira_passagem.ipynb`                     Primeira exploração e diagnóstico
-                                                              dos dados.
-
-  `02_eda/02_eda_temporal_clustering.ipynb`                   Análises temporais e experimentos
-                                                              de agrupamento.
-
-  `02_eda/03_supervisionado_pilotos.ipynb`                    Experimentos supervisionados
-                                                              preliminares.
-
-  `02_eda/04_consolidacao_shortlist_transicao_coorte.ipynb`   Consolidar a shortlist e a
-                                                              transição da coorte.
-
-  `02_eda/_provisorio_construcao_coorte_b.ipynb`              Notebook provisório de construção
-                                                              de coorte; confirmar sua
-                                                              necessidade antes de tratá-lo como
-                                                              fluxo oficial.
-
-  `C/C1_smoke_test.ipynb`                                     Verificar componentes essenciais do
-                                                              ambiente e do projeto.
-
-  `C/C2_pipeline_supervisionado.ipynb`                        Orquestrar e validar o pipeline
-                                                              supervisionado.
-
-  `C/C3_baseline_logistica.ipynb`                             Executar referências e experimentos
-                                                              com regressão logística.
-
-  `C/C4_boosting.ipynb`                                       Executar a busca limitada e avaliar
-                                                              boosting.
-
-  `C/C5_calibracao_limiar.ipynb`                              Escolher calibração e limiar usando
-                                                              dados permitidos.
-
-  `C/C6_validacao_final.ipynb`                                Executar o protocolo de validação
-                                                              final, condicionado à liberação do
-                                                              gate correspondente.
-  -----------------------------------------------------------------------------------------------
-
-Os notebooks devem evitar implementações duplicadas de funções
+O A_03 gera a coorte e o artefato; os notebooks B e C usam o artefato; o C_16 abre o
+teste uma única vez. Os notebooks devem evitar implementações duplicadas de funções
 reutilizáveis. Uma função deve migrar para `src/` quando representar uma
-responsabilidade compartilhada ou uma regra que precise de testes;
-código exclusivo de apresentação e orquestração pode permanecer no
-notebook.
+responsabilidade compartilhada ou uma regra que precise de testes; código exclusivo de
+apresentação e orquestração pode permanecer no notebook.
 
 ## Metodologia supervisionada
 
@@ -228,19 +198,26 @@ usadas como atributos de entrada.
 
 ### Período e partições
 
-A configuração abrange 2019--2026, incluindo 2026 como ano parcial. A
-partição primária atualmente configurada é **aleatória estratificada por
-alvo e ano de internação**, com seed `42` e proporções:
+A configuração abrange 2019--2026, com 2026 como ano parcial e fora dos blocos
+principais. A partição é uma **partição-mestre determinística por grupo**
+(`group_id`, seed `42`, método `hash_grupo_estratificado_mestre_v1`), gravada uma única
+vez e sem novo sorteio. A estratificação usa ano de internação, desfecho e região de
+residência, e reduz a geografia quando um estrato fica pequeno (o manifesto registra isso).
+Os blocos são:
 
--   treino: 70%;
--   validação: 15%;
--   teste/holdout: 15%.
+-   `train_ref`: treino (70% dos grupos de 2019, 2023, 2024 e 2025);
+-   `val_ref`: validação para ajuste, calibração e limiar (15%, mesmos anos);
+-   `test_ref`: Teste A, resultado principal (15%, mesmos anos);
+-   `test_pandemic`: anos de 2020 a 2022, bloco adicional do Teste B.
 
-**Importante:** apesar do interesse em comportamento temporal, essa
-configuração não corresponde a uma separação estritamente cronológica
-entre passado e futuro. Análises temporais adicionais podem ser usadas
-como análises de robustez, mas não devem substituir silenciosamente a
-partição primária definida na configuração. A documentação e os
+As janelas de avaliação são: **Teste A** = `test_ref`; **Teste B** = `test_ref` +
+`test_pandemic`; e 2020--2022 (`test_pandemic`) também é relatado em separado.
+`test_ref` e `test_pandemic` só são abertos uma vez, depois da aprovação do gate
+`G9_holdout`.
+
+**Importante:** dentro de 2019 e 2023--2025 a separação é aleatória por grupo
+(estratificada), e não cronológica. O bloco `test_pandemic` mede a robustez à mudança de
+período e não deve ser interpretado como efeito causal da pandemia. A documentação e os
 resultados devem explicitar essa escolha.
 
 ### Atributos e prevenção de leakage
@@ -404,33 +381,6 @@ Para permitir a rastreabilidade dos experimentos:
 Os artefatos e resultados devem seguir as convenções já utilizadas no
 projeto. Não crie diretórios alternativos para a mesma finalidade sem
 antes verificar a organização existente.
-
-## Pontos de atenção conhecidos
-
-A referência estática do repositório identificou itens que precisam ser
-conferidos; eles não significam automaticamente que toda a
-funcionalidade esteja quebrada:
-
-1.  **Importação de `csv_to_parquet`:** `tests/test_pipeline.py`
-    referencia `src.data.extracao.csv_to_parquet`, mas o módulo
-    correspondente não aparece entre os arquivos rastreados no snapshot.
-    Verifique histórico de renomeação e atualize o teste ou a
-    implementação canônica, sem recriar o módulo às cegas.
-2.  **Engenharia de atributos:** nomes derivados configurados --- como
-    `sin_semana`, `cos_semana`, `ano_internacao` e
-    `dias_sintomas_ate_internacao` --- não foram todos encontrados como
-    nomes estáticos nos módulos de `src/data/` e `src/features/`.
-    Confirme sua geração real e cubra o contrato com testes.
-3.  **Documentação de decisões:** `docs/decisoes.md` cita
-    `configs/dicionario_variaveis_v1_revisao.csv`, que não aparece na
-    lista de arquivos rastreados do snapshot. Atualize a referência ou
-    restaure o arquivo se ele for realmente necessário.
-4.  **Lógica nos notebooks:** há funções auxiliares locais nos notebooks
-    de EDA e modelagem. Avalie caso a caso se são exclusivas de um
-    experimento ou se devem ser promovidas a módulos testados em `src/`.
-5.  **Caminhos e estrutura:** mantenha este README sincronizado com os
-    arquivos reais; a referência do projeto é um snapshot estático, não
-    uma verificação de execução ponta a ponta.
 
 ## Limitações
 
