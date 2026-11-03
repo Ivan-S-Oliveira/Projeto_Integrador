@@ -1582,6 +1582,7 @@ Se o YAML tiver a mesma chave duas vezes, a leitura padrão fica com a última, 
 
 - nao-contem: `src/utils/config.py` :: `@lru_cache(maxsize=1)` | (Pós-entrega) carregar_supervised deixou de guardar o YAML em cache permanente (ou ganhou recarregar_supervised), então mudar o YAML vale sem reiniciar o kernel.
 - contem: `src/utils/config.py` :: `duplicada` | (Pós-entrega) A leitura do YAML detecta chave duplicada e avisa, em vez de ficar com a última em silêncio.
+- teste: `tests/test_config.py` | O teste `tests/test_config.py` precisa passar no pytest rápido. Ele importa `src/utils/config.py`, que pertence(m) a esta pendência, e falhou na verificação de 2026-11-03 (2 testes falharam; ex.: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\olivem85\\AppData\\Local\\Temp\\1\\srag_verificador_9mdibj0g\\repo\\). Acrescentado automaticamente pelo verificador.
 
 ## #36 · Faixas etárias e grafia do sexo diferentes entre EDA e modelo
 
@@ -1740,6 +1741,7 @@ O notebook ainda faz `fit_transform` do treino e `transform` da validação comp
 
 - nao-contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `sparse_output=False` | O C_11 não força mais o one-hot denso (causa do MemoryError de 2,53 GiB); usa o pré-processador esparso do src. A nova execução do C_11 nos seis blocos é conferida no #132.
 - contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | O pré-processador do src usa saída esparsa por padrão.
+- teste: `tests/test_config.py` | O teste `tests/test_config.py` precisa passar no pytest rápido. Ele importa `src/models/pipeline.py`, que pertence(m) a esta pendência, e falhou na verificação de 2026-11-03 (2 testes falharam; ex.: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\olivem85\\AppData\\Local\\Temp\\1\\srag_verificador_9mdibj0g\\repo\\). Acrescentado automaticamente pelo verificador.
 
 ## #20 · Nome do finalista diferente no YAML e no código
 
@@ -6828,6 +6830,7 @@ O `OneHotEncoder` de `src/models/pipeline.py` usa `sparse_output=False`. No C2 (
 
 - contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | build_preprocessor gera matriz esparsa por padrão (CSR em float32), sem guardar os zeros do one-hot.
 - teste: `tests/test_pipeline.py` | Os testes do pipeline passam.
+- teste: `tests/test_config.py` | O teste `tests/test_config.py` precisa passar no pytest rápido. Ele importa `src/models/pipeline.py`, que pertence(m) a esta pendência, e falhou na verificação de 2026-11-03 (2 testes falharam; ex.: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\olivem85\\AppData\\Local\\Temp\\1\\srag_verificador_9mdibj0g\\repo\\). Acrescentado automaticamente pelo verificador.
 
 ## #62 · pyproject.toml inválido
 
