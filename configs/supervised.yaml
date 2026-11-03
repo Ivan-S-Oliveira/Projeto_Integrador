@@ -308,7 +308,7 @@ missingness:
 models:
   baseline:
     strategy: prior
-    logistic:
+  logistic:
     C: 10.0
     busca_C:
     - 0.001
@@ -319,7 +319,7 @@ models:
     penalty: l2
     solver: lbfgs
     max_iter: 1000
-    class_weight: null
+    class_weight: {}   # sem peso (null seria descartado pela fábrica e viraria balanced)
     busca_class_weight:
     - balanced
     - null
@@ -368,7 +368,7 @@ models:
     min_samples_leaf: 20
     l2_regularization: 0.0
     early_stopping: true
-    class_weight: null
+    class_weight: {}   # sem peso (null seria descartado pela fábrica e viraria balanced)
     busca_class_weight:
     - balanced
     - null
