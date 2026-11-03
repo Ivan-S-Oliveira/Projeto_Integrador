@@ -72,7 +72,7 @@ def particao_mestra_real():
 
 @pytest.mark.slow
 class TestParticaoMestraArtefatoReal:
-    """Auditoria do §28.4 sobre o artefato real do #142 (não sintético)."""
+    """Auditoria do §28.4 sobre o artefato real (não sintético)."""
 
     def test_a_cada_group_id_em_um_unico_bloco(
         self,
