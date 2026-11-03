@@ -58,6 +58,11 @@ Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em lingu
 
 ### Aviso da revisão
 
+> [!decisão] Ajuste de 03/11 · versão 4.2: scripts da tarde e critérios do “Pronto quando” alinhados ao código (verificado sobre o commit `cba5d46`)
+> **O que foi aplicado no repositório** (todos os scripts começaram por um relatório numa cópia): #79 (`limiar.metrica: precision`), #126 (parte mecânica: `cloudpickle` e README), #152 (conferência: os restos locais da coorte provisória já não existiam) e #154 (esquema legado e fluxo A removidos; as invariantes do #135 agora estão em `tests/test_invariantes_protocolo.py`).
+>
+> **O que mudou no verificador:** o “④ Pronto quando” é o verificador (está no texto, não no código dele). Os critérios que apontavam para `tests/test_regras_pessoa_a.py`, `src/protocolo/verificacoes.py`, `dataset_analitico` e para testes legados do artefato foram trocados nos cards #16, #87, #102, #123, #135 e #144; o #154 e o #79 ganharam critérios novos. Sem essa troca, esses cards já concluídos voltariam a “reconfirmar”.
+
 > [!decisão] Revisão de 03/11 · versão 4.1: leitura completa do repositório e dos notebooks (commit `5c9e205`) e decisões da equipe sobre o corte por região e o UMAP
 > **O que mudou na situação:** #132 e #140 estão concluídos; os scripts de 03/11 foram aplicados (variáveis e ANOVA; C_15 e C_16; rastros); o `requirements.txt` foi restaurado (por isso o #17, o #19 e o #124 estavam em "precisa revisão"). Medido hoje no C_14 (30 variáveis, hiperparâmetros padrão, treino inteiro): cada ajuste leva de 8 a 16 s, e o `val_ref` dá PR-AUC de 0,320 (logística) e 0,353 (boosting).
 >
@@ -415,7 +420,7 @@ Testes rápidos passando e o C_11 lendo `train_ref` sem tocar no teste.
 - carga: 2
 - novo: sim
 - professores: não
-- arquivos: tests/test_regras_pessoa_a.py, src/protocolo/verificacoes.py
+- arquivos: tests/test_invariantes_protocolo.py
 
 ### ① Para entender
 
@@ -441,11 +446,11 @@ A função de partição foi testada só com dados sintéticos. Ninguém conferi
 
 ### ④ Pronto quando
 
-- contem: `tests/test_regras_pessoa_a.py` :: `bloco_mestre` | tests/test_regras_pessoa_a.py tem os testes das invariantes do protocolo que leem a coluna bloco_mestre do artefato real (classe marcada como slow).
-- contem: `tests/test_regras_pessoa_a.py` :: `test_pandemic` | Há teste conferindo que 2020–2022 só aparecem no bloco test_pandemic.
-- contem: `tests/test_regras_pessoa_a.py` :: `sha256` | Há teste conferindo que o SHA-256 do arquivo do artefato é igual ao registrado no manifesto (src/utils/hashing.py).
-- teste: `tests/test_regras_pessoa_a.py` | Os testes rápidos de tests/test_regras_pessoa_a.py passam (os de artefato real são slow e não entram aqui).
-- manual: | A saída de `.\.venv\Scripts\python.exe -m pytest -m slow tests/test_regras_pessoa_a.py -q`, rodada com o artefato real, foi colada como comentário neste card, sem falhas e sem skips das cinco garantias (grupo em um único bloco, 2020–2022 só em test_pandemic, 2026 só em exploracao, prevalência por bloco a no máximo 0,5 p.p. da média, SHA-256 igual ao manifesto).
+- contem: `tests/test_invariantes_protocolo.py` :: `bloco_mestre` | tests/test_invariantes_protocolo.py tem os testes das invariantes do protocolo que leem a coluna bloco_mestre do artefato real (classe marcada como slow).
+- contem: `tests/test_invariantes_protocolo.py` :: `test_pandemic` | Há teste conferindo que 2020–2022 só aparecem no bloco test_pandemic.
+- contem: `tests/test_invariantes_protocolo.py` :: `sha256` | Há teste conferindo que o SHA-256 do arquivo do artefato é igual ao registrado no manifesto (src/utils/hashing.py).
+- teste: `tests/test_invariantes_protocolo.py` | Os testes rápidos de tests/test_invariantes_protocolo.py passam (os de artefato real são slow e não entram aqui).
+- manual: | A saída de `.\.venv\Scripts\python.exe -m pytest -m slow tests/test_invariantes_protocolo.py -q`, rodada com o artefato real, foi colada como comentário neste card, sem falhas e sem skips das cinco garantias (grupo em um único bloco, 2020–2022 só em test_pandemic, 2026 só em exploracao, prevalência por bloco a no máximo 0,5 p.p. da média, SHA-256 igual ao manifesto).
 
 ## #132 · Regerar o artefato com as 30 variáveis e reexecutar C_11, C_12 e C_14 (o C_13 roda no #1)
 
@@ -973,9 +978,7 @@ Os dois YAMLs, `decisoes.md`, `tests/test_split.py` e este painel dizem o mesmo 
 - yaml: `configs/supervised.yaml` :: `temporal.blocos.test_pandemic.anos` nao-contem `2019` | Opção A: test_pandemic volta a ter só 2020–2022 (nome do bloco coerente com o conteúdo).
 - yaml: `configs/decisoes.yaml` :: `dev_years` contem `2019` | O configs/decisoes.yaml diz o mesmo que o supervised.yaml sobre 2019 (dev_years com 2019 na Opção A).
 - contem: `docs/decisoes.md` :: `2019` | O docs/decisoes.md (§5 e §28) registra a decisão sobre 2019, com data e motivo, coerente com os dois YAMLs.
-- define: `src/protocolo/verificacoes.py` :: `DEFAULT_CONFIG` | O DEFAULT_CONFIG de src/protocolo/verificacoes.py continua existindo (o cenário quebrado sem_2019_2022 foi corrigido para sem_2020_2021, ou removido junto com os testes se o A_09 sair no #143).
-- nao-contem: `src/protocolo/verificacoes.py` :: `sem_2019_2022` | O cenário com nome e lista contraditórios (sem_2019_2022, que mantém 2019 e 2022) não existe mais em verificacoes.py.
-- teste: `tests/test_regras_pessoa_a.py` | Os testes de tests/test_regras_pessoa_a.py passam (hoje 3 falham com KeyError: 'sem_2020_2021').
+- nao-existe: `src/protocolo/verificacoes.py` | O fluxo A (onde ficavam o DEFAULT_CONFIG e o cenário contraditório sem_2019_2022) foi removido no #154: o desenho temporal agora só existe nos YAMLs conferidos acima.
 - teste: `tests/test_split.py` | Os testes de partição passam com o TEMPORAL_CFG coerente com a decisão sobre 2019.
 
 ## #30 · Salvar a coorte definitiva com o nome errado a carregaria como provisória
@@ -1258,9 +1261,8 @@ Se os notebooks A rodarem depois do B_07, o hash deixa de bater com o manifesto 
 
 ### ④ Pronto quando
 
-- yaml: `configs/decisoes.yaml` :: `dataset_analitico.path` != `data/analytical/dataset_supervisionado.parquet` | O configs/decisoes.yaml aponta a exportação da Pessoa A para outro arquivo (por exemplo, populacao_analitica_pessoa_a.parquet), diferente do artefato oficial.
-- nao-contem: `src/protocolo/verificacoes.py` :: `"dataset_supervisionado.parquet"` | O DEFAULT_CONFIG de src/protocolo/verificacoes.py também deixou de usar o nome do artefato oficial, então rodar A_03 ou A_04 não apaga mais o artefato.
-- teste: `tests/test_regras_pessoa_a.py` | Os testes de tests/test_regras_pessoa_a.py passam (incluído pelo verificador em 28/10: esses testes importam src/protocolo/verificacoes.py, arquivo desta pendência, e 3 deles falham hoje pelo cenário renomeado do #102).
+- yaml: `configs/decisoes.yaml` :: `dataset_analitico` nao-existe | A chave dataset_analitico, que apontava a exportação da Pessoa A para outro arquivo, saiu do configs/decisoes.yaml (#154): nada mais aponta para o fluxo A.
+- nao-existe: `src/protocolo/verificacoes.py` | O fluxo A, que gravava esse arquivo, foi removido (#154): rodar os notebooks não apaga mais o artefato oficial.
 
 ## #123 · Ler o artefato por partição, para o teste nunca chegar à memória por engano
 
@@ -1300,7 +1302,7 @@ Também resolve dois problemas antigos: a leitura parcial pulava a validação (
 
 - contem: `src/data/supervised_artifact.py` :: `partitions` | load_supervised_artifact aceita o parâmetro partitions= e filtra na leitura do Parquet.
 - teste: `tests/test_supervised_artifact.py::test_default_nao_carrega_teste` | O teste confirma que a leitura padrão não traz o teste para a memória.
-- teste: `tests/test_supervised_artifact.py::test_load_com_teste_sem_g9_falha` | O teste confirma que pedir o teste com o G9 pendente levanta erro.
+- teste: `tests/test_supervised_artifact.py::test_load_bloco_de_teste_sem_g9_falha` | O teste confirma que pedir test_ref ou test_pandemic com o G9 pendente levanta erro.
 
 ## #16 · Nada no código impede abrir o teste antes do G9
 
@@ -1343,7 +1345,7 @@ Também resolve dois problemas antigos: a leitura parcial pulava a validação (
 
 - contem: `src/data/supervised_artifact.py` :: `exigir_gate("G9_holdout")` | holdout_partition e load_supervised_artifact chamam exigir_gate("G9_holdout") antes de devolver o teste.
 - teste: `tests/test_supervised_artifact.py::test_holdout_partition_sem_g9_falha` | O teste confirma que holdout_partition falha com o G9 pendente.
-- teste: `tests/test_supervised_artifact.py::test_holdout_partition_apos_g9` | O teste confirma que holdout_partition devolve o teste depois de o G9 ser aprovado.
+- teste: `tests/test_supervised_artifact.py::test_holdout_partition_blocos_apos_g9` | O teste confirma que holdout_partition devolve o teste (test_ref e test_pandemic) depois de o G9 ser aprovado.
 
 ## #18 · Carregar só algumas colunas do artefato pula a validação
 
@@ -4196,6 +4198,9 @@ O C_15 treina **os dois** finalistas e compara o peso de classe nos dois, então
 
 ### ③ O que fazer
 
+> [!ok] Passo 2 já aplicado por script em 03/11 (commit `b3772de`)
+> `limiar.metrica` passou de `null` para `precision` (`min_recall: 0.8` já estava). Os demais passos continuam abertos.
+
 **Dono:** Pessoa B · **Prazo:** 03/11, 14h às 15h15, na **máquina oficial** (#158) · **Começa quando:** #1 (finalista e hiperparâmetros no YAML)
 
 1. **Confira o YAML do #1:** `selecao_modelos.finalista_escolhido` preenchido e, se o peso de classe do finalista for "sem peso", `class_weight: {}` (e não `null`). Confirme com o comando:
@@ -4226,6 +4231,7 @@ O C_15 treina **os dois** finalistas e compara o peso de classe nos dois, então
 - contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `finalista_escolhido` | O C_15 usa o finalista do YAML, e não o de maior AUC.
 - notebook-executado: `notebooks/C/C_15_calibracao_limiar.ipynb` | O C_15 foi reexecutado com o finalista congelado e salvo sem erro.
 - contem: `docs/decisoes.md` :: `G7 e G8: peso de classe, calibração e limiar` | O decisoes.md registra as três decisões (entrada 29.36) com números e a limitação.
+- yaml: `configs/supervised.yaml` :: `limiar.metrica` = `precision` | A métrica do limiar está definida como precisão, com a sensibilidade mínima de 0,80 (G8 decidido antes dos números).
 
 ## #80 · Aprovar o G8: escolher o limiar (proposta do C_15: 0,255 pelo F1)
 
@@ -4537,6 +4543,9 @@ A banca precisa conseguir entender a estrutura e, em tese, reproduzir os resulta
 - **C_13:** a execução limpa roda a busca da grade do YAML (a de referência do #1). O modelo final vem do #155 e do YAML; o README diz isso numa linha.
 
 ### ③ O que fazer
+
+> [!ok] Parte mecânica aplicada por script em 03/11 (commit `b3772de`)
+> `cloudpickle` está no `requirements.txt` e no `pyproject.toml`, ambos com `>=` (como as demais linhas desses arquivos, e não com `==` como o passo 1 descreve). O README já usa os nomes atuais dos notebooks, não tem mais “Pontos de atenção conhecidos” e descreve o `test_pandemic`. Falta a execução limpa e o resto do README.
 
 **Dono:** Pessoa C (execução) + Pessoa B (README) · **Prazo:** 04/11, 19h às 22h · **Começa quando:** #155 (modelo final congelado), #152, #153, #158 e #159 · **Script previsto:** `executar_cadeia.py` (começa por relatório; roda a cadeia na ordem, para no primeiro erro, anota tempo e memória e já limpa os caminhos locais do #156). O que segue é o plano B.
 
@@ -7434,7 +7443,7 @@ As três tabelas existirem, a decisão estiver no #140 e, se aprovada, a funçã
 - carga: 1.25
 - novo: sim
 - professores: não
-- arquivos: src/protocolo/verificacoes.py, configs/supervised.yaml, tests/test_regras_pessoa_a.py, tests/test_config.py, tools/medir_notebook.py
+- arquivos: configs/supervised.yaml, tests/test_invariantes_protocolo.py, tests/test_config.py, tools/medir_notebook.py
 
 ### ① Para entender
 
@@ -7646,9 +7655,9 @@ if __name__ == "__main__":
 
 ### ④ Pronto quando
 
-- define: `src/protocolo/verificacoes.py` :: `_analytical_path` | A função _analytical_path existe em src/protocolo/verificacoes.py (uma única definição, devolvendo um Path).
-- contem: `tests/test_regras_pessoa_a.py` :: `test_src_sem_funcoes_duplicadas` | Há teste que impede funções de topo repetidas em qualquer arquivo de src/.
-- teste: `tests/test_regras_pessoa_a.py` | Os testes de test_regras_pessoa_a.py passam (as quatro falhas de 30/10 sumiram).
+- nao-existe: `src/protocolo/verificacoes.py` | O arquivo que tinha a função _analytical_path foi removido junto com o fluxo A (#154): a duplicação deixou de existir.
+- contem: `tests/test_invariantes_protocolo.py` :: `test_src_sem_funcoes_duplicadas` | Há teste que impede funções de topo repetidas em qualquer arquivo de src/ (veio do antigo test_regras_pessoa_a.py).
+- teste: `tests/test_invariantes_protocolo.py` | Os testes rápidos de tests/test_invariantes_protocolo.py passam (as quatro falhas de 30/10 eram do antigo test_regras_pessoa_a.py, removido no #154).
 - teste: `tests/test_config.py::test_gates_historicos_aprovados` | O teste que confere G1, G2, G4 e G5 aprovados passa.
 - yaml: `configs/supervised.yaml` :: `gates.G1_definicao_alvo_features.status` = `aprovado` | O G1 voltou a aprovado.
 - yaml: `configs/supervised.yaml` :: `gates.G2_janela_temporal.status` = `aprovado` | O G2 voltou a aprovado.
@@ -8313,7 +8322,7 @@ git grep -n -E "val_tune|val_cal|val_meas|70/5|5\+5\+5|seis blocos" -- . ':!docs
 - carga: 2
 - novo: sim
 - professores: não
-- arquivos: src/data/supervised_artifact.py, src/protocolo/verificacoes.py, configs/decisoes.yaml, tests/test_supervised_artifact.py, tests/test_regras_pessoa_a.py
+- arquivos: src/data/supervised_artifact.py, src/protocolo/verificacoes.py, configs/decisoes.yaml, tests/test_supervised_artifact.py, tests/test_regras_pessoa_a.py, tests/test_invariantes_protocolo.py
 
 ### ① Para entender
 
@@ -8326,6 +8335,9 @@ Removê-los mexe em dezenas de testes (`tests/test_supervised_artifact.py`, `tes
 
 ### ③ O que fazer
 
+> [!ok] Aplicado por script em 03/11 (commit `cba5d46`)
+> Passos 1 e 2 prontos: o esquema legado saiu de `supervised_artifact.py` e dos testes; o fluxo A (`verificacoes.py`, `test_regras_pessoa_a.py` e a chave `dataset_analitico`) foi removido; as invariantes do #135 estão em `tests/test_invariantes_protocolo.py`. Falta só o passo 3: o `pytest -m "not slow"` verde (o verificador mostra o resultado em REVISÕES).
+
 1. Depois do #2 (o C_16 já não usa o esquema legado): remover `_PARTICOES_LEGADAS` e os ramos `legado` de `supervised_artifact.py` e os testes `_frame_legado`.
 2. Mover os testes de invariantes do protocolo (#135) de `tests/test_regras_pessoa_a.py` para `tests/test_invariantes_protocolo.py`; apagar o fluxo A (`verificacoes.py`, `dataset_analitico` do `decisoes.yaml`) e os testes que só ele usa.
 3. `pytest -m "not slow"` verde antes do commit.
@@ -8334,6 +8346,10 @@ Removê-los mexe em dezenas de testes (`tests/test_supervised_artifact.py`, `tes
 
 - nao-contem: `src/data/supervised_artifact.py` :: `_PARTICOES_LEGADAS` | O esquema legado do artefato saiu do código.
 - nao-existe: `src/protocolo/verificacoes.py` | O fluxo A da coorte provisória saiu do código.
+- existe: `tests/test_invariantes_protocolo.py` | As cinco invariantes da partição-mestra (#135) passaram para tests/test_invariantes_protocolo.py.
+- nao-existe: `tests/test_regras_pessoa_a.py` | O arquivo de testes do fluxo A foi removido.
+- yaml: `configs/decisoes.yaml` :: `dataset_analitico` nao-existe | A chave dataset_analitico saiu do configs/decisoes.yaml.
+- teste: `tests/test_supervised_artifact.py` | Os testes do artefato, agora só com os blocos da partição-mestra, passam.
 
 ## #155 · Equipe: explorar hiperparâmetros para melhorar o modelo antes do teste (04/11)
 

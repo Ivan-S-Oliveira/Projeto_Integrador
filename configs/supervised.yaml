@@ -392,7 +392,7 @@ calibracao:
 limiar:
   default: 0.5
   otimo: null
-  metrica: null
+  metrica: precision   # #79: maximiza a precisão sujeita a min_recall
   metricas_candidatas:
   - f1
   - recall

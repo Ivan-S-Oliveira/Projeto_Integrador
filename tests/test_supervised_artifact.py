@@ -1,14 +1,9 @@
 """Testes do artefato supervisionado (``src.data.supervised_artifact``).
 
-Cobrem os dois esquemas suportados:
-
-- **legado**: ``treino``, ``validacao``, ``teste`` (artefato provisório);
-- **blocos**: ``train_ref``, ``val_ref``,
-  ``test_ref``, ``test_pandemic`` (+ ``exploracao`` opcional).
-
-Além do gate ``G9_holdout`` sobre **qualquer** partição de teste,
-verificam a validação da leitura parcial (``columns=``) e a agregação
-feita por ``split_partitions`` / ``holdout_partition``.
+Cobrem os blocos da partição-mestra (``train_ref``, ``val_ref``, ``test_ref``,
+``test_pandemic`` e ``exploracao`` opcional), o gate ``G9_holdout`` sobre
+**qualquer** bloco de teste, a validação da leitura parcial (``columns=``) e a
+agregação feita por ``split_partitions`` / ``holdout_partition``.
 """
 
 from __future__ import annotations
@@ -43,18 +38,6 @@ _MANIFEST_REL = Path("data") / "analytical" / MANIFEST_NAME
 # ---------------------------------------------------------------------------
 # Frames de exemplo
 # ---------------------------------------------------------------------------
-
-def _frame_legado() -> pd.DataFrame:
-    """6 registos: 2 por partição do esquema legado, alvo alternado."""
-    return pd.DataFrame({
-        "idade_anos":      [10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
-        "alvo_obito_srag": [0, 1, 0, 1, 0, 1],
-        "particao": [
-            "treino", "treino",
-            "validacao", "validacao",
-            "teste", "teste",
-        ],
-    })
 
 
 def _frame_blocos() -> pd.DataFrame:
@@ -92,8 +75,8 @@ def _params_persistencia(**overrides: Any) -> dict[str, Any]:
         "source":           {},
         "feature_columns":  ["idade_anos"],
         "target_column":    "alvo_obito_srag",
-        "partition_column": "particao",
-        "cohort_kind":      "provisional",
+        "partition_column": "bloco_mestre",
+        "cohort_kind":      "final",
         "seed":             42,
     }
     base.update(overrides)
@@ -192,11 +175,6 @@ def exploracao_inativa(monkeypatch: pytest.MonkeyPatch) -> None:
 # Persistência — contrato de partições
 # ===========================================================================
 
-def test_persistencia_legado_exige_tres_particoes(tmp_path: Path) -> None:
-    """Sem ``teste``, o esquema legado é incompleto."""
-    with pytest.raises(ValueError, match="Partições incompletas"):
-        _persistir(tmp_path, _frame_legado().query("particao != 'teste'"))
-
 
 def test_persistencia_blocos_exige_seis_blocos(tmp_path: Path) -> None:
     """Sem ``test_pandemic``, o esquema de blocos é incompleto."""
@@ -205,47 +183,21 @@ def test_persistencia_blocos_exige_seis_blocos(tmp_path: Path) -> None:
         _persistir_blocos(tmp_path, frame)
 
 
-def test_persistencia_mistura_de_esquemas_falha(tmp_path: Path) -> None:
-    """Um frame com ``treino`` e ``train_ref`` é rejeitado explicitamente."""
-    frame = _frame_legado().rename(columns={"particao": "bloco_mestre"}).copy()
-    frame.loc[0, "bloco_mestre"] = "train_ref"
-    with pytest.raises(ValueError, match="misturou esquemas"):
-        _persistir_blocos(tmp_path, frame)
-
-
 # ===========================================================================
-# Round-trip — esquema legado
+# Round-trip — leitura padrão
 # ===========================================================================
 
 def test_default_nao_carrega_teste(tmp_path: Path) -> None:
-    """Sem ``partitions``, o loader devolve só treino+validação."""
-    _persistir(tmp_path, _frame_legado(), source={"kind": "provisional", "sha256": "abc"})
- 
-    loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="provisional")
- 
-    assert set(loaded["particao"]) == {"treino", "validacao"}
+    """Sem ``partitions``, o loader devolve só ``train_ref`` e ``val_ref``."""
+    _persistir_blocos(tmp_path, _frame_blocos(), source={"kind": "final", "sha256": "abc"})
+    loaded, manifest = load_supervised_artifact(tmp_path, expected_kind="final")
+    assert set(loaded["bloco_mestre"]) == set(BLOCKS_PADRAO_LEITURA)
     assert manifest["test_opened"] is False
     assert manifest["seed"] == 42
 
 
-def test_roundtrip_legado_completo_apos_g9(
-    tmp_path: Path,
-    g9_aprovado: None,
-) -> None:
-    """Com G9 aprovado e ``partitions`` explícito, o teste entra no round-trip."""
-    frame = _frame_legado()
-    _persistir(tmp_path, frame)
-
-    loaded, _ = load_supervised_artifact(
-        tmp_path, partitions=("treino", "validacao", "teste"),
-    )
-
-    assert set(loaded["particao"]) == {"treino", "validacao", "teste"}
-    assert len(loaded) == len(frame)
-
-
 # ===========================================================================
-# Round-trip — esquema de blocos
+# Round-trip — blocos
 # ===========================================================================
 
 def test_default_blocos_le_apenas_desenvolvimento(
@@ -284,19 +236,10 @@ def test_roundtrip_blocos_completo_apos_g9(
 
 
 def test_manifesto_registra_partition_schema(tmp_path: Path) -> None:
-    """O manifesto grava ``partition_schema`` coerente com o esquema gravado."""
-    _persistir(tmp_path, _frame_legado())
-    manifesto_legado = json.loads(
-        _caminho_manifesto(tmp_path).read_text(encoding="utf-8")
-    )
-    assert manifesto_legado["partition_schema"] == "legado"
-
-    tmp_blocos = tmp_path / "blocos"
-    _persistir_blocos(tmp_blocos, _frame_blocos())
-    manifesto_blocos = json.loads(
-        _caminho_manifesto(tmp_blocos).read_text(encoding="utf-8")
-    )
-    assert manifesto_blocos["partition_schema"] == "blocos"
+    """O manifesto grava ``partition_schema`` = "blocos"."""
+    _persistir_blocos(tmp_path, _frame_blocos())
+    manifesto = json.loads(_caminho_manifesto(tmp_path).read_text(encoding="utf-8"))
+    assert manifesto["partition_schema"] == "blocos"
 
 
 # ===========================================================================
@@ -305,39 +248,14 @@ def test_manifesto_registra_partition_schema(tmp_path: Path) -> None:
 
 def test_tipo_de_coorte_incorreto_falha(tmp_path: Path) -> None:
     """``expected_kind`` divergente falha antes de tocar nos dados."""
-    _persistir(tmp_path, _frame_legado())
-
+    _persistir_blocos(tmp_path, _frame_blocos(), cohort_kind="outra")
     with pytest.raises(RuntimeError, match="SRAG_COHORT_KIND"):
         load_supervised_artifact(tmp_path, expected_kind="final")
 
 
 # ===========================================================================
-# Gate G9 — esquema legado
+# Gate G9 — holdout_partition
 # ===========================================================================
-
-def test_default_funciona_com_g9_pendente(
-    tmp_path: Path,
-    g9_pendente: None,
-) -> None:
-    """Sem ``teste`` na seleção, o loader não consulta o gate."""
-    _persistir(tmp_path, _frame_legado())
-
-    loaded, _ = load_supervised_artifact(tmp_path)
-
-    assert set(loaded["particao"]) == {"treino", "validacao"}
-
-
-def test_load_com_teste_sem_g9_falha(
-    tmp_path: Path,
-    g9_pendente: None,
-) -> None:
-    """Pedir ``teste`` sem G9 aprovado levanta antes de materializar o bloco."""
-    _persistir(tmp_path, _frame_legado())
-
-    with pytest.raises(GatePendenteError, match="G9_holdout"):
-        load_supervised_artifact(
-            tmp_path, partitions=("treino", "validacao", "teste"),
-        )
 
 
 def test_holdout_partition_sem_g9_falha(
@@ -345,31 +263,14 @@ def test_holdout_partition_sem_g9_falha(
     g9_pendente: None,
 ) -> None:
     """``holdout_partition`` revalida o gate (defesa em profundidade)."""
-    _persistir(tmp_path, _frame_legado())
+    _persistir_blocos(tmp_path, _frame_blocos())
     loaded, manifest = load_supervised_artifact(tmp_path)
-
     with pytest.raises(GatePendenteError, match="G9_holdout"):
         holdout_partition(loaded, manifest)
 
 
-def test_holdout_partition_apos_g9(
-    tmp_path: Path,
-    g9_aprovado: None,
-) -> None:
-    """Com G9 aprovado, ``holdout_partition`` devolve o bloco de teste."""
-    _persistir(tmp_path, _frame_legado())
-    loaded, manifest = load_supervised_artifact(
-        tmp_path, partitions=("treino", "validacao", "teste"),
-    )
-
-    teste = holdout_partition(loaded, manifest)
-
-    assert set(teste["particao"]) == {"teste"}
-    assert len(teste) == 2
-
-
 # ===========================================================================
-# Gate G9 — esquema de blocos
+# Gate G9 — blocos de teste
 # ===========================================================================
 
 @pytest.mark.parametrize("bloco_teste", ["test_ref", "test_pandemic"])
@@ -437,25 +338,22 @@ def test_exploracao_liberada_quando_ativa(
 # ===========================================================================
 
 def test_partitions_vazias_falham(tmp_path: Path) -> None:
-    _persistir(tmp_path, _frame_legado())
-
+    _persistir_blocos(tmp_path, _frame_blocos())
     with pytest.raises(ValueError, match="partitions.*vazio"):
         load_supervised_artifact(tmp_path, partitions=())
 
 
 def test_partitions_desconhecidas_falham(tmp_path: Path) -> None:
-    _persistir(tmp_path, _frame_legado())
-
+    _persistir_blocos(tmp_path, _frame_blocos())
     with pytest.raises(ValueError, match="Partições desconhecidas"):
-        load_supervised_artifact(tmp_path, partitions=("treino", "foo"))
+        load_supervised_artifact(tmp_path, partitions=("train_ref", "foo"))
 
 
 def test_particao_solicitada_ausente_no_artefato_falha(tmp_path: Path) -> None:
     """Pedir um bloco que não existe no artefato falha antes do parquet."""
-    _persistir(tmp_path, _frame_legado())
-
+    _persistir_blocos(tmp_path, _frame_blocos())
     with pytest.raises(ValueError, match="não existem no artefato"):
-        load_supervised_artifact(tmp_path, partitions=("train_ref",))
+        load_supervised_artifact(tmp_path, partitions=("exploracao",))
 
 
 # ===========================================================================
@@ -464,21 +362,19 @@ def test_particao_solicitada_ausente_no_artefato_falha(tmp_path: Path) -> None:
 
 def test_load_com_columns_devolve_apenas_o_pedido(tmp_path: Path) -> None:
     """``columns=["idade_anos"]`` devolve só essa coluna; alvo/partição saem."""
-    _persistir(tmp_path, _frame_legado())
+    _persistir_blocos(tmp_path, _frame_blocos())
     loaded, _ = load_supervised_artifact(tmp_path, columns=["idade_anos"])
-
     assert list(loaded.columns) == ["idade_anos"]
     assert not loaded.empty
 
 
 def test_load_com_columns_preserva_colunas_pedidas(tmp_path: Path) -> None:
     """Se o chamador pedir alvo/partição, elas continuam no retorno."""
-    _persistir(tmp_path, _frame_legado())
+    _persistir_blocos(tmp_path, _frame_blocos())
     loaded, _ = load_supervised_artifact(
-        tmp_path, columns=["idade_anos", "alvo_obito_srag", "particao"],
+        tmp_path, columns=["idade_anos", "alvo_obito_srag", "bloco_mestre"],
     )
-
-    assert {"idade_anos", "alvo_obito_srag", "particao"} <= set(loaded.columns)
+    assert {"idade_anos", "alvo_obito_srag", "bloco_mestre"} <= set(loaded.columns)
 
 
 def test_load_com_columns_valida_alvo_binario(
@@ -486,14 +382,12 @@ def test_load_com_columns_valida_alvo_binario(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Artefato com alvo inválido falha mesmo com ``columns=`` (que exclui o alvo)."""
-    _persistir(tmp_path, _frame_legado())
-
+    _persistir_blocos(tmp_path, _frame_blocos())
     dataset_path = _caminho_dataset(tmp_path)
     frame = pd.read_parquet(dataset_path)
     frame.loc[frame.index[0], "alvo_obito_srag"] = 5
     frame.to_parquet(dataset_path, index=False)
     _rehash_manifesto(tmp_path, monkeypatch)
-
     with pytest.raises(ValueError, match="binário"):
         load_supervised_artifact(tmp_path, columns=["idade_anos"])
 
@@ -502,15 +396,13 @@ def test_load_com_columns_valida_particoes(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Partição desaparecida do parquet é detectada mesmo com ``columns=``."""
-    _persistir(tmp_path, _frame_legado())
-
+    """Bloco desaparecido do parquet é detectado mesmo com ``columns=``."""
+    _persistir_blocos(tmp_path, _frame_blocos())
     dataset_path = _caminho_dataset(tmp_path)
     frame = pd.read_parquet(dataset_path)
-    frame.loc[frame["particao"] == "validacao", "particao"] = "treino"
+    frame.loc[frame["bloco_mestre"] == "val_ref", "bloco_mestre"] = "train_ref"
     frame.to_parquet(dataset_path, index=False)
     _rehash_manifesto(tmp_path, monkeypatch)
-
     with pytest.raises(ValueError, match="Partições esperadas"):
         load_supervised_artifact(tmp_path, columns=["idade_anos"])
 
@@ -518,18 +410,6 @@ def test_load_com_columns_valida_particoes(
 # ===========================================================================
 # split_partitions — agregação por papel
 # ===========================================================================
-
-def test_split_partitions_legado(tmp_path: Path) -> None:
-    """No esquema legado, ``split_partitions`` devolve treino/validação literais."""
-    _persistir(tmp_path, _frame_legado())
-    loaded, manifest = load_supervised_artifact(tmp_path)
-
-    treino, validacao = split_partitions(loaded, manifest)
-
-    assert set(treino["particao"]) == {"treino"}
-    assert set(validacao["particao"]) == {"validacao"}
-    assert len(treino) == 2
-    assert len(validacao) == 2
 
 
 def test_split_partitions_agrega_blocos(

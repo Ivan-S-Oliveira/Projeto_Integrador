@@ -1,19 +1,13 @@
 """Persistência e leitura do dataset supervisionado canônico.
 
-O artefato pode existir em **dois esquemas**:
-
-- **legado** (coorte provisória): ``treino``, ``validacao``, ``teste``;
-- **blocos** (partição-mestre): ``train_ref``, ``val_ref``, ``test_ref``, ``test_pandemic`` (+ ``exploracao`` opcional
-  para 2026).
-
-O esquema é detectado pelos valores de ``partition_counts`` no manifesto;
-nunca é preciso informá-lo ao chamador.
+O artefato usa a partição-mestre por blocos: ``train_ref``, ``val_ref``,
+``test_ref`` e ``test_pandemic`` (mais ``exploracao`` opcional, para 2026).
 
 Proteção do teste:
 
-- qualquer partição de teste (``teste``, ``test_ref`` ou ``test_pandemic``)
-  exige ``G9_holdout`` aprovado — ``GatePendenteError`` é levantado antes
-  de tocar no arquivo;
+- qualquer bloco de teste (``test_ref`` ou ``test_pandemic``) exige
+  ``G9_holdout`` aprovado — ``GatePendenteError`` é levantado antes de tocar
+  no arquivo;
 - ``exploracao`` exige ``temporal.exploracao_2026.ativa: true``.
 """
 
@@ -57,14 +51,6 @@ DATASET_NAME = "dataset_supervisionado.parquet"
 MANIFEST_NAME = "manifesto_supervisionado.json"
 SCHEMA_VERSION = 2
 
-# --- Esquema legado --------------------------------------------------------
-_PARTITION_TREINO = "treino"
-_PARTITION_VALIDACAO = "validacao"
-_PARTITION_TESTE = "teste"
-_PARTICOES_LEGADAS: frozenset[str] = frozenset(
-    {_PARTITION_TREINO, _PARTITION_VALIDACAO, _PARTITION_TESTE}
-)
-
 # --- Esquema de blocos da partição-mestre ---------------------------------
 _BLOCK_TRAIN_REF = "train_ref"
 _BLOCK_VAL_REF = "val_ref"
@@ -89,20 +75,19 @@ BLOCKS_PADRAO_LEITURA: tuple[str, ...] = (
 
 _BLOCOS_OBRIGATORIOS: frozenset[str] = frozenset(BLOCOS_MESTRE) - {_BLOCK_EXPLORACAO}
 
-# Toda string reconhecida como partição (qualquer um dos dois esquemas).
-ALLOWED_PARTITIONS: frozenset[str] = _PARTICOES_LEGADAS | frozenset(BLOCOS_MESTRE)
+# Toda string reconhecida como partição.
+ALLOWED_PARTITIONS: frozenset[str] = frozenset(BLOCOS_MESTRE)
 
 # Combinações de partição consideradas artefatos completos.
 _ESQUEMAS_COMPLETOS: frozenset[frozenset[str]] = frozenset(
     {
-        _PARTICOES_LEGADAS,
         _BLOCOS_OBRIGATORIOS,
         frozenset(BLOCOS_MESTRE),
     }
 )
 
 # Partições que acionam o gate de teste.
-_PARTICOES_DE_TESTE: frozenset[str] = BLOCKS_TESTE | {_PARTITION_TESTE}
+_PARTICOES_DE_TESTE: frozenset[str] = BLOCKS_TESTE
 
 
 # ---------------------------------------------------------------------------
@@ -118,36 +103,11 @@ def _normalizar_kind(kind: Any) -> str:
     return str(kind or "").strip().lower()
 
 
-def _esquema_do_manifest(manifest: Mapping[str, Any]) -> str:
-    """Devolve ``"blocos"`` ou ``"legado"`` a partir do ``partition_counts``."""
-    valores = {str(k) for k in (manifest.get("partition_counts") or {})}
-    if valores & set(BLOCOS_MESTRE):
-        return "blocos"
-    if valores & _PARTICOES_LEGADAS:
-        return "legado"
-    raise ValueError(
-        f"Manifesto sem partições reconhecidas: {sorted(valores)}. "
-        f"Esperado algum de {sorted(ALLOWED_PARTITIONS)}."
-    )
-
-
 def _validar_particoes_completas(observed: set[str]) -> None:
-    """Exige que ``observed`` seja exatamente um dos esquemas completos."""
+    """Exige que ``observed`` seja exatamente um dos esquemas completos de blocos."""
     observed_fs = frozenset(observed)
-
     if observed_fs in _ESQUEMAS_COMPLETOS:
         return
-
-    tem_legado = bool(observed_fs & _PARTICOES_LEGADAS)
-    tem_blocos = bool(observed_fs & set(BLOCOS_MESTRE))
-
-    if tem_legado and tem_blocos:
-        raise ValueError(
-            "Artefato misturou esquemas de partição: "
-            f"legado={sorted(observed_fs & _PARTICOES_LEGADAS)}, "
-            f"blocos={sorted(observed_fs & set(BLOCOS_MESTRE))}."
-        )
-
     esperados = "; ".join(str(sorted(esquema)) for esquema in sorted(_ESQUEMAS_COMPLETOS, key=len))
     raise ValueError(
         f"Partições incompletas. Observado: {sorted(observed_fs)}. "
@@ -155,18 +115,12 @@ def _validar_particoes_completas(observed: set[str]) -> None:
     )
 
 
-def _particoes_por_papel(manifest: Mapping[str, Any]) -> dict[str, tuple[str, ...]]:
-    """Mapeia papel agregado (treino/validacao/teste) para nomes reais no artefato."""
-    if _esquema_do_manifest(manifest) == "blocos":
-        return {
-            "treino": (_BLOCK_TRAIN_REF,),
-            "validacao": (_BLOCK_VAL_REF,),
-            "teste": (_BLOCK_TEST_REF, _BLOCK_TEST_PANDEMIC),
-        }
+def _particoes_por_papel() -> dict[str, tuple[str, ...]]:
+    """Mapeia o papel agregado (treino/validacao/teste) para os blocos do artefato."""
     return {
-        "treino": (_PARTITION_TREINO,),
-        "validacao": (_PARTITION_VALIDACAO,),
-        "teste": (_PARTITION_TESTE,),
+        "treino": (_BLOCK_TRAIN_REF,),
+        "validacao": (_BLOCK_VAL_REF,),
+        "teste": (_BLOCK_TEST_REF, _BLOCK_TEST_PANDEMIC),
     }
 
 
@@ -254,7 +208,7 @@ def validate_supervised_frame(
     """Valida schema mínimo, alvo binário e partições do dataset.
 
     ``required_partitions=None`` aceita qualquer um dos esquemas completos
-    (legado, blocos sem ``exploracao`` ou blocos com ``exploracao``).
+    (blocos sem ``exploracao`` ou blocos com ``exploracao``).
     Um subconjunto permite validar leituras parciais.
     """
     required = set(feature_columns) | {target_column, partition_column}
@@ -362,11 +316,7 @@ def _build_manifest(
             frame[partition_column].value_counts(dropna=False).items()
         )
     }
-    schema = (
-        "blocos"
-        if (set(partition_counts) & set(BLOCOS_MESTRE))
-        else "legado"
-    )
+    schema = "blocos"
     return {
         "schema_version": SCHEMA_VERSION,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
@@ -444,7 +394,6 @@ def persist_supervised_artifact(
         encoding="utf-8",
     )
     return dataset_path, manifest_path
-
 
 
 def _configuracao_artefato() -> dict[str, Any]:
@@ -921,12 +870,6 @@ def gerar_artefato_supervisionado(
 # Leitura
 # ---------------------------------------------------------------------------
 
-def _selecionar_particoes_padrao(manifest: Mapping[str, Any]) -> tuple[str, ...]:
-    """Default depende do esquema do artefato."""
-    if _esquema_do_manifest(manifest) == "blocos":
-        return BLOCKS_PADRAO_LEITURA
-    return (_PARTITION_TREINO, _PARTITION_VALIDACAO)
-
 
 def _validar_particoes_solicitadas(
     selected: Sequence[str],
@@ -966,10 +909,9 @@ def load_supervised_artifact(
     """Carrega o artefato canônico e valida hash, tipo de coorte e schema.
 
     ``partitions`` restringe o subconjunto carregado (pushdown no Parquet).
-    Default: ``BLOCKS_PADRAO_LEITURA`` quando o artefato é de blocos, senão
-    ``("treino", "validacao")``.
+    Default: ``BLOCKS_PADRAO_LEITURA`` (``train_ref`` e ``val_ref``).
 
-    Qualquer partição de teste (``teste``, ``test_ref`` ou ``test_pandemic``)
+    Qualquer bloco de teste (``test_ref`` ou ``test_pandemic``)
     exige ``G9_holdout`` aprovado. ``exploracao`` exige
     ``temporal.exploracao_2026.ativa``.
 
@@ -998,7 +940,7 @@ def load_supervised_artifact(
 
     selected = (
         tuple(partitions) if partitions is not None
-        else _selecionar_particoes_padrao(manifest)
+        else BLOCKS_PADRAO_LEITURA
     )
     _validar_particoes_solicitadas(selected, manifest)
     _exigir_gates_para(selected)
@@ -1043,14 +985,13 @@ def split_partitions(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Devolve ``(treino, validacao)`` agregando os blocos correspondentes.
 
-    - legado: ``treino``, ``validacao``;
-    - blocos: ``train_ref`` → treino; ``val_ref`` → validação.
+    ``train_ref`` → treino; ``val_ref`` → validação.
 
     O bloco de teste nunca é exposto aqui — use ``holdout_partition`` após
     ``G9_holdout``.
     """
     col = manifest["partition_column"]
-    papeis = _particoes_por_papel(manifest)
+    papeis = _particoes_por_papel()
 
     treino = _filtrar_particoes(frame, col, papeis["treino"])
     validacao = _filtrar_particoes(frame, col, papeis["validacao"])
@@ -1075,12 +1016,12 @@ def holdout_partition(
     exigir_gate("G9_holdout")
 
     col = manifest["partition_column"]
-    papeis = _particoes_por_papel(manifest)
+    papeis = _particoes_por_papel()
     teste = _filtrar_particoes(frame, col, papeis["teste"])
 
     if teste.empty:
         raise ValueError(
             "Bloco de teste ausente no DataFrame. Carregue o artefato "
-            "incluindo test_ref/test_pandemic (ou 'teste' no legado)."
+            "incluindo test_ref/test_pandemic."
         )
     return teste
