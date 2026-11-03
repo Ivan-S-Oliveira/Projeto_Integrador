@@ -3500,7 +3500,7 @@ def project_context_section(config=None):
         blocks_text = ("Partition by notification group into " + ", ".join(f"`{n}`" for n in block_names)
                        + " (block names read from `experimentos_split.blocos` in the YAML).")
     else:
-        blocks_text = ("Partition by notification group into `train_ref`, `val_tune`, `val_cal`, `val_meas`, "
+        blocks_text = ("Partition by notification group into `train_ref`, `val_ref`, "
                        "`test_ref`, `test_pandemic` (+ `exploracao`).")
     return [
         "## 9. Project pillars and context (summary; the Knowledge Base has the full context)", "",

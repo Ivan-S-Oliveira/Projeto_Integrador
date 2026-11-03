@@ -295,30 +295,14 @@ experimentos_split:
       - 2025
       papel: treino
       influencia_decisoes: true
-    val_tune:
+    val_ref:
       anos:
       - 2019
       - 2023
       - 2024
       - 2025
-      papel: selecao_de_features_geografia_e_tuning
+      papel: validacao_tuning_calibracao_e_limiar
       influencia_decisoes: true
-    val_cal:
-      anos:
-      - 2019
-      - 2023
-      - 2024
-      - 2025
-      papel: calibracao_e_escolha_de_limiar
-      influencia_decisoes: true
-    val_meas:
-      anos:
-      - 2019
-      - 2023
-      - 2024
-      - 2025
-      papel: confirmacao_intermediaria_pre_teste
-      influencia_decisoes: false
     test_ref:
       anos:
       - 2019

@@ -3,8 +3,7 @@
 O artefato pode existir em **dois esquemas**:
 
 - **legado** (coorte provisória): ``treino``, ``validacao``, ``teste``;
-- **blocos** (partição-mestre): ``train_ref``, ``val_tune``, ``val_cal``,
-  ``val_meas``, ``test_ref``, ``test_pandemic`` (+ ``exploracao`` opcional
+- **blocos** (partição-mestre): ``train_ref``, ``val_ref``, ``test_ref``, ``test_pandemic`` (+ ``exploracao`` opcional
   para 2026).
 
 O esquema é detectado pelos valores de ``partition_counts`` no manifesto;
@@ -68,18 +67,14 @@ _PARTICOES_LEGADAS: frozenset[str] = frozenset(
 
 # --- Esquema de blocos da partição-mestre ---------------------------------
 _BLOCK_TRAIN_REF = "train_ref"
-_BLOCK_VAL_TUNE = "val_tune"
-_BLOCK_VAL_CAL = "val_cal"
-_BLOCK_VAL_MEAS = "val_meas"
+_BLOCK_VAL_REF = "val_ref"
 _BLOCK_TEST_REF = "test_ref"
 _BLOCK_TEST_PANDEMIC = "test_pandemic"
 _BLOCK_EXPLORACAO = "exploracao"
 
 BLOCOS_MESTRE: tuple[str, ...] = (
     _BLOCK_TRAIN_REF,
-    _BLOCK_VAL_TUNE,
-    _BLOCK_VAL_CAL,
-    _BLOCK_VAL_MEAS,
+    _BLOCK_VAL_REF,
     _BLOCK_TEST_REF,
     _BLOCK_TEST_PANDEMIC,
     _BLOCK_EXPLORACAO,
@@ -89,9 +84,7 @@ BLOCKS_TESTE: frozenset[str] = frozenset({_BLOCK_TEST_REF, _BLOCK_TEST_PANDEMIC}
 
 BLOCKS_PADRAO_LEITURA: tuple[str, ...] = (
     _BLOCK_TRAIN_REF,
-    _BLOCK_VAL_TUNE,
-    _BLOCK_VAL_CAL,
-    _BLOCK_VAL_MEAS,
+    _BLOCK_VAL_REF,
 )
 
 _BLOCOS_OBRIGATORIOS: frozenset[str] = frozenset(BLOCOS_MESTRE) - {_BLOCK_EXPLORACAO}
@@ -167,7 +160,7 @@ def _particoes_por_papel(manifest: Mapping[str, Any]) -> dict[str, tuple[str, ..
     if _esquema_do_manifest(manifest) == "blocos":
         return {
             "treino": (_BLOCK_TRAIN_REF,),
-            "validacao": (_BLOCK_VAL_TUNE, _BLOCK_VAL_CAL, _BLOCK_VAL_MEAS),
+            "validacao": (_BLOCK_VAL_REF,),
             "teste": (_BLOCK_TEST_REF, _BLOCK_TEST_PANDEMIC),
         }
     return {
@@ -1049,7 +1042,7 @@ def split_partitions(
     """Devolve ``(treino, validacao)`` agregando os blocos correspondentes.
 
     - legado: ``treino``, ``validacao``;
-    - blocos: ``train_ref`` → treino; ``val_tune + val_cal + val_meas`` → validação.
+    - blocos: ``train_ref`` → treino; ``val_ref`` → validação.
 
     O bloco de teste nunca é exposto aqui — use ``holdout_partition`` após
     ``G9_holdout``.

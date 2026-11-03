@@ -22,18 +22,14 @@ PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
 
 MASTER_BLOCKS: tuple[str, ...] = (
     "train_ref",
-    "val_tune",
-    "val_cal",
-    "val_meas",
+    "val_ref",
     "test_ref",
     "test_pandemic",
 )
 
 DEFAULT_FRACOES_MASTER: dict[str, float] = {
     "train_ref": 0.70,
-    "val_tune": 0.05,
-    "val_cal": 0.05,
-    "val_meas": 0.05,
+    "val_ref": 0.15,
     "test_ref": 0.15,
 }
 
@@ -283,7 +279,7 @@ def criar_particao_mestra(
     region_column: str | None = "regiao_residencia",
     partition_column: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Materializa os seis blocos de ``temporal.blocos`` no DataFrame.
+    """Materializa os quatro blocos de ``temporal.blocos`` no DataFrame.
 
     - 2019/2023/2024/2025 → hash por (ano × alvo × região) entre os cinco
       blocos compartilhados (fallback para ano × alvo se algum estrato

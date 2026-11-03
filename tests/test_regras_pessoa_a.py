@@ -563,7 +563,7 @@ _MANIFESTO_PARTICAO = (
 _PREVALENCIA_ESPERADA = 0.0844      # 8,44% (§29.1, coorte definitiva)
 _TOLERANCIA_PP        = 0.005       # 0,5 ponto percentual
 _BLOCOS_DESENVOLVIMENTO = (
-    "train_ref", "val_tune", "val_cal", "val_meas", "test_ref",
+    "train_ref", "val_ref", "test_ref",
 )
 _ANOS_DESENVOLVIMENTO = (2019, 2023, 2024, 2025)
 

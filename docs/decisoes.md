@@ -29,7 +29,7 @@ approved); a coorte provisória foi aposentada e o resolvedor só aceita a
 definitiva (§29.32).
 - Alvo principal: `evolucao = 1` versus `evolucao = 2`.
 - Desenvolvimento: apenas 2019, 2023, 2024 e 2025.
-- Blocos de desenvolvimento: `train_ref`, `val_tune`, `val_cal` e `val_meas`.
+- Blocos de desenvolvimento: `train_ref` e `val_ref`.
 - Teste A: `test_ref`, com 2019, 2023, 2024 e 2025 e grupos nunca usados no desenvolvimento; é o resultado principal.
 - Teste B: união lógica de `test_ref` com `test_pandemic`, cobrindo 2019–2025; é a avaliação ampliada de robustez temporal.
 - `test_pandemic`: somente 2020, 2021 e 2022, sem participação em qualquer decisão de desenvolvimento.
@@ -37,7 +37,7 @@ definitiva (§29.32).
 - 2026: fora do desenvolvimento e dos Testes A/B; exploração opcional posterior, sem reajuste.
 - Interpretação A × B: sensibilidade à composição temporal, sem interpretação causal do efeito da pandemia.
 - Testes fechados: `test_ref` e `test_pandemic` permanecem inacessíveis até G9.
-- Partição-mestre: seis blocos (`train_ref`, `val_tune`, `val_cal`, `val_meas`, `test_ref`, `test_pandemic`) materializados por `criar_particao_mestra` com o método `hash_grupo_estratificado_mestre_v1`. Frações nos anos compartilhados: `0.70/0.05/0.05/0.05/0.15`; `min_grupos_por_estrato: 5`.
+- Partição-mestre: quatro blocos (`train_ref`, `val_ref`, `test_ref`, `test_pandemic`) materializados por `criar_particao_mestra` com o método `hash_grupo_estratificado_mestre_v1`. Frações nos anos compartilhados: `0.70/0.15/0.15`; `min_grupos_por_estrato: 5`.
 - 2026 é marcado como `exploracao`, rótulo separado do fluxo principal.
 - Tratamentos: somente EDA e auditoria até a conclusão do modelo principal.
 - Textos livres: EDA, sem NLP completo antes do Fine Tuning.
@@ -153,8 +153,7 @@ anos de forma assimétrica e definida antes da avaliação.
 
 ### 5.1 Desenvolvimento de referência
 
-Somente 2019, 2023, 2024 e 2025 alimentam `train_ref`, `val_tune`,
-`val_cal` e `val_meas`. Esses blocos são disjuntos por `group_id`.
+Somente 2019, 2023, 2024 e 2025 alimentam `train_ref` e `val_ref`. Esses blocos são disjuntos por `group_id`.
 Nenhum registro de 2020–2022 ou 2026 participa de decisões de
 desenvolvimento.
 
@@ -683,14 +682,12 @@ A criação do Modelo C não faz parte do caminho crítico até 17/10/2026.
 **Status:** decisão fechada em 18/10/2026.
 
 A divisão 70/15/15 foi supersedida. A partição-mestre determinística por
-`group_id` tem seis blocos:
+`group_id` tem quatro blocos:
 
 | Bloco | Anos | Fração | Finalidade | Influencia decisões? |
 |---|---|---|---|---|
 | `train_ref` | 2019, 2023, 2024, 2025 | 0.70 | treino | Sim |
-| `val_tune` | 2019, 2023, 2024, 2025 | 0.05 | features, geografia e tuning | Sim |
-| `val_cal` | 2019, 2023, 2024, 2025 | 0.05 | calibração e limiar | Sim |
-| `val_meas` | 2019, 2023, 2024, 2025 | 0.05 | confirmação pré-teste | Somente confirmação |
+| `val_ref` | 2019, 2023, 2024, 2025 | 0.15 | features, geografia e tuning; calibração e limiar; confirmação pré-teste | Sim; Somente confirmação |
 | `test_ref` | 2019, 2023, 2024, 2025 | 0.15 | Teste A | Não |
 | `test_pandemic` | 2020, 2021, 2022 | n/a (100% dos anos pandêmicos) | parcela adicional do Teste B | Não |
 
@@ -707,7 +704,7 @@ Invariantes:
 
 - nenhum `group_id` cruza blocos;
 - 2020–2022 aparecem somente em `test_pandemic`;
-- 2026 fica fora dos seis blocos, em `exploracao`;
+- 2026 fica fora dos quatro blocos, em `exploracao`;
 - mesma entrada, seed e configuração reproduzem o mapa;
 - ambos os testes ficam fechados até G9;
 - Teste B é união lógica sem duplicação física;
@@ -898,7 +895,7 @@ Nenhuma extensão retroage para otimizar o resultado oficial de teste.
 
 Um único modelo é desenvolvido sem 2020–2022. Treino e desenvolvimento
 usam exclusivamente 2019, 2023, 2024 e 2025, distribuídos em
-`train_ref`, `val_tune`, `val_cal` e `val_meas`, com separação
+`train_ref` e `val_ref`, com separação
 determinística por grupo.
 
 - **Teste A (`test_ref`)**: 2019, 2023, 2024 e 2025, em grupos nunca
@@ -935,7 +932,7 @@ região e UF. Registrar hashes, commit e timestamp.
 A decisão estará implementada quando:
 
 - [x] este registro estiver versionado;
-- [x] o `supervised.yaml` declarar os seis blocos e seus anos;
+- [x] o `supervised.yaml` declarar os quatro blocos e seus anos;
 - [x] nenhuma configuração ativa permitir 2020–2022 ou 2026 em
       desenvolvimento;
 - [ ] testes automatizados bloquearem anos proibidos e sobreposição de
@@ -1667,3 +1664,11 @@ tests/test_cohort_source.py; notebooks C_11, C_12, C_13, C_15 e C_16;
 configs/final_cohort_v1.yaml; tests/test_cohort_contract.py;
 configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Decidiu:** Pessoa B.
+
+#### 29.33 03/11 · Validação unificada: desenho 70/15/15
+
+- **Decisão:** os três blocos de validação (`val_tune`, `val_cal` e `val_meas`, 5% cada) foram unificados em `val_ref` (15%). `train_ref` (70%), `test_ref` (15%) e `test_pandemic` não mudam.
+- **Motivo:** simplificar o desenho e a explicação do trabalho.
+- **Limitação:** a seleção de variáveis e de hiperparâmetros (C_12 a C_14) e a calibração e a escolha do limiar (C_15) usam o mesmo bloco `val_ref`: não há bloco exclusivo para calibrar e escolher o limiar. Mitigação: o C_15 divide `val_ref` em duas metades disjuntas (`val_cal` ajusta o calibrador; `val_meas` mede o Brier e escolhe o limiar) e o teste segue fechado até o G9.
+- **Efeito:** a partição-mestra e o artefato supervisionado precisam ser regerados, e os resultados do B_05 e do C_11 ao C_16 precisam ser reexecutados antes de serem citados.
+- **Registro anterior:** as entradas acima descrevem o desenho 70/5+5+5/15 e foram mantidas como histórico, sem alteração.

@@ -7,7 +7,7 @@ Cobrem:
   independência de índice/ordem;
 - ``atribuir_particao_estratificada_por_hash``: determinismo,
   disjunção por grupo, sensibilidade ao sal, validação de estratos;
-- ``criar_particao_mestra``: seis blocos, pandemia isolada, 2026 em
+- ``criar_particao_mestra``: quatro blocos, pandemia isolada, 2026 em
   exploração, manifesto com hash por bloco, região categórica.
 """
 
@@ -219,9 +219,7 @@ TEMPORAL_CFG = {
     "coluna_particao": "particao",
     "blocos": {
         "train_ref":     {"anos": [2019, 2023, 2024, 2025], "fracao": 0.70},
-        "val_tune":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
-        "val_cal":       {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
-        "val_meas":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.05},
+        "val_ref":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.15},
         "test_ref":      {"anos": [2019, 2023, 2024, 2025], "fracao": 0.15},
         "test_pandemic": {"anos": [2020, 2021, 2022]},
     },
@@ -232,7 +230,7 @@ def test_particao_mestra_pandemia_isolada():
     out, m = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
     assert set(out.loc[out.ano_internacao.isin([2020, 2021, 2022]), "particao"]) == {"test_pandemic"}
     assert set(out.loc[out.ano_internacao.isin([2019, 2023, 2024, 2025]), "particao"]) <= {
-        "train_ref", "val_tune", "val_cal", "val_meas", "test_ref",
+        "train_ref", "val_ref", "test_ref",
     }
 
 
@@ -249,7 +247,7 @@ def test_particao_mestra_2026_marcado_exploracao():
 
 def test_particao_mestra_manifesto_tem_hash_por_bloco():
     _, m = criar_particao_mestra(_df_master(), temporal_cfg=TEMPORAL_CFG)
-    for nome in ("train_ref", "val_tune", "val_cal", "val_meas", "test_ref", "test_pandemic"):
+    for nome in ("train_ref", "val_ref", "test_ref", "test_pandemic"):
         assert m["blocos"][nome]["n_linhas"] > 0
         assert m["blocos"][nome]["hash_bloco"]
 

@@ -3,7 +3,7 @@
 Cobrem os dois esquemas suportados:
 
 - **legado**: ``treino``, ``validacao``, ``teste`` (artefato provisório);
-- **blocos**: ``train_ref``, ``val_tune``, ``val_cal``, ``val_meas``,
+- **blocos**: ``train_ref``, ``val_ref``,
   ``test_ref``, ``test_pandemic`` (+ ``exploracao`` opcional).
 
 Além do gate ``G9_holdout`` sobre **qualquer** partição de teste,
@@ -64,7 +64,7 @@ def _frame_blocos() -> pd.DataFrame:
         "alvo_obito_srag": [0, 1, 0, 1, 0, 1, 0, 1],
         "bloco_mestre": [
             "train_ref", "train_ref",
-            "val_tune", "val_cal", "val_meas",
+            "val_ref", "val_ref", "val_ref",
             "test_ref",
             "test_pandemic", "test_pandemic",
         ],
@@ -271,13 +271,13 @@ def test_roundtrip_blocos_completo_apos_g9(
     loaded, _ = load_supervised_artifact(
         tmp_path,
         partitions=(
-            "train_ref", "val_tune", "val_cal", "val_meas",
+            "train_ref", "val_ref",
             "test_ref", "test_pandemic",
         ),
     )
 
     assert set(loaded["bloco_mestre"]) == {
-        "train_ref", "val_tune", "val_cal", "val_meas",
+        "train_ref", "val_ref",
         "test_ref", "test_pandemic",
     }
     assert len(loaded) == len(frame)
@@ -394,7 +394,7 @@ def test_holdout_partition_blocos_apos_g9(
     loaded, manifest = load_supervised_artifact(
         tmp_path,
         partitions=(
-            "train_ref", "val_tune", "val_cal", "val_meas",
+            "train_ref", "val_ref",
             "test_ref", "test_pandemic",
         ),
     )
@@ -541,7 +541,7 @@ def test_split_partitions_agrega_blocos(
     loaded, manifest = load_supervised_artifact(
         tmp_path,
         partitions=(
-            "train_ref", "val_tune", "val_cal", "val_meas",
+            "train_ref", "val_ref",
             "test_ref", "test_pandemic",
         ),
     )
@@ -550,7 +550,7 @@ def test_split_partitions_agrega_blocos(
 
     assert set(treino["bloco_mestre"]) == {"train_ref"}
     assert set(validacao["bloco_mestre"]) == {
-        "val_tune", "val_cal", "val_meas",
+        "val_ref",
     }
     assert len(treino) == 2
     assert len(validacao) == 3
@@ -637,17 +637,9 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
                 "anos": [2019, 2023, 2024, 2025],
                 "fracao": 0.70,
             },
-            "val_tune": {
+            "val_ref": {
                 "anos": [2019, 2023, 2024, 2025],
-                "fracao": 0.05,
-            },
-            "val_cal": {
-                "anos": [2019, 2023, 2024, 2025],
-                "fracao": 0.05,
-            },
-            "val_meas": {
-                "anos": [2019, 2023, 2024, 2025],
-                "fracao": 0.05,
+                "fracao": 0.15,
             },
             "test_ref": {
                 "anos": [2019, 2023, 2024, 2025],
@@ -763,9 +755,7 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
         )
         shared_blocks = [
             "train_ref",
-            "val_tune",
-            "val_cal",
-            "val_meas",
+            "val_ref",
             "test_ref",
         ]
 
@@ -779,9 +769,7 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
         blocks_manifest = {}
         for block in [
             "train_ref",
-            "val_tune",
-            "val_cal",
-            "val_meas",
+            "val_ref",
             "test_ref",
             "test_pandemic",
             "exploracao",
@@ -917,9 +905,7 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
 
     assert set(dataset["particao"]) == {
         "train_ref",
-        "val_tune",
-        "val_cal",
-        "val_meas",
+        "val_ref",
         "test_ref",
         "test_pandemic",
     }
