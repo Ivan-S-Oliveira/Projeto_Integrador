@@ -50,6 +50,7 @@ definitiva (§29.32).
 - G1 aprovado em 22/10: 31 features principais; `saturacao` e `desc_resp` só em sensibilidade; `vacina`, `vacina_cov`, `cs_escol_n` e `sg_uf` só como contexto incremental (§29.2); em 27/10 `vacina_cov` foi trocada por `vacina_cov_previa`.
 - `nu_notific` repetido: quarentena entre estratos com flag (§29.10).
 - Lista curta provisória de modelos: `hist_gradient_boosting` e `logistic`; `decision_tree` e `random_forest` encerradas (§29.11).
+Substituído em 03/11 (§29.35): o finalista foi congelado no G6 (`boosting`); a lista curta acima fica como histórico.
 
 ### 1.2 Decisões pendentes
 
@@ -1147,6 +1148,7 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
   desenvolvimento.
 - **Implementado em:** `supervised.yaml` (`selecao_modelos`); G5
   aprovado em 11/10. O `finalista_escolhido` fica em aberto até o G6.
+- **Substituído em 03/11:** o finalista foi congelado no G6 (§29.35): `boosting`; esta lista curta fica como histórico.
 
 ### 29.12 27/10 · Peso de classe (#5)
 
@@ -1611,6 +1613,7 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   (`DEFAULT_CONFIG` e docstring de `_analytical_path`),
   `src/data/supervised_artifact.py` (comentário em `DATASET_NAME`).
 - **Fecha:** #73.
+- **Substituído em 03/11 (#154):** o fluxo A (`src/protocolo/verificacoes.py`) e a chave `dataset_analitico` do `configs/decisoes.yaml` foram removidos; o artefato oficial é o único.
 
 ### 29.27 01/11 · Suíte rápida e gates históricos restaurados (#144)
 
@@ -1634,6 +1637,7 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   `test_src_sem_funcoes_duplicadas`), `tests/test_config.py`
   (`test_gates_historicos_aprovados`) e `tools/medir_notebook.py`.
 - **Fecha:** #144.
+- **Atualizado em 03/11 (#154):** `tests/test_regras_pessoa_a.py` e `src/protocolo/verificacoes.py` (com `_analytical_path`) foram removidos; o teste de funções duplicadas e as invariantes da partição-mestra estão em `tests/test_invariantes_protocolo.py`.
 
 #### 29.32 02/11 · Coorte provisória aposentada; resolvedor e contrato só aceitam a definitiva (#151)
 - **Decisão:** o projeto usa uma única coorte, a definitiva
@@ -1669,6 +1673,7 @@ G8.
 (final_metadata.origem em supervised.yaml e feature_contract_v1.json); e
 as chaves candidate_* do contrato, que nomeiam a pasta de trabalho do
 construtor da coorte e são exigidas por src/data/cohort_contract.py.
+- **Atualizado em 03/11 (#154):** o esquema legado do artefato supervisionado e o dataset provisório do fluxo A saíram do código; seguem mantidos a origem histórica da seleção de variáveis e as chaves `candidate_*` do contrato.
 - **Implementado em:** src/data/cohort_source.py;
 tests/test_cohort_source.py; notebooks C_11, C_12, C_13, C_15 e C_16;
 configs/final_cohort_v1.yaml; tests/test_cohort_contract.py;
