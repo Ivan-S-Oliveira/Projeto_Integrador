@@ -8,7 +8,8 @@ Run from anywhere inside the repository, with the project venv:
     .\.venv\Scripts\python.exe tools\update_project_reference.py --run-tests --pytest-args "-m 'not slow'"
     .\.venv\Scripts\python.exe tools\update_project_reference.py --self-test
 
-Output: docs/PROJECT_COMPLETE_REFERENCE.txt (the only file needed).
+Output: docs/PROJECT_COMPLETE_REFERENCE.txt (the canonical file) plus a Markdown pack of at most 8
+files in docs/project_reference_md/ (the hard limit is 8 generated files besides the TXT).
 
 What the TXT contains
 - Instructions for AI assistants at the top (format, how to work, extraction commands).
@@ -20,6 +21,13 @@ What the TXT contains
   exactly as it is. Each file header has an outline of its functions with line numbers.
 - Sections 7-9: files not copied (with reason), environment and Git state, and a
   short summary of the project pillars and methodology.
+- Section 10: data flow by static analysis (who reads and writes each file, artifact matrix,
+  execution order suggested by the data flow, project functions that touch files).
+- Section 11: configuration readers, gate status, artifact manifests, recorded hashes versus
+  the real files (detects artifacts built from an older cohort), notebooks executed before a
+  module they import changed, and recent commits.
+- Backups and historical copies (folders `backups`, `_backup_limpeza`, `_versoes_anteriores`,
+  names `*.antes_*`, `*.bak`) are listed with size and hash but not copied (--include-backups).
 
 Rules
 - Reproduced in full (never shortened): .py, .ipynb (rendered cell by cell, all
@@ -32,7 +40,7 @@ Rules
   captured file; the run fails if anything differs.
 
 Exit codes: 0 ok · 2 high problems with --fail-on-high · 3 coverage gaps ·
-            4 a removed limit option was passed.
+            4 a removed limit option was passed · 5 more than 8 files generated besides the TXT.
 """
 from __future__ import annotations
 
@@ -68,7 +76,7 @@ except Exception:  # pragma: no cover
     tomllib = None
 
 
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 17
 SNAPSHOT_ID = "unset"  # set at the start of build_reference
 
 OUTPUT_DIR = Path("docs")
@@ -183,6 +191,21 @@ DEFAULT_GENERATED_PATTERNS = (
 
 # Files whose existence and keys are reported, but whose values are hidden.
 KEYS_ONLY_FILES = {"paths.local.json"}
+
+# Backups and historical copies: listed (size, hash) but not copied, unless --include-backups.
+BACKUP_DIR_NAMES = {"backups", "backup", "_backup_limpeza", "_backups", "_versoes_anteriores", "versoes_anteriores"}
+BACKUP_FILE_PATTERNS = ("*.antes_*", "*.bak", "*.orig", "*.backup", "*_backup.*")
+
+# Static data-flow analysis (Sections 10 and 11).
+IO_READ_CALLS = {"read_parquet", "read_csv", "read_json", "read_excel", "read_feather", "read_pickle", "read_table",
+                 "ParquetFile", "read_text", "read_bytes", "read_hdf", "read_stata", "read_sas", "imread"}
+IO_WRITE_CALLS = {"to_parquet", "to_csv", "to_json", "to_excel", "to_feather", "to_pickle", "to_html", "to_markdown",
+                  "to_hdf", "to_stata", "savefig", "write_text", "write_bytes", "write_table"}
+IO_RECEIVER_PATH = {"read_text", "read_bytes", "write_text", "write_bytes"}
+FILE_LIKE_RE = re.compile(r"\.[A-Za-z0-9]{1,8}$")
+CONFIG_ROOT_TOKENS = ("cfg", "config")
+MANIFEST_PRIORITY = ("sha256", "rows", "columns", "generated", "published", "created", "kind", "status",
+                     "test_opened", "deaths", "schema_version", "partition", "counts", "path")
 
 EXTRACTABLE_SUFFIXES = {".docx", ".docm", ".pptx", ".pptm", ".xlsx", ".xlsm", ".pdf"}
 SCHEMA_SUFFIXES = {".parquet"}
@@ -2720,6 +2743,9 @@ def build_reference(root, args):
     requirements = None
     numbered = args.line_numbers
     nb_cells = {}          # notebook path -> list of cell sources (index 0 = cell 1)
+    py_sources = {}        # python path -> source text (for the data-flow analysis)
+    manifests = {}         # json path -> parsed manifest (data/analytical, outputs/coorte_candidata, *manifest*)
+    nb_exec = {}           # notebook path -> last saved execution (UTC datetime) or None
     parquet_info = {}      # parquet path -> {"rows": n, "columns": "name:type, ..."}
     symbol_spans = {}      # python path -> [(start, end, qualname)]
     RENDERED_BODIES.clear()
@@ -2774,6 +2800,15 @@ def build_reference(root, args):
             record["mandatory_integral"] = is_mandatory_source(rel, read_head(absolute, 256))
         except OSError:
             pass
+        backup_text = None if args.include_backups else backup_reason(rel_text)
+        if backup_text:
+            try:
+                backup_digest = sha256_file(absolute) if args.hash_binaries else None
+            except OSError:
+                backup_digest = None
+            record.update(category="backup", mode="excluded", reason=backup_text, sha256=backup_digest)
+            finish(record)
+            continue
         pattern = is_generated(rel_text, generated_patterns)
         if not pattern and not args.include_generated and is_compiler_output(absolute):
             pattern = "content: generated reference or compilation"
@@ -2813,8 +2848,10 @@ def build_reference(root, args):
                     as_metadata(record, absolute, error or "schema unavailable", category="data")
                     continue
                 columns = ", ".join(f"{c['name']}:{c['type']}" for c in structured.get("columns", ()))
-                parquet_info[rel_text] = {"rows": structured.get("rows"), "columns": columns}
-                record.update(category="data", mode="schema", reason="Parquet: schema in Section 7, rows never copied")
+                parquet_digest = sha256_file(absolute) if args.hash_binaries else None
+                parquet_info[rel_text] = {"rows": structured.get("rows"), "columns": columns, "sha256": parquet_digest}
+                record.update(category="data", mode="schema", sha256=parquet_digest,
+                              reason="Parquet: schema in Section 7, rows never copied")
                 finish(record)
                 continue
 
@@ -2884,6 +2921,7 @@ def build_reference(root, args):
                         numbered=numbered,
                     )
                     rendered = json.dumps(cells, ensure_ascii=False, default=str)
+                    nb_exec[rel_text] = notebook_last_execution(cells)
                     record.update(category="notebook", mode="full",
                                   lines=analysis.code_lines, redactions=len(events),
                                   sha256_rendered=sha256_text(rendered), partial=False)
@@ -2909,6 +2947,7 @@ def build_reference(root, args):
             if suffix in PYTHON_MODE_SUFFIXES:
                 analysis_py = analyze_python(rel, decoded, internal_roots)
                 python_files.append(analysis_py)
+                py_sources[rel_text] = decoded
                 record["module"] = analysis_py.module
                 record["purpose"] = first_purpose(rel, text, analysis_py)
                 symbol_spans[rel_text] = sorted((s.lineno, s.end_lineno, s.qualname)
@@ -2926,6 +2965,13 @@ def build_reference(root, args):
                 requirements = parse_requirements(text)
             if not artifact or suffix in {".yaml", ".yml"}:
                 files_text[rel_text] = text
+            if suffix == ".json" and len(text) < 3_000_000 and (
+                    rel_text.startswith(("data/analytical/", "outputs/coorte_candidata/"))
+                    or "manifest" in rel.name.lower()):
+                try:
+                    manifests[rel_text] = json.loads(text)
+                except ValueError:
+                    pass
             extra = list(redaction_lines(events))
             if suffix in PYTHON_MODE_SUFFIXES:
                 extra.extend(outline_lines(analysis_py.symbols, constants=module_constants(decoded)))
@@ -2954,6 +3000,42 @@ def build_reference(root, args):
 
     # Indexes and diagnostics
     symbols = [s for f in python_files for s in f.symbols]
+    # ---- Sections 10 and 11: data flow, configuration and artifact state -----
+    log("6b/8 Analisando fluxo de dados, configuração e estado dos artefatos...")
+    try:
+        io_model = build_io_model(py_sources, nb_cells, python_files, notebooks, existing_paths)
+        flow_name_counts, flow_hashes, flow_last_change, flow_modified = Counter(), {}, {}, {}
+        for r in coverage:
+            flow_modified[r["path"]] = r.get("modified_utc", "")
+            if r.get("category") == "backup" or r.get("git") == "deleted":
+                continue
+            base = r["path"].rsplit("/", 1)[-1]
+            flow_name_counts[base] += 1
+            if r.get("sha256"):
+                flow_hashes[base] = r["sha256"]
+            commit_info = commits.get(r["path"])
+            committed = parse_iso_utc(commit_info.get("date")) if commit_info else None
+            touched = parse_iso_utc(r.get("modified_utc"))
+            dirty = bool(r.get("status")) and r.get("status") != "!!"
+            if committed and not dirty:
+                flow_last_change[r["path"]] = committed
+            elif committed and dirty and touched:
+                flow_last_change[r["path"]] = max(committed, touched)
+            elif touched:
+                flow_last_change[r["path"]] = touched
+        flow_ctx = {
+            "io_model": io_model, "config": config if isinstance(config, dict) else None,
+            "texts": {**files_text, **notebook_text}, "manifests": manifests, "modified": flow_modified,
+            "hash_by_name": flow_hashes, "name_counts": dict(flow_name_counts), "notebooks": notebooks,
+            "nb_exec": nb_exec, "python_files": python_files, "last_change": flow_last_change,
+            "commits_recent": recent_commits(root),
+        }
+        sec10, sec11, flow = build_flow_sections(flow_ctx)
+    except Exception as exc:  # the data-flow analysis must never break the main snapshot
+        failure = f"- The data-flow analysis failed and was skipped: {exc!r}. The rest of the snapshot is complete."
+        sec10 = ["## 10. Data flow and execution order (static analysis)", "", failure]
+        sec11 = ["## 11. Configuration, gates and artifact state", "", failure]
+        flow = {"error": repr(exc)}
     log("4/8 Construindo catálogo de APIs, consumidores e testes...")
     consumers, tests = index_usage(symbols, python_files, notebooks)
     import_map = top_level_import_map()
@@ -2966,6 +3048,22 @@ def build_reference(root, args):
     code_text = "\n".join(code_pieces)
 
     attention = []
+    if flow.get("hash_divergences"):
+        attention.append(Attention(
+            "high", "artifact-hash-mismatch",
+            f"{flow['hash_divergences']} sha256 recorded in manifests differ from the real file "
+            "(a derived artifact was built from an older version of another file).",
+            flow.get("hash_divergence_rows", []),
+            "Regenerate the derived artifact (partition master / supervised artifact) and rerun the dependent notebooks."))
+    if flow.get("stale_notebooks"):
+        attention.append(Attention(
+            "medium", "notebook-stale-vs-code",
+            "Notebooks executed before the last change of a project module they import.",
+            flow["stale_notebooks"], "Rerun them before trusting their saved outputs (Section 11.5)."))
+    if flow.get("cycle"):
+        attention.append(Attention(
+            "low", "data-flow-cycle", "Notebooks/scripts that depend on each other through files.",
+            flow["cycle"], "Check the execution order (Section 10.1)."))
     attention += working_tree_attention([e for e in entries if not is_generated(e.path, own_patterns)])
     ignored_sources = [r["path"] for r in coverage
                        if r["git"] == "ignored" and r["path"].startswith(IMPORTANT_UNTRACKED_PREFIXES)
@@ -3028,6 +3126,9 @@ def build_reference(root, args):
             "Capture the complete file and regenerate the snapshot."))
     gaps = [(r["path"], r["reason"]) for r in coverage if r.get("gap")]
     gaps.extend(("integrity-contract", value) for value in contract_violations)
+    registered_paths = {r["path"] for r in coverage}
+    gaps.extend((path, "present in the folder but absent from the register")
+                for path in sorted(existing_paths - registered_paths))
     if gaps:
         attention.append(Attention(
             "high", "coverage-gap", "Eligible files whose content could not be captured.",
@@ -3078,6 +3179,8 @@ def build_reference(root, args):
     not_copied = sorted((r for r in coverage if r["path"] not in RENDERED_BODIES and r["mode"] != "excluded"),
                         key=lambda r: r["path"].lower())
     excluded = sorted((r for r in coverage if r["mode"] == "excluded"), key=lambda r: r["path"].lower())
+    backups = [r for r in excluded if r.get("category") == "backup"]
+    excluded = [r for r in excluded if r.get("category") != "backup"]
 
     # ---- Section 1: repository map -----------------------------------------
     entry_points = sorted(f.path for f in python_files if f.has_main_guard)
@@ -3204,16 +3307,23 @@ def build_reference(root, args):
     if artifact_sections:
         sec6 += ["", "### Files from artifact folders (data/, outputs/, reports/, models/, logs/)", "",
                  "\n".join(artifact_sections).rstrip()]
-    data_rows = [[f"`{p}`", str(info.get("rows", "?")), info.get("columns", "")] for p, info in sorted(parquet_info.items())]
+    data_rows = [[f"`{p}`", str(info.get("rows", "?")), (info.get("sha256") or "-")[:12], info.get("columns", "")]
+                 for p, info in sorted(parquet_info.items())]
     sec7 = ["## 7. Data files and files not copied", "",
             "### Parquet files (schema only; data rows are never copied)", "",
-            render_table(["File", "Rows", "Columns (name:type)"], data_rows), "",
+            render_table(["File", "Rows", "SHA-256 (12)", "Columns (name:type)"], data_rows), "",
             "### Files whose content is NOT in this TXT (never guess their content)", "",
             render_table(["File", "Size", "Reason"],
                          [[f"`{r['path']}`", human_bytes(r["bytes"]), r.get("reason") or r.get("category")]
                           for r in not_copied])]
     if excluded:
         sec7 += ["", "Excluded as outputs of this generator: " + ", ".join(f"`{r['path']}`" for r in excluded)]
+    if backups:
+        sec7 += ["", "### Backups and historical copies (listed, not copied; use --include-backups to copy them)", "",
+                 "Não fazem parte do estado atual do projeto. O hash permite saber se um backup é idêntico a outro arquivo.", "",
+                 render_table(["File", "Size", "Modified (UTC)", "SHA-256 (12)"],
+                              [[f"`{r['path']}`", human_bytes(r["bytes"]), r.get("modified_utc", ""),
+                                (r.get("sha256") or "not hashed")[:12]] for r in backups])]
 
     # ---- Section 8: environment, Git and coverage ----------------------------
     key_rows = []
@@ -3238,7 +3348,8 @@ def build_reference(root, args):
             "", render_table(["Package", "Installed", "requirements.txt", "pyproject.toml"], key_rows), "",
             "### Uncommitted changes (`git status --short`)", "", code_block(status_text, "text"), "",
             f"- Files in the folder: `{len(coverage)}` · content in this TXT: `{len(reproduced)}` · "
-            f"not copied: `{len(not_copied)}` · excluded outputs: `{len(excluded)}`",
+            f"not copied: `{len(not_copied)}` · excluded outputs: `{len(excluded)}` · "
+            f"backups listed only: `{len(backups)}`",
             "- Modes: " + ", ".join(f"`{k}` {v}" for k, v in sorted(modes.items())),
             f"- Capture check: **{verification['status']}** (gaps `{verification['gaps']}`). After writing, the "
             "TXT is re-read and every block between BEGIN and END is compared with the file; the run fails "
@@ -3246,9 +3357,9 @@ def build_reference(root, args):
     sec8 += [f"  - GAP `{p}`: {reason}" for p, reason in gap_paths]
 
     # ---- Section 9: project pillars and context ------------------------------
-    sec9 = project_context_section()
+    sec9 = project_context_section(config)
 
-    document_parts = draft_parts + [""] + sec8 + [""] + sec9 + [
+    document_parts = draft_parts + [""] + sec8 + [""] + sec9 + [""] + sec10 + [""] + sec11 + [
         "", f"END OF PROJECT_COMPLETE_REFERENCE.txt — SNAPSHOT ID: {SNAPSHOT_ID} — nothing follows this line."]
     document = normalize_text("\n".join(document_parts).rstrip() + "\n")
     machine = {
@@ -3263,6 +3374,7 @@ def build_reference(root, args):
         "tests_by_symbol": tests,
         "attention": [asdict(a) for a in attention],
         "tests_result": tests_result,
+        "flow": flow,
         "sections": [line[3:] for line in document_parts if line.startswith("## ") and line[3:4].isdigit()],
     }
     return document, machine, jsonl
@@ -3290,6 +3402,8 @@ def folder_tree(coverage, pruned_dirs=()):
             mark = ""
         elif record.get("git") == "deleted":
             mark = "  [deleted, not committed yet]"
+        elif record.get("category") == "backup":
+            mark = "  [backup/historical, not copied, Section 7]"
         elif record.get("mode") == "excluded":
             mark = "  [output of this generator]"
         elif record.get("mode") == "schema":
@@ -3379,7 +3493,15 @@ def outline_lines(symbols, *, notebook=False, constants=()):
     return out
 
 
-def project_context_section():
+def project_context_section(config=None):
+    blocks = nested_get(config, "experimentos_split", "blocos", default=None) if isinstance(config, dict) else None
+    block_names = [str(name) for name in blocks] if isinstance(blocks, dict) and blocks else []
+    if block_names:
+        blocks_text = ("Partition by notification group into " + ", ".join(f"`{n}`" for n in block_names)
+                       + " (block names read from `experimentos_split.blocos` in the YAML).")
+    else:
+        blocks_text = ("Partition by notification group into `train_ref`, `val_tune`, `val_cal`, `val_meas`, "
+                       "`test_ref`, `test_pandemic` (+ `exploracao`).")
     return [
         "## 9. Project pillars and context (summary; the Knowledge Base has the full context)", "",
         "### Pillars", "",
@@ -3400,9 +3522,7 @@ def project_context_section():
         "`configs/final_cohort_v1.yaml`.",
         "- Target `alvo_obito_srag`: death from SRAG (1) vs cure (0). Features, partitions, models, "
         "calibration, threshold and gates live in `configs/supervised.yaml`.",
-        "- Development years 2019 and 2023-2025; 2020-2022 only in test; 2026 exploration only. Partition "
-        "by notification group into `train_ref`, `val_tune`, `val_cal`, `val_meas`, `test_ref`, "
-        "`test_pandemic` (+ `exploracao`).",
+        "- Development years 2019 and 2023-2025; 2020-2022 only in test; 2026 exploration only. " + blocks_text,
         "- Models: dummy baseline, regularised logistic regression (one-hot) and HistGradientBoosting "
         "(native categoricals). Choices are made on validation blocks only; the test is opened once "
         "(gate `G9_holdout`).",
@@ -3465,7 +3585,7 @@ def instruction_lines(machine):
         f"- {reproduced} files are copied IN FULL: every Python module, test, notebook, configuration "
         "(YAML/TOML/JSON), Markdown document and script. It is the source of truth about the code.",
         "- Project context and decisions are in the Knowledge Base (separate document); a summary is in "
-        "the LAST section of this file.",
+        "Section 9 of this file.",
         "",
         "HOW A FILE APPEARS",
         "    ## FILE: `PATH`",
@@ -3490,6 +3610,9 @@ def instruction_lines(machine):
         "invent files, functions or results.",
         f"6. SNAPSHOT ID of this file: {SNAPSHOT_ID}. It repeats in every file header. If you see a "
         "different ID, you are mixing two TXT files: stop and ask which one is current.",
+        "7. Which notebook reads or writes which file, execution order, who reads each YAML section, gate "
+        "status, manifest hashes versus real files and notebooks executed before a module changed: Sections 10 "
+        "and 11 (static analysis: confirm in the code before acting).",
         "",
         "COMMANDS (replace PATH; this TXT uses LF line breaks only, so all tools count the same lines)",
         "- Find a file:      grep -nxF '<<< BEGIN FILE: PATH >>>' PROJECT_COMPLETE_REFERENCE.txt",
@@ -3525,7 +3648,7 @@ def instruction_lines(machine):
         *[f"- ## {s}" for s in sections],
         "",
         "NOT COPIED (size only, Section 7): CSV/TSV tables, HTML pages, images, binaries, Office/PDF "
-        "documents, plain .txt/.log files. Parquet: schema only. `.env`: keys only. Never guess their content.",
+        "documents, plain .txt/.log files, backups and historical copies. Parquet: schema only. `.env`: keys only. Never guess their content.",
         "Masked: `<REPO>` = repository path, `<HOME>` = user folder, `[REDACTED]` = secret value.",
         "",
         "====================================================================================================",
@@ -3577,7 +3700,10 @@ def parse_args():
     parser.add_argument("--coverage-csv", dest="coverage_csv", action="store_true", default=False,
                         help=f"Also write the optional coverage CSV (the register stays in the TXT).")
     parser.add_argument("--no-md", dest="md", action="store_false",
-                        help="Não gerar o pacote Markdown (no máximo 7 arquivos .md) ao lado do TXT.")
+                        help="Não gerar o pacote Markdown (no máximo 8 arquivos) ao lado do TXT.")
+    parser.add_argument("--include-backups", action="store_true",
+                        help="Copiar também backups e cópias históricas (pastas backups, _backup_limpeza, "
+                             "_versoes_anteriores; nomes *.antes_*, *.bak). Por padrão só são listados.")
     parser.add_argument("--allow-gaps", action="store_true",
                         help="Exit 0 even when the coverage verification finds gaps.")
     parser.add_argument("--run-tests", action="store_true",
@@ -3720,8 +3846,682 @@ def run_generator_self_tests():
           "only LF line breaks after normalisation")
     RENDERED_BODIES.clear()
     md_self_test(check)
+    flow_self_test(check)
     print(f"[reference] Self-test passed: {len(checks)} checks.")
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Backups, fluxo de dados, configuração e estado dos artefatos (análise estática)
+# ---------------------------------------------------------------------------
+def backup_reason(rel_text):
+    """Motivo textual se o caminho é um backup ou versão histórica; senão None."""
+    parts = rel_text.split("/")
+    for part in parts[:-1]:
+        if part.lower() in BACKUP_DIR_NAMES:
+            return f"backup/histórico (pasta `{part}`; conteúdo não copiado, use --include-backups)"
+    name = parts[-1].lower()
+    for pattern in BACKUP_FILE_PATTERNS:
+        if fnmatch.fnmatch(name, pattern):
+            return f"backup/histórico (nome `{parts[-1]}`; conteúdo não copiado, use --include-backups)"
+    return None
+
+
+def parse_iso_utc(value):
+    """datetime consciente de fuso (UTC) a partir de texto ISO-8601, ou None."""
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        moment = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc)
+
+
+def notebook_last_execution(cells):
+    """Data/hora (UTC) da última execução salva num notebook, a partir da metadata das células."""
+    latest = None
+    for cell in cells or ():
+        execution = (cell.get("metadata") or {}).get("execution") or {}
+        for key in ("iopub.execute_input", "shell.execute_reply", "iopub.status.idle"):
+            moment = parse_iso_utc(execution.get(key))
+            if moment is not None and (latest is None or moment > latest):
+                latest = moment
+    return latest
+
+
+def _path_strings(node, names, depth=0):
+    """Pedaços constantes de uma expressão de caminho: Path / "a" / "b", os.path.join, f-strings
+    e nomes já atribuídos a texto constante."""
+    if node is None or depth > 8:
+        return []
+    if isinstance(node, ast.Constant):
+        return [node.value] if isinstance(node.value, str) else []
+    if isinstance(node, ast.JoinedStr):
+        pieces = []
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                pieces.append(value.value)
+            else:
+                pieces.append("{}")
+        text = "".join(pieces)
+        return [text] if text else []
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.Add)):
+        return _path_strings(node.left, names, depth + 1) + _path_strings(node.right, names, depth + 1)
+    if isinstance(node, ast.Name):
+        return list(names.get(node.id, ()))
+    if isinstance(node, ast.Attribute):
+        return list(names.get(dotted_name(node) or "", ()))
+    if isinstance(node, ast.Call):
+        found = []
+        if isinstance(node.func, ast.Attribute):
+            found += _path_strings(node.func.value, names, depth + 1)
+        for argument in node.args:
+            found += _path_strings(argument, names, depth + 1)
+        return found
+    return []
+
+
+def _iter_assignments(node):
+    """Atribuições em ordem de leitura, sem entrar em def/class aninhados (cada função tem o seu escopo).
+    Percurso iterativo: expressões muito profundas não estouram a recursão."""
+    found = []
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        for child in ast.iter_child_nodes(current):
+            if isinstance(child, DEF_NODES):
+                continue
+            if isinstance(child, (ast.Assign, ast.AnnAssign)):
+                found.append(child)
+            stack.append(child)
+    return sorted(found, key=lambda n: (n.lineno, n.col_offset))
+
+
+def collect_assigned_strings(node, names):
+    """Atualiza names (nome -> pedaços de caminho constantes) com as atribuições de node."""
+    for statement in _iter_assignments(node):
+        value = getattr(statement, "value", None)
+        targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+        pieces = _path_strings(value, names)
+        for target in targets:
+            if isinstance(target, ast.Name):
+                if pieces:
+                    names[target.id] = pieces
+                else:
+                    names.pop(target.id, None)
+    return names
+
+
+def path_candidate(pieces):
+    """Texto único de caminho (barras normais) a partir dos pedaços constantes, ou None."""
+    cleaned = [p.replace("\\", "/").strip("/") for p in pieces if p and p.strip()]
+    joined = "/".join(c for c in cleaned if c)
+    joined = re.sub(r"^(?:\./|\{\}/)+", "", joined)
+    if not joined or not FILE_LIKE_RE.search(joined) or not re.search(r"[A-Za-z]{2,}", joined.replace("{}", "")):
+        return None
+    return joined
+
+
+def _open_mode(call, builtin):
+    node = None
+    if builtin:
+        if len(call.args) > 1:
+            node = call.args[1]
+    elif call.args:
+        node = call.args[0]
+    for keyword in call.keywords:
+        if keyword.arg == "mode":
+            node = keyword.value
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return "r"
+
+
+def io_in_tree(tree, names):
+    """(leituras, gravações): caminhos (texto) usados em chamadas de leitura/gravação de arquivos."""
+    reads, writes = [], []
+    for call in (n for n in ast.walk(tree) if isinstance(n, ast.Call)):
+        func = call.func
+        if isinstance(func, ast.Attribute):
+            attr, receiver = func.attr, func.value
+        elif isinstance(func, ast.Name):
+            attr, receiver = func.id, None
+        else:
+            continue
+        keyword_paths = [k.value for k in call.keywords if k.arg in {"path", "fname", "filepath_or_buffer", "where", "source"}]
+        targets, kind = [], None
+        if attr in IO_READ_CALLS:
+            kind = "r"
+            targets = [receiver] if attr in IO_RECEIVER_PATH and receiver is not None else call.args[:1] + keyword_paths
+        elif attr in IO_WRITE_CALLS:
+            kind = "w"
+            if attr in IO_RECEIVER_PATH and receiver is not None:
+                targets = [receiver]
+            elif attr == "write_table":
+                targets = call.args[1:2] + keyword_paths
+            else:
+                targets = call.args[:1] + keyword_paths
+        elif attr == "open":
+            mode = _open_mode(call, builtin=isinstance(func, ast.Name))
+            kind = "w" if any(c in mode for c in "wax+") else "r"
+            targets = call.args[:1] if isinstance(func, ast.Name) else ([receiver] if receiver is not None else [])
+        elif attr == "dump" and len(call.args) > 1:
+            kind, targets = "w", call.args[1:2]
+        elif attr == "load" and call.args and isinstance(receiver, ast.Name) and receiver.id in {"joblib", "pickle"}:
+            kind, targets = "r", call.args[:1]
+        if not kind:
+            continue
+        for target in targets:
+            candidate = path_candidate(_path_strings(target, names))
+            if candidate:
+                (reads if kind == "r" else writes).append(candidate)
+    return list(dict.fromkeys(reads)), list(dict.fromkeys(writes))
+
+
+def _config_chain(node):
+    """(nome raiz, chaves literais) de CFG["a"]["b"] ou CFG.get("a", {}).get("b")."""
+    keys = []
+    current = node
+    while True:
+        if isinstance(current, ast.Subscript):
+            index = current.slice
+            keys.append(index.value if isinstance(index, ast.Constant) and isinstance(index.value, str) else None)
+            current = current.value
+        elif (isinstance(current, ast.Call) and isinstance(current.func, ast.Attribute)
+              and current.func.attr == "get" and current.args):
+            first = current.args[0]
+            keys.append(first.value if isinstance(first, ast.Constant) and isinstance(first.value, str) else None)
+            current = current.func.value
+        else:
+            break
+    keys.reverse()
+    clean = []
+    for key in keys:
+        if key is None:
+            break
+        clean.append(key)
+    return (current.id if isinstance(current, ast.Name) else None), clean
+
+
+def config_paths_in_tree(tree):
+    """Caminhos de chaves de configuração lidos (CFG[...], C.cfg(...), nested_get(config, ...))."""
+    paths = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            name = dotted_name(node.func) or ""
+            last = name.rsplit(".", 1)[-1]
+            if last in {"cfg", "get_cfg"} and node.args and all(
+                    isinstance(a, ast.Constant) and isinstance(a.value, str) for a in node.args):
+                paths.add(tuple(a.value for a in node.args))
+            elif last == "nested_get" and len(node.args) > 1 and all(
+                    isinstance(a, ast.Constant) and isinstance(a.value, str) for a in node.args[1:]):
+                paths.add(tuple(a.value for a in node.args[1:]))
+        if isinstance(node, (ast.Subscript, ast.Call)):
+            root, keys = _config_chain(node)
+            if root and keys and any(token in root.lower() for token in CONFIG_ROOT_TOKENS):
+                paths.add(tuple(keys))
+    longest = {p for p in paths if not any(q != p and q[:len(p)] == p for q in paths)}
+    return sorted(longest)
+
+
+def resolve_repo_path(candidate, paths, names_index):
+    """Caminho existente no snapshot que corresponde ao texto, ou None."""
+    text = candidate.replace("\\", "/")
+    while text.startswith("./"):
+        text = text[2:]
+    if text in paths:
+        return text
+    tails = [p for p in paths if p.endswith("/" + text)]
+    if len(tails) == 1:
+        return tails[0]
+    base = text.rsplit("/", 1)[-1]
+    same_name = names_index.get(base, [])
+    if len(same_name) == 1 and "{}" not in base:
+        return same_name[0]
+    return None
+
+
+def build_io_model(py_sources, nb_cells, python_files, notebooks, inventory_paths):
+    """Mapa estático de quem lê e quem grava cada arquivo. Devolve um dict com:
+    func_io (função -> (lê, grava)), nodes (notebooks e scripts -> leituras/gravações diretas e indiretas)
+    e config_readers (caminho de configuração -> arquivos que o leem)."""
+    paths = set(inventory_paths)
+    names_index = defaultdict(list)
+    for path in sorted(paths):
+        names_index[path.rsplit("/", 1)[-1]].append(path)
+    symbols_by_full = {}
+    for f in python_files:
+        for s in f.symbols:
+            symbols_by_full[f"{s.module}.{s.qualname}"] = s
+    imports_of, aliases_of = {}, {}
+    for f in python_files:
+        is_package = f.path.endswith("__init__.py")
+        mapping = {}
+        for item in f.import_from:
+            source = resolve_relative(item.get("module", ""), f.module, is_package)
+            names = item.get("names", ())
+            for name, local in zip(names, item.get("asnames", names)):
+                if name != "*":
+                    mapping[local] = f"{source}.{name}"
+        imports_of[f.module] = mapping
+        aliases_of[f.module] = dict(f.module_aliases)
+    func_io, file_io, config_readers = {}, {}, defaultdict(set)
+    for f in python_files:
+        text = py_sources.get(f.path)
+        if not text or f.parse_error:
+            continue
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        module_names = collect_assigned_strings(tree, {})
+        defs = {n.lineno: n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        reads_all, writes_all = [], []
+        for statement in tree.body:
+            if isinstance(statement, DEF_NODES):
+                continue
+            r, w = io_in_tree(statement, module_names)
+            reads_all += r
+            writes_all += w
+        for symbol in f.symbols:
+            node = defs.get(symbol.lineno)
+            if node is None or symbol.kind not in {"function", "method", "nested_function"}:
+                continue
+            local_names = collect_assigned_strings(node, dict(module_names))
+            r, w = io_in_tree(node, local_names)
+            func_io[f"{symbol.module}.{symbol.qualname}"] = (r, w)
+            reads_all += r
+            writes_all += w
+        file_io[f.path] = (list(dict.fromkeys(reads_all)), list(dict.fromkeys(writes_all)))
+        for key_path in config_paths_in_tree(tree):
+            config_readers[key_path].add(f.path)
+
+    def resolve_callee(module, imported, aliases, call_name):
+        pieces = call_name.split(".")
+        if len(pieces) == 1:
+            own = f"{module}.{pieces[0]}"
+            if module and own in symbols_by_full:
+                return own
+            target = imported.get(pieces[0])
+            return target if target in symbols_by_full else None
+        head = imported.get(pieces[0]) or aliases.get(pieces[0])
+        if head:
+            full = ".".join([head] + pieces[1:])
+            if full in symbols_by_full:
+                return full
+        return None
+
+    def indirect(module, imported, aliases, call_names):
+        seen, queue, reads, writes, used = set(), [(module, imported, aliases, n, 0) for n in call_names], [], [], []
+        while queue:
+            mod, imp, ali, name, depth = queue.pop(0)
+            full = resolve_callee(mod, imp, ali, name)
+            if not full or full in seen:
+                continue
+            seen.add(full)
+            used.append(full)
+            r, w = func_io.get(full, ([], []))
+            reads += r
+            writes += w
+            if depth < 4:
+                symbol = symbols_by_full[full]
+                callee_module = symbol.module
+                for inner in symbol.calls:
+                    queue.append((callee_module, imports_of.get(callee_module, {}), aliases_of.get(callee_module, {}), inner, depth + 1))
+        return list(dict.fromkeys(reads)), list(dict.fromkeys(writes)), used
+
+    nodes = {}
+    for nb in notebooks:
+        names, reads, writes = {}, [], []
+        keys = set()
+        for source in nb_cells.get(nb.path, ()):
+            if not source.strip():
+                continue
+            try:
+                tree = ast.parse(strip_magics(source))
+            except SyntaxError:
+                continue
+            collect_assigned_strings(tree, names)
+            r, w = io_in_tree(tree, names)
+            reads += r
+            writes += w
+            keys.update(config_paths_in_tree(tree))
+        imported = {}
+        for item in nb.import_from:
+            source_module = item.get("module", "")
+            for name, local in zip(item.get("names", ()), item.get("asnames", item.get("names", ()))):
+                if name != "*":
+                    imported[local] = f"{source_module}.{name}"
+        ind_r, ind_w, used = indirect("", imported, dict(nb.module_aliases), [s.name for s in nb.call_sites])
+        nodes[nb.path] = {"kind": "notebook", "reads": list(dict.fromkeys(reads)), "writes": list(dict.fromkeys(writes)),
+                          "ind_reads": ind_r, "ind_writes": ind_w, "functions": used}
+        for key_path in keys:
+            config_readers[key_path].add(nb.path)
+    for f in python_files:
+        if f.path not in file_io or not (f.has_main_guard or f.path.startswith(("tools/", "scripts/"))):
+            continue
+        reads, writes = file_io[f.path]
+        ind_r, ind_w, used = indirect(f.module, imports_of.get(f.module, {}), aliases_of.get(f.module, {}),
+                                      list(f.calls))
+        nodes[f.path] = {"kind": "script", "reads": reads, "writes": writes,
+                         "ind_reads": ind_r, "ind_writes": ind_w, "functions": used}
+
+    def resolved(values):
+        out = []
+        for value in values:
+            found = resolve_repo_path(value, paths, names_index)
+            out.append(found or value)
+        return list(dict.fromkeys(out))
+
+    for entry in nodes.values():
+        for key in ("reads", "writes", "ind_reads", "ind_writes"):
+            entry[key] = resolved(entry[key])
+    nodes = {p: e for p, e in nodes.items()
+             if e["kind"] == "notebook" or e["reads"] or e["writes"] or e["ind_reads"] or e["ind_writes"]}
+    resolved_func_io = {k: (resolved(r), resolved(w)) for k, (r, w) in func_io.items() if r or w}
+    return {"nodes": nodes, "func_io": resolved_func_io, "config_readers": config_readers,
+            "paths": paths, "names_index": names_index}
+
+
+def artifact_matrix(nodes):
+    """Artefato -> (produtores, consumidores). Arquivos sem caminho resolvido são agrupados pelo nome."""
+    groups = {}
+    for path, entry in nodes.items():
+        for direction, keys in (("w", entry["writes"] + entry["ind_writes"]), ("r", entry["reads"] + entry["ind_reads"])):
+            for artifact in keys:
+                base = artifact.rsplit("/", 1)[-1]
+                group = groups.setdefault(base, {"names": set(), "producers": set(), "consumers": set()})
+                group["names"].add(artifact)
+                (group["producers"] if direction == "w" else group["consumers"]).add(path)
+    rows = {}
+    for base, group in groups.items():
+        display = sorted(group["names"], key=lambda n: (n.count("{}"), -n.count("/"), n))[0]
+        rows[display] = (sorted(group["producers"]), sorted(group["consumers"]), sorted(group["names"]))
+    return dict(sorted(rows.items()))
+
+
+def execution_order(nodes, matrix):
+    """Ordem topológica produtor -> consumidor entre notebooks e scripts (empates por nome)."""
+    edges = defaultdict(set)
+    for _artifact, (producers, consumers, _names) in matrix.items():
+        for producer in producers:
+            for consumer in consumers:
+                if producer != consumer:
+                    edges[producer].add(consumer)
+    indegree = {n: 0 for n in nodes}
+    for source, targets in edges.items():
+        for target in targets:
+            indegree[target] = indegree.get(target, 0) + 1
+    ready = sorted(n for n, d in indegree.items() if d == 0)
+    order = []
+    while ready:
+        current = ready.pop(0)
+        order.append(current)
+        for target in sorted(edges.get(current, ())):
+            indegree[target] -= 1
+            if indegree[target] == 0:
+                ready.append(target)
+                ready.sort()
+    cycle = sorted(n for n in indegree if n not in order)
+    return order, cycle, edges
+
+
+def summarize_manifest(data, limit=24):
+    flat = flatten_mapping(data) if isinstance(data, dict) else {"value": data}
+    items = []
+    for key, value in flat.items():
+        if isinstance(value, (list, tuple)):
+            text = f"lista com {len(value)} itens"
+        else:
+            text = str(value)
+        items.append((key, text if len(text) <= 110 else text[:107] + "..."))
+    def priority(item):
+        lowered = item[0].lower()
+        for rank, token in enumerate(MANIFEST_PRIORITY):
+            if token in lowered:
+                return rank
+        return len(MANIFEST_PRIORITY)
+    items.sort(key=lambda item: (priority(item), item[0]))
+    return items[:limit], max(0, len(items) - limit)
+
+
+def hash_consistency(manifests, hash_by_name, name_counts):
+    """Compara cada sha256 registrado num manifesto (com o caminho do arquivo ao lado) com o hash real."""
+    rows = []
+    for manifest_path, data in sorted(manifests.items()):
+        def walk(node, where):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if (isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+                            and (key == "sha256" or key.endswith("_sha256"))):
+                        sibling = "path" if key == "sha256" else key[:-len("_sha256")] + "_path"
+                        target = node.get(sibling)
+                        if isinstance(target, str) and target:
+                            base = target.replace("\\", "/").rsplit("/", 1)[-1]
+                            real = hash_by_name.get(base)
+                            if name_counts.get(base, 0) == 0:
+                                state = "arquivo ausente no snapshot"
+                            elif name_counts.get(base, 0) > 1:
+                                state = "nome ambíguo (vários arquivos com esse nome)"
+                            elif real is None:
+                                state = "arquivo sem hash calculado"
+                            elif real == value:
+                                state = "OK"
+                            else:
+                                state = "DIVERGE (manifesto desatualizado ou arquivo trocado)"
+                            rows.append([f"`{manifest_path}`", f"`{where}{key}`", f"`{base}`", value[:12],
+                                         (real or "-")[:12], state])
+                    walk(value, f"{where}{key}.")
+            elif isinstance(node, list):
+                for index, item in enumerate(node[:50]):
+                    walk(item, f"{where}[{index}].")
+        walk(data, "")
+    return rows
+
+
+def notebook_staleness(notebooks, nb_exec, python_files, last_change):
+    """Notebooks executados antes da última alteração de algum módulo do projeto que importam (direta ou
+    indiretamente). last_change: caminho -> datetime UTC da última alteração."""
+    by_module = {f.module: f for f in python_files if f.module}
+    def module_file(name):
+        pieces = name.split(".")
+        while pieces:
+            candidate = ".".join(pieces)
+            if candidate in by_module:
+                return by_module[candidate]
+            pieces.pop()
+        return None
+    def closure(start_modules):
+        seen, queue = {}, list(start_modules)
+        while queue:
+            name = queue.pop()
+            f = module_file(name)
+            if f is None or f.path in seen:
+                continue
+            seen[f.path] = f
+            queue.extend(f.internal_imports)
+        return seen
+    rows = []
+    for nb in sorted(notebooks, key=lambda n: n.path):
+        executed = nb_exec.get(nb.path)
+        if executed is None:
+            rows.append([f"`{nb.path}`", "sem data de execução salva", "-", "-", "verificar manualmente"])
+            continue
+        newer = []
+        for path, f in closure(nb.internal_imports).items():
+            moment = last_change.get(path)
+            if moment is not None and moment > executed:
+                newer.append((moment, path))
+        if newer:
+            newer.sort(reverse=True)
+            moment, path = newer[0]
+            extra = f" (+{len(newer) - 1} outros)" if len(newer) > 1 else ""
+            rows.append([f"`{nb.path}`", executed.strftime("%Y-%m-%d %H:%M"), f"`{path}`{extra}",
+                         moment.strftime("%Y-%m-%d %H:%M"), "POSSIVELMENTE DESATUALIZADO: rodar de novo"])
+        else:
+            rows.append([f"`{nb.path}`", executed.strftime("%Y-%m-%d %H:%M"), "-", "-", "ok"])
+    return rows
+
+
+def recent_commits(root, count=40):
+    output = git(root, "log", "-n", str(count), "--date=short", "--format=%h|%ad|%an|%s", check=False)
+    rows = []
+    for line in output.splitlines():
+        pieces = line.split("|", 3)
+        if len(pieces) == 4:
+            rows.append(pieces)
+    return rows
+
+
+def build_flow_sections(ctx):
+    """Seções 10 e 11 do TXT: fluxo de dados, ordem de execução, configuração, gates, manifestos,
+    consistência de hashes e notebooks possivelmente desatualizados. Tudo por análise estática."""
+    model = ctx["io_model"]
+    nodes = model["nodes"]
+    matrix = artifact_matrix(nodes)
+    order, cycle, edges = execution_order(nodes, matrix)
+    paths = model["paths"]
+    def join(values):
+        return ", ".join(f"`{v}`" for v in values) if values else "-"
+    sec10 = [
+        "## 10. Data flow and execution order (static analysis)", "",
+        "Derivado do código (AST), sem executar nada. Cobre `pandas.read_*/to_*`, `open`, `Path.read_text/write_text`, "
+        "`savefig`, `joblib/pickle`, `pyarrow` e as funções do projeto chamadas (até 4 níveis). Caminhos montados "
+        "em tempo de execução (sem texto constante) não aparecem. Trate como pista a confirmar no código; arquivos "
+        "sem caminho resolvido são agrupados pelo nome.", "",
+        "### 10.1 Execution order suggested by the data flow", "",
+        "Um arquivo vem depois de quem grava o que ele lê. A numeração dos nomes (A_, B_, C_) pode diferir disto.", "",
+    ]
+    touched = set(edges) | {t for targets in edges.values() for t in targets}
+    chain = [n for n in order if n in touched]
+    isolated = sorted(set(nodes) - touched)
+    for position, node in enumerate(chain, 1):
+        entry = nodes[node]
+        produces = len(set(entry["writes"] + entry["ind_writes"]))
+        consumes = len(set(entry["reads"] + entry["ind_reads"]))
+        sec10.append(f"{position}. `{node}` ({entry['kind']}; lê {consumes}, grava {produces})")
+    if cycle:
+        sec10 += ["", "Dependência circular (um depende do outro; ordem indefinida): " + join(cycle)]
+    if isolated:
+        sec10 += ["", "Sem ligação de dados detectada com os demais (ordem pelo nome do arquivo): " + join(isolated)]
+    sec10 += ["", "### 10.2 What each notebook and script reads and writes", "",
+              "Direto = chamada no próprio arquivo. Via funções = lido/gravado por funções do projeto que ele chama.", ""]
+    rows = []
+    for node in sorted(nodes):
+        entry = nodes[node]
+        rows.append([f"`{node}`", entry["kind"], join(entry["reads"]), join(entry["writes"]),
+                     join([a for a in entry["ind_reads"] if a not in entry["reads"]]),
+                     join([a for a in entry["ind_writes"] if a not in entry["writes"]]),
+                     join(entry["functions"])])
+    sec10.append(render_table(["Arquivo", "Tipo", "Lê (direto)", "Grava (direto)", "Lê (via funções)",
+                               "Grava (via funções)", "Funções do projeto usadas"], rows))
+    sec10 += ["", "### 10.3 Artifact matrix (who produces and who consumes each file)", ""]
+    sec10.append(render_table(["Artefato", "No snapshot", "Produzido por", "Consumido por"],
+                              [[f"`{name}`", "sim" if name in paths else "não", join(prod), join(cons)]
+                               for name, (prod, cons, _n) in matrix.items()]))
+    unproduced = [(n, c) for n, (p, c, _x) in matrix.items() if c and not p]
+    unconsumed = [(n, p) for n, (p, c, _x) in matrix.items() if p and not c]
+    sec10 += ["", "### 10.4 Read without a producer and written without a consumer", "",
+              "Lidos sem produtor detectado (vêm de fora do código analisado, de download ou de execução manual):", ""]
+    sec10 += [f"- `{n}` ← lido por {join(c)}" for n, c in unproduced] or ["- None."]
+    sec10 += ["", "Gravados sem consumidor detectado (saídas finais, relatórios ou uso fora do código):", ""]
+    sec10 += [f"- `{n}` ← gravado por {join(p)}" for n, p in unconsumed] or ["- None."]
+    sec10 += ["", "### 10.5 Project functions that read or write files", ""]
+    sec10.append(render_table(["Função", "Lê", "Grava"],
+                              [[f"`{name}`", join(r), join(w)] for name, (r, w) in sorted(model["func_io"].items())]))
+
+    config = ctx.get("config")
+    sec11 = ["## 11. Configuration, gates and artifact state", "",
+             "### 11.1 Main YAML sections and the files that read them", ""]
+    readers = model["config_readers"]
+    if isinstance(config, dict):
+        rows = []
+        for section in config:
+            files = sorted({p for key, fs in readers.items() if key and key[0] == section for p in fs})
+            sample = sorted({".".join(key) for key in readers if key and key[0] == section})[:6]
+            rows.append([f"`{section}`", join(files), ", ".join(f"`{s}`" for s in sample) or "-"])
+        sec11.append(render_table(["Seção do YAML", "Arquivos que leem", "Chaves lidas (amostra)"], rows))
+        gates = config.get("gates") if isinstance(config.get("gates"), dict) else {}
+        gate_refs = defaultdict(set)
+        for path, text in ctx["texts"].items():
+            if path.endswith((OUTPUT_TXT_NAME, LEGACY_MD_NAME)):
+                continue
+            for match in GATE_RE.findall(text):
+                gate_refs[match].add(path)
+        sec11 += ["", "### 11.2 Gates (status in the YAML and where each one is referenced)", ""]
+        sec11.append(render_table(["Gate", "Status no YAML", "Referenciado em"],
+                                  [[f"`{name}`", str((value or {}).get("status", "-")) if isinstance(value, dict) else str(value),
+                                    join(sorted(gate_refs.get(name, ())))] for name, value in gates.items()]))
+    else:
+        sec11 += ["- Main YAML not available (see Section 5).", "", "### 11.2 Gates", "", "- Not available."]
+    manifests = ctx["manifests"]
+    sec11 += ["", "### 11.3 Artifact manifests (latest version of each; hashes and counts)", ""]
+    shown = 0
+    latest = {}
+    for path in sorted(manifests):
+        if path.startswith("outputs/"):
+            stem = re.sub(r"_?\d{8}T\d{6}Z", "", path)
+            previous = latest.get(stem)
+            if previous is None or ctx["modified"].get(path, "") >= ctx["modified"].get(previous, ""):
+                latest[stem] = path
+    older = {path for path in manifests if path.startswith("outputs/")} - set(latest.values())
+    for path in sorted(manifests):
+        if path in older:
+            continue
+        items, hidden = summarize_manifest(manifests[path])
+        sec11 += [f"#### `{path}` (modificado {ctx['modified'].get(path, '?')} UTC)", ""]
+        sec11 += [f"- `{key}` = {value}" for key, value in items]
+        if hidden:
+            sec11.append(f"- (+{hidden} chaves; o arquivo completo está na Seção 6)")
+        sec11.append("")
+        shown += 1
+    if not shown:
+        sec11 += ["- No manifest found.", ""]
+    if older:
+        sec11 += [f"Versões anteriores de manifestos em `outputs/` ({len(older)}) não detalhadas aqui; estão na Seção 6.", ""]
+    sec11 += ["### 11.4 Recorded hashes versus the files in the snapshot", "",
+              "Cada `sha256` registrado num manifesto com o caminho ao lado é comparado com o hash real do arquivo. "
+              "DIVERGE indica artefato derivado de uma versão anterior do arquivo.", ""]
+    consistency = hash_consistency({p: d for p, d in manifests.items() if p not in older},
+                                   ctx["hash_by_name"], ctx["name_counts"])
+    sec11.append(render_table(["Manifesto", "Campo", "Arquivo", "Registrado", "Real", "Situação"], consistency))
+    diverging = [r for r in consistency if r[5].startswith("DIVERGE")]
+    sec11 += ["", f"- Resultado: {len(consistency)} verificações, {len(diverging)} divergências."]
+    sec11 += ["", "### 11.5 Notebooks possibly stale (executed before a module they import changed)", "",
+              "Compara a última execução salva no notebook com a data do último commit (ou a data do arquivo, se houver "
+              "alteração não commitada) dos módulos do projeto que ele importa, direta ou indiretamente.", ""]
+    stale_rows = notebook_staleness(ctx["notebooks"], ctx["nb_exec"], ctx["python_files"], ctx["last_change"])
+    sec11.append(render_table(["Notebook", "Última execução (UTC)", "Módulo alterado depois", "Alterado em (UTC)", "Situação"],
+                              stale_rows))
+    sec11 += ["", "### 11.6 Recent commits", ""]
+    sec11.append(render_table(["Commit", "Data", "Autor", "Mensagem"], ctx["commits_recent"]))
+    flow = {"order": chain, "isolated": isolated, "cycle": cycle, "artifacts": len(matrix), "unproduced": [n for n, _ in unproduced],
+            "unconsumed": [n for n, _ in unconsumed], "hash_checks": len(consistency),
+            "hash_divergences": len(diverging),
+            "hash_divergence_rows": [f"{r[0]} {r[1]}: registrado {r[3]} != real {r[4]}" for r in diverging],
+            "stale_notebooks": [r[0].strip("`") for r in stale_rows if r[4].startswith("POSSIVELMENTE")]}
+    return sec10, sec11, flow
+
+
+def enforce_file_budget(out_dir):
+    """Conta os arquivos gerados além do TXT e falha se passarem do limite fixo."""
+    extra = []
+    md_dir = out_dir / MD_DIR_NAME
+    if md_dir.is_dir():
+        extra += [p for p in md_dir.iterdir() if p.is_file()]
+    for name in (OUTPUT_JSON_NAME, OUTPUT_JSONL_NAME, OUTPUT_COVERAGE_NAME):
+        if (out_dir / name).is_file():
+            extra.append(out_dir / name)
+    parts_dir = out_dir / PARTS_DIR_NAME
+    if parts_dir.is_dir():
+        extra += list(parts_dir.glob("part_*.txt"))
+    if len(extra) > MD_MAX_FILES:
+        raise RuntimeError(f"{len(extra)} arquivos gerados além do TXT; o limite é {MD_MAX_FILES}. "
+                           "Não use --split-txt-mb nem as saídas auxiliares junto com o pacote Markdown completo.")
+    return len(extra)
 
 
 # ---------------------------------------------------------------------------
@@ -3729,9 +4529,10 @@ def run_generator_self_tests():
 # (complementa o TXT único; o TXT continua sendo gerado normalmente)
 # ---------------------------------------------------------------------------
 MD_DIR_NAME = "project_reference_md"
-MD_MAX_FILES = 7  # limite fixo e definitivo: nunca mais de 7 arquivos .md
-MD_SUPPORT_FILES = 2  # 00_LEIA_PRIMEIRO.md e 01_mapa_e_simbolos.md
+MD_MAX_FILES = 8  # limite fixo e definitivo: nunca mais de 8 arquivos gerados além do TXT
+MD_SUPPORT_FILES = 3  # 00_LEIA_PRIMEIRO.md, 01_mapa_e_simbolos.md e 02_fluxo_e_estado.md
 MD_MAX_CODE_PARTS = MD_MAX_FILES - MD_SUPPORT_FILES  # 5 partes de código, no máximo
+MD_FLOW_SECTIONS = (10, 11)  # fluxo de dados e estado dos artefatos (arquivo 02)
 MD_BEGIN = "===== BEGIN FILE: {path} ====="
 MD_END = "===== END OF FILE: {path} ====="
 MD_PART_END = ("===== FIM DA PARTE {number}/{total} ({name}) — SNAPSHOT ID: {snapshot} "
@@ -3824,6 +4625,12 @@ def md_partition(sizes, k):
     return groups_for(low)
 
 
+def md_code_budget(args):
+    """Partes de código permitidas: o limite de 8 arquivos descontados os de apoio e as saídas opcionais."""
+    optional = sum(bool(getattr(args, name, False)) for name in ("json", "jsonl", "coverage_csv"))
+    return max(1, MD_MAX_FILES - MD_SUPPORT_FILES - optional)
+
+
 def md_line_count(body):
     """Número de linhas de um corpo (0 para corpo vazio)."""
     return len(body.split("\n")) if body else 0
@@ -3896,7 +4703,7 @@ def md_clear(md_dir, keep):
 
 
 def write_markdown_pack(out_dir, text, machine, args):
-    """Grava o pacote Markdown ao lado do TXT (no máximo 7 arquivos .md, sempre), relê tudo e
+    """Grava o pacote Markdown ao lado do TXT (no máximo 8 arquivos, sempre), relê tudo e
     compara cada arquivo com o capturado."""
     md_dir = out_dir / MD_DIR_NAME
     headers = md_headers_by_file(text)
@@ -3907,7 +4714,7 @@ def write_markdown_pack(out_dir, text, machine, args):
     for record in records:
         body = RENDERED_BODIES[record["path"]]
         blocks.append((record, md_file_block(record, headers.get(record["path"], []), body), body))
-    groups = md_partition([len(block.encode("utf-8")) for _r, block, _b in blocks], MD_MAX_CODE_PARTS)
+    groups = md_partition([len(block.encode("utf-8")) for _r, block, _b in blocks], md_code_budget(args))
     total = len(groups)
     outputs = {}
     manifest = []
@@ -3926,37 +4733,79 @@ def write_markdown_pack(out_dir, text, machine, args):
     map_parts = [f"# Mapa do repositório e índice de símbolos\n\n- SNAPSHOT ID: `{SNAPSHOT_ID}`\n\n{note}"]
     map_parts += [sections[n] for n in MD_MAP_SECTIONS if n in sections]
     outputs["01_mapa_e_simbolos.md"] = "\n".join(map_parts)
+    flow_parts = [f"# Fluxo de dados, configuração e estado dos artefatos\n\n- SNAPSHOT ID: `{SNAPSHOT_ID}`\n\n"
+                  "> Análise estática do código (nada foi executado). Seções 10 e 11 do TXT, copiadas sem alteração. "
+                  "Confirme no código antes de agir.\n"]
+    flow_parts += [sections[n] for n in MD_FLOW_SECTIONS if n in sections]
+    outputs["02_fluxo_e_estado.md"] = "\n".join(flow_parts)
     repo = machine.get("repository", {})
+    flow = machine.get("flow", {}) or {}
+    coverage = machine["coverage"]
+    modes = Counter(r["mode"] for r in coverage)
+    backups_listed = sum(1 for r in coverage if r.get("category") == "backup")
+    pack_rows = [[f"`{name}`", len(content.encode("utf-8")), content.count("\n") + 1, sha256_text(content)[:12]]
+                 for name, content in sorted(outputs.items())]
+    alerts = []
+    if flow.get("hash_divergences"):
+        alerts.append(f"- **{flow['hash_divergences']} hash(es) registrado(s) em manifestos divergem do arquivo real**: "
+                      "algum artefato foi gerado a partir de uma versão anterior de outro. Ver `02_fluxo_e_estado.md`, seção 11.4.")
+    if flow.get("stale_notebooks"):
+        alerts.append("- Notebooks possivelmente desatualizados (executados antes da última alteração de um módulo que "
+                      "importam): " + ", ".join(f"`{n}`" for n in flow["stale_notebooks"]) + ". Seção 11.5.")
+    if flow.get("unproduced"):
+        alerts.append(f"- {len(flow['unproduced'])} arquivo(s) são lidos sem produtor detectado no código (seção 10.4).")
+    if flow.get("cycle"):
+        alerts.append("- Dependência circular entre: " + ", ".join(f"`{n}`" for n in flow["cycle"]) + " (seção 10.1).")
     head = [
         "# Referência completa do projeto SRAG — pacote Markdown (LEIA PRIMEIRO)", "",
         f"- SNAPSHOT ID: `{SNAPSHOT_ID}`",
         f"- Repositório: branch `{repo.get('branch')}`, commit `{str(repo.get('commit', ''))[:12]}`, "
         f"gerado (UTC) `{machine.get('generated_utc')}`",
         f"- Mesmo conteúdo de `{args.output_dir.as_posix()}/{OUTPUT_TXT_NAME}` (mesmo snapshot), em "
-        f"{len(outputs) + 1} arquivos `.md` (limite fixo: {MD_MAX_FILES}): este, `01_mapa_e_simbolos.md` e {total} "
-        "partes de código. Não misture arquivos de SNAPSHOT IDs diferentes.",
+        f"{len(outputs) + 1} arquivos (limite fixo: {MD_MAX_FILES}): este, `01_mapa_e_simbolos.md`, "
+        f"`02_fluxo_e_estado.md` e {total} partes de código. Não misture arquivos de SNAPSHOT IDs diferentes.",
         "", "## Como trabalhar", "",
         "1. Leia este manifesto: ele diz em qual parte está cada arquivo do projeto.",
         "2. Mapa do repositório, índice de símbolos (função/classe, arquivo e linha), dependências, notebooks, problemas "
         "detectados e arquivos NÃO copiados: `01_mapa_e_simbolos.md`.",
-        "3. Cada arquivo do projeto aparece como: título `## FILE: caminho`, metadados (com o Outline e o número de linha "
+        "3. Quem lê e quem grava cada arquivo, ordem de execução, leitores da configuração, gates, hashes dos manifestos "
+        "e notebooks desatualizados: `02_fluxo_e_estado.md`.",
+        "4. Cada arquivo do projeto aparece como: título `## FILE: caminho`, metadados (com o Outline e o número de linha "
         "de cada função), `===== BEGIN FILE: caminho =====`, um bloco de código com o conteúdo exato e "
         "`===== END OF FILE: caminho =====`.",
-        "4. Notebooks aparecem renderizados (um `### Cell N` por célula, com as saídas textuais salvas, que podem ser "
+        "5. Notebooks aparecem renderizados (um `### Cell N` por célula, com as saídas textuais salvas, que podem ser "
         "antigas); imagens e saídas binárias foram omitidas.",
-        "5. Cite o código exatamente como está entre os marcadores. Se algo não estiver no pacote, diga que falta; "
+        "6. Cite o código exatamente como está entre os marcadores. Se algo não estiver no pacote, diga que falta; "
         "nunca invente arquivos, funções ou resultados.",
-        "6. Contra truncamento: toda parte de código termina com `===== FIM DA PARTE N/M ... =====`. Se essa linha não "
+        "7. Contra truncamento: toda parte de código termina com `===== FIM DA PARTE N/M ... =====`. Se essa linha não "
         "aparecer no fim do que você leu, o arquivo foi cortado: avise e peça o reenvio.",
-        "", "Comandos úteis (na pasta do pacote):", "",
-        "- Listar todos os arquivos: `grep -rn '^## FILE: ' .`",
-        "- Achar um arquivo: `grep -rnF '===== BEGIN FILE: src/x.py =====' .`",
+        "", "## Onde procurar cada tipo de pergunta", "",
+        render_table(["Pergunta", "Onde"], [
+            ["Onde está a função ou classe X? Quem a usa? Que teste a cobre?", "`01_mapa_e_simbolos.md`, seção 2"],
+            ["Qual o código do arquivo Y?", "manifesto abaixo → parte de código indicada"],
+            ["Qual notebook produz ou lê o artefato Z? Em que ordem rodar?", "`02_fluxo_e_estado.md`, seção 10"],
+            ["Qual seção do YAML cada arquivo lê? Qual o status de cada gate?", "`02_fluxo_e_estado.md`, seções 11.1 e 11.2"],
+            ["O artefato está atualizado em relação à coorte? O notebook foi rodado antes da última mudança?",
+             "`02_fluxo_e_estado.md`, seções 11.4 e 11.5"],
+            ["Que problemas foram detectados? O que NÃO está no pacote?", "`01_mapa_e_simbolos.md`, seções 5 e 7"],
+        ]),
+        "", "## Alertas de consistência deste snapshot", "",
+        *(alerts or ["- Nenhum alerta de consistência detectado (hashes dos manifestos conferem; nenhum notebook "
+                     "executado antes da alteração de um módulo que importa)."]),
         "", "## Verificação feita na geração", "",
         f"- {len(manifest)} arquivos do projeto em {total} partes; os `.md` foram relidos e cada bloco foi comparado, "
         "caractere a caractere, com o conteúdo capturado para o TXT (a execução falha se algo diferir).",
-        "- Arquivos NÃO copiados (CSV/TSV, HTML, imagens, binários, Office/PDF, .txt/.log, schema de Parquet): "
-        "ver a Seção 7 em `01_mapa_e_simbolos.md`.",
-        "", "## Manifesto (onde está cada arquivo)", "",
+        f"- Arquivos do repositório: {len(coverage)} · copiados integralmente: {len(manifest)} · "
+        f"backups só listados: {backups_listed} · modos: " + ", ".join(f"{k} {v}" for k, v in sorted(modes.items())) + ".",
+        "- Todo arquivo existente na pasta está ou copiado ou listado com o motivo (a execução falha se algum faltar "
+        "no registro). Não copiados (CSV/TSV, HTML, imagens, binários, Office/PDF, .txt/.log, backups, schema de "
+        "Parquet): ver a seção 7 em `01_mapa_e_simbolos.md`.",
+        "", "Comandos úteis (na pasta do pacote):", "",
+        "- Listar todos os arquivos: `grep -rn '^## FILE: ' .`",
+        "- Achar um arquivo: `grep -rnF '===== BEGIN FILE: src/x.py =====' .`",
+        "", "## Arquivos deste pacote (tamanho e hash)", "",
+        render_table(["Arquivo", "Bytes", "Linhas", "SHA-256 (12)"], pack_rows), "",
+        "## Manifesto (onde está cada arquivo)", "",
         render_table(["Parte", "Arquivo do projeto", "Linhas do bloco", "Bytes", "SHA-256 (12)"], manifest), "",
     ]
     outputs["00_LEIA_PRIMEIRO.md"] = "\n".join(head)
@@ -4018,7 +4867,58 @@ def md_self_test(check):
         plano = [i for g in grupos for i in g]
         check(len(grupos) <= MD_MAX_CODE_PARTS and plano == list(range(quantidade)),
               f"pacote Markdown: {quantidade} arquivos cabem em no máximo {MD_MAX_CODE_PARTS} partes, em ordem")
-    check(MD_SUPPORT_FILES + MD_MAX_CODE_PARTS == MD_MAX_FILES == 7, "pacote Markdown: limite total de 7 arquivos")
+    check(MD_SUPPORT_FILES + MD_MAX_CODE_PARTS == MD_MAX_FILES == 8, "pacote Markdown: limite total de 8 arquivos")
+
+
+def flow_self_test(check):
+    """Testes rápidos da análise de fluxo, dos backups e do orçamento de arquivos."""
+    check(backup_reason(".srag-status-local/backups/B_06.ipynb") is not None, "backup: pasta backups")
+    check(backup_reason("notebooks/B/B_07.antes_x.ipynb") is not None, "backup: nome *.antes_*")
+    check(backup_reason("data/analytical/_versoes_anteriores/20261103/coorte_final.parquet") is not None,
+          "backup: pasta _versoes_anteriores")
+    check(backup_reason("src/data/split.py") is None and backup_reason("notebooks/A/A_03.ipynb") is None,
+          "backup: arquivos normais não são backup")
+    names = collect_assigned_strings(ast.parse("D = 'x.parquet'\nP = ROOT / 'data' / 'analytical' / D\n"), {})
+    check(path_candidate(names["P"]) == "data/analytical/x.parquet", "caminho montado com Path / nome constante")
+    tree = ast.parse(
+        "import pandas as pd\n"
+        "df = pd.read_parquet(ROOT / 'data' / 'a.parquet')\n"
+        "df.to_csv(ROOT / 'outputs' / 'b.csv')\n"
+        "(ROOT / 'c.json').write_text('{}')\n"
+        "open('d.txt', 'w')\n"
+        "open('e.md')\n"
+        "joblib.dump(obj, 'f.pkl')\n")
+    reads, writes = io_in_tree(tree, {})
+    check(reads == ["data/a.parquet", "e.md"] and writes == ["outputs/b.csv", "c.json", "d.txt", "f.pkl"],
+          "leituras e gravações de arquivos detectadas")
+    check(io_in_tree(ast.parse("x = foo(1)\nprint('a.txt')\n"), {}) == ([], []), "sem falso positivo em chamadas comuns")
+    keys = config_paths_in_tree(ast.parse(
+        "C.cfg('gates', 'G1', 'status')\nCFG['features']['proibidas']\nCFG.get('a', {}).get('b')\nother['x']['y']\n"))
+    check(keys == [("a", "b"), ("features", "proibidas"), ("gates", "G1", "status")], "chaves de configuração lidas")
+    paths = {"data/analytical/x.parquet", "src/a.py"}
+    index = {"x.parquet": ["data/analytical/x.parquet"], "a.py": ["src/a.py"]}
+    check(resolve_repo_path("x.parquet", paths, index) == "data/analytical/x.parquet", "resolve pelo nome único")
+    check(resolve_repo_path("data/analytical/x.parquet", paths, index) == "data/analytical/x.parquet", "resolve pelo caminho")
+    check(resolve_repo_path("{}.csv", paths, index) is None, "texto com marcador não resolve")
+    nodes = {"a.ipynb": {"kind": "notebook", "reads": [], "writes": ["x.parquet"], "ind_reads": [], "ind_writes": []},
+             "b.ipynb": {"kind": "notebook", "reads": ["x.parquet"], "writes": [], "ind_reads": [], "ind_writes": []},
+             "c.ipynb": {"kind": "notebook", "reads": [], "writes": [], "ind_reads": [], "ind_writes": []}}
+    matrix = artifact_matrix(nodes)
+    order, cycle, _edges = execution_order(nodes, matrix)
+    check(matrix == {"x.parquet": (["a.ipynb"], ["b.ipynb"], ["x.parquet"])}, "matriz de artefatos")
+    check(order.index("a.ipynb") < order.index("b.ipynb") and not cycle, "ordem produtor antes de consumidor")
+    loop = {"a": {"kind": "script", "reads": ["y"], "writes": ["x"], "ind_reads": [], "ind_writes": []},
+            "b": {"kind": "script", "reads": ["x"], "writes": ["y"], "ind_reads": [], "ind_writes": []}}
+    check(execution_order(loop, artifact_matrix(loop))[1] == ["a", "b"], "dependência circular detectada")
+    real, stale = "a" * 64, "b" * 64
+    rows = hash_consistency({"m.json": {"source": {"path": "C:\\x\\coorte.parquet", "sha256": stale},
+                                         "dataset_path": "d.parquet", "dataset_sha256": real}},
+                            {"coorte.parquet": real, "d.parquet": real}, {"coorte.parquet": 1, "d.parquet": 1})
+    check([r[5][:6] for r in rows] == ["DIVERG", "OK"], "hash divergente e hash conferido")
+    check(parse_iso_utc("2026-10-27T00:10:05.909879Z") is not None and parse_iso_utc("lixo") is None, "datas ISO")
+    check(md_code_budget(argparse.Namespace(json=False, jsonl=False, coverage_csv=False)) == 5, "orçamento: 5 partes")
+    check(md_code_budget(argparse.Namespace(json=True, jsonl=True, coverage_csv=True)) == 2,
+          "orçamento: saídas opcionais reduzem as partes, total continua 8")
 
 
 def main():
@@ -4032,6 +4932,10 @@ def main():
     args = parse_args()
     if args.self_test:
         return run_generator_self_tests()
+    if args.md and args.split_txt_mb and args.split_txt_mb > 0:
+        print("[reference] ERRO: --split-txt-mb criaria arquivos além do limite de 8 gerados ao lado do TXT. "
+              "Rode sem essa opção (ou use --no-md).", flush=True)
+        return 4
     root = root_dir()
     document, machine, jsonl = build_reference(root, args)
     print("[reference] 7/8 Verificando integridade e gravando o TXT canônico...", flush=True)
@@ -4105,6 +5009,11 @@ def main():
             path.unlink()
             removed.append(path)
 
+    try:
+        generated_extra = enforce_file_budget(out_dir)
+    except RuntimeError as exc:
+        print(f"[reference] ERRO: {exc}", flush=True)
+        return 5
     attention = machine.get("attention", ())
     high = sum(a.get("severity") == "high" for a in attention)
     print(f"update_project_reference.py schema v{SCHEMA_VERSION}")
@@ -4124,6 +5033,11 @@ def main():
     print("Largest sections: " + ", ".join(f"{name.split('.')[0]} {human_bytes(size)}"
                                           for name, size in sorted(sizes.items(), key=lambda kv: -kv[1])[:4]))
     print("Snapshot ID: " + SNAPSHOT_ID)
+    print(f"Files generated besides the TXT: {generated_extra} (hard limit {MD_MAX_FILES})")
+    flow = machine.get("flow", {}) or {}
+    print(f"Data flow: {flow.get('artifacts', 0)} artifacts · hash checks {flow.get('hash_checks', 0)} "
+          f"(divergences {flow.get('hash_divergences', 0)}) · possibly stale notebooks "
+          f"{len(flow.get('stale_notebooks', []))}")
     modes = Counter(r["mode"] for r in machine["coverage"])
     print(f"Coverage: {len(machine['coverage'])} files · " + ", ".join(f"{k} {v}" for k, v in sorted(modes.items())))
     print(f"Verification: {verification['status']} · gaps {verification['gaps']} · "

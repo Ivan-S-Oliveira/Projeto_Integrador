@@ -1,0 +1,362 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "7d51506d",
+   "metadata": {},
+   "source": [
+    "# C2 — Pipeline Supervisionado\n",
+    "\n",
+    "Pré-processamento + partição persistida. Consome o artefato do Notebook 03;\n",
+    "não cria partição e mantém o teste fechado.\n",
+    "\n",
+    "**Pré-requisito:** `pip install -e .`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "88c2e46d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ROOT_DIR          = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\n",
+      "DATA_DIR          = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\data\n",
+      "RAW_DIR           = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\data\\raw\n",
+      "PROCESSED_DIR     = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\data\\processed\n",
+      "ANALYTICAL_DIR    = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\data\\analytical\n",
+      "TREINO_DIR        = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\data\\treino\n",
+      "OUTPUTS_DIR       = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\outputs\n",
+      "RUNS_DIR          = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\outputs\\runs\n",
+      "LOGS_DIR          = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\logs\n",
+      "CONFIGS_DIR       = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\configs\n",
+      "SUPERVISED_YAML   = C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador\\configs\\supervised.yaml (ok)\n",
+      "PARQUET_NAME      = srag.parquet\n",
+      "DATA_VERSION      = dados-v2\n",
+      "GITHUB_REPO       = Ivan-S-Oliveira/Projeto_Integrador\n",
+      "HTTP_TIMEOUT      = 180\n",
+      "HTTP_TENTATIVAS   = 3\n",
+      "SEED              = 42\n",
+      "GITHUB_TOKEN?     = False\n",
+      "SRAG_PARQUET_URL  = https://github.com/Ivan-S-Oliveira/Projeto_Integrador/releases/download/dados-v2/srag.parquet\n",
+      "SUPERVISED_SHA256 = 38c9ba9e9275320946dd18ae07d02107ac94c1a7c849852d854c1834cb1f6f49\n"
+     ]
+    }
+   ],
+   "source": [
+    "from pathlib import Path\n",
+    "import json\n",
+    "import os\n",
+    "import sys\n",
+    "\n",
+    "\n",
+    "def encontrar_raiz_projeto(start: Path | None = None) -> Path:\n",
+    "    atual = (start or Path.cwd()).resolve()\n",
+    "    for candidato in (atual, *atual.parents):\n",
+    "        if (candidato / \"src\").is_dir() and (candidato / \"pyproject.toml\").is_file():\n",
+    "            return candidato\n",
+    "    raise RuntimeError(f\"Raiz do projeto não encontrada a partir de: {atual}\")\n",
+    "\n",
+    "\n",
+    "ROOT_DIR = encontrar_raiz_projeto()\n",
+    "if str(ROOT_DIR) not in sys.path:\n",
+    "    sys.path.insert(0, str(ROOT_DIR))\n",
+    "\n",
+    "import joblib\n",
+    "import pandas as pd\n",
+    "from scipy import sparse\n",
+    "from sklearn.base import clone\n",
+    "\n",
+    "from src.utils import config as C\n",
+    "from src.utils import env\n",
+    "from src.utils.performance import Monitor\n",
+    "from src.utils.reproducibility import Run\n",
+    "from src.data.supervised_artifact import load_supervised_artifact, split_partitions\n",
+    "from src.evaluation.leakage import check_leakage\n",
+    "from src.models.pipeline import build_pipeline, filtrar_rotulos_validos\n",
+    "\n",
+    "env.carregar_dotenv()\n",
+    "env.garantir_diretorios()\n",
+    "\n",
+    "print(C.resumo())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d94407d1",
+   "metadata": {},
+   "source": [
+    "## Carregar artefato (treino + validação)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "d8fc6734",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "FileNotFoundError",
+     "evalue": "O artefato supervisionado está incompleto. Arquivos ausentes: ['dataset_supervisionado.parquet', 'manifesto_supervisionado.json']. Execute o Notebook 03 adaptado para gerar o dataset_supervisionado.parquet e o manifesto correspondente. Nenhum dos arquivos esperados foi encontrado em C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador.",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mFileNotFoundError\u001b[39m                         Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 26\u001b[39m\n\u001b[32m     24\u001b[39m     ausentes = sorted(nomes - encontrados_nomes)\n\u001b[32m     25\u001b[39m \n\u001b[32m---> \u001b[39m\u001b[32m26\u001b[39m     raise FileNotFoundError(\n\u001b[32m     27\u001b[39m         \u001b[33m\"O artefato supervisionado está incompleto. \"\u001b[39m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\Documents\\GitHub\\Projeto_Integrador\\src\\data\\supervised_artifact.py:1008\u001b[39m, in \u001b[36mload_supervised_artifact\u001b[39m\u001b[34m(root, expected_kind, columns, partitions)\u001b[39m\n\u001b[32m   1007\u001b[39m \u001b[38;5;28;01mif\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m dataset_path.is_file() \u001b[38;5;129;01mor\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m manifest_path.is_file():\n\u001b[32m-> \u001b[39m\u001b[32m1008\u001b[39m     \u001b[38;5;28;01mraise\u001b[39;00m \u001b[38;5;167;01mFileNotFoundError\u001b[39;00m(\n\u001b[32m   1009\u001b[39m         \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mExecute o Notebook 03 adaptado para gerar \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m   1010\u001b[39m         \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[38;5;132;01m{\u001b[39;00mDATASET_NAME\u001b[38;5;132;01m}\u001b[39;00m\u001b[33m e \u001b[39m\u001b[38;5;132;01m{\u001b[39;00mMANIFEST_NAME\u001b[38;5;132;01m}\u001b[39;00m\u001b[33m.\u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m   1011\u001b[39m     )\n\u001b[32m   1013\u001b[39m manifest = json.loads(manifest_path.read_text(encoding=\u001b[33m\"\u001b[39m\u001b[33mutf-8\u001b[39m\u001b[33m\"\u001b[39m))\n",
+      "\u001b[31mFileNotFoundError\u001b[39m: Execute o Notebook 03 adaptado para gerar dataset_supervisionado.parquet e manifesto_supervisionado.json.",
+      "\nThe above exception was the direct cause of the following exception:\n",
+      "\u001b[31mFileNotFoundError\u001b[39m                         Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 26\u001b[39m\n\u001b[32m     22\u001b[39m     )\n\u001b[32m     23\u001b[39m     encontrados_nomes = {Path(p).name \u001b[38;5;28;01mfor\u001b[39;00m p \u001b[38;5;28;01min\u001b[39;00m encontrados}\n\u001b[32m     24\u001b[39m     ausentes = sorted(nomes - encontrados_nomes)\n\u001b[32m     25\u001b[39m \n\u001b[32m---> \u001b[39m\u001b[32m26\u001b[39m     raise FileNotFoundError(\n\u001b[32m     27\u001b[39m         \u001b[33m\"O artefato supervisionado está incompleto. \"\u001b[39m\n\u001b[32m     28\u001b[39m         f\"Arquivos ausentes: {ausentes}. \"\n\u001b[32m     29\u001b[39m         \u001b[33m\"Execute o Notebook 03 adaptado para gerar o \"\u001b[39m\n",
+      "\u001b[31mFileNotFoundError\u001b[39m: O artefato supervisionado está incompleto. Arquivos ausentes: ['dataset_supervisionado.parquet', 'manifesto_supervisionado.json']. Execute o Notebook 03 adaptado para gerar o dataset_supervisionado.parquet e o manifesto correspondente. Nenhum dos arquivos esperados foi encontrado em C:\\Users\\eduar\\Documents\\GitHub\\Projeto_Integrador."
+     ]
+    }
+   ],
+   "source": [
+    "EXPECTED_KIND = \"final\"\n",
+    "os.environ[\"SRAG_COHORT_KIND\"] = EXPECTED_KIND\n",
+    "\n",
+    "try:\n",
+    "    df, manifest = load_supervised_artifact(\n",
+    "        ROOT_DIR,\n",
+    "        expected_kind=EXPECTED_KIND,\n",
+    "        partitions=(\"treino\", \"validacao\"),\n",
+    "    )\n",
+    "except FileNotFoundError as exc:\n",
+    "    nomes = {\"dataset_supervisionado.parquet\", \"manifesto_supervisionado.json\"}\n",
+    "    encontrados = [\n",
+    "        str(p)\n",
+    "        for p in ROOT_DIR.rglob(\"*\")\n",
+    "        if p.is_file() and p.name in nomes\n",
+    "    ]\n",
+    "\n",
+    "    detalhe = (\n",
+    "        f\"Arquivos encontrados: {encontrados}\"\n",
+    "        if encontrados\n",
+    "        else f\"Nenhum dos arquivos esperados foi encontrado em {ROOT_DIR}.\"\n",
+    "    )\n",
+    "    encontrados_nomes = {Path(p).name for p in encontrados}\n",
+    "    ausentes = sorted(nomes - encontrados_nomes)\n",
+    "\n",
+    "    raise FileNotFoundError(\n",
+    "        \"O artefato supervisionado está incompleto. \"\n",
+    "        f\"Arquivos ausentes: {ausentes}. \"\n",
+    "        \"Execute o Notebook 03 adaptado para gerar o \"\n",
+    "        \"dataset_supervisionado.parquet e o manifesto correspondente. \"\n",
+    "        f\"{detalhe}\"\n",
+    "    ) from exc\n",
+    "treino, validacao = split_partitions(df, manifest)\n",
+    "\n",
+    "PARTICAO = manifest[\"partition_column\"]\n",
+    "TARGET   = manifest.get(\"target_column\") or C.cfg(\"target\", \"coluna\")\n",
+    "FEATURES = list(manifest.get(\"feature_columns\") or C.features_finais())\n",
+    "PROIBIDAS = manifest.get(\"forbidden_columns\") or list(C.cfg(\"features\", \"proibidas\") or [])\n",
+    "\n",
+    "N_TREINO = int(manifest[\"partition_counts\"][\"treino\"])\n",
+    "N_VAL    = int(manifest[\"partition_counts\"][\"validacao\"])\n",
+    "N_TESTE  = int(manifest[\"partition_counts\"][\"teste\"])\n",
+    "\n",
+    "assert set(df[PARTICAO].unique()) == {\"treino\", \"validacao\"}\n",
+    "assert set(FEATURES).issubset(df.columns)\n",
+    "\n",
+    "print(f\"treino    : {N_TREINO:,}\")\n",
+    "print(f\"validacao : {N_VAL:,}\")\n",
+    "print(f\"teste     : {N_TESTE:,} (não carregado)\")\n",
+    "print(f\"features  : {len(FEATURES)}\")\n",
+    "print(f\"proibidas : {len(PROIBIDAS)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a7c38f27",
+   "metadata": {},
+   "source": [
+    "## X / y e checagem de leakage\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1e4052e2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X_train, y_train = filtrar_rotulos_validos(\n",
+    "    treino[FEATURES],\n",
+    "    pd.to_numeric(treino[TARGET], errors=\"coerce\").astype(\"float64\"),\n",
+    ")\n",
+    "X_val, y_val = filtrar_rotulos_validos(\n",
+    "    validacao[FEATURES],\n",
+    "    pd.to_numeric(validacao[TARGET], errors=\"coerce\").astype(\"float64\"),\n",
+    ")\n",
+    "\n",
+    "check_leakage(X_train, forbidden_columns=PROIBIDAS)\n",
+    "check_leakage(X_val,   forbidden_columns=PROIBIDAS)\n",
+    "\n",
+    "print(f\"treino    : {len(X_train):,}  positivos={int(y_train.sum()):,}\")\n",
+    "print(f\"validacao : {len(X_val):,}  positivos={int(y_val.sum()):,}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2ffef44c",
+   "metadata": {},
+   "source": [
+    "## Construir e ajustar o pipeline\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4c438c56",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pipeline = build_pipeline(X=X_train, y=y_train)\n",
+    "pipeline_arquitetura = clone(pipeline)\n",
+    "\n",
+    "monitor = Monitor(notebook=\"C_11_pipeline_supervisionado\")\n",
+    "\n",
+    "with monitor.etapa(\"fit_treino\"):\n",
+    "    pipeline.fit(X_train, y_train)\n",
+    "\n",
+    "with monitor.etapa(\"transform_val_10k\"):\n",
+    "    X_val_proc_sample = pipeline.transform(X_val.head(10_000))\n",
+    "\n",
+    "assert sparse.issparse(X_val_proc_sample), (\n",
+    "    f\"pré-processador deveria ser esparso; veio {type(X_val_proc_sample).__name__}\"\n",
+    ")\n",
+    "assert X_val_proc_sample.dtype.name == \"float32\", (\n",
+    "    f\"pré-processador deveria produzir float32; veio {X_val_proc_sample.dtype}\"\n",
+    ")\n",
+    "\n",
+    "N_FEATURES_PROCESSADAS = int(X_val_proc_sample.shape[1])\n",
+    "\n",
+    "print(f\"features : {X_train.shape[1]} -> {N_FEATURES_PROCESSADAS}\")\n",
+    "print(\n",
+    "    f\"amostra  : {X_val_proc_sample.shape}  \"\n",
+    "    f\"nnz={sparse.csr_matrix(X_val_proc_sample).nnz:,}\"\n",
+    ")\n",
+    "print(f\"monitor  : {monitor.salvar()}\")\n",
+    "\n",
+    "monitor.resumo()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d134ccd1",
+   "metadata": {},
+   "source": [
+    "## Persistir\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "22a5aa85",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import cloudpickle\n",
+    "\n",
+    "OUT_DIR = C.OUTPUTS_DIR / \"C2\"\n",
+    "OUT_DIR.mkdir(parents=True, exist_ok=True)\n",
+    "\n",
+    "pipeline_path     = OUT_DIR / \"preprocessor.joblib\"\n",
+    "pipeline_fit_path = OUT_DIR / \"preprocessor_ajustado.joblib\"\n",
+    "split_info_path   = OUT_DIR / \"split_info.json\"\n",
+    "\n",
+    "def _cast_float32(X):\n",
+    "    return X.astype(\"float32\")\n",
+    "with pipeline_fit_path.open(\"wb\") as arquivo:\n",
+    "    cloudpickle.dump(pipeline, arquivo)\n",
+    "\n",
+    "split_info = {\n",
+    "    \"origem\":            \"artefato_supervisionado\",\n",
+    "    \"cohort_kind\":       manifest.get(\"cohort_kind\"),\n",
+    "    \"partition_column\":  PARTICAO,\n",
+    "    \"n_total\":           int(manifest[\"rows\"]),\n",
+    "    \"n_treino_split\":    N_TREINO,\n",
+    "    \"n_val_split\":       N_VAL,\n",
+    "    \"n_teste_split\":     N_TESTE,\n",
+    "    \"n_treino_rotulado\": int(len(y_train)),\n",
+    "    \"n_val_rotulado\":    int(len(y_val)),\n",
+    "}\n",
+    "split_info_path.write_text(\n",
+    "    json.dumps(split_info, indent=2, ensure_ascii=False),\n",
+    "    encoding=\"utf-8\",\n",
+    ")\n",
+    "\n",
+    "print(f\"Arquitetura : {pipeline_path}\")\n",
+    "print(f\"Ajustado    : {pipeline_fit_path}\")\n",
+    "print(f\"Split info  : {split_info_path}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "db196aff",
+   "metadata": {},
+   "source": [
+    "## Registar execução\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6bb5ec53",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pre          = pipeline.named_steps[\"pre\"]\n",
+    "features_num = list(pre.transformers_[0][2])\n",
+    "features_cat = list(pre.transformers_[1][2])\n",
+    "\n",
+    "with Run(modelo=\"C2_pipeline\", notas=\"Arquitetura do pipeline supervisionado\") as r:\n",
+    "    r.add_dataset(\n",
+    "        n_rows=int(manifest[\"rows\"]),\n",
+    "        train_rows=int(len(y_train)),\n",
+    "        valid_rows=int(len(y_val)),\n",
+    "        test_rows=N_TESTE,\n",
+    "    )\n",
+    "    r.features = {\n",
+    "        \"n_features\":  len(features_num) + len(features_cat),\n",
+    "        \"numericas\":   features_num,\n",
+    "        \"categoricas\": features_cat,\n",
+    "    }\n",
+    "    r.parametros = {\n",
+    "        \"target\":           TARGET,\n",
+    "        \"partition_column\": PARTICAO,\n",
+    "        \"origem_particao\":  \"artefato_supervisionado\",\n",
+    "        \"cohort_kind\":      manifest.get(\"cohort_kind\"),\n",
+    "    }\n",
+    "    r.metrica(n_features_processadas=N_FEATURES_PROCESSADAS)\n",
+    "\n",
+    "print(\"Run registrado em:\", r.pasta)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
