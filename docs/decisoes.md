@@ -1732,12 +1732,12 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 
 | Família | Configuração | PR-AUC | ROC-AUC | Brier |
 |---|---|---|---|---|
-| logística | `C=…`, `class_weight=…` | … | … | … |
-| logística (2ª) | `C=…`, `class_weight=…` | … | … | … |
-| boosting | `learning_rate=…`, `max_iter=…`, `class_weight=…` | … | … | … |
-| boosting (2ª) | `learning_rate=…`, `max_iter=…`, `class_weight=…` | … | … | … |
+| logística | `C=10`, `class_weight=sem peso` | 0,3227 | 0,8555 | 0,0651 |
+| logística (2ª) | `C=0.1`, `class_weight=sem peso` | 0,3224 | 0,8555 | 0,0651 |
+| boosting | `learning_rate=0.05`, `max_iter=1000`, `class_weight=sem peso` | 0,3603 | 0,8665 | 0,0632 |
+| boosting (2ª) | `learning_rate=0.05`, `max_iter=500`, `class_weight=sem peso` | 0,3603 | 0,8665 | 0,0632 |
 
-- **Resultado:** finalista congelado = **`<logistic|boosting>`**, com `class_weight` final `<balanced|null>`; hiperparâmetros gravados em `configs/supervised.yaml`.
+- **Resultado:** finalista congelado = **`boosting`**, com `class_weight` final `{}` (sem peso); hiperparâmetros gravados em `configs/supervised.yaml`.
 - **Implementado em:** `configs/supervised.yaml` (`models.logistic`, `models.boosting`, `selecao_modelos.finalista_escolhido`, `selecao_modelos.status: finalista_congelado`) e `docs/decisoes.md` (esta entrada).
 - **Depende de:** #132 (artefato com 30 variáveis) e #140 (lista de variáveis).
 - **Abre:** #79 (G7 e G8) e #155 (exploração em equipe).
