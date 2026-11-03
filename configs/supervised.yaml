@@ -421,6 +421,8 @@ avaliacao:
   - sexo_categoria
   - faixa_etaria
   - ano_internacao
+  - cs_raca
+  - cs_zona
   min_n_grupo: 100
   desempenho_por_ano: true
   calibracao_por_ano: true

@@ -1741,3 +1741,14 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Implementado em:** `configs/supervised.yaml` (`models.logistic`, `models.boosting`, `selecao_modelos.finalista_escolhido`, `selecao_modelos.status: finalista_congelado`) e `docs/decisoes.md` (esta entrada).
 - **Depende de:** #132 (artefato com 30 variáveis) e #140 (lista de variáveis).
 - **Abre:** #79 (G7 e G8) e #155 (exploração em equipe).
+
+#### 29.38 04/11 · Hipóteses registradas antes da abertura do teste
+
+- **Contexto:** o teste (`test_ref`, `test_pandemic` e a união Teste B) é aberto **uma vez** em 05/11 (§29.38). Registrar a expectativa **antes** impede que um resultado inesperado pareça desculpa depois.
+- **Prevalência:** 8,4% no desenvolvimento (`train_ref` e `val_ref`), ≈ 26% em 2020–2022 (`test_pandemic`).
+- **Teste A (`test_ref`):** PR-AUC entre **0,30 e 0,36** (3,6× a 4,3× o acaso, que é 0,084); ROC-AUC entre **0,85 e 0,87**, perto do `val_ref`.
+- **Teste B (`test_ref` + `test_pandemic`):** fica entre Teste A e `test_pandemic`; mais perto do `test_pandemic` por volume (2,9 milhões de fichas contra 119 mil).
+- **`test_pandemic` isolado:** PR-AUC absoluta maior que no Teste A, mas **PR-AUC ÷ prevalência igual ou menor**; Brier pior; razão **observado/esperado (O/E) acima de 1** (hipótese: entre 1,5 e 3), porque o calibrador foi ajustado a 8,4% e não a 26%. Isso **não é defeito do modelo** — é a consequência esperada de calibrar em um período e aplicar em outro.
+- **Regra:** se algum resultado contrariar uma hipótese, a contradição entra no relatório **como achado**, nunca como motivo para ajustar o modelo, a calibração ou o corte. O teste é uma única vez.
+- **Implementado em:** esta entrada. A abertura fica registrada na §29.39 (ou na entrada equivalente do #2).
+- **Abre:** nada (o teste é o fim da cadeia).
