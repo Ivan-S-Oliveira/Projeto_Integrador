@@ -1700,8 +1700,12 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
   de critério fica registrada aqui. As três colunas ficam no artefato
   (`features.sensibilidade_marcador_periodo`) só para a linha "P + 3 sintomas"
   do C_14.
-- **Recodificação das comorbidades por `fator_risc`:** PREENCHER com o resultado
-  da conferência (contagem de brancos com `fator_risc` = 2) e a decisão.
+- **Recodificação das comorbidades por `fator_risc`:** não adotada. A conferência
+  no `train_ref` contou **zero** casos que a regra mudaria para as comorbidades
+  verificadas (cardiopati, diabetes, obesidade, asma, renal, puerpera): nenhum
+  branco com `fator_risc = 2`. O ganho medido na ablação de 02/11 também foi
+  nulo (Δ PR-AUC 0,0000 / Δ ROC-AUC 0,0000, logística e boosting), consistente
+  com a ausência de casos.
 - **Sensibilidade "sem saturação e desconforto":** desativada
   (`sensibilidades.sem_saturacao_desc_resp.ativa: false`); a linha
   "P − gravidade" do C_14 mostra o efeito de retirá-las.
