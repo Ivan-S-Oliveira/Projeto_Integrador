@@ -262,10 +262,8 @@ Decisão de 18/10 (#13): a sazonalidade não entra no modelo principal (mais
 dimensões, ganho incerto) e é documentada como limitação. `sin_semana` e
 `cos_semana` transformam a semana do ano num círculo (a semana 52 fica
 vizinha da semana 1) e são criadas por `montar_features`, mas não constam em
-`features.final`. Serão testadas na linha "P + sazonalidade" da tabela de
-ablações (#54). Se a PR-AUC subir pelo menos 0,005, vira achado da Discussão:
-a sazonalidade carrega informação de onda epidêmica; o modelo principal
-continua o do G1.
+`features.final`. Não foram testadas: a sazonalidade fica como limitação
+declarada no relatório.
 
 ---
 
@@ -683,24 +681,21 @@ A criação do Modelo C não faz parte do caminho crítico até 17/10/2026.
 
 **Status:** decisão fechada em 18/10/2026.
 
-A divisão 70/15/15 foi supersedida. A partição-mestre determinística por
-`group_id` tem quatro blocos:
+A partição-mestre é determinística por `group_id` e segue o desenho 70/15/15
+(§29.33), com quatro blocos:
 
 | Bloco | Anos | Fração | Finalidade | Influencia decisões? |
 |---|---|---|---|---|
 | `train_ref` | 2019, 2023, 2024, 2025 | 0.70 | treino | Sim |
-| `val_ref` | 2019, 2023, 2024, 2025 | 0.15 | features, geografia e tuning; calibração e limiar; confirmação pré-teste | Sim; Somente confirmação |
+| `val_ref` | 2019, 2023, 2024, 2025 | 0.15 | variáveis e hiperparâmetros (C_12 a C_14); calibração, medição e limiar (C_15, em duas metades internas) | Sim |
 | `test_ref` | 2019, 2023, 2024, 2025 | 0.15 | Teste A | Não |
 | `test_pandemic` | 2020, 2021, 2022 | n/a (100% dos anos pandêmicos) | parcela adicional do Teste B | Não |
 
-Atualizado em 27/10 (#118): as três validações são disjuntas e cada uma tem
-um papel só, de modo que nenhuma fatia escolhe e mede ao mesmo tempo.
-`val_tune` escolhe features, geografia e hiperparâmetros; `val_cal` ajusta
-a calibração e escolhe o limiar; `val_meas` só mede o desempenho antes do
-teste e não influencia nenhuma escolha. Isso substitui o desenho anterior,
-em que a busca de hiperparâmetros (C_13) usava a validação inteira e o C_15
-media o resultado numa metade dela, já vista pela busca, o que deixava a
-estimativa otimista.
+Atualizado em 03/11 (§29.33): a validação é um bloco só. O C_15 divide o
+`val_ref` em duas metades estratificadas e disjuntas: `val_cal` ajusta o
+calibrador e `val_meas` mede o Brier e escolhe o limiar. A seleção de variáveis
+e de hiperparâmetros também usa o `val_ref`; essa limitação está declarada, e a
+medida honesta é a do teste, aberto uma vez.
 
 Invariantes:
 
@@ -720,8 +715,8 @@ Invariantes:
 
 A materialização fica em `src/data/split.py::criar_particao_mestra`. A
 função lê `temporal.blocos`, atribui 2020–2022 inteiramente a
-`test_pandemic`, distribui os demais anos por hash entre os cinco blocos
-compartilhados, marca o restante (2026) como `exploracao` e devolve um
+`test_pandemic`, distribui os demais anos por hash entre os três blocos
+compartilhados (`train_ref`, `val_ref` e `test_ref`), marca o restante (2026) como `exploracao` e devolve um
 manifesto com contagem, nº de grupos, anos, prevalência do alvo e hash
 por bloco.
 
@@ -777,11 +772,11 @@ Atualizado em 27/10: `limiar.min_recall: 0.80` e as métricas candidatas
 #80). São parâmetros e candidatos; a escolha do critério e do valor
 continua no G8, só com a validação.
 
-Proposta do G8 (card #80, 27/10), ainda não aprovada: corte principal igual
-ao de maior precisão entre os que têm sensibilidade de pelo menos 0,80,
-escolhido em `val_cal` sobre probabilidades calibradas. Cortes de referência,
-só para mostrar: sensibilidade de pelo menos 0,70, F1 máximo e Youden. Os
-cortes são medidos em `val_meas` sem serem alterados. Detalhes e pontos em
+Proposta do G8 (27/10; a decisão final fica registrada na §29.36): corte
+principal igual ao de maior precisão entre os que têm sensibilidade de pelo menos
+0,80, escolhido na metade `val_meas` do `val_ref`, com as probabilidades
+calibradas na metade `val_cal`. Cortes de referência, só para mostrar:
+sensibilidade de pelo menos 0,70, F1 máximo e Youden. Detalhes e pontos em
 aberto em §29.22.
 
 Alternativas possíveis:
@@ -890,7 +885,6 @@ Nenhuma extensão retroage para otimizar o resultado oficial de teste.
 **Data:** 18/10/2026
 **Status:** aprovada e congelada
 **Origem:** decisão metodológica aprovada pelo time
-**Responsável pelo registro:** Pessoa B
 **Natureza:** contrato metodológico do experimento principal
 
 ### 28.1 Decisão
@@ -966,13 +960,9 @@ manifestos e da execução.
 ## 29. Decisões do ciclo de 22 a 24/10/2026
 
 **Redigido em:** 27/10/2026
-**Responsável pelo registro:** Pessoa A
 **Regra de escrita:** cada entrada traz data, decisão, motivo, impacto, onde
 está implementado e quem decidiu. Texto antigo não é apagado; as seções
 substituídas levam a marca "substituído em DD/MM por …".
-**Campos sem dado:** o que não consta nos arquivos (decisores, datas das
-§29.10 a 29.12, números do #131, pontos do #95) não foi preenchido aqui e
-deve ser consultado nas fichas.
 
 ### 29.1 22/10 · Contrato da coorte definitiva (`final_cohort_v1`)
 
@@ -1037,6 +1027,8 @@ deve ser consultado nas fichas.
 Substituído em 02/11: o contrato passou a status: approved (§29.32).
 
 ### 29.4 24/10 · Regra de grupo (#10) e partição em seis blocos
+
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
 
 - **Regra de grupo (#10):** `group_id` é o `nu_notific` sem espaços; quando o
   número está vazio, usa-se "sem_notific:" mais o `id_registro`. Fichas com o
@@ -1157,6 +1149,8 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
   aprovado em 11/10. O `finalista_escolhido` fica em aberto até o G6.
 
 ### 29.12 27/10 · Peso de classe (#5)
+
+> Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão nas §29.36 e §29.37.
 
 - **Decisão vigente:** `class_weight: balanced` na regressão logística e no
   boosting (as famílias encerradas, árvore e random forest, também trazem a
@@ -1283,6 +1277,8 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
 
 ### 29.16 27/10 · Validação que escolhe não é a validação que mede (#118)
 
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
+
 - **Decisão:** três validações disjuntas, cada uma com um papel: `val_tune`
   (escolhe features, geografia e hiperparâmetros), `val_cal` (calibra e
   escolhe o limiar) e `val_meas` (só mede, sem influenciar escolhas).
@@ -1301,6 +1297,8 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   mede ao mesmo tempo."
 
 ### 29.17 27/10 · Plano do ajuste fino (G6), registrado antes dos resultados
+
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
 
 - **Decisão:** busca curta e reproduzível, não exaustiva, sem validação
   cruzada (aceito pelo professor, por causa do tamanho da base). Escolha em
@@ -1369,6 +1367,8 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   alvo_qualquer_obito). Alinhar o YAML ao que será rodado.
 
 ### 29.19 27/10 · Três sintomas vazios em 2019 (#50): critério registrado antes dos números
+
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
 
 > Atualizado em 03/11 (§29.34): os três sintomas saíram do modelo por decisão de validade (marcador de período), e não pelo critério de desempenho abaixo.
 
@@ -1446,6 +1446,9 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
 
 ### 29.21 27/10 · Plano do G7 (calibração), registrado antes dos resultados
 
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
+> Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão nas §29.36 e §29.37.
+
 - **Decisão (card #79):** calibrar o finalista congelado (FrozenEstimator)
   com dois métodos, `sigmoid` e `isotonic`, ajustados só em `val_cal`; a
   ordenação não muda (PR-AUC e ROC-AUC iguais, com tolerância).
@@ -1472,6 +1475,9 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   `val_cal`.
 
 ### 29.22 27/10 · Plano do G8 (limiar), registrado antes dos resultados
+
+> Histórico: escrita para o desenho anterior, com três blocos de validação; o desenho vigente é o da §29.33.
+> Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão nas §29.36 e §29.37.
 
 - **Decisão proposta (card #80):** o corte principal é o de maior precisão
   entre os que têm sensibilidade de pelo menos 0,80, escolhido em `val_cal`
@@ -1538,8 +1544,8 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
   21 pontos percentuais). Se a hipótese se confirmar, parte do "viés de
   documentação" (#52) é a regra de preenchimento da ficha, e a categoria
   `AUSENTE` carrega "não tem comorbidade", ligada a menos óbitos.
-- **Verificação (Pessoa A):** `notebooks/A/A_15_fator_risco.ipynb`, só leitura
-  de `coorte_final.parquet`: (1) `fator_risc` × comorbidade em branco, por ano;
+- **Verificação:** feita num notebook auxiliar (retirado do pacote; fica no
+  histórico do Git), só leitura de `coorte_final.parquet`: (1) `fator_risc` × comorbidade em branco, por ano;
   (2) mortalidade por valor de `fator_risc`; (3) a diferença de ausência entre
   curas e óbitos só entre fichas com `fator_risc` = sim. Saídas em
   `outputs/tables/eda_02_fator_risc_*.csv`.

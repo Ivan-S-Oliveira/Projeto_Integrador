@@ -35,9 +35,7 @@ uso_temporal_no_experimento:
       - 2025
     blocos:
       - "train_ref"
-      - "val_tune"
-      - "val_cal"
-      - "val_meas"
+      - "val_ref"
   teste_referencia:
     anos:
       - 2019
