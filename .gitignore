@@ -203,3 +203,7 @@ docs/PROJECT_FILES.jsonl
 .pytest_cache/*
 docs/project_reference_md/*
 tools/trocar_validacao_70_15_15.py
+
+# Cópias de segurança locais e saídas de monitoramento (arquivos gerados; não versionar)
+_backup_limpeza/
+**/outputs/performance/

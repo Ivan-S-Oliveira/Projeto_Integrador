@@ -1,3 +1,0 @@
-﻿notebook,etapa,status,duracao_s,rss_inicio_mb,rss_fim_mb,rss_pico_mb,arrow_inicio_mb,arrow_fim_mb
-C_11_pipeline_supervisionado,fit_treino,ok,7.976,695.9,662.6,1231.4,492.4,492.4
-C_11_pipeline_supervisionado,transform_val_10k,ok,0.202,662.7,659.7,662.7,492.4,492.4
