@@ -56,7 +56,9 @@ Substituído em 03/11 (§29.35): o finalista foi congelado no G6 (`boosting`); a
 
 - Resultado dos sintomas de 2019 (#50).
 - Peso de classe (#5): `class_weight: balanced` está vigente nos quatro modelos e depende da confirmação do #5 (§29.12).
+- **Substituído em 03/11:** peso de classe decidido no G6 (§29.35): `class_weight` final `{}` (sem peso) em boosting e logística; a linha acima fica como histórico.
 - Escolha do finalista e dos hiperparâmetros no G6.
+- **Substituído em 03/11:** finalista e hiperparâmetros congelados no G6 (§29.35): `boosting`; a linha acima fica como histórico.
 - Escolha final do método de calibração no G7, após o ajuste fino.
 - Escolha final do critério e valor do limiar no G8, usando somente validação.
 - Aprovação conjunta do G9 depois do congelamento de features, modelo, hiperparâmetros, calibrador, limiar, commit e manifestos.
@@ -1120,6 +1122,7 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
 - Calibração (G7): aguardando a Pessoa C
 - Limiar (G8): aguardando a Pessoa C
 - Concluir até 29/10, antes do G9.
+- **Substituído em 03/11:** o peso de classe e o finalista com os hiperparâmetros (G6) foram decididos (§29.35); esta lista fica como histórico.
 
 ### 29.10 · Quarentena para `nu_notific` repetido (#10)
 
@@ -1153,6 +1156,8 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
 ### 29.12 27/10 · Peso de classe (#5)
 
 > Histórico: os números desta entrada são da coorte provisória ou de modelos sem ajuste fino; os valores finais estão nas §29.36 e §29.37.
+>
+> **Substituído em 03/11:** a decisão vigente é `class_weight` final `{}` (sem peso) em boosting e logística, congelada no G6 (§29.35); o texto desta entrada fica como histórico.
 
 - **Decisão vigente:** `class_weight: balanced` na regressão logística e no
   boosting (as famílias encerradas, árvore e random forest, também trazem a
