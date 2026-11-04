@@ -125,6 +125,9 @@ def load_cohort(
         root, kind=kind, explicit_path=explicit_path,
     )
     frame = pd.read_parquet(path, columns=columns)
+    for col in frame.select_dtypes(include=["object", "string"]).columns:
+        if frame[col].nunique(dropna=True) <= 1000:
+            frame[col] = frame[col].astype("category")
     source = CohortSource(
         kind=effective_kind,
         path=str(path),

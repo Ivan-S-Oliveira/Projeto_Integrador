@@ -53,23 +53,9 @@ def build_baseline_pipeline(
 
 
 def evaluate_baseline(
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    X_eval: pd.DataFrame,
-    y_eval: pd.Series,
-    *,
-    strategy: DummyStrategy = "prior",
-) -> dict[str, str | float]:
-    """Treina e avalia um ``DummyClassifier`` — devolve o dict de métricas.
-
-    O dict inclui ``strategy`` (a escolhida) mais todas as chaves de
-    ``metricas_completas`` — ver esse módulo para a lista completa.
-    """
-    pipe = build_baseline_pipeline(strategy=strategy)
+    X_train, y_train, X_eval, y_eval, *, strategy: DummyStrategy = "prior"
+):
+    pipe = build_baseline_pipeline(strategy=strategy, preprocessor="passthrough")
     pipe.fit(X_train, y_train)
     y_prob = pipe.predict_proba(X_eval)[:, 1]
-
-    return {
-        "strategy": strategy,
-        **metricas_completas(y_eval, y_prob, limiar=0.5),
-    }
+    return {"strategy": strategy, **metricas_completas(y_eval, y_prob, limiar=0.5)}
