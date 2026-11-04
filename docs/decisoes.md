@@ -1748,6 +1748,7 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 | boosting (2ª) | `learning_rate=0.05`, `max_iter=500`, `class_weight=sem peso` | 0,3603 | 0,8665 | 0,0632 |
 
 - **Resultado:** finalista congelado = **`boosting`**, com `class_weight` final `{}` (sem peso); hiperparâmetros gravados em `configs/supervised.yaml`.
+- **Desempate aplicado em 03/11:** `max_iter=500` e `max_iter=1000` obtiveram PR-AUC idêntica (0.360273385816); diferença absoluta `0.000000000000`. Pela regra pré-definida de preferir a configuração mais simples quando a diferença é menor que `0,002`, o modelo congelado permanece com `max_iter=500`. O valor `1000` permanece no histórico apenas como a primeira configuração na ordenação bruta da busca.
 - **Implementado em:** `configs/supervised.yaml` (`models.logistic`, `models.boosting`, `selecao_modelos.finalista_escolhido`, `selecao_modelos.status: finalista_congelado`) e `docs/decisoes.md` (esta entrada).
 - **Depende de:** #132 (artefato com 30 variáveis) e #140 (lista de variáveis).
 - **Abre:** #79 (G7 e G8) e #155 (exploração em equipe).
