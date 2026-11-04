@@ -1752,6 +1752,20 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Depende de:** #132 (artefato com 30 variáveis) e #140 (lista de variáveis).
 - **Abre:** #79 (G7 e G8) e #155 (exploração em equipe).
 
+#### 29.37 04/11 · Exploração de hiperparâmetros antes de testar
+
+Regras combinadas em equipe **antes** de rodar qualquer exploração:
+
+- **Métrica de escolha**: PR-AUC no recorte interno; desempate por Brier bruto; depois pela configuração mais simples.
+- **Orçamento**: no máximo 40 configurações por frente, `random_state=42`. Nada de "só mais uma".
+- **Confirmação**: as 3 melhores de cada frente vão ao `val_ref`.
+- **Regra de troca**: a configuração nova só substitui a do #1 se
+  (a) ganhar ≥ 0,005 de PR-AUC no `val_ref`;
+  (b) não piorar a ROC-AUC em mais de 0,002;
+  (c) o IC 95% da diferença de PR-AUC (bootstrap por grupo, 300 réplicas, `seed=42`) tiver o limite inferior acima de zero.
+  Empate dentro de 0,002: a mais simples. Troca de família (logística ↔ boosting) segue a §29.17.
+- **Proibido**: carregar `test_ref` ou `test_pandemic`; mexer em variáveis, partição ou código de `src/`.
+
 #### 29.38 04/11 · Hipóteses registradas antes da abertura do teste
 
 - **Contexto:** o teste (`test_ref`, `test_pandemic` e a união Teste B) é aberto **uma vez** em 05/11 (§29.38). Registrar a expectativa **antes** impede que um resultado inesperado pareça desculpa depois.
