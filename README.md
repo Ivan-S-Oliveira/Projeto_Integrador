@@ -281,7 +281,7 @@ ser concluídas antes de avançar. No snapshot documentado:
   -----------------------------------------------------------------------
   Gate                    Situação registrada     Significado
   ----------------------- ----------------------- -----------------------
-  G1 --- alvo e atributos Pendente                Confirmar coorte
+  G1 --- alvo e atributos Aprovado                Confirmar coorte
                                                   definitiva, alvo e
                                                   lista final de
                                                   atributos.
@@ -295,7 +295,7 @@ ser concluídas antes de avançar. No snapshot documentado:
   G5 --- pilotos          Aprovado                Pilotos supervisionados
                                                   registrados.
 
-  G6 --- finalistas e     Pendente                Selecionar finalista e
+  G6 --- finalistas e     Aprovado                Selecionar finalista e
   tuning                                          concluir busca
                                                   limitada.
 
