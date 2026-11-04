@@ -834,7 +834,7 @@ distribuição das probabilidades.
   quando isso reduz duplicação e facilita reprodução.
 - Nenhum notebook incorpora caminhos locais absolutos.
 - Decisões futuras são acrescentadas sem apagar o histórico relevante.
-
+"Nota de mapeamento (04/11/2026). Em 04/11 os notebooks foram renumerados na ordem de execução: A_03→02_coorte_definitiva, B_02→03_eda_primeira_passagem, B_04→04_eda_temporal_agrupamento, B_05→05_supervisionado_pilotos, C_11→06_pipeline_supervisionado, C_12→07_baseline_logistica, C_14→08_ablacoes_variaveis, C_13→09_ajuste_fino, C_15→10_calibracao_limiar, C_16→11_validacao_final. As entradas históricas que citam os nomes antigos ficam como registro; leia-as com este mapeamento. Os prefixos de saída C3_*, C4_*, C5_*, C6_* e os nomes de execução hist_gradient_boosting_v2/logistica_C1_v2 não mudaram."
 ---
 
 ## 26. Princípios inegociáveis

@@ -416,3 +416,5 @@ O projeto reúne práticas de engenharia de dados, análise exploratória,
 aprendizado supervisionado e não supervisionado, engenharia de
 atributos, avaliação de modelos, prevenção de vazamento de informação e
 reprodutibilidade.
+
+> **Notebooks numerados na ordem de execução (04/11/2026):** `A_03`→`02_coorte_definitiva`, `B_02`→`03_eda_primeira_passagem`, `B_04`→`04_eda_temporal_agrupamento`, `B_05`→`05_supervisionado_pilotos`, `C_11`→`06_pipeline_supervisionado`, `C_12`→`07_baseline_logistica`, `C_14`→`08_ablacoes_variaveis`, `C_13`→`09_ajuste_fino`, `C_15`→`10_calibracao_limiar`, `C_16`→`11_validacao_final`. Os prefixos de saída `C3_*`…`C6_*` e os nomes de execução `hist_gradient_boosting_v2`/`logistica_C1_v2` não mudaram.
