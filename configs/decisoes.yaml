@@ -36,6 +36,12 @@ status_decisoes:
     status: proposta
     responsavel: a_definir
     data: null
+  maturidade_desfecho:
+    status: analise_descritiva_concluida
+    data: '2026-11-04'
+    resultado: "<estável entre anos | 2025 ~Nx 2023-2024>"
+    acao: "declarar_como_limitacao_no_relatorio"
+    reabre_decisoes: false  
   features_derivadas:
     status: aprovada
     responsavel: time_do_projeto
