@@ -1098,7 +1098,7 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
   completude (#52).
 - **Implementado em:** `configs/supervised.yaml`; card #83 (fechado) e card P4
   (este item).
-- **Decidiu:** Pessoa A (dona), com revisão cruzada.
+- **Decidiu:** a equipe, com revisão cruzada.
 - **Fecha:** card P4 e item #83.
 
 ### 29.7 24/10 · Não supervisionado
@@ -1114,15 +1114,11 @@ Substituído em 02/11: o contrato passou a status: approved (§29.32).
   como contexto incremental; a comparação sem geografia × região é
   obrigatória e UF como preditora é condicional (§1.1).
 
+- **Atualização de 03/11: versão mínima do corte por região.** O professor sugeriu, em 24/10, um modelo único com ponto de corte por região. Foi implementada só a versão mínima: modelo único, corte global e métricas e calibração por região no teste. O corte regional não foi implementado, por falta de tempo antes do teste, e fica como trabalho futuro. A tabela por região mostra a diferença de sensibilidade entre regiões que ele tentaria corrigir.
+
 ### 29.9 27–28/10 · Pendente (a Pessoa C escreve uma linha no card; a Pessoa A transcreve)
 
-- Sintomas de 2019 (#50): aguardando a Pessoa C
-- Peso de classe (#5): aguardando a Pessoa C
-- Finalista e hiperparâmetros (G6): aguardando a Pessoa C
-- Calibração (G7): aguardando a Pessoa C
-- Limiar (G8): aguardando a Pessoa C
-- Concluir até 29/10, antes do G9.
-- **Substituído em 03/11:** o peso de classe e o finalista com os hiperparâmetros (G6) foram decididos (§29.35); esta lista fica como histórico.
+**Resolvido:** ver §29.34 a §29.38.
 
 ### 29.10 · Quarentena para `nu_notific` repetido (#10)
 
@@ -1683,7 +1679,7 @@ construtor da coorte e são exigidas por src/data/cohort_contract.py.
 tests/test_cohort_source.py; notebooks C_11, C_12, C_13, C_15 e C_16;
 configs/final_cohort_v1.yaml; tests/test_cohort_contract.py;
 configs/supervised.yaml; configs/feature_contract_v1.json.
-- **Decidiu:** Pessoa B.
+- **Decidiu:** a equipe.
 
 #### 29.33 03/11 · Validação unificada: desenho 70/15/15
 
@@ -1728,6 +1724,9 @@ configs/supervised.yaml; configs/feature_contract_v1.json.
 - **Impacto:** o artefato supervisionado é regerado (mesmas fichas e blocos;
   `feature_columns` e hash novos) e os notebooks de modelagem e de agrupamento
   são reexecutados. Substitui, nestes pontos, as §13, §29.2, §29.14 e §29.19.
+
+  - **Reexecução no val_ref (03/11, C_14, 30 variáveis, hiperparâmetros padrão):** P + 3 sintomas Δ PR-AUC +0,0001 (logística) e −0,0005 (boosting); P − gravidade −0,0170 (logística); recodificação por fator_risc 0,0000 nas duas famílias, coerente com zero casos.
+- **Status do G1:** Esta decisão reabre o G1 (aprovado em 22/10) apenas para a lista de variáveis, por falha material (marcador de período), como previsto na §29.19. Com a lista de 30 variáveis, o G1 volta a aprovado.
 
 #### 29.35 03/11 · G6: hiperparâmetros e finalista
 
