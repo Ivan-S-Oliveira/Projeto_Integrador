@@ -8858,3 +8858,1326 @@ git grep -n -I -i -E "olivem85|OneDrive - |C:.{1,4}Users"
 ### ④ Pronto quando
 
 - manual: | O clone limpo instalou pelo requirements.txt, o pytest rápido passou, os notebooks 00 e 01 rodaram (ou o README diz que a release é privada), o git grep por caminhos locais saiu vazio e o resultado está comentado neste card.
+
+## #164 · Caminhos relativos no código: tirar a pasta do usuário e da empresa de resumos, registros e manifestos (causa raiz do #156)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Revisão do src/ de 04/11 (snapshot 741fbbe): caminhos absolutos gerados por config.resumo, reproducibility._env_info e supervised_artifact
+- depende de: —
+- tags: Código, Entrega, Privacidade
+- pilar: Documentação
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: src/utils/config.py, src/utils/reproducibility.py, src/data/supervised_artifact.py, src/data/final_cohort_cli.py, tests/test_config.py
+
+### ① Para entender
+
+O #156 limpou os caminhos absolutos das saídas salvas dos notebooks, mas eles **voltam a cada execução**, porque nascem no código, e não nos notebooks. São quatro fontes:
+
+| Onde | O que grava hoje |
+|---|---|
+| `src/utils/config.py::resumo()` | `ROOT_DIR`, `DATA_DIR`, `OUTPUTS_DIR`… absolutos, impressos no começo de quase todo notebook |
+| `src/utils/reproducibility.py::_env_info()` | `cwd` e `python_executable` absolutos em todo `outputs/runs/<RUN_ID>/metadata.json` |
+| `src/data/supervised_artifact.py` | `dataset_path`, `partition_path` e `source.path` absolutos nos manifestos `manifesto_supervisionado.json` e `manifesto_particao.json` |
+| `src/data/final_cohort_cli.py` | caminhos da fonte e da coorte nos manifestos da coorte (`coorte_final.manifest.json`, `manifesto_coorte.json`) |
+
+Na máquina oficial, esses caminhos contêm o nome do usuário e a pasta sincronizada da empresa (`C:\Users\<usuário>\OneDrive - <empresa>\…`). O pacote de referência mascara como `<HOME>` e `<REPO>`, mas os arquivos reais, não.
+
+### ② Problema
+
+- A execução limpa (#126) vai regravar todas as saídas e manifestos **com os caminhos pessoais de novo**, desfazendo o #156.
+- Os manifestos vão para o pacote entregue (`data/analytical/*.json` e as tabelas citadas no #157).
+- O `metadata.json` de cada execução grava também o executável do Python, com o mesmo caminho.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Antes de:** execução limpa (#126). Todo script começa por um relatório numa cópia, como combinado.
+
+1. **Em `src/utils/config.py`**, acrescente a função (depois de `ROOT_DIR`):
+```python
+def caminho_relativo(caminho) -> str:
+    """Caminho relativo à raiz do projeto, sem pastas pessoais.
+
+    Fora do projeto, devolve só o nome do arquivo.
+    """
+    p = Path(caminho).resolve()
+    try:
+        return p.relative_to(ROOT_DIR).as_posix()
+    except ValueError:
+        return p.name
+```
+2. **`resumo()`**: troque cada valor `Path` por `caminho_relativo(...)`. Exemplo: `("ROOT_DIR", "."), ("DATA_DIR", caminho_relativo(DATA_DIR))`.
+3. **`reproducibility._env_info()`**: `"cwd": caminho_relativo(Path.cwd())` e `"python_executable": Path(sys.executable).name`.
+4. **`supervised_artifact.py`**: nos campos `dataset_path` e `partition_path`, use `C.caminho_relativo(...)`. Em `source.to_dict()` (vem de `cohort_source.CohortSource`), faça o mesmo com `path`. **Atenção:** `load_supervised_artifact` sobrescreve `manifest["dataset_path"]` com o caminho absoluto só em memória; isso pode ficar, porque não é gravado.
+5. **`final_cohort_cli.py`**: procure os `str(path)` que entram em manifestos e aplique `caminho_relativo`.
+6. **Teste** em `tests/test_config.py`:
+```python
+def test_caminho_relativo_nao_expoe_pasta_pessoal():
+    from src.utils import config as C
+    assert C.caminho_relativo(C.ROOT_DIR / "data" / "x.parquet") == "data/x.parquet"
+    assert "Users" not in C.caminho_relativo("C:/Users/fulano/arquivo.txt")
+```
+7. Rode `python -m pytest -q` e, depois da execução limpa, confira:
+```powershell
+git grep -n -i "OneDrive\|C:\\Users" -- notebooks data/analytical outputs/tables configs
+```
+8. Commit: `fix: caminhos relativos em resumos, registros e manifestos [done:#164]`.
+
+> [!atenção] Não altere o hash dos artefatos por isso
+> Os caminhos estão no manifesto, e não no Parquet: o `dataset_sha256` não muda. Mas, se o artefato for regerado, os manifestos novos já saem limpos.
+
+### ④ Pronto quando
+
+- define: `src/utils/config.py` :: `caminho_relativo` | A função caminho_relativo existe em config.py e devolve caminhos relativos à raiz do projeto.
+- contem: `src/utils/reproducibility.py` :: `caminho_relativo` | O registro de cada execução grava o diretório de trabalho como caminho relativo.
+- contem: `src/data/supervised_artifact.py` :: `caminho_relativo` | Os manifestos do artefato e da partição gravam caminhos relativos.
+- teste: `tests/test_config.py::test_caminho_relativo_nao_expoe_pasta_pessoal` | O teste garante que nenhuma pasta pessoal aparece no caminho devolvido.
+- nao-contem: `data/analytical/manifesto_supervisionado.json` :: `OneDrive` | O manifesto do artefato não tem a pasta sincronizada da empresa.
+- manual: | Depois da execução limpa, o git grep por OneDrive e C:\Users não encontrou nada em notebooks, manifestos e tabelas.
+
+---
+
+## #165 · C_16: O/E, calibração e Brier relativo por janela, e parada se a árvore Git estiver suja
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M5
+- data ideal: 04/11
+- responsável: a definir (0,75 h)
+- pessoas: Equipe
+- fonte: Revisão de 04/11: a hipótese registrada da §29.38 (O/E entre 1,5 e 3 em 2020–2022) não é calculada pelo C_16; metadata.json de 03/11 com dirty = true
+- depende de: #148
+- tags: Notebook, Teste, Calibração, Reprodutibilidade
+- pilar: Valor científico-acadêmico
+- carga: 0.75
+- novo: sim
+- professores: não
+- arquivos: notebooks/C/C_16_validacao_final.ipynb, src/evaluation/calibration.py
+
+### ① Para entender
+
+A §29.38 registrou, antes da abertura do teste, que no período pandêmico o modelo deve **ordenar bem** o risco, mas **subestimar o nível**: **O/E** (óbitos observados ÷ soma das probabilidades previstas) entre 1,5 e 3, porque foi calibrado com 8,4% de óbitos e a pandemia teve 26%. É o resultado mais relevante do teste do ponto de vista de saúde pública: um modelo calibrado num período e aplicado em outro.
+
+Hoje, porém, a tabela `janelas_df` do C_16 (célula 12) calcula `metricas_completas` mais PR-AUC ÷ prevalência, sem O/E e sem medida de calibração. A hipótese registrada **não seria conferida**.
+
+Ao mesmo tempo, os cinco registros de execução de 03/11 (B_05 e C_11 a C_15) têm `"git": {"dirty": true}`: rodaram com mudanças não commitadas. Para o C_16, que abre o teste uma única vez, isso precisa ser impossível.
+
+### ② Problema
+
+- Sem O/E, inclinação de calibração e Brier relativo por janela, a §29.38 fica sem resposta.
+- O `ece` do projeto usa 10 faixas de largura fixa: com prevalência de 8%, quase todas as previsões caem nas duas primeiras faixas. O `ece_quantis` (faixas com o mesmo número de fichas) já existe em `src/evaluation/calibration.py` e é mais informativo, mas nenhum notebook o usa.
+- O intercepto de `calibracao_intercepto_inclinacao` é estimado junto com a inclinação; ele **não** é a calibração geral (*calibration-in-the-large*). Para a calibração geral, use O/E e a diferença entre média prevista e observada.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 45 min · **Antes do G9.** Testar no **modo ensaio** (`SRAG_C16_ENSAIO=1`).
+
+1. **Imports** (célula de imports do C_16):
+```python
+from src.evaluation.calibration import calibracao_intercepto_inclinacao, ece_quantis
+```
+2. **Na célula 12, dentro do laço que monta `janelas_df`**, depois de `m = metricas_completas(...)`, acrescente:
+```python
+y_j, p_j = y_por_janela[nome], p_por_janela[nome]   # use os nomes reais do notebook
+prev = float(np.mean(y_j))
+brier_nulo = prev * (1 - prev)
+_, inclinacao = calibracao_intercepto_inclinacao(y_j, p_j)
+m.update({
+    "o_e": float(np.sum(y_j) / np.sum(p_j)),
+    "media_prevista": float(np.mean(p_j)),
+    "media_observada": prev,
+    "inclinacao_calibracao": inclinacao,
+    "ece_quantis": ece_quantis(y_j, p_j, n_bins=10),
+    "brier_nulo": brier_nulo,
+    "brier_relativo": 1 - m["brier"] / brier_nulo,
+})
+```
+   **Leitura:** O/E = 1 é calibração perfeita no total; inclinação < 1 indica previsões "espalhadas demais", > 1 "comprimidas demais"; Brier relativo > 0 indica melhor que dizer a prevalência para todos.
+3. **Por ano** (célula 16): acrescente `o_e` e `media_prevista` à tabela de calibração por ano, para mostrar a "travessia" 2019 → 2020–2022 → 2023–2025.
+4. **Parada com árvore suja** (célula que confere gates, antes de qualquer leitura do teste):
+```python
+from src.utils.reproducibility import _git_info
+_g = _git_info()
+if _g.get("dirty") and os.getenv("SRAG_ALLOW_DIRTY") != "1" and not MODO_ENSAIO:
+    raise RuntimeError(
+        "Árvore Git com mudanças não commitadas: commit antes de abrir o teste "
+        "(ou SRAG_ALLOW_DIRTY=1 com justificativa no decisoes.md)."
+    )
+print("commit:", _g.get("commit"), "| dirty:", _g.get("dirty"))
+```
+5. **Rode o ensaio** e confira que as colunas novas saem preenchidas e plausíveis (no ensaio, O/E perto de 1).
+6. Registre na §29.38, **antes do G9**, uma linha: "O/E, inclinação de calibração, ECE por quantis e Brier relativo são reportados por janela; leitura conforme a hipótese acima".
+7. Commit: `feat: calibracao por janela e trava de arvore suja no C_16 [done:#165]`.
+
+### ④ Pronto quando
+
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `o_e` | O C_16 calcula a razão entre óbitos observados e esperados por janela.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `calibracao_intercepto_inclinacao` | O C_16 calcula a inclinação de calibração por janela.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `ece_quantis` | O C_16 usa o ECE por quantis, adequado a prevalência baixa.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `brier_relativo` | O C_16 reporta o Brier relativo ao modelo nulo.
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `SRAG_ALLOW_DIRTY` | O C_16 se recusa a abrir o teste com mudanças não commitadas.
+- contem: `docs/decisoes.md` :: `Brier relativo` | A §29.38 registra, antes da abertura, as medidas de calibração por janela.
+- manual: | O ensaio do C_16 rodou com as colunas novas preenchidas.
+
+---
+
+## #166 · C_15 final: corrigir o rótulo do veredito do peso de classe e conferir que o manifesto grava a regra do limiar
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M5
+- data ideal: 04/11
+- responsável: Pessoa B (0,25 h)
+- pessoas: B
+- fonte: Revisão de 04/11: célula 8 do C_15 rotula como balanced a linha de Brier 0,063181 (variante sem peso); manifesto C5_..._20261103T202752Z e metadata.json registram limiar_metrica = f1
+- depende de: #79
+- tags: Notebook, Calibração, Gate
+- pilar: Valor científico-acadêmico + Documentação
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: notebooks/C/C_15_calibracao_limiar.ipynb
+
+### ① Para entender
+
+O C_15 decide G7 (calibração) e G8 (limiar) e compara o peso de classe. Duas coisas no estado de 03/11 não batem com o que ele realmente fez:
+
+1. A tabela **"Veredito (menor Brier pós-calibração)"** (célula 8) mostra `hist_gradient_boosting · balanced · 0,063181 · 0,360909`. Mas 0,063181 e 0,3609 são os números da variante **sem peso** (`class_weight` = `NaN` na tabela de comparação logo acima, que tem `balanced` com 0,063349 e 0,3554). A recomendação impressa no fim (`nan` = sem peso) está certa; o rótulo não.
+2. O manifesto `outputs/tables/C5_calibracao_limiar_final_20261103T202752Z_manifesto.json` e o `metadata.json` da mesma execução gravam `"limiar_metrica": "f1"`. A saída do notebook salvo mostra `precision (min_recall=0.8)` e o limiar 0,1178 é o da regra de precisão. É o rótulo de uma execução intermediária ou de um valor lido antes do YAML ser atualizado.
+
+### ② Problema
+
+O C_16 confere o manifesto do C_15 antes de abrir o teste. A banca e o relatório citam o veredito. Rótulos trocados viram pergunta difícil ("vocês escolheram com ou sem peso?").
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Junto da execução final do C_15** (04/11, 16h–17h).
+
+1. **Célula 8:** encontre o trecho que monta o veredito (provavelmente um `groupby("finalista")` com `idxmin()` sobre o Brier). O rótulo vem da coluna `class_weight`, que tem `NaN` para "sem peso" e algum preenchimento (`fillna`) está trocando. Substitua por:
+```python
+comparacao["peso"] = comparacao["class_weight"].map(lambda v: "sem peso" if pd.isna(v) or v in ({}, "{}", None) else str(v))
+veredito = comparacao.loc[comparacao.groupby("finalista")["brier"].idxmin(), ["finalista", "peso", "brier", "pr_auc"]]
+```
+2. **Texto da célula 7:** tire "ainda não se mediu sem peso" e "item #5". Escreva: "o G6 escolheu sem peso (§29.35); esta tabela confirma depois da calibração".
+3. Rode o C_15 final e confira **no manifesto novo**: `"limiar_metrica": "precision"` e `"min_recall": 0.8`.
+4. Se ainda sair `f1`, procure onde o manifesto lê a métrica: deve ser `LIMIAR_METRICA` (lido de `C.cfg("limiar")`), e não um valor fixo.
+5. Commit junto com o #79.
+
+### ④ Pronto quando
+
+- notebook-saida: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `sem peso` | A tabela de veredito mostra o peso de classe com o rótulo correto.
+- nao-contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `item #5` | O texto do C_15 não cita mais a pendência antiga do peso de classe.
+- manual: | O manifesto da execução final do C_15 registra limiar_metrica = precision e min_recall = 0.8.
+
+---
+
+## #167 · Colar os textos corrigidos no B_04 (células 155 e 156), no B_05 (célula 52), no C_14 (célula 7) e no B_02 (células 28, 45 e 46)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M6
+- data ideal: 04/11
+- responsável: Pessoa B (0,75 h)
+- pessoas: B
+- fonte: Conferência número a número de 04/11 contra as saídas salvas (snapshot 741fbbe); documento "Pendências lotes 2 e 3", partes C1 a C5
+- depende de: #159
+- tags: Notebook, Entrega
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 0.75
+- novo: sim
+- professores: não
+- arquivos: notebooks/B/B_04_eda_temporal_clustering.ipynb, notebooks/B/B_05_supervisionado_pilotos.ipynb, notebooks/C/C_14_ablacoes_variaveis.ipynb, notebooks/B/B_02_eda_primeira_passagem.ipynb
+
+### ① Para entender
+
+As saídas do B_04 e do B_05 já foram regeradas com as 30 variáveis e o `val_ref`, mas os textos de leitura ainda descrevem a execução anterior (31 variáveis, `val_tune` de 39.748 fichas, peso de classe no boosting). O #159 corrige o **código**; este card corrige o **texto**, que é o que a banca lê.
+
+**Mudança de leitura importante (B_04):** com as 30 variáveis, o corte em três grupos do hierárquico **deixou de ter salto quase igual** ao de dois (42,1 contra 77,7). Os três grupos passam a ser só um nível de descrição.
+
+### ② Problema
+
+| Notebook · célula | Texto atual | Saída atual |
+|---|---|---|
+| B_04 · 155 | silhueta 0,392; salto 63,1; 46,9/30,3/22,7%; óbito 4,0%; cortes 35,0–95,9; 2019 com 4,6% | 0,395; 77,7; 47,2/30,3/22,5%; 4,1%; 38,0–80,2; 2,4% |
+| B_04 · 156 | itens 6 e 7 das implicações (indicadores de ausência; saturação em sensibilidade) | ambos superados (§29.6 e §29.34) |
+| B_05 · 52 | `val_tune` (39.748; 3.355 óbitos); ROC-AUC 0,872/0,868/0,766; O/E ≈ 0,25 por peso | `val_ref` (119.243; 10.064); 0,881/0,871/0,780; boosting sem peso, O/E 0,97–1,02 |
+| C_14 · 7 | "manter/retirar, porque …" (modelo não preenchido) | decisão da §29.34 |
+| B_02 · 28 / 45 | "25 variáveis"; "3.847,05 MB" | 100 variáveis; 1.021,28 MB |
+
+### ③ O que fazer
+
+**Tempo:** ≈ 45 min · **Antes da execução limpa** (#126).
+
+1. Abra o documento `Pendencias_Lotes_2e3_src_e_notebooks_B_04-11-2026.md`, partes **C1 a C5**: os textos estão prontos para colar.
+2. **B_04 · 155:** substitua a célula inteira pelo texto de C1. Antes, abra `outputs/final/perfil_clusters_hca.csv` e `perfil_clusters_kmeans.csv` e preencha os três valores marcados com ⟨conferir⟩ (η² da idade, V dos sintomas secundários e η² do intervalo).
+3. **B_04 · 156:** aplique as cinco trocas de C2 (seção de saturação, seção dos quatro estados, implicações 6 e 7, encerramento).
+4. **B_05 · 52:** substitua pelo texto de C3. Na mesma passada: troque `"O B_07 exige"` por `"Este notebook exige"` e explicite, no §11 e no §20, que são **duas logísticas diferentes** (§11 sem peso, treino inteiro; §20 com `balanced`, amostra de 300 mil).
+5. **C_14 · 7:** texto de C4; confira −0,0002 e −0,0004 na saída da execução limpa.
+6. **B_02:** as três trocas de C5.
+7. **Não reexecute** só por causa do texto: o #126 reexecuta tudo. Commit: `docs: textos dos notebooks com os numeros atuais [done:#167]`.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `0,392` | O B_04 não cita mais a silhueta da execução com 31 variáveis.
+- contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `0,395` | O B_04 cita a silhueta atual da rodada de quatro estados.
+- nao-contem: `notebooks/B/B_04_eda_temporal_clustering.ipynb` :: `manter saturação e desconforto respiratório como sensibilidade` | A implicação superada sobre saturação foi atualizada.
+- nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `val_tune` | O B_05 não cita mais o bloco de validação antigo.
+- contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `0,881` | O texto do B_05 traz o ROC-AUC atual do padrão sem respostas "não".
+- nao-contem: `notebooks/C/C_14_ablacoes_variaveis.ipynb` :: `manter/retirar, porque` | A decisão do C_14 está preenchida.
+- nao-contem: `notebooks/B/B_02_eda_primeira_passagem.ipynb` :: `3.847,05` | O B_02 cita a memória da leitura compactada.
+
+---
+
+## #168 · decisoes.md coerente com o desenho final: §1.1, §1.2, §29.9, cabeçalho e entradas 29.36 e 29.37
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Revisão de 04/11: §1.1 e §1.2 contradizem §29.34 e §29.35; §29.36 e §29.37 citadas e inexistentes; §29.9 com título de tarefa interna
+- depende de: #79, #155
+- tags: Documentação, Metodologia
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: docs/decisoes.md
+
+### ① Para entender
+
+O `decisoes.md` é a fonte do "porquê" do projeto e vai no pacote. A parte de cima (§1, "status das decisões") é o que a banca lê primeiro, e hoje ela descreve o desenho de 27/10. Este card complementa o #73 com a lista exata do que está errado.
+
+### ② Problema
+
+| Trecho | O que diz hoje | O que é verdade em 04/11 |
+|---|---|---|
+| Cabeçalho | "Última atualização: 02/11/2026" | 04/11 |
+| §1.1 | "seleção de features construída e auditada na coorte provisória B" | coorte provisória aposentada (§29.32) |
+| §1.1 | "`saturacao` e `desc_resp`: sensibilidade…, fora do modelo principal" | no modelo (§29.34) |
+| §1.1 | "G1 aprovado em 22/10: 31 features principais; saturacao e desc_resp só em sensibilidade" | 30 variáveis (§29.34) |
+| §1.1 | "Internações anteriores aos sintomas: auditoria com nosocomial antes de qualquer exclusão" | excluídas pela D_COORTE_006; `nosocomial` não está no dicionário |
+| §1.1 | "em 27/10 vacina_cov foi trocada por vacina_cov_previa" | o YAML e o código ainda usam `vacina_cov`; `vacina_cov_previa` não existe |
+| §1.2 | pendentes: #50, #5 ("class_weight: balanced está vigente"), G6 | decididos em 03/11 (§29.34 e §29.35) |
+| §29.9 | título "Pendente (a Pessoa C escreve uma linha no card; a Pessoa A transcreve)" | tarefa interna, não decisão |
+| §29.36, §29.37 | citadas 4 vezes | não existem |
+| §29.23 | promete `tools/ancora_e_excluidos.py` e três tabelas | script inexistente (ver #179) |
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Depois do C_15 final e do #155.**
+
+1. **Cabeçalho:** "Última atualização: 04/11/2026".
+2. **§1.1:** em cada item superado, acrescente na linha seguinte `> Substituído em 03/11 (§29.34).` (mesmo padrão já usado). Para `vacina_cov_previa`, escreva: "Não implementada: o contexto incremental usa `vacina_cov`, fora do modelo principal."
+3. **§1.2:** mova #50, #5 e G6 para "Decididas em 03/11 (§29.34 e §29.35)". Deixe como pendentes só: G9 e a abertura do teste.
+4. **§29.9:** troque o título por "27–28/10 · Registro pendente" e tire os rótulos de pessoas.
+5. **§29.36** (`#### 29.36 04/11 · G7 e G8: peso de classe, calibração e limiar`): método (sigmoid), Brier antes e depois em `val_meas`, Brier do modelo nulo (≈ 0,077), ECE, limiar com todas as casas, sensibilidade e precisão nesse corte, regra de empate e a frase da limitação (§29.33).
+6. **§29.37** (`#### 29.37 04/11 · Exploração de hiperparâmetros`): orçamento, frentes (L2, L1/elastic-net, boosting), as 3 melhores de cada frente no `val_ref`, regra de troca e resultado (trocou ou manteve o G6).
+7. **Numeração:** padronize as entradas 29.32 a 29.38 com `###` (hoje usam `####`) **ou** registre que a mudança é intencional.
+8. Commit: `docs: decisoes.md coerente com o desenho final [done:#168]`.
+
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `29.36` | A entrada do G7 e do G8 existe.
+- contem: `docs/decisoes.md` :: `29.37` | A entrada da exploração de hiperparâmetros existe.
+- nao-contem: `docs/decisoes.md` :: `Última atualização: 02/11/2026` | O cabeçalho mostra a data da última atualização real.
+- nao-contem: `docs/decisoes.md` :: `a Pessoa C escreve uma linha no card` | O título da §29.9 não descreve uma tarefa interna.
+- manual: | A §1.1 e a §1.2 não contradizem as §29.34 e §29.35.
+
+---
+
+## #169 · README final: status, gates, estratificação real, ordem de execução, tempo, memória e resultados
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 04/11
+- responsável: Pessoa B (0,5 h)
+- pessoas: B
+- fonte: Revisão do README de 04/11 (snapshot 741fbbe)
+- depende de: #126
+- tags: Documentação, Entrega
+- pilar: Documentação
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: README.md
+
+### ① Para entender
+
+O README é a porta de entrada da banca e de quem clonar o repositório. Hoje ele descreve um projeto "em desenvolvimento", com gates pendentes que já foram aprovados. Este card detalha o que o #126 (README novo) precisa conter.
+
+### ② Problema
+
+- Tabela de gates: G1 e G6 "Pendente" (aprovados); G7, G8 e G9 serão aprovados em 04–05/11.
+- "A lista final de atributos ainda depende da confirmação do gate G1": falso.
+- Descreve a estratificação "por ano, alvo e região". O manifesto registra **"ano × alvo (fallback)"**: algum estrato com região tinha menos de 5 grupos.
+- Faltam: ordem de execução da cadeia, tempo (≈ 31 min), memória (pico ≈ 4,1 GB no A_03; o C_16 pede ≈ 14 GB livres), como obter os dados, resultados principais.
+- `configs/dicionario_variaveis_v1.csv` aparece na árvore: confirmar que vai no pacote.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Depois do C_16** (para os números do teste).
+
+1. **Status:** "Concluído em 05/11/2026. Teste aberto uma única vez em <data>."
+2. **Gates:** tabela com G1, G2, G4–G9 e data de aprovação (copie do `supervised.yaml`).
+3. **Partição:** "hash por grupo; estratificação por ano × alvo (a estratificação com região caiu porque algum estrato tinha menos de 5 grupos, como previsto no código e registrado em `manifesto_particao.json`)".
+4. **Ordem de execução** (bloco de código):
+```text
+00_acesso_dados_parquet → 01_extracao → A/A_03 → B/B_02 → B/B_04 → B/B_05
+→ C/C_11 → C/C_12 → C/C_13 → C/C_14 → C/C_15 → C/C_16 (uma vez, com G9)
+```
+5. **Recursos:** ≈ 31 min na máquina de referência (32 GB de RAM); pico ≈ 4,1 GB; C_16 com ≈ 14 GB livres.
+6. **Resultados:** três linhas (Teste A, 2020–2022, Teste B) com PR-AUC, PR-AUC ÷ prevalência, ROC-AUC, Brier e O/E, com o link para `resultados/`.
+7. **Versões:** cite o `requirements-lock.txt` (#170).
+8. Commit junto com o #126.
+
+### ④ Pronto quando
+
+- nao-contem: `README.md` :: `ainda depende da confirmação do gate` | O README não diz mais que a lista de variáveis está pendente.
+- contem: `README.md` :: `ano × alvo` | O README descreve a estratificação real da partição.
+- contem: `README.md` :: `C_16` | O README traz a ordem de execução até o C_16.
+- contem: `README.md` :: `requirements-lock.txt` | O README indica o arquivo com as versões exatas.
+
+---
+
+## #170 · Versões exatas: requirements-lock.txt da máquina oficial e pyproject coerente com o Python usado
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: Revisão de 04/11: requirements.txt e pyproject.toml só com >=; execuções de 03/11 com Python 3.14.7, scikit-learn 1.9.1, pandas 3.0.6
+- depende de: —
+- tags: Reprodutibilidade, Entrega
+- pilar: Documentação
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: requirements-lock.txt, pyproject.toml, README.md
+
+### ① Para entender
+
+Um clone feito daqui a um ano instalaria versões mais novas de scikit-learn e pandas. O scikit-learn muda padrões entre versões (por exemplo, o `l1_ratio` da logística a partir da 1.8), então os números podem mudar. Hoje `requirements.txt` só tem `>=` e o `pyproject.toml` declara Python 3.11/3.12, mas as execuções usaram **3.14.7**.
+
+### ② Problema
+
+- Sem versões exatas, ninguém reproduz o resultado com segurança.
+- Teste que tenta conferir isso já existe e falha numa cópia sem o arquivo: `tests/test_config.py::test_requirements_tem_versao_fixada`.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Na máquina oficial**, com o `.venv` do projeto.
+
+1. Gere o arquivo:
+```powershell
+.\.venv\Scripts\python.exe -m pip freeze --exclude-editable | Out-File -Encoding utf8 requirements-lock.txt
+```
+2. Abra e remova pacotes de ferramentas pessoais, se houver (o `requirements.txt` continua com `>=` para instalação flexível).
+3. No `pyproject.toml`, ajuste `requires-python` e os classificadores para incluir a versão usada (3.14) ou declare no README: "testado com Python 3.14.7".
+4. Rode `python -m pytest -q tests/test_config.py`.
+5. Commit: `build: versoes exatas da maquina oficial [done:#170]`.
+
+### ④ Pronto quando
+
+- existe: `requirements-lock.txt` | O arquivo com as versões exatas da máquina oficial existe.
+- contem: `requirements-lock.txt` :: `scikit-learn==` | O arquivo fixa a versão do scikit-learn.
+- contem: `requirements-lock.txt` :: `pandas==` | O arquivo fixa a versão do pandas.
+- teste: `tests/test_config.py` | Os testes de configuração passam.
+
+---
+
+## #171 · supervised.yaml sem rótulos internos e com comentários atualizados
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: Revisão do YAML de 04/11 (itens Y2 a Y8 do relatório do lote 1)
+- depende de: #79
+- tags: Configuração, Entrega
+- pilar: Documentação
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: configs/supervised.yaml
+
+### ① Para entender
+
+O `supervised.yaml` é o contrato do estudo e vai no pacote. Ele ainda tem marcas de trabalho interno e comentários de etapas já concluídas.
+
+### ② Problema
+
+| Chave | Hoje | Correção |
+|---|---|---|
+| `gates.G6_finalistas_tuning.aprovado_por` | "Pessoa A e Pessoa C" | nomes reais ou "equipe" |
+| `gates.G1_definicao_alvo_features` | data 22/10, lista mudou em 03/11 | acrescentar `revisado_em: "2026-11-03"` e `nota: "§29.34"` |
+| `features.engenharia.recodificar_comorbidades_fator_risco` (comentário) | "decisão pendente no #140" | "não adotada (§29.34)" |
+| `selecao_modelos.finalista_escolhido` | comentário "# <- era logistic, agora boosting" | tirar o comentário |
+| `selecao_modelos.observacoes` | "probabilidades brutas ainda não calibradas" | "calibradas com sigmoid (G7)" |
+| `selecao_modelos.nomes_execucao.logistic` | `logistica_C1_v2` | `logistica_C10` ou remover |
+| `limiar.metrica` (comentário) | "# #79: …" | comentário sem card |
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Depois do G7 e do G8** (para não conflitar com o #79).
+
+1. Edite cada linha da tabela. Não mude nenhum valor usado pelo código além dos comentários, de `aprovado_por` e de `observacoes`.
+2. **Atenção:** o C_16 compara o hash da **seção de modelos** do YAML com o manifesto do C_15. Mudanças fora de `models` e `selecao_modelos.finalista_escolhido` não afetam essa trava; se mexer em `selecao_modelos`, rode o C_15 de novo antes do C_16.
+3. Confira com:
+```powershell
+git grep -n "Pessoa [ABC]\|#[0-9][0-9]" -- configs/supervised.yaml
+```
+4. Commit: `docs: supervised.yaml sem rotulos internos [done:#171]`.
+
+### ④ Pronto quando
+
+- nao-contem: `configs/supervised.yaml` :: `Pessoa A` | O YAML não tem rótulos internos de pessoas.
+- nao-contem: `configs/supervised.yaml` :: `era logistic, agora boosting` | O comentário informal do finalista foi removido.
+- nao-contem: `configs/supervised.yaml` :: `decisão pendente no #140` | O comentário da recodificação está atualizado.
+
+---
+
+## #172 · Rótulos internos e nomes antigos em notebooks, mensagens do src e manifestos
+
+- prioridade: P1
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Varredura de 04/11: 15 citações de cards no B_05; "Notebook 03" no src; títulos C2…C6 nos notebooks C; campo "pendencia": "#142" em manifestos
+- depende de: —
+- tags: Notebook, Entrega, Código
+- pilar: Documentação
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: notebooks/B/B_05_supervisionado_pilotos.ipynb, src/data/supervised_artifact.py, notebooks/C/C_11_pipeline_supervisionado.ipynb, notebooks/C/C_12_baseline_logistica.ipynb, notebooks/C/C_13_boosting.ipynb, notebooks/C/C_15_calibracao_limiar.ipynb, notebooks/C/C_16_validacao_final.ipynb, notebooks/A/A_03_coorte_protocolo.ipynb
+
+### ① Para entender
+
+A Base de Conhecimento proíbe rótulos internos (Pessoa A/B/C, #N, G1–G9 sem explicação, nomes antigos de notebook) em material da banca. O #146 renomeou os arquivos; ficaram as citações dentro deles.
+
+### ② Problema
+
+- **B_05:** `#142`, `#51`, `#52`, `#55`, `#110`, `#140` e "Fase E" nos textos; mensagem `"O B_07 exige o artefato…"`; campo `"pendencia": "#142"` gravado nos manifestos e no `Run`.
+- **`src/data/supervised_artifact.py`:** mensagens de erro "Execute o Notebook 03 adaptado" e "Reconstrua no Notebook 03"; comentário "ver #73".
+- **`src/features/engineering.py`:** docstring "Regra (decisão do #140, 30/10)".
+- **C_11 a C_16:** títulos "C2…C6"; mistura "artefacto/artefato" e "Registar/Registrar".
+- **A_03 · 1:** "Substitui o antigo A_03 (mover para `notebooks/A/historico/`)".
+- **Testes:** comentários com cards (aceitável, mas pode limpar).
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Antes da execução limpa.** Script com relatório numa cópia primeiro.
+
+1. Liste:
+```powershell
+git grep -n -E "#[0-9]{2,3}\b|Pessoa [ABC]|Notebook 03|\bB_0[67]\b|Fase E|\bC[2-6]\b" -- notebooks src configs README.md
+```
+2. Troque nos textos e mensagens: "Notebook 03" → "B_05"; "O B_07 exige" → "Este notebook exige"; títulos "C2" → "C_11", "C3" → "C_12", "C4" → "C_13", "C5" → "C_15", "C6" → "C_16".
+3. No B_05, tire o campo `"pendencia"` do dicionário do manifesto e dos parâmetros do `Run`.
+4. Padronize "artefato" e "Registrar".
+5. **Não mude** o prefixo dos arquivos de saída (`C3_…`, `C5_…`): o C_16 procura o manifesto do C_15 pelo nome. Mude só o texto.
+6. Commit: `docs: sem rotulos internos nos notebooks e mensagens [done:#172]`.
+
+### ④ Pronto quando
+
+- nao-contem: `src/data/supervised_artifact.py` :: `Notebook 03` | As mensagens de erro citam o notebook pelo nome atual.
+- nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `O B_07 exige` | O B_05 não cita o nome antigo de si mesmo.
+- nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `#142` | O B_05 não cita o card interno.
+- nao-contem: `notebooks/A/A_03_coorte_protocolo.ipynb` :: `mover para` | O A_03 não tem instrução de arrumação interna.
+
+---
+
+## #173 · Exploração do #155 com a logística L1 e elastic-net: chamada certa da fábrica (senão vira L2 sem aviso)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M5
+- data ideal: 04/11
+- responsável: Pessoa B (0,25 h)
+- pessoas: B
+- fonte: Revisão de src/models/factory.py e logistic.py de 04/11: o YAML passa penalty l2, que força l1_ratio = 0
+- depende de: —
+- tags: Modelagem, Código
+- pilar: Valor científico-acadêmico
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: src/models/factory.py, src/models/logistic.py
+
+### ① Para entender
+
+Na exploração em equipe de 04/11 (#155), a sua frente é a logística com **L1** (zera coeficientes, seleciona variáveis) e **elastic-net** (mistura L1 e L2). A fábrica `build_finalista("logistic", ...)` lê `models.logistic` do YAML, que tem `penalty: l2` e `solver: lbfgs`, e soma os seus parâmetros por cima.
+
+Dentro de `build_logistic_pipeline`, quando `penalty == "l2"`, o código **força `l1_ratio = 0`**. Então:
+
+| Chamada | O que treina de verdade |
+|---|---|
+| `build_finalista("logistic", l1_ratio=0.5, solver="saga")` | **L2** com saga, sem aviso |
+| `build_finalista("logistic", l1_ratio=1.0)` | **L2** com lbfgs |
+| `build_finalista("logistic", penalty="l1", solver="saga", C=c, class_weight={})` | **L1** ✓ |
+| `build_finalista("logistic", penalty="elasticnet", l1_ratio=0.5, solver="saga", C=c, class_weight={})` | **elastic-net** ✓ |
+
+### ② Problema
+
+Sem `penalty` explícito, a frente inteira mediria L2 com outro nome, e a conclusão ("L1 não ajudou") seria falsa.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Antes das 9h de 04/11.**
+
+1. Use sempre `penalty` explícito, como na tabela.
+2. Depois de construir cada modelo, imprima:
+```python
+clf = pipe.named_steps["clf"]
+print(clf.l1_ratio, clf.solver, clf.C, clf.class_weight)
+```
+3. `saga` com 556 mil × 122 colunas pode não convergir em `max_iter=1000` (`ConvergenceWarning`). Faça a pré-seleção numa amostra do treino (por exemplo, 150 mil, estratificada por ano e alvo) e, se aparecer o aviso no treino inteiro, registre e suba `max_iter` para 3000 só para as 3 finalistas.
+4. Grade sugerida (orçamento fixo): L1 com `C ∈ {0,01; 0,1; 1; 10}`; elastic-net com `C ∈ {0,1; 1; 10}` × `l1_ratio ∈ {0,25; 0,5; 0,75}` = 13 configurações.
+5. Para as razões de chances do #91, guarde quantos coeficientes a L1 zerou e quais.
+6. Registre o resultado na §29.37 (#168).
+
+### ④ Pronto quando
+
+- manual: | Cada modelo da frente L1/elastic-net teve l1_ratio, solver e class_weight impressos e conferidos antes de ser avaliado.
+- contem: `docs/decisoes.md` :: `elastic-net` | O resultado da frente está registrado na entrada da exploração.
+
+---
+
+## #174 · Tabelas de equidade: mínimo de óbitos por grupo, coluna de óbitos e especificidade em metricas_por_grupo
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M5
+- data ideal: 04/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: Revisão de src/evaluation/errors.py de 04/11: supressão só por total de fichas (min_n = 100)
+- depende de: —
+- tags: Código, Equidade, Teste
+- pilar: Valor científico-acadêmico
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: src/evaluation/errors.py, tests/test_errors.py, notebooks/C/C_16_validacao_final.ipynb
+
+### ① Para entender
+
+`metricas_por_grupo` calcula as métricas por UF, região, faixa etária, raça/cor e ano no teste, e alimenta as tabelas de equidade (#55). Ela suprime grupos com menos de 100 fichas, mas **não olha o número de óbitos**. Uma UF com 150 fichas e 2 óbitos recebe PR-AUC, ROC-AUC e O/E, todos sem sentido estatístico. O B_05 já usou uma regra melhor: suprimir com menos de 30 por classe.
+
+### ② Problema
+
+Tabelas de equidade com números instáveis podem sugerir diferenças entre grupos que são só acaso, e são as tabelas mais sensíveis do relatório.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Antes do C_16.**
+
+1. Em `src/evaluation/errors.py::metricas_por_grupo`, acrescente o parâmetro `min_eventos: int = 20` e troque a condição:
+```python
+n_eventos = int(y_g.sum())
+suprimir = (n < min_n) or (n_eventos < min_eventos) or ((n - n_eventos) < min_eventos)
+```
+2. Acrescente às duas versões da linha (suprimida e calculada): `"n_obitos": float(n_eventos)` e, na calculada, `"especificidade": especificidade(y_g, y_pred)` (importe de `src.evaluation.metrics`).
+3. Atualize a docstring.
+4. Teste em `tests/test_errors.py`:
+```python
+def test_metricas_por_grupo_suprime_poucos_eventos():
+    import numpy as np, pandas as pd
+    from src.evaluation.errors import metricas_por_grupo
+    df = pd.DataFrame({"g": ["a"] * 200})
+    y = np.r_[np.ones(3), np.zeros(197)]
+    p = np.linspace(0, 1, 200)
+    t = metricas_por_grupo(df, y, p, "g", min_n=100, min_eventos=20)
+    assert bool(t.loc[0, "suprimido"]) and t.loc[0, "n_obitos"] == 3
+```
+5. No C_16, confira que as chamadas passam o limiar do YAML (`limiar_ativo()`), e não 0,5.
+6. Commit: `feat: minimo de eventos nas metricas por grupo [done:#174]`.
+
+### ④ Pronto quando
+
+- contem: `src/evaluation/errors.py` :: `min_eventos` | A função suprime grupos com poucos óbitos ou poucas curas.
+- contem: `src/evaluation/errors.py` :: `n_obitos` | A tabela por grupo mostra o número de óbitos.
+- teste: `tests/test_errors.py::test_metricas_por_grupo_suprime_poucos_eventos` | O teste garante a supressão por poucos eventos.
+
+---
+
+## #175 · Execução limpa com árvore Git limpa e suíte completa de testes
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: M7
+- data ideal: 04/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: metadata.json de 03/11 (B_05, C_11 a C_15) com dirty = true; suíte completa não registrada
+- depende de: #164, #167, #172
+- tags: Reprodutibilidade, Entrega, Teste
+- pilar: Documentação + Valor científico-acadêmico
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: outputs/runs
+
+### ① Para entender
+
+Cada execução grava o commit em `outputs/runs/<RUN_ID>/metadata.json`. Se a árvore estiver "suja" (com mudanças não commitadas), o commit não reproduz o que rodou. Todas as execuções de 03/11 estão assim. Este card é a lista de conferência do #126, para que a cadeia final seja reproduzível.
+
+### ② Problema
+
+- `"dirty": true` em todas as execuções salvas de 03/11.
+- A suíte rápida exclui testes `slow` e `net`; a completa não tem registro de execução.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min de conferência (fora o tempo da cadeia).
+
+1. Antes de começar: `git status --short` deve sair vazio (faça commit ou `git stash`).
+2. Rode a suíte completa e guarde o resultado:
+```powershell
+.\.venv\Scripts\python.exe -m pytest -m "" -q 2>&1 | Out-File -Encoding utf8 outputs\final\pytest_completo.txt
+```
+3. Rode a cadeia (#126).
+4. No fim, confira que nenhuma execução nova ficou suja:
+```powershell
+Get-ChildItem outputs\runs -Recurse -Filter metadata.json | ForEach-Object { $j = Get-Content $_ -Raw | ConvertFrom-Json; "$($j.run_id) dirty=$($j.git.dirty)" }
+```
+5. Registre no #126 o commit da execução limpa.
+
+### ④ Pronto quando
+
+- existe: `outputs/final/pytest_completo.txt` | O resultado da suíte completa de testes foi guardado.
+- manual: | Todas as execuções da cadeia final registram dirty = false.
+
+---
+
+## #176 · Curva de decisão (benefício líquido): utilidade do alerta por limiar no Teste A e em 2020–2022
+
+- prioridade: P3
+- situação: aberta
+- estratégia: explorar
+- marco: M8
+- data ideal: 05/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (recomendação 4.3); Vickers e Elkin (2006), análise de curva de decisão
+- depende de: #2
+- tags: Avaliação, Teste, Saúde pública
+- pilar: Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: sim
+- arquivos: notebooks/C/C_17_curva_decisao.ipynb, outputs/final/curva_decisao.csv
+
+### ① Para entender
+
+PR-AUC e ROC-AUC dizem se o modelo **ordena** bem o risco. Não dizem se **usá-lo para alertar** é melhor do que alternativas simples. A **curva de decisão** responde a isso. Para cada limiar *t* (por exemplo, de 2% a 40%), calcula o **benefício líquido** de três estratégias:
+
+- **modelo**: alertar quem tem risco ≥ *t*;
+- **alertar todos**;
+- **não alertar ninguém** (benefício 0).
+
+A fórmula:
+
+$$BL(t) = \frac{VP}{n} - \frac{FP}{n} \cdot \frac{t}{1-t}$$
+
+O fator *t* ÷ (1 − *t*) diz quanto vale um alarme falso em relação a um acerto. Escolher *t* = 10% é dizer "aceito 9 alarmes falsos para encontrar 1 óbito". O modelo é **útil** nas faixas de *t* em que sua curva fica acima das outras duas.
+
+**Em linguagem comum:** é a pergunta "se a equipe só consegue atender um certo número de alertas, o modelo ajuda mais do que alertar todo mundo?". É o padrão em modelos de risco clínico e o que uma banca de saúde pública costuma esperar.
+
+### ② Problema
+
+O projeto não tem nenhuma medida de utilidade. O limiar 0,1178 é justificado pela regra de recall ≥ 80%, mas não se mostra se, nesse ponto, usar o modelo é melhor do que alertar todos.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Depois do C_16**, usando só as previsões gravadas do teste (sem reajuste; não é uma escolha, é uma descrição).
+
+1. Crie `notebooks/C/C_17_curva_decisao.ipynb` (ou uma seção no fim do C_16 antes do fechamento, se a equipe preferir um notebook só).
+2. Leia o Parquet de previsões do C_16 (colunas: bloco, `y`, probabilidade calibrada).
+3. Função:
+```python
+import numpy as np, pandas as pd
+def curva_decisao(y, p, limiares=np.arange(0.02, 0.41, 0.01)):
+    y = np.asarray(y).astype(int); p = np.asarray(p); n = len(y); prev = y.mean()
+    linhas = []
+    for t in limiares:
+        alerta = p >= t
+        vp = int((alerta & (y == 1)).sum()); fp = int((alerta & (y == 0)).sum())
+        peso = t / (1 - t)
+        linhas.append({"limiar": round(float(t), 2),
+                       "bl_modelo": vp / n - fp / n * peso,
+                       "bl_todos": prev - (1 - prev) * peso,
+                       "bl_nenhum": 0.0,
+                       "alertas_por_100": 100 * alerta.mean()})
+    return pd.DataFrame(linhas)
+```
+4. Rode para o **Teste A** e para **2020–2022**; grave `outputs/final/curva_decisao.csv` (com a coluna `janela`).
+5. Figura: três linhas por janela (modelo, todos, nenhum), eixo x de 2% a 40%; marque o limiar 0,1178.
+6. **Leitura para o relatório:** "o modelo tem benefício líquido maior que alertar todos entre *t* = ⟨a⟩ e ⟨b⟩; no limiar escolhido, o benefício equivale a encontrar ⟨x⟩ óbitos a mais por 100 internações sem aumentar os alarmes falsos, em relação a alertar todos". Em 2020–2022, discuta que a prevalência maior desloca a curva de "alertar todos".
+7. **Opcional:** intervalo por bootstrap de grupos no Teste A (100 réplicas bastam).
+
+### ④ Pronto quando
+
+- existe: `notebooks/C/C_17_curva_decisao.ipynb` | O notebook da curva de decisão existe.
+- contem: `notebooks/C/C_17_curva_decisao.ipynb` :: `bl_modelo` | O notebook calcula o benefício líquido do modelo.
+- notebook-executado: `notebooks/C/C_17_curva_decisao.ipynb` | O notebook rodou sem erro sobre as previsões gravadas do teste.
+- manual: | O relatório traz a figura da curva de decisão e a faixa de limiares em que o modelo é útil.
+
+---
+
+## #177 · Comparador "só idade e sexo" no Teste A, com bootstrap pareado (quanto as variáveis clínicas acrescentam fora da validação)
+
+- prioridade: P3
+- situação: aberta
+- estratégia: explorar
+- marco: M5
+- data ideal: 04/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (recomendação 4.2); #161 item 3 (referência só idade e sexo no C_14, só na validação); src/evaluation/metrics.py::bootstrap_grupo já faz comparação pareada
+- depende de: #148
+- tags: Avaliação, Teste, Notebook
+- pilar: Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: sim
+- arquivos: notebooks/C/C_16_validacao_final.ipynb, docs/decisoes.md
+
+### ① Para entender
+
+Só idade e sexo já dão ROC-AUC 0,80 na validação. A pergunta natural da banca: "quanto as 28 variáveis clínicas acrescentam **no teste**?". O #161 põe a linha "só idade e sexo" no C_14, mas só na validação.
+
+`bootstrap_grupo(y, prob_a, grupos, metrica="ap", prob_b=prob_b)` já faz o **bootstrap pareado**: sorteia os mesmos grupos para os dois modelos e devolve a diferença A − B, com intervalo de 95% e p bilateral.
+
+### ② Problema
+
+Sem o comparador no teste, o ganho clínico só é mostrado na mesma validação que escolheu o modelo.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Antes do G9**, testado no modo ensaio. Exige registro **antes** da abertura.
+
+1. **Registre na §29.38, antes do G9:** "Comparação descritiva, sem escolha: logística com idade e sexo (C=1, sem peso), treinada no `train_ref`, calibrada em `val_cal` com sigmoid, avaliada no Teste A; diferença de PR-AUC e ROC-AUC pelo bootstrap pareado por grupo (1.000 réplicas)."
+2. No C_16, depois de treinar e calibrar o finalista:
+```python
+from src.models.logistic import build_logistic_pipeline
+from src.models.pipeline import build_preprocessor
+from src.models.calibration import calibrar
+pre_ref = build_preprocessor(numericas=["idade_anos"], categoricas=["sexo_categoria"])
+ref = build_logistic_pipeline(C=1.0, penalty="l2", class_weight={}, preprocessor=pre_ref)
+ref.fit(X_treino[["idade_anos", "sexo_categoria"]], y_treino)
+ref_cal = calibrar(ref, X_val_cal[["idade_anos", "sexo_categoria"]], y_val_cal, method="sigmoid")
+```
+3. Depois de prever o Teste A com os dois (mesmas fichas):
+```python
+from src.evaluation.metrics import bootstrap_grupo
+dif_ap = bootstrap_grupo(y_a, p_final_a, grupos_a, metrica="ap", prob_b=p_ref_a, n=1000)
+dif_auc = bootstrap_grupo(y_a, p_final_a, grupos_a, metrica="auc", prob_b=p_ref_a, n=1000)
+```
+4. Grave `C6_..._comparador_idade_sexo.csv` com as duas diferenças e intervalos.
+5. **Leitura:** "no Teste A, as variáveis clínicas acrescentam ⟨x⟩ de PR-AUC (IC 95% ⟨a⟩ a ⟨b⟩) ao modelo só com idade e sexo".
+
+### ④ Pronto quando
+
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `prob_b=` | O C_16 compara o finalista com a referência por bootstrap pareado.
+- contem: `docs/decisoes.md` :: `idade e sexo` | A comparação foi registrada antes da abertura do teste.
+
+---
+
+## #178 · Mapa TRIPOD+AI no relatório (padrão de relato de modelos preditivos em saúde)
+
+- prioridade: P3
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 05/11
+- responsável: a definir (0,33 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (recomendação 4.6); Collins et al., BMJ 2024 (TRIPOD+AI)
+- depende de: #133
+- tags: Relatório, Metodologia
+- pilar: Valor científico-acadêmico + Documentação
+- carga: 0.33
+- novo: sim
+- professores: sim
+- arquivos: docs/tripod_ai_mapa.md
+
+### ① Para entender
+
+O **TRIPOD+AI** (2024) é a lista de itens que um artigo sobre modelo de predição em saúde deve relatar: fonte dos dados, participantes, desfecho, preditores, tamanho da amostra, dados ausentes, análise, desempenho, calibração, equidade, limitações, disponibilidade do código. Mapear o relatório nessa lista mostra rigor e evita esquecer itens que a banca de saúde pública conhece.
+
+### ② Problema
+
+O relatório (#133) não tem uma checagem formal de completude.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 20 min.
+
+1. Crie `docs/tripod_ai_mapa.md` com uma tabela: item · onde está no relatório · onde está no repositório.
+2. Itens principais e onde o projeto já responde:
+
+| Item | Onde |
+|---|---|
+| Fonte de dados e período | Introdução, `data/manifest_dados-v2.yaml` |
+| Elegibilidade (7 regras) | Métodos, `configs/final_cohort_v1.yaml`, waterfall |
+| Desfecho e momento | Métodos, §9 e §3 do `decisoes.md` |
+| Preditores e disponibilidade na admissão | Métodos, `feature_contract_v1.json`, §29.34 |
+| Dados ausentes (categoria AUSENTE) | Métodos, §20 |
+| Divisão dos dados (grupo, hash, 70/15/15, pandemia no teste) | Métodos, §29.33, manifesto da partição |
+| Modelos, hiperparâmetros, regra de escolha | Métodos, §29.35, §29.37 |
+| Calibração e limiar | Métodos, §29.36 |
+| Desempenho com IC (Teste A) e calibração por janela | Resultados, C_16 |
+| Equidade (região, raça/cor, faixa etária) | Resultados, #55 |
+| Limitações | Discussão |
+| Código e reprodutibilidade | README, `requirements-lock.txt` |
+
+3. Itens não atendidos (por exemplo, validação externa prospectiva): diga explicitamente "não se aplica a este estudo acadêmico" ou "limitação".
+4. Cite no relatório: "O relato segue o TRIPOD+AI (Collins et al., 2024); o mapa está em `docs/tripod_ai_mapa.md`."
+
+### ④ Pronto quando
+
+- existe: `docs/tripod_ai_mapa.md` | O mapa TRIPOD+AI existe no repositório.
+- contem: `docs/tripod_ai_mapa.md` :: `Calibração` | O mapa cobre a calibração.
+- manual: | O relatório cita o TRIPOD+AI e o mapa.
+
+---
+
+## #179 · Evidências prometidas na §29.23: atraso notificação–internação e incluídos × excluídos por desfecho
+
+- prioridade: P3
+- situação: aberta
+- estratégia: explorar
+- marco: M6
+- data ideal: 04/11
+- responsável: a definir (0,6 h)
+- pessoas: Equipe
+- fonte: §29.23 do decisoes.md (tools/ancora_e_excluidos.py prometido e inexistente); parecer crítico de 04/11 (recomendação 4.4)
+- depende de: —
+- tags: Exploração, Viés de seleção, Vazamento
+- pilar: Valor científico-acadêmico
+- carga: 0.6
+- novo: sim
+- professores: sim
+- arquivos: tools/ancora_e_excluidos.py, outputs/final/atraso_notificacao.csv, outputs/final/excluidos_por_desfecho.csv, docs/decisoes.md
+
+### ① Para entender
+
+Duas perguntas que uma banca de saúde pública quase certamente faz:
+
+1. **"Quando a ficha foi preenchida?"** A notificação pode ser feita dias depois da internação. Se o atraso for grande, campos como saturação podem ter sido preenchidos já com o paciente evoluindo. O atraso `dt_notific − dt_interna` mede isso.
+2. **"Quem ficou de fora pode enviesar o resultado?"** A regra D_COORTE_003 excluiu **530.370** internações: 340.351 com evolução vazia, 103.570 com código 9 (ignorado) e 86.449 com código 3 (óbito por outra causa). Se essas pessoas forem mais velhas, ou concentradas em certos anos e regiões, a mortalidade estimada pode estar enviesada.
+
+A §29.23 prometeu essas tabelas e o script `tools/ancora_e_excluidos.py`, que não existe.
+
+### ② Problema
+
+Sem esses números, a resposta às duas perguntas fica no campo da opinião.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 35 min · Usa só a base bruta e a coorte; **não toca no teste**. Começa por um relatório numa cópia, como combinado.
+
+1. Crie `tools/ancora_e_excluidos.py`, que lê do Parquet bruto só `dt_notific, dt_interna, dt_sin_pri, evolucao, hospital, nu_idade_n, tp_idade, sg_uf` (com `storage.read_srag(columns=..., compactar=True)`).
+2. **Tabela 1 — atraso** (só fichas da coorte): `dias = dt_notific − dt_interna`, por ano de internação: mediana, intervalo interquartil, % com atraso > 7 dias, % com notificação antes da internação. Grave `outputs/final/atraso_notificacao.csv`.
+3. **Tabela 2 — excluídos por desfecho** (internados com `hospital = 1`, data válida e 2019–2026): três grupos (incluídos, desfecho ausente ou 9, óbito por outra causa) × ano × faixa etária × região, com contagem e idade mediana. Grave `outputs/final/excluidos_por_desfecho.csv`.
+4. Use `idade_em_anos`, `regiao_residencia` e `parse_srag_date` do `src` (as datas do episódio estão em `AAAA-MM-DD`).
+5. Escreva na §29.23 as frases de leitura com os números. Exemplo: "a mediana do atraso é ⟨x⟩ dias; ⟨y⟩% das fichas foram notificadas mais de 7 dias após a internação"; "a ausência de desfecho concentra-se em ⟨anos⟩ e ⟨faixas⟩".
+6. Se o atraso for grande, cite-o na limitação da saturação. Se a ausência de desfecho for desigual, cite-a como possível viés de seleção.
+7. A tabela 3 da §29.23 (`nosocomial`) não é possível: a coluna não está no dicionário. Registre isso como limitação.
+
+### ④ Pronto quando
+
+- existe: `tools/ancora_e_excluidos.py` | O script prometido na §29.23 existe.
+- existe: `outputs/final/atraso_notificacao.csv` | A tabela do atraso entre notificação e internação foi gerada.
+- existe: `outputs/final/excluidos_por_desfecho.csv` | A tabela dos excluídos por desfecho foi gerada.
+- manual: | A §29.23 tem as frases de leitura com os números.
+
+---
+
+## #180 · Validação "quase prospectiva" em 2026, com o modelo congelado e sem reajuste
+
+- prioridade: P3
+- situação: aberta
+- estratégia: explorar
+- marco: Pós-entrega
+- data ideal: 05/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (recomendação 4.9); temporal.exploracao_2026 no YAML (permitir_reajuste: false)
+- depende de: #2, #160
+- tags: Avaliação, Exploração, Teste
+- pilar: Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: configs/supervised.yaml, docs/decisoes.md
+
+### ① Para entender
+
+2026 é o dado mais "futuro" disponível: 173.945 fichas até 28/09/2026, nunca usadas em nada. O YAML já prevê `exploracao_2026` com `somente_apos_fluxo_principal: true` e `permitir_reajuste: false`. Avaliar o modelo congelado nesse bloco simula um uso prospectivo.
+
+### ② Problema
+
+2026 é parcial e o desfecho dos meses finais pode não estar maduro (fichas abertas). A mortalidade observada (5,5%) pode estar subestimada. Por isso a leitura exige o #160 e uma ressalva explícita.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Só depois do C_16.**
+
+1. Registre na §29.38 (ou §29.39), **antes de rodar**: "avaliação descritiva de 2026 com o modelo congelado; meses de ⟨x⟩ a ⟨y⟩ excluídos por imaturidade do desfecho (#160)".
+2. No YAML: `temporal.exploracao_2026.ativa: true` (o carregador exige isso para ler o bloco `exploracao`).
+3. Carregue com `load_supervised_artifact(root, partitions=("exploracao",))`. **Atenção:** o artefato atual **não grava** o bloco `exploracao` (ele é filtrado em `gerar_artefato_supervisionado`). Será preciso reconstruir só 2026 a partir da coorte com `montar_features`, sem regerar o artefato, ou gravar à parte.
+4. Calcule as mesmas métricas do Teste A, mais O/E por mês.
+5. Leitura: comparação descritiva com o Teste A; nada é reajustado.
+
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `2026 com o modelo congelado` | A avaliação de 2026 foi registrada antes de rodar.
+- manual: | As métricas de 2026 foram calculadas com o modelo congelado e a ressalva de maturidade.
+
+---
+
+## #181 · Equidade: "ignorado" e "AUSENTE" como grupos explícitos em raça/cor e zona, com nota de leitura
+
+- prioridade: P3
+- situação: aberta
+- estratégia: desenvolver
+- marco: M5
+- data ideal: 05/11
+- responsável: a definir (0,17 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (recomendação 4.8); src/evaluation/errors.py descarta grupo nulo (dropna)
+- depende de: #55, #174
+- tags: Equidade, Relatório
+- pilar: Valor científico-acadêmico
+- carga: 0.17
+- novo: sim
+- professores: sim
+- arquivos: notebooks/C/C_16_validacao_final.ipynb
+
+### ① Para entender
+
+Em raça/cor, "ignorado" (código 9) é frequente. Se o grupo "ignorado" sumir das tabelas, ou se misturar a outro, as métricas por raça/cor podem sugerir equidade onde só há falta de registro. `metricas_por_grupo` descarta valores nulos (`dropna`); o C_16 já converte para "AUSENTE".
+
+### ② Problema
+
+Uma tabela de equidade sem os grupos "ignorado" e "AUSENTE" esconde parte da população, justamente a de registro mais pobre.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 10 min.
+
+1. Confirme no C_16 que `cs_raca` e `cs_zona` passam por `fillna("AUSENTE")` antes de `metricas_por_grupo`.
+2. Mapeie os códigos para nomes legíveis (1 branca, 2 preta, 3 amarela, 4 parda, 5 indígena, 9 ignorado; zona 1 urbana, 2 rural, 3 periurbana, 9 ignorado).
+3. Nota no relatório: "diferenças entre grupos podem refletir acesso, capacidade dos hospitais e qualidade do registro; 'ignorado' e 'ausente' são mostrados à parte".
+
+### ④ Pronto quando
+
+- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `ignorado` | As tabelas por raça/cor e zona mostram o grupo ignorado com nome legível.
+- manual: | O relatório traz a nota de leitura sobre registro e acesso.
+
+---
+
+## #182 · Estratificação por região: descobrir qual estrato derrubou a região e registrar
+
+- prioridade: P3
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 05/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: manifesto_particao.json ("estratificacao": "ano × alvo (fallback)"); src/data/split.py::criar_particao_mestra
+- depende de: —
+- tags: Partição, Documentação
+- pilar: Documentação
+- carga: 0.25
+- novo: sim
+- professores: não
+- arquivos: tools/diagnostico_estratos.py, docs/decisoes.md
+
+### ① Para entender
+
+`criar_particao_mestra` tenta estratificar por ano × alvo × região. Se **um** estrato tiver menos de 5 grupos, toda a partição cai para ano × alvo, e o manifesto registra "fallback" sem dizer qual estrato foi. O mais provável: algum estrato de região `AUSENTE` em 2019, com óbito.
+
+### ② Problema
+
+A banca pode perguntar por que a região, prevista no desenho, não entrou. Hoje a resposta é "algum estrato era pequeno", sem saber qual.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Não muda a partição** (mudar obrigaria regerar tudo).
+
+1. Script `tools/diagnostico_estratos.py`: lê `partitions_master.parquet` (só `group_id`, `ano_internacao`, `alvo_obito_srag`, `regiao_residencia`) dos anos compartilhados e conta grupos por estrato:
+```python
+cont = (df.drop_duplicates("group_id")
+          .groupby(["ano_internacao", "alvo_obito_srag", "regiao_residencia"], observed=True)
+          .size().reset_index(name="grupos"))
+print(cont[cont.grupos < 5])
+```
+2. Registre no `decisoes.md` (§21 ou §29.4): "estrato(s) ⟨…⟩ com ⟨n⟩ grupos; a estratificação caiu para ano × alvo; as prevalências dos blocos conferem (8,439%, 8,440%, 8,441%)".
+3. Trabalho futuro: juntar `AUSENTE` à região mais frequente ou estratificar só nas regiões presentes.
+
+### ④ Pronto quando
+
+- existe: `tools/diagnostico_estratos.py` | O diagnóstico dos estratos existe.
+- contem: `docs/decisoes.md` :: `ano × alvo (fallback)` | O decisoes.md explica a queda da estratificação por região.
+
+---
+
+## #183 · Robustez do src: fábrica com erro em chave desconhecida, datas com formato fixo e lista de proibidas completa
+
+- prioridade: P3
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-entrega
+- data ideal: 05/11
+- responsável: a definir (0,5 h)
+- pessoas: Equipe
+- fonte: Revisão do src/ de 04/11 (itens B7, B9 e S6 dos relatórios)
+- depende de: —
+- tags: Código, Vazamento, Qualidade
+- pilar: Eficiência + Valor científico-acadêmico
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: src/models/factory.py, src/data/cohort_audit.py, src/features/engineering.py, src/evaluation/leakage.py, configs/supervised.yaml, tests/test_model_pipelines.py, tests/test_leakage.py
+
+### ① Para entender
+
+Três pontos do `src/` funcionam hoje, mas protegem pouco contra erros futuros:
+
+1. **Fábrica:** chave desconhecida em `models.<nome>` vira só um `RuntimeWarning` (o modelo treina sem o parâmetro). Valores `null` são descartados (por isso `class_weight: {}` em vez de `null`).
+2. **Datas:** `parse_srag_date` aceita só `AAAA-MM-DD`; `montar_features` usa `pd.to_datetime` sem formato. As datas do episódio são 100% ISO (B_02), mas **todas as datas de vacina COVID estão em DD/MM/AAAA** e virariam vazio sem aviso.
+3. **Proibidas:** faltam `classi_fin` (classificação final, definida depois dos exames), `criterio` e os campos de resultado laboratorial e de imagem. `DEFAULT_LEAKAGE_COLUMNS` cita `classificacao_final`, que não existe na base.
+
+### ② Problema
+
+Nenhum afeta o modelo atual, mas qualquer extensão (contexto com vacinação, novas variáveis) pode cair nessas armadilhas em silêncio.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min · **Depois da entrega** (mudar o `src` antes do C_16 exige rodar tudo de novo).
+
+1. **Fábrica:** troque `warnings.warn(...)` por `raise ValueError(...)` quando houver chave ignorada; aceite `null` em `class_weight` tratando como "sem peso" (`{}`) explicitamente. Teste em `tests/test_model_pipelines.py`.
+2. **Datas:** em `montar_features`, passe `format="%Y-%m-%d"` aos `pd.to_datetime`; no docstring de `parse_srag_date`: "datas de vacina COVID estão em DD/MM/AAAA; use converter_data_mista (B_02)".
+3. **Proibidas:** acrescente ao YAML `classi_fin`, `criterio` e as colunas de exame (confira os nomes no dicionário: `pcr_resul`, `res_an`, `raiox_res`, `tomo_res` e similares); corrija `classificacao_final` para `classi_fin` em `DEFAULT_LEAKAGE_COLUMNS`.
+4. Rode `python -m pytest -q`.
+
+### ④ Pronto quando
+
+- contem: `src/evaluation/leakage.py` :: `classi_fin` | A lista padrão de vazamento usa o nome real da classificação final.
+- yaml: `configs/supervised.yaml` :: `features.proibidas` contem `classi_fin` | A classificação final está entre as proibidas.
+- contem: `src/features/engineering.py` :: `format="%Y-%m-%d"` | As datas do episódio são convertidas com formato fixo.
+
+---
+
+## #184 · Limpeza técnica do src: teste fora do pacote, função duplicada, docstrings e nome da chave da recodificação
+
+- prioridade: P3
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-entrega
+- data ideal: 05/11
+- responsável: a definir (0,33 h)
+- pessoas: Equipe
+- fonte: Revisão do src/ de 04/11 (itens S1, S3, S7, Y1 e B10)
+- depende de: —
+- tags: Código, Qualidade
+- pilar: Eficiência
+- carga: 0.33
+- novo: sim
+- professores: não
+- arquivos: src/evaluation/calibration.py, tests/test_calibration.py, src/data/final_cohort_cli.py, src/utils/hashing.py, src/data/split.py, src/utils/config.py, src/features/engineering.py, src/models/pipeline.py
+
+### ① Para entender
+
+Itens pequenos que não afetam resultado, mas que um avaliador de código percebe.
+
+### ② Problema
+
+| Onde | Problema |
+|---|---|
+| `src/evaluation/calibration.py` | `test_calibracao_intercepto_inclinacao_e_ece_quantis` está dentro do pacote (não é coletada pelo `pytest`) |
+| `final_cohort_cli.py` e `utils/hashing.py` | duas funções `sha256_file` |
+| `src/data/split.py` | docstring "cinco blocos compartilhados" (são três) |
+| `src/utils/config.py` | exemplo de `cfg` com `temporal.fracao` (chave antiga); `gate_aprovado` quebra se um gate não for dicionário |
+| `src/features/engineering.py` | lê `recodificar_comorbidades_fator_risc`, o YAML tem `…_risco` (a chave nunca seria encontrada) |
+| `src/models/pipeline.py` | `FEATURES` é lida do YAML na importação (mudou o YAML, reinicie o kernel); `FunctionTransformer(lambda …)` impede `pickle` comum |
+| `.gitignore` | acentos corrompidos ("relatÃ³rios") |
+
+### ③ O que fazer
+
+**Tempo:** ≈ 20 min · **Depois da entrega.**
+
+1. Mova o teste para `tests/test_calibration.py` (ele passa, conferido em 04/11).
+2. `final_cohort_cli.py`: `from src.utils.hashing import sha256_file` e apague a cópia local.
+3. Corrija as docstrings.
+4. `gate_aprovado`: `g = _get_nested(...); return isinstance(g, dict) and g.get("status") == "aprovado"`.
+5. Alinhe o nome da chave da recodificação (no código ou no YAML) e acrescente um teste que lê a chave.
+6. Em `pipeline.py`, troque o `lambda` por uma função nomeada no módulo (`def _para_float32_fn(v): return v.astype(np.float32)`).
+7. Regrave o `.gitignore` em UTF-8.
+
+### ④ Pronto quando
+
+- nao-define: `src/evaluation/calibration.py` :: `test_calibracao_intercepto_inclinacao_e_ece_quantis` | O teste saiu do pacote.
+- nao-define: `src/data/final_cohort_cli.py` :: `sha256_file` | A função de hash existe num lugar só.
+- nao-contem: `src/data/split.py` :: `cinco blocos compartilhados` | A docstring descreve os três blocos compartilhados.
+
+---
+
+## #185 · Piloto do boosting: L2 lida com "or 0.10" usa 0,10 em vez do 0,0 do YAML
+
+- prioridade: P3
+- situação: aberta
+- estratégia: documentar
+- marco: M6
+- data ideal: 04/11
+- responsável: Pessoa B (0,1 h)
+- pessoas: B
+- fonte: Revisão do B_05 de 04/11: float(cfg.get("l2_regularization") or 0.10) com YAML 0.0
+- depende de: —
+- tags: Notebook, Modelagem
+- pilar: Documentação
+- carga: 0.1
+- novo: sim
+- professores: não
+- arquivos: notebooks/B/B_05_supervisionado_pilotos.ipynb
+
+### ① Para entender
+
+Na comparação das cinco famílias, o B_05 lê os parâmetros do boosting com `valor_do_yaml or padrão`. Em Python, `0.0 or 0.10` dá `0.10`, porque zero conta como "falso". O piloto usou regularização L2 de 0,10; o finalista, montado pela fábrica, usa 0,0.
+
+### ② Problema
+
+Diferença pequena (PR-AUC 0,354 no piloto com 300 mil fichas; 0,360 no finalista), mas é o tipo de detalhe que vira pergunta.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 5 min.
+
+**Opção A (sem reexecutar)**, no texto do §20 do B_05: "no piloto, a regularização L2 do boosting ficou em 0,10 (valor padrão), e não no 0,0 do YAML; o finalista usa 0,0".
+
+**Opção B (se a execução limpa rodar o B_05)**, troque no código:
+```python
+def _ou(v, padrao): return padrao if v is None else v
+l2 = float(_ou(boost_cfg.get("l2_regularization"), 0.10))
+```
+Faça o mesmo nos outros parâmetros lidos com `or`.
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/B/B_05_supervisionado_pilotos.ipynb` :: `get("l2_regularization") or` | O parâmetro não é mais lido com "or", que troca zero pelo padrão.
+
+---
+
+## #186 · Limitações e trabalhos futuros no relatório: agrupamento por hospital, nosocomial, recalibração periódica e corte por região
+
+- prioridade: P3
+- situação: aberta
+- estratégia: documentar
+- marco: M7
+- data ideal: 05/11
+- responsável: a definir (0,25 h)
+- pessoas: Equipe
+- fonte: Parecer crítico de 04/11 (fragilidades 3, 8 e 9); decisão da equipe de 03/11 sobre o corte por região
+- depende de: #133
+- tags: Relatório, Limitações
+- pilar: Valor científico-acadêmico
+- carga: 0.25
+- novo: sim
+- professores: sim
+- arquivos: docs/decisoes.md
+
+### ① Para entender
+
+Algumas limitações não estão escritas em nenhum lugar, e outras estão espalhadas. Dizer antes da banca perguntar é a melhor defesa.
+
+### ② Problema
+
+Faltam no relatório:
+
+1. **Agrupamento por hospital:** fichas de um mesmo hospital e município são correlacionadas (prática de registro, qualidade do cuidado). O bootstrap por grupo trata notificações repetidas, não hospitais. Os intervalos podem estar estreitos demais; a avaliação por UF e região mitiga em parte.
+2. **Nosocomial:** a coluna não está no dicionário; não dá para separar SRAG adquirida no hospital dos intervalos negativos excluídos (D_COORTE_006).
+3. **Hora da medição** da saturação e do desconforto (já citada, mas reforce com o atraso de notificação do #179).
+4. **Trabalhos futuros:** recalibração periódica (por ano ou onda) e monitoramento do O/E; corte de decisão por região (sugestão do professor); modelo específico para crianças; validação prospectiva e análise de impacto (alertas que a equipe consegue atender).
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min.
+
+1. Escreva as quatro limitações e a lista de trabalhos futuros na seção de discussão do relatório (#133), com uma frase cada.
+2. Registre um resumo no `decisoes.md` (§26 "Princípios inegociáveis" ou uma nova §29.40 "Limitações registradas").
+
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `nosocomial` | A limitação sobre a origem hospitalar da infecção está registrada.
+- manual: | O relatório traz as limitações e os trabalhos futuros.
+
+---
+
+## #187 · Resumo visual da curva de decisão e do comparador para os slides
+
+- prioridade: P3
+- situação: aberta
+- estratégia: documentar
+- marco: M8
+- data ideal: 05/11
+- responsável: Pessoa B (0,25 h)
+- pessoas: B
+- fonte: Recomendações de 04/11 (curva de decisão e comparador idade + sexo); #134 (apresentação)
+- depende de: #176, #177, #134
+- tags: Apresentação
+- pilar: Valor científico-acadêmico + Documentação
+- carga: 0.25
+- novo: sim
+- professores: sim
+- arquivos: —
+
+### ① Para entender
+
+Se os cards #176 e #177 forem feitos, eles rendem os dois slides mais fortes para uma banca de saúde: "quanto a clínica acrescenta à idade" e "em que faixa de limiar o modelo é útil".
+
+### ② Problema
+
+Os resultados existiriam só em CSV e figura técnica, sem a frase que a banca entende em 10 segundos.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 15 min · **Depois do teste.**
+
+1. **Slide "O que a clínica acrescenta":** duas barras (só idade e sexo × modelo final) com PR-AUC no Teste A e o intervalo da diferença. Frase: "as informações clínicas da chegada acrescentam ⟨x⟩ de PR-AUC à idade e ao sexo".
+2. **Slide "Quando o alerta vale a pena":** a curva de decisão com o limiar 0,118 marcado. Frase: "entre ⟨a⟩% e ⟨b⟩% de risco, usar o modelo é melhor que alertar todos ou ninguém".
+3. Sem rótulos internos.
+
+### ④ Pronto quando
+
+- manual: | Os dois slides estão na apresentação, com as frases e os números do teste.
