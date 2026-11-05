@@ -1509,31 +1509,28 @@ passaram a ativa: false em supervised.yaml e feature_contract_v1.json.
 - **Ordem:** só depois do G7. Mudar finalista, peso de classe ou calibrador
   invalida o corte.
 
-### 29.23 27/10 · Âncora temporal e quem ficou de fora (#56)
+### 29.23 27/10 · Âncora temporal e quem ficou de fora (#56, #24)
 
 - **Decisão (D_COORTE_002):** a data de internação (`dt_interna`) é a âncora
   temporal obrigatória; `dt_notific` não é usada como âncora nem como
   preditora (consta nas variáveis proibidas).
-- **Evidência a produzir:** (1) dias entre `dt_notific` e `dt_interna`
-  (mediana e intervalo interquartil) por ano e desfecho; (2) hospitalizados
-  excluídos por desfecho não elegível contra incluídos, por ano, região e faixa
-  etária; (3) entre os intervalos negativos (D_COORTE_006), a distribuição por
-  `nosocomial` e desfecho. Script: `tools/ancora_e_excluidos.py`. Saídas em
-  `outputs/final/`. As frases de leitura só se escrevem com os números.
-- **Números de referência:** a exclusão por evolução (D_COORTE_003) soma 530.370
-  linhas e, segundo o dicionário, é composta por 340.351 vazias, 103.570 com
-  código 9 e 86.449 com código 3. Os valores do card (97.786 e 36.923) vêm do
-  waterfall do A_03, de outra etapa e coorte, e não devem ser citados como o
-  total excluído. Usar o `coorte_waterfall.csv` da coorte definitiva.
-- **Separar duas coisas na tabela 2:** código 3 é óbito por outra causa (o
-  desfecho é conhecido, mas fora do alvo); código 9 e vazio são ausência de
-  desfecho. O viés de seleção é diferente em cada caso, e a ausência de
-  desfecho deve se concentrar nos anos recentes (2026 parcial, §5.4).
-- **Limite conhecido:** o dicionário (88 colunas) não tem a coluna
-  `nosocomial`. Se ela também não estiver no `srag.parquet`, a tabela 3 não
-  pode ser feita. Nesse caso, registrar como limitação: não é possível
-  distinguir infecção adquirida no hospital dos intervalos negativos, e a
-  exclusão pela D_COORTE_006 não depende dessa informação (§8).
+- **Evidência pendente (04/11):** as duas tabelas prometidas (atraso
+  `dt_notific` − `dt_interna` por ano; incluídos × excluídos por desfecho
+  por ano/faixa/região) **não foram produzidas**. O card #24 está aberto
+  com prioridade P3 e prazo 04/11; o script `tools/ancora_e_excluidos.py`
+  ainda não existe.
+- **O que falta:** criar `tools/ancora_e_excluidos.py` (só leitura da base
+  bruta e da coorte; não toca no teste) e gravar
+  `outputs/final/atraso_notificacao.csv` e
+  `outputs/final/excluidos_por_desfecho.csv`, com as frases de leitura
+  correspondentes nesta entrada.
+- **Limitação registrada desde já (tabela 3):** a coluna `nosocomial`
+  não está no dicionário nem no contrato `final_cohort_v1`; a
+  distribuição dos intervalos negativos (D_COORTE_006) por `nosocomial`
+  não pode ser produzida. A exclusão pela D_COORTE_006 não depende dessa
+  informação (§8).
+- **Status do card #24:** aberto; não bloqueia G7, G8, G9 nem a entrega de
+  05/11.
 
 ### 29.24 28/10 · "Fatores de risco" (`fator_risc`): o branco das comorbidades é "não"? (verificação antes do treino)
 
