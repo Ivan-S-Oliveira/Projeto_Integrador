@@ -62,6 +62,10 @@ Rode os notebooks na ordem. O 11 só abre o teste depois da aprovação do gate
 G9 em `configs/supervised.yaml`. Para ensaiar o 11 sem abrir o teste, use
 `SRAG_ENSAIO=1`.
 
+<!-- cadeia:inicio -->
+Tempo e memoria (maquina oficial): a cadeia de notebooks 02 a 10 leva cerca de 14 min, com pico de 3.4 GB de memoria. Os notebooks 01 (download dos dados) e 11 (abertura unica do teste) ficam fora dessa execucao. Testado com Python 3.14.8; versoes exatas em `requirements-lock.txt`.
+<!-- cadeia:fim -->
+
 ## Metodologia (resumo)
 
 - Partição por grupo (`group_id`), seed 42: `train_ref` 70%, `val_ref` 15% e
