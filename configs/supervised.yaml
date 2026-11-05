@@ -382,7 +382,7 @@ tuning:
 
 calibracao:
   ativa: true
-  metodo: null
+  metodo: sigmoid
   metodos_candidatos:
   - sigmoid
   - isotonic
@@ -391,7 +391,7 @@ calibracao:
 
 limiar:
   default: 0.5
-  otimo: null
+  otimo: 0.1178
   metrica: precision   # #79: maximiza a precisão sujeita a min_recall
   metricas_candidatas:
   - f1
@@ -518,14 +518,14 @@ gates:
     data: '2026-11-03'
   G7_calibracao:
     descricao: Escolher o metodo de calibracao usando apenas treino e validacao.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: '2026-11-04'
   G8_limiar:
     descricao: Escolher o limiar operacional usando apenas a validacao.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: '2026-11-04'
   G9_holdout:
     descricao: >-
       Liberar test_ref e test_pandemic uma unica vez depois de congelar
