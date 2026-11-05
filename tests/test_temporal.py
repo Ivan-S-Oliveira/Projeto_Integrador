@@ -79,11 +79,7 @@ def test_treino_validacao_nao_expoe_holdout(df_temporal: pd.DataFrame) -> None:
 
 @pytest.fixture
 def y_true_y_pred() -> tuple[np.ndarray, np.ndarray]:
-    """8 amostras com falsos positivos e negativos plantados.
-
-    Labels (não probabilidades) — para ``top_erros``, cada teste constrói
-    os seus próprios dados.
-    """
+    """8 amostras com falsos positivos e negativos plantados."""
     y_true = np.array([0, 0, 1, 1, 0, 1, 0, 1])
     y_pred = np.array([0, 1, 1, 0, 0, 1, 1, 1])
     return y_true, y_pred
@@ -113,7 +109,7 @@ def test_metricas_por_grupo_suprime_abaixo_de_min_n() -> None:
 
 
 def test_grupo_so_de_curas_devolve_pr_auc_vazia():
-    """Card #? — grupo com uma classe só devolve PR-AUC/Brier vazios, sem erro."""
+    """Card #?"""
     df = pd.DataFrame({"uf": ["SP"] * 200})
     y_true = np.zeros(200, dtype=np.int8)
     y_prob = np.full(200, 0.1, dtype=np.float64)

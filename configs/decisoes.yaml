@@ -373,9 +373,6 @@ derivadas:
     - 60-69
     - 70-79
     - 80+
-  # A coorte final_cohort_v1 (D_COORTE_006 e 007) exclui registros com
-  # intervalo negativo ou acima de 60 dias. Este bloco é histórico e
-  # não é aplicado novamente na coorte já filtrada.
 intervalo_sintomas_internacao:
   limite_sinalizacao_dias: 60
   politica_acima_limite: excluir_na_coorte_final_v1

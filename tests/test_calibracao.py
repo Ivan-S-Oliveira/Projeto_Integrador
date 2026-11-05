@@ -19,11 +19,7 @@ def dados_limiar() -> tuple[np.ndarray, np.ndarray]:
 
 @pytest.fixture
 def modelo_ajustado() -> tuple[LogisticRegression, pd.DataFrame, pd.Series]:
-    """``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal.
-
-    Fixture separada (não por teste) para que múltiplos testes de calibração
-    reutilizem o mesmo modelo — o objecto é imutável após ``fit``.
-    """
+    """``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal."""
     pytest.importorskip("sklearn.frozen")
     rng = np.random.RandomState(0)
     X = pd.DataFrame({"a": rng.randn(200)})
@@ -41,7 +37,6 @@ def test_escolher_limiar_retorna_dict(dados_limiar):
 
 def test_escolher_limiar_metrica_invalida(dados_limiar):
     y, p = dados_limiar
-    # Metrica não existe no Literal — passagem intencional de valor inválido.
     with pytest.raises(ValueError, match="metrica inválida"):
         escolher_limiar(y, p, metrica="nao_existe")  # type: ignore[arg-type]
 

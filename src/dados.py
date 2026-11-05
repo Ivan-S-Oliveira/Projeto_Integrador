@@ -26,8 +26,6 @@ from src.config import PROCESSED, get_secret, sha256_file, GatePendenteError, ex
 from src.features import montar_features, regiao_residencia
 
 
-# --- io_eficiente ---
-
 def metadados_parquet(caminho):
     arq=pq.ParquetFile(caminho); meta=arq.metadata
     return {"caminho":str(caminho),"linhas":int(meta.num_rows),"colunas":int(meta.num_columns),
@@ -72,8 +70,6 @@ def ler_parquet_enxuto(caminho,columns=None,filters=None,colunas_texto_livre=(),
     return pd.concat(partes,axis=1)
 
 
-# --- storage ---
-
 PARQUET_MAGIC: bytes = b"PAR1"
 _CHUNK: int = 8 * 1024 * 1024
 
@@ -105,12 +101,7 @@ def _abrir_stream(
     backoff: float,
     timeout: float,
 ) -> requests.Response:
-    """Abre um stream HTTP com retry linear.
-
-    4xx permanente (exceto 429) falha sem retentar. 5xx, 429 e erros de
-    conexão são retentados até ``tentativas`` vezes, com espera
-    ``backoff * tentativa`` entre elas.
-    """
+    """Abre um stream HTTP com retry linear."""
     last_exc: Exception | None = None
 
     for tentativa in range(1, tentativas + 1):
@@ -150,10 +141,7 @@ def _baixar_para_part(
     r: requests.Response,
     tmp: Path,
 ) -> tuple[str, bytes]:
-    """Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``.
-
-    Imprime progresso quando o servidor declara ``content-length``.
-    """
+    """Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``."""
     h = hashlib.sha256()
     first = b""
     total = int(r.headers.get("content-length", 0))
@@ -188,13 +176,7 @@ def download_file(
     expected_magic: bytes | None = None,
     expected_sha256: str | None = None,
 ) -> str:
-    """Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256.
-
-    Retorna o SHA-256 hex e grava o sidecar ``<dest>.sha256``. O download
-    passa por ``<dest>.part``, removido em qualquer falha. Levanta
-    ``RuntimeError`` se o content-type indicar HTML/JSON, se o magic não
-    bater ou se o SHA-256 divergir.
-    """
+    """Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256."""
     tmp = dest.with_suffix(dest.suffix + ".part")
     tmp.unlink(missing_ok=True)
 
@@ -269,17 +251,7 @@ def get_parquet(
     *,
     expected_sha256: str | None = None,
 ) -> Path:
-    """Devolve o caminho local do Parquet de SRAG, baixando se necessário.
-
-    Ordem: release pública; se falhar e ``GITHUB_TOKEN`` estiver definido,
-    asset privado via API. ``force=True`` rebaixa mesmo que o arquivo
-    exista e descarta o sidecar antigo. ``expected_sha256`` valida o hash
-    do arquivo baixado.
-
-    Efeito colateral: Parquet gravado em
-    ``data/processed/<DATA_VERSION>/<PARQUET_NAME>``, sidecar ``.sha256``
-    ao lado, e SHA-256 impresso no stdout.
-    """
+    """Devolve o caminho local do Parquet de SRAG, baixando se necessário."""
     folder = PROCESSED / C.DATA_VERSION
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / C.PARQUET_NAME
@@ -329,20 +301,7 @@ def read_srag(
     compactar: bool = False,
     colunas_texto_livre: Iterable[str] = (),
 ) -> pd.DataFrame:
-    """Lê o Parquet de SRAG como DataFrame.
-
-    ``columns`` faz pushdown (só lê as colunas pedidas) e ``filters`` segue
-    o formato de ``pd.read_parquet(filters=...)``.
-
-    ``compactar=True`` delega para ``io_eficiente.ler_parquet_enxuto``:
-    texto vira ``category``, inteiros descem de largura, floats viram
-    ``float32``. Reduz o pico de memória em bases grandes, ao custo de
-    tipos não-nativos. ``colunas_texto_livre`` lista colunas que devem
-    permanecer como texto livre (não viram ``category``).
-
-    O comportamento antigo (dtypes nativos do pandas) continua sendo o
-    padrão: ``compactar=False``.
-    """
+    """Lê o Parquet de SRAG como DataFrame."""
     caminho = get_parquet()
     columns_list = list(columns) if columns is not None else None
 
@@ -356,8 +315,6 @@ def read_srag(
 
     return pd.read_parquet(caminho, columns=columns_list, filters=filters)
 
-
-# --- cohort_audit ---
 
 DEFAULT_RULE_ORDER: tuple[str, ...] = (
     "hospital_nao_confirmado",
@@ -497,11 +454,7 @@ def evaluate_audit_rules(
     frame: pd.DataFrame,
     parameters: CohortAuditParameters,
 ) -> CohortAuditEvaluation:
-    """Avalia todas as regras sem remover registros.
-
-    A função cria representações normalizadas somente para auditoria. O
-    DataFrame recebido não é modificado.
-    """
+    """Avalia todas as regras sem remover registros."""
 
     validate_audit_schema(frame)
 
@@ -654,11 +607,7 @@ def build_approved_exclusion_mask(
     evaluation: CohortAuditEvaluation,
     approved_rule_ids: Sequence[str],
 ) -> pd.Series:
-    """Combina somente regras explicitamente aprovadas.
-
-    A função devolve a máscara que futuramente poderá ser utilizada pelo
-    construtor da candidata. Ela não aplica a máscara ao DataFrame.
-    """
+    """Combina somente regras explicitamente aprovadas."""
 
     approved = tuple(approved_rule_ids)
 
@@ -710,8 +659,6 @@ def _validate_rule_order(
 
     return normalized_order
 
-
-# --- cohort_contract ---
 
 VALID_CONTRACT_STATUSES: frozenset[str] = frozenset(
     {
@@ -1181,24 +1128,18 @@ def _parse_contract_date(
     return pd.Timestamp(parsed)
 
 
-# --- cohort_source ---
-
 CohortKind = Literal["final"]
 
 _ENV_VAR: str = "SRAG_COHORT_KIND"
 _DEFAULT_KIND: str = "final"
 _VALID_KINDS: frozenset[str] = frozenset(get_args(CohortKind))
-# Tipos que existiram antes: geram erro explicativo em vez de "valor inválido".
 _RETIRED_KINDS: frozenset[str] = frozenset({"provisional", "auto"})
 _ANALYTICAL_DIR = Path("data") / "analytical"
 
-# Nome canônico por tipo. Só este é aceito em ``explicit_path`` e na descoberta
-# automática. Nomes ambíguos (ex.: "coorte.parquet") continuam rejeitados.
 _FILENAMES_BY_KIND: dict[str, tuple[str, ...]] = {
     "final": ("coorte_final.parquet",),
 }
 
-# Índice reverso (nome em minúsculas -> tipo), preenchido uma única vez.
 _KIND_BY_FILENAME: dict[str, str] = {
     name.lower(): kind
     for kind, names in _FILENAMES_BY_KIND.items()
@@ -1236,19 +1177,7 @@ def resolve_cohort_path(
     kind: CohortKind | None = None,
     explicit_path: Path | None = None,
 ) -> tuple[str, Path]:
-    """Resolve o caminho da coorte definitiva.
-
-    Parâmetros
-    ----------
-    root:
-        Raiz do projeto (contém ``data/analytical``).
-    kind:
-        ``final``. ``None`` consulta a variável de ambiente
-        ``SRAG_COHORT_KIND``. ``provisional`` e ``auto`` falham.
-    explicit_path:
-        Caminho explícito para a coorte. O nome do arquivo precisa ser o
-        canônico (``coorte_final.parquet``).
-    """
+    """Resolve o caminho da coorte definitiva."""
     if explicit_path is not None:
         return _resolve_explicit_path(explicit_path, requested_kind=kind)
 
@@ -1307,7 +1236,7 @@ def _resolve_kind(kind: CohortKind | None) -> str:
 
 
 def _kind_from_path(path: Path) -> str:
-    """Classifica uma coorte pelo nome canônico. Nome desconhecido -> ``ValueError``."""
+    """Classifica uma coorte pelo nome canônico."""
     kind = _KIND_BY_FILENAME.get(path.name.lower())
     if kind is not None:
         return kind
@@ -1357,8 +1286,6 @@ def _not_found_message(
     return f"Nenhuma coorte do tipo {selected!r} encontrada. Candidatos:\n{paths}"
 
 
-# --- final_cohort ---
-
 @dataclass(frozen=True)
 class FinalCohortCandidate:
     """Resultado da construção em memória da candidata."""
@@ -1391,12 +1318,7 @@ def build_final_cohort_candidate(
     frame: pd.DataFrame,
     contract: CohortContract,
 ) -> FinalCohortCandidate:
-    """Constrói uma candidata sem modificar o DataFrame recebido.
-
-    Somente regras declaradas como ``approved_exclusion`` removem linhas.
-    Regras ``audit_only`` continuam medidas e documentadas, mas não
-    participam da máscara efetiva de exclusão.
-    """
+    """Constrói uma candidata sem modificar o DataFrame recebido."""
 
     _validate_candidate_input(
         frame=frame,
@@ -1671,8 +1593,6 @@ def _validate_candidate_output(
             f"{excluded_codes_present}"
         )
 
-
-# --- final_cohort_cli ---
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
@@ -2624,8 +2544,6 @@ def gerar_coorte(modo: str, sobrescrever: bool = False, contrato: Path = DEFAULT
         raise ValueError(f"Modo inválido: {modo!r}. Use 'audit' ou 'candidate'.")
 
 
-# --- split ---
-
 PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
 
 MASTER_BLOCKS: tuple[str, ...] = (
@@ -2645,12 +2563,7 @@ _VALORES_TEXTUAIS_AUSENTES = frozenset({"", "nan", "none", "null", "<na>"})
 
 
 def criar_group_id(df: pd.DataFrame) -> pd.Series:
-    """Cria o identificador estável usado no particionamento agrupado.
-
-    Usa ``nu_notific`` sem espaços quando o valor é válido. Apenas nas
-    linhas sem notificação válida exige ``id_registro`` e usa o prefixo
-    ``sem_notific:``. O resultado independe da ordem e do índice das linhas.
-    """
+    """Cria o identificador estável usado no particionamento agrupado."""
     if "nu_notific" not in df.columns:
         raise KeyError("Coluna necessária para criar group_id ausente: 'nu_notific'")
 
@@ -2757,12 +2670,7 @@ def atribuir_blocos_por_hash(
     fracoes: dict[str, float],
     min_grupos_por_estrato: int = 5,
 ) -> pd.Categorical:
-    """Atribui cada grupo a um dos blocos definidos em ``fracoes``.
-
-    Mesma mecânica de ``atribuir_particao_estratificada_por_hash``, mas
-    aceita N blocos com frações explícitas (devem somar 1). Cada estrato
-    recebe ao menos um grupo por bloco.
-    """
+    """Atribui cada grupo a um dos blocos definidos em ``fracoes``."""
     nomes = list(fracoes)
     valores = list(fracoes.values())
     if abs(sum(valores) - 1.0) > 1e-6:
@@ -2821,11 +2729,7 @@ def _estrato_inteiro(
     target_column: str,
     region_column: str | None,
 ) -> pd.Series:
-    """Códigos inteiros de (ano × alvo [× região]).
-
-    Substitui a concatenação de texto do estrato, que gerava uma Series
-    com milhões de strings e pico de memória alto.
-    """
+    """Códigos inteiros de (ano × alvo [× região])."""
     cod_ano, _ = pd.factorize(sub[year_column], sort=True)
     cod_alvo, _ = pd.factorize(sub[target_column], sort=True)
     cod = cod_ano.astype("int32") * 1000 + cod_alvo.astype("int32")
@@ -2846,21 +2750,7 @@ def criar_particao_mestra(
     region_column: str | None = "regiao_residencia",
     partition_column: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Materializa os quatro blocos de ``temporal.blocos`` no DataFrame.
-
-    - Anos compartilhados → hash por (ano × alvo × região) entre os três
-      blocos compartilhados (fallback para ano × alvo se algum estrato
-      ficar abaixo do mínimo).
-    - Anos de ``test_pandemic`` → 100% nesse bloco.
-    - Demais anos (2026) → ``"exploracao"``.
-
-    Levanta ``RuntimeError`` se um ``group_id`` aparecer em mais de um
-    bloco, e ``ValueError`` se os anos de ``test_pandemic`` e dos blocos
-    compartilhados se sobrepuserem.
-
-    Retorna ``(df_com_particao, manifesto)``. A entrada não é alterada;
-    as colunas originais são compartilhadas com ``df`` (cópia rasa).
-    """
+    """Materializa os quatro blocos de ``temporal.blocos`` no DataFrame."""
     partition_column = str(
         partition_column or temporal_cfg.get("coluna_particao") or "particao"
     )
@@ -2985,15 +2875,10 @@ def criar_particao_mestra(
     return out, manifesto
 
 
-# --- supervised_artifact ---
-
-# DONO ÚNICO deste arquivo: gerar_artefato_supervisionado.
-# Nenhum notebook A deve gravar aqui.
 DATASET_NAME = "dataset_supervisionado.parquet"
 MANIFEST_NAME = "manifesto_supervisionado.json"
 SCHEMA_VERSION = 2
 
-# --- Esquema de blocos da partição-mestre ---------------------------------
 _BLOCK_TRAIN_REF = "train_ref"
 _BLOCK_VAL_REF = "val_ref"
 _BLOCK_TEST_REF = "test_ref"
@@ -3017,10 +2902,8 @@ BLOCKS_PADRAO_LEITURA: tuple[str, ...] = (
 
 _BLOCOS_OBRIGATORIOS: frozenset[str] = frozenset(BLOCOS_MESTRE) - {_BLOCK_EXPLORACAO}
 
-# Toda string reconhecida como partição.
 ALLOWED_PARTITIONS: frozenset[str] = frozenset(BLOCOS_MESTRE)
 
-# Combinações de partição consideradas artefatos completos.
 _ESQUEMAS_COMPLETOS: frozenset[frozenset[str]] = frozenset(
     {
         _BLOCOS_OBRIGATORIOS,
@@ -3028,7 +2911,6 @@ _ESQUEMAS_COMPLETOS: frozenset[frozenset[str]] = frozenset(
     }
 )
 
-# Partições que acionam o gate de teste.
 _PARTICOES_DE_TESTE: frozenset[str] = BLOCKS_TESTE
 
 
@@ -3104,12 +2986,7 @@ def _resolver_grupos(
     numeric_columns: Sequence[str] | None,
     categorical_columns: Sequence[str] | None,
 ) -> tuple[list[str] | None, list[str] | None]:
-    """Resolve o par (numéricas, categóricas).
-
-    - ambas ``None`` → ``(None, None)``
-    - apenas uma informada → o complemento é inferido dentro de ``feature_columns``
-    - ambas informadas → valida disjunção e cobertura exata
-    """
+    """Resolve o par (numéricas, categóricas)."""
     if numeric_columns is None and categorical_columns is None:
         return None, None
 
@@ -3139,12 +3016,7 @@ def validate_supervised_frame(
     audit_columns: Sequence[str] | None = None,
     required_partitions: Sequence[str] | None = None,
 ) -> None:
-    """Valida schema mínimo, alvo binário e partições do dataset.
-
-    ``required_partitions=None`` aceita qualquer um dos esquemas completos
-    (blocos sem ``exploracao`` ou blocos com ``exploracao``).
-    Um subconjunto permite validar leituras parciais.
-    """
+    """Valida schema mínimo, alvo binário e partições do dataset."""
     required = set(feature_columns) | {target_column, partition_column}
     if audit_columns:
         required |= set(audit_columns)
@@ -3186,11 +3058,7 @@ def _validate_partial_load(
     partition_column: str,
     expected_partitions: set[str],
 ) -> None:
-    """Validação mínima quando ``columns=`` restringe a leitura.
-
-    Não substitui ``validate_supervised_frame`` (features não foram lidas).
-    Confere apenas o que sustenta a integridade das partições e do alvo.
-    """
+    """Validação mínima quando ``columns=`` restringe a leitura."""
     if frame.empty:
         raise ValueError("O dataset supervisionado não pode ser vazio.")
 
@@ -3376,15 +3244,7 @@ def _configuracao_artefato() -> dict[str, Any]:
 def _colunas_auditoria_extras(
     artefato_cfg: Mapping[str, Any],
 ) -> list[str]:
-    """Colunas físicas guardadas para auditoria e análises de sensibilidade.
-
-    ``fator_risc`` (indicador agregado de fatores de risco),
-    ``features.contexto_incremental`` e
-    ``features.sensibilidade_gravidade_admissao`` e
-    ``features.sensibilidade_marcador_periodo``. Nenhuma delas entra em
-    ``feature_columns``: ficam em ``audit_columns`` para as análises de
-    sensibilidade previstas em ``sensibilidades`` no YAML.
-    """
+    """Colunas físicas guardadas para auditoria e análises de sensibilidade."""
     features_cfg = artefato_cfg["features_cfg"]
     feature_columns = set(artefato_cfg["feature_columns"])
     candidatas = [
@@ -3507,18 +3367,7 @@ def _separar_grupos_temporais_incompativeis(
     target_column: str,
     region_column: str | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Separa grupos que não podem receber uma única partição-mestre.
-
-    Um grupo é incompatível quando suas linhas pertencem a categorias
-    temporais diferentes ou, dentro dos anos compartilhados, formam mais
-    de um estrato de ano, alvo e região. A separação ocorre antes da
-    partição para impedir que registros do mesmo grupo sejam distribuídos
-    entre blocos diferentes.
-
-    Os estratos são comparados por códigos inteiros (sem montar uma string
-    por linha), o que mantém o resultado e reduz memória e tempo. Quando
-    nenhum grupo é incompatível, devolve o próprio ``frame`` sem cópia.
-    """
+    """Separa grupos que não podem receber uma única partição-mestre."""
     required = {group_column, year_column, target_column}
     if region_column:
         required.add(region_column)
@@ -3575,16 +3424,7 @@ def gerar_artefato_supervisionado(
     exportar_particao: bool = True,
     overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Gera e persiste o artefato supervisionado canônico.
-
-    A função aceita exclusivamente a coorte final, aplica a engenharia
-    central, cria identificadores estáveis, separa grupos temporalmente
-    incompatíveis, materializa a partição-mestre e persiste dataset e
-    manifestos sem expor os blocos de teste para modelagem.
-
-    Os DataFrames largos são liberados assim que deixam de ser usados,
-    para manter baixo o pico de memória.
-    """
+    """Gera e persiste o artefato supervisionado canônico."""
     root = Path(root).resolve()
     kind_normalizado = str(cohort_kind).strip().lower()
     if kind_normalizado != "final":
@@ -3680,8 +3520,6 @@ def gerar_artefato_supervisionado(
             ]
         )
     )
-    # Só as colunas gravadas no dataset são copiadas; a exploração (2026)
-    # fica de fora.
     mascara_modelavel = particionado[partition_column].astype(str) != "exploracao"
     modelavel = particionado.loc[mascara_modelavel, output_columns]
     rows_partitioned = int(len(particionado))
@@ -3699,8 +3537,6 @@ def gerar_artefato_supervisionado(
             ]
             if coluna in particionado.columns
         ]
-        # Preserva o nome explícito do bloco mestre e mantém a coluna de
-        # partição configurada para compatibilidade com os consumidores.
         particao_mestre = particionado[partition_columns].copy()
         particao_mestre["bloco_mestre"] = (
             particao_mestre[partition_column].astype("string")
@@ -3724,8 +3560,6 @@ def gerar_artefato_supervisionado(
     analytical_dir = root / "data" / "analytical"
     partition_path = analytical_dir / "partitions_master.parquet"
     partition_manifest_path = analytical_dir / "manifesto_particao.json"
-    # Confere a sobrescrita antes de gravar qualquer arquivo, para não
-    # deixar dataset novo ao lado de partição-mestre antiga.
     if exportar_particao and not overwrite and (
         partition_path.exists() or partition_manifest_path.exists()
     ):
@@ -3833,19 +3667,7 @@ def load_supervised_artifact(
     columns: Sequence[str] | None = None,
     partitions: Sequence[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Carrega o artefato canônico e valida hash, tipo de coorte e schema.
-
-    ``partitions`` restringe o subconjunto carregado (pushdown no Parquet).
-    Default: ``BLOCKS_PADRAO_LEITURA`` (``train_ref`` e ``val_ref``).
-
-    Qualquer bloco de teste (``test_ref`` ou ``test_pandemic``)
-    exige ``G9_holdout`` aprovado. ``exploracao`` exige
-    ``temporal.exploracao_2026.ativa``.
-
-    ``columns`` restringe as colunas devolvidas; alvo e partição são
-    **sempre lidos internamente** para validar e descartados no retorno
-    caso o chamador não os tenha pedido.
-    """
+    """Carrega o artefato canônico e valida hash, tipo de coorte e schema."""
     dataset_path, manifest_path = _paths(root)
 
     if not dataset_path.is_file() or not manifest_path.is_file():
@@ -3906,13 +3728,7 @@ def split_partitions(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Devolve ``(treino, validacao)`` agregando os blocos correspondentes.
-
-    ``train_ref`` → treino; ``val_ref`` → validação.
-
-    O bloco de teste nunca é exposto aqui — use ``holdout_partition`` após
-    ``G9_holdout``.
-    """
+    """Devolve ``(treino, validacao)`` agregando os blocos correspondentes."""
     col = manifest["partition_column"]
     papeis = _particoes_por_papel()
 
@@ -3935,7 +3751,7 @@ def holdout_partition(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Devolve o bloco de teste. Exige ``G9_holdout`` aprovado."""
+    """Devolve o bloco de teste."""
     exigir_gate("G9_holdout")
 
     col = manifest["partition_column"]

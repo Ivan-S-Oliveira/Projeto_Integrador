@@ -22,13 +22,7 @@ def _df_features(
     n: int = 200,
     seed: int = 42,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """DataFrame sintético com exactamente as features exigidas pelo YAML.
-
-    Numéricas com distribuição normal; categóricas com 3 níveis como
-    strings. O alvo é balanceado 50/50 e depois embaralhado — garante as
-    duas classes para ``DummyClassifier(strategy="prior")`` e para
-    ``LogisticRegression(class_weight="balanced")``.
-    """
+    """DataFrame sintético com exactamente as features exigidas pelo YAML."""
     rng = np.random.default_rng(seed)
     dados: dict[str, np.ndarray] = {}
 
@@ -47,11 +41,7 @@ def _df_features(
 
 
 def _colunas_do_pre(pipe: Pipeline) -> set[str]:
-    """Colunas declaradas no ``ColumnTransformer`` do pipeline.
-
-    ``ColumnTransformer.transformers`` é uma lista de
-    ``(nome, transformer, colunas)`` — extraímos a terceira posição.
-    """
+    """Colunas declaradas no ``ColumnTransformer`` do pipeline."""
     colunas: set[str] = set()
     for _, _, cols in pipe.named_steps["pre"].transformers:
         if isinstance(cols, list):
@@ -105,10 +95,7 @@ def test_pipeline_fit_predict_proba(
 
 
 def test_pipelines_usam_features_do_yaml() -> None:
-    """Pré-processador expõe ``FEATURES_NUMERICAS + FEATURES_CATEGORICAS`` do YAML.
-
-    Canário contra features fora do YAML ou filtros silenciosos.
-    """
+    """Pré-processador expõe ``FEATURES_NUMERICAS + FEATURES_CATEGORICAS`` do YAML."""
     esperadas = set(P.FEATURES_NUMERICAS) | set(P.FEATURES_CATEGORICAS)
     assert esperadas, "Nenhuma feature declarada em supervised.yaml."
 
@@ -123,14 +110,7 @@ def test_pipelines_usam_features_do_yaml() -> None:
 
 
 def test_build_finalista_aceita_nomes_do_yaml() -> None:
-    """Cada nome em `selecao_modelos.finalistas` precisa construir um Pipeline.
-
-    O YAML usa nomes descritivos (`hist_gradient_boosting`), a fábrica
-    interna trabalha com nomes curtos (`boosting`). Os apelidos vivem em
-    `src/models/factory.py` — este teste garante a tradução ponta a ponta
-    e falha cedo se alguém renomear um finalista no YAML sem adicionar o
-    alias correspondente na fábrica.
-    """
+    """Cada nome em `selecao_modelos.finalistas` precisa construir um Pipeline."""
     from src.modelos import build_finalista
 
     finalistas = list(C.cfg("selecao_modelos", "finalistas") or [])

@@ -21,8 +21,6 @@ from dataclasses import dataclass, field
 from src import config as C
 
 
-# --- metrics ---
-
 ArrayLike = np.ndarray | pd.Series | list
 
 
@@ -110,12 +108,7 @@ def metricas_completas(
     y_prob: ArrayLike,
     limiar: float = 0.5,
 ) -> dict[str, float]:
-    """
-    Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``.
-
-    ``pr_auc`` é **alias** de ``ap`` (ambos = ``average_precision_score``),
-    mantido por compatibilidade com consumidores que usam esse nome (ex.: notebook 09).
-    """
+    """Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``."""
     y      = _to_int_labels(y_true)
     p      = _to_np(y_prob)
     y_pred = (p >= limiar).astype(int)
@@ -143,17 +136,7 @@ def metricas_por_limiar(
     y_prob: ArrayLike,
     n_limiares: int = 101,
 ) -> pd.DataFrame:
-    """
-    Tabela com métricas para cada limiar em ``[0.01, 0.99]``.
-
-    Colunas: ``limiar, tp, fp, tn, fn, f1, precision, recall,
-    sensibilidade, especificidade, accuracy, youden_j``.
-
-    ``youden_j`` = sensibilidade + especificidade − 1, útil para escolher
-    o limiar que maximiza a separação entre as classes. As contagens de
-    confusão ficam expostas para permitir derivar qualquer outra métrica
-    a posteriori — não há tabela paralela de lambdas.
-    """
+    """Tabela com métricas para cada limiar em ``[0.01, 0.99]``."""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
 
@@ -194,13 +177,7 @@ def ic_bootstrap(
     alpha: float = 0.05,
     seed: int = 42,
 ) -> tuple[float, float, float]:
-    """
-    Intervalo de confiança via bootstrap percentil.
-
-    Retorna ``(estimativa, limite_inferior, limite_superior)``. Amostras
-    degeneradas (uma única classe) são descartadas internamente. Métrica
-    default é ``auc``; ``alpha=0.05`` corresponde a IC 95%.
-    """
+    """Intervalo de confiança via bootstrap percentil."""
     y = _to_int_labels(y_true)
     if n_boot is None:
         from src import config as C
@@ -272,13 +249,7 @@ def bootstrap_grupo(
     alpha: float = 0.05,
     seed: int | None = None,
 ) -> dict[str, float]:
-    """Bootstrap por grupo (``group_id``) de AUC, AP ou Brier.
-
-    Cada réplica sorteia grupos com reposição; todas as linhas do grupo entram juntas,
-    com peso igual ao número de vezes sorteado. As probabilidades são ordenadas uma vez.
-    Com ``prob_b``, o sorteio é o mesmo para os dois modelos e o resultado é a
-    diferença A − B (IC percentil e p bilateral).
-    """
+    """Bootstrap por grupo (``group_id``) de AUC, AP ou Brier."""
     from src import config as C
 
     if metrica not in {"auc", "ap", "brier"}:
@@ -327,8 +298,6 @@ def bootstrap_grupo(
             "ic_superior": float(superior), "p_bilateral": p_bilateral, "n_validas": int(validos.size)}
 
 
-# --- calibration ---
-
 ArrayLike = np.ndarray | pd.Series | list
 
 
@@ -352,15 +321,7 @@ def curva_confiabilidade(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> pd.DataFrame:
-    """
-    Dados para o reliability diagram.
-
-    Colunas:
-        bin_centro    — probabilidade média prevista no bin
-        freq_positiva — fração real de positivos no bin
-        n             — número de amostras no bin
-        gap           — |freq_positiva - bin_centro|
-    """
+    """Dados para o reliability diagram."""
     y      = _to_int_labels(y_true)
     p      = _to_np(y_prob)
     edges  = np.linspace(0.0, 1.0, n_bins + 1)
@@ -424,20 +385,7 @@ def brier_decomposicao(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> dict[str, float]:
-    """
-    Decompõe o Brier score (Murphy, 1973):
-
-        Brier = Reliability − Resolution + Uncertainty
-
-    Retorna
-    -------
-    dict com:
-        brier         — Brier score observado
-        reliability   — quanto menor, melhor (penaliza desvios locais)
-        resolution    — quanto maior, melhor (capacidade de separar)
-        uncertainty   — entropia binária da base (fixa para o dataset)
-        n             — número de amostras
-    """
+    """Decompõe o Brier score (Murphy, 1973):"""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
     n = len(y)
@@ -476,8 +424,6 @@ def brier_decomposicao(
     }
 
 
-# --- errors ---
-
 ArrayLike   = np.ndarray | pd.Series | list
 CriterioTop = Literal["fp", "fn", "erro_absoluto"]
 
@@ -492,12 +438,7 @@ def matriz_confusao(
     y_true: ArrayLike,
     y_pred: ArrayLike,
 ) -> pd.DataFrame:
-    """
-    Matriz de confusão 2×2 como DataFrame.
-
-    Colunas: ``["pred_0", "pred_1"]``, índice: ``["real_0", "real_1"]``.
-    Adiciona linha/coluna ``"total"``.
-    """
+    """Matriz de confusão 2×2 como DataFrame."""
     y = _to_int_labels(y_true)
     p = _to_int_labels(y_pred)
 
@@ -608,10 +549,10 @@ def metricas_por_grupo(
             "grupo":            str(g),
             "n":                float(n),
             "prevalencia":      prevalencia,
-            "taxa_positivos":   prevalencia,   # alias de compatibilidade
+            "taxa_positivos":   prevalencia,
             "pr_auc":           pr_auc,
             "pr_auc_sobre_prev":pr_auc_sobre_prev,
-            "auc":              roc_auc,       # alias de compatibilidade
+            "auc":              roc_auc,
             "roc_auc":          roc_auc,
             "brier":            brier,
             "o_e":              o_e,
@@ -627,8 +568,6 @@ def metricas_por_grupo(
         .reset_index(drop=True)
     )
 
-
-# --- leakage ---
 
 class LeakageError(RuntimeError):
     """Erro lançado quando variáveis com vazamento são encontradas."""
@@ -647,11 +586,7 @@ def _resolve_forbidden_columns(
     forbidden_columns: Iterable[str] | None,
     target_column: str | None,
 ) -> set[str]:
-    """Conjunto efetivo de colunas proibidas.
-
-    Prioridade: ``forbidden_columns`` explícito > ``features.proibidas``
-    do YAML. Sempre soma ``DEFAULT_LEAKAGE_COLUMNS`` e o alvo.
-    """
+    """Conjunto efetivo de colunas proibidas."""
     base = (
         set(forbidden_columns)
         if forbidden_columns is not None
@@ -671,17 +606,11 @@ def check_leakage(
     forbidden_columns: Iterable[str] | None = None,
     target_column: str | None = None,
 ) -> None:
-    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas.
-
-    ``forbidden_columns=None`` usa ``features.proibidas`` do YAML;
-    ``target_column=None`` usa ``target.coluna`` do YAML.
-    """
+    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas."""
     forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
     if detected := sorted(set(X.columns) & forbidden):
         raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
 
-
-# --- temporal ---
 
 OnNat = Literal["raise", "drop"]
 _ON_NAT_VALORES = frozenset(get_args(OnNat))
@@ -730,17 +659,7 @@ def split_temporal_3way(
     *,
     on_nat: OnNat = "raise",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Divide em treino / validação / holdout, **sem embaralhar**.
-
-    Garante, na ordem temporal::
-
-        max(treino[coluna_tempo]) <= min(validacao[coluna_tempo])
-        max(validacao[coluna_tempo]) <= min(holdout[coluna_tempo])
-
-    ``on_nat='raise'`` (default) falha se houver ``NaT``; ``'drop'``
-    remove essas linhas antes de ordenar.
-    """
+    """Divide em treino / validação / holdout, **sem embaralhar**."""
     if on_nat not in _ON_NAT_VALORES:
         raise ValueError(
             f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
@@ -773,16 +692,7 @@ def split_temporal_3way(
 
 @dataclass
 class TemporalSplit:
-    """Guarda os três blocos e controla o acesso ao holdout.
-
-    ⚠️  Ferramenta de **sensibilidade temporal**, não o split oficial.
-    Uso típico::
-
-        split = TemporalSplit(df, coluna_tempo="dt_notific")
-        tr, va = split.treino_validacao()  # seleção
-        split.concluir_selecao()           # exige G9_holdout aprovado
-        ho = split.holdout()               # avaliação, uma vez
-    """
+    """Guarda os três blocos e controla o acesso ao holdout."""
 
     df: pd.DataFrame
     coluna_tempo: str
@@ -820,12 +730,7 @@ class TemporalSplit:
         return self._validacao
 
     def concluir_selecao(self) -> None:
-        """Libera o holdout após o gate ``G9_holdout`` estar aprovado.
-
-        O gate é a autorização explícita — G7 e G8 tratam de decisões da
-        fase de seleção e devem ter sido fechados *antes* deste ponto.
-        Chamar **uma única vez**, após congelar modelo, calibração e limiar.
-        """
+        """Libera o holdout após o gate ``G9_holdout`` estar aprovado."""
         gate   = C.cfg("gates", "G9_holdout") or {}
         status = gate.get("status")
         if status != "aprovado":
@@ -841,7 +746,7 @@ class TemporalSplit:
         return self._holdout_liberado
 
     def holdout(self) -> pd.DataFrame:
-        """Bloco de holdout. Levanta ``RuntimeError`` se ainda bloqueado."""
+        """Bloco de holdout."""
         if not self._holdout_liberado:
             raise RuntimeError(
                 "Holdout bloqueado. Chame `split.concluir_selecao()` antes."

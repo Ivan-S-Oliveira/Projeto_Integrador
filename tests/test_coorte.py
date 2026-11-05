@@ -157,11 +157,7 @@ _FINAL = "coorte_final.parquet"
 
 @pytest.fixture(autouse=True)
 def _limpar_variavel_de_ambiente(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Remove ``SRAG_COHORT_KIND`` antes de cada teste.
-
-    Sem isto, uma variável definida no shell do runner mudaria o default
-    ``final`` e tornaria os testes dependentes do ambiente.
-    """
+    """Remove ``SRAG_COHORT_KIND`` antes de cada teste."""
     monkeypatch.delenv("SRAG_COHORT_KIND", raising=False)
 
 

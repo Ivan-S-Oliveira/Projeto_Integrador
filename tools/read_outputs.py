@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""Consolida resultados locais do projeto em UM DOCX autocontido.
-
-Execute na raiz do repositório:
-    python tools/read_outputs.py
-
-Saída única:
-    docs/RESULTADOS_COMPLETOS.docx
-"""
+"""Consolida resultados locais do projeto em UM DOCX autocontido."""
 from __future__ import annotations
 import argparse, hashlib, json, os, platform, re, subprocess, sys, tempfile
 from collections import Counter

@@ -97,10 +97,10 @@ _MANIFESTO_PARTICAO = (
 )
 
 
-_PREVALENCIA_ESPERADA = 0.0844      # 8,44%
+_PREVALENCIA_ESPERADA = 0.0844
 
 
-_TOLERANCIA_PP        = 0.005       # 0,5 ponto percentual
+_TOLERANCIA_PP        = 0.005
 
 
 _BLOCOS_DESENVOLVIMENTO = (
@@ -113,11 +113,7 @@ _ANOS_DESENVOLVIMENTO = (2019, 2023, 2024, 2025)
 
 @pytest.fixture(scope="class")
 def particao_mestra_real():
-    """Carrega o artefato real da partição-mestra (só 4 colunas).
-
-    Faz ``pytest.skip`` se o artefato ou o manifesto ainda não existirem —
-    o artefato é produzido pela geração do artefato supervisionado e não é versionado no Git.
-    """
+    """Carrega o artefato real da partição-mestra (só 4 colunas)."""
     if not _ARTEFATO_PARTICAO.is_file() or not _MANIFESTO_PARTICAO.is_file():
         pytest.skip(
             "Artefato da partição-mestra ausente: "
@@ -192,7 +188,7 @@ class TestParticaoMestraArtefatoReal:
         self,
         particao_mestra_real,
     ) -> None:
-        """(d) Prevalência dos blocos de desenvolvimento a ≤ 0,5 p.p. de 8,44%."""
+        """(d) Prevalência dos blocos de desenvolvimento a ≤ 0,5 p.p."""
         df, _ = particao_mestra_real
         sub = df[
             df["bloco_mestre"].astype(str).isin(_BLOCOS_DESENVOLVIMENTO)

@@ -15,8 +15,6 @@ from src import config as C
 from src.modelos import _normalizador_categorico
 
 
-# --- engineering ---
-
 PoliticaIntervalo = Literal["sinalizar", "descartar"]
 
 _INTERVALO_MAX_DIAS_PADRAO = 60.0
@@ -67,35 +65,7 @@ def recodificar_comorbidades_por_fator_risco(
     *,
     comorbidades: tuple[str, ...] | None = None,
 ) -> pd.DataFrame:
-    """Recodifica comorbidade em branco quando fator_risc = não.
-
-    Se a ficha do SIVEP só preenche a lista de comorbidades quando a
-    pergunta-mãe ("Possui fatores de risco/comorbidades?") é "sim",
-    então o branco com fator_risc = não significa "não tem", e não
-    "não informado". Hoje o pré-processador transforma os dois em
-    AUSENTE.
-
-    Regra:
-    - Comorbidade em branco + fator_risc = não → "2" (não).
-    - Comorbidade em branco + fator_risc = sim,
-      ignorado ou branco → continua em branco
-                                                  (vira AUSENTE depois).
-
-    Não mexe em comorbidades já preenchidas (1, 2 ou 9).
-    Não usa o alvo, não acessa informação posterior à admissão.
-
-    Parâmetros
-    ----------
-    df:
-        DataFrame com ``fator_risc`` e as colunas de comorbidade.
-    comorbidades:
-        Lista de colunas a recodificar. Se ``None``, usa a lista
-        canônica do projeto (12 comorbidades + puerpera).
-
-    Retorna
-    -------
-    Cópia rasa de ``df`` com as comorbidades recodificadas.
-    """
+    """Recodifica comorbidade em branco quando fator_risc = não."""
     if comorbidades is None:
         comorbidades = (
             "cardiopati", "hematologi", "sind_down", "hepatica", "asma",
@@ -112,16 +82,13 @@ def recodificar_comorbidades_por_fator_risco(
 
     out = df.copy(deep=False)
 
-    # Classifica fator_risc em sim/nao/ignorado/branco
     fator = out["fator_risc"].astype("string").str.strip().str.upper()
     sim = fator.isin(["1", "1.0", "S", "SIM"])
     nao = fator.isin(["2", "2.0", "N", "NAO", "NÃO"])
 
     for col in comorbidades:
         s = out[col]
-        # Branco = NaN ou string vazia. Código 9 (ignorado) NÃO é branco.
         branco = s.isna() | (s.astype("string").str.strip() == "")
-        # Recodifica só os brancos com fator_risc = não
         recodificar = branco & nao
         if recodificar.any():
             out.loc[recodificar, col] = "2"
@@ -163,12 +130,7 @@ def _faixas_etarias() -> list[tuple[str, float, float | None]]:
 
 
 def idade_em_anos(df: pd.DataFrame) -> pd.Series:
-    """
-    Converte nu_idade_n + tp_idade (SIVEP) em idade em anos.
-
-    tp_idade: 1=dias, 2=meses, 3=anos. Retorna float64 com NaN quando
-    a codificação é desconhecida, a idade é negativa ou excede 120.
-    """
+    """Converte nu_idade_n + tp_idade (SIVEP) em idade em anos."""
     idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
     tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
 
@@ -187,14 +149,7 @@ def idade_em_anos(df: pd.DataFrame) -> pd.Series:
 
 
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade.
-
-    Colunas: ``dias_sintomas_ate_internacao`` (float64), ``flag_intervalo_invalido``
-    (int8), ``flag_internacao_antes_sintomas`` (int8). A política de valores
-    fora de ``[0, intervalo_max_dias]`` vem de
-    ``features.engenharia.intervalo_politica``.
-    """
+    """Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade."""
     max_dias = _intervalo_max_dias()
     politica = _intervalo_politica()
 
@@ -219,12 +174,7 @@ def sazonalidade(
     df: pd.DataFrame,
     coluna_data: str | None = None,
 ) -> pd.DataFrame:
-    """
-    Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``.
-
-    Coluna default: ``dt_sin_pri`` (ou ``features.engenharia.coluna_sazonalidade``).
-    Datas nulas resultam em NaN.
-    """
+    """Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``."""
     if coluna_data is None:
         coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
     if coluna_data not in df.columns:
@@ -248,11 +198,7 @@ def sazonalidade(
 
 
 def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
-    """
-    Categoriza idade em faixas semiabertas ``[min, max)`` do YAML.
-
-    Idade nula vira a categoria explícita ``"desconhecida"``.
-    """
+    """Categoriza idade em faixas semiabertas ``[min, max)`` do YAML."""
     faixas = _faixas_etarias()
     idade  = pd.to_numeric(idade_anos, errors="coerce")
 
@@ -267,11 +213,7 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
 
 
 def sexo_categoria(df: pd.DataFrame) -> pd.Series:
-    """
-    Normaliza ``cs_sexo`` em categórica explícita.
-
-    ``M`` → masculino; ``F`` → feminino; ``I`` → ignorado; demais/nulo → ausente.
-    """
+    """Normaliza ``cs_sexo`` em categórica explícita."""
     sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
 
     out = pd.Series("ausente", index=df.index, dtype="object")
@@ -283,12 +225,7 @@ def sexo_categoria(df: pd.DataFrame) -> pd.Series:
 
 
 def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64.
-
-    Datas nulas resultam em NaN, mantendo compatibilidade com
-    ``SimpleImputer`` e ``StandardScaler``.
-    """
+    """Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64."""
     dt = pd.to_datetime(df["dt_interna"], errors="coerce")
 
     return pd.DataFrame({
@@ -298,11 +235,7 @@ def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def regiao_residencia(sg_uf: pd.Series) -> pd.Series:
-    """Mapeia a UF de residência para região e preserva o índice.
-
-    Valores nulos, vazios ou diferentes das 27 siglas oficiais recebem a
-    categoria explícita ``AUSENTE``.
-    """
+    """Mapeia a UF de residência para região e preserva o índice."""
     if not isinstance(sg_uf, pd.Series):
         raise TypeError("sg_uf deve ser uma pandas.Series.")
 
@@ -316,22 +249,7 @@ def regiao_residencia(sg_uf: pd.Series) -> pd.Series:
 
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aplica todas as derivações e devolve cópia rasa de ``df`` com as
-    colunas de ``COLUNAS_DERIVADAS`` adicionadas. Não muta a entrada.
-
-    Com pandas 3 (Copy-on-Write), ``copy(deep=False)`` já garante que a
-    entrada original não é alterada, sem custo de cópia completa.
-
-    As colunas novas usam tipos compactos:
-
-    - ``idade_anos``, ``dias_sintomas_ate_internacao``: ``float32``;
-    - ``sin_semana``, ``cos_semana``: ``float32``;
-    - ``ano_internacao``: ``Int16`` (nullable, mantém NaN de datas ausentes);
-    - ``mes_internacao``: ``Int8`` (nullable, idem);
-    - ``flag_intervalo_invalido``, ``flag_internacao_antes_sintomas``: ``int8``;
-    - ``faixa_etaria``, ``sexo_categoria``: ``category``.
-    """
+    """Aplica todas as derivações e devolve cópia rasa de ``df`` com as colunas de ``COLUNAS_DERIVADAS`` adicionadas."""
     out = df.copy(deep=False)
 
     out["idade_anos"] = idade_em_anos(df).astype("float32")
@@ -352,14 +270,11 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
     out["ano_internacao"] = ano_mes["ano_internacao"].astype("Int16")
     out["mes_internacao"] = ano_mes["mes_internacao"].astype("Int8")
 
-    # Recodificação opcional via flag de config.
     if C.cfg("features", "engenharia", "recodificar_comorbidades_fator_risc") is True:
         out = recodificar_comorbidades_por_fator_risco(out)
 
     return out
 
-
-# --- normalization ---
 
 class OneHotPonderado(BaseEstimator, TransformerMixin):
     """One-hot esparso em que cada variável pesa 1/sqrt(k) (k = categorias da variável)."""
@@ -380,12 +295,7 @@ class OneHotPonderado(BaseEstimator, TransformerMixin):
 
 
 class PreprocessadorClustering(BaseEstimator, TransformerMixin):
-    """Numéricas e categóricas lado a lado, em uma matriz esparsa.
-
-    Com ``equilibrar_numericas=True``, cada numérica é multiplicada por ``peso_numericas_``, a raiz da
-    variância média de uma variável categórica depois do one-hot ponderado. Sem isso, os grupos
-    tendem a seguir as numéricas, mesmo quando elas não têm estrutura.
-    """
+    """Numéricas e categóricas lado a lado, em uma matriz esparsa."""
 
     def __init__(self, numericas, categoricas, valor_ausente="AUSENTE", equilibrar_numericas=True):
         self.numericas = numericas

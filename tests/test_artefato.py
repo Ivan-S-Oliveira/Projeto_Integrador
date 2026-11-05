@@ -83,11 +83,7 @@ def _caminho_manifesto(tmp_path: Path) -> Path:
 
 
 def _rehash_manifesto(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Mantém o hash do manifesto válido depois de adulterar o parquet.
-
-    Útil para testar a validação da leitura parcial, que não deve ser
-    mascarada pela checagem de SHA-256.
-    """
+    """Mantém o hash do manifesto válido depois de adulterar o parquet."""
     manifest_hash = json.loads(
         _caminho_manifesto(tmp_path).read_text(encoding="utf-8")
     )["dataset_sha256"]
@@ -556,7 +552,6 @@ def test_gerar_artefato_supervisionado_ponta_a_ponta_sintetico(
         == partitions["particao"].astype(str)
     ).all()
 
-    # Colunas de auditoria e sensibilidade permanecem fora das features.
     for coluna in ("fator_risc", "vacina", "saturacao", "sg_uf"):
         assert coluna in dataset.columns
         assert coluna in manifest["audit_columns"]

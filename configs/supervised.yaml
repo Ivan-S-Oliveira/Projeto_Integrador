@@ -88,8 +88,8 @@ features:
   - sg_uf
   - vacina
   - vacina_cov
-  sensibilidade_gravidade_admissao: []  # 03/11: saturacao e desc_resp entraram no modelo principal
-  sensibilidade_marcador_periodo:  # 03/11: fora do modelo; guardadas no artefato só para a linha "P + 3 sintomas" do notebook 08
+  sensibilidade_gravidade_admissao: []
+  sensibilidade_marcador_periodo:
   - perd_olft
   - perd_pala
   - fadiga
@@ -130,8 +130,6 @@ features:
   - particao
   engenharia:
     intervalo_max_dias: 60
-    # A coorte final_cohort_v1 já excluiu intervalos negativos e > 60 dias.
-    # A flag abaixo só permanece para registro; não haverá registros inválidos.
     intervalo_politica: sinalizar
     coluna_sazonalidade: dt_sin_pri
     faixas_etarias:
@@ -296,7 +294,6 @@ models:
     busca_l2_regularization:
     - 0.1
 
-    # null representa None na busca, isto é, sem balanceamento.
     busca_class_weight:
     - null
 
@@ -315,7 +312,7 @@ calibracao:
 limiar:
   default: 0.5
   otimo: 0.1178
-  metrica: precision   #: maximiza a precisão sujeita a min_recall
+  metrica: precision
   min_precision: null
   min_recall: 0.80
 
@@ -388,9 +385,6 @@ gates:
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-18'
-    # Revisado em 29/10: revertida a mudança não registrada que colocava
-    # 2019 no test_pandemic. Desenho original
-    # reafirmado.
   G4_baseline:
     descricao: Rodar DummyClassifier e registrar as metricas de referencia.
     status: aprovado
@@ -439,7 +433,7 @@ selecao_modelos:
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
-  finalista_escolhido: boosting          # <- era logistic, agora boosting
+  finalista_escolhido: boosting
   familias_encerradas:
   - decision_tree
   - random_forest

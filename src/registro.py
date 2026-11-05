@@ -18,8 +18,6 @@ import pandas as pd
 from src import config as C
 
 
-# --- reproducibility ---
-
 def _commit() -> str | None:
     try:
         proc = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=C.ROOT_DIR,
@@ -89,8 +87,6 @@ class Run:
         print(f"Execução registrada em: {self.pasta}")
         return False
 
-
-# --- performance ---
 
 try:
     import psutil

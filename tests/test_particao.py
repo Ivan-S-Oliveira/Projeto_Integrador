@@ -72,7 +72,7 @@ def _df_master(seed=0, anos=None):
     linhas = []
     gid = 0
     for ano in anos:
-        for _ in range(100):  # 100 grupos por ano
+        for _ in range(100):
             g = f"g{gid:04d}"; gid += 1
             alvo = int(rng.integers(0, 2))
             regiao = rng.choice(["N", "SE", "S"])

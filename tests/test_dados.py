@@ -43,11 +43,7 @@ def test_get_parquet_usa_srag_parquet_url(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``get_parquet`` deve usar ``C.srag_parquet_url``, não montar a URL à mão.
-
-    Regressão do: ``SRAG_PARQUET_URL`` era descrita no
-    ``01_extracao.ipynb`` como override, mas ``get_parquet`` ignorava.
-    """
+    """``get_parquet`` deve usar ``C.srag_parquet_url``, não montar a URL à mão."""
     from src import dados as storage
 
     url_customizada = "https://example.org/dados/srag_teste.parquet"

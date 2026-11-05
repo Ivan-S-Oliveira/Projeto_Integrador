@@ -1,47 +1,5 @@
 #!/usr/bin/env python3
-r"""Generate PROJECT_COMPLETE_REFERENCE.txt: one TXT with the complete code of the
-repository, built so that any AI can find every file and every function at once.
-
-Run from anywhere inside the repository, with the project venv:
-
-    .\.venv\Scripts\python.exe tools\update_project_reference.py
-    .\.venv\Scripts\python.exe tools\update_project_reference.py --run-tests --pytest-args "-m 'not slow'"
-    .\.venv\Scripts\python.exe tools\update_project_reference.py --self-test
-
-Output: docs/PROJECT_COMPLETE_REFERENCE.txt (the canonical file) plus a Markdown pack of at most 8
-files in docs/project_reference_md/ (the hard limit is 8 generated files besides the TXT).
-
-What the TXT contains
-- Instructions for AI assistants at the top (format, how to work, extraction commands).
-- Section 1: map of every file (kind, lines, purpose); Section 2: index of every
-  function/class with file and line; Section 3: internal imports; Section 4:
-  notebooks and tests; Section 5: high/medium problems found statically.
-- Section 6: the full content of every code, notebook, configuration, Markdown and
-  script file, between `<<< BEGIN FILE: path >>>` and `<<< END OF FILE: path >>>`,
-  exactly as it is. Each file header has an outline of its functions with line numbers.
-- Sections 7-9: files not copied (with reason), environment and Git state, and a
-  short summary of the project pillars and methodology.
-- Section 10: data flow by static analysis (who reads and writes each file, artifact matrix,
-  execution order suggested by the data flow, project functions that touch files).
-- Section 11: configuration readers, gate status, artifact manifests, recorded hashes versus
-  the real files (detects artifacts built from an older cohort), notebooks executed before a
-  module they import changed, and recent commits.
-- Backups and historical copies (folders `backups`, `_backup_limpeza`, `_versoes_anteriores`,
-  names `*.antes_*`, `*.bak`) are listed with size and hash but not copied (--include-backups).
-
-Rules
-- Reproduced in full (never shortened): .py, .ipynb (rendered cell by cell, all
-  textual outputs), .json, .jsonl, .yaml, .toml, .md, .markdown and other source or
-  script formats (.ps1, .sh, .sql, .cfg, .ini, requirements.txt, .gitignore...).
-- Not copied (size only): CSV/TSV, HTML, images, binaries, Office/PDF, .txt/.log.
-  Parquet: schema only. .env and configs/paths.local.json: keys only.
-- Secrets and absolute local paths are masked (<REPO>, <HOME>, [REDACTED]).
-- After writing, the TXT is re-read and every file block is compared with the
-  captured file; the run fails if anything differs.
-
-Exit codes: 0 ok · 2 high problems with --fail-on-high · 3 coverage gaps ·
-            4 a removed limit option was passed · 5 more than 8 files generated besides the TXT.
-"""
+"""Generate PROJECT_COMPLETE_REFERENCE.txt: one TXT with the complete code of the repository, built so that any AI can find every file and."""
 from __future__ import annotations
 
 import argparse
@@ -71,17 +29,16 @@ except Exception:  # pragma: no cover
     yaml = None
 
 try:
-    import tomllib  # Python 3.11+
+    import tomllib
 except Exception:  # pragma: no cover
     tomllib = None
 
 
 SCHEMA_VERSION = 17
-SNAPSHOT_ID = "unset"  # set at the start of build_reference
+SNAPSHOT_ID = "unset"
 
 OUTPUT_DIR = Path("docs")
 OUTPUT_TXT_NAME = "PROJECT_COMPLETE_REFERENCE.txt"
-# Outputs of previous versions, removed at every run (never read as sources).
 LEGACY_MD_NAME = "PROJECT_COMPLETE_REFERENCE.md"
 LEGACY_ASSETS_DIR_NAME = "project_reference_assets"
 OUTPUT_JSON_NAME = "PROJECT_COMPLETE_REFERENCE.json"
@@ -94,9 +51,7 @@ END_OF_FILE = "<<< END OF FILE: {path} >>>"
 BEGIN_OF_FILE = "<<< BEGIN FILE: {path} >>>"
 GENERATOR_PATH = "tools/update_project_reference.py"
 
-# There are no capture limits. Every reproduced file is read and written from start
-# to end. The options below do not exist; passing one stops the run (exit 4).
-DEFAULT_SPLIT_TXT_MB = 0.0  # 0 = single TXT, no parts
+DEFAULT_SPLIT_TXT_MB = 0.0
 REMOVED_LIMIT_OPTIONS = (
     "--compact", "--max-text-mb", "--max-artifact-bytes", "--max-inline-bytes",
     "--max-output-chars", "--no-artifacts", "--artifacts", "--no-notebook-outputs",
@@ -104,14 +59,10 @@ REMOVED_LIMIT_OPTIONS = (
     "--split-mb", "--no-split",
 )
 MAX_DOCSTRING_CHARS = 0
-# Preview length of module constants in the API catalog only; the full value is
-# always in the file's full content, so nothing is lost.
 CATALOG_CONSTANT_CHARS = 300
 BINARY_PROBE_BYTES = 8192
 HASH_CHUNK_BYTES = 1 << 20
 
-# Never walked (tooling, caches, virtual environments). A folder is still
-# walked when Git tracks files inside it.
 EXCLUDED_DIRS_ANYWHERE = {
     ".git", ".venv", "venv", "env", ".env", "__pycache__", ".pytest_cache",
     ".mypy_cache", ".ruff_cache", ".tox", ".nox", ".ipynb_checkpoints",
@@ -119,13 +70,10 @@ EXCLUDED_DIRS_ANYWHERE = {
     "build", "dist",
 }
 
-# Text files inside these folders are listed apart (artifact folders),
-# unless they are code or configuration (SOURCE_LIKE_SUFFIXES).
 ARTIFACT_DIRS_AT_ROOT = {
     "data", "outputs", "models", "logs", "artifacts", "mlruns", "reports",
 }
 
-# Code and configuration: always treated as source, in any folder.
 SOURCE_LIKE_SUFFIXES = {
     ".md", ".markdown", ".mdown", ".mkd", ".rst", ".adoc",
     ".py", ".pyi", ".pyx", ".pxd", ".ipynb",
@@ -149,14 +97,7 @@ MANDATORY_VERBATIM_NAMES = {
 }
 SHEBANG_PREFIXES = (b"#!",)
 
-# Generated compilations excluded by default (fnmatch on the relative path and
-# on the file name). Outputs of this tool are always excluded. Use
-# --include-generated to keep the patterns below, or --exclude to add more.
-# First bytes of .txt files written by markdown_compiler.py (current and legacy
-# headers). Such files are compilations of this tool's own outputs: copying them
-# back would duplicate the whole reference at every run.
 COMPILER_MARKERS = (b"# Gerado por markdown_compiler.py", b"Pasta: ")
-# First bytes of reference files written by this tool (TXT, legacy MD and parts).
 REFERENCE_MARKERS = (
     b"# PROJECT_COMPLETE_REFERENCE.txt",
     b"# Project Complete Reference",
@@ -189,14 +130,11 @@ DEFAULT_GENERATED_PATTERNS = (
     ".scripts.txt",
 )
 
-# Files whose existence and keys are reported, but whose values are hidden.
 KEYS_ONLY_FILES = {"paths.local.json"}
 
-# Backups and historical copies: listed (size, hash) but not copied, unless --include-backups.
 BACKUP_DIR_NAMES = {"backups", "backup", "_backup_limpeza", "_backups", "_versoes_anteriores", "versoes_anteriores"}
 BACKUP_FILE_PATTERNS = ("*.antes_*", "*.bak", "*.orig", "*.backup", "*_backup.*")
 
-# Static data-flow analysis (Sections 10 and 11).
 IO_READ_CALLS = {"read_parquet", "read_csv", "read_json", "read_excel", "read_feather", "read_pickle", "read_table",
                  "ParquetFile", "read_text", "read_bytes", "read_hdf", "read_stata", "read_sas", "imread"}
 IO_WRITE_CALLS = {"to_parquet", "to_csv", "to_json", "to_excel", "to_feather", "to_pickle", "to_html", "to_markdown",
@@ -209,14 +147,11 @@ MANIFEST_PRIORITY = ("sha256", "rows", "columns", "generated", "published", "cre
 
 EXTRACTABLE_SUFFIXES = {".docx", ".docm", ".pptx", ".pptm", ".xlsx", ".xlsm", ".pdf"}
 SCHEMA_SUFFIXES = {".parquet"}
-# Tabular text files: never read (only size and hash), to keep the snapshot small.
 TABLE_SUFFIXES = {".csv", ".tsv"}
-# HTML pages: never reproduced (project rule; size and hash only).
 HTML_SUFFIXES = {".html", ".htm"}
 ARCHIVE_SUFFIXES = {".zip", ".tar", ".tgz", ".gz", ".bz2", ".xz"}
 
 
-# Never read as text (content is hashed in streaming mode, never loaded).
 LIKELY_BINARY_SUFFIXES = {
     ".feather", ".arrow", ".pkl", ".pickle", ".joblib", ".onnx", ".pt", ".pth",
     ".h5", ".hdf5", ".npy", ".npz", ".doc", ".ppt", ".xls", ".png", ".jpg",
@@ -229,7 +164,6 @@ IMPORTANT_UNTRACKED_PREFIXES = (
     "src/", "tests/", "configs/", "docs/", "notebooks/", "tools/", "scripts/",
 )
 
-# Import name -> distribution name, for the dependency check.
 IMPORT_TO_DIST = {
     "sklearn": "scikit-learn", "yaml": "pyyaml", "dotenv": "python-dotenv",
     "PIL": "pillow", "cv2": "opencv-python", "bs4": "beautifulsoup4",
@@ -303,12 +237,6 @@ TEXT_MIME_LEXER = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Line normalisation and verification helpers
-# ---------------------------------------------------------------------------
-
-# Characters that some readers treat as line breaks. They are shown as visible
-# placeholders, so every reader counts the same lines.
 LINE_SEPARATORS_RE = re.compile("[\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]")
 RENDERED_BODIES = {}
 
@@ -562,13 +490,7 @@ def begin_marker_path(line):
 
 
 def iter_structure(text):
-    """Yield (line, protected) for every line (line endings kept).
-
-    protected is True for every line of a file block (from its BEGIN marker to
-    its END marker, both included) and for lines inside code fences outside
-    file blocks. Headings are only searched where protected is False, so the
-    content of a file can never be mistaken for the structure of the TXT.
-    """
+    """Yield (line, protected) for every line (line endings kept)."""
     in_block = None
     in_fence = None
     for line in text.splitlines(keepends=True):
@@ -597,13 +519,8 @@ def iter_structure(text):
         yield line, in_fence is not None
 
 
-# ---------------------------------------------------------------------------
-# Generic helpers
-# ---------------------------------------------------------------------------
-
-
 def module_name(path):
-    """Dotted module name. Leading dots of folders (e.g. `.scripts`) are dropped."""
+    """Dotted module name."""
     parts = [part.lstrip(".") or part for part in path.with_suffix("").parts]
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
@@ -632,11 +549,7 @@ def read_head(path, size):
 
 
 def _decode_text_raw(data):
-    """Return (text, encoding) for text content, or (None, reason) for binary.
-
-    Order: UTF-16/UTF-32 with BOM, UTF-8 (with or without BOM), cp1252, latin-1.
-    Content with NUL bytes or many control characters is treated as binary.
-    """
+    """Return (text, encoding) for text content, or (None, reason) for binary."""
     for bom, name in (
         (codecs.BOM_UTF32_LE, "utf-32"), (codecs.BOM_UTF32_BE, "utf-32"),
         (codecs.BOM_UTF16_LE, "utf-16"), (codecs.BOM_UTF16_BE, "utf-16"),
@@ -670,11 +583,7 @@ CONTROL_CHARS_RE = re.compile("[\x00-\x08\x0e-\x1f\x7f]")
 
 
 def force_decode_text(data):
-    """Decode ANY bytes as text (mandatory files only).
-
-    UTF-8 with replacement for invalid bytes; every control character other
-    than tab and line breaks is shown as ⟨U+XXXX⟩. Nothing is dropped.
-    """
+    """Decode ANY bytes as text (mandatory files only)."""
     if data.startswith(codecs.BOM_UTF8):
         data = data[len(codecs.BOM_UTF8):]
     text = data.decode("utf-8", errors="replace")
@@ -712,11 +621,7 @@ def line_of(text, offset):
 
 
 class Redactor:
-    """Redacts literal secrets and absolute local paths, logging every change.
-
-    Calling the instance returns (text, events). Each event is a dict with
-    `line`, `kind` and `detail`. Values are never logged.
-    """
+    """Redacts literal secrets and absolute local paths, logging every change."""
 
     def __init__(self, root, *, secrets=True, paths=True):
         self.secrets = secrets
@@ -727,7 +632,6 @@ class Redactor:
         home_variants = {str(home), home.as_posix(), str(home).replace("\\", "\\\\")}
         self.home_variants = sorted((v for v in home_variants if v), key=len, reverse=True)
 
-    # -- paths -------------------------------------------------------------
     def replace_paths(self, text, events=None):
         if not self.paths:
             return text
@@ -744,7 +648,6 @@ class Redactor:
             text = compiled.sub(token, text)
         return text
 
-    # -- secrets -----------------------------------------------------------
     @staticmethod
     def _secret_key(key):
         spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
@@ -770,7 +673,7 @@ class Redactor:
             new_value = quoted.group("q") + "[REDACTED]" + quoted.group("q") + quoted.group("rest")
         else:
             if python_like:
-                return line, False  # an unquoted Python value is an expression, not a literal
+                return line, False
             bare = value.split(" #", 1)[0].strip()
             if len(bare) < 4:
                 return line, False
@@ -778,9 +681,7 @@ class Redactor:
         return match.group("lead") + match.group("key") + match.group("sep") + new_value, True
 
     def __call__(self, text, *, mode="prose", skip_secrets=False):
-        """mode: `python` (code), `config` (YAML/TOML/INI/JSON/env/shell) or
-        `prose` (Markdown, plain text, outputs). Assignment-based redaction is
-        applied only to `python` and `config`, to avoid altering prose."""
+        """mode: `python` (code), `config` (YAML/TOML/INI/JSON/env/shell) or `prose` (Markdown, plain text, outputs)."""
         python_like = mode == "python"
         events = []
         if self.secrets and not skip_secrets:
@@ -788,7 +689,6 @@ class Redactor:
                 for match in regex.finditer(text):
                     events.append({"line": line_of(text, match.start()), "kind": label,
                                    "detail": "literal removed"})
-            # Keep the line count, so `path:line` citations stay valid.
             text = PRIVATE_KEY_RE.sub(
                 lambda m: "[REDACTED_PRIVATE_KEY]" + "\n" * m.group(0).count("\n"), text
             )
@@ -856,11 +756,7 @@ def stable_file_id(path, rendered_hash):
 
 
 def exact_body(text):
-    """(body, final_newline): the body written between the markers.
-
-    Exactly one final line break is removed (it is implied by the END marker
-    line); every other character, including trailing blank lines, is kept.
-    """
+    """(body, final_newline): the body written between the markers."""
     text = text or ""
     if text.endswith("\n"):
         return text[:-1], True
@@ -874,8 +770,6 @@ def verify_verbatim_contract(coverage):
     for r in coverage:
         if not r.get("mandatory_integral"):
             continue
-        # keys_only (secrets, local paths) and excluded (outputs of this tool and
-        # known reference compilations) are explicit rules registered with a reason.
         if r.get("mode") not in {"full", "extracted", "keys_only", "excluded"}:
             violations.append(f"mandatory file is not integral: {r['path']} ({r.get('mode')})")
         if r.get("mode") in {"full", "extracted"} and not r.get("sha256_rendered"):
@@ -884,11 +778,7 @@ def verify_verbatim_contract(coverage):
 
 
 def extract_rendered_bodies(text):
-    """path -> exact text between its BEGIN FILE and END OF FILE markers.
-
-    State machine: inside a block only its own END marker ends it, so marker
-    lines quoted inside a file can never open or close another block.
-    """
+    """path -> exact text between its BEGIN FILE and END OF FILE markers."""
     results = {}
     current = None
     end = None
@@ -930,13 +820,7 @@ def notebook_cell_sources(body):
 
 
 def verify_final_txt_round_trip(text, jsonl, line_numbers=False):
-    """Re-read the written TXT and prove that every file block is exact.
-
-    1. The TXT has only LF line breaks (grep, wc and splitlines agree).
-    2. The text between BEGIN FILE and END OF FILE equals the rendered body.
-    3. Text files: the body equals the captured content (one final line break
-       removed, see exact_body). Notebooks: every cell source is identical.
-    """
+    """Re-read the written TXT and prove that every file block is exact."""
     violations = []
     bad = FORBIDDEN_LINE_BREAKS_RE.search(text)
     if bad:
@@ -971,14 +855,8 @@ def verify_final_txt_round_trip(text, jsonl, line_numbers=False):
     return violations
 
 
-# ---------------------------------------------------------------------------
-# Git and filesystem inventory
-# ---------------------------------------------------------------------------
-
-
 def walk_inventory(root, tracked, untracked, max_entries=0):
-    """Every file of the working folder. Tooling folders are pruned unless Git
-    tracks files inside them. Returns (rows, truncated, pruned_dirs)."""
+    """Every file of the working folder."""
     tracked_dirs = set()
     for value in tracked:
         parts = Path(value).parts
@@ -1043,10 +921,6 @@ def last_commits(root):
     return result
 
 
-# ---------------------------------------------------------------------------
-# Python AST analysis (nested and conditional symbols)
-# ---------------------------------------------------------------------------
-
 DEF_NODES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
@@ -1107,7 +981,6 @@ def analyze_python(path, text, internal_roots):
                     symbols.extend(nested_symbols(child, path=path, module=module, text=text,
                                                   prefix=f"{node.name}.{child.name}"))
         elif isinstance(node, (ast.If, ast.Try, ast.With, ast.For, ast.While)):
-            # Module-level definitions under if/try (e.g. try/except ImportError).
             symbols.extend(nested_symbols(node, path=path, module=module, text=text,
                                           prefix="", nested=False))
     return PythonFileAnalysis(
@@ -1148,11 +1021,6 @@ def has_main_guard(tree):
                     and isinstance(value_node, ast.Constant) and value_node.value == "__main__"):
                 return True
     return False
-
-
-# ---------------------------------------------------------------------------
-# Git entries, AST helpers and notebook analysis
-# ---------------------------------------------------------------------------
 
 
 def parse_porcelain_status(root):
@@ -1298,7 +1166,6 @@ def top_level_names(tree):
             for alias in node.names:
                 names.add(alias.asname or alias.name)
         elif isinstance(node, (ast.If, ast.Try)):
-            # Conditional definitions (try/except ImportError, if TYPE_CHECKING)
             for sub in ast.walk(node):
                 if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                     names.add(sub.name)
@@ -1339,7 +1206,6 @@ def extract_symbol(node, *, path, module, text, parent=""):
         bases = ", ".join(safe_unparse(b) for b in node.bases)
         signature = f"class {node.name}({bases})"
         kind = "class"
-        # A class call uses __init__ (or dataclass fields): handled loosely.
         init = None
         for child in node.body:
             if isinstance(child, ast.FunctionDef) and child.name == "__init__":
@@ -1354,7 +1220,7 @@ def extract_symbol(node, *, path, module, text, parent=""):
             has_varargs = args.vararg is not None
             has_varkw = args.kwarg is not None
         else:
-            has_varargs = has_varkw = True  # unknown (dataclass, inheritance)
+            has_varargs = has_varkw = True
     else:
         signature = function_signature(node)
         kind = "method" if parent else "function"
@@ -1526,11 +1392,6 @@ def analyze_notebook(path, data, internal_roots):
     return analysis, nb
 
 
-# ---------------------------------------------------------------------------
-# Notebooks (every textual output, cell ids and metadata; images omitted)
-# ---------------------------------------------------------------------------
-
-
 def _join_text(value):
     if isinstance(value, list):
         return "".join(str(v) for v in value)
@@ -1538,7 +1399,7 @@ def _join_text(value):
 
 
 def render_output(output, *, cell_number, out_index, opts, redactor):
-    """Render one notebook output. Returns (markdown_blocks, structured, events)."""
+    """Render one notebook output."""
     kind = output.get("output_type", "unknown")
     blocks = []
     events = []
@@ -1574,7 +1435,6 @@ def render_output(output, *, cell_number, out_index, opts, redactor):
         structured["data"] = {}
         for mime, value in data.items():
             if mime == "text/html" and "text/plain" in data:
-                # The same output is already shown as text/plain (e.g. DataFrames).
                 blocks.extend(["", "`text/html` — omitted: the same output is shown in this output as text/plain"])
                 structured["data"][mime] = "omitted (duplicate of text/plain)"
                 continue
@@ -1588,7 +1448,6 @@ def render_output(output, *, cell_number, out_index, opts, redactor):
                 blocks.extend(["", f"`{mime}`", "", block])
                 structured["data"][mime] = value
             else:
-                # Images and other binary payloads are not textual: never decoded.
                 blocks.extend(["", f"`{mime}` — non-textual output omitted"])
                 structured["data"][mime] = "omitted (non-textual)"
         metadata = output.get("metadata")
@@ -1670,11 +1529,6 @@ def notebook_source_markdown(nb, analysis, *, opts, redactor, numbered):
     return "\n".join(parts).rstrip(), cells, events
 
 
-# ---------------------------------------------------------------------------
-# Data files (Parquet schema)
-# ---------------------------------------------------------------------------
-
-
 def _stat_value(value):
     if isinstance(value, bytes):
         try:
@@ -1685,7 +1539,7 @@ def _stat_value(value):
 
 
 def parquet_description(path):
-    """Return (text, structured, error). Never reads data rows."""
+    """Return (text, structured, error)."""
     try:
         import pyarrow.parquet as pq  # type: ignore
     except Exception as exc:
@@ -1810,11 +1664,6 @@ def env_keys_only(text):
         match = re.match(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*=", line)
         out.append(f"{match.group(1)}=<hidden>" if match else "<unparsed line hidden>")
     return "\n".join(out)
-
-
-# ---------------------------------------------------------------------------
-# Configuration, dependencies, usage index and diagnostics
-# ---------------------------------------------------------------------------
 
 
 def flatten_mapping(value, prefix=""):
@@ -1962,12 +1811,7 @@ def is_test_path(path):
 
 
 def index_usage(symbols, python_files, notebooks):
-    """Map `module.qualname` to consuming files and to test files.
-
-    A file uses `module.name` when it imports it (directly, with an alias, or
-    through a package that re-exports it), or when it reads `alias.name` after
-    `import module as alias`. Methods inherit the usage of their class.
-    """
+    """Map `module.qualname` to consuming files and to test files."""
     modules = {f.module for f in python_files if f.module}
     known = set(modules)
     for name in modules:
@@ -2104,12 +1948,7 @@ def import_integrity_attention(python_files, notebooks, internal_roots):
 
 
 def call_signature_attention(symbols, python_files, notebooks):
-    """Calls to project functions whose arguments do not match the signature.
-
-    A call is checked only when it resolves, through the imports of the
-    calling file, to the project function itself. This avoids false positives
-    such as `subprocess.run(...)` being matched against a project `run`.
-    """
+    """Calls to project functions whose arguments do not match the signature."""
     targets = {}
     for symbol in symbols:
         if symbol.kind in {"function", "class"} and symbol.path.startswith("src/"):
@@ -2520,17 +2359,8 @@ def render_table(headers, rows):
     return "\n".join(out)
 
 
-# ---------------------------------------------------------------------------
-# Rendering helpers
-# ---------------------------------------------------------------------------
-
-
 def split_document(document, max_bytes):
-    """Split on level-2 headings (outside file blocks), never inside one.
-
-    Every file block (heading, metadata, BEGIN ... END) stays whole in a single
-    part; a part can exceed max_bytes only when one block alone is larger.
-    """
+    """Split on level-2 headings (outside file blocks), never inside one."""
     chunks = []
     current = []
     for line, inside in iter_structure(document):
@@ -2600,10 +2430,6 @@ def anchor_for(record):
     return f"FILE: `{record['path']}`"
 
 
-# ---------------------------------------------------------------------------
-# Build
-# ---------------------------------------------------------------------------
-
 PYTHON_MODE_SUFFIXES = {".py", ".pyi"}
 CONFIG_MODE_SUFFIXES = {
     ".yaml", ".yml", ".toml", ".ini", ".cfg", ".json", ".json5", ".ps1", ".psm1",
@@ -2663,11 +2489,7 @@ def redaction_lines(events):
 
 
 def file_block(record, extra, body):
-    """One file of the TXT: heading, metadata, BEGIN marker, content, END marker.
-
-    The exact body is remembered, so the written TXT can be re-read and proved
-    identical (see verify_final_txt_round_trip).
-    """
+    """One file of the TXT: heading, metadata, BEGIN marker, content, END marker."""
     path = record["path"]
     body = normalize_text(body)
     reserved = (BEGIN_OF_FILE.format(path=path), END_OF_FILE.format(path=path))
@@ -2742,12 +2564,12 @@ def build_reference(root, args):
     pyproject_data = pyproject_error = None
     requirements = None
     numbered = args.line_numbers
-    nb_cells = {}          # notebook path -> list of cell sources (index 0 = cell 1)
-    py_sources = {}        # python path -> source text (for the data-flow analysis)
-    manifests = {}         # json path -> parsed manifest (data/analytical, outputs/coorte_candidata, *manifest*)
-    nb_exec = {}           # notebook path -> last saved execution (UTC datetime) or None
-    parquet_info = {}      # parquet path -> {"rows": n, "columns": "name:type, ..."}
-    symbol_spans = {}      # python path -> [(start, end, qualname)]
+    nb_cells = {}
+    py_sources = {}
+    manifests = {}
+    nb_exec = {}
+    parquet_info = {}
+    symbol_spans = {}
     RENDERED_BODIES.clear()
     protected_patterns = set(own_patterns) | set(DEFAULT_GENERATED_PATTERNS) | {
         "content: generated reference or compilation"}
@@ -2813,7 +2635,6 @@ def build_reference(root, args):
         if not pattern and not args.include_generated and is_compiler_output(absolute):
             pattern = "content: generated reference or compilation"
         if pattern and record["mandatory_integral"] and pattern not in protected_patterns:
-            # A user --exclude pattern never removes a mandatory source file.
             record["reason"] = f"mandatory source kept despite --exclude pattern `{pattern}`"
             pattern = None
         if pattern:
@@ -2824,24 +2645,20 @@ def build_reference(root, args):
             continue
 
         try:
-            # CSV/TSV tables: never read, by design (size and hash only).
             if suffix in TABLE_SUFFIXES:
                 as_metadata(record, absolute, "CSV/TSV table: contents not read (size and hash only)",
                             category="table")
                 continue
 
-            # HTML: not reproduced (project rule).
             if suffix in HTML_SUFFIXES:
                 as_metadata(record, absolute, "HTML file: not reproduced by project rule (size and hash only)",
                             category="html")
                 continue
 
-            # Binary by extension: never loaded in memory.
             if suffix in LIKELY_BINARY_SUFFIXES:
                 as_metadata(record, absolute, "binary file (contents not copied)")
                 continue
 
-            # Parquet: schema only, never rows (listed in Section 7).
             if suffix in SCHEMA_SUFFIXES:
                 text, structured, error = parquet_description(absolute)
                 if error or not structured:
@@ -2855,7 +2672,6 @@ def build_reference(root, args):
                 finish(record)
                 continue
 
-            # Archives: not copied.
             if suffix in ARCHIVE_SUFFIXES:
                 as_metadata(record, absolute, "archive (contents not copied)")
                 continue
@@ -2867,14 +2683,12 @@ def build_reference(root, args):
             record["mandatory_integral"] = is_mandatory_source(rel, data[:256])
             record["sha256"] = sha256_bytes(data)
 
-            # Office and PDF documents: not copied (the Knowledge Base covers documents).
             if suffix in EXTRACTABLE_SUFFIXES:
                 as_metadata(record, absolute, "Office/PDF document (not copied)", category="document")
                 continue
 
             decoded, encoding = decode_text(data)
             if decoded is None and record["mandatory_integral"]:
-                # A mandatory file is never skipped, even if it looks binary.
                 decoded, encoding = force_decode_text(data)
                 record["reason"] = "looked binary; reproduced with control characters shown as ⟨U+XXXX⟩"
             if decoded is None:
@@ -2882,7 +2696,6 @@ def build_reference(root, args):
                 continue
             record["encoding"] = encoding
 
-            # Secrets and local paths: keys only.
             is_env = rel.name.startswith(".env") and rel.name != ".env.example"
             if (is_env and args.redact_secrets) or (rel.name in KEYS_ONLY_FILES and args.redact_paths):
                 text = env_keys_only(decoded) if is_env else keys_only_json(decoded)
@@ -2893,7 +2706,6 @@ def build_reference(root, args):
                 finish(record, content=text)
                 continue
 
-            # Text outside the reproduced formats (.txt, .log, ...): size only.
             if not record["mandatory_integral"]:
                 as_metadata(record, absolute, "text file outside the reproduced formats (size only)",
                             category="text")
@@ -2901,7 +2713,6 @@ def build_reference(root, args):
 
             artifact = is_artifact_path(rel)
 
-            # Notebooks.
             if suffix == ".ipynb":
                 nb = {}
                 try:
@@ -2934,8 +2745,7 @@ def build_reference(root, args):
                                           "redaction_log": events})
                     continue
 
-            # Every other text file, in any folder.
-            skip_secrets = rel_text == GENERATOR_PATH  # its regular expressions look like secrets
+            skip_secrets = rel_text == GENERATOR_PATH
             text, events = redactor(decoded, mode=redaction_mode(rel), skip_secrets=skip_secrets)
             record["redactions"] = len(events)
             if events:
@@ -2984,7 +2794,6 @@ def build_reference(root, args):
             record.update(category="unreadable", mode="metadata", reason=f"could not be read: {exc!r}", gap=True)
             finish(record)
 
-    # Tracked files deleted from the working tree: content from HEAD.
     deleted = [e for e in entries if e.tracked and not e.exists]
     for entry in deleted:
         data = git_show_head(root, entry.path)
@@ -2998,9 +2807,7 @@ def build_reference(root, args):
         record["reason"] = "deleted from the working tree (not committed yet)"
         finish(record)
 
-    # Indexes and diagnostics
     symbols = [s for f in python_files for s in f.symbols]
-    # ---- Sections 10 and 11: data flow, configuration and artifact state -----
     log("6b/8 Analisando fluxo de dados, configuração e estado dos artefatos...")
     try:
         io_model = build_io_model(py_sources, nb_cells, python_files, notebooks, existing_paths)
@@ -3031,7 +2838,7 @@ def build_reference(root, args):
             "commits_recent": recent_commits(root),
         }
         sec10, sec11, flow = build_flow_sections(flow_ctx)
-    except Exception as exc:  # the data-flow analysis must never break the main snapshot
+    except Exception as exc:
         failure = f"- The data-flow analysis failed and was skipped: {exc!r}. The rest of the snapshot is complete."
         sec10 = ["## 10. Data flow and execution order (static analysis)", "", failure]
         sec11 = ["## 11. Configuration, gates and artifact state", "", failure]
@@ -3182,7 +2989,6 @@ def build_reference(root, args):
     backups = [r for r in excluded if r.get("category") == "backup"]
     excluded = [r for r in excluded if r.get("category") != "backup"]
 
-    # ---- Section 1: repository map -----------------------------------------
     entry_points = sorted(f.path for f in python_files if f.has_main_guard)
     module_users = defaultdict(set)
     for symbol in symbols:
@@ -3227,7 +3033,6 @@ def build_reference(root, args):
     sec1 += [f"Files present in the folder but whose content is NOT in this TXT: {len(not_copied)} "
              "(listed with the reason in Section 7)."]
 
-    # ---- Section 2: symbol index ---------------------------------------------
     def files_text_list(paths, limit=6):
         paths = sorted(paths)
         shown = ", ".join(f"`{p}`" for p in paths[:limit])
@@ -3254,7 +3059,6 @@ def build_reference(root, args):
             "(static analysis: access through getattr or strings is not detected).", ""]
     sec2 += [row for _, _, row in sorted(index_rows)] or ["- None."]
 
-    # ---- Section 3: internal dependencies ------------------------------------
     dep_rows = [[f"`{f.path}`", ", ".join(f"`{v}`" for v in f.internal_imports) or "none"]
                 for f in sorted(python_files, key=lambda x: x.path) if f.internal_imports]
     nb_dep_rows = [[f"`{n.path}`", ", ".join(f"`{v}`" for v in n.internal_imports) or "none"]
@@ -3262,7 +3066,6 @@ def build_reference(root, args):
     sec3 = ["## 3. Internal dependencies (which project modules each file imports)", "",
             render_table(["File", "Imports from the project"], dep_rows + nb_dep_rows)]
 
-    # ---- Section 4: notebooks and tests --------------------------------------
     nb_rows = [[f"`{n.path}`", f"{n.code_cells}/{n.markdown_cells}", f"{n.executed_cells}/{n.code_cells}",
                 "yes" if n.out_of_order else "no", str(len(n.error_outputs)),
                 ", ".join(f"`{s.name}`" for s in n.functions + n.classes) or "none"]
@@ -3284,7 +3087,6 @@ def build_reference(root, args):
     else:
         sec4 += ["pytest was not executed for this snapshot: do not assume that the tests pass or fail."]
 
-    # ---- Section 5: attention (high and medium only) -------------------------
     relevant = [a for a in attention if a.severity in {"high", "medium"}]
     sec5 = ["## 5. Problems detected automatically (high and medium only)", "",
             "Static checks: treat them as leads to verify in the code, not as facts.", ""]
@@ -3297,7 +3099,6 @@ def build_reference(root, args):
                     + (f" Evidence: {evidence}{more}." if evidence else "")
                     + (f" Action: {a.recommendation}" if a.recommendation else ""))
 
-    # ---- Sections 6 and 7: files ---------------------------------------------
     sec6 = ["## 6. Full content of every file", "",
             "Each file: ``## FILE: `path` ``, metadata lines starting with `- ` (kind, lines, purpose, "
             "outline of functions with their line numbers), then `<<< BEGIN FILE: path >>>`, the file "
@@ -3325,7 +3126,6 @@ def build_reference(root, args):
                               [[f"`{r['path']}`", human_bytes(r["bytes"]), r.get("modified_utc", ""),
                                 (r.get("sha256") or "not hashed")[:12]] for r in backups])]
 
-    # ---- Section 8: environment, Git and coverage ----------------------------
     key_rows = []
     for name in KEY_PACKAGES:
         if name in packages or name in (requirements or {}) or name in (pyproject_deps or {}):
@@ -3356,7 +3156,6 @@ def build_reference(root, args):
             "if anything differs."]
     sec8 += [f"  - GAP `{p}`: {reason}" for p, reason in gap_paths]
 
-    # ---- Section 9: project pillars and context ------------------------------
     sec9 = project_context_section(config)
 
     document_parts = draft_parts + [""] + sec8 + [""] + sec9 + [""] + sec10 + [""] + sec11 + [
@@ -3390,10 +3189,7 @@ def folder_rank(path):
 
 
 def folder_tree(coverage, pruned_dirs=()):
-    """Complete folder tree of the repository: every folder and every file, one per line.
-
-    Folders end with '/'. Each file says whether its content is in this TXT.
-    """
+    """Complete folder tree of the repository: every folder and every file, one per line."""
     tree = {}
     marks = {}
     for record in coverage:
@@ -3665,7 +3461,6 @@ def render_txt(document, machine):
 
 
 def parse_args():
-    # argparse rejects values that start with "-" (e.g. --pytest-args "-m 'not slow'").
     argv = list(sys.argv[1:])
     for index in range(len(argv) - 1):
         if argv[index] == "--pytest-args" and argv[index + 1].startswith("-"):
@@ -3681,7 +3476,7 @@ def parse_args():
                         help=f"Also write the TXT split into parts of N MB in docs/{PARTS_DIR_NAME}/ "
                              "(only for systems with a per-file size limit; default 0 = no parts).")
     parser.add_argument("--no-line-numbers", action="store_true",
-                        help=argparse.SUPPRESS)  # accepted and ignored (no numbering exists)
+                        help=argparse.SUPPRESS)
     parser.add_argument("--no-binary-hash", dest="hash_binaries", action="store_false",
                         help="Do not compute SHA-256 of large binary/data files.")
     parser.add_argument("--include-generated", action="store_true",
@@ -3718,7 +3513,7 @@ def parse_args():
               + ", ".join(removed) + ". Rode sem elas.", flush=True)
         raise SystemExit(4)
     args = parser.parse_args(argv)
-    args.line_numbers = False  # files are reproduced exactly, never numbered
+    args.line_numbers = False
     return args
 
 
@@ -3734,8 +3529,7 @@ def write_coverage_csv(path, coverage):
 
 
 def remove_legacy_outputs(out_dir, keep_parts):
-    """Delete outputs of previous versions (v7/v8) and stale parts. Only files
-    written by this tool are removed; anything else in those folders is kept."""
+    """Delete outputs of previous versions (v7/v8) and stale parts."""
     removed = []
     legacy_md = out_dir / LEGACY_MD_NAME
     if legacy_md.is_file():
@@ -3763,7 +3557,7 @@ def remove_legacy_outputs(out_dir, keep_parts):
 
 
 def write_txt_parts(parts_dir, text, max_mb):
-    """Optional split of the TXT. Code blocks are closed and reopened at every cut."""
+    """Optional split of the TXT."""
     for old in parts_dir.glob("part_*.txt") if parts_dir.is_dir() else ():
         old.unlink()
     parts = split_document(text, int(max_mb * 1024 * 1024))
@@ -3851,9 +3645,6 @@ def run_generator_self_tests():
     return 0
 
 
-# ---------------------------------------------------------------------------
-# Backups, fluxo de dados, configuração e estado dos artefatos (análise estática)
-# ---------------------------------------------------------------------------
 def backup_reason(rel_text):
     """Motivo textual se o caminho é um backup ou versão histórica; senão None."""
     parts = rel_text.split("/")
@@ -3925,8 +3716,7 @@ def _path_strings(node, names, depth=0):
 
 
 def _iter_assignments(node):
-    """Atribuições em ordem de leitura, sem entrar em def/class aninhados (cada função tem o seu escopo).
-    Percurso iterativo: expressões muito profundas não estouram a recursão."""
+    """Atribuições em ordem de leitura, sem entrar em def/class aninhados (cada função tem o seu escopo)."""
     found = []
     stack = [node]
     while stack:
@@ -4085,9 +3875,7 @@ def resolve_repo_path(candidate, paths, names_index):
 
 
 def build_io_model(py_sources, nb_cells, python_files, notebooks, inventory_paths):
-    """Mapa estático de quem lê e quem grava cada arquivo. Devolve um dict com:
-    func_io (função -> (lê, grava)), nodes (notebooks e scripts -> leituras/gravações diretas e indiretas)
-    e config_readers (caminho de configuração -> arquivos que o leem)."""
+    """Mapa estático de quem lê e quem grava cada arquivo."""
     paths = set(inventory_paths)
     names_index = defaultdict(list)
     for path in sorted(paths):
@@ -4227,7 +4015,7 @@ def build_io_model(py_sources, nb_cells, python_files, notebooks, inventory_path
 
 
 def artifact_matrix(nodes):
-    """Artefato -> (produtores, consumidores). Arquivos sem caminho resolvido são agrupados pelo nome."""
+    """Artefato -> (produtores, consumidores)."""
     groups = {}
     for path, entry in nodes.items():
         for direction, keys in (("w", entry["writes"] + entry["ind_writes"]), ("r", entry["reads"] + entry["ind_reads"])):
@@ -4323,8 +4111,7 @@ def hash_consistency(manifests, hash_by_name, name_counts):
 
 
 def notebook_staleness(notebooks, nb_exec, python_files, last_change):
-    """Notebooks executados antes da última alteração de algum módulo do projeto que importam (direta ou
-    indiretamente). last_change: caminho -> datetime UTC da última alteração."""
+    """Notebooks executados antes da última alteração de algum módulo do projeto que importam (direta ou indiretamente)."""
     by_module = {f.module: f for f in python_files if f.module}
     def module_file(name):
         pieces = name.split(".")
@@ -4377,8 +4164,7 @@ def recent_commits(root, count=40):
 
 
 def build_flow_sections(ctx):
-    """Seções 10 e 11 do TXT: fluxo de dados, ordem de execução, configuração, gates, manifestos,
-    consistência de hashes e notebooks possivelmente desatualizados. Tudo por análise estática."""
+    """Seções 10 e 11 do TXT: fluxo de dados, ordem de execução, configuração, gates, manifestos, consistência de hashes e notebooks possivelmente."""
     model = ctx["io_model"]
     nodes = model["nodes"]
     matrix = artifact_matrix(nodes)
@@ -4524,20 +4310,16 @@ def enforce_file_budget(out_dir):
     return len(extra)
 
 
-# ---------------------------------------------------------------------------
-# Pacote Markdown: o mesmo snapshot do TXT, dividido em vários arquivos .md
-# (complementa o TXT único; o TXT continua sendo gerado normalmente)
-# ---------------------------------------------------------------------------
 MD_DIR_NAME = "project_reference_md"
-MD_MAX_FILES = 8  # limite fixo e definitivo: nunca mais de 8 arquivos gerados além do TXT
-MD_SUPPORT_FILES = 3  # 00_LEIA_PRIMEIRO.md, 01_mapa_e_simbolos.md e 02_fluxo_e_estado.md
-MD_MAX_CODE_PARTS = MD_MAX_FILES - MD_SUPPORT_FILES  # 5 partes de código, no máximo
-MD_FLOW_SECTIONS = (10, 11)  # fluxo de dados e estado dos artefatos (arquivo 02)
+MD_MAX_FILES = 8
+MD_SUPPORT_FILES = 3
+MD_MAX_CODE_PARTS = MD_MAX_FILES - MD_SUPPORT_FILES
+MD_FLOW_SECTIONS = (10, 11)
 MD_BEGIN = "===== BEGIN FILE: {path} ====="
 MD_END = "===== END OF FILE: {path} ====="
 MD_PART_END = ("===== FIM DA PARTE {number}/{total} ({name}) — SNAPSHOT ID: {snapshot} "
                "— nada segue esta linha =====")
-MD_MAP_SECTIONS = (1, 2, 3, 4, 5, 7, 8, 9)  # a 6 (conteúdo dos arquivos) vai para as partes de código
+MD_MAP_SECTIONS = (1, 2, 3, 4, 5, 7, 8, 9)
 MD_LEXERS = {
     ".py": "python", ".pyi": "python", ".yaml": "yaml", ".yml": "yaml", ".json": "json",
     ".jsonl": "json", ".toml": "toml", ".md": "markdown", ".markdown": "markdown",
@@ -4556,7 +4338,7 @@ def md_headers_by_file(text):
     for line, protected in iter_structure(text):
         bare = line.rstrip("\n")
         if protected:
-            current = None  # entrou no bloco do arquivo (marcador BEGIN) ou numa cerca
+            current = None
             continue
         if bare.startswith("## "):
             match = MD_FILE_HEADING_RE.match(bare)
@@ -4570,7 +4352,7 @@ def md_headers_by_file(text):
 
 
 def md_numbered_sections(text):
-    """Número -> texto de cada seção numerada (## N. ...) do TXT, ignorando o conteúdo dos arquivos."""
+    """Número -> texto de cada seção numerada (## N."""
     sections = {}
     current = None
     for line, protected in iter_structure(text):
@@ -4588,7 +4370,7 @@ def md_numbered_sections(text):
 def md_file_block(record, header, body):
     """Um arquivo do projeto no pacote: título, metadados, marcador, bloco de código exato, marcador final."""
     path = record["path"]
-    fence = fence_for(body)  # sempre maior que qualquer sequência de crases do conteúdo
+    fence = fence_for(body)
     lexer = MD_LEXERS.get(Path(path).suffix.lower(), "text")
     lines = [f"## FILE: `{path}`", ""] + list(header) + ["", MD_BEGIN.format(path=path), f"{fence}{lexer}"]
     if not record.get("empty"):
@@ -4598,8 +4380,7 @@ def md_file_block(record, header, body):
 
 
 def md_partition(sizes, k):
-    """Divide a lista, sem mudar a ordem, em no máximo k grupos contíguos, minimizando o maior grupo.
-    Devolve uma lista de listas de índices. Nunca devolve mais de k grupos."""
+    """Divide a lista, sem mudar a ordem, em no máximo k grupos contíguos, minimizando o maior grupo."""
     count = len(sizes)
     if count == 0:
         return []
@@ -4637,7 +4418,7 @@ def md_line_count(body):
 
 
 def md_part_text(name, number, total, items):
-    """Texto de um arquivo de parte de código. items = lista de (registro, bloco, corpo)."""
+    """Texto de um arquivo de parte de código."""
     lines = [
         f"# Código do projeto — parte {number}/{total}", "",
         f"- SNAPSHOT ID: `{SNAPSHOT_ID}`",
@@ -4654,7 +4435,7 @@ def md_part_text(name, number, total, items):
 
 
 def md_extract_bodies(text):
-    """Lê um arquivo de parte e devolve ({caminho: corpo}, [erros]). Respeita as cercas de código."""
+    """Lê um arquivo de parte e devolve ({caminho: corpo}, [erros])."""
     found, errors = {}, []
     lines = text.split("\n")
     prefix, suffix = "===== BEGIN FILE: ", " ====="
@@ -4926,7 +4707,7 @@ def main():
         try:
             reconfigure = getattr(stream, "reconfigure", None)
             if callable(reconfigure):
-                reconfigure(encoding="utf-8", errors="replace")  # Windows consoles
+                reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
     args = parse_args()
@@ -5002,7 +4783,6 @@ def main():
     if args.jsonl:
         atomic_write(output_jsonl, "".join(json.dumps(entry, ensure_ascii=False, default=str) + "\n"
                                            for entry in jsonl))
-    # A disabled auxiliary output is deleted, so no stale copy from an older run survives.
     for enabled, path in ((args.json, output_json), (args.coverage_csv, output_csv),
                           (args.jsonl, output_jsonl)):
         if not enabled and path.is_file():

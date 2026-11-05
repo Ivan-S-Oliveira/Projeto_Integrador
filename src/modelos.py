@@ -24,12 +24,8 @@ from src import config as C
 from src.avaliacao import metricas_completas, metricas_por_limiar
 
 
-# --- pipeline ---
-
 logger = logging.getLogger(__name__)
 
-# Sem defaults próprios: se a config falhar, o import falha — decisão
-# deliberada para que um YAML inválido impeça a modelagem cedo.
 ALVO: str = C.cfg("target", "coluna")
 COLUNA_TEMPO: str = C.cfg("coluna_tempo")
 
@@ -178,15 +174,7 @@ def criar_alvo_binario(
     positivos: Iterable[float] | None = None,
     negativos: Iterable[float] | None = None,
 ) -> pd.Series:
-    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido).
-
-    ``1`` = óbito SRAG (``target.positivos`` do YAML), ``0`` = cura
-    (``target.negativos``). Qualquer outro valor (``3.0``, ``9.0``, nulos)
-    vira ``NaN`` — descartado adiante por ``filtrar_rotulos_validos``.
-
-    Argumentos explícitos sobrepõem o YAML. Levanta ``ValueError`` se os
-    conjuntos se sobrepuserem ou se algum estiver vazio.
-    """
+    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido)."""
     alvo = alvo if alvo is not None else ALVO
 
     positivos_set = {
@@ -216,7 +204,7 @@ def filtrar_rotulos_validos(
     X: pd.DataFrame,
     y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """Remove linhas em que ``y`` é NaN. Devolve ``(X, y)`` alinhados (int8)."""
+    """Remove linhas em que ``y`` é NaN."""
     if not y.index.equals(X.index):
         raise ValueError("X e y precisam ter o mesmo índice.")
 
@@ -240,15 +228,7 @@ def build_pipeline(
     features: Iterable[str] | None = None,
     strict: bool = True,
 ) -> Pipeline:
-    """Constrói o ``Pipeline`` sklearn.
-
-    - ``classifier=None`` → devolve só o pré-processamento (útil no notebook 06).
-    - ``classifier`` passado (notebook 07+) → anexa como etapa final.
-    - ``features=None`` → usa ``FEATURES`` do módulo.
-    - ``strict=True`` → levanta ``KeyError`` se alguma feature configurada
-      estiver ausente em ``X``; ``False`` → emite warning e segue só com
-      as presentes.
-    """
+    """Constrói o ``Pipeline`` sklearn."""
     num = list(FEATURES_NUMERICAS)
     cat = list(FEATURES_CATEGORICAS)
 
@@ -279,8 +259,6 @@ def build_pipeline(
     return Pipeline(etapas)
 
 
-# --- baseline ---
-
 DummyStrategy = Literal[
     "most_frequent",
     "prior",
@@ -295,18 +273,7 @@ def build_baseline_pipeline(
     strategy: DummyStrategy = "prior",
     preprocessor=None,
 ) -> Pipeline:
-    """``Pipeline`` com pré-processamento + ``DummyClassifier``.
-
-    Estratégias mais úteis como piso:
-
-    - ``"prior"``         → probabilidade constante = prevalência do treino
-      (AUC ≈ 0.5 por construção; Brier ainda informativo);
-    - ``"most_frequent"`` → sempre a classe majoritária
-      (F1/recall = 0 se a positiva for minoria);
-    - ``"stratified"``    → amostra respeitando o prior.
-
-    ``preprocessor=None`` usa ``build_preprocessor()``.
-    """
+    """``Pipeline`` com pré-processamento + ``DummyClassifier``."""
     pre = preprocessor if preprocessor is not None else build_preprocessor()
 
     return Pipeline([
@@ -317,8 +284,6 @@ def build_baseline_pipeline(
         )),
     ])
 
-
-# --- logistic ---
 
 Solver  = Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"]
 Penalty = Literal["l1", "l2", "elasticnet"]
@@ -335,11 +300,7 @@ SKLEARN_L1_RATIO_MIN = "1.8"
 
 
 def _verificar_sklearn_minima() -> None:
-    """Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8.
-
-    Versões anteriores ignoram ``l1_ratio`` em ``LogisticRegression``:
-    ``penalty: l1`` do YAML viraria L2 sem aviso.
-    """
+    """Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8."""
     try:
         instalada = metadata.version("scikit-learn")
     except metadata.PackageNotFoundError as exc:
@@ -360,12 +321,7 @@ def _verificar_sklearn_minima() -> None:
 
 
 def _penalty_do_yaml() -> Penalty | None:
-    """Lê ``models.logistic.penalty`` do YAML.
-
-    Devolve ``None`` quando a chave está ausente, vazia ou nula — o
-    ``l1_ratio`` passado explicitamente é usado sem alteração. Levanta
-    ``ValueError`` se a chave existir mas tiver valor desconhecido.
-    """
+    """Lê ``models.logistic.penalty`` do YAML."""
     valor = C.cfg("models", "logistic", "penalty")
     if not valor:
         return None
@@ -396,24 +352,7 @@ def build_logistic_pipeline(
     class_weight: str | dict | None = "balanced",
     preprocessor=None,
 ) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``LogisticRegression``.
-
-    ``penalty=None`` (default) lê ``models.logistic.penalty`` do YAML.
-    Quando definido, sobrepõe ``l1_ratio``:
-
-    - ``"l2"``          → força ``l1_ratio=0.0``;
-    - ``"l1"``          → força ``l1_ratio=1.0``;
-    - ``"elasticnet"``  → exige ``0 < l1_ratio < 1``.
-
-    ``l1_ratio`` (0..1) só tem efeito quando ``penalty`` é ``None`` ou
-    ``"elasticnet"``. O ``solver`` precisa ser compatível com o tipo
-    resultante (ver ``_L1_RATIO_SOLVERS``).
-
-    Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8, e
-    ``ValueError`` para ``l1_ratio`` fora de ``[0, 1]``, combinação
-    ``solver`` × tipo inválida, ou ``penalty="elasticnet"`` com
-    ``l1_ratio`` nos extremos.
-    """
+    """``Pipeline`` de pré-processamento + ``LogisticRegression``."""
     _verificar_sklearn_minima()
 
     if not 0.0 <= l1_ratio <= 1.0:
@@ -463,8 +402,6 @@ def build_logistic_pipeline(
         )),
     ])
 
-
-# --- boosting ---
 
 def build_boosting_pipeline(
     learning_rate: float = 0.08,
@@ -537,8 +474,6 @@ def build_boosting_pipeline(
     )
 
 
-# --- calibration ---
-
 Metrica          = Literal["f1", "precision", "recall", "accuracy", "youden_j"]
 MetodoCalibracao = Literal["isotonic", "sigmoid"]
 
@@ -553,18 +488,7 @@ def calibrar(
     *,
     method: MetodoCalibracao = "isotonic",
 ):
-    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado.
-
-    Use uma base de calibração distinta do treino do ``pipeline``. O
-    pipeline não é re-treinado — o calibrador aprende só o mapeamento
-    probabilidade → probabilidade.
-
-    ``"isotonic"`` é não-paramétrico (requer mais dados); ``"sigmoid"``
-    (Platt) é paramétrico e mais estável em amostras pequenas.
-
-    Levanta ``RuntimeError`` se ``sklearn.frozen`` não estiver disponível
-    (scikit-learn anterior a 1.6).
-    """
+    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado."""
     if method not in _METODOS_VALIDOS:
         raise ValueError(
             f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
@@ -601,16 +525,7 @@ def escolher_limiar(
     min_precision: float | None = None,
     min_recall: float | None = None,
 ) -> dict[str, Any]:
-    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado.
-
-    Restrições opcionais de ``min_precision`` / ``min_recall`` filtram
-    candidatos antes de maximizar ``metrica``; se nada sobrar, levanta
-    ``ValueError``.
-
-    Retorna dict com ``limiar``, ``valor`` (da métrica escolhida),
-    ``metrica``, ``auc``, ``brier`` e ``tabela`` (grade completa de
-    ``metricas_por_limiar``).
-    """
+    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado."""
     if metrica not in _METRICAS_VALIDAS:
         raise ValueError(
             f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
@@ -652,8 +567,6 @@ def escolher_limiar(
     }
 
 
-# --- factory ---
-
 Finalista = Literal["boosting", "logistic"]
 _FINALISTAS_VALIDOS = frozenset(get_args(Finalista))
 
@@ -678,11 +591,7 @@ def resolver_finalista(nome: str) -> str:
 
 
 def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
-    """Lê ``models.<nome>`` do YAML e devolve só kwargs aceitos pelo construtor.
-
-    Filtra: chaves ``busca_*``, valores ``None`` e chaves que o construtor
-    não reconhece (administrativas ou typos), avisando via ``RuntimeWarning``.
-    """
+    """Lê ``models.<nome>`` do YAML e devolve só kwargs aceitos pelo construtor."""
     secao = C.cfg("models", nome)
     if not isinstance(secao, dict):
         return {}
@@ -721,11 +630,7 @@ def build_finalista(
     preprocessor=None,
     **overrides: Any,
 ) -> Pipeline:
-    """Constrói o ``Pipeline`` de um finalista pelo nome ou apelido.
-
-    Levanta ``ValueError`` se ``nome`` (após normalização) for desconhecido.
-    O ``Pipeline`` devolvido não está ajustado — o caller faz ``fit``.
-    """
+    """Constrói o ``Pipeline`` de um finalista pelo nome ou apelido."""
     nome = resolver_finalista(nome)
 
     if nome not in _FINALISTAS_VALIDOS:

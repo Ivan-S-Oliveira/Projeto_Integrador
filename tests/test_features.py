@@ -55,15 +55,7 @@ COLUNAS_DERIVADAS_ESPERADAS: frozenset[str] = frozenset({
 
 @pytest.fixture
 def df_base() -> pd.DataFrame:
-    """DataFrame mínimo com as colunas exigidas por ``montar_features``.
-
-    Linhas:
-
-    - 0: adulto (30a), 4 dias até internação, M
-    - 1: bebé (6 meses), 5 dias, F
-    - 2: adulto (40a), 5 dias, sexo ignorado
-    - 3: recém-nascido (1 dia), 5 dias, M
-    """
+    """DataFrame mínimo com as colunas exigidas por ``montar_features``."""
     return pd.DataFrame({
         "nu_idade_n": [30, 6, 40, 1],
         "tp_idade":   [3, 2, 3, 1],

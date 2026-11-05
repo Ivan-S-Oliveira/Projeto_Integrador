@@ -13,8 +13,6 @@ import yaml
 C = sys.modules[__name__]
 
 
-# --- config ---
-
 ROOT_DIR: Path = Path(__file__).resolve().parents[1]
 
 SEED         = 42
@@ -69,11 +67,7 @@ def github_token() -> str | None:
 
 
 def srag_parquet_url() -> str:
-    """URL do Parquet oficial processado.
-
-    Construída a partir de ``GITHUB_REPO`` / ``DATA_VERSION`` /
-    ``PARQUET_NAME``. Pode ser sobrescrita via ``SRAG_PARQUET_URL``.
-    """
+    """URL do Parquet oficial processado."""
     url_padrao = (
         f"https://github.com/{GITHUB_REPO}/releases/download/"
         f"{DATA_VERSION}/{PARQUET_NAME}"
@@ -100,13 +94,7 @@ def _get_nested(mapping: Any, *chaves: str, default: Any = None) -> Any:
 
 
 class _UniqueKeyLoader(yaml.SafeLoader):
-    """Carregador YAML que rejeita chaves duplicadas.
-
-    ``yaml.safe_load`` aceita duplicatas silenciosamente (a última
-    ocorrência vence). Este carregador levanta ``ValueError`` com o
-    nome e a linha da chave duplicada, para o erro aparecer no arquivo
-    certo em vez de virar comportamento estranho depois.
-    """
+    """Carregador YAML que rejeita chaves duplicadas."""
 
 
 def _construct_unique_mapping(
@@ -114,11 +102,7 @@ def _construct_unique_mapping(
     node: yaml.MappingNode,
     deep: bool = False,
 ) -> dict[Any, Any]:
-    """Constrói um mapeamento YAML e falha em chave duplicada.
-
-    Chaves que não são hasháveis são ignoradas aqui; o PyYAML reporta
-    o erro dele ao montar o ``dict`` final.
-    """
+    """Constrói um mapeamento YAML e falha em chave duplicada."""
     vistos: set[Any] = set()
 
     for key_node, _value_node in node.value:
@@ -126,7 +110,6 @@ def _construct_unique_mapping(
         try:
             ja_existe = chave in vistos
         except TypeError:
-            # Chave não-hashável: o PyYAML vai falhar em construct_mapping.
             continue
 
         if ja_existe:
@@ -165,11 +148,7 @@ _supervised_cache = _SupervisedCache()
 
 
 def _ler_yaml_supervisionado(raw: bytes) -> dict[str, Any]:
-    """Decodifica, interpola ``${VAR}`` e faz o parse do YAML.
-
-    Recebe os bytes crus (já lidos por ``carregar_supervised``) para
-    que o arquivo não seja lido duas vezes.
-    """
+    """Decodifica, interpola ``${VAR}`` e faz o parse do YAML."""
     try:
         texto = _interpolar_env(raw.decode("utf-8-sig"))
     except UnicodeDecodeError as exc:
@@ -193,21 +172,7 @@ def _ler_yaml_supervisionado(raw: bytes) -> dict[str, Any]:
 
 
 def carregar_supervised() -> dict[str, Any]:
-    """Lê ``configs/supervised.yaml`` e devolve o dict parseado.
-
-    Comportamento em relação à versão anterior:
-
-    - **Sem ``lru_cache``**: o cache é indexado pelo SHA-256 do
-      conteúdo. Alterar o YAML passa a valer na próxima chamada, sem
-      reiniciar o kernel do notebook.
-    - **Chave duplicada falha alto**: ``_UniqueKeyLoader`` levanta
-      ``ValueError`` apontando a linha, em vez de deixar a última
-      silenciosamente vencer.
-    - ``recarregar_supervised()`` força a releitura do disco.
-
-    Resolve ``${VAR}`` antes do parse. Levanta ``FileNotFoundError``
-    se o YAML não existir e ``ValueError`` se a raiz não for mapping.
-    """
+    """Lê ``configs/supervised.yaml`` e devolve o dict parseado."""
     if not SUPERVISED_YAML.exists():
         raise FileNotFoundError(
             f"Configuração não encontrada: {SUPERVISED_YAML}\n"
@@ -245,15 +210,7 @@ def supervised_yaml_sha256() -> str | None:
 
 
 def cfg(*chaves: str, default: Any = None) -> Any:
-    """Acessa ``configs/supervised.yaml`` por caminho de chaves.
-
-    Exemplo::
-
-        cfg("target", "coluna")       # → "evolucao"
-        cfg("temporal", "fracao")     # → {"treino": 0.7, "validacao": 0.15}
-
-    Devolve ``default`` se qualquer chave do caminho não existir.
-    """
+    """Acessa ``configs/supervised.yaml`` por caminho de chaves."""
     return _get_nested(carregar_supervised(), *chaves, default=default)
 
 
@@ -263,11 +220,7 @@ def gate_aprovado(nome_gate: str) -> bool:
 
 
 def exigir_gate(nome_gate: str) -> None:
-    """Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado.
-
-    Use no início de etapas que dependem de decisão metodológica congelada
-    (ex.: holdout antes de G9).
-    """
+    """Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado."""
     if not gate_aprovado(nome_gate):
         raise GatePendenteError(
             f"Gate '{nome_gate}' está pendente. "
@@ -277,11 +230,7 @@ def exigir_gate(nome_gate: str) -> None:
 
 
 def features_finais() -> list[str]:
-    """Lista final de features.
-
-    Usa ``features.final`` se preenchida; caso contrário, concatena
-    ``features.numericas`` + ``features.categoricas``.
-    """
+    """Lista final de features."""
     f = cfg("features") or {}
     return list(f["final"]) if f.get("final") else (
         list(f.get("numericas", [])) + list(f.get("categoricas", []))
@@ -316,9 +265,6 @@ def resumo() -> str:
     return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
 
 
-# --- env ---
-
-# Aliases públicos — conveniência para notebooks e testes.
 ROOT      = C.ROOT_DIR
 DATA      = C.DATA_DIR
 RAW       = C.RAW_DIR
@@ -326,8 +272,6 @@ PROCESSED = C.PROCESSED_DIR
 TREINO    = C.TREINO_DIR
 FIGURES   = C.FIGURES_DIR
 
-# Diretórios criados por ``garantir_diretorios``. A ordem não importa —
-# ``mkdir(parents=True)`` cria a árvore conforme necessário.
 _DIRS_PADRAO = (
     C.DATA_DIR, C.RAW_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR,
     C.TREINO_DIR, C.CONFIGS_DIR, C.MODELS_DIR, C.OUTPUTS_DIR,
@@ -337,23 +281,13 @@ _DIRS_PADRAO = (
 
 
 def garantir_diretorios() -> None:
-    """Cria todos os diretórios padrão do projeto, se ainda não existirem.
-
-    Percorre as constantes de ``config.py`` — nenhum caminho é redefinido aqui.
-    """
+    """Cria todos os diretórios padrão do projeto, se ainda não existirem."""
     for p in _DIRS_PADRAO:
         p.mkdir(parents=True, exist_ok=True)
 
 
 def carregar_dotenv(caminho: Path | None = None) -> bool:
-    """Carrega ``.env`` da raiz do projeto (ou de ``caminho``).
-
-    Retorna ``True`` se o arquivo foi encontrado e carregado, ``False`` caso
-    contrário (arquivo ausente ou ``python-dotenv`` indisponível). Não
-    sobrescreve variáveis já definidas no ambiente.
-    """
-    # Lazy: python-dotenv não é dependência obrigatória — permite importar
-    # este módulo em ambientes que não o têm instalado.
+    """Carrega ``.env`` da raiz do projeto (ou de ``caminho``)."""
     try:
         from dotenv import load_dotenv
     except ImportError:
@@ -376,12 +310,7 @@ ENV = detectar_ambiente()
 
 
 def get_secret(nome: str, obrigatorio: bool = True) -> str | None:
-    """Lê um segredo/variável sensível do ambiente.
-
-    Se ``obrigatorio=True`` (default) e a variável não existir, levanta
-    ``RuntimeError`` com instruções de configuração. Se ``False``, devolve
-    ``None``.
-    """
+    """Lê um segredo/variável sensível do ambiente."""
     valor = os.getenv(nome)
     if valor:
         return valor
@@ -410,17 +339,11 @@ def resumo_ambiente() -> str:
     return "\n".join(f"{nome:18s}= {valor}" for nome, valor in linhas)
 
 
-# --- hashing ---
-
 _DEFAULT_CHUNK_SIZE = 1024 * 1024
 
 
 def sha256_file(path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE) -> str:
-    """Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória.
-
-    Lê em blocos de ``chunk_size`` bytes (default 1 MiB), permitindo
-    hashear arquivos grandes com memória constante.
-    """
+    """Calcula SHA-256 de um arquivo sem carregá-lo integralmente em memória."""
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
         while chunk := handle.read(chunk_size):
