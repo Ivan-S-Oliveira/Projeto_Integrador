@@ -1,0 +1,67 @@
+# Dicionário das variáveis do modelo
+
+Documento gerado automaticamente por `tools/dicionario_variaveis.py` a partir de `configs/dicionario_variaveis_v1.csv`, `configs/supervised.yaml` e `data/analytical/manifesto_supervisionado.json`.
+
+- Total de variáveis documentadas: `45` (36 do dicionário de 199 colunas do Parquet + 9 derivadas ou estruturais).
+- **Branco** = valor nulo no CSV original; vira categoria explícita `AUSENTE` no pré-processador (não é tratado como 'não').
+- **Ignorado** = código 9 do SIVEP-Gripe; vira categoria `IGNORADO` (não é tratado como 'não').
+- **Recodificação** = transformação aplicada antes do modelo (ex.: derivar `idade_anos` a partir de `nu_idade_n` + `tp_idade`).
+
+## 1. Variáveis do dicionário de 199 colunas do Parquet
+
+| Variável | Nome SIVEP-Gripe | Descrição | Tipo | Códigos | Branco | Ignorado | Recodificação | Motivo |
+|----------|------------------|-----------|------|---------|--------|----------|----------------|--------|
+| `cs_gestant` | Situacao gestacional | Situacao gestacional (demografia_contexto_social) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `cs_raca` | Raca ou cor | Raca ou cor (demografia_contexto_social) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `cs_zona` | Zona de residencia | Zona de residencia (demografia_contexto_social) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `ave_suino` | Contato direto com aves, suinos ou outro animal? | Contato direto com aves, suinos ou outro animal? (exposicao_animal) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `febre` | Febre | Febre (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `tosse` | Tosse | Tosse (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `garganta` | Dor de garganta | Dor de garganta (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `dispneia` | Dispneia | Dispneia (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `saturacao` | Saturacao de oxigenio abaixo de 95%? | Saturacao de oxigenio abaixo de 95%? (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | Avaliada em sensibilidade separada. Só poderá integrar uma configuração congelada se a auditoria confirmar disponibilidade consistente no momento da admissão. |
+| `desc_resp` | Desconforto respiratorio | Desconforto respiratorio (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | Avaliada em sensibilidade separada. Só poderá integrar uma configuração congelada se a auditoria confirmar disponibilidade consistente no momento da admissão. |
+| `diarreia` | Diarreia | Diarreia (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `vomito` | Vomito | Vomito (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `dor_abd` | Dor abdominal | Dor abdominal (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `outro_sin` | Apresentou outros sintomas? | Apresentou outros sintomas? (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `puerpera` | Puerpera ou parturiente | Puerpera ou parturiente (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `cardiopati` | Doenca cardiovascular cronica | Doenca cardiovascular cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `hematologi` | Doenca hematologica cronica | Doenca hematologica cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `sind_down` | Sindrome de Down | Sindrome de Down (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `hepatica` | Doenca hepatica cronica | Doenca hepatica cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `asma` | Asma | Asma (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `diabetes` | Diabetes mellitus | Diabetes mellitus (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `neurologic` | Doenca neurologica cronica | Doenca neurologica cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `pneumopati` | Outra pneumopatia cronica | Outra pneumopatia cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `imunodepre` | Imunodeficiencia ou imunodepressao | Imunodeficiencia ou imunodepressao (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `renal` | Doenca renal cronica | Doenca renal cronica (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `obesidade` | Obesidade | Obesidade (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `out_morbi` | Outro fator de risco? | Outro fator de risco? (comorbidades_fatores_risco) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `evolucao` | Evolucao do caso | Evolucao do caso (desfecho_auditoria) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Mapear cura = 0 e obito por SRAG = 1 | Alvo principal restrito a evolucao = 1, cura codificada como 0, versus
+evolucao = 2, óbito por SRAG codificado como 1. Evolucao = 3 e demais
+valores ficam fora do alvo principal. |
+| `nu_notific` | Numero da notificacao | Numero da notificacao (estrutura_coorte) | codigo_identificador | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Identificador tecnico; nao usar como preditor | Identificador técnico usado para auditoria e construção do identificador de grupo. Não será usado como preditor. |
+| `sg_uf` | UF de residencia | UF de residencia (geografia_residencia) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; comparar modelo com e sem geografia | UF de residência permanece disponível para análise geográfica e avaliação incremental. A inclusão como preditora depende de validação e deve ser congelada antes dos testes. |
+| `cs_escol_n` | Escolaridade | Escolaridade (demografia_contexto_social) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `vacina` | Recebeu vacina contra influenza? | Recebeu vacina contra influenza? (vacinacao_influenza) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | Variável mantida para avaliação incremental. A decisão de inclusão usa somente os blocos de desenvolvimento. |
+| `vacina_cov` | Recebeu vacina contra COVID-19? | Recebeu vacina contra COVID-19? (vacinacao_covid) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | Variável mantida para avaliação incremental devido à forte variação temporal de disponibilidade e preenchimento. A decisão de inclusão usa somente os blocos de desenvolvimento. |
+| `perd_olft` | Perda do olfato | Perda do olfato (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `perd_pala` | Perda do paladar | Perda do paladar (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+| `fadiga` | Fadiga | Fadiga (sintomas) | categorica | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | Categorica; preservar sim, nao, ignorado e vazio | nan |
+
+## 2. Variáveis derivadas e estruturais
+
+Features criadas por `src/features/engineering.py` (ou identificadores gerados em código). Não estão no dicionário de 199 colunas do Parquet porque não são colunas brutas.
+
+| Variável | Nome SIVEP-Gripe | Descrição | Tipo | Códigos | Branco | Ignorado | Recodificação | Motivo |
+|----------|------------------|-----------|------|---------|--------|----------|----------------|--------|
+| `idade_anos` | idade_anos | Idade em anos (padronizada) | derivada | — | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | derivada de nu_idade_n + tp_idade (1=dias, 2=meses, 3=anos; /365.25, /12, direto) | feature do contrato principal (numérica) |
+| `dias_sintomas_ate_internacao` | dias_sintomas_ate_internacao | Intervalo entre início dos sintomas e internação (dias) | derivada | float; pode ser negativo (nosocomial) ou >60 (outlier) | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | dt_interna − dt_sin_pri em dias; flag_intervalo_invalido marca negativos e >max_dias | feature do contrato principal (numérica); política D_COORTE_006/007 exclui negativos e >60 dias da coorte final |
+| `sexo_categoria` | sexo_categoria | Sexo em categoria explícita | derivada | M=masculino; F=feminino; I=ignorado; ausente=ausente | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | derivada de cs_sexo (normaliza M/F/I; resto vira ausente) | feature do contrato principal (categórica) |
+| `id_registro` | id_registro | Identificador técnico do registro | estrutura/auditoria | string única | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | gerado no construtor da coorte; NÃO é preditor | auditoria; fora das matrizes de features |
+| `group_id` | group_id | Identificador de grupo (para partição-mestre) | estrutura/auditoria | nu_notific normalizado, ou 'sem_notific:<id_registro>' | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | gerado por criar_group_id; NÃO é preditor | estrutura de coorte; usado na partição-mestre (hash por grupo) |
+| `ano_internacao` | ano_internacao | Ano da internação (derivado de dt_interna) | derivada | 2019 a 2026 | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | dt_interna.dt.year como Int16 | âncora temporal; usado em avaliação por ano e partição-mestre |
+| `regiao_residencia` | regiao_residencia | Região do Brasil da UF de residência | derivada | NORTE, NORDESTE, CENTRO-OESTE, SUDESTE, SUL, AUSENTE | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | derivada de sg_uf (mapa UF→região; UF desconhecida vira AUSENTE) | feature de contexto; usada na estratificação da partição |
+| `faixa_etaria` | faixa_etaria | Faixa etária (intervalo semiaberto) | derivada | <1, 1-4, 5-11, 12-17, 18-39, 40-59, 60-79, 80+, desconhecida | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | derivada de idade_anos com bins do YAML | feature do contrato principal (categórica; usada em avaliação por faixa) |
+| `fator_risc` | fator_risc | Possui fatores de risco/comorbidades? (pergunta-mãe) | estrutura/auditoria | 1=sim; 2=não; 9=ignorado; branco=ausente | categoria AUSENTE (não é 'não') | categoria IGNORADO (código 9) | coluna de auditoria do artefato supervisionado; NÃO é feature do modelo | auditoria e análise de sensibilidade (não entra no modelo) |
