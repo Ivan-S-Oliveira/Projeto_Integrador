@@ -423,11 +423,11 @@ gates:
       Liberar test_ref e test_pandemic uma unica vez depois de congelar
       features, modelo, hiperparametros, calibrador e limiar. O estado
       aprovado libera o acesso; executado registra a consulta e e terminal.
-    status: aprovado
+    status: executado
     aprovado_por: equipe
     data: '2026-11-05'
-    executado_em: null
-    n_acessos: 0
+    executado_em: "2026-11-05T21:15:27.499663+00:00"
+    n_acessos: 1
 
 selecao_modelos:
   status: finalista_congelado
