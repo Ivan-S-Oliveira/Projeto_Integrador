@@ -1,15 +1,4 @@
-r"""Executa um notebook em processo isolado e mede tempo e pico de memória.
-
-Uso (na raiz do repositório):
-    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/<nome>.ipynb
-    .\.venv\Scripts\python.exe tools/medir_notebook.py notebooks/<nome>.ipynb --salvar-no-lugar
-
-Sem --salvar-no-lugar, a cópia executada vai para outputs/notebooks/<nome>_executado.ipynb
-e o notebook original não muda. Com --salvar-no-lugar, o próprio arquivo é regravado
-com as saídas (use só na execução final de cada notebook).
-
-A linha de resultado é acrescentada a outputs/final/performance_notebooks.csv.
-"""
+"""Executa um notebook em processo isolado e mede tempo e pico de memória."""
 from __future__ import annotations
 
 import argparse

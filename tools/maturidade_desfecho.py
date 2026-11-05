@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Análise descritiva de maturidade de desfecho por ano (somente leitura).
-
-Não altera coorte, partição, período nem gates. Lê apenas
-dt_interna, hospital e evolucao da base inteira (não da coorte).
-Saída: outputs/final/maturidade_desfecho_por_ano.csv
-"""
+"""Análise descritiva de maturidade de desfecho por ano (somente leitura)."""
 from __future__ import annotations
 import pandas as pd
 from pathlib import Path
@@ -12,7 +7,7 @@ from src.utils import storage
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs" / "final" / "maturidade_desfecho_por_ano.csv"
-ANOS = range(2019, 2027)  # inclui 2026 para comparação com §29.15
+ANOS = range(2019, 2027)
 
 
 def main() -> int:
@@ -30,7 +25,6 @@ def main() -> int:
     t["pct_sem_desfecho_util"] = (t[fora].sum(axis=1) / t["n"] * 100).round(1)
     t["mortalidade_observada_pct"] = (t.get("obito", 0) / t["n"] * 100).round(1)
 
-    # Marca anos com dt_interna inválida (não devem existir na coorte)
     invalidos = d["ano"].isna().sum()
     if invalidos:
         print(f"[aviso] {invalidos} registros com dt_interna inválida (ano = NaN)")

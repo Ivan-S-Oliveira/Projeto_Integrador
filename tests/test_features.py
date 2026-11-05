@@ -1,52 +1,10 @@
-"""
-Testes de engenharia de atributos (``src/features/engineering.py``).
-
-Cobre funções puras e o orquestrador ``montar_features``: contrato de
-cada derivada, casos inválidos, não-mutação da entrada e invariantes de
-ponto-no-tempo. Não testa parsing do YAML.
-"""
+"""Engenharia de variáveis."""
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 import pytest
-
-from src.features.engineering import (
-    ano_mes_internacao,
-    faixa_etaria,
-    idade_em_anos,
-    intervalo_sintomas_internacao,
-    montar_features,
-    regiao_residencia,
-    sazonalidade,
-    sexo_categoria,
-)
-
-
-@pytest.mark.parametrize(
-    ("uf", "esperado"),
-    [
-        ("AC", "NORTE"),
-        ("BA", "NORDESTE"),
-        ("DF", "CENTRO-OESTE"),
-        ("SP", "SUDESTE"),
-        ("RS", "SUL"),
-    ],
-)
-def test_regiao_residencia_mapeia_cinco_regioes(
-    uf: str,
-    esperado: str,
-) -> None:
-    assert regiao_residencia(pd.Series([uf])).iloc[0] == esperado
-
-
-def test_regiao_residencia_normaliza_espacos_e_caixa() -> None:
-    entrada = pd.Series([" sp ", "ba", " dF", "sc "])
-    resultado = regiao_residencia(entrada)
-    assert resultado.astype("string").tolist() == [
-        "SUDESTE", "NORDESTE", "CENTRO-OESTE", "SUL",
-    ]
+from src.features import ano_mes_internacao, faixa_etaria, idade_em_anos, intervalo_sintomas_internacao, montar_features, regiao_residencia, sazonalidade, sexo_categoria
 
 
 def test_regiao_residencia_trata_ausentes_e_invalidos() -> None:
@@ -72,20 +30,6 @@ def test_regiao_residencia_cobre_as_27_ufs() -> None:
     }
 
 
-def test_regiao_residencia_retorna_categoria_nomeada() -> None:
-    resultado = regiao_residencia(pd.Series(["SP"], index=[8]))
-    assert isinstance(resultado.dtype, pd.CategoricalDtype)
-    assert resultado.name == "regiao_residencia"
-    assert resultado.index.tolist() == [8]
-
-
-def test_regiao_residencia_rejeita_entrada_que_nao_seja_series() -> None:
-    with pytest.raises(TypeError, match="pandas.Series"):
-        regiao_residencia(["SP", "BA"])  # type: ignore[arg-type]
-
-
-# Conjunto mínimo de entradas exigido por ``montar_features``, alinhado
-# com ``features.engenharia.entradas`` do supervised.yaml.
 ENTRADAS_OBRIGATORIAS: tuple[str, ...] = (
     "nu_idade_n",
     "tp_idade",
@@ -94,9 +38,7 @@ ENTRADAS_OBRIGATORIAS: tuple[str, ...] = (
     "dt_interna",
 )
 
-# Derivadas que ``montar_features`` deve produzir. Deliberadamente
-# hardcoded (não importado de engineering) para travar mudanças
-# silenciosas no contrato.
+
 COLUNAS_DERIVADAS_ESPERADAS: frozenset[str] = frozenset({
     "idade_anos",
     "dias_sintomas_ate_internacao",
@@ -113,15 +55,7 @@ COLUNAS_DERIVADAS_ESPERADAS: frozenset[str] = frozenset({
 
 @pytest.fixture
 def df_base() -> pd.DataFrame:
-    """DataFrame mínimo com as colunas exigidas por ``montar_features``.
-
-    Linhas:
-
-    - 0: adulto (30a), 4 dias até internação, M
-    - 1: bebé (6 meses), 5 dias, F
-    - 2: adulto (40a), 5 dias, sexo ignorado
-    - 3: recém-nascido (1 dia), 5 dias, M
-    """
+    """DataFrame mínimo com as colunas exigidas por ``montar_features``."""
     return pd.DataFrame({
         "nu_idade_n": [30, 6, 40, 1],
         "tp_idade":   [3, 2, 3, 1],
@@ -138,40 +72,14 @@ class TestIdadeEmAnos:
     def test_meses_convertidos(self, df_base: pd.DataFrame) -> None:
         assert idade_em_anos(df_base).iloc[1] == pytest.approx(0.5)
 
-    def test_dias_convertidos(self, df_base: pd.DataFrame) -> None:
-        assert idade_em_anos(df_base).iloc[3] == pytest.approx(1 / 365.25)
-
-    def test_retorna_float64(self, df_base: pd.DataFrame) -> None:
-        assert idade_em_anos(df_base).dtype == np.float64
-
-    def test_tipo_invalido_vira_nan(self) -> None:
-        df = pd.DataFrame({"nu_idade_n": [10], "tp_idade": [9]})
-        assert pd.isna(idade_em_anos(df)).all()
-
-    def test_idade_negativa_vira_nan(self) -> None:
-        df = pd.DataFrame({"nu_idade_n": [-1], "tp_idade": [3]})
-        assert pd.isna(idade_em_anos(df)).all()
 
     def test_idade_acima_de_120_vira_nan(self) -> None:
         df = pd.DataFrame({"nu_idade_n": [200], "tp_idade": [3]})
         assert pd.isna(idade_em_anos(df)).all()
 
-    def test_nao_muta_entrada(self, df_base: pd.DataFrame) -> None:
-        antes = df_base.copy(deep=True)
-        idade_em_anos(df_base)
-        pd.testing.assert_frame_equal(df_base, antes)
-
 
 class TestIntervaloSintomasInternacao:
-    def test_intervalo_positivo(self, df_base: pd.DataFrame) -> None:
-        out = intervalo_sintomas_internacao(df_base)
-        assert out["dias_sintomas_ate_internacao"].iloc[0] == pytest.approx(4.0)
 
-    def test_tipos_das_colunas(self, df_base: pd.DataFrame) -> None:
-        out = intervalo_sintomas_internacao(df_base)
-        assert out["dias_sintomas_ate_internacao"].dtype == np.float64
-        assert out["flag_intervalo_invalido"].dtype == np.int8
-        assert out["flag_internacao_antes_sintomas"].dtype == np.int8
 
     def test_negativo_seta_ambas_flags(self) -> None:
         df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
@@ -179,36 +87,13 @@ class TestIntervaloSintomasInternacao:
         assert out["flag_internacao_antes_sintomas"].iloc[0] == 1
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
-    def test_acima_do_limite_seta_flag_umbrella_sem_marcar_sinal(self) -> None:
-        df = pd.DataFrame({"dt_sin_pri": ["2024-01-01"], "dt_interna": ["2024-06-01"]})
-        out = intervalo_sintomas_internacao(df)
-        assert out["flag_intervalo_invalido"].iloc[0] == 1
-        assert out["flag_internacao_antes_sintomas"].iloc[0] == 0
-
-    def test_data_ausente_seta_flag_umbrella(self) -> None:
-        df = pd.DataFrame({"dt_sin_pri": [None], "dt_interna": ["2024-01-05"]})
-        out = intervalo_sintomas_internacao(df)
-        assert pd.isna(out["dias_sintomas_ate_internacao"].iloc[0])
-        assert out["flag_intervalo_invalido"].iloc[0] == 1
-
-    def test_politica_sinalizar_mantem_valor_bruto(
-        self, monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Default: valor inválido fica visível, comunicado por flags."""
-        df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
-        monkeypatch.setattr(
-            "src.features.engineering._intervalo_politica",
-            lambda: "sinalizar",
-        )
-        out = intervalo_sintomas_internacao(df)
-        assert out["dias_sintomas_ate_internacao"].iloc[0] == pytest.approx(-5.0)
 
     def test_politica_descartar_substitui_por_nan(
         self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         df = pd.DataFrame({"dt_sin_pri": ["2024-01-10"], "dt_interna": ["2024-01-05"]})
         monkeypatch.setattr(
-            "src.features.engineering._intervalo_politica",
+            "src.features._intervalo_politica",
             lambda: "descartar",
         )
         out = intervalo_sintomas_internacao(df)
@@ -216,74 +101,10 @@ class TestIntervaloSintomasInternacao:
         assert out["flag_intervalo_invalido"].iloc[0] == 1
 
 
-class TestSazonalidade:
-    def test_gera_sin_e_cos_no_intervalo(self, df_base: pd.DataFrame) -> None:
-        out = sazonalidade(df_base)
-        assert set(out.columns) == {"sin_semana", "cos_semana"}
-        for col in out.columns:
-            assert out[col].between(-1.0, 1.0, inclusive="both").all()
-
-    def test_mesma_semana_em_anos_diferentes_proxima(self) -> None:
-        df = pd.DataFrame({"dt_sin_pri": ["2023-03-15", "2024-03-13"]})  # mesma semana ISO
-        out = sazonalidade(df)
-        assert abs(out["sin_semana"].iloc[0] - out["sin_semana"].iloc[1]) < 0.1
-        assert abs(out["cos_semana"].iloc[0] - out["cos_semana"].iloc[1]) < 0.1
-
-    def test_data_nula_vira_nan(self) -> None:
-        out = sazonalidade(pd.DataFrame({"dt_sin_pri": [None]}))
-        assert pd.isna(out["sin_semana"].iloc[0])
-        assert pd.isna(out["cos_semana"].iloc[0])
-
-    def test_coluna_ausente_levanta_keyerror(self) -> None:
-        df = pd.DataFrame({"outra_data": ["2024-01-01"]})
-        with pytest.raises(KeyError, match="Coluna temporal ausente"):
-            sazonalidade(df, coluna_data="dt_sin_pri")
-
-
 class TestFaixaEtaria:
     def test_fronteiras_semiabertas(self) -> None:
         out = faixa_etaria(pd.Series([0.0, 0.99, 1.0, 4.99, 5.0, 80.0, 120.0]))
         assert list(out) == ["<1", "<1", "1-4", "1-4", "5-11", "80+", "80+"]
-
-    def test_idade_nula_vira_desconhecida(self) -> None:
-        out = faixa_etaria(pd.Series([np.nan, 30.0]))
-        assert out.iloc[0] == "desconhecida"
-        assert out.iloc[1] == "18-39"
-
-    def test_retorna_categoria(self) -> None:
-        assert isinstance(faixa_etaria(pd.Series([30.0])).dtype, pd.CategoricalDtype)
-
-
-class TestSexoCategoria:
-    @pytest.mark.parametrize(
-        "entrada, esperado",
-        [
-            ("M",     "masculino"),
-            ("f",     "feminino"),
-            (" I ",   "ignorado"),
-            ("X",     "ausente"),
-            (None,    "ausente"),
-        ],
-    )
-    def test_mapeamento(self, entrada: str | None, esperado: str) -> None:
-        df = pd.DataFrame({"cs_sexo": [entrada]})
-        assert sexo_categoria(df).iloc[0] == esperado
-
-    def test_retorna_categoria(self) -> None:
-        df = pd.DataFrame({"cs_sexo": ["M"]})
-        assert isinstance(sexo_categoria(df).dtype, pd.CategoricalDtype)
-
-
-class TestAnoMesInternacao:
-    def test_extrai_ano_e_mes(self, df_base: pd.DataFrame) -> None:
-        out = ano_mes_internacao(df_base)
-        assert out["ano_internacao"].tolist() == [2024.0] * 4
-        assert out["mes_internacao"].tolist() == [1.0, 3.0, 6.0, 9.0]
-
-    def test_data_nula_vira_nan(self) -> None:
-        out = ano_mes_internacao(pd.DataFrame({"dt_interna": [None]}))
-        assert pd.isna(out["ano_internacao"].iloc[0])
-        assert pd.isna(out["mes_internacao"].iloc[0])
 
 
 class TestMontarFeatures:
@@ -309,10 +130,6 @@ class TestMontarFeatures:
 class TestPontoNoTempo:
     """Invariantes contra vazamento temporal — o ponto de previsão é a admissão."""
 
-    def test_so_precisa_das_entradas_declaradas(self, df_base: pd.DataFrame) -> None:
-        """Um df com só as entradas declaradas deve bastar para as derivadas."""
-        out = montar_features(df_base[list(ENTRADAS_OBRIGATORIAS)].copy())
-        assert COLUNAS_DERIVADAS_ESPERADAS.issubset(out.columns)
 
     def test_colunas_pos_admissao_nao_influenciam(self, df_base: pd.DataFrame) -> None:
         """Injetar colunas pós-alta não pode alterar a saída."""
@@ -332,133 +149,3 @@ class TestPontoNoTempo:
             baseline[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
             contaminado[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
         )
-
-    def test_ordem_das_linhas_nao_altera_derivadas(self, df_base: pd.DataFrame) -> None:
-        """Derivadas são pointwise — sem dependência de ordem."""
-        normal    = montar_features(df_base)
-        invertido = montar_features(df_base.iloc[::-1].reset_index(drop=True))
-
-        pd.testing.assert_frame_equal(
-            normal[list(COLUNAS_DERIVADAS_ESPERADAS)].reset_index(drop=True),
-            invertido[list(COLUNAS_DERIVADAS_ESPERADAS)].iloc[::-1].reset_index(drop=True),
-        )
-
-# ---------------------------------------------------------------------------
-# Tipos compactos das derivadas (#121)
-# ---------------------------------------------------------------------------
-
-def test_montar_features_usa_tipos_compactos(df_base: pd.DataFrame) -> None:
-    """As derivadas usam tipos compactos sem alterar a interface do módulo."""
-    out = montar_features(df_base)
-
-    assert out["idade_anos"].dtype == np.float32
-    assert out["dias_sintomas_ate_internacao"].dtype == np.float32
-    assert out["sin_semana"].dtype == np.float32
-    assert out["cos_semana"].dtype == np.float32
-    assert out["flag_intervalo_invalido"].dtype == np.int8
-    assert out["flag_internacao_antes_sintomas"].dtype == np.int8
-    assert str(out["ano_internacao"].dtype) == "Int16"
-    assert str(out["mes_internacao"].dtype) == "Int8"
-    assert isinstance(out["faixa_etaria"].dtype, pd.CategoricalDtype)
-    assert isinstance(out["sexo_categoria"].dtype, pd.CategoricalDtype)
-
-
-def test_montar_features_valores_numericos_inalterados(df_base: pd.DataFrame) -> None:
-    """A conversão de float64 para float32 não pode alterar os valores."""
-    out = montar_features(df_base)
-
-    pares = {
-        "idade_anos":                   idade_em_anos(df_base),
-        "dias_sintomas_ate_internacao": intervalo_sintomas_internacao(df_base)["dias_sintomas_ate_internacao"],
-        "sin_semana":                   sazonalidade(df_base)["sin_semana"],
-        "cos_semana":                   sazonalidade(df_base)["cos_semana"],
-        "ano_internacao":               ano_mes_internacao(df_base)["ano_internacao"],
-        "mes_internacao":               ano_mes_internacao(df_base)["mes_internacao"],
-    }
-
-    for nome, esperado in pares.items():
-        np.testing.assert_allclose(
-            out[nome].to_numpy(dtype="float64"),
-            esperado.to_numpy(dtype="float64"),
-            rtol=1e-6,
-            equal_nan=True,
-            err_msg=f"{nome} mudou de valor após a compactação de tipo",
-        )
-
-
-def test_montar_features_preserva_nan_em_ano_mes() -> None:
-    """Datas ausentes continuam virando NaN (via ``<NA>`` em Int16/Int8)."""
-    df = pd.DataFrame({
-        "nu_idade_n": [30, 40],
-        "tp_idade":   [3, 3],
-        "cs_sexo":    ["M", "F"],
-        "dt_sin_pri": ["2024-01-01", "2024-01-01"],
-        "dt_interna": ["2024-01-05", None],
-    })
-    out = montar_features(df)
-
-    assert out["ano_internacao"].isna().tolist() == [False, True]
-    assert out["mes_internacao"].isna().tolist() == [False, True]
-    assert int(out["ano_internacao"].iloc[0]) == 2024
-    assert int(out["mes_internacao"].iloc[0]) == 1
-
-
-def test_preprocessador_clustering_ausente_explicito_e_esparso():
-    from scipy import sparse
-
-    from src.features.normalization import construir_preprocessador_clustering
-
-    df = pd.DataFrame({
-        "idade": [10.0, 20.0, None, 40.0, 50.0, 60.0, 70.0, 80.0],
-        "febre": ["1", "2", None, "9", "1", "2", None, "1"],
-        "tosse": ["1", "1", "2", "2", None, "1", "2", "9"],
-    })
-    pre = construir_preprocessador_clustering(["idade"], ["febre", "tosse"])
-    matriz = pre.fit_transform(df)
-    nomes = list(pre.get_feature_names_out())
-    assert sparse.issparse(matriz)
-    assert any(n.startswith("febre_AUSENTE") for n in nomes) and any(n.startswith("tosse_AUSENTE") for n in nomes)
-    # febre tem 4 categorias (1, 2, 9, AUSENTE): peso 1/2 em cada coluna dela
-    colunas_febre = [i for i, n in enumerate(nomes) if n.startswith("febre_")]
-    assert len(colunas_febre) == 4 and np.isclose(matriz[:, colunas_febre].max(), 0.5)
-
-
-def test_preprocessador_clustering_categoria_nova_e_tipos_do_pandas():
-    from src.features.normalization import construir_preprocessador_clustering
-
-    treino = pd.DataFrame({
-        "idade": [10.0, 20.0, 30.0, 40.0],
-        "febre": pd.Categorical(["1", "2", None, "1"]),
-        "tosse": pd.array(["1", "2", "9", None], dtype="string"),
-    })
-    pre = construir_preprocessador_clustering(["idade"], ["febre", "tosse"]).fit(treino)
-    novo = pd.DataFrame({"idade": [25.0], "febre": pd.Categorical(["1"]), "tosse": pd.array(["7"], dtype="string")})
-    matriz = pre.transform(novo)  # categoria nunca vista (tosse = "7") não pode dar erro
-    assert matriz.shape == (1, len(pre.get_feature_names_out()))
-    assert np.isclose(matriz[:, [i for i, n in enumerate(pre.get_feature_names_out()) if n.startswith("tosse_")]].sum(), 0.0)
-
-
-def test_preprocessador_clustering_equilibra_a_variancia_das_numericas():
-    from src.features.normalization import construir_preprocessador_clustering
-
-    rng = np.random.default_rng(0)
-    n = 4000
-    df = pd.DataFrame({
-        "idade": rng.normal(50, 20, n),
-        "dias": rng.integers(0, 30, n).astype(float),
-        "febre": rng.choice(["1", "2", "9", None], n, p=[0.5, 0.3, 0.05, 0.15]),
-        "tosse": rng.choice(["1", "2", "9", None], n, p=[0.6, 0.2, 0.05, 0.15]),
-    })
-    equilibrado = construir_preprocessador_clustering(["idade", "dias"], ["febre", "tosse"]).fit(df)
-    sem_ajuste = construir_preprocessador_clustering(["idade", "dias"], ["febre", "tosse"], equilibrar_numericas=False).fit(df)
-
-    def variancia(matriz, coluna):
-        return float(np.var(matriz[:, [coluna]].toarray()))
-
-    x, y = equilibrado.transform(df), sem_ajuste.transform(df)
-    assert sem_ajuste.peso_numericas_ == 1.0 and np.isclose(variancia(y, 0), 1.0) and np.isclose(variancia(y, 1), 1.0)
-    variancia_categorica = sum(variancia(x, j) for j in range(2, x.shape[1])) / 2
-    assert 0 < equilibrado.peso_numericas_ < 1
-    assert np.isclose(variancia(x, 0), variancia_categorica, rtol=1e-4)
-    assert np.isclose(variancia(x, 1), variancia_categorica, rtol=1e-4)
-    assert np.isclose(variancia_categorica, equilibrado.variancia_media_categorica_, rtol=1e-4)

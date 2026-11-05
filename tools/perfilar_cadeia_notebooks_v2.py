@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Executa uma cadeia de notebooks sequencialmente e perfila tempo e RAM por célula.
-
-Não altera os notebooks originais. Cada notebook usa um kernel novo, encerrado antes do
-próximo. Saídas: CSV por célula, CSV por notebook, amostras da cadeia, JSON e relatório MD.
-"""
+"""Executa uma cadeia de notebooks sequencialmente e perfila tempo e RAM por célula."""
 from __future__ import annotations
 
 import argparse

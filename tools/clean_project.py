@@ -32,7 +32,6 @@ FILE_PATTERNS = [
     "*.npy", "*.npz",
 ]
 
-# Pastas e caminhos (relativos a PROJECT_ROOT) que NUNCA devem ser limpos.
 PROTECTED_FOLDERS = {
     ".git",
     ".venv",
@@ -49,9 +48,6 @@ PROTECTED_FOLDERS = {
     "data/external",
 }
 
-# Caches seguros de remover. NÃO incluímos ~/.local/share/jupyter porque lá ficam
-# os ficheiros de conexão dos kernels ativos (mexer nisso derruba o JupyterLab).
-# O mesmo se aplica no Windows a %LOCALAPPDATA%\Jupyter\runtime — não tocar.
 JUPYTER_CACHE_DIRS = [
     Path.home() / ".cache" / "jupyter",
 ]
@@ -59,21 +55,11 @@ JUPYTER_CACHE_DIRS = [
 IS_WINDOWS = sys.platform.startswith("win")
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _is_protected(path: Path) -> bool:
-    """Devolve True se `path` estiver dentro de algo em PROTECTED_FOLDERS.
-
-    Usa comparação por componentes de caminho (não substring), para evitar
-    falsos positivos como `source_output.png` casar com `src`, ou `.venv`
-    ser apagado por engano.
-    """
+    """Devolve True se `path` estiver dentro de algo em PROTECTED_FOLDERS."""
     try:
         rel = path.resolve().relative_to(PROJECT_ROOT)
     except ValueError:
-        # Fora do projeto — não tocar.
         return True
 
     parts = set(rel.parts)
@@ -116,10 +102,6 @@ def clean_directory_contents(path: Path, dry_run: bool) -> None:
         else:
             remove_file(child, dry_run)
 
-
-# ---------------------------------------------------------------------------
-# Limpeza de artefactos
-# ---------------------------------------------------------------------------
 
 def clean_directories(dry_run: bool) -> None:
     for directory in DIRECTORIES_TO_CLEAN:
@@ -164,10 +146,6 @@ def clean_jupyter_cache(dry_run: bool) -> None:
             clean_directory_contents(cache_dir, dry_run)
 
 
-# ---------------------------------------------------------------------------
-# Caches do sistema (Windows)
-# ---------------------------------------------------------------------------
-
 def _require_windows(feature: str) -> bool:
     if not IS_WINDOWS:
         print(f"[SKIP] {feature}: apenas disponível no Windows.")
@@ -176,10 +154,7 @@ def _require_windows(feature: str) -> bool:
 
 
 def flush_dns(dry_run: bool) -> None:
-    """Limpa o cache de DNS do Windows com `ipconfig /flushdns`.
-
-    Útil quando há problemas de conectividade ou o browser resolve IPs antigos.
-    """
+    """Limpa o cache de DNS do Windows com `ipconfig /flushdns`."""
     if not _require_windows("flush DNS"):
         return
     if dry_run:
@@ -204,12 +179,7 @@ def flush_dns(dry_run: bool) -> None:
 
 
 def clean_windows_temp(dry_run: bool) -> None:
-    """Remove o conteúdo de %TEMP% do utilizador, ignorando ficheiros em uso.
-
-    Substitui o `del /q /s %TEMP%\\*` do CMD por uma versão em Python que:
-      * não segue symlinks (apaga só o link);
-      * ignora silenciosamente ficheiros bloqueados por outros processos.
-    """
+    """Remove o conteúdo de %TEMP% do utilizador, ignorando ficheiros em uso."""
     if not _require_windows("clean TEMP"):
         return
 
@@ -240,7 +210,6 @@ def clean_windows_temp(dry_run: bool) -> None:
                 child.unlink(missing_ok=True)
             removed += 1
         except (PermissionError, OSError):
-            # Ficheiro/diretório em uso — normal, ignorar.
             skipped += 1
 
     if not dry_run:
@@ -273,11 +242,7 @@ def _pip_cache_dir() -> Path | None:
 
 
 def clean_pip_cache(dry_run: bool) -> None:
-    """Limpa o cache de wheels/HTTP do pip.
-
-    Usa o comando oficial `pip cache purge`; se falhar, apaga manualmente
-    a pasta devolvida por `pip cache dir` (preservando o diretório em si).
-    """
+    """Limpa o cache de wheels/HTTP do pip."""
     if dry_run:
         print("[DRY RUN] CMD   pip cache purge")
         return
@@ -308,7 +273,6 @@ def clean_pip_cache(dry_run: bool) -> None:
 def clean_windows_caches(dry_run: bool) -> None:
     """Agrega os caches de sistema do Windows: DNS + TEMP + pip."""
     if not _require_windows("clean Windows caches"):
-        # Ainda assim limpamos o cache do pip (é cross-platform).
         clean_pip_cache(dry_run)
         return
     flush_dns(dry_run)
@@ -316,18 +280,8 @@ def clean_windows_caches(dry_run: bool) -> None:
     clean_pip_cache(dry_run)
 
 
-# ---------------------------------------------------------------------------
-# Memória
-# ---------------------------------------------------------------------------
-
 def clean_memory(dry_run: bool) -> None:
-    """Força gc.collect() e, em Linux/glibc, devolve páginas livres ao SO.
-
-    Nota: só afeta o processo atual. Para libertar RAM de um script pesado,
-    importe esta função no final do script:
-        from tools.clean_project import clean_memory
-        clean_memory(dry_run=False)
-    """
+    """Força gc.collect() e, em Linux/glibc, devolve páginas livres ao SO."""
     if dry_run:
         print("[DRY RUN] MEMORY  (gc.collect + malloc_trim)")
         return
@@ -389,10 +343,6 @@ def diagnose_memory() -> None:
         print(f"  {rss_kb / 1024:8.1f} MiB  pid={pid:<7}  {cmdline}")
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Limpa artefactos gerados sem tocar em código, configs ou dados originais."
@@ -406,7 +356,6 @@ def main() -> None:
     parser.add_argument("--clean-jupyter-cache", action="store_true",
                         help="Remove ~/.cache/jupyter (não afeta kernels ativos).")
 
-    # --- Caches do sistema (Windows) ---
     parser.add_argument("--flush-dns", action="store_true",
                         help="[Windows] Executa `ipconfig /flushdns`.")
     parser.add_argument("--clean-temp", action="store_true",
@@ -439,7 +388,6 @@ def main() -> None:
     if args.clean_jupyter_cache:
         clean_jupyter_cache(args.dry_run)
 
-    # --- Caches do sistema ---
     if args.clean_windows_caches:
         clean_windows_caches(args.dry_run)
     else:

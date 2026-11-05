@@ -9,35 +9,15 @@ target:
   negativos:
   - 1.0
   descartar_outros: true
-  sensibilidade_qualquer_obito:
-    ativa: false  # desativada: a coorte definitiva exclui evolucao 3 (decisoes.md §29.13)
-    positivos:
-    - 2.0
-    - 3.0
-    negativos:
-    - 1.0
 
 coluna_tempo: dt_interna
 
 periodo:
-  cobertura_fonte:
-    ano_inicial: 2019
-    ano_final: 2026
-    coluna_ano: ano_internacao
-    incluir_limites: true
-    anos_parciais:
-    - 2026
   desenvolvimento:
   - 2019
   - 2023
   - 2024
   - 2025
-  teste_pandemico:
-  - 2020
-  - 2021
-  - 2022
-  exploracao_opcional:
-  - 2026
 
 features:
   numericas:
@@ -108,25 +88,11 @@ features:
   - sg_uf
   - vacina
   - vacina_cov
-  sensibilidade_gravidade_admissao: []  # 03/11: saturacao e desc_resp entraram no modelo principal (decisoes.md §29.34)
-  sensibilidade_marcador_periodo:  # 03/11: fora do modelo; guardadas no artefato só para a linha "P + 3 sintomas" do C_14
+  sensibilidade_gravidade_admissao: []
+  sensibilidade_marcador_periodo:
   - perd_olft
   - perd_pala
   - fadiga
-  sensibilidade_indicadores_ausencia:
-    ativa: false
-    # desativada em 28/10: nenhum código cria as colunas;
-    # AUSENTE já é categoria no pré-processador (ver decisoes.md §29.6)
-    incluir_no_pipeline_principal: false
-    prefixo_esperado: missingindicator_
-  sensibilidade_contadores_clinicos:
-    ativa: false
-    motivo: Os contadores agregados podem duplicar o peso das variaveis individuais das quais foram derivados.
-    colunas:
-    - n_sintomas_confirmados
-    - n_sintomas_avaliados
-    - n_comorbidades_confirmadas
-    - n_comorbidades_avaliadas
   proibidas:
   - evolucao
   - alvo_obito_srag
@@ -164,8 +130,6 @@ features:
   - particao
   engenharia:
     intervalo_max_dias: 60
-    # A coorte final_cohort_v1 já excluiu intervalos negativos e > 60 dias.
-    # A flag abaixo só permanece para registro; não haverá registros inválidos.
     intervalo_politica: sinalizar
     coluna_sazonalidade: dt_sin_pri
     faixas_etarias:
@@ -193,7 +157,6 @@ features:
     - nome: 80+
       min: 80
       max: null
-    recodificar_comorbidades_fator_risco: false   # decisão pendente no #140
     derivadas:
     - idade_anos
     - dias_sintomas_ate_internacao
@@ -211,12 +174,6 @@ features:
     - cs_sexo
     - dt_sin_pri
     - dt_interna
-  final_metadata:
-    versao: v1
-    origem: selecao_auditada_da_coorte_provisoria_b
-    status: congelada_para_validacao_g1
-    teste_consultado: false
-    reabrir_somente_por: falha_material_vazamento_ou_indisponibilidade_na_admissao
 
 temporal:
   modo: particao_mestra_por_grupo
@@ -292,18 +249,11 @@ temporal:
     preprocessamento_ajustado_so_no_treino: true
 
 missingness:
-  vazio_nao_e_nao: true
-  ignorado_nao_e_nao: true
-  nao_aplicavel_nao_e_nao: true
-  ajustar_imputacao_apenas_no_treino: true
   numericas:
     imputacao: mediana
   categoricas:
     imputacao: categoria_explicita
     valor_ausente: AUSENTE
-  indicadores_ausencia:
-    pipeline_principal: false
-    sensibilidade: false # desativada em 28/10: ver features.sensibilidade_indicadores_ausencia
 
 models:
   baseline:
@@ -344,15 +294,11 @@ models:
     busca_l2_regularization:
     - 0.1
 
-    # null representa None na busca, isto é, sem balanceamento.
     busca_class_weight:
     - null
 
 tuning:
   metrica_principal: pr_auc
-  concentrar_nos_dois_melhores: true
-  usar_apenas_treino_validacao: true
-  teste_proibido_durante_tuning: true
   max_configuracoes_por_modelo: 30
 
 calibracao:
@@ -362,22 +308,13 @@ calibracao:
   - sigmoid
   - isotonic
   fonte: validacao
-  comparar_brier_antes_depois: true
-
 
 limiar:
   default: 0.5
   otimo: 0.1178
-  metrica: precision   # #79: maximiza a precisão sujeita a min_recall
-  metricas_candidatas:
-  - f1
-  - recall
-  - precision
-  - youden_j
-  - recall_minimo
+  metrica: precision
   min_precision: null
   min_recall: 0.80
-  selecionar_somente_na_validacao: true
 
 avaliacao:
   metrica_principal: pr_auc
@@ -400,7 +337,6 @@ avaliacao:
   - cs_raca
   - cs_zona
   min_n_grupo: 100
-  desempenho_por_ano: true
   calibracao_por_ano: true
   bootstrap:
     ativo: true
@@ -409,7 +345,6 @@ avaliacao:
     seed: 42
   analise_erros:
     ativa: true
-    priorizar_falsos_negativos: true
   janelas:
     teste_a:
       blocos:
@@ -424,34 +359,12 @@ avaliacao:
       blocos:
       - test_pandemic
       obrigatorio: true
-  comparacao_temporal:
-    interpretacao: sensibilidade_a_composicao_temporal
-    interpretacao_causal_permitida: false
-    mesmo_modelo_features_hiperparametros_calibrador_e_limiar: true
-  relatar_por_ano: true
-  relatar_prevalencia: true
-  relatar_pr_auc_sobre_prevalencia: true
 
 sensibilidades:
   temporal:
     ativa: true
-  com_sem_indicadores_ausencia:
-    ativa: false # desativada em 28/10: sem código, sem contraste real (ver decisoes.md §29.6)
-  sem_saturacao_desc_resp:
-    ativa: false  # 03/11: as duas variáveis entraram no modelo principal (decisoes.md §29.34)
   contexto_incremental:
     ativa: true
-  alvo_qualquer_obito:
-    ativa: false  # desativada: a coorte definitiva exclui evolucao 3 (decisoes.md §29.13)
-
-artefatos_coorte:
-  parquet: coorte_final.parquet
-  waterfall: coorte_waterfall.csv
-  variaveis: variaveis_finais.csv
-  manifesto: manifesto_coorte.json
-  particao_mestra: partitions_master.parquet
-  manifesto_particao: manifesto_particao.json
-  contrato_features: feature_contract_v1.json
 
 gates:
   G1_definicao_alvo_features:
@@ -472,9 +385,6 @@ gates:
     status: aprovado
     aprovado_por: time_do_projeto
     data: '2026-10-18'
-    # Revisado em 29/10: revertida a mudança não registrada que colocava
-    # 2019 no test_pandemic (ver decisoes.md §29.25). Desenho original
-    # reafirmado.
   G4_baseline:
     descricao: Rodar DummyClassifier e registrar as metricas de referencia.
     status: aprovado
@@ -490,7 +400,7 @@ gates:
       Selecionar no maximo dois finalistas e executar tuning limitado.
       Ao final, preencher selecao_modelos.finalista_escolhido.
     status: aprovado
-    aprovado_por: Pessoa A e Pessoa C
+    aprovado_por: equipe
     data: '2026-11-03'
   G7_calibracao:
     descricao: Escolher o metodo de calibracao usando apenas treino e validacao.
@@ -507,23 +417,23 @@ gates:
       Liberar test_ref e test_pandemic uma unica vez depois de congelar
       features, modelo, hiperparametros, calibrador e limiar. O estado
       aprovado libera o acesso; executado registra a consulta e e terminal.
-    status: pendente
-    aprovado_por: null
-    data: null
-    executado_em: null
-    n_acessos: 0
+    status: executado
+    aprovado_por: equipe
+    data: '2026-11-05'
+    executado_em: "2026-11-05T21:15:27.499663+00:00"
+    n_acessos: 1
 
 selecao_modelos:
   status: finalista_congelado
   origem: pilotos
-  teste_consultado: false
+  teste_consultado: true
   finalistas:
   - hist_gradient_boosting
   - logistic
   nomes_execucao:
     hist_gradient_boosting: hist_gradient_boosting_v2
     logistic: logistica_C1_v2
-  finalista_escolhido: boosting          # <- era logistic, agora boosting
+  finalista_escolhido: boosting
   familias_encerradas:
   - decision_tree
   - random_forest
@@ -532,4 +442,4 @@ selecao_modelos:
   - probabilidades brutas ainda nao calibradas
   - decisao congelada em 2026-11-03
   - a escolha final usou somente os blocos de desenvolvimento
-  - test_ref e test_pandemic permanecem fechados ate autorizacao formal
+  - test_ref e test_pandemic foram abertos uma unica vez em 05/11/2026 (G9)

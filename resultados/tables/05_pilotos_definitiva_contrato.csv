@@ -1,0 +1,12 @@
+﻿verificacao,resultado
+artefato_nao_vazio,True
+coorte_final,True
+teste_fechado,True
+colunas_obrigatorias,True
+alvo_binario,True
+blocos_de_desenvolvimento,True
+id_registro_unico,True
+grupos_disjuntos,True
+sem_feature_proibida,True
+auditoria_fora_das_features,True
+numericas_mais_categoricas_iguais_features,True

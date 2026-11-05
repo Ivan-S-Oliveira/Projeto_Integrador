@@ -1,28 +1,4 @@
-r"""Executa um notebook célula a célula e mostra onde estão o tempo e a memória.
-
-Para cada célula de código, registra a duração, a memória do kernel (e dos processos
-filhos) antes e depois, e o PICO durante a execução. Serve para achar a célula que
-estoura a memória ou demora demais. O notebook original NÃO é alterado: o código é
-lido do arquivo e enviado a um kernel novo.
-
-Uso (na raiz do repositório):
-    .\.venv\Scripts\python.exe tools/perfil_celulas.py notebooks/B/<nome>.ipynb
-    .\.venv\Scripts\python.exe tools/perfil_celulas.py notebooks/B/<nome>.ipynb --ate 60
-    .\.venv\Scripts\python.exe tools/perfil_celulas.py notebooks/B/<nome>.ipynb --trocar "REGERAR_ARTEFATO = True" "REGERAR_ARTEFATO = False"
-
-Opções:
-    --ate N          para depois da célula N (numeração de 1 a N, contando também as de texto)
-    --trocar A B     troca o texto A por B no código antes de executar (só na memória; repetível)
-    --pular-texto T  não executa células de código que contenham o texto T (repetível)
-
-O notebook executa de verdade: o que ele grava em data/ e outputs/ é gravado.
-Use --trocar e --pular-texto para evitar etapas que sobrescrevem arquivos.
-
-Resultado: tabela no terminal e CSV em outputs/final/perfil_celulas_<notebook>.csv.
-"subida_mb" é o pico da célula menos a memória antes dela: mostra quem MAIS exige, sem
-confundir com o que já estava acumulado de células anteriores.
-Para na primeira célula com erro (inclusive falta de memória) e informa qual foi.
-"""
+"""Executa um notebook célula a célula e mostra onde estão o tempo e a memória."""
 from __future__ import annotations
 
 import argparse
@@ -88,7 +64,7 @@ def _resumo(codigo: str, limite: int = 70) -> str:
 
 
 def _executar(km: KernelManager, kc, codigo: str) -> str | None:
-    """Envia o código ao kernel e espera terminar. Devolve a descrição do erro, se houver."""
+    """Envia o código ao kernel e espera terminar."""
     id_msg = kc.execute(codigo, store_history=True, allow_stdin=False)
     erro = None
     while True:
@@ -154,7 +130,7 @@ def perfilar(caminho: Path, ate: int | None, trocas: list[tuple[str, str]], pula
             inicio = time.perf_counter()
             erro = _executar(km, kc, codigo)
             duracao = time.perf_counter() - inicio
-            time.sleep(INTERVALO_AMOSTRA_S * 1.5)  # deixa o medidor ler o valor final
+            time.sleep(INTERVALO_AMOSTRA_S * 1.5)
             depois = medidor.atual
             pico = max(medidor.pico, depois)
             pico_global = max(pico_global, pico)
