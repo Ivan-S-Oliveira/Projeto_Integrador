@@ -432,7 +432,7 @@ gates:
 selecao_modelos:
   status: finalista_congelado
   origem: pilotos
-  teste_consultado: false
+  teste_consultado: true
   finalistas:
   - hist_gradient_boosting
   - logistic
@@ -448,4 +448,4 @@ selecao_modelos:
   - probabilidades brutas ainda nao calibradas
   - decisao congelada em 2026-11-03
   - a escolha final usou somente os blocos de desenvolvimento
-  - test_ref e test_pandemic permanecem fechados ate autorizacao formal
+  - test_ref e test_pandemic foram abertos uma unica vez em 05/11/2026 (G9)

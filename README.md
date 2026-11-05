@@ -80,8 +80,9 @@ Detalhes em `docs/decisoes.md`.
 
 ## Resultados
 
-Validação (`val_ref`): PR-AUC 0,362, ROC-AUC 0,867, Brier 0,063. Os
-resultados do teste ficam no relatório final, depois da abertura única.
+Validação (`val_ref`): PR-AUC 0,362, ROC-AUC 0,867, Brier 0,063.
+
+Teste aberto uma única vez em 05/11/2026. No Teste A (`test_ref`, n = 119.245): PR-AUC 0,369 (4,37x a prevalência), ROC-AUC 0,869, Brier 0,0628, sensibilidade 0,813 e precisão 0,252 no limiar 0,1178. Em 2020–2022 (isolado): PR-AUC 0,457, ROC-AUC 0,728, Brier 0,1835. As tabelas estão em `resultados/`.
 
 ## Limitações
 

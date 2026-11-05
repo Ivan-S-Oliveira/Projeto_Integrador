@@ -110,6 +110,29 @@ por ano × desfecho × região, com no mínimo 5 grupos por estrato:
   prevalência de 8,4% e a pandemia tem cerca de 26%. Resultado contrário
   entra no relatório como achado, nunca como motivo para reajuste.
 
+### Resultado da abertura (teste aberto uma única vez em 05/11/2026, 21:15 UTC, commit 52970fc)
+
+O teste foi aberto com tudo congelado: Hist Gradient Boosting, 30 variáveis, calibração `sigmoid` e limiar 0,1178. Nada foi reajustado depois.
+
+| Janela | Blocos | n | Óbitos | Prevalência | PR-AUC | PR-AUC ÷ prevalência | ROC-AUC | Brier | O/E | Sensibilidade | Precisão |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Teste A (principal) | test_ref | 119.245 | 10.065 | 8,4% | 0,369 | 4,37x | 0,869 | 0,0628 | 0,99 | 0,813 | 0,252 |
+| 2020–2022 (isolado) | test_pandemic | 2.915.829 | 771.095 | 26,4% | 0,457 | 1,73x | 0,728 | 0,1835 | 1,66 | 0,792 | 0,379 |
+| Teste B (A + 2020–2022) | test_ref+test_pandemic | 3.035.074 | 781.160 | 25,7% | 0,454 | 1,77x | 0,735 | 0,1788 | 1,64 | 0,792 | 0,376 |
+
+Teste A, com intervalo de 95% por bootstrap de grupos (1000 réplicas): PR-AUC 0,369 (IC 95%: 0,359 a 0,379); ROC-AUC 0,869 (IC 95%: 0,865 a 0,872); Brier 0,0628 (IC 95%: 0,0618 a 0,0637).
+
+Calibração por janela: Teste A: O/E 0,99, inclinação 1,01, ECE por quantis 0,002; 2020–2022: O/E 1,66, inclinação 0,82, ECE por quantis 0,105; Teste B: O/E 1,64, inclinação 0,83, ECE por quantis 0,101.
+
+| Hipótese registrada antes do teste | Resultado | Leitura |
+|---|---|---|
+| Teste A: PR-AUC entre 0,30 e 0,36 | 0,369 | fora do previsto (acima da faixa) |
+| Teste A: ROC-AUC entre 0,85 e 0,87 | 0,869 | dentro do previsto |
+| 2020–2022: Brier pior que no Teste A | 0,1835 contra 0,0628 | dentro do previsto |
+| 2020–2022: O/E acima de 1 | 1,66 | dentro do previsto |
+
+Resultado fora do previsto entra como achado, nunca como motivo para reajuste.
+
 ## 10. Princípios
 
 1. Nenhuma informação posterior à admissão no modelo.
