@@ -207,3 +207,4 @@ tools/trocar_validacao_70_15_15.py
 # Cópias de segurança locais e saídas de monitoramento (arquivos gerados; não versionar)
 _backup_limpeza/
 **/outputs/performance/
+!configs/dicionario_variaveis_v1.csv
