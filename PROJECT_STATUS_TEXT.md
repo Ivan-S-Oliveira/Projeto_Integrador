@@ -23,11 +23,13 @@ Projeto SRAG · Pendências
 
 ### Subtítulo
 
-Retrato de **05/11, dia da entrega**, sobre o commit `978019a` da branch `enxugamento` (a `main` está em `f27ac3c`). **G6, G7 e G8 aprovados; G9 pendente.** Painel **refeito (versão 6): só o essencial antes do G9**. Restam **7 cards até a documentação do G9** (todos da Pessoa C), **9 depois dela** (Pessoas A e B) e **2 opcionais** (P4, fora da conta de hoje). **23 cards antigos foram removidos** (incorporados, obsoletos ou fora do escopo). Todo "③ O que fazer" tem **passo a passo para a pessoa**, **automação sugerida** (scripts já prontos, todos com relatório antes de gravar) e **bloco para a IA com botão de copiar**.
+Retrato de **05/11, dia da entrega**, sobre a branch `enxugamento` (a `main` recebe a branch no fim do #194). **G6, G7 e G8 aprovados; G9 pendente.** Painel **versão 7: só o essencial antes do G9, e a cadeia completa de notebooks volta para antes dele**. Restam **7 cards até a documentação do G9** (todos da Pessoa C), **8 depois** (Pessoas A e B) e **2 opcionais** (P4). Todo "③ O que fazer" tem passo a passo para a pessoa, automação sugerida (scripts com relatório antes de gravar) e bloco para a IA com botão de copiar.
 
-**A entrega:** (1) o **link do GitHub (branch `main`, completa)** e (2) a **apresentação em PowerPoint** (#134, arquivo `entrega/Apresentacao_SRAG.pptx`). A branch `enxugamento` é a versão final: o trabalho até o G9 é nela e **ela é mesclada na `main` no fim do #194**.
+**A entrega:** (1) o **link do GitHub (branch `main`, completa)** e (2) a **apresentação em PowerPoint** (#134, arquivo `entrega/Apresentacao_SRAG.pptx`).
 
-**Regra de ordem:** testar e publicar a branch (#188) → renomear as saídas (#192) → reexecutar só o notebook 10 (#126) → **ensaio e congelamento (#193)** → **G9, teste aberto uma vez (#2)** → calibração/O/E (#165) → **documentar o G9 e mesclar na main (#194)** → cadeia 03 a 09 e versões (#195) → comentários e caminhos (#189) → comentários essenciais (#191) → Markdown (#190) → equidade (#55), limitações (#133), apresentação (#134), resultados (#157) → **fechar a entrega (#147)**.
+**Dois comandos fazem quase tudo:** `pre_g9.py` (#188 e #192) agora e `pos_g9.py` (#2, #165, #194, #189, #157) depois do G9. No meio, a Pessoa C roda `cadeia.py iniciar` (#126: **todos os notebooks, 02 a 10**, em segundo plano, com a documentação atualizada sozinha).
+
+**Regra de ordem:** testar, publicar e renomear (#188, #192) → **executar todos os notebooks e atualizar a documentação (#126)** → **ensaio e congelamento (#193)** → **G9, teste aberto uma vez (#2)** → calibração/O/E (#165) → **documentar o G9 e mesclar na main (#194)** → comentários e caminhos (#189) → comentários essenciais (#191) → Markdown (#190) → equidade (#55), limitações (#133), apresentação (#134), resultados (#157) → **fechar a entrega (#147)**.
 
 ### Entrega
 
@@ -35,13 +37,13 @@ Retrato de **05/11, dia da entrega**, sobre o commit `978019a` da branch `enxuga
 
 ### Cronograma
 
-- **05/11 qui · 1 Preparar (Pessoa C)** — #188 testar e publicar a branch · #192 renomear as saídas · #126 reexecutar só o notebook 10
-- **05/11 qui · 2 Congelar (Pessoa C)** — **#193 ensaio do notebook 11 e checklist: "código congelado"**
-- **05/11 qui · 3 G9 (Pessoa C + Equipe)** — **#2 aprovar e abrir o teste uma vez** · #165 O/E e calibração por janela · **#194 documentar o G9 e mesclar na main**
-- **05/11 qui · 4 Em paralelo, desde já (A e B)** — rascunho do #134 (apresentação) e da Fase 1 do #133; **sem tocar em código**
-- **05/11 qui · 5 Depois do #194, um de cada vez no repositório (A e B)** — B: #195 cadeia 03 a 09 e versões (máquina) → B: #189 comentários e caminhos → B: #191 comentários essenciais → A: #190 Markdown
-- **05/11 qui · 6 Sem esperar ninguém (depois do #194)** — A: #55 equidade, #133 limitações · B: #134 apresentação com os números
-- **05/11 qui · 7 Fechar (A)** — #157 resultados no pacote · **#147 fechar a entrega**
+- **05/11 qui · 1 Preparar (Pessoa C)** — #188 testar e publicar a branch e #192 renomear as saídas: **um comando, `pre_g9.py`**
+- **05/11 qui · 2 Cadeia completa (Pessoa C)** — **#126 executar TODOS os notebooks (02 a 10) e atualizar a documentação**: `cadeia.py iniciar` (segundo plano, ≈ 30 a 60 min de máquina)
+- **05/11 qui · 3 Congelar (Pessoa C)** — **#193 ensaio do notebook 11 e checklist: "código congelado"**
+- **05/11 qui · 4 G9 (Pessoa C + Equipe)** — **#2 aprovar e abrir o teste uma vez**; depois, **um comando, `pos_g9.py`**: #165 calibração, #194 documentar o G9 e mesclar na main, #189 comentários e caminhos, #157 resultados
+- **05/11 qui · 5 Em paralelo, desde já (A e B)** — rascunho do #134 (apresentação) e do #133; **sem tocar em código**
+- **05/11 qui · 6 Depois do #194, um de cada vez no repositório (A e B)** — B: #191 comentários essenciais · A: #190 Markdown · A: #55 equidade e #133 limitações · B: #134 apresentação com os números
+- **05/11 qui · 7 Fechar (A)** — **#147 fechar a entrega**
 
 ### Legenda das estratégias
 
@@ -55,19 +57,22 @@ O **③ O que fazer** tem agora quatro partes: **Passo a passo (para a pessoa)**
 
 ### Pessoas
 
-- **C (≈ 4.0 h)** — **todo o caminho até o G9 e a documentação dele**: #188, #192, #126, #193, **#2 (G9)**, #165 e #194 (inclui a mescla na `main`). Só a Pessoa C mexe em código até o G9.
-- **B (≈ 4.4 h)** — depois do #194, na máquina oficial e no repositório (um por vez): #195, #189, #191; e a **apresentação (#134, dona)**. Opcional: #91.
-- **A (≈ 4.0 h)** — depois do #194: #190 (Markdown), #55 (equidade), #133 (limitações e rastreabilidade), #157 (resultados no pacote) e **#147 (fechar a entrega)**. Antes do #194: só documentos (rascunhos).
+- **C (≈ 4,7 h, das quais ≈ 1 h de máquina)** — **todo o caminho até o G9 e a documentação dele**: #188 e #192 (`pre_g9.py`), **#126 (todos os notebooks)**, #193, **#2 (G9)**, #165 e #194 (`pos_g9.py`, inclui a mescla na `main`). Só a Pessoa C mexe em código até o G9.
+- **B (≈ 3,4 h)** — depois do #194: #191 (comentários essenciais), #189 e #157 (só se o `pos_g9.py` não tiver feito) e a **apresentação (#134, dona)**. Opcional: #91.
+- **A (≈ 3,4 h)** — depois do #194: #190 (Markdown), #55 (equidade), #133 (limitações e rastreabilidade) e **#147 (fechar a entrega)**. Antes do #194: só documentos (rascunhos).
 - **Equipe** — aprovação do G9 e confirmação do congelamento (#2, #193). Opcional: #176 (B).
 
 ### Caminho crítico
 
-#188 → #192 → #126 → #193 → #2 → #165 → #194 → #195 → #189 → #191 → #190 → #157 → #147 (e #134 em paralelo, antes do #147)
+#188 → #192 → #126 → #193 → #2 → #165 → #194 → #189 → #191 → #190 → #157 → #147 (e #134 em paralelo, antes do #147)
 
 ### Aviso da revisão
 
+> [!decisão] Versão 7 (05/11): a cadeia completa volta para antes do G9
+> **Todos os notebooks (02 a 10) são reexecutados antes do G9** (#126), em segundo plano, com a documentação atualizada pelo próprio script (`cadeia.py`). O #195 foi incorporado ao #126. **Dois comandos** fazem o resto: `pre_g9.py` (#188 e #192) e, depois do G9, `pos_g9.py` (#2, #165, #194, #189, #157). Os cards são fechados por `[done:#N]` nos commits.
+
 > [!decisão] Revisão final de 05/11 · versão 6.0: só o essencial antes do G9; o resto depois
-> **O que mudou desde a versão 5:** (1) **a branch `enxugamento` é a final** e só é mesclada na `main` no fim do #194; (2) **a entrega** é o link do GitHub completo mais a **apresentação em PowerPoint** (#134); (3) tudo o que pôde ir para **depois do G9** foi: a cadeia 03 a 09 (#195), comentários e caminhos (#189), comentários essenciais (#191), Markdown (#190), equidade (#55), limitações (#133), resultados (#157); (4) **o notebook 11 e o `src/` não mudam antes do G9**: o O/E e as regras de equidade saem depois, do arquivo de previsões e dos CSV que o próprio notebook grava (#165, #55); (5) a renomeação das saídas (#192) **foi mantida** e o notebook 10 é reexecutado logo depois (#126); (6) **o orquestrador `lote.py`** roda os relatórios de vários scripts de uma vez e aplica tudo em ordem segura.
+> **O que mudou desde a versão 5:** (1) **a branch `enxugamento` é a final** e só é mesclada na `main` no fim do #194; (2) **a entrega** é o link do GitHub completo mais a **apresentação em PowerPoint** (#134); (3) tudo o que pôde ir para **depois do G9** foi: comentários e caminhos (#189), comentários essenciais (#191), Markdown (#190), equidade (#55), limitações (#133), resultados (#157); (4) **o notebook 11 e o `src/` não mudam antes do G9**: o O/E e as regras de equidade saem depois, do arquivo de previsões e dos CSV que o próprio notebook grava (#165, #55); (5) a renomeação das saídas (#192) **foi mantida** e **todos os notebooks (02 a 10) são reexecutados logo depois (#126), antes do G9**; (6) **o orquestrador `lote.py`** roda os relatórios de vários scripts de uma vez e aplica tudo em ordem segura.
 
 **Antes do G9, são 7 cards da Pessoa C (≈ 4.0 h):** #188, #192, #126, #193, #2, #165, #194. É o mínimo que protege o teste.
 
@@ -75,9 +80,9 @@ O **③ O que fazer** tem agora quatro partes: **Passo a passo (para a pessoa)**
 > O verificador lê a `main`, e a `main` só recebe a branch no fim do #194. Até lá, critérios com caminhos novos aparecem como "não atendido". Use **"Conferir na minha pasta"** em cada card ou confirme manualmente. Os marcadores `[done:#N]` dos commits da branch passam a valer depois da mescla.
 
 > [!atenção] Plano de corte (se o tempo apertar; nesta ordem)
-> 1. **#91 e #176** (opcionais) já estão fora da conta. 2. **#191 e #190** (só texto): podem ficar para depois da entrega; não mudam resultado. 3. **#195** (cadeia 03 a 09): pode ficar para depois, o repositório continua válido (só sem as saídas atualizadas dos notebooks 03 a 09). **Nunca cortar:** #188, #192, #126, #193, #2, #165, #194, #134 e #147.
+> 1. **#91 e #176** (opcionais) já estão fora da conta. 2. **#191 e #190** (só texto): podem ficar para depois da entrega; não mudam resultado. **Nunca cortar:** #188, #192, #126, #193, #2, #165, #194, #134 e #147.
 > **O painel publica na `main`:** os cliques e o texto do painel vão **direto para a `main`** (commits "(#status) ..."), por isso a mescla final da branch é um **merge normal** (o #194 traz o comando), não avanço rápido.
-> **Um por vez no repositório:** depois da mescla, quem for mexer em arquivos faz `git pull` antes e `git push` depois; a ordem é #195 → #189 → #191 → #190.
+> **Um por vez no repositório:** depois da mescla, quem for mexer em arquivos faz `git pull` antes e `git push` depois; a ordem é #189 → #191 → #190.
 
 > [!atenção] O que nunca muda
 > O teste é aberto **uma única vez**, com tudo congelado; resultado fora do previsto é **achado**, nunca motivo de reajuste; **depois do G9 não se roda o notebook 02 nem o 11**; só a Pessoa C mexe em código até o G9.
@@ -202,6 +207,7 @@ Painel local de acompanhamento do projeto. O conteúdo vem de PROJECT_STATUS_TEX
 - **Padrão de todos os scripts:** primeiro um **relatório** (trabalham numa cópia temporária e nada muda no repositório); depois, o mesmo comando com `--aplicar`. Cada um confere o que fez (código com a mesma árvore, JSON e YAML válidos) e deixa como estava o arquivo que não passar.
 - **Orquestrador `lote.py`:** `listar` mostra as etapas e os lotes; `relatorio --lote <nome>` roda o relatório de cada etapa e junta tudo em `outputs\final\lote_relatorio.md` (o arquivo que se envia para a IA); `aplicar --etapas a,b` grava na ordem segura, só se o commit for o mesmo do relatório e a árvore estiver limpa, e roda o `pytest`. Lotes: `agora` (testes, renomear, checklist), `pos-cadeia`, `pos-g9`, `pacote` e `tudo` (todos os relatórios de uma vez; hoje use com `--ensaio`, que usa as previsões do ensaio nas etapas do pós-G9 e **não serve para aplicar**).
 - **Scripts:** `renomear_saidas` (#192) · `checklist_g9` (#193 e #2) · `calibracao_pos_g9` (#165) · `gerar_blocos_g9` (#194) · `limpar_caminhos` e `limpar_comentarios` (#189) · `inserir_comentarios` (#191) · `enxugar_markdown` (#190) · `tabelas_relatorio` (#55) · `montar_resultados` (#157) · `curva_decisao` (#176) · `lote` (orquestrador) · `rodar_testes` (#188) · `fluxo` (#126, #193, #2 e #195: executa notebook 10, ensaio, aprovação e abertura do G9, e a cadeia 03 a 09, com as travas embutidas).
+- **Lote 4 (comandos de ponta a ponta):** `pre_g9.py` (#188 e #192: testes, renomeação, commit, push, painel) · `cadeia.py` (#126: notebooks 02 a 10 em segundo plano, com `iniciar`, `status` e `--de NN` para retomar; documentação automática: caminhos, lock, pyproject, README; commit e push) · `pos_g9.py` (depois do G9: checklist, calibração, tabelas, curva, documentação do G9, comentários e caminhos, resultados, commits, mescla na main) · `aplicar_docs_g9.py` (aplica os blocos do G9) · `painel_marcar.py` (tenta marcar cards como concluídos) · `atualizar_painel.py` (este texto). Os cards são fechados por `[done:#N]` na mensagem dos commits: o painel lê a `main`, então os que vão na branch aparecem quando ela é mesclada.
 
 ## #120 · Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste
 
@@ -4777,108 +4783,191 @@ O B_10 tem uma verificação, `features_finais_ainda_nao_congeladas`, que exige 
 
 - nao-contem: `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` :: `features_finais_ainda_nao_congeladas` | A verificação que falhava de propósito foi removida do B_10 (se o B_10 sair no #143, o critério continua atendido).
 
-## #126 · Reexecutar o notebook 10 com os nomes novos e conferir o manifesto que o notebook 11 vai procurar
+## #126 · Executar TODOS os notebooks (02 a 10) em ordem e atualizar a documentação, antes do G9
 
 - prioridade: P1
-- situação: parcial
+- situação: aberta
 - estratégia: desenvolver
 - marco: Pré-G9
 - data ideal: 05/11
 - responsável: Pessoa C
 - pessoas: C
-- fonte: Reduzido em 05/11: antes do G9 só o notebook 10 precisa ser reexecutado; a cadeia 03 a 09 vai para depois do G9 (#195)
+- fonte: Decisão de 05/11: todos os notebooks são reexecutados antes do G9 (a versão anterior deste card só reexecutava o notebook 10); incorpora o antigo #195 e a limpeza de caminhos dos notebooks (#164)
 - depende de: #192
-- tags: notebook 10, manifesto, pré-G9
-- pilar: —
-- carga: 0.4
+- tags: cadeia, notebooks, reprodutibilidade, documentação, pré-G9, automatizável
+- pilar: Eficiência + Documentação
+- carga: 1
 - novo: não
 - professores: não
-- arquivos: notebooks/10_calibracao_limiar.ipynb, outputs/tables/10_calibracao_limiar_*_manifesto.json
+- arquivos: notebooks/02_coorte_definitiva.ipynb, notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/06_pipeline_supervisionado.ipynb, notebooks/07_baseline_logistica.ipynb, notebooks/08_ablacoes_variaveis.ipynb, notebooks/09_ajuste_fino.ipynb, notebooks/10_calibracao_limiar.ipynb, requirements-lock.txt, pyproject.toml, README.md
 
 ### ① Para entender
 
-O notebook 11 só abre o teste se achar um **manifesto do notebook 10** compatível: mesmo artefato (`dataset_sha256`), mesmas variáveis, mesmo método de calibração, mesmo limiar do YAML e mesmo **hash dos modelos**. Depois da renomeação (#192), o manifesto antigo (`C5_calibracao_limiar_...`) **não é mais encontrado**.
+Antes de abrir o teste (que só pode ser aberto **uma vez**), o projeto precisa estar **inteiro e coerente**: cada notebook salvo com as saídas do código final, o artefato e os manifestos com o mesmo hash, e a documentação descrevendo o que foi executado. Em vez de reexecutar só o notebook 10, a decisão de 05/11 é **reexecutar toda a cadeia, de ponta a ponta, antes do G9**. Este card incorpora o antigo #195 (cadeia e versões) e a limpeza de caminhos pessoais dos notebooks.
 
-Por isso, **antes do G9, só o notebook 10 precisa rodar de novo**, agora com o nome novo e com o G8 já aprovado. A reexecução dos notebooks 03 a 09 (para a banca ver tudo salvo com o código final) **vai para depois do G9 (#195)**: ela não muda nada do que o G9 usa.
+| Ordem | Notebook | O que faz | Por que roda aqui |
+|---|---|---|---|
+| 1 | `02_coorte_definitiva` | republica a coorte e **regera o artefato** supervisionado (partição 70/15/15) | roda **primeiro**: se o hash do artefato mudar, tudo o que vem depois precisa ser refeito |
+| 2 | `03_eda_primeira_passagem` | análise exploratória inicial | saídas com o código final |
+| 3 | `04_eda_temporal_agrupamento` | exploração temporal e agrupamento | saídas com o código final |
+| 4 | `05_supervisionado_pilotos` | pilotos supervisionados | saídas com o código final |
+| 5 | `06_pipeline_supervisionado` | pipeline de pré-processamento e modelo | saídas com o código final |
+| 6 | `07_baseline_logistica` | baseline logístico | saídas com o código final |
+| 7 | `08_ablacoes_variaveis` | ablações de variáveis | saídas com o código final |
+| 8 | `09_ajuste_fino` | ajuste fino do boosting | saídas com o código final |
+| 9 | `10_calibracao_limiar` | calibração (G7) e limiar (G8) | **gera o manifesto que o notebook 11 vai procurar** |
+
+**Ficam de fora, de propósito:** o `01_extracao` (baixa os dados da internet; o README diz que ele fica sem saídas salvas) e o `11_validacao_final` (abre o teste: só roda no ensaio do #193 e uma vez no G9, #2).
+
+**Ordem de grandeza:** de 30 a 60 min de máquina (a última medição, de 03/11, foi ≈ 31 min, com pico ≈ 4,1 GB). Use um computador com ≥ 8 GB livres.
+
+> [!atenção] O notebook 02 regera o artefato
+> Ele republica a coorte (com backup `.bak`) e regrava o artefato. É determinístico (hash por grupo, semente 42), mas, se o `dataset_sha256` mudar, o manifesto antigo do notebook 10 deixa de servir. É por isso que a cadeia vai até o 10, em ordem, numa única execução.
 
 ### ② Problema
 
-- O notebook 10 de 05/11 02h24 gravou `g8_status = pendente` (foi antes da aprovação). Reexecutar grava `aprovado`.
-- O YAML não pode mudar entre esta execução e o G9: o hash dos modelos tem de continuar `6cb2c96bca846c7d`. Se mudar, algo em `models` ou `features` foi editado: **pare e investigue**.
-- O notebook 10 precisa de memória livre: feche navegador, Teams e outros notebooks.
-- Os caminhos pessoais gravados nesta execução são limpos **depois do G9** (#189).
+- Os notebooks 04, 05, 06, 08, 09 e 10 foram salvos antes das últimas mudanças em `src/`, e os notebooks 01, 02, 03, 07 e 11 estão sem execução salva (snapshot de 05/11).
+- Depois da renomeação das saídas (#192), os arquivos antigos de `outputs/` ficaram em `outputs/_antigo`: só a reexecução gera os nomes novos que o notebook 11 procura.
+- Cada execução grava o **caminho completo da máquina** (`C:\Users\...\OneDrive - ...`) nas saídas dos notebooks. Isso precisa ser limpo antes de publicar (o script faz).
+- O `README.md` não tem tempo, memória nem versão do Python; não existe `requirements-lock.txt`; o `pyproject.toml` não declara a versão do Python usada.
+- O G9 só abre com a **árvore Git limpa**: tudo isso precisa estar commitado e publicado antes do ensaio (#193).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Tempo:** ≈ 25 min (10 min de trabalho + alguns minutos de máquina) · **Começa quando:** #192 commitado · **Antes de:** #193.
+**Dono:** Pessoa C · **Tempo:** ≈ 15 min de trabalho + ≈ 30 a 60 min de máquina (sem ninguém acompanhar) · **Começa quando:** #192 commitado e publicado · **Antes de:** #193 (ensaio do notebook 11).
 
-> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\fluxo.py nb10`
-> confere árvore limpa e memória, reexecuta o notebook 10 salvando no lugar e compara o manifesto com o esperado (equivale aos passos 1 a 3). Depois é só o commit do passo 4.
-> Os scripts de fluxo foram testados com notebooks simulados, não com os reais: **se o atalho recusar ou falhar, siga os passos manuais abaixo, que continuam valendo.**
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\cadeia.py iniciar`
+> Roda **em segundo plano** os notebooks 02 a 10, na ordem, salvando cada um no lugar e medindo tempo e memória; **para no primeiro erro**; ao terminar, **atualiza a documentação sozinho** (tira caminhos pessoais dos notebooks, grava `requirements-lock.txt`, acrescenta a versão do Python ao `pyproject.toml`, escreve o parágrafo de tempo e memória no `README.md`), roda o `pytest`, faz **commit** (`cadeia 02 a 10 executada [done:#126]`) e **push**. Acompanhe com `.\.venv\Scripts\python.exe ..\cadeia.py status`. Se um notebook falhar, corrija e retome com `... cadeia.py iniciar --de 05` (troque 05 pelo número que parou).
+> O script foi testado com notebooks simulados (segundo plano, falha, retomada, documentação e commit), **não com os notebooks reais**: se ele recusar ou falhar, siga os passos manuais mais abaixo, que continuam valendo.
+
+#### Antes de começar (5 min)
+1. **Ramo e árvore limpos:** `git switch enxugamento; git pull --ff-only; git status --short` (o último não pode imprimir nada).
+2. **Memória:** feche navegador, Teams, Excel e outros notebooks. Precisa de **≥ 8 GB livres** (o script confere e recusa se faltar).
+3. **Energia:** computador na tomada. O script pede ao Windows para não suspender enquanto roda, mas desligue também a suspensão automática por garantia.
+4. **Scripts:** todos os scripts do lote precisam estar na **pasta acima do repositório**. O `pre_g9.py` gera `..\scripts_g9_completo.zip` com todos eles; se esta máquina ainda não os tem, copie esse zip para `..` e rode (um comando): `Expand-Archive -Path ..\scripts_g9_completo.zip -DestinationPath .. -Force`.
+5. **Combine** no grupo: "máquina ocupada por ≈ 1 h". Não rode nada pesado junto e **não toque em `src/`, `configs/` nem nos notebooks** enquanto a cadeia roda.
 
 #### Passo a passo (para a pessoa)
-1. **Árvore limpa** (`git status --short` sem nada). Se algo aparecer, faça commit (ou descarte) antes.
-2. **Rode o notebook 10 e salve no lugar** (um comando; ele mede tempo e memória):
+1. **Inicie a cadeia** (um comando; devolve o terminal em segundos):
 ```powershell
-.\.venv\Scripts\python.exe tools\medir_notebook.py notebooks\10_calibracao_limiar.ipynb --salvar-no-lugar --limite-mb 12288 --limite-s 3600
+.\.venv\Scripts\python.exe ..\cadeia.py iniciar
 ```
-   Esperado: linha final "memória OK / tempo OK" e código de saída 0. Se falhar por memória, feche programas e repita; se for erro de código, cole a mensagem na IA (bloco abaixo). **Não "conserte" mudando a lógica do estudo.**
-3. **Confira o manifesto novo** (uma linha; esperado `aprovado aprovado 6cb2c96bca846c7d precision 0.1178`):
+   Esperado: "Cadeia iniciada em segundo plano (PID ...)". Se aparecer `PARADO` (árvore suja ou pouca memória), resolva e repita.
+2. **Acompanhe** quando quiser (não interfere na execução):
+```powershell
+.\.venv\Scripts\python.exe ..\cadeia.py status
+```
+   Mostra o estado (`rodando`, `documentando`, `ok` ou `erro`), o notebook atual, o tempo e o pico de memória de cada um já feito e as últimas linhas do log (`outputs\final\cadeia.log`).
+3. **Se parar com erro**, leia a mensagem e use a tabela:
+
+| O que aparece | Causa provável | O que fazer |
+|---|---|---|
+| `PARADO: há mudanças não commitadas` | árvore Git suja | commit ou descarte e repita o passo 1 |
+| `PARADO: x GB livres` | pouca memória | feche programas e repita |
+| `ABORTADO: não achei exatamente um arquivo para: ...` | a renomeação (#192) não foi aplicada | rode o `pre_g9.py` ou aplique o #192 antes |
+| `PAROU EM 02_coorte_definitiva` | falta a base de dados ou erro na coorte | confira se a base está na máquina (`data/`); se faltar, chame a equipe; **não rode o 01 por conta própria sem combinar** |
+| `PAROU EM 0X` com `MemoryError` | memória acabou | feche programas e retome: `... cadeia.py iniciar --de 0X` |
+| `ACIMA DO LIMITE` de memória no log | o notebook rodou, mas passou do teto de 12 GB | retome com `... cadeia.py iniciar --de 0X --limite-mb 16384` |
+| erro de código ou de manifesto em um notebook | algo no código ou no YAML | **não mude a lógica do estudo**: cole o erro na IA (bloco abaixo) e retome do mesmo notebook |
+| `pytest rápido: FALHOU` na etapa de documentação | teste quebrou depois da cadeia | nada foi commitado; leia a saída, cole na IA e rode `... cadeia.py documentar` depois de corrigir |
+
+4. **Quando disser `CADEIA CONCLUIDA`** (status `ok`), o script já fez commit e push. Confira em **um comando** (esperado: o commit `cadeia 02 a 10 executada [done:#126]` e nada em `git status`):
+```powershell
+git log --oneline -3; git status --short; git grep -n -I -i -E "olivem85|OneDrive - |C:.{1,4}Users" -- notebooks README.md
+```
+5. **Confira o manifesto do notebook 10** (esperado: `aprovado aprovado 6cb2c96bca846c7d precision 0.1178`):
 ```powershell
 $m = Get-ChildItem outputs\tables\10_calibracao_limiar_*_manifesto.json | Sort-Object LastWriteTime | Select-Object -Last 1 | Get-Content -Raw | ConvertFrom-Json; "$($m.g7_status) $($m.g8_status) $($m.config_modelo_hash) $($m.limiar_metrica) $($m.escolhas.hist_gradient_boosting.limiar)"
 ```
-   Se o hash ou o limiar forem diferentes, **pare**: o YAML mudou ou o modelo não é o mesmo.
-4. **Commit e publicação** (o `git status` antes deve listar só o notebook 10):
+   Se o hash ou o limiar forem diferentes, **pare** e chame a equipe: o YAML dos modelos mudou, ou o artefato regerado pelo notebook 02 levou a outro resultado. Não copie o limiar para o YAML sem decisão registrada no `docs/decisoes.md`.
+6. **Confira que todos os notebooks ficaram executados e sem erro** (esperado: `0` células sem execução e `0` erros em cada linha):
 ```powershell
-git status --short; git add -A; git commit -m "notebook 10 reexecutado [done:#126]"; git push
+.\.venv\Scripts\python.exe -c "import json,glob; [print(f.split('\\')[-1], 'sem execucao:', sum(1 for c in json.load(open(f,encoding='utf-8'))['cells'] if c['cell_type']=='code' and ''.join(c['source']).strip() and c.get('execution_count') is None), '| erros:', sum(1 for c in json.load(open(f,encoding='utf-8'))['cells'] for o in c.get('outputs',[]) if o.get('output_type')=='error')) for f in sorted(glob.glob('notebooks/0[2-9]_*.ipynb')+glob.glob('notebooks/10_*.ipynb'))]"
 ```
+7. **Abra o `outputs\final\cadeia.md`** (tabela de tempo e memória) e **comente neste card**: tempo total, pico de memória e o commit. Avise o grupo: "cadeia concluída; começo o ensaio (#193)".
 
-#### Documentação que muda por causa desta tarefa
-Nenhuma agora. O tempo e a memória da cadeia completa entram no README no #195.
+#### Passo a passo manual (plano B, sem o script)
+1. **Execute os nove notebooks em ordem** (um comando; para no primeiro erro; cada notebook é salvo no lugar e mede tempo e memória):
+```powershell
+foreach ($n in '02_coorte_definitiva','03_eda_primeira_passagem','04_eda_temporal_agrupamento','05_supervisionado_pilotos','06_pipeline_supervisionado','07_baseline_logistica','08_ablacoes_variaveis','09_ajuste_fino','10_calibracao_limiar') { .\.venv\Scripts\python.exe tools\medir_notebook.py "notebooks\$n.ipynb" --salvar-no-lugar --limite-mb 12288 --limite-s 10800; if ($LASTEXITCODE -ne 0) { Write-Host "PAROU EM $n"; break } }
+```
+   Para retomar depois de um erro, repita o comando só com os nomes que faltam.
+2. **Tire os caminhos pessoais dos notebooks** (relatório primeiro; nada muda):
+```powershell
+.\.venv\Scripts\python.exe ..\limpar_caminhos.py --pastas notebooks
+```
+   Se o relatório estiver certo, aplique: `.\.venv\Scripts\python.exe ..\limpar_caminhos.py --pastas notebooks --aplicar`.
+3. **Grave as versões exatas** do ambiente:
+```powershell
+.\.venv\Scripts\python.exe -m pip freeze --exclude-editable | Out-File -Encoding utf8 requirements-lock.txt
+```
+4. **`pyproject.toml`:** descubra a versão com `.\.venv\Scripts\python.exe --version`. Na lista `classifiers`, **depois** da última linha `"Programming Language :: Python :: 3.xx",`, acrescente a linha da versão usada (por exemplo `"Programming Language :: Python :: 3.14",`), com o mesmo recuo. Confira: `.\.venv\Scripts\python.exe -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('pyproject ok')"`.
+5. **`README.md`, seção "Como rodar":** **depois** do parágrafo que termina em "use `SRAG_ENSAIO=1`." acrescente (os números vêm de `Get-Content outputs\final\performance_notebooks.csv -Tail 10`: some os tempos dos nove notebooks e pegue o maior pico):
+```markdown
+Tempo e memória (máquina oficial): a cadeia de notebooks 02 a 10 leva cerca de ⟨X⟩ min, com pico de ⟨Y⟩ GB de memória. Os notebooks 01 (download dos dados) e 11 (abertura única do teste) ficam fora dessa execução. Testado com Python ⟨versão⟩; versões exatas em `requirements-lock.txt`.
+```
+6. **Teste, commit e publicação** (um comando; o `git status` antes do commit deve listar só notebooks, lock, pyproject e README):
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q; git status --short; git add -A; git commit -m "cadeia 02 a 10 executada [done:#126]"; git push
+```
+7. Siga os passos 5 a 7 do passo a passo principal (manifesto, notebooks sem erro, comentário no card).
+
+#### Documentação que muda por causa desta tarefa (resumo)
+| Onde | Bloco | O que muda | Quem faz |
+|---|---|---|---|
+| `README.md` | "Como rodar" | parágrafo de tempo, memória e versão do Python (entre os marcadores `<!-- cadeia:inicio -->` e `<!-- cadeia:fim -->`) | `cadeia.py` |
+| `requirements-lock.txt` | arquivo novo | versões exatas do ambiente | `cadeia.py` |
+| `pyproject.toml` | `classifiers` | linha da versão do Python usada | `cadeia.py` |
+| Notebooks 02 a 10 | saídas salvas | caminhos pessoais trocados por `<REPO>` e `<HOME>` | `cadeia.py` + `limpar_caminhos.py` |
+| `outputs\final\cadeia.md` | resumo local (não vai ao Git) | tabela de tempo e memória | `cadeia.py` |
+| Painel | este card | comentário com tempo, pico e commit | pessoa |
 
 #### Automação sugerida
-> [!exemplo] Já automatizado
-> `tools/medir_notebook.py` executa, salva e mede. A conferência do manifesto está numa linha; o `checklist_g9.py` (#193) refaz essa conferência e mais 25 itens.
+> [!exemplo] Estratégia do `cadeia.py` (já entregue)
+> **Descoberta:** acha cada notebook pelo número (`02_*` a `10_*`) e recusa se faltar ou houver dois. **Segundo plano:** `iniciar` abre um processo desanexado (no Windows, sem janela) que grava `outputs\final\cadeia_status.json` e `cadeia.log`; `status` só lê esses arquivos. **Segurança:** recusa árvore suja (na retomada aceita só notebooks modificados) e pouca memória; remove `SRAG_ENSAIO`, `SRAG_ALLOW_TEST_REOPEN` e `SRAG_ALLOW_DIRTY` do ambiente dos notebooks; nunca roda o 01 nem o 11. **Erro:** para no primeiro, guarda a cauda do log e diz como retomar. **Documentação:** só depois de a cadeia inteira passar; o commit só acontece se o `pytest` passar e se os únicos arquivos alterados forem notebooks, `requirements-lock.txt`, `pyproject.toml`, `README.md` ou `docs/`.
 
 #### Para a IA (copie e cole na conversa)
 <div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
 
 ~~~text
-TAREFA: #126 · Reexecutar o notebook 10 com os nomes novos
+TAREFA: #126 · Executar todos os notebooks (02 a 10) e atualizar a documentação, antes do G9
 
 OBJETIVO
-Executar o notebook 10 e conferir que o manifesto novo bate com o YAML (hash dos modelos, limiar, variáveis) para o notebook 11 poder abri-lo.
+Acompanhar a execução completa e ordenada dos notebooks 02 a 10 (cadeia.py), diagnosticar qualquer parada SEM mudar a lógica do estudo e conferir que a documentação (README, requirements-lock.txt, pyproject) e o manifesto do notebook 10 estão corretos para o G9.
 
 MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
 - Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
 - Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
-- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
-- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: medir_notebook.py executa, salva e mede um notebook.
 - Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
 - Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
 
 ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
-- A saída do `git status --short` antes da execução.
-- As últimas 40 linhas da saída da execução, se falhar.
-- O manifesto novo outputs/tables/10_calibracao_limiar_final_<data>_manifesto.json.
-- configs/supervised.yaml (blocos models, features, limiar, calibracao, gates).
+- A saída de `cadeia.py status` e o arquivo outputs/final/cadeia.log (últimas 80 linhas).
+- Se houve erro: a mensagem completa e o notebook que parou.
+- O manifesto novo outputs/tables/10_calibracao_limiar_final_<data>_manifesto.json e configs/supervised.yaml (blocos models, features, limiar, calibracao, gates).
+- outputs/final/cadeia.md e git log --oneline -3.
 
 PASSOS
-1. Se falhou: leia a mensagem, diga a causa provável e proponha a correção mínima SEM mudar a lógica do estudo (bloco completo com âncoras).
-2. Compare o config_modelo_hash do manifesto novo com 6cb2c96bca846c7d e o limiar com limiar.otimo do YAML (0,1178). Se diferirem, pare e explique.
-3. Entregue a linha de PowerShell de commit.
+1. Se parou: classifique a causa (memória, dado ausente, erro de código, trava de manifesto) e proponha a correção mínima, com âncoras (4 linhas antes e 4 depois) e a linha de PowerShell para retomar (`cadeia.py iniciar --de NN`).
+2. Se terminou: compare o config_modelo_hash com 6cb2c96bca846c7d e o limiar com limiar.otimo do YAML (0,1178). Se diferirem, pare e explique.
+3. Confira o parágrafo do README (tempo, memória, versão do Python) e se o requirements-lock.txt tem scikit-learn==, pandas==, numpy== e pyarrow==.
+4. Diga em uma frase se o #193 (ensaio) pode começar.
 
 CRITÉRIOS DE ACEITE (verificáveis)
-- O notebook 10 está salvo com todas as células executadas e sem erro.
-- O manifesto tem g7_status = aprovado, g8_status = aprovado, limiar_metrica = precision e o mesmo hash dos modelos.
+- Os notebooks 02 a 10 estão salvos com todas as células executadas e sem erro.
+- git status limpo e o commit 'cadeia 02 a 10 executada [done:#126]' publicado.
+- O manifesto do notebook 10 tem g7_status = aprovado, g8_status = aprovado, limiar_metrica = precision e o hash dos modelos esperado.
+- Nenhum caminho pessoal (olivem85, OneDrive - ) nos notebooks.
 
 NÃO FAÇA
-- Não rode os notebooks 01 a 09 nem o 11.
-- Não edite src/, configs/ nem notebooks.
-- Não use SRAG_ALLOW_TEST_REOPEN nem SRAG_ENSAIO aqui.
+- Não rode os notebooks 01 e 11.
+- Não edite src/, configs/ nem notebooks durante a cadeia.
+- Não use SRAG_ENSAIO, SRAG_ALLOW_TEST_REOPEN nem SRAG_ALLOW_DIRTY.
+- Não proponha mudar modelo, calibração ou limiar.
 
 FORMATO DA ENTREGA
-Diagnóstico curto + linha de PowerShell.
+Diagnóstico em 3 linhas + linhas de PowerShell (uma por linha). Só entregue código se houver erro.
 
 REGRAS DO USUÁRIO (valem sempre)
 - Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
@@ -4891,8 +4980,19 @@ REGRAS DO USUÁRIO (valem sempre)
 
 ### ④ Pronto quando
 
+- notebook-executado: `notebooks/02_coorte_definitiva.ipynb` | O notebook 02 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/03_eda_primeira_passagem.ipynb` | O notebook 03 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/04_eda_temporal_agrupamento.ipynb` | O notebook 04 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/05_supervisionado_pilotos.ipynb` | O notebook 05 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/06_pipeline_supervisionado.ipynb` | O notebook 06 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/07_baseline_logistica.ipynb` | O notebook 07 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/08_ablacoes_variaveis.ipynb` | O notebook 08 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/09_ajuste_fino.ipynb` | O notebook 09 está salvo com todas as células executadas e sem erro.
 - notebook-executado: `notebooks/10_calibracao_limiar.ipynb` | O notebook 10 está salvo com todas as células executadas e sem erro.
-- manual: | O manifesto novo do notebook 10 registra G7 e G8 aprovados, precision e o mesmo hash dos modelos (6cb2c96bca846c7d).
+- existe: `requirements-lock.txt` | O arquivo com as versões exatas da máquina oficial existe.
+- contem: `requirements-lock.txt` :: `scikit-learn==` | O arquivo fixa a versão do scikit-learn.
+- contem: `README.md` :: `requirements-lock.txt` | O README cita as versões exatas, o tempo e a memória da cadeia.
+- manual: | O manifesto novo do notebook 10 registra G7 e G8 aprovados, precision e o mesmo hash dos modelos (6cb2c96bca846c7d), e o git status ficou limpo depois do commit da cadeia.
 
 ## #28 · O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes
 
@@ -9042,7 +9142,7 @@ Contagem nas saídas salvas do commit `863dd45`: B_02 37, B_04 58, B_05 18, C_12
 - responsável: Pessoa A
 - pessoas: A
 - fonte: Reescrito em 05/11: outputs/ é ignorado pelo Git; script montar_resultados.py cobre a cópia, a limpeza de caminhos e o índice
-- depende de: #195, #55
+- depende de: #194, #55
 - tags: pacote, resultados, automatizável
 - pilar: —
 - carga: 0.5
@@ -9064,7 +9164,10 @@ A solução é uma pasta **`resultados/`** (que **não** é ignorada) com só o 
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Tempo:** ≈ 25 min · **Começa quando:** #195, #189 e #55 concluídos (e #91 e #176, se feitos) · **Antes de:** #147 · **Script pronto:** `montar_resultados.py` (relatório primeiro; copia só com `--aplicar`).
+**Dono:** Pessoa A · **Tempo:** ≈ 25 min · **Começa quando:** #126, #189 e #55 concluídos (e #91 e #176, se feitos) · **Antes de:** #147 · **Script pronto:** `montar_resultados.py` (relatório primeiro; copia só com `--aplicar`).
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 já roda o `montar_resultados.py --aplicar` e faz o commit de `resultados/`. Só use os passos abaixo se ele não tiver chegado até aqui.
 
 #### Passo a passo (para a pessoa)
 1. **`git switch main; git pull --ff-only`** e **guarde o script fora do repositório** (`..\montar_resultados.py`). Rode **na máquina oficial** (é onde estão os arquivos).
@@ -9588,6 +9691,9 @@ O notebook 11 não calcula O/E. **Não vamos alterá-lo antes do G9** (menos ris
 ### ③ O que fazer
 
 **Dono:** Pessoa C · **Tempo:** ≈ 20 min · **Começa quando:** #2 concluído (teste aberto e commit publicado) · **Antes de:** #194 · **Script pronto:** `calibracao_pos_g9.py`.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 roda o `calibracao_pos_g9.py --aplicar` (este card), as tabelas, a curva, os textos do G9 e a documentação, e fecha os cards. Veja o #194.
 
 #### Passo a passo (para a pessoa)
 1. **Relatório** (nada é gravado; mostra as três janelas, o O/E por ano e o veredito da hipótese):
@@ -10915,13 +11021,16 @@ Os arquivos que os notebooks gravam (tabelas, previsões, manifestos, figuras e 
 > - o 11 para com "Nenhum manifesto notebook 10 compatível" (erro seguro: nada é aberto); ou
 > - **pior**: a guarda de reabertura deixa de enxergar uma abertura anterior (falha silenciosa; por isso o ensaio do #193 precisa passar depois desta troca).
 
-- Os arquivos antigos que já estão em `outputs/` ficam para trás: com o prefixo novo, o notebook 11 só enxerga manifestos novos. Por isso o **notebook 10 é reexecutado logo depois (#126)**. Os notebooks 03 a 09 só são reexecutados **depois do G9** (#195), e as tabelas deles ganham os nomes novos nessa hora.
+- Os arquivos antigos que já estão em `outputs/` ficam para trás: com o prefixo novo, o notebook 11 só enxerga manifestos novos. Por isso **todos os notebooks (02 a 10) são reexecutados logo depois (#126)**, o que regera as saídas com os nomes novos.
 - **Não renomeie depois do G9.** Depois da abertura, os nomes dos arquivos do teste (`11_validacao_final_...`) já são os finais.
 - Textos que citam "C_16", "B_04" etc. (nomes de notebook antigos dentro de Markdown e mensagens) **não** são trocados por esta tarefa; entram no #190 (depois do G9).
 
 ### ③ O que fazer
 
 **Dono:** Pessoa C · **Tempo:** ≈ 30 min · **Começa quando:** #188 · **Antes de:** #126 · **Script pronto:** `renomear_saidas.py`, rodado pelo orquestrador `lote.py` (relatório primeiro; grava só no segundo comando).
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pre_g9.py`
+> faz o #188 e o #192 juntos: testes completos, relatório e aplicação da renomeação, conferência do notebook 11, commit (`[done:#188] [done:#192]`), push e atualização do painel. Para no primeiro erro e não faz commit se algo falhar. Testado com repositório simulado, não com o real.
 
 #### Passo a passo (para a pessoa)
 1. **Guarde os scripts fora do repositório**, na pasta acima dele (`..\lote.py`, `..\renomear_saidas.py` e os demais da pasta `scripts`). Rode sempre da **raiz do repositório**.
@@ -10950,7 +11059,7 @@ git add -A; git commit -m "renomeia saidas [done:#192]"; git push
 8. **Se algo estranho aparecer** (arquivo "PULADO", muitos restos, pytest falhando), **não aplique** ou desfaça com `git checkout -- .` (os arquivos movidos para `outputs\_antigo` voltam com `Move-Item`). O G9 funciona também com os nomes antigos, mas a decisão da equipe é **manter** a renomeação.
 
 > [!atenção] Depois desta tarefa o notebook 11 só enxerga manifestos novos
-> O notebook 10 precisa ser reexecutado (#126) antes do ensaio (#193). Sem isso o notebook 11 para com "Nenhum manifesto notebook 10 compatível" (erro seguro: nada é aberto).
+> Os notebooks 02 a 10 precisam ser reexecutados (#126) antes do ensaio (#193). Sem isso o notebook 11 para com "Nenhum manifesto notebook 10 compatível" (erro seguro: nada é aberto).
 
 #### Documentação que muda por causa desta tarefa
 Nenhuma (README e decisões já usam os nomes dos notebooks).
@@ -11057,6 +11166,9 @@ O projeto tem hoje dois formatos. A `main` do GitHub (commit `f27ac3c`) está na
 ### ③ O que fazer
 
 **Dono:** Pessoa C · **Tempo:** ≈ 30 min · **Começa quando:** agora · **Antes de:** #192 e todo o resto.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pre_g9.py`
+> o mesmo comando do #192 faz o #188 (testes completos e push da branch) antes de renomear. Veja o #192.
 
 > [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\rodar_testes.py`
 > roda a suíte completa de testes e guarda `outputs\final\pytest_completo.txt` (equivale ao passo 3). Depois só falta o `git push`.
@@ -11278,7 +11390,7 @@ REGRAS DO USUÁRIO (valem sempre)
 - responsável: Pessoa B
 - pessoas: B
 - fonte: Pedido de 05/11 (projeto sem comentários) + #164 (caminhos pessoais) unificados; roda no orquestrador lote.py
-- depende de: #195
+- depende de: #194
 - tags: comentários, caminhos, limpeza, automatizável, lote
 - pilar: —
 - carga: 0.5
@@ -11288,7 +11400,7 @@ REGRAS DO USUÁRIO (valem sempre)
 
 ### ① Para entender
 
-Duas limpezas automáticas, feitas **num só lote**, **depois** da cadeia do #195 (que regrava os caminhos pessoais e as saídas):
+Duas limpezas automáticas, feitas **num só lote**, **depois** do G9 (o notebook 11 regrava os caminhos pessoais e as saídas):
 
 1. **Comentários:** o código ainda tem comentários de várias fases do projeto ("# 03/11: ...", "# <- era logistic, agora boosting", "# --- errors ---", docstrings de vários parágrafos). A decisão é **zerar** e depois recolocar só os essenciais (#191).
 2. **Caminhos pessoais:** `C:\Users\<usuário>\OneDrive - <empresa>\...` aparece nas saídas salvas dos notebooks, nos manifestos e no `metadata.json`. Vira `<REPO>` e `<HOME>`.
@@ -11314,7 +11426,10 @@ Duas limpezas automáticas, feitas **num só lote**, **depois** da cadeia do #19
 
 ### ③ O que fazer
 
-**Dono:** Pessoa B · **Tempo:** ≈ 30 min · **Começa quando:** #195 publicado e a `main` atualizada · **Antes de:** #191 e #190 · **Scripts prontos:** `lote.py` (orquestra), `limpar_caminhos.py` e `limpar_comentarios.py`.
+**Dono:** Pessoa B · **Tempo:** ≈ 30 min · **Começa quando:** #194 concluído e a `main` atualizada · **Antes de:** #191 e #190 · **Scripts prontos:** `lote.py` (orquestra), `limpar_caminhos.py` e `limpar_comentarios.py`.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 já roda este lote (caminhos e comentários, com relatório, aplicação e pytest). Só use os passos abaixo se ele não tiver chegado até aqui.
 
 #### Passo a passo (para a pessoa)
 1. **Atualize e confira:** `git switch main; git pull --ff-only; git status --short` (sem nada).
@@ -11444,6 +11559,9 @@ O script `gerar_blocos_g9.py` lê os arquivos que o notebook 11 gravou e **escre
 
 **Dono:** Pessoa C · **Tempo:** ≈ 55 min · **Começa quando:** #165 concluído e o backup do #2 feito · **Antes de:** todo o trabalho de A e B · **Script pronto:** `gerar_blocos_g9.py` (só lê; escreve `outputs\final\blocos_g9.md`).
 
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> **rode na máquina oficial** (onde o G9 foi executado: ele lê `outputs/` e `data/`, que não vão para o Git). Depois que a Pessoa C terminar o G9 e publicar o commit, um comando roda o checklist `--depois`, a calibração (#165), as tabelas (#55), a curva (#176), gera os 5 blocos de texto e **aplica** os blocos em `docs/decisoes.md`, `README.md` e `configs/supervised.yaml` (passos 2 a 6 abaixo), tira comentários e caminhos (#189), monta `resultados/` (#157), roda o pytest, faz os commits (com `[done:#N]`), mescla na `main` e faz o push. Para no primeiro erro. Testado com repositório simulado, não com o real: se ele recusar, os passos manuais abaixo valem.
+
 #### Passo a passo (para a pessoa)
 1. **Gere os textos** (um comando; abre o resultado no terminal e grava o arquivo):
 ```powershell
@@ -11469,7 +11587,7 @@ git switch main; git pull --ff-only; git merge --no-edit enxugamento; git push; 
 ```
    Esperado: aparece "Merge branch 'enxugamento'" (ou "Fast-forward", se ninguém clicou no painel) e o `push` termina sem erro. **Se aparecer CONFLITO** (só pode ser nos arquivos do painel, `PROJECT_STATUS.md` ou `PROJECT_STATUS_TEXT.md`), fique com a versão da `main` e conclua (dois comandos, um por vez): `git checkout --ours -- PROJECT_STATUS.md PROJECT_STATUS_TEXT.md` e depois `git add PROJECT_STATUS.md PROJECT_STATUS_TEXT.md; git commit --no-edit; git push`. Conflito em **outro** arquivo: pare e chame a IA (bloco abaixo). Depois rode `.\.venv\Scripts\python.exe -m pytest -q`. **Deste ponto em diante todo o trabalho é na `main`.**
 10. **Abra o GitHub no navegador** e confira: último commit, `README.md` com o resultado do teste, pasta `notebooks/` com o notebook 11 salvo.
-11. **Avise A e B:** "main atualizada; façam `git pull`". Ordem de trabalho no repositório (**um por vez**, sempre `git pull` antes e `git push` depois): **#195 (B)** → **#190 (A)** → **#189 (B)** → **#191 (B)**. #55, #133, #134 e #157 não esperam ninguém.
+11. **Avise A e B:** "main atualizada; façam `git pull`". Ordem de trabalho no repositório (**um por vez**, sempre `git pull` antes e `git push` depois): **#191 (B)** → **#190 (A)**. #55, #133, #134 e #157 não esperam ninguém.
 
 #### Resumo: quais blocos da documentação são atualizados
 | # | Arquivo | Bloco | Origem do texto |
@@ -11480,7 +11598,7 @@ git switch main; git pull --ff-only; git merge --no-edit enxugamento; git push; 
 | 4 | `configs/supervised.yaml` | `selecao_modelos.teste_consultado` e observações | passo 5 |
 | 5 | `configs/supervised.yaml` | `gates.G9_holdout` | já gravado pelo notebook (conferir) |
 | 6 | Painel | comentário e conclusão do card #2 | Bloco 5 |
-| 7 | `README.md` | "Como rodar" (tempo, memória, versão, lock) | **#195** (B), depois da cadeia |
+| 7 | `README.md` | "Como rodar" (tempo, memória, versão, lock) | **#126** (C), já feito antes do G9 |
 | 8 | `resultados/LEIA-ME.md` | lista de arquivos da abertura | **#157** (A) |
 
 #### Automação sugerida
@@ -11551,7 +11669,7 @@ REGRAS DO USUÁRIO (valem sempre)
 ## #195 · Reexecução final dos notebooks 03 a 09 e versões exatas (requirements-lock.txt)
 
 - prioridade: P2
-- situação: aberta
+- situação: resolvida
 - estratégia: desenvolver
 - marco: Pós-G9
 - data ideal: 05/11
@@ -11565,6 +11683,7 @@ REGRAS DO USUÁRIO (valem sempre)
 - novo: sim
 - professores: não
 - arquivos: notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/06_pipeline_supervisionado.ipynb, notebooks/07_baseline_logistica.ipynb, notebooks/08_ablacoes_variaveis.ipynb, notebooks/09_ajuste_fino.ipynb, requirements-lock.txt, README.md
+- removido: 05/11: incorporado ao #126 (todos os notebooks, 02 a 10, rodam antes do G9; lock, pyproject e README entram na mesma execução)
 
 ### ① Para entender
 
@@ -11700,7 +11819,7 @@ REGRAS DO USUÁRIO (valem sempre)
 - responsável: Pessoa A
 - pessoas: A
 - fonte: Pedido de 05/11; medição do snapshot 978019a: 112 células Markdown e ≈ 96 mil caracteres, 80% em três notebooks
-- depende de: #195
+- depende de: #194
 - tags: markdown, notebooks, IA, automatizável
 - pilar: —
 - carga: 0.75
@@ -11725,16 +11844,16 @@ Aproveitamos para eliminar **textos que descrevem execuções antigas** (textos 
 
 ### ② Problema
 
-- Células Markdown **não afetam resultado**: este é o tipo de limpeza mais seguro. Mesmo assim, **não reescreva o texto das saídas**: os números que o texto cita têm de bater com as saídas salvas da cadeia do #195 (por isso esta tarefa vem **depois** dela).
+- Células Markdown **não afetam resultado**: este é o tipo de limpeza mais seguro. Mesmo assim, **não reescreva o texto das saídas**: os números que o texto cita têm de bater com as saídas salvas da cadeia do #126 (por isso esta tarefa vem **depois** dela).
 - Rodar de novo **não** é necessário: o script troca só o texto da célula Markdown. O código e as saídas não mudam, e o notebook continua "executado".
 - Notebooks 03 e 04 têm células enormes (provavelmente conclusões e implicações). Em vez de apagar, **resuma em um quadro curto** e mova o excesso para `docs/historico/` só se for preciso guardar.
 
 ### ③ O que fazer
 
-**Dono:** Pessoa C · **Tempo:** ≈ 45 min (30 min de IA + 15 min de revisão) · **Começa quando:** a cadeia do #195 terminou e está publicada · **Script pronto:** `enxugar_markdown.py` (lista as candidatas e aplica um JSON de textos novos; relatório numa cópia).
+**Dono:** Pessoa C · **Tempo:** ≈ 45 min (30 min de IA + 15 min de revisão) · **Começa quando:** a cadeia do #126 terminou e está publicada · **Script pronto:** `enxugar_markdown.py` (lista as candidatas e aplica um JSON de textos novos; relatório numa cópia).
 
 #### Passo a passo (para a pessoa)
-1. **`git switch main; git pull --ff-only`** (a Pessoa B publica o #195 antes), **árvore limpa** (`git status --short` sem nada) e **guarde o script fora do repositório** (`..\enxugar_markdown.py`; ele também roda no lote `pos-cadeia`).
+1. **`git switch main; git pull --ff-only`** (a Pessoa B publica o #126 antes), **árvore limpa** (`git status --short` sem nada) e **guarde o script fora do repositório** (`..\enxugar_markdown.py`; ele também roda no lote `pos-cadeia`).
 2. **Gere a lista de candidatas** (nada muda nos notebooks):
 ```powershell
 .\.venv\Scripts\python.exe ..\enxugar_markdown.py
