@@ -1776,3 +1776,105 @@ Regras combinadas em equipe **antes** de rodar qualquer exploração:
 - **Regra:** se algum resultado contrariar uma hipótese, a contradição entra no relatório **como achado**, nunca como motivo para ajustar o modelo, a calibração ou o corte. O teste é uma única vez.
 - **Implementado em:** esta entrada. A abertura fica registrada na §29.39 (ou na entrada equivalente do #2).
 - **Abre:** nada (o teste é o fim da cadeia).
+
+## Ajuste fino final do Hist Gradient Boosting
+
+**Data:** 2026-11-04
+**Notebook:** `notebooks/09_ajuste_fino.ipynb`
+**Métrica principal:** PR-AUC
+**Teste final consultado:** não
+
+### Modelos finalistas
+
+- Hist Gradient Boosting.
+- Regressão Logística.
+
+### Modelo selecionado
+
+Hist Gradient Boosting.
+
+### Configuração anterior
+
+- `learning_rate`: 0.05
+- `max_iter`: 500
+- `max_depth`: `None`
+- `max_leaf_nodes`: 31
+- `min_samples_leaf`: 20
+- `l2_regularization`: 0.0
+- `class_weight`: `None`
+
+Resultados:
+
+- PR-AUC: 0.360273
+- ROC-AUC: 0.866464
+- Brier: 0.063152
+
+### Configuração final escolhida
+
+- `learning_rate`: 0.05
+- `max_iter`: 500
+- `max_depth`: `None`
+- `max_leaf_nodes`: 63
+- `min_samples_leaf`: 100
+- `l2_regularization`: 0.1
+- `early_stopping`: `True`
+- `class_weight`: `None`
+
+Resultados:
+
+- PR-AUC: 0.361643
+- ROC-AUC: 0.866776
+- Brier: 0.063084
+
+### Comparação
+
+- Ganho de PR-AUC: +0.001370.
+- Ganho de ROC-AUC: +0.000312.
+- Redução do Brier: 0.000068.
+- A configuração final apresentou melhora simultânea nas três métricas.
+- O aumento de `min_samples_leaf` e a regularização L2 tornam as folhas mais conservadoras.
+- O fine tuning foi encerrado após explorar taxa de aprendizado, iterações, profundidade, número máximo de folhas, mínimo de amostras por folha, regularização L2 e peso das classes.
+
+### Decisão
+
+A configuração do Hist Gradient Boosting foi congelada. Nenhum novo hiperparâmetro será ajustado depois da calibração ou da abertura do teste final.
+
+## 29.36 05/11 · G7 e G8 finais: calibração e limiar operacional
+
+### G7: calibração
+
+**Método escolhido:** `sigmoid`
+**Brier bruto OOF em `val_cal`:** 0.063109686
+**Brier sigmoid OOF em `val_cal`:** 0.063112588
+**Brier isotonic OOF em `val_cal`:** 0.063243551
+**Log loss sigmoid OOF em `val_cal`:** 0.211664048
+**ECE sigmoid OOF em `val_cal`:** 0.001167321
+**Intercepto de calibração:** não calculado no experimento OOF adicional
+**Inclinação de calibração:** não calculada no experimento OOF adicional
+**Teste final consultado:** não
+
+#### Justificativa
+
+O método `sigmoid` foi mantido após comparação com o modelo-base e `isotonic` por validação cruzada estratificada com previsões fora da amostra em `val_cal`. O Brier de `sigmoid` ficou praticamente empatado com o modelo-base: a diferença `sigmoid - base` foi de aproximadamente 0.000003, com intervalo de confiança de 95% entre -0.000009 e 0.000015. Em relação ao `isotonic`, o `sigmoid` apresentou Brier consistentemente menor: a diferença `sigmoid - isotonic` foi de aproximadamente -0.000130, com intervalo de confiança de 95% entre -0.000181 e -0.000078. A escolha foi feita exclusivamente em `val_cal`; `val_meas` foi usado somente para medição descritiva e não influenciou a decisão. O teste final permaneceu fechado.
+
+A decisão final de peso de classe foi manter `class_weight=None`, representado por `{}` no YAML, tanto para o Hist Gradient Boosting quanto para a Regressão Logística.
+
+### G8: limiar operacional
+
+**Métrica otimizada:** `precision`
+**Restrição:** `recall >= 0.80`
+**Limiar escolhido em `val_cal`:** 0.1178
+**Recall em `val_cal`:** 0.8098171701112877
+**Precision em `val_cal`:** 0.2523532325984642
+**Recall em `val_meas`:** 0.8090222575516693
+**Precision em `val_meas`:** 0.24908223201174742
+**Limiar reajustado em `val_meas`:** não
+**Teste final consultado:** não
+
+#### Justificativa
+
+O limiar 0.1178 foi escolhido em `val_cal` como o corte de maior precisão entre os que mantiveram recall mínimo de 0.80. O mesmo corte foi aplicado em `val_meas` sem reajuste. A proximidade entre recall e precision nos dois subconjuntos indica estabilidade suficiente para congelar o limiar antes do G9. Nenhum resultado do teste final foi consultado, e nenhuma decisão pode ser alterada com base no holdout após sua abertura.
+
+### Decisão
+
+G7 e G8 ficam aprovados e congelados com o Hist Gradient Boosting final, `class_weight=None`, calibração `sigmoid` e limiar operacional 0.1178. Qualquer alteração posterior em dados, features, hiperparâmetros, peso de classe, calibrador ou limiar invalida este congelamento e exige retornar aos gates anteriores antes de abrir o teste final.

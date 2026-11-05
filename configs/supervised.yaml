@@ -311,66 +311,41 @@ models:
   logistic:
     C: 10.0
     busca_C:
-    - 0.001
-    - 0.01
-    - 0.1
-    - 1.0
     - 10.0
     penalty: l2
     solver: lbfgs
     max_iter: 1000
-    class_weight: {}   # sem peso (null seria descartado pela fábrica e viraria balanced)
+    class_weight: {}
     busca_class_weight:
-    - balanced
     - null
-  decision_tree:
-    ativa: false
-    max_depth:
-    - 3
-    - 5
-    - 8
-    - null
-    min_samples_leaf:
-    - 20
-    - 50
-    - 100
-    class_weight: balanced
-  random_forest:
-    ativa: false
-    n_estimators: 300
-    max_depth:
-    - 6
-    - 10
-    - null
-    min_samples_leaf:
-    - 10
-    - 20
-    - 50
-    max_features:
-    - sqrt
-    - log2
-    class_weight: balanced
-    n_jobs: -1
   boosting:
     learning_rate: 0.05
-    busca_learning_rate:
-    - 0.03
-    - 0.05
-    - 0.1
     max_iter: 500
+    max_depth: null
+    max_leaf_nodes: 63
+    min_samples_leaf: 100
+    l2_regularization: 0.1
+    class_weight: {}
+    busca_learning_rate:
+    - 0.05
+
     busca_max_iter:
     - 500
-    - 1000
-    max_depth: null
+
     busca_max_depth:
     - null
-    max_leaf_nodes: 31
-    min_samples_leaf: 20
-    l2_regularization: 0.0
-    early_stopping: true
-    class_weight: {}   # sem peso (null seria descartado pela fábrica e viraria balanced)
+
+    busca_max_leaf_nodes:
+    - 63
+
+    busca_min_samples_leaf:
+    - 100
+
+    busca_l2_regularization:
+    - 0.1
+
+    # null representa None na busca, isto é, sem balanceamento.
     busca_class_weight:
-    - balanced
     - null
 
 tuning:
@@ -382,16 +357,17 @@ tuning:
 
 calibracao:
   ativa: true
-  metodo: null
+  metodo: sigmoid
   metodos_candidatos:
   - sigmoid
   - isotonic
   fonte: validacao
   comparar_brier_antes_depois: true
 
+
 limiar:
   default: 0.5
-  otimo: null
+  otimo: 0.1178
   metrica: precision   # #79: maximiza a precisão sujeita a min_recall
   metricas_candidatas:
   - f1
@@ -518,14 +494,14 @@ gates:
     data: '2026-11-03'
   G7_calibracao:
     descricao: Escolher o metodo de calibracao usando apenas treino e validacao.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: '2026-11-04'
   G8_limiar:
     descricao: Escolher o limiar operacional usando apenas a validacao.
-    status: pendente
-    aprovado_por: null
-    data: null
+    status: aprovado
+    aprovado_por: time_do_projeto
+    data: '2026-11-05'
   G9_holdout:
     descricao: >-
       Liberar test_ref e test_pandemic uma unica vez depois de congelar
