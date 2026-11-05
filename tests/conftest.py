@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from src.utils import config as C
+from src import config as C
 
 
 @pytest.fixture(scope="session")
