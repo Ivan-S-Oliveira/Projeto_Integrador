@@ -23,19 +23,27 @@ Projeto SRAG · Pendências
 
 ### Subtítulo
 
-Retrato de 03/11, ao meio-dia, sobre o commit `5c9e205`. O artefato foi regerado com as **30 variáveis** (saturação e desconforto dentro; perda de olfato, perda de paladar e fadiga fora) e o C_11, o C_12 e o C_14 foram reexecutados nele (#132 e #140 concluídos). Com hiperparâmetros padrão, o `val_ref` (119.243 fichas, 8,4% de óbitos) dá PR-AUC de **0,320 na logística e 0,353 no boosting**, isto é, 3,8× e 4,2× o acaso (critério do professor: pelo menos 1,25×). O C_15 e o C_16 já foram corrigidos pelo script de 03/11, e os rastros da coorte provisória e do desenho 70/5+5+5/15 foram removidos. G6 a G9 continuam pendentes. **Trabalho, teste e apresentação: 05/11 (em negociação com os professores).**
+Retrato de **05/11, dia da entrega**, sobre a branch `enxugamento` (a `main` recebe a branch no fim do #194). **G6, G7 e G8 aprovados; G9 pendente.** Painel **versão 7: só o essencial antes do G9, e a cadeia completa de notebooks volta para antes dele**. Restam **7 cards até a documentação do G9** (todos da Pessoa C), **8 depois** (Pessoas A e B) e **2 opcionais** (P4). Todo "③ O que fazer" tem passo a passo para a pessoa, automação sugerida (scripts com relatório antes de gravar) e bloco para a IA com botão de copiar.
 
-**Regra de ordem:** uma máquina oficial (#158) → G6 e ajuste fino de referência (#1) → G7 e G8 (#79) → exploração em equipe, 04/11 (#155) → execução limpa (#126) e clone limpo (#163) → **05/11: G9, teste aberto uma vez (#2), resultados, relatório, pacote e apresentação** (#55, #133, #157, #147, #134).
+**A entrega:** (1) o **link do GitHub (branch `main`, completa)** e (2) a **apresentação em PowerPoint** (#134, arquivo `entrega/Apresentacao_SRAG.pptx`).
+
+**Dois comandos fazem quase tudo:** `pre_g9.py` (#188 e #192) agora e `pos_g9.py` (#2, #165, #194, #189, #157) depois do G9. No meio, a Pessoa C roda `cadeia.py iniciar` (#126: **todos os notebooks, 02 a 10**, em segundo plano, com a documentação atualizada sozinha).
+
+**Regra de ordem:** testar, publicar e renomear (#188, #192) → **executar todos os notebooks e atualizar a documentação (#126)** → **ensaio e congelamento (#193)** → **G9, teste aberto uma vez (#2)** → calibração/O/E (#165) → **documentar o G9 e mesclar na main (#194)** → comentários e caminhos (#189) → comentários essenciais (#191) → Markdown (#190) → equidade (#55), limitações (#133), apresentação (#134), resultados (#157) → **fechar a entrega (#147)**.
 
 ### Entrega
 
-05/11/2026 (trabalho, teste e apresentação; em negociação com os professores)
+05/11/2026 (link do GitHub, branch main completa, e apresentação em PowerPoint; em negociação com os professores)
 
 ### Cronograma
 
-- **03/11 ter** — 12h: **máquina oficial (#158: A e C)** · 12h30: B corrige o B_04, o B_05 e o 01_extracao (#159, #137) · 13h45: C congela o G6 (#1) · 14h: B: C_15, G7 e G8 na máquina oficial (#79) · A: ensaio do C_16 (#148) e registros no decisoes.md (#73) · noite: cada pessoa prepara a sua frente do #155
-- **04/11 qua** — 8h: A: maturidade do desfecho (#160) e ajustes de avaliação (#161) · B prepara a sua frente do #155 e adianta o relatório (#133) · **9h às 15h: exploração em equipe (#155: A logística L2, B logística L1 e elastic-net, C boosting)** · 15h às 16h: confirmação e escolha · 16h às 17h: congelar e rodar o C_15 final (**corte duro às 17h**) · 17h: importância das variáveis (#91) · 18h: nomes da entrega (#146) · 19h às 22h: execução limpa e README (#126), caminhos locais (#156) · 22h: clone limpo (#163) e hipóteses do teste registradas (#161) · em paralelo: relatório sem os números do teste (#133), referências (#112), dicionário (#70)
-- **05/11 qui** — 7h45: RAM e checklist (#161, #2) · 8h: G9 e abertura única do teste (#2) · 9h30: conferência das saídas · 10h: figuras e tabelas por grupo (#55) · 10h às 14h: números do teste no relatório (#133) · 14h: resultados no pacote (#157) · 14h30: slides e ensaio (#134) · 16h: congelar e empacotar (#147) · **apresentação**
+- **05/11 qui · 1 Preparar (Pessoa C)** — #188 testar e publicar a branch e #192 renomear as saídas: **um comando, `pre_g9.py`**
+- **05/11 qui · 2 Cadeia completa (Pessoa C)** — **#126 executar TODOS os notebooks (02 a 10) e atualizar a documentação**: `cadeia.py iniciar` (segundo plano, ≈ 30 a 60 min de máquina)
+- **05/11 qui · 3 Congelar (Pessoa C)** — **#193 ensaio do notebook 11 e checklist: "código congelado"**
+- **05/11 qui · 4 G9 (Pessoa C + Equipe)** — **#2 aprovar e abrir o teste uma vez**; depois, **um comando, `pos_g9.py`**: #165 calibração, #194 documentar o G9 e mesclar na main, #189 comentários e caminhos, #157 resultados
+- **05/11 qui · 5 Em paralelo, desde já (A e B)** — rascunho do #134 (apresentação) e do #133; **sem tocar em código**
+- **05/11 qui · 6 Depois do #194, um de cada vez no repositório (A e B)** — B: #191 comentários essenciais · A: #190 Markdown · A: #55 equidade e #133 limitações · B: #134 apresentação com os números
+- **05/11 qui · 7 Fechar (A)** — **#147 fechar a entrega**
 
 ### Legenda das estratégias
 
@@ -43,107 +51,72 @@ Retrato de 03/11, ao meio-dia, sobre o commit `5c9e205`. O artefato foi regerado
 
 ### Como ler
 
-Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em linguagem simples, com números do projeto), **② Problema** (o que está errado, com detalhes técnicos), **③ O que fazer** (passos), **④ Pronto quando** (critérios conferidos pelo verificador, com ✓, ✗, "indisponível nesta máquina" ou "confirmação manual"), **Ligações** (de quem depende e o que trava) e **Evidências** (commits que citam a pendência, commits que só mexeram nos arquivos dela e histórico). Os números dos itens são fixos e mantêm seus números históricos; o item #108 foi removido por impossibilidade material de recuperar a gravação. Cada card mostra a data ideal mesmo quando fechado. A **barra de progresso** conta só os cards P1, P2 e P3 (os despriorizados e os removidos ficam de fora).
+Cada card é uma pendência. Dentro dele: **① Para entender** (o tema em linguagem simples), **② Problema** (o que está errado ou o que pode dar errado), **③ O que fazer** e **④ Pronto quando** (critérios conferidos pelo verificador, com ✓, ✗, "indisponível nesta máquina" ou "confirmação manual"), mais **Ligações** e **Evidências**.
+
+O **③ O que fazer** tem agora quatro partes: **Passo a passo (para a pessoa)** (numerado, com comandos de PowerShell de uma linha, o que esperar de cada um e o que fazer se for diferente); **Documentação que muda por causa desta tarefa** (resumo dos blocos de README, decisões, YAML e painel); **Automação sugerida** (o script que já existe ou a estratégia para criar um); e **Para a IA**: um bloco com **botão 📋 Copiar instruções para a IA**, pronto para colar numa conversa (contexto, arquivos a pedir, passos, critérios de aceite, o que não fazer e as regras do usuário). Os números dos itens são fixos; os removidos ficam no filtro "Removidos". A **barra de progresso** conta só os cards P1, P2 e P3.
 
 ### Pessoas
 
-- **A (≈ 15,5 h)** — ensaio do C_16 (#148), registros no decisoes.md (#73), maturidade do desfecho (#160), ajustes de avaliação (#161), frente da logística L2 no #155, clone limpo (#163), checklist do G9 (#2), equidade e corte por região na versão mínima (#55), dicionário (#70), resultados e pacote (#157, #147), relatório (#133, dona)
-- **B (≈ 12,8 h)** — correção dos notebooks B (#159, #137), restos da limpeza (#152, #153), C_15 com G7 e G8 (#79), frente da logística L1 e elastic-net no #155, nomes da entrega (#146), README (#126), referências (#112), relatório (#133), apresentação (#134, dona)
-- **C (≈ 11,5 h)** — máquina oficial (#158), ajuste fino de referência (#1), frente do boosting no #155, ajustes de avaliação (#161), importância das variáveis (#91), execução limpa (#126), execução do teste (#2), relatório (#133)
-- **Equipe** — máquina oficial (#158), exploração e escolha final (#155), aprovação do G9 (#2)
+- **C (≈ 4,7 h, das quais ≈ 1 h de máquina)** — **todo o caminho até o G9 e a documentação dele**: #188 e #192 (`pre_g9.py`), **#126 (todos os notebooks)**, #193, **#2 (G9)**, #165 e #194 (`pos_g9.py`, inclui a mescla na `main`). Só a Pessoa C mexe em código até o G9.
+- **B (≈ 3,4 h)** — depois do #194: #191 (comentários essenciais), #189 e #157 (só se o `pos_g9.py` não tiver feito) e a **apresentação (#134, dona)**. Opcional: #91.
+- **A (≈ 3,4 h)** — depois do #194: #190 (Markdown), #55 (equidade), #133 (limitações e rastreabilidade) e **#147 (fechar a entrega)**. Antes do #194: só documentos (rascunhos).
+- **Equipe** — aprovação do G9 e confirmação do congelamento (#2, #193). Opcional: #176 (B).
 
 ### Caminho crítico
 
-#158 → #1 → #79 → #155 → #126 → #163 → #2 → #133 → #157 → #147 → #134
+#188 → #192 → #126 → #193 → #2 → #165 → #194 → #189 → #191 → #190 → #157 → #147 (e #134 em paralelo, antes do #147)
 
 ### Aviso da revisão
 
-> [!decisão] Ajuste de 03/11 · versão 4.2: scripts da tarde e critérios do “Pronto quando” alinhados ao código (verificado sobre o commit `cba5d46`)
-> **O que foi aplicado no repositório** (todos os scripts começaram por um relatório numa cópia): #79 (`limiar.metrica: precision`), #126 (parte mecânica: `cloudpickle` e README), #152 (conferência: os restos locais da coorte provisória já não existiam) e #154 (esquema legado e fluxo A removidos; as invariantes do #135 agora estão em `tests/test_invariantes_protocolo.py`).
->
-> **O que mudou no verificador:** o “④ Pronto quando” é o verificador (está no texto, não no código dele). Os critérios que apontavam para `tests/test_regras_pessoa_a.py`, `src/protocolo/verificacoes.py`, `dataset_analitico` e para testes legados do artefato foram trocados nos cards #16, #87, #102, #123, #135 e #144; o #154 e o #79 ganharam critérios novos. Sem essa troca, esses cards já concluídos voltariam a “reconfirmar”.
+> [!decisão] Versão 7 (05/11): a cadeia completa volta para antes do G9
+> **Todos os notebooks (02 a 10) são reexecutados antes do G9** (#126), em segundo plano, com a documentação atualizada pelo próprio script (`cadeia.py`). O #195 foi incorporado ao #126. **Dois comandos** fazem o resto: `pre_g9.py` (#188 e #192) e, depois do G9, `pos_g9.py` (#2, #165, #194, #189, #157). Os cards são fechados por `[done:#N]` nos commits.
 
-> [!decisão] Revisão de 03/11 · versão 4.1: leitura completa do repositório e dos notebooks (commit `5c9e205`) e decisões da equipe sobre o corte por região e o UMAP
-> **O que mudou na situação:** #132 e #140 estão concluídos; os scripts de 03/11 foram aplicados (variáveis e ANOVA; C_15 e C_16; rastros); o `requirements.txt` foi restaurado (por isso o #17, o #19 e o #124 estavam em "precisa revisão"). Medido hoje no C_14 (30 variáveis, hiperparâmetros padrão, treino inteiro): cada ajuste leva de 8 a 16 s, e o `val_ref` dá PR-AUC de 0,320 (logística) e 0,353 (boosting).
->
-> **Correções do meu próprio plano:**
-> - **#155 reescrito.** A versão anterior pedia `max_features`, `interaction_cst`, splines, interações e variáveis derivadas. O construtor do boosting aceita só 10 hiperparâmetros, e a fábrica **ignora em silêncio** (só um `RuntimeWarning`) as chaves que não conhece: o teste seria feito com outro modelo. Variáveis derivadas exigiriam código novo em `src/` e regerar o artefato. Agora: só hiperparâmetros que o construtor aceita, mais a logística com L1 e elastic-net.
-> - **Corte por região: só a versão mínima (decisão da equipe em 03/11).** O professor sugeriu, em 24/10, um modelo único com ponto de corte por região. A equipe decidiu fazer a versão mínima: modelo único, corte global e **métricas e calibração por região no teste** (tabelas por região, UF, faixa etária e raça/cor, e figura de sensibilidade e precisão por região). O corte regional vira limitação e trabalho futuro. O #162, que o implementaria (cerca de 1 h 45 min), foi **removido e absorvido pelo #55** (que passa a 1 h 15 min). Ganho líquido: cerca de 1 h 15 min, e nenhuma alteração no C_15 nem no C_16 antes do teste.
-> - **UMAP avaliado e deixado de fora.** Custaria de 3 a 4 h (teste de instalação, código no B_04, texto e slide) e o agrupamento já mostra que os grupos refletem idade e preenchimento. Resposta pronta no #134.
-> - **Armadilha do `class_weight`.** A fábrica descarta valores `null` do YAML, então `class_weight: null` **não** treina sem peso: vale o padrão `balanced`. Para treinar sem peso, escreva `class_weight: {}`. Isso muda como o #1, o #79 e o #155 congelam o peso de classe.
->
-> **Cards novos (5):**
->
-> | Card | O quê | Por quê |
-> |---|---|---|
-> | #158 | Uma máquina oficial para a cadeia que termina no teste | O C_16 só abre o teste se achar, no mesmo computador, o manifesto do C_15 com o mesmo `dataset_sha256` |
-> | #159 | B_04, B_05, 01_extracao e B_02 | O B_04 vai falhar na execução limpa: exige três variáveis que saíram do modelo |
-> | #160 | Maturidade do desfecho por ano | A orientação do TCC pede medir desfechos pendentes e a estabilidade de 2025 |
-> | #161 | Ajustes de avaliação antes do teste | Raça/cor e zona, hipóteses registradas, referência só idade e sexo, memória |
-> | #163 | Clone limpo | O `requirements.txt` sumiu e só o pytest percebeu |
->
-> **Scripts previstos** (todos começam por relatório, como combinado): `corrigir_notebooks_b.py` (#159), `explorar_hiperparametros.py` (#155), `executar_cadeia.py` (#126), `tabelas_relatorio.py` (#55 e #133), `montar_resultados.py` (#157), `dicionario_variaveis.py` (#70) e, por último, `checklist_g9.py` (#2). Cada card traz também os passos manuais (plano B).
->
-> **Fora do escopo, de propósito:** SHAP, UMAP, corte de decisão por região (só a versão mínima), validação cruzada, sensibilidade com data do PCR, curvas de decisão e anos anteriores a 2019 ("primeiro trabalho, não TCC", orientação de 24/10).
+> [!decisão] Revisão final de 05/11 · versão 6.0: só o essencial antes do G9; o resto depois
+> **O que mudou desde a versão 5:** (1) **a branch `enxugamento` é a final** e só é mesclada na `main` no fim do #194; (2) **a entrega** é o link do GitHub completo mais a **apresentação em PowerPoint** (#134); (3) tudo o que pôde ir para **depois do G9** foi: comentários e caminhos (#189), comentários essenciais (#191), Markdown (#190), equidade (#55), limitações (#133), resultados (#157); (4) **o notebook 11 e o `src/` não mudam antes do G9**: o O/E e as regras de equidade saem depois, do arquivo de previsões e dos CSV que o próprio notebook grava (#165, #55); (5) a renomeação das saídas (#192) **foi mantida** e **todos os notebooks (02 a 10) são reexecutados logo depois (#126), antes do G9**; (6) **o orquestrador `lote.py`** roda os relatórios de vários scripts de uma vez e aplica tudo em ordem segura.
 
-> [!decisão] Revisão de 03/11 · versão 3.4: variáveis e ANOVA
-> **Variáveis (#140):** saturação e desconforto respiratório entram no modelo principal (estão na definição de caso de SRAG hospitalizado e no campo 34 da ficha; maior ganho das ablações); perda de olfato, perda de paladar e fadiga saem (campos da era COVID, marcador de período, custo nulo). O modelo passa a ter 30 variáveis. A sensibilidade "sem saturação e desconforto" foi desativada, e o C_14 passa a medir "P − gravidade" e "P + 3 sintomas".
-> **Ordem nova:** o #140 vem **antes** do #132, porque o artefato precisa ser regerado com a lista nova (mesmas fichas e blocos, hash novo).
-> **ANOVA (#137, reaberto):** o professor pediu ANOVA e qui-quadrado no perfil dos grupos; o B_04 tinha só o qui-quadrado e o Kruskal-Wallis. Entra a ANOVA com η², e o Kruskal-Wallis fica como conferência.
-> **Cards ajustados:** #132, #1, #155 (saturação deixa de ser proibida; nova variável derivada `sinal_gravidade`), #133, #134, #73, #70 e o #9 (concluído: critérios atualizados para a decisão nova).
-> **Ferramenta:** `aplicar_decisoes_03_11.py` aplica as duas mudanças com conferência de cada troca (`--variaveis`, `--anova`, `--simular`). Salve fora do repositório.
+**Antes do G9, são 7 cards da Pessoa C (≈ 4.0 h):** #188, #192, #126, #193, #2, #165, #194. É o mínimo que protege o teste.
 
-> [!decisão] Revisão de 03/11 · versão 3.3: conferência dos removidos e varredura dos notebooks
-> **Removidos conferidos um a um contra o repositório.** Nenhum precisa voltar, mas cinco motivos estavam errados ou incompletos e foram corrigidos: #35, #38, #74 e #137 citavam o "B_06/B_07" como inexistente, e eles só **mudaram de nome** para B_04/B_05 (o #35, o #38 e o #137 já estão resolvidos no código: o B_04 tem qui-quadrado, V de Cramér e Kruskal-Wallis); o #109 era sugestão de professor e ganhou resposta pronta no #134. Três textos do `decisoes.md` ainda dependiam de cards removidos e foram para o #73 (§7 sazonalidade, §29.7 ANOVA, §29.24 notebook A_15).
->
-> **Necessidades que não estavam mapeadas (varredura dos 15 notebooks):**
-> - **#156 (novo, P1):** 165 caminhos locais com o nome do usuário e da empresa nas saídas salvas dos notebooks.
-> - **#157 (novo, P1):** `outputs/` e `reports/figures/` são ignorados pelo Git: sem uma pasta `resultados/`, nenhuma tabela ou figura citada no relatório chega à banca.
-> - **#126:** o A_03 republica a coorte e regera o artefato por padrão (os três interruptores estão `True`): roda primeiro, e nunca depois do teste (#2). O medidor para a sequência se um notebook passar de 6 GB; o comando agora usa 12 GB.
-> - **#146:** os títulos dos notebooks C ainda dizem C2 a C6 e há mensagens "Execute o Notebook 03" e "O B_07 exige…"; os **prefixos dos arquivos de saída não podem ser renomeados**, porque o C_16 encontra o manifesto do C_15 por eles.
-> - **#70:** o dicionário completo já existe em `configs/dicionario_variaveis_v1.csv`; o card passa a filtrá-lo em vez de escrever do zero.
-> - **#147:** `tools/read_outputs.py` e `tools/perfil_celulas.py` usam bibliotecas fora das dependências e saem do pacote; a conferência final inclui a busca por caminhos locais.
+> [!atenção] Por que o painel mostra ✗ até a mescla na main
+> O verificador lê a `main`, e a `main` só recebe a branch no fim do #194. Até lá, critérios com caminhos novos aparecem como "não atendido". Use **"Conferir na minha pasta"** em cada card ou confirme manualmente. Os marcadores `[done:#N]` dos commits da branch passam a valer depois da mescla.
 
-> [!decisão] Revisão de 03/11 · versão 3.2: cada pendência aberta conferida contra o código (commit `863dd45`)
-> **20 cards ficam** (14 P1, 5 P2, 1 P3). **21 cards pós-entrega foram removidos**: o projeto termina em 05/11, então "depois da entrega" não tem janela. Cada um tem o motivo no campo "removido" (filtro "Removidos" do painel) e pode ser reaberto se o trabalho continuar como TCC. O que eles tinham de útil virou frase de limitação ou de trabalho futuro no #133; os códigos do #49 foram para o #70.
->
-> | Motivo da remoção | Cards |
-> |---|---|
-> | já resolvido no código | #38 (modo de teste sintético), #137 (B_04 já usa só o `train_ref`) |
-> | cita notebooks que não existem mais (A_08, B_06, B_07, notebooks A da coorte provisória) | #25, #35, #74, #129 |
-> | variável fora do modelo | #48 (`tp_pov_ct`), #84 (vacina) |
-> | gatilho vencido ou já coberto por outro card | #111, #138, #145, #49 |
-> | trabalho futuro, agora frase no relatório | #13, #53, #109 |
-> | sem efeito na entrega (cosmético ou ferramenta interna) | #24, #32, #42, #94, #96, #128 |
->
-> **Restos do desenho de três blocos de validação, corrigidos nos textos dos cards:** #132, #140 e #133 não falam mais em "seis blocos"; o #153 deixou de pedir para apagar o script de troca (ele já não está no repositório), passou a renomear todas as tabelas `*_val_tune.csv` do B_05 e a marcar como histórico as §29.4, §29.16, §29.17, §29.19, §29.21 e §29.22; o #79 ganhou a correção do texto do C_15 que ainda cita 21,9% de óbitos (prevalência da coorte provisória). Nos C_15 e C_16, `val_cal` e `val_meas` são as **duas metades internas do `val_ref`** e continuam com esses nomes.
+> [!atenção] Plano de corte (se o tempo apertar; nesta ordem)
+> 1. **#91 e #176** (opcionais) já estão fora da conta. 2. **#191 e #190** (só texto): podem ficar para depois da entrega; não mudam resultado. **Nunca cortar:** #188, #192, #126, #193, #2, #165, #194, #134 e #147.
+> **O painel publica na `main`:** os cliques e o texto do painel vão **direto para a `main`** (commits "(#status) ..."), por isso a mescla final da branch é um **merge normal** (o #194 traz o comando), não avanço rápido.
+> **Um por vez no repositório:** depois da mescla, quem for mexer em arquivos faz `git pull` antes e `git push` depois; a ordem é #189 → #191 → #190.
 
-> [!decisão] Ajuste de 03/11 · versão 3.1: um dia de exploração antes do teste
-> Em 04/11 a equipe se reúne para explorar hiperparâmetros e variáveis derivadas (#155), com orçamento fixo e regra de escolha registrada **antes** de rodar. O **teste passa para 05/11 de manhã** (#2), junto com tudo o que depende dele e da apresentação: resultados por grupo (#55), números do teste no relatório (#133), congelamento (#147) e apresentação (#134). A execução limpa (#126) e os nomes da entrega (#146) ficam em 04/11 à noite, depois da exploração.
+> [!atenção] O que nunca muda
+> O teste é aberto **uma única vez**, com tudo congelado; resultado fora do previsto é **achado**, nunca motivo de reajuste; **depois do G9 não se roda o notebook 02 nem o 11**; só a Pessoa C mexe em código até o G9.
 
-> [!decisão] Replanejamento de 03/11 · versão 3 (entrega em 05/11, plano B em 04/11)
-> Revisão completa das 69 pendências abertas contra o código do commit `9f3322b` (pacote de referência de 03/11, 04:25 UTC). Três mudanças de fundo desde a versão 2: a **coorte provisória foi aposentada** (§29.32), a validação passou para o **desenho 70/15/15** (§29.33, `val_ref`) e o artefato foi regerado. Resultado: **19 cards de trabalho** (14 P1, 5 P2), 1 P3 e 21 despriorizados. Cards unificados levam o número do card principal; os absorvidos ficam como "removido" com o destino no motivo.
+**Cards antigos removidos nesta revisão** (os números não são reutilizados; o texto continua guardado no filtro "Removidos"):
 
-| Card principal | Absorveu | Por quê |
-|---|---|---|
-| #140 (variáveis) | #54, #50 | ablação e decisão dos três sintomas são o mesmo passo |
-| #1 (G6 e ajuste) | #78 | o G6 libera a busca que o #1 executa |
-| #79 (G7 e G8) | #80, #5, #58 | o C_15 decide peso de classe, calibração e limiar numa só execução |
-| #148 (C_16) | #26, #27 | registro do teste aberto e escolha do manifesto ficam no próprio C_16 |
-| #2 (teste) | #81, #119 | checklist, abertura e conferência acontecem na mesma noite |
-| #133 (relatório) | #56, #71, #45, #46, #47, #69 | eram só parágrafos do relatório |
-| #91 (importância) | #57 | a leitura ajustada pela idade faz parte da tabela de importância |
-| #55 (subgrupos) | #110 | o corte por região sai das mesmas saídas do C_16 |
-| #147 (congelar) | #149, #130 | a reconferência e a referência são passos do congelamento |
-| #152 (novo: provisória) | #151, #150, #41, #43 | um único card de limpeza com lista fechada de arquivos |
+| Card | Por quê |
+|---|---|
+| #166 | o rótulo do veredito já está certo no notebook 10 (sem_peso); o resto do texto antigo entra na limpeza dos Markdown (#190); o manifesto do 10 ganha o G8 aprovado na execução do #126 |
+| #167 | incorporado ao #190 (textos dos notebooks com números atuais); os notebooks mudaram de nome e de número |
+| #168 | obsoleto: o docs/decisoes.md foi reescrito e condensado na limpeza (as §29.xx foram para docs/historico); o que falta é registrar o resultado do G9, no #194 |
+| #169 | incorporado ao #194 (README: resultados, tempo, memória e versões) e ao #126 |
+| #171 | incorporado ao #189 (comentários do YAML) e ao #194 (selecao_modelos); as marcas de pessoas já não existem no YAML |
+| #172 | incorporado ao #190 (textos e mensagens) e ao #192 (nomes das saídas); os rótulos #N e Pessoa X já foram removidos do código pela limpeza |
+| #173 | obsoleto: a exploração de hiperparâmetros (#155) já foi concluída e o G6 aprovado |
+| #175 | incorporado ao #126 (árvore limpa e suíte completa de testes) |
+| #178 | incorporado ao #133 (mapa TRIPOD+AI, no passo 4) |
+| #179 | fora do escopo de hoje: exigiria ler a base bruta; vira frase de trabalho futuro no #133 |
+| #180 | fora do escopo: o artefato não grava o bloco de 2026 e exigiria reconstruí-lo; vira trabalho futuro |
+| #181 | incorporado ao #174 (ignorado e AUSENTE como grupos com nome legível) |
+| #182 | fora do escopo: diagnóstico cosmético sem efeito na entrega; a explicação (estratificação caiu para ano × alvo) já está no manifesto |
+| #183 | fora do escopo: mexer em src/ depois do congelamento exige reexecutar tudo; vira trabalho futuro |
+| #184 | fora do escopo: limpeza técnica de src/ já feita em parte pela limpeza; o restante é cosmético e arriscado antes do G9 |
+| #185 | fora do escopo: diferença de 0,006 de PR-AUC no piloto; o #190 corrige o texto do notebook 05 se necessário |
+| #186 | incorporado ao #133 (limitações e trabalhos futuros, no passo 3) |
+| #187 | incorporado ao #134 (apresentação) |
+| #164 | incorporado ao #189 (caminhos pessoais limpos no mesmo lote dos comentários, depois do G9) |
+| #170 | incorporado ao #195 (requirements-lock.txt e pyproject, depois do G9) |
+| #174 | o notebook 11 e o src/ não mudam antes do G9; as regras (mínimo de óbitos, nomes legíveis, ignorado/ausente) passaram para o script do #55, depois do G9 |
+| #177 | exigiria alterar o notebook 11 antes do G9 e ler o teste; vira trabalho futuro (frase no #133) |
+| #112 | fora do essencial de hoje; sem referência conferida no texto completo não se cita |
 
-**Removidos por obsolescência** (a coorte provisória ou o notebook citado não existem mais): #40, #98, #89, #88, #90, #93, #39. **Novos:** #152 (rastros da coorte provisória), #153 (rastros do desenho 70/5+5+5/15), #154 (código legado, P3) e #155 (exploração de hiperparâmetros em equipe, 04/11).
-
-> [!atenção] Se os professores mantiverem o trabalho em 04/11
-> O #155 é cortado inteiro (o modelo do #1 e do #79 já está congelado e pronto) e o teste (#2) volta para 04/11, 20h. Depois, cortar nesta ordem: #146, #70, #112; #91 e #55 viram só as tabelas mínimas. **Nada do caminho crítico é cortado.**
-
-> [!ok] Confirmar no painel depois de executar
-> O #132 pode ser marcado como concluído assim que o C_11, o C_12 e o C_14 forem salvos com as saídas do artefato 70/15/15. Nenhum card foi marcado como concluído nesta revisão: o estado compartilhado só muda pelo painel ou por `[done:#N]` num commit.
+> [!ok] Cards concluídos
+> Os cards **#17** e **#124** (⚠ precisa revisão) tiveram os critérios movidos para a estrutura nova e só precisam de **✓ Confirmar**. Alguns cards concluídos antigos podem mostrar ⚠ reconfirmar porque os caminhos mudaram: não afeta a entrega (veja o #147).
 
 ### Ajuda · Como usar (30 segundos)
 
@@ -226,6 +199,15 @@ Painel local de acompanhamento do projeto. O conteúdo vem de PROJECT_STATUS_TEX
 - Cards absorvidos por outro (esforço 0) têm a mesma data do card que os contém.
 - Se um card atrasar, os que dependem dele atrasam junto: avise no card e use o filtro "Só prontos para começar".
 - Um card concluído só volta para ABERTA se uma decisão pendente ou um resultado ainda por vir puder mudar a conclusão (revisão de volatilidade de 01/11); se só os números mudarem, ele fica concluído e a reconferência entra no #149.
+
+### Ajuda · Bloco para a IA e scripts desta revisão
+
+- **Botão 📋 Copiar instruções para a IA:** em cada card, na parte "Para a IA", clique no botão e cole na conversa. O bloco traz o contexto do projeto, o mapa atual de notebooks e módulos, os arquivos que a IA deve pedir, os passos, os critérios de aceite, o que **não** fazer e as regras do usuário (se faltar arquivo, a IA para e pede; scripts começam por relatório; PowerShell em uma linha; comentários mínimos em português; commits curtos). Se o botão não copiar (alguns navegadores bloqueiam), selecione o bloco e use Ctrl+C.
+- **Onde guardar os scripts:** na **pasta acima do repositório** (por exemplo `..\lote.py`), para não entrarem no Git. Rode sempre da **raiz do repositório**: `.\.venv\Scripts\python.exe ..\nome.py`.
+- **Padrão de todos os scripts:** primeiro um **relatório** (trabalham numa cópia temporária e nada muda no repositório); depois, o mesmo comando com `--aplicar`. Cada um confere o que fez (código com a mesma árvore, JSON e YAML válidos) e deixa como estava o arquivo que não passar.
+- **Orquestrador `lote.py`:** `listar` mostra as etapas e os lotes; `relatorio --lote <nome>` roda o relatório de cada etapa e junta tudo em `outputs\final\lote_relatorio.md` (o arquivo que se envia para a IA); `aplicar --etapas a,b` grava na ordem segura, só se o commit for o mesmo do relatório e a árvore estiver limpa, e roda o `pytest`. Lotes: `agora` (testes, renomear, checklist), `pos-cadeia`, `pos-g9`, `pacote` e `tudo` (todos os relatórios de uma vez; hoje use com `--ensaio`, que usa as previsões do ensaio nas etapas do pós-G9 e **não serve para aplicar**).
+- **Scripts:** `renomear_saidas` (#192) · `checklist_g9` (#193 e #2) · `calibracao_pos_g9` (#165) · `gerar_blocos_g9` (#194) · `limpar_caminhos` e `limpar_comentarios` (#189) · `inserir_comentarios` (#191) · `enxugar_markdown` (#190) · `tabelas_relatorio` (#55) · `montar_resultados` (#157) · `curva_decisao` (#176) · `lote` (orquestrador) · `rodar_testes` (#188) · `fluxo` (#126, #193, #2 e #195: executa notebook 10, ensaio, aprovação e abertura do G9, e a cadeia 03 a 09, com as travas embutidas).
+- **Lote 4 (comandos de ponta a ponta):** `pre_g9.py` (#188 e #192: testes, renomeação, commit, push, painel) · `cadeia.py` (#126: notebooks 02 a 10 em segundo plano, com `iniciar`, `status` e `--de NN` para retomar; documentação automática: caminhos, lock, pyproject, README; commit e push) · `pos_g9.py` (depois do G9: checklist, calibração, tabelas, curva, documentação do G9, comentários e caminhos, resultados, commits, mescla na main) · `aplicar_docs_g9.py` (aplica os blocos do G9) · `painel_marcar.py` (tenta marcar cards como concluídos) · `atualizar_painel.py` (este texto). Os cards são fechados por `[done:#N]` na mensagem dos commits: o painel lê a `main`, então os que vão na branch aparecem quando ela é mesclada.
 
 ## #120 · Registrar o protocolo fechado: treino não pandêmico e duas janelas de teste
 
@@ -1769,11 +1751,14 @@ O notebook ainda faz `fit_transform` do treino e `transform` da validação comp
 
 **No #132:** o C_11 passa a ler `train_ref` e uma amostra de `val_tune`, e nunca a validação inteira. Registrar tempo e pico de memória com `Monitor`, como já faz.
 
+> [!ok] Atualizado em 05/11
+> Os critérios do ④ foram movidos para os caminhos da estrutura nova (`src/modelos.py`, `tests/test_modelos.py`, notebook 06). No painel, use **✓ Confirmar**.
+
 ### ④ Pronto quando
 
-- nao-contem: `notebooks/C/C_11_pipeline_supervisionado.ipynb` :: `sparse_output=False` | O C_11 não força mais o one-hot denso (causa do MemoryError de 2,53 GiB); usa o pré-processador esparso do src. A nova execução do C_11 nos seis blocos é conferida no #132.
-- contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | O pré-processador do src usa saída esparsa por padrão.
-- teste: `tests/test_config.py` | O teste `tests/test_config.py` precisa passar no pytest rápido. Ele importa `src/models/pipeline.py`, que pertence(m) a esta pendência, e falhou na verificação de 2026-11-03 (2 testes falharam; ex.: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\olivem85\\AppData\\Local\\Temp\\1\\srag_verificador_9mdibj0g\\repo\\). Acrescentado automaticamente pelo verificador.
+- nao-contem: `notebooks/06_pipeline_supervisionado.ipynb` :: `sparse_output=False` | O notebook 06 não força mais o one-hot denso (causa do MemoryError de 2,53 GiB).
+- contem: `src/modelos.py` :: `saida: SaidaPreprocessador = "esparsa"` | O pré-processador do src usa saída esparsa por padrão.
+- teste: `tests/test_modelos.py` | Os testes dos modelos e pipelines passam.
 
 ## #20 · Nome do finalista diferente no YAML e no código
 
@@ -2964,112 +2949,289 @@ B_06 executado do início ao fim (120/120 células, sem erro) na coorte definiti
 - nao-contem: `notebooks/B/B_06_eda_temporal_clustering.ipynb` :: `COLUNAS_ESTRUTURA_B06` | Os nomes de variáveis do B_06 não carregam mais o sufixo do número do notebook.
 - manual: | O comentário final foi registrado neste card: totais do train_ref (556.462 fichas, 46.961 óbitos), a comparação das 26 variáveis com a versão anterior (24 mantêm o sentido) e as duas variáveis que trocaram de sentido (dor abdominal e doença hematológica), ambas perto de 1.
 
-## #91 · Importância das variáveis do finalista (permutação no val_ref) e razões de chances ajustadas
+## #91 · Importância das variáveis do finalista (permutação na validação) e razões de chances da logística
 
-- prioridade: P2
+- prioridade: P4
 - situação: aberta
-- estratégia: desenvolver
-- marco: M7
-- data ideal: 04/11
-- responsável: Pessoa C (1,5 h)
-- pessoas: C
-- fonte: §29.20; revisão de 03/11 (absorve #57)
-- depende de: #155
-- tags: Modelagem, Interpretação
-- pilar: Valor científico-acadêmico
-- carga: 1.5
-- novo: não
-- professores: sim
-- arquivos: notebooks/C/C_15_calibracao_limiar.ipynb
-
-### ① Para entender
-
-A banca vai perguntar "o que pesa mais no risco?". A resposta defensável tem duas partes: a importância por permutação do finalista (quanto o desempenho cai quando a variável é embaralhada) e as razões de chances da logística, que já vêm ajustadas pelas outras variáveis, inclusive a idade. Este card absorveu o #57: associações que parecem "protetoras" no bruto e somem com o ajuste pela idade.
-
-### ② Problema
-
-Nada disso existe ainda no código. Calcular no teste está fora de questão (o teste é aberto só para medir); o lugar certo é o `val_ref`, com o modelo congelado.
-
-> [!decisão] Revisão de 03/11 · versão 4.0
-> Roda na máquina oficial (#158), depois do C_15 final do #155 (passo 6). A importância por permutação usa `resultados[melhor_nome]["escolha"]["pipeline"]` e `X_val_meas`/`y_val_meas`, que existem no C_15.
-
-### ③ O que fazer
-
-**Dono:** Pessoa C · **Prazo:** 04/11, 17h às 18h30 · **Começa quando:** #155 (C_15 rodado com o modelo final)
-
-1. No fim do C_15 (o modelo final já está treinado e calibrado ali), acrescente uma célula:
-```python
-from sklearn.inspection import permutation_importance
-amostra = X_val_meas.sample(n=min(30_000, len(X_val_meas)), random_state=C.SEED)
-y_am = y_val_meas.loc[amostra.index]
-imp = permutation_importance(resultados[melhor_nome]["escolha"]["pipeline"], amostra, y_am, scoring="average_precision", n_repeats=5, random_state=C.SEED, n_jobs=-1)
-tabela_imp = pd.DataFrame({"variavel": amostra.columns, "queda_pr_auc": imp.importances_mean, "dp": imp.importances_std}).sort_values("queda_pr_auc", ascending=False)
-tabela_imp.to_csv(TABLES_DIR / "importancia_permutacao_val_meas.csv", index=False, encoding="utf-8-sig"); display(tabela_imp.head(15))
-```
-   (confira a chave do pipeline calibrado em `resultados[...]` antes de rodar.)
-2. Razões de chances: treine a logística congelada em `train_ref` e grave os coeficientes exponenciados com nome da coluna one-hot em `outputs/tables/razoes_chances_logistica.csv` (`np.exp(coef_)` e `get_feature_names_out()` do pré-processador).
-3. Para o relatório (#133): as 10 primeiras de cada tabela e a frase do #57 sobre asma, puerpério, tosse e febre.
-4. Commit: `feat: importância das variáveis e razões de chances [done:#91]`.
-
-### ④ Pronto quando
-
-- contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `permutation_importance` | O C_15 calcula a importância por permutação do finalista no val_ref.
-- manual: | As tabelas importancia_permutacao_val_meas.csv e razoes_chances_logistica.csv foram geradas e as 10 primeiras linhas de cada uma estão no relatório.
-
-## #55 · Equidade e desempenho por ano, região, faixa etária e raça/cor, e perfil dos óbitos sem alerta, a partir das saídas do C_16
-
-- prioridade: P2
-- situação: aberta
-- estratégia: desenvolver
-- marco: M7
+- estratégia: despriorizar
+- marco: Opcional
 - data ideal: 05/11
-- responsável: Pessoa A (1,25 h)
-- pessoas: A
-- fonte: §22 e §29.8; orientação do TCC (equidade); revisão de 03/11 (v4.1: recebe a versão mínima do corte por região)
-- depende de: #2
-- tags: Resultados, Equidade
-- pilar: Valor científico-acadêmico
-- carga: 1.25
+- responsável: Pessoa B (na máquina oficial)
+- pessoas: B
+- fonte: Reescrito em 05/11 para a estrutura nova; usa só train_ref e val_ref (o teste não é tocado)
+- depende de: #195
+- tags: importância, interpretação, relatório, não usa o teste
+- pilar: —
+- carga: 1.0
 - novo: não
-- professores: sim
+- professores: não
+- arquivos: outputs/tables/importancia_permutacao_val_meas.csv, outputs/tables/razoes_chances_logistica.csv
 
 ### ① Para entender
 
-Um modelo pode ir bem na média e mal num grupo. O protocolo pede métricas por ano, região, UF e faixa etária, e uma olhada nos óbitos que ficaram sem alerta (falsos negativos).
+> [!decisão] Opcional: só se sobrar tempo depois do #147. Não conta para a entrega de hoje.
 
-**Corte por região, versão mínima (decisão da equipe em 03/11).** O professor sugeriu, em 24/10, um modelo único com um ponto de corte diferente por região. Foi decidido fazer só a versão mínima: **modelo único, corte global e métricas e calibração por região no teste**. O corte regional em si não é implementado e fica como trabalho futuro, por falta de tempo antes do teste. A tabela por região mostra exatamente a diferença de sensibilidade que um corte regional tentaria corrigir.
+A banca vai perguntar: "**o que mais pesa no risco?**". A resposta defensável tem duas partes:
+
+- **Importância por permutação (do modelo final):** embaralha uma variável por vez e mede quanto a PR-AUC **cai**. Quanto maior a queda, mais o modelo depende dela.
+- **Razões de chances (da logística):** já vêm **ajustadas** pelas outras variáveis, inclusive a idade. Uma razão de 2 diz "com as demais iguais, esta característica dobra as chances de óbito". Associações que parecem "protetoras" no bruto (asma, puerpério, tosse, febre) costumam ser efeito da **idade**: a razão ajustada mostra isso.
+
+Tudo é calculado na **metade `val_meas` da validação**, com o modelo congelado. **O teste não é tocado.**
 
 ### ② Problema
 
-> [!decisão] Revisão de 03/11 · versão 4.0
-> O C_16 novo **já grava** as tabelas por grupo (Teste A e Teste B), por ano, e a distribuição dos falsos negativos por região e faixa etária. Este card não calcula nada novo: lê as tabelas, faz a figura e escreve a leitura. Nenhum código do C_15 nem do C_16 muda por causa do corte por região.
-
-Depois do #2, o teste não pode ser carregado de novo (`G9_holdout: executado`). Tudo sai dos arquivos que o C_16 gravou em `outputs/tables/` (prefixo `C6_validacao_final_<carimbo>`):
-
-| Arquivo | O que tem |
-|---|---|
-| `*_por_grupo_teste_a_regiao_residencia.csv` | n, óbitos, PR-AUC, Brier, razão observado/esperado, sensibilidade e precisão no corte global, por região (Teste A) |
-| `*_por_grupo_teste_a_faixa_etaria.csv`, `..._sexo_categoria.csv`, `..._sg_uf.csv`, `..._cs_raca.csv`, `..._cs_zona.csv` | o mesmo, por faixa etária, sexo, UF, raça/cor e zona (Teste A) |
-| `*_por_grupo_teste_b_*.csv` | por região, UF, sexo, faixa etária e ano (Teste B; raça/cor e zona **não** saem no Teste B, porque as variáveis do modelo só ficam guardadas na janela principal) |
-| `*_fn_por_regiao_residencia.csv`, `*_fn_por_faixa_etaria.csv` | óbitos sem alerta por grupo (Teste A) |
-| `*_metricas_por_ano.csv` | por ano de 2019 a 2025 (Teste B) |
-
-Grupos com menos de 100 fichas aparecem com as métricas vazias e `suprimido=True`.
+- Nada disso existe hoje no código. Calcular **no teste** está fora de questão (o teste é aberto só para medir).
+- **Usa a máquina oficial** (é onde estão o artefato e os blocos de validação) e **memória e CPU**: combine com a Pessoa C uma janela em que a máquina esteja livre: **depois do #126 e antes do #193**, ou **depois do #2**. **Nunca** durante a cadeia nem durante o G9.
+- Importância por permutação de variáveis correlacionadas divide o "crédito" entre elas: leia como ordem de grandeza, não como causa.
+- O script abaixo **não foi executado aqui** (precisa dos dados e do scikit-learn 1.8): rode, leia a saída e ajuste só nomes se algo divergir (o nome das etapas do pipeline, por exemplo).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** 05/11, 10h às 11h15 · **Começa quando:** #2 · **Script previsto:** `tabelas_relatorio.py` (lê os CSV do C_16 e gera as tabelas em Markdown e as figuras; começa por relatório).
+**Dono:** Pessoa B (com a Pessoa C cedendo a máquina) · **Tempo:** ≈ 40 min (10 min de trabalho + 30 de máquina) · **Começa quando:** #126 terminou e a máquina está livre · **Script:** `importancia_variaveis.py` (código abaixo).
 
-1. **Tabelas do relatório:** por região, faixa etária, raça/cor e ano: n, óbitos, PR-AUC ÷ prevalência, sensibilidade e precisão. Marque os grupos suprimidos.
-2. **Falsos negativos do Teste A:** distribuição por faixa etária e região (contagem e % dos óbitos sem alerta).
-3. **Leitura para o relatório (uma frase por tabela):** a diferença máxima de sensibilidade entre regiões; a faixa etária com mais óbitos sem alerta; se algum grupo de raça/cor tem sensibilidade ou calibração (razão observado/esperado) bem diferente; **o que o modelo não permite concluir** (heterogeneidade pode refletir acesso, capacidade e registro, e `cs_raca` tem muito branco e "ignorado"). Nunca uma causa.
-4. **Corte por região (versão mínima):** uma figura com a sensibilidade e a precisão de cada região **no corte global** (barras, com a sensibilidade média como linha) e a razão observado/esperado por região. Escreva a frase de limitação, com os números: "O professor sugeriu um corte de decisão diferente por região. Implementamos a versão mínima (modelo único, corte global e métricas e calibração por região). Com o mesmo corte, a sensibilidade varia de X a Y entre as regiões, o que um corte regional tentaria corrigir; deixamos como trabalho futuro." Sem causa: "pode refletir acesso, capacidade e registro".
-5. Commit: `feat: equidade e desempenho por grupo no Teste A [done:#55]`.
+#### Passo a passo (para a pessoa)
+1. **Combine a janela** com a Pessoa C no grupo ("máquina livre para o #91 por 40 min").
+2. **Crie o arquivo `..\importancia_variaveis.py`** (fora do repositório) com o código abaixo. Ele lê **só** `train_ref` e `val_ref`, refaz o modelo final, calibra na metade `val_cal` e mede na metade `val_meas` (a mesma divisão do notebook 10), calcula a importância por permutação numa amostra de 30 mil fichas e grava as duas tabelas.
+```python
+import numpy as np
+import pandas as pd
+from sklearn.inspection import permutation_importance
+from sklearn.model_selection import train_test_split
+
+from src import config as C
+from src.dados import load_supervised_artifact, split_partitions
+from src.modelos import build_finalista, calibrar, resolver_finalista
+
+df, manifest = load_supervised_artifact(C.ROOT_DIR, expected_kind="final", partitions=("train_ref", "val_ref"))
+treino, validacao = split_partitions(df, manifest)
+FEATURES, ALVO = list(manifest["feature_columns"]), manifest["target_column"]
+X_tr, y_tr = treino[FEATURES], pd.to_numeric(treino[ALVO]).astype("int8")
+X_val, y_val = validacao[FEATURES], pd.to_numeric(validacao[ALVO]).astype("int8")
+
+idx_cal, idx_meas = train_test_split(np.arange(len(y_val)), test_size=0.5, random_state=C.SEED, stratify=y_val.to_numpy())
+X_cal, y_cal = X_val.iloc[idx_cal].reset_index(drop=True), y_val.iloc[idx_cal].reset_index(drop=True)
+X_meas, y_meas = X_val.iloc[idx_meas].reset_index(drop=True), y_val.iloc[idx_meas].reset_index(drop=True)
+
+final = C.cfg("selecao_modelos", "finalista_escolhido")
+modelo = build_finalista(final).fit(X_tr, y_tr)
+preditor = calibrar(modelo, X_cal, y_cal, method=C.cfg("calibracao", "metodo"))
+
+amostra = X_meas.sample(n=min(30_000, len(X_meas)), random_state=C.SEED)
+y_am = y_meas.loc[amostra.index]
+imp = permutation_importance(preditor, amostra, y_am, scoring="average_precision", n_repeats=5, random_state=C.SEED, n_jobs=2)
+tabela = pd.DataFrame({"variavel": amostra.columns, "queda_pr_auc": imp.importances_mean, "dp": imp.importances_std})
+tabela = tabela.sort_values("queda_pr_auc", ascending=False)
+tabela.to_csv(C.TABLES_DIR / "importancia_permutacao_val_meas.csv", index=False, encoding="utf-8-sig")
+print(tabela.head(15))
+
+logistica = build_finalista("logistic").fit(X_tr, y_tr)
+nomes = logistica.named_steps["pre"].get_feature_names_out()
+razoes = pd.DataFrame({"coluna": nomes, "razao_de_chances": np.exp(logistica.named_steps["clf"].coef_[0])})
+razoes.sort_values("razao_de_chances", ascending=False).to_csv(C.TABLES_DIR / "razoes_chances_logistica.csv", index=False, encoding="utf-8-sig")
+print(razoes.sort_values("razao_de_chances", ascending=False).head(10))
+```
+3. **Rode** (um comando; salve a saída para o relatório):
+```powershell
+.\.venv\Scripts\python.exe ..\importancia_variaveis.py 2>&1 | Tee-Object -FilePath outputs\final\importancia_saida.txt
+```
+4. **Se der erro de nome** (por exemplo `KeyError: 'pre'`): imprima `modelo.named_steps.keys()` e troque `"pre"`/`"clf"` pelos nomes reais. Se faltar memória, reduza a amostra para 15 mil.
+5. **Leia as tabelas:** as 10 primeiras de cada uma vão para o relatório (#133). Escreva **uma frase por tabela**: quais variáveis mais pesam; quais razões de chances são altas depois do ajuste; e a frase do cuidado: "a importância mede dependência do modelo, não causa".
+6. **Frase sobre associações "protetoras":** compare asma, puerpério, tosse e febre entre a razão ajustada e o que se vê no bruto (notebook 04). Se a razão for ≤ 1 só no bruto, escreva "o efeito protetor aparente é efeito da idade".
+7. **Não commite o script** (fica fora do repositório); as tabelas entram em `resultados/` pelo #157.
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| Relatório (#133) | seção "Importância das variáveis" com as duas tabelas (10 primeiras linhas) e as frases do passo 5 e 6 |
+| `resultados/LEIA-ME.md` | gerado pelo #157 |
+
+#### Automação sugerida
+> [!exemplo] Script (código no passo 2)
+> Reusa as funções do projeto (`load_supervised_artifact`, `split_partitions`, `build_finalista`, `calibrar`), reproduz a divisão `val_cal`/`val_meas` com a mesma semente e grava CSV com BOM (abrem certo no Excel). Para virar ferramenta do repositório: mova para `tools/`, acrescente `argparse` e um teste de fumaça com dados sintéticos.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #91 · Importância por permutação e razões de chances
+
+OBJETIVO
+Gerar duas tabelas para o relatório: importância por permutação do modelo final (queda de PR-AUC) na metade val_meas e razões de chances da logística congelada (exp dos coeficientes), sem tocar no teste.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- O código do script importancia_variaveis.py (card #91) e a mensagem de erro, se houver.
+- src/modelos.py (nomes das etapas do pipeline e a função build_finalista).
+- O trecho do notebook 10 que faz a divisão val_cal/val_meas (para conferir a semente e a estratificação).
+- configs/supervised.yaml (selecao_modelos, calibracao, models).
+
+PASSOS
+1. Confira que a divisão val_cal/val_meas do script é idêntica à do notebook 10 (fração 0,5, semente C.SEED, estratificada por desfecho).
+2. Corrija nomes de etapas e de colunas se o erro apontar divergência.
+3. Explique, em linguagem simples, como ler as duas tabelas e escreva as duas frases de leitura para o relatório (sem causalidade).
+4. Sugira a ordem de apresentação: 10 primeiras linhas de cada tabela.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- As duas tabelas existem em outputs/tables com cabeçalhos legíveis.
+- Nenhum bloco de teste foi carregado (partitions=('train_ref','val_ref')).
+- As frases dizem 'dependência do modelo' e 'associação ajustada', nunca 'causa'.
+
+NÃO FAÇA
+- Não leia test_ref nem test_pandemic.
+- Não reajuste modelo, calibração nem limiar.
+- Não rode enquanto a cadeia ou o G9 estiverem rodando na mesma máquina.
+
+FORMATO DA ENTREGA
+O script corrigido completo (se mudar) e 3 frases de leitura.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- manual: | As tabelas por região, faixa etária, raça/cor e ano, a distribuição dos falsos negativos e a leitura (com o que não se pode concluir) estão no relatório, geradas a partir dos CSV do C_16.
-- manual: | O relatório tem a figura de sensibilidade e precisão por região no corte global e a frase de limitação do corte regional (versão mínima, trabalho futuro).
+- existe: `outputs/tables/importancia_permutacao_val_meas.csv` | A tabela de importância por permutação foi gerada.
+- existe: `outputs/tables/razoes_chances_logistica.csv` | A tabela de razões de chances foi gerada.
+- manual: | As 10 primeiras linhas de cada tabela e as frases de leitura (importância não é causa) estão no relatório.
+
+## #55 · Equidade e desempenho por ano, região, faixa etária e raça/cor, e perfil dos óbitos sem alerta
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 05/11
+- responsável: Pessoa A
+- pessoas: A
+- fonte: Reescrito em 05/11: absorve o #174 (mínimo de óbitos, nomes legíveis, ignorado/ausente) como regras do script, sem mexer no src/ nem no notebook 11
+- depende de: #165
+- tags: equidade, apresentação, figura, automatizável
+- pilar: —
+- carga: 0.75
+- novo: não
+- professores: não
+- arquivos: outputs/final/tabelas_relatorio_*.csv, reports/figures/equidade_regiao.png
+
+### ① Para entender
+
+Um modelo pode ir bem na média e mal num grupo. O protocolo pede métricas por ano, região, UF, faixa etária e raça/cor, e uma olhada nos **óbitos que ficaram sem alerta** (falsos negativos: a pessoa morreu e o modelo não deu alerta).
+
+**Corte por região, versão mínima (decisão da equipe).** O professor sugeriu um modelo único com um ponto de corte por região. Fazemos só a versão mínima: **modelo único, corte global, e métricas e calibração por região no teste**. O corte regional em si fica como trabalho futuro. A tabela por região mostra a diferença de sensibilidade que um corte regional tentaria corrigir.
+
+**Regras de leitura (incorporadas do antigo #174, aplicadas pelo script depois do G9):** grupo com menos de **100 fichas**, ou com menos de **20 óbitos ou 20 curas**, aparece **suprimido**; os códigos de raça/cor e zona viram nomes legíveis ("9 ignorado"); valor vazio vira "AUSENTE".
+
+### ② Problema
+
+O notebook 11 **já gravou** tudo em `outputs/tables/` (prefixo `11_validacao_final_final_<carimbo>`). Esta tarefa **não calcula métricas novas**: o script `tabelas_relatorio.py` lê, aplica as regras de leitura, tabula e desenha a figura.
+
+| Arquivo (sufixo) | O que tem |
+|---|---|
+| `_por_grupo_teste_a_<grupo>.csv` e `..._pandemico_isolado_<grupo>.csv` | n, prevalência, PR-AUC, ROC-AUC, Brier, O/E, sensibilidade e precisão no corte global, por região, UF, faixa etária, sexo, raça/cor e zona |
+| `_por_grupo_teste_b_<grupo>.csv` | por região, UF, sexo, faixa etária e ano (raça/cor e zona **não** saem no Teste B) |
+| `_fn_por_regiao_residencia.csv`, `_fn_por_faixa_etaria.csv` | óbitos sem alerta por grupo (Teste A) |
+| `outputs\final\calibracao_por_grupo.csv` (do #165) | O/E, inclinação e ECE por região, faixa etária, sexo e UF |
+
+O arquivo de previsões **não** tem raça/cor nem zona: para esses grupos valem as tabelas do notebook 11 (por isso a regra de óbitos usa `n × prevalência`).
+
+### ③ O que fazer
+
+**Dono:** Pessoa A · **Tempo:** ≈ 45 min · **Começa quando:** #165 e #194 concluídos e a `main` atualizada · **Antes de:** #157 · **Script pronto:** `tabelas_relatorio.py` (relatório primeiro; grava só com `--aplicar`).
+
+#### Passo a passo (para a pessoa)
+1. **`git switch main; git pull --ff-only`** e **guarde o script fora do repositório** (`..\tabelas_relatorio.py`). Rode na **máquina oficial** (é onde estão os CSV de `outputs/`).
+2. **Relatório** (nada é gravado; lista os grupos lidos e quantos foram suprimidos):
+```powershell
+.\.venv\Scripts\python.exe ..\tabelas_relatorio.py
+```
+   Confira que o prefixo lido começa com `11_validacao_final_` (sem `ensaio`).
+3. **Grave as tabelas e a figura:**
+```powershell
+.\.venv\Scripts\python.exe ..\tabelas_relatorio.py --aplicar
+```
+   Saídas: `outputs\final\tabelas_relatorio_<janela>_<grupo>.csv`, `tabelas_relatorio_fn_<grupo>.csv` e `reports\figures\equidade_regiao.png` (sensibilidade e precisão por região no corte global; O/E por região).
+4. **Escolha o que vai para a apresentação** (#134): uma tabela por região, uma por faixa etária, uma por raça/cor e a figura. **Marque os grupos suprimidos.**
+5. **Leitura (uma frase por tabela):** (a) diferença máxima de sensibilidade entre regiões; (b) faixa etária com mais óbitos sem alerta; (c) se algum grupo de raça/cor tem sensibilidade ou O/E bem diferente; (d) **o que o modelo não permite concluir**: heterogeneidade pode refletir acesso, capacidade dos hospitais e qualidade do registro; `cs_raca` tem muito "branca" e "ignorado". **Nunca uma causa.**
+6. **Frase de limitação do corte regional:** "O professor sugeriu um corte diferente por região. Implementamos a versão mínima (modelo único, corte global e métricas por região). Com o mesmo corte, a sensibilidade varia de ⟨X⟩ a ⟨Y⟩ entre as regiões, o que um corte regional tentaria corrigir; fica como trabalho futuro."
+7. **Nota de leitura obrigatória** (slide e `docs/limitacoes_e_rastreabilidade.md`): "grupos com menos de 100 fichas ou menos de 20 óbitos/curas aparecem suprimidos; 'ignorado' e 'ausente' são mostrados à parte; diferenças entre grupos podem refletir acesso, capacidade dos hospitais e qualidade do registro".
+8. Nada para commitar: o #157 copia as tabelas para `resultados/`.
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| Apresentação (#134) | slides de equidade e a frase do corte regional |
+| `docs/limitacoes_e_rastreabilidade.md` (#133) | nota de leitura e frase de limitação |
+| `resultados/` (#157) | tabelas e figura copiadas |
+
+#### Automação sugerida
+> [!exemplo] Já automatizado (testado com CSV sintéticos)
+> `tabelas_relatorio.py` acha o carimbo mais recente sem `ensaio`, recalcula `n_obitos = n × prevalência`, suprime por n e por eventos, troca os códigos de raça/cor e zona por nomes, grava uma tabela por janela e grupo e desenha a figura por região. Pode rodar também no lote `pos-g9`.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #55 · Leitura das tabelas de equidade
+
+OBJETIVO
+Ler as tabelas geradas pelo tabelas_relatorio.py e escrever a leitura de equidade (por região, faixa etária, raça/cor e ano), sem causalidade, com as limitações.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída do relatório do tabelas_relatorio.py.
+- Os CSV outputs/final/tabelas_relatorio_*.csv (região, faixa etária, raça/cor) e calibracao_por_grupo.csv.
+- A figura equidade_regiao.png.
+
+PASSOS
+1. Escreva uma frase por tabela com os números reais (n e prevalência quando falar de diferença).
+2. Escreva a frase do corte por região (versão mínima) com a amplitude real de sensibilidade.
+3. Escreva o que o modelo NÃO permite concluir (acesso, capacidade hospitalar, qualidade do registro).
+4. Sugira quais 3 tabelas e a figura vão para a apresentação.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Todo número citado existe nos CSV.
+- Grupos suprimidos não são interpretados.
+- Nenhuma frase afirma causa.
+
+NÃO FAÇA
+- Não recalcule métricas.
+- Não afirme causa.
+- Não leia o teste: use só os CSV agregados.
+
+FORMATO DA ENTREGA
+Frases de leitura em um bloco de texto + a lista de tabelas para a apresentação.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- manual: | As tabelas por região, faixa etária, raça/cor e ano, a distribuição dos falsos negativos e a leitura (com o que não se pode concluir) estão na apresentação, geradas dos CSV do notebook 11 pelo script.
+- manual: | A apresentação tem a figura de sensibilidade e precisão por região no corte global e a frase de limitação do corte regional.
 
 ## #57 · Associações "protetoras" que são efeito da idade
 
@@ -4035,81 +4197,192 @@ Continua **pós-entrega**. A parte de não supervisionado pedida pelos professor
 
 - manual: | (Pós-entrega) UMAP só se um professor pedir: figura 2D numa amostra de 50 mil do train_ref colorida pelos grupos do #136; caso contrário, registrar que ficou como trabalho futuro.
 
-## #2 · G9 e abertura única do teste: checklist, execução do C_16 e conferência das saídas
+## #2 · G9: aprovar e abrir o teste uma única vez (notebook 11), com conferência das saídas
 
 - prioridade: P1
-- situação: aberta
+- situação: parcial
 - estratégia: desenvolver
-- marco: M6
+- marco: G9
 - data ideal: 05/11
-- responsável: Pessoa A (0,5 h) + Pessoa C (1 h) + Equipe
-- pessoas: A, C, Equipe
-- fonte: §22 do decisoes.md; revisão de 03/11 (absorve #81 e #119); ajuste 3.1 (teste em 05/11)
-- depende de: #79, #148, #155, #126, #161, #163
-- tags: Gate, Teste, Entrega
-- pilar: Valor científico-acadêmico
-- carga: 1.5
+- responsável: Pessoa C (executa) + Equipe (aprova)
+- pessoas: C, Equipe
+- fonte: #2, #81 e #119 unificados; reescrito em 05/11 para a estrutura nova e para a decisão de mesclar na main só depois do G9
+- depende de: #193
+- tags: G9, teste, abertura única, notebook 11
+- pilar: —
+- carga: 1.0
 - novo: não
-- professores: não
-- arquivos: notebooks/C/C_16_validacao_final.ipynb, configs/supervised.yaml
+- professores: sim
+- arquivos: notebooks/11_validacao_final.ipynb, configs/supervised.yaml
 
 ### ① Para entender
 
-O teste é aberto **uma única vez**, depois de tudo congelado. Um resultado ruim no teste vira limitação documentada, nunca ajuste. Este card juntou o checklist do G9 (#81), a execução (#2) e a conferência das saídas (#119): acontecem na mesma noite e com as mesmas pessoas.
+O teste é aberto **uma única vez**, depois que tudo está congelado: variáveis, modelo, hiperparâmetros, calibração e limiar. **Um resultado ruim no teste vira limitação documentada, nunca motivo de ajuste.** O notebook 11 é quem abre:
+
+| Janela | O que é | Quantas fichas |
+|---|---|---|
+| **Teste A** (resultado principal) | `test_ref`: grupos não vistos de 2019 e 2023–2025 | 119.245 (≈ 8,4% de óbitos) |
+| **2020–2022 isolado** | `test_pandemic`: os anos da pandemia | 2.915.829 (≈ 26,4%) |
+| **Teste B** | as duas juntas, sem duplicar | 3.035.074 (≈ 25,7%) |
+
+Hoje o `G9_holdout` está `pendente`, com `executado_em: null` e `n_acessos: 0`. O notebook exige G7, G8 e G9 **aprovados** e, ao terminar, grava `status: executado` (estado terminal: o teste não pode mais ser carregado) e `test_opened` no manifesto do artefato.
 
 ### ② Problema
 
-Hoje o `G9_holdout` está `pendente`, com `executado_em: null` e `n_acessos: 0`. O C_16 exige G7, G8 e G9 aprovados e, ao terminar, grava `status: executado` (estado terminal: o teste não pode mais ser carregado). Se faltar qualquer congelamento, a abertura fica inválida para a banca.
+O notebook **se protege** antes de abrir o teste. Se algo não estiver no lugar, ele **para sem abrir nada**:
+- confere os gates; a árvore Git (se estiver suja, para);
+- acha o manifesto do notebook 10 (por nome e `dataset_sha256`) e confere variáveis, limiar do YAML, método de calibração e **hash dos modelos**;
+- confere o hash do split de calibração; e a guarda de reabertura (se já houver manifesto real do notebook 11 para o mesmo dataset, para).
 
-O C_16 novo **se protege** antes de abrir o teste: confere o limiar do YAML contra o manifesto do C_15, as variáveis e o hash dos modelos. Se algo estiver fora do lugar, ele para sem abrir nada. Também grava as previsões **antes** de qualquer análise, para que uma falha posterior não obrigue a reabrir o teste.
+Também **grava as previsões antes de qualquer análise**, para que uma falha posterior não obrigue a reabrir o teste.
+
+> [!atenção] Regras que nunca se quebram
+> 1. **Não rode o notebook 02** (nem `gerar_artefato_supervisionado`) depois da abertura: ele regrava o manifesto do artefato e apaga o registro `test_opened`.
+> 2. **Não defina `SRAG_ALLOW_TEST_REOPEN`** sem decisão da equipe e registro no `decisoes.md`.
+> 3. **Não rode o notebook 11 duas vezes.** Se falhar depois de gravar as previsões, use o plano de recuperação (passo 8).
+> 4. **Não use `SRAG_ENSAIO`** na execução real (o comando abaixo o remove).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A (checklist) + Pessoa C (executa, na máquina oficial do #158) + Equipe (aprova) · **Prazo:** 05/11, 7h45 às 10h · **Começa quando:** #155 (modelo final congelado), #79 (C_15 final rodado), #126 (cadeia executada), #161 (hipóteses registradas) e #163 (clone limpo) · **Script previsto:** `checklist_g9.py` (só lê; começa por relatório; é o último script a ser entregue). Sem ele, use a tabela.
+**Dono:** Pessoa C (executa, na máquina oficial) + Equipe (aprova) · **Tempo:** ≈ 45 min (a execução em si leva de 10 a 30 min) · **Começa quando:** #193 com "PODE APROVAR O G9" e o grupo de acordo · **Antes de:** #194.
 
-1. **Checklist (A, 15 min; um "ok" por linha no grupo):**
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\fluxo.py aprovar --aplicar` e depois `.\.venv\Scripts\python.exe ..\fluxo.py abrir`
+> o primeiro faz o passo 2 (roda o checklist, mostra o diff do bloco `G9_holdout`, pede que você digite `APROVO O G9` e edita só as três linhas); depois do commit e do push (passo 3), o segundo faz os passos 4, 5, 7 e 9: exige G9 aprovado, árvore limpa, commit publicado, checklist sem falhas e que você digite `ABRIR O TESTE`; **remove** `SRAG_ENSAIO`, `SRAG_ALLOW_TEST_REOPEN` e `SRAG_ALLOW_DIRTY` do processo filho; abre o teste; roda `checklist_g9 --depois`; faz o backup em `..\backup_g9`; e, se falhar, diz se foi **(a)** antes de gravar as previsões (seguro repetir) ou **(b)** depois (**não repetir**; plano de recuperação do passo 8). Sem `--aplicar`, o `aprovar` só mostra o que mudaria.
+> Os scripts de fluxo foram testados com notebooks simulados, não com os reais: **se o atalho recusar ou falhar, siga os passos manuais abaixo, que continuam valendo.**
 
-| Item | Onde conferir |
-|---|---|
-| Máquina oficial: a mesma que rodou o C_15 final (o `dataset_sha256` do artefato aparece no manifesto `C5_*`) | #158 |
-| G6, G7 e G8 aprovados; `features.final` com 30 variáveis | `configs/supervised.yaml` |
-| `finalista_escolhido`, `calibracao.metodo` e `limiar.otimo` preenchidos; `class_weight` conferido pelo comando do #155 | `configs/supervised.yaml` |
-| C_15 executado **depois** do último ajuste do YAML dos modelos (o C_16 confere por hash) | `outputs/tables/C5_*_manifesto.json` |
-| Ensaio do C_16 feito com dados reais | comentário do #148 |
-| Hipóteses do teste registradas em commit anterior (§29.38) | `docs/decisoes.md` e `git log` |
-| `avaliacao.grupos` com `cs_raca` e `cs_zona` | `configs/supervised.yaml` |
-| Memória livre de pelo menos 14 GB | comando do #161 |
-| `test_opened: false`, `partition_counts` do 70/15/15 e árvore limpa no `origin/main` | manifesto e `git status` |
-
-2. **Aprovar (Equipe):** no bloco `G9_holdout`: `status: aprovado`, `aprovado_por: Equipe`, `data: "2026-11-05"`. Commit e push: `chore: G9 aprovado`.
-3. **Executar uma vez (C):**
-```powershell
-.\.venv\Scripts\python.exe tools\medir_notebook.py notebooks\C\C_16_validacao_final.ipynb --salvar-no-lugar --limite-s 5400 --limite-mb 12288
+#### Passo a passo (para a pessoa)
+1. **Confirmação de equipe (1 minuto, por escrito no grupo):** "G9: código congelado, checklist verde, aprovo". Cada pessoa responde "ok". Sem os três "ok", não siga.
+2. **Aprove o G9 no YAML.** Em `configs/supervised.yaml`, no bloco `G9_holdout`, troque **só três linhas** (`status`, `aprovado_por`, `data`). Veja o bloco inteiro como deve ficar:
+   - **Âncoras antes (não mexa):** as últimas linhas do `G8_limiar`: `status: aprovado`, `aprovado_por: time_do_projeto`, `data: '2026-11-05'`, e a linha em branco.
+   - **Âncoras depois (não mexa):** a linha em branco e o começo de `selecao_modelos:`.
+   - **Apague** as nove linhas de `  G9_holdout:` até `    n_acessos: 0` e **cole**:
+```yaml
+  G9_holdout:
+    descricao: >-
+      Liberar test_ref e test_pandemic uma unica vez depois de congelar
+      features, modelo, hiperparametros, calibrador e limiar. O estado
+      aprovado libera o acesso; executado registra a consulta e e terminal.
+    status: aprovado
+    aprovado_por: equipe
+    data: '2026-11-05'
+    executado_em: null
+    n_acessos: 0
 ```
-4. **Se o notebook parar** (todas as travas abaixo disparam **antes** de abrir o teste, e nada foi visto):
+   **Não reformate** (a linha `  G9_holdout:` tem dois espaços; o notebook a procura exatamente). Salve com a mesma codificação (UTF-8).
+3. **Confira e publique** (um comando; o `git status` antes do commit deve listar só o YAML):
+```powershell
+git status --short; git add configs/supervised.yaml; git commit -m "G9 aprovado"; git push; git status --short
+```
+   O último `git status --short` precisa sair **vazio** (árvore limpa: a trava do notebook exige isso).
+4. **Reconfirme memória e energia:** cerca de **14 GB livres**, computador na tomada, **desative a suspensão**, nada pesado aberto. Não use a máquina durante a execução.
+5. **Abra o teste (uma vez).** Um comando; ele remove `SRAG_ENSAIO` por segurança, executa o notebook 11 e o salva no lugar:
+```powershell
+Remove-Item Env:SRAG_ENSAIO -ErrorAction SilentlyContinue; .\.venv\Scripts\python.exe tools\medir_notebook.py notebooks\11_validacao_final.ipynb --salvar-no-lugar --limite-s 5400 --limite-mb 14336
+```
+   Esperado, nesta ordem: gates aprovados e o commit; tabela de configuração (finalista `boosting`, calibração `sigmoid`, limiar `0.1178`, 30 variáveis); "Teste aberto em UTC: ..."; as três janelas; IC, erros, tabelas por ano e por grupo; "G9 marcado em ..." e "test_opened registrado em ...".
+6. **Se o notebook parar, leia a mensagem** (as travas disparam **antes** de ler o teste: nada foi visto):
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "Nenhum manifesto C5 compatível" | o C_15 não rodou nesta máquina com este artefato | rodar o C_15 aqui e tentar de novo |
-| "O limiar do manifesto do C5 … não é o do YAML" | o YAML mudou depois do C_15 | copiar o limiar do C_15 (todas as casas) ou rodar o C_15 de novo |
-| "Os modelos do YAML mudaram depois do C5" | `models` ou `features` mudaram depois do C_15 | rodar o C_15 de novo |
-| "O C5 foi rodado com outras variáveis" | idem | rodar o C_15 de novo |
-| "Teste já aberto para este dataset_sha256" | já existe um manifesto C6 | **não reabrir**; ver o item 5 |
-| erro de memória antes de existir `C6_*_predicoes_teste` | nada foi visto | liberar memória e rodar de novo |
-| erro **depois** de gravar `C6_*_predicoes_teste` | o resultado já existe | **não reabrir**; ver o item 5 |
+| "Gates não aprovados" | o YAML não foi salvo/commitado | corrigir o passo 2 e repetir |
+| "Há mudanças não commitadas" | árvore suja | `git status --short`, commit, repetir |
+| "Nenhum manifesto notebook 10 compatível" | o 10 não rodou com este artefato/método | rodar o notebook 10 (#126) e repetir |
+| "O limiar do manifesto do notebook 10 ... não é o do YAML" | YAML e manifesto divergem | copiar o limiar (todas as casas) ou rodar o 10 de novo |
+| "Os modelos do YAML mudaram depois do notebook 10" | `models` ou `features` mudaram | rodar o 10 de novo; **não** editar o YAML |
+| "O notebook 10 foi rodado com outras variáveis" | idem | rodar o 10 de novo |
+| "Teste já aberto para este dataset_sha256" | já existe manifesto real do 11 | **não reabrir**; ver o passo 8 |
+| MemoryError antes de existir `..._predicoes_teste` | nada foi visto | liberar memória e repetir o passo 5 |
+| erro **depois** de gravar `..._predicoes_teste` | o resultado já existe | **não rodar de novo**; passo 8 |
 
-5. **Se falhar depois da gravação das previsões:** não rode o C_16 de novo. As análises seguintes (por ano, por grupo, falsos negativos) podem ser refeitas a partir do arquivo de previsões, sem ler o teste. O G9 e o `test_opened` precisam ser marcados: edite à mão `G9_holdout` (`status: executado`, `executado_em`, `n_acessos: 1`) e `test_opened: true` no manifesto do artefato, e registre tudo no `decisoes.md`.
-6. **Conferir (A e C, 30 min):** a tabela de janelas tem Teste A, Teste B e 2020–2022 com n = 119.245, 3.035.074 e 2.915.829; prevalências perto de 8,4%, 26% e 26,4%; o finalista, o limiar e o método impressos são os do YAML; o YAML ficou com `G9_holdout.status: executado` e `n_acessos: 1`.
-7. **Depois da abertura, não rode o A_03** (nem `gerar_artefato_supervisionado`): ele regrava o manifesto do artefato e apaga o registro `test_opened`. Rode o comando do #156 (caminhos locais) no C_16 salvo.
-8. Complete a entrada `#### 29.38` do `decisoes.md` (criada em 04/11 com as hipóteses, #161) acrescentando o bloco `**G9: teste aberto uma vez (05/11)**` com data e hora UTC, commit, as três linhas da tabela de janelas e a comparação com as hipóteses. Commit: `feat: teste aberto uma vez no C_16 [done:#2]`.
+7. **Conferência (A e C, 20 min):** rode o checklist depois da abertura (um comando) e leia a tabela das janelas no notebook salvo:
+```powershell
+.\.venv\Scripts\python.exe ..\checklist_g9.py --depois
+```
+   Esperado: `G9 executado`, `n_acessos = 1`, `test_opened = true`, **um** manifesto real e previsões gravadas. Confira na tabela de janelas: **n** = 119.245 (Teste A), 2.915.829 (2020–2022) e 3.035.074 (Teste B); prevalências perto de 8,4%, 26,4% e 25,7%; finalista, método e limiar são os do YAML.
+8. **Plano de recuperação (só se falhou depois de gravar as previsões):** **não rode o notebook 11 de novo.** (a) Marque o G9 à mão no YAML: `status: executado`, `executado_em: "<data UTC do notebook>"`, `n_acessos: 1`; (b) no `manifesto_supervisionado.json` coloque `"test_opened": true` e `"test_opened_utc"`; (c) refaça as análises que faltaram **a partir do arquivo de previsões** (`outputs\predictions\11_validacao_final_final_<carimbo>_predicoes_teste.parquet`, colunas `bloco`, `y_true`, `y_prob`, `y_pred` e as de auditoria), sem ler o teste; (d) registre tudo no `decisoes.md`.
+9. **Faça backup do que o Git ignora** (um comando; `outputs/` e `data/analytical/` não vão para o GitHub):
+```powershell
+New-Item -ItemType Directory -Force ..\backup_g9 | Out-Null; Copy-Item outputs\tables ..\backup_g9\tables -Recurse -Force; Copy-Item outputs\predictions ..\backup_g9\predictions -Recurse -Force; Copy-Item data\analytical\manifesto_supervisionado.json ..\backup_g9\ -Force; Get-ChildItem ..\backup_g9 | Select-Object Name
+```
+10. **Publique** (um comando; os caminhos pessoais das saídas são limpos depois, no #189):
+```powershell
+git status --short; git add -A; git commit -m "G9 executado [done:#2]"; git push
+```
+11. **Avise o grupo:** "teste aberto". A Pessoa C segue com o #165 (O/E e calibração) e o #194 (documentação e mescla na main). **A e B só começam o trabalho pós-G9 quando a Pessoa C avisar que a main foi atualizada.**
+
+#### Documentação que muda por causa desta tarefa (resumo; o passo a passo está no #194)
+| Onde | Bloco | Quem atualiza |
+|---|---|---|
+| `configs/supervised.yaml` | `gates.G9_holdout` (`executado`, `executado_em`, `n_acessos: 1`) | o próprio notebook 11 |
+| `data/analytical/manifesto_supervisionado.json` | `test_opened`, `test_opened_utc`, `test_opened_by` | o próprio notebook 11 |
+| `outputs/final/calibracao_por_*.csv` | O/E, inclinação e ECE por janela, ano e grupo | **#165** (script) |
+| `configs/supervised.yaml` | `selecao_modelos.teste_consultado` e a observação "permanecem fechados" | **#194** |
+| `docs/decisoes.md` | §9, subseção "Resultado da abertura" com as 3 janelas e as hipóteses | **#194** (script gera o texto) |
+| `README.md` | "Resultados" e "Como rodar" (tempo, memória, versões) | **#194** |
+| Painel | comentário do card #2 com a data, o commit e os números | **#194** |
+
+#### Automação sugerida
+> [!exemplo] Dois scripts já entregues
+> `checklist_g9.py` (antes: tudo certo para aprovar; depois: `--depois` confere o registro da abertura), `calibracao_pos_g9.py` (#165: O/E e calibração, a partir das previsões gravadas) e `gerar_blocos_g9.py` (#194: textos da documentação). O notebook 11 já se auto-protege (gates, árvore limpa, hash, guarda de reabertura) e já se auto-registra (YAML e manifesto). A única parte humana é a decisão de aprovar e o plano de recuperação.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #2 · G9: abrir o teste uma única vez
+
+OBJETIVO
+Acompanhar a abertura única do teste pelo notebook 11 e ajudar a diagnosticar qualquer parada SEM reabrir o teste. Nunca sugerir nada que viole o protocolo (teste aberto uma vez, nada reajustado depois).
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída completa do checklist_g9.py antes da aprovação.
+- A mensagem de erro completa, se o notebook parar (e as últimas 30 linhas antes dela).
+- A lista de arquivos em outputs/predictions e outputs/tables com prefixo 11_validacao_final_ (para saber se as previsões já foram gravadas).
+- configs/supervised.yaml (bloco gates).
+
+PASSOS
+1. Se houve parada: classifique em (a) trava antes de ler o teste (seguro repetir depois de corrigir) ou (b) falha depois de gravar as previsões (NÃO repetir). Use a tabela de mensagens do card #2.
+2. Para (a): diga a correção mínima (PowerShell em uma linha) e quais verificações repetir.
+3. Para (b): conduza o plano de recuperação: marcar G9 no YAML e test_opened no manifesto à mão e refazer as análises a partir do arquivo de previsões, sem ler o teste.
+4. Depois da execução: confira as três janelas (n = 119.245; 2.915.829; 3.035.074), a prevalência (≈ 8,4%; 26,4%; 25,7%) e se finalista, método e limiar são os do YAML.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Nenhuma sugestão reabre o teste ou reajusta modelo, calibração ou limiar.
+- G9_holdout fica executado com n_acessos = 1.
+- Há exatamente um manifesto real 11_validacao_final_* e um arquivo de previsões.
+
+NÃO FAÇA
+- Não sugira SRAG_ALLOW_TEST_REOPEN, SRAG_ALLOW_DIRTY nem rodar o notebook 02.
+- Não interprete o resultado como motivo para mudar nada: resultado fora do previsto é achado.
+- Não leia test_ref nem test_pandemic em outro lugar.
+
+FORMATO DA ENTREGA
+Diagnóstico em 3 linhas, a classificação (a) ou (b) e os comandos de PowerShell (uma linha cada).
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- yaml: `configs/supervised.yaml` :: `gates.G9_holdout.status` = `executado` | O C_16 marcou o G9 como executado: o teste foi aberto uma vez.
+- yaml: `configs/supervised.yaml` :: `gates.G9_holdout.status` = `executado` | O notebook 11 marcou o G9 como executado: o teste foi aberto.
 - yaml: `configs/supervised.yaml` :: `gates.G9_holdout.n_acessos` = `1` | O teste foi aberto exatamente uma vez.
-- notebook-executado: `notebooks/C/C_16_validacao_final.ipynb` | O C_16 está salvo com todas as células executadas e sem erro.
-- notebook-saida: `notebooks/C/C_16_validacao_final.ipynb` :: `test_pandemic` | As saídas salvas mostram a leitura do bloco 2020–2022.
-- contem: `docs/decisoes.md` :: `G9: teste aberto uma vez` | O decisoes.md registra a abertura com data, commit e a tabela das três janelas.
+- notebook-executado: `notebooks/11_validacao_final.ipynb` | O notebook 11 está salvo com todas as células executadas e sem erro.
+- notebook-saida: `notebooks/11_validacao_final.ipynb` :: `test_pandemic` | As saídas salvas mostram a leitura do bloco 2020–2022.
+- manual: | O checklist_g9.py --depois terminou com 0 falhas, as três janelas têm os n esperados e o backup do que o Git ignora foi feito.
 
 ## #77 · Aprovar o G1 com a seleção de features da coorte provisória congelada
 
@@ -4510,61 +4783,216 @@ O B_10 tem uma verificação, `features_finais_ainda_nao_congeladas`, que exige 
 
 - nao-contem: `notebooks/B/B_10_consolidacao_shortlist_transicao_coorte.ipynb` :: `features_finais_ainda_nao_congeladas` | A verificação que falhava de propósito foi removida do B_10 (se o B_10 sair no #143, o critério continua atendido).
 
-## #126 · Execução limpa da cadeia final, README novo e pacote de reprodução
+## #126 · Executar TODOS os notebooks (02 a 10) em ordem e atualizar a documentação, antes do G9
 
 - prioridade: P1
 - situação: aberta
 - estratégia: desenvolver
-- marco: M7
-- data ideal: 04/11
-- responsável: Pessoa C (1 h) + Pessoa B (1,5 h)
-- pessoas: C, B
-- fonte: README.md e 02_fluxo_e_estado §11.5 no commit 9f3322b; revisão de 03/11
-- depende de: #155, #152, #153, #158, #159
-- tags: Entrega, Reprodutibilidade, Documentação
+- marco: Pré-G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C
+- fonte: Decisão de 05/11: todos os notebooks são reexecutados antes do G9 (a versão anterior deste card só reexecutava o notebook 10); incorpora o antigo #195 e a limpeza de caminhos dos notebooks (#164)
+- depende de: #192
+- tags: cadeia, notebooks, reprodutibilidade, documentação, pré-G9, automatizável
 - pilar: Eficiência + Documentação
-- carga: 2.5
+- carga: 1
 - novo: não
 - professores: não
-- arquivos: README.md, requirements.txt, pyproject.toml
+- arquivos: notebooks/02_coorte_definitiva.ipynb, notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/06_pipeline_supervisionado.ipynb, notebooks/07_baseline_logistica.ipynb, notebooks/08_ablacoes_variaveis.ipynb, notebooks/09_ajuste_fino.ipynb, notebooks/10_calibracao_limiar.ipynb, requirements-lock.txt, pyproject.toml, README.md
 
 ### ① Para entender
 
-A banca precisa conseguir entender a estrutura e, em tese, reproduzir os resultados. Isso exige três coisas: todos os notebooks salvos com saídas do mesmo artefato, um README que descreva o projeto como ele é hoje e as dependências declaradas.
+Antes de abrir o teste (que só pode ser aberto **uma vez**), o projeto precisa estar **inteiro e coerente**: cada notebook salvo com as saídas do código final, o artefato e os manifestos com o mesmo hash, e a documentação descrevendo o que foi executado. Em vez de reexecutar só o notebook 10, a decisão de 05/11 é **reexecutar toda a cadeia, de ponta a ponta, antes do G9**. Este card incorpora o antigo #195 (cadeia e versões) e a limpeza de caminhos pessoais dos notebooks.
+
+| Ordem | Notebook | O que faz | Por que roda aqui |
+|---|---|---|---|
+| 1 | `02_coorte_definitiva` | republica a coorte e **regera o artefato** supervisionado (partição 70/15/15) | roda **primeiro**: se o hash do artefato mudar, tudo o que vem depois precisa ser refeito |
+| 2 | `03_eda_primeira_passagem` | análise exploratória inicial | saídas com o código final |
+| 3 | `04_eda_temporal_agrupamento` | exploração temporal e agrupamento | saídas com o código final |
+| 4 | `05_supervisionado_pilotos` | pilotos supervisionados | saídas com o código final |
+| 5 | `06_pipeline_supervisionado` | pipeline de pré-processamento e modelo | saídas com o código final |
+| 6 | `07_baseline_logistica` | baseline logístico | saídas com o código final |
+| 7 | `08_ablacoes_variaveis` | ablações de variáveis | saídas com o código final |
+| 8 | `09_ajuste_fino` | ajuste fino do boosting | saídas com o código final |
+| 9 | `10_calibracao_limiar` | calibração (G7) e limiar (G8) | **gera o manifesto que o notebook 11 vai procurar** |
+
+**Ficam de fora, de propósito:** o `01_extracao` (baixa os dados da internet; o README diz que ele fica sem saídas salvas) e o `11_validacao_final` (abre o teste: só roda no ensaio do #193 e uma vez no G9, #2).
+
+**Ordem de grandeza:** de 30 a 60 min de máquina (a última medição, de 03/11, foi ≈ 31 min, com pico ≈ 4,1 GB). Use um computador com ≥ 8 GB livres.
+
+> [!atenção] O notebook 02 regera o artefato
+> Ele republica a coorte (com backup `.bak`) e regrava o artefato. É determinístico (hash por grupo, semente 42), mas, se o `dataset_sha256` mudar, o manifesto antigo do notebook 10 deixa de servir. É por isso que a cadeia vai até o 10, em ordem, numa única execução.
 
 ### ② Problema
 
-- **README desatualizado (linhas 69, 76, 180, 200 e 270):** descreve notebooks que não existem (`02_eda/_provisorio_construcao_coorte_b`, `C1_smoke_test` a `C6_validacao_final`), fala em "shortlist provisória" e traz uma seção "Pontos de atenção conhecidos" (linha 408), escrita por uma auditoria automática, cujo primeiro item (`csv_to_parquet`) já não se aplica.
-- **O A_03 republica e regera por padrão:** `GERAR_CANDIDATA`, `PUBLICAR` e `GERAR_ARTEFATO` estão `True`. Rodá-lo copia a coorte por cima (com `.bak`) e regrava o artefato. É determinístico, mas qualquer notebook C rodado **antes** dele fica com o hash antigo; por isso ele roda primeiro, e nunca depois do teste (#2).
-- **Notebooks desatualizados:** B_04 (27/10) e B_05 (30/10) foram salvos antes de mudanças em `src/`; B_02, A_03, 00 e 01 estão sem execução salva.
-- **Dependência faltando:** o C_11 importa `cloudpickle`, que não está no `requirements.txt` (restaurado em 03/11, com 17 linhas) nem no `pyproject.toml`.
-- **Tempo de máquina (pelos carimbos das últimas execuções):** B_04 ≈ 5 min e B_05 ≈ 6 min; C_14 ≈ 1,5 min; C_11, C_12 e C_15 de poucos minutos cada (estimativa). B_02 e A_03 não têm carimbo: meça. Estimativa para a cadeia inteira: 30 a 45 min.
-- **Não executar aqui:** o C_16 (roda uma vez, em 05/11), o 00 e o 01 (baixam dados; ficam sem saídas e o README explica).
-- **C_13:** a execução limpa roda a busca da grade do YAML (a de referência do #1). O modelo final vem do #155 e do YAML; o README diz isso numa linha.
+- Os notebooks 04, 05, 06, 08, 09 e 10 foram salvos antes das últimas mudanças em `src/`, e os notebooks 01, 02, 03, 07 e 11 estão sem execução salva (snapshot de 05/11).
+- Depois da renomeação das saídas (#192), os arquivos antigos de `outputs/` ficaram em `outputs/_antigo`: só a reexecução gera os nomes novos que o notebook 11 procura.
+- Cada execução grava o **caminho completo da máquina** (`C:\Users\...\OneDrive - ...`) nas saídas dos notebooks. Isso precisa ser limpo antes de publicar (o script faz).
+- O `README.md` não tem tempo, memória nem versão do Python; não existe `requirements-lock.txt`; o `pyproject.toml` não declara a versão do Python usada.
+- O G9 só abre com a **árvore Git limpa**: tudo isso precisa estar commitado e publicado antes do ensaio (#193).
 
 ### ③ O que fazer
 
-> [!ok] Parte mecânica aplicada por script em 03/11 (commit `b3772de`)
-> `cloudpickle` está no `requirements.txt` e no `pyproject.toml`, ambos com `>=` (como as demais linhas desses arquivos, e não com `==` como o passo 1 descreve). O README já usa os nomes atuais dos notebooks, não tem mais “Pontos de atenção conhecidos” e descreve o `test_pandemic`. Falta a execução limpa e o resto do README.
+**Dono:** Pessoa C · **Tempo:** ≈ 15 min de trabalho + ≈ 30 a 60 min de máquina (sem ninguém acompanhar) · **Começa quando:** #192 commitado e publicado · **Antes de:** #193 (ensaio do notebook 11).
 
-**Dono:** Pessoa C (execução) + Pessoa B (README) · **Prazo:** 04/11, 19h às 22h · **Começa quando:** #155 (modelo final congelado), #152, #153, #158 e #159 · **Script previsto:** `executar_cadeia.py` (começa por relatório; roda a cadeia na ordem, para no primeiro erro, anota tempo e memória e já limpa os caminhos locais do #156). O que segue é o plano B.
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\cadeia.py iniciar`
+> Roda **em segundo plano** os notebooks 02 a 10, na ordem, salvando cada um no lugar e medindo tempo e memória; **para no primeiro erro**; ao terminar, **atualiza a documentação sozinho** (tira caminhos pessoais dos notebooks, grava `requirements-lock.txt`, acrescenta a versão do Python ao `pyproject.toml`, escreve o parágrafo de tempo e memória no `README.md`), roda o `pytest`, faz **commit** (`cadeia 02 a 10 executada [done:#126]`) e **push**. Acompanhe com `.\.venv\Scripts\python.exe ..\cadeia.py status`. Se um notebook falhar, corrija e retome com `... cadeia.py iniciar --de 05` (troque 05 pelo número que parou).
+> O script foi testado com notebooks simulados (segundo plano, falha, retomada, documentação e commit), **não com os notebooks reais**: se ele recusar ou falhar, siga os passos manuais mais abaixo, que continuam valendo.
 
-1. **Dependência (C, 2 min):** acrescente `cloudpickle` ao `requirements.txt` (versão: `python -c "import cloudpickle; print(cloudpickle.__version__)"`, fixada com `==`) e ao `pyproject.toml` (`>=`). `pytest tests/test_config.py -q` deve passar.
-2. **Execução (C, na máquina oficial do #158):** com os nomes finais do #146 (ou os atuais, se ele for cortado), cada notebook com `tools\medir_notebook.py <arquivo> --salvar-no-lugar --limite-mb 12288`, **nesta ordem**: A_03 (primeiro), B_02, B_04, B_05, C_11, C_12, C_14, C_13, C_15. **Não rode o C_16, o 00 nem o 01.**
-3. **Confira o C_15 desta cadeia:** o limiar impresso precisa ser o `limiar.otimo` do YAML (todas as casas). O A_03 regrava o artefato, e o hash pode ter mudado; o C_15 que você acabou de rodar já usa o hash novo, que é o que o C_16 vai procurar. Se o limiar diferir, copie o novo para o YAML e **registre** (o C_16 não deixa passar nada diferente).
-4. **Caminhos locais (C, 2 min):** logo depois da execução, o comando do #156.
-5. **README (B, 1 h 30), seções curtas:** objetivo e pergunta; dados (SIVEP-Gripe, `dados-v2`, coorte definitiva de 3.884.728 notificações); desenho (70/15/15 por grupo, Teste A, Teste B, 2020–2022 isolado, 2026 fora); estrutura de pastas real; ordem de execução dos notebooks, com o que cada um lê e grava (§10 do pacote de referência); como instalar (`python -m venv .venv`, `pip install -r requirements.txt`) e a versão do Python testada (3.14.7); como rodar os testes (`pytest -q`); onde estão as decisões (`docs/decisoes.md`) e os resultados (`resultados/`); uma linha dizendo que os arquivos de saída começam por `C3_`, `C4_`, `C5_` e `C6_` (sem citar o nome antigo dos notebooks); que o C_16 já foi executado uma vez (reabrir exige `SRAG_ALLOW_TEST_REOPEN=1` e registro); e três linhas de limitações. **Apague** a seção "Pontos de atenção conhecidos". Nenhum nome de pessoa nem número de card.
-6. Commit: `docs: README da entrega e execução limpa da cadeia [done:#126]`, e **faça o push** (o #163 clona do GitHub).
+#### Antes de começar (5 min)
+1. **Ramo e árvore limpos:** `git switch enxugamento; git pull --ff-only; git status --short` (o último não pode imprimir nada).
+2. **Memória:** feche navegador, Teams, Excel e outros notebooks. Precisa de **≥ 8 GB livres** (o script confere e recusa se faltar).
+3. **Energia:** computador na tomada. O script pede ao Windows para não suspender enquanto roda, mas desligue também a suspensão automática por garantia.
+4. **Scripts:** todos os scripts do lote precisam estar na **pasta acima do repositório**. O `pre_g9.py` gera `..\scripts_g9_completo.zip` com todos eles; se esta máquina ainda não os tem, copie esse zip para `..` e rode (um comando): `Expand-Archive -Path ..\scripts_g9_completo.zip -DestinationPath .. -Force`.
+5. **Combine** no grupo: "máquina ocupada por ≈ 1 h". Não rode nada pesado junto e **não toque em `src/`, `configs/` nem nos notebooks** enquanto a cadeia roda.
+
+#### Passo a passo (para a pessoa)
+1. **Inicie a cadeia** (um comando; devolve o terminal em segundos):
+```powershell
+.\.venv\Scripts\python.exe ..\cadeia.py iniciar
+```
+   Esperado: "Cadeia iniciada em segundo plano (PID ...)". Se aparecer `PARADO` (árvore suja ou pouca memória), resolva e repita.
+2. **Acompanhe** quando quiser (não interfere na execução):
+```powershell
+.\.venv\Scripts\python.exe ..\cadeia.py status
+```
+   Mostra o estado (`rodando`, `documentando`, `ok` ou `erro`), o notebook atual, o tempo e o pico de memória de cada um já feito e as últimas linhas do log (`outputs\final\cadeia.log`).
+3. **Se parar com erro**, leia a mensagem e use a tabela:
+
+| O que aparece | Causa provável | O que fazer |
+|---|---|---|
+| `PARADO: há mudanças não commitadas` | árvore Git suja | commit ou descarte e repita o passo 1 |
+| `PARADO: x GB livres` | pouca memória | feche programas e repita |
+| `ABORTADO: não achei exatamente um arquivo para: ...` | a renomeação (#192) não foi aplicada | rode o `pre_g9.py` ou aplique o #192 antes |
+| `PAROU EM 02_coorte_definitiva` | falta a base de dados ou erro na coorte | confira se a base está na máquina (`data/`); se faltar, chame a equipe; **não rode o 01 por conta própria sem combinar** |
+| `PAROU EM 0X` com `MemoryError` | memória acabou | feche programas e retome: `... cadeia.py iniciar --de 0X` |
+| `ACIMA DO LIMITE` de memória no log | o notebook rodou, mas passou do teto de 12 GB | retome com `... cadeia.py iniciar --de 0X --limite-mb 16384` |
+| erro de código ou de manifesto em um notebook | algo no código ou no YAML | **não mude a lógica do estudo**: cole o erro na IA (bloco abaixo) e retome do mesmo notebook |
+| `pytest rápido: FALHOU` na etapa de documentação | teste quebrou depois da cadeia | nada foi commitado; leia a saída, cole na IA e rode `... cadeia.py documentar` depois de corrigir |
+
+4. **Quando disser `CADEIA CONCLUIDA`** (status `ok`), o script já fez commit e push. Confira em **um comando** (esperado: o commit `cadeia 02 a 10 executada [done:#126]` e nada em `git status`):
+```powershell
+git log --oneline -3; git status --short; git grep -n -I -i -E "olivem85|OneDrive - |C:.{1,4}Users" -- notebooks README.md
+```
+5. **Confira o manifesto do notebook 10** (esperado: `aprovado aprovado 6cb2c96bca846c7d precision 0.1178`):
+```powershell
+$m = Get-ChildItem outputs\tables\10_calibracao_limiar_*_manifesto.json | Sort-Object LastWriteTime | Select-Object -Last 1 | Get-Content -Raw | ConvertFrom-Json; "$($m.g7_status) $($m.g8_status) $($m.config_modelo_hash) $($m.limiar_metrica) $($m.escolhas.hist_gradient_boosting.limiar)"
+```
+   Se o hash ou o limiar forem diferentes, **pare** e chame a equipe: o YAML dos modelos mudou, ou o artefato regerado pelo notebook 02 levou a outro resultado. Não copie o limiar para o YAML sem decisão registrada no `docs/decisoes.md`.
+6. **Confira que todos os notebooks ficaram executados e sem erro** (esperado: `0` células sem execução e `0` erros em cada linha):
+```powershell
+.\.venv\Scripts\python.exe -c "import json,glob; [print(f.split('\\')[-1], 'sem execucao:', sum(1 for c in json.load(open(f,encoding='utf-8'))['cells'] if c['cell_type']=='code' and ''.join(c['source']).strip() and c.get('execution_count') is None), '| erros:', sum(1 for c in json.load(open(f,encoding='utf-8'))['cells'] for o in c.get('outputs',[]) if o.get('output_type')=='error')) for f in sorted(glob.glob('notebooks/0[2-9]_*.ipynb')+glob.glob('notebooks/10_*.ipynb'))]"
+```
+7. **Abra o `outputs\final\cadeia.md`** (tabela de tempo e memória) e **comente neste card**: tempo total, pico de memória e o commit. Avise o grupo: "cadeia concluída; começo o ensaio (#193)".
+
+#### Passo a passo manual (plano B, sem o script)
+1. **Execute os nove notebooks em ordem** (um comando; para no primeiro erro; cada notebook é salvo no lugar e mede tempo e memória):
+```powershell
+foreach ($n in '02_coorte_definitiva','03_eda_primeira_passagem','04_eda_temporal_agrupamento','05_supervisionado_pilotos','06_pipeline_supervisionado','07_baseline_logistica','08_ablacoes_variaveis','09_ajuste_fino','10_calibracao_limiar') { .\.venv\Scripts\python.exe tools\medir_notebook.py "notebooks\$n.ipynb" --salvar-no-lugar --limite-mb 12288 --limite-s 10800; if ($LASTEXITCODE -ne 0) { Write-Host "PAROU EM $n"; break } }
+```
+   Para retomar depois de um erro, repita o comando só com os nomes que faltam.
+2. **Tire os caminhos pessoais dos notebooks** (relatório primeiro; nada muda):
+```powershell
+.\.venv\Scripts\python.exe ..\limpar_caminhos.py --pastas notebooks
+```
+   Se o relatório estiver certo, aplique: `.\.venv\Scripts\python.exe ..\limpar_caminhos.py --pastas notebooks --aplicar`.
+3. **Grave as versões exatas** do ambiente:
+```powershell
+.\.venv\Scripts\python.exe -m pip freeze --exclude-editable | Out-File -Encoding utf8 requirements-lock.txt
+```
+4. **`pyproject.toml`:** descubra a versão com `.\.venv\Scripts\python.exe --version`. Na lista `classifiers`, **depois** da última linha `"Programming Language :: Python :: 3.xx",`, acrescente a linha da versão usada (por exemplo `"Programming Language :: Python :: 3.14",`), com o mesmo recuo. Confira: `.\.venv\Scripts\python.exe -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('pyproject ok')"`.
+5. **`README.md`, seção "Como rodar":** **depois** do parágrafo que termina em "use `SRAG_ENSAIO=1`." acrescente (os números vêm de `Get-Content outputs\final\performance_notebooks.csv -Tail 10`: some os tempos dos nove notebooks e pegue o maior pico):
+```markdown
+Tempo e memória (máquina oficial): a cadeia de notebooks 02 a 10 leva cerca de ⟨X⟩ min, com pico de ⟨Y⟩ GB de memória. Os notebooks 01 (download dos dados) e 11 (abertura única do teste) ficam fora dessa execução. Testado com Python ⟨versão⟩; versões exatas em `requirements-lock.txt`.
+```
+6. **Teste, commit e publicação** (um comando; o `git status` antes do commit deve listar só notebooks, lock, pyproject e README):
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q; git status --short; git add -A; git commit -m "cadeia 02 a 10 executada [done:#126]"; git push
+```
+7. Siga os passos 5 a 7 do passo a passo principal (manifesto, notebooks sem erro, comentário no card).
+
+#### Documentação que muda por causa desta tarefa (resumo)
+| Onde | Bloco | O que muda | Quem faz |
+|---|---|---|---|
+| `README.md` | "Como rodar" | parágrafo de tempo, memória e versão do Python (entre os marcadores `<!-- cadeia:inicio -->` e `<!-- cadeia:fim -->`) | `cadeia.py` |
+| `requirements-lock.txt` | arquivo novo | versões exatas do ambiente | `cadeia.py` |
+| `pyproject.toml` | `classifiers` | linha da versão do Python usada | `cadeia.py` |
+| Notebooks 02 a 10 | saídas salvas | caminhos pessoais trocados por `<REPO>` e `<HOME>` | `cadeia.py` + `limpar_caminhos.py` |
+| `outputs\final\cadeia.md` | resumo local (não vai ao Git) | tabela de tempo e memória | `cadeia.py` |
+| Painel | este card | comentário com tempo, pico e commit | pessoa |
+
+#### Automação sugerida
+> [!exemplo] Estratégia do `cadeia.py` (já entregue)
+> **Descoberta:** acha cada notebook pelo número (`02_*` a `10_*`) e recusa se faltar ou houver dois. **Segundo plano:** `iniciar` abre um processo desanexado (no Windows, sem janela) que grava `outputs\final\cadeia_status.json` e `cadeia.log`; `status` só lê esses arquivos. **Segurança:** recusa árvore suja (na retomada aceita só notebooks modificados) e pouca memória; remove `SRAG_ENSAIO`, `SRAG_ALLOW_TEST_REOPEN` e `SRAG_ALLOW_DIRTY` do ambiente dos notebooks; nunca roda o 01 nem o 11. **Erro:** para no primeiro, guarda a cauda do log e diz como retomar. **Documentação:** só depois de a cadeia inteira passar; o commit só acontece se o `pytest` passar e se os únicos arquivos alterados forem notebooks, `requirements-lock.txt`, `pyproject.toml`, `README.md` ou `docs/`.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #126 · Executar todos os notebooks (02 a 10) e atualizar a documentação, antes do G9
+
+OBJETIVO
+Acompanhar a execução completa e ordenada dos notebooks 02 a 10 (cadeia.py), diagnosticar qualquer parada SEM mudar a lógica do estudo e conferir que a documentação (README, requirements-lock.txt, pyproject) e o manifesto do notebook 10 estão corretos para o G9.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: medir_notebook.py executa, salva e mede um notebook.
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída de `cadeia.py status` e o arquivo outputs/final/cadeia.log (últimas 80 linhas).
+- Se houve erro: a mensagem completa e o notebook que parou.
+- O manifesto novo outputs/tables/10_calibracao_limiar_final_<data>_manifesto.json e configs/supervised.yaml (blocos models, features, limiar, calibracao, gates).
+- outputs/final/cadeia.md e git log --oneline -3.
+
+PASSOS
+1. Se parou: classifique a causa (memória, dado ausente, erro de código, trava de manifesto) e proponha a correção mínima, com âncoras (4 linhas antes e 4 depois) e a linha de PowerShell para retomar (`cadeia.py iniciar --de NN`).
+2. Se terminou: compare o config_modelo_hash com 6cb2c96bca846c7d e o limiar com limiar.otimo do YAML (0,1178). Se diferirem, pare e explique.
+3. Confira o parágrafo do README (tempo, memória, versão do Python) e se o requirements-lock.txt tem scikit-learn==, pandas==, numpy== e pyarrow==.
+4. Diga em uma frase se o #193 (ensaio) pode começar.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Os notebooks 02 a 10 estão salvos com todas as células executadas e sem erro.
+- git status limpo e o commit 'cadeia 02 a 10 executada [done:#126]' publicado.
+- O manifesto do notebook 10 tem g7_status = aprovado, g8_status = aprovado, limiar_metrica = precision e o hash dos modelos esperado.
+- Nenhum caminho pessoal (olivem85, OneDrive - ) nos notebooks.
+
+NÃO FAÇA
+- Não rode os notebooks 01 e 11.
+- Não edite src/, configs/ nem notebooks durante a cadeia.
+- Não use SRAG_ENSAIO, SRAG_ALLOW_TEST_REOPEN nem SRAG_ALLOW_DIRTY.
+- Não proponha mudar modelo, calibração ou limiar.
+
+FORMATO DA ENTREGA
+Diagnóstico em 3 linhas + linhas de PowerShell (uma por linha). Só entregue código se houver erro.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- nao-contem: `README.md` :: `_provisorio_construcao_coorte_b` | O README não cita mais o notebook da coorte provisória.
-- nao-contem: `README.md` :: `C6_validacao_final` | O README não usa mais os nomes antigos dos notebooks C.
-- nao-contem: `README.md` :: `Pontos de atenção conhecidos` | A seção escrita por auditoria automática saiu do README.
-- contem: `README.md` :: `test_pandemic` | O README descreve o Teste B e a janela 2020–2022.
-- contem: `requirements.txt` :: `cloudpickle` | A dependência do notebook do pipeline está declarada.
-- contem: `pyproject.toml` :: `cloudpickle` | O pyproject.toml também declara o cloudpickle.
-- manual: | Todos os notebooks da lista, exceto 00, 01 e o de validação final, foram reexecutados em 04/11 e salvos com saídas; a tabela outputs/final/performance_notebooks.csv tem uma linha de 04/11 para cada um.
+- notebook-executado: `notebooks/02_coorte_definitiva.ipynb` | O notebook 02 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/03_eda_primeira_passagem.ipynb` | O notebook 03 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/04_eda_temporal_agrupamento.ipynb` | O notebook 04 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/05_supervisionado_pilotos.ipynb` | O notebook 05 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/06_pipeline_supervisionado.ipynb` | O notebook 06 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/07_baseline_logistica.ipynb` | O notebook 07 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/08_ablacoes_variaveis.ipynb` | O notebook 08 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/09_ajuste_fino.ipynb` | O notebook 09 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/10_calibracao_limiar.ipynb` | O notebook 10 está salvo com todas as células executadas e sem erro.
+- existe: `requirements-lock.txt` | O arquivo com as versões exatas da máquina oficial existe.
+- contem: `requirements-lock.txt` :: `scikit-learn==` | O arquivo fixa a versão do scikit-learn.
+- contem: `README.md` :: `requirements-lock.txt` | O README cita as versões exatas, o tempo e a memória da cadeia.
+- manual: | O manifesto novo do notebook 10 registra G7 e G8 aprovados, precision e o mesmo hash dos modelos (6cb2c96bca846c7d), e o git status ficou limpo depois do commit da cadeia.
 
 ## #28 · O YAML diz que o finalista é escolhido no fim do C_16, mas o C_16 exige antes
 
@@ -4996,146 +5424,274 @@ A Pessoa B confere a mesma lista nos slides em 04/11.
 
 - manual: | A lista de verificação de redação deste card foi aplicada no relatório e nos slides (Pessoa A) e conferida pela Pessoa B: notificações, associação preditiva, robustez temporal, 2026 parcial, heterogeneidade regional, ausência de registro e número com origem.
 
-## #133 · Relatório final: seções, rastreabilidade de cada número e limitações
+## #133 · Limitações, rastreabilidade e mapa TRIPOD+AI no repositório (docs/limitacoes_e_rastreabilidade.md)
 
-- prioridade: P1
+- prioridade: P2
 - situação: aberta
-- estratégia: documentar
-- marco: M7
+- estratégia: desenvolver
+- marco: Pós-G9
 - data ideal: 05/11
-- responsável: Pessoa A (5 h) + Pessoa B (2 h) + Pessoa C (1,5 h)
-- pessoas: A, B, C
-- fonte: Orientação do TCC; decisoes.md; revisão de 03/11 (absorve #56, #71, #45, #46, #47 e #69)
-- depende de: #2
-- tags: Relatório, Entrega
-- pilar: Valor científico-acadêmico + Documentação
-- carga: 8.5
+- responsável: Pessoa A
+- pessoas: A
+- fonte: Reduzido em 05/11: a entrega é a apresentação em PowerPoint e o link do GitHub completo; o relatório longo foi substituído por um documento curto no repositório (limitações #186, rastreabilidade e TRIPOD+AI #178 incorporados)
+- depende de: #194
+- tags: documentação, limitações, rastreabilidade, TRIPOD+AI
+- pilar: —
+- carga: 1.5
 - novo: não
 - professores: sim
+- arquivos: docs/limitacoes_e_rastreabilidade.md, README.md
 
 ### ① Para entender
 
-O relatório é a peça que a banca lê. Ele precisa contar uma história curta e defensável: a pergunta, a coorte, o desenho que protege o teste, o modelo escolhido, a calibração, o limiar, o desempenho nas duas janelas e o que **não** se pode concluir. Cada número tem de vir de um arquivo do repositório.
+Como a entrega é a **apresentação em PowerPoint** mais o **link do GitHub completo**, um relatório de 12 a 15 páginas deixa de ser necessário. O que a banca ainda precisa encontrar **no repositório**, num só lugar:
+
+1. **Limitações e trabalhos futuros** (escritas antes de a banca perguntar).
+2. **Rastreabilidade:** de onde vem cada número da apresentação (arquivo e coluna).
+3. **Mapa TRIPOD+AI:** onde cada item do padrão de relato de modelos de previsão está respondido.
+
+Tudo isso vira **um arquivo curto**: `docs/limitacoes_e_rastreabilidade.md`, citado no `README.md`. Os slides da apresentação (#134) usam as mesmas frases.
+
+> [!decisão] Se a faculdade exigir um relatório escrito separado
+> Avise a equipe: o texto longo (esqueleto de 12 seções, com fonte de cada número) está no histórico deste painel e volta como card próprio. Nesta versão fica fora do essencial de hoje.
 
 ### ② Problema
 
-> [!decisão] Revisão de 03/11 · versão 3
-> Seis cards pequenos eram só parágrafos deste relatório e foram absorvidos: âncora e quem ficou de fora (#56, §29.23), cuidados de redação (#71, §29.20), vacina marcada antes de existir (#45), 58 linhas com 29 números repetidos (#46, §29.10), idades e datas impossíveis (#47) e a diferença entre o plano v2 e a orientação e o desenho final (#69).
-
-O texto descreve **só o desenho final** (70/15/15 e coorte definitiva); versões intermediárias não entram no relatório.
-
-> [!decisão] Revisão de 03/11 · versão 3.2
-> Os cards pós-entrega foram removidos (o projeto termina em 05/11). O que eles tinham de útil para a banca virou uma frase de **Limitações** ou de **Trabalhos futuros** neste card (lista no ③).
-
-> [!decisão] Revisão de 03/11 · versão 4.0
-> O relatório ganhou três seções que a leitura do repositório mostrou que faltavam: maturidade do desfecho (#160), equidade (#55, #161) e a comparação com as hipóteses registradas antes do teste (#161). Veja os acréscimos no ③.
+- Os números do teste só existem depois do #194; use o `blocos_g9.md` da Pessoa C (**copie, não redigite**).
+- Descreva **só o desenho final** (70/15/15 por grupo e coorte definitiva); versões intermediárias não entram.
+- Resultado fora do previsto é **achado**, nunca motivo para reajuste.
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A (organiza, Métodos, Resultados, Discussão, Limitações) + Pessoa B (Introdução, revisão, agrupamento) + Pessoa C (modelos, calibração, limiar, importância) · **Prazo:** tudo o que não depende do teste em 04/11; números do teste em 05/11, 10h às 14h, com conferência às 14h · **Começa quando:** já (as seções de resultados do teste esperam o #2)
+**Dono:** Pessoa A · **Tempo:** ≈ 1 h 30 min · **Começa quando:** #194 concluído e a `main` atualizada · **Antes de:** #147.
 
-**Esqueleto (≈ 12 a 15 páginas):**
+#### Passo a passo (para a pessoa)
+1. **`git switch main; git pull --ff-only`.** Crie `docs/limitacoes_e_rastreabilidade.md` com três seções: **Limitações e trabalhos futuros**, **Rastreabilidade dos números** e **Mapa TRIPOD+AI**.
+2. **Frases que precisam estar no texto:**
+   - "A diferença entre o Teste A e o Teste B mede a robustez a uma mudança de período, não o efeito causal da pandemia."
+   - "Associações de variáveis com o desfecho não são efeitos causais; as que parecem protetoras são, em geral, efeito da idade."
+   - **Limitação do desenho:** "A seleção de variáveis e de hiperparâmetros, a calibração e a escolha do limiar usaram a mesma validação (`val_ref`), em metades disjuntas para calibrar e medir. Por isso as métricas de validação são otimistas; as estimativas de referência são as do teste, aberto uma única vez."
+3. **Limitações e trabalhos futuros (uma frase cada):**
+   - *Agrupamento por hospital:* fichas de um mesmo hospital e município são correlacionadas; o bootstrap por grupo trata notificações repetidas, não hospitais; os intervalos podem estar estreitos demais; a avaliação por UF e região mitiga em parte.
+   - *Nosocomial:* a coluna não está no dicionário; não dá para separar SRAG adquirida no hospital dos intervalos negativos excluídos (D_COORTE_006).
+   - *Hora da medição* da saturação e do desconforto: a ficha não registra.
+   - *Prevalência muito maior em 2020–2022* (≈ 26% contra 8,4%): o desempenho em 2020–2022 mede robustez a mudança de período.
+   - *Código:* a coluna `classi_fin` não está na lista de proibidas e a fábrica de modelos só **avisa** sobre chaves desconhecidas do YAML; nada disso afeta o modelo congelado (30 variáveis aprovadas).
+   - *Trabalhos futuros:* recalibração periódica (por ano ou onda) e monitoramento do O/E; corte de decisão por região (sugestão do professor); modelo específico para crianças; validação prospectiva e análise de impacto (alertas que a equipe consegue atender).
+4. **Rastreabilidade (tabela):** uma linha por número da apresentação: **número · arquivo · coluna**. Monte-a **depois** da apresentação (#134) a partir das legendas; o `blocos_g9.md` e `resultados/LEIA-ME.md` já trazem os arquivos.
+5. **Mapa TRIPOD+AI** (frase: "O relato segue o TRIPOD+AI (Collins et al., 2024)") e a tabela:
 
-| Seção | Fonte | Quem |
-|---|---|---|
-| Introdução e pergunta | revisão (#112) | B |
-| Dados e coorte (âncora em `dt_interna`, exclusões em cascata, quem ficou de fora; #45, #46, #47 como qualidade dos dados) | `final_cohort_v1.yaml`, `outputs/coorte_candidata/manifesto_coorte.json`, §29.10 e §29.23 | A |
-| Desenho: 70/15/15 por grupo, Teste A, Teste B e 2020–2022, 2026 fora, teste aberto uma vez | `manifesto_particao.json`, §21, §22, §29.33 e §29.37 | A |
-| Variáveis do modelo (30; entram saturação e desconforto, saem os três sintomas da era COVID) | §29.34, C_14 | A |
-| Exploração e agrupamento (clusters refletem idade e preenchimento; perfil por qui-quadrado e ANOVA) | B_04, §29.7, #137 | B |
-| Modelos e ajuste (G6 e exploração de 04/11), peso de classe, calibração (G7), limiar (G8) | C_13, C_15, §29.35 a §29.37 | C |
-| Resultados: tabela das três janelas, por ano, por região e faixa etária, falsos negativos | `C6_*_janelas.csv`, #55 | A |
-| Importância das variáveis | #91 | C |
-| Discussão e limitações (texto pronto abaixo) | — | A |
-| Reprodutibilidade (ordem dos notebooks, hashes, testes) | README (#126) | A |
+| Item | Onde |
+|---|---|
+| Fonte de dados e período | `README.md`; `data/manifest_dados-v2.yaml` |
+| Elegibilidade (7 regras) | `configs/final_cohort_v1.yaml`; `docs/decisoes.md` §3 |
+| Desfecho e momento da previsão | `docs/decisoes.md` §1 e §4 |
+| Preditores e disponibilidade na admissão | `configs/feature_contract_v1.json`; `docs/decisoes.md` §6 |
+| Dados ausentes (categoria AUSENTE) | `docs/decisoes.md` §6 |
+| Divisão dos dados (grupo, hash, 70/15/15, pandemia no teste) | `docs/decisoes.md` §5; `manifesto_particao.json` |
+| Modelos, hiperparâmetros, regra de escolha | `docs/decisoes.md` §7 |
+| Calibração e limiar | `docs/decisoes.md` §8 |
+| Desempenho com IC (Teste A) e calibração por janela | notebook 11; `resultados/` |
+| Equidade (região, raça/cor, faixa etária) | #55; `resultados/` |
+| Limitações | este arquivo |
+| Código e reprodutibilidade | `README.md`; `requirements-lock.txt` |
 
-**Frases que precisam estar no texto (cuidados de redação, #71):**
-- "A diferença entre o Teste A e o Teste B mede a robustez a uma mudança de período, não o efeito causal da pandemia."
-- "Associações de variáveis com o desfecho não são efeitos causais; as que parecem protetoras são, em geral, efeito da idade."
-- **Limitação do desenho:** "A seleção de variáveis e de hiperparâmetros e a calibração e a escolha do limiar usaram a mesma validação (`val_ref`), em metades disjuntas para calibrar e medir. Por isso as métricas de validação são otimistas; as estimativas de referência são as do teste, aberto uma única vez."
+   Itens que não se aplicam (validação externa prospectiva): diga "não se aplica a este estudo acadêmico" ou "limitação".
+6. **No `README.md`**, na seção "Estrutura", acrescente a linha: `docs/limitacoes_e_rastreabilidade.md   limitações, origem de cada número e mapa TRIPOD+AI`.
+7. **Commit e publicação** (um comando): `git add -A; git commit -m "limitacoes e rastreabilidade [done:#133]"; git push`.
 
-**Rastreabilidade:** cada tabela e cada número no texto tem, em nota ou legenda, o arquivo de origem (`outputs/tables/...`). Em 05/11 às 14h, A e C conferem cada número contra o arquivo (lista no comentário do card).
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| `docs/limitacoes_e_rastreabilidade.md` | arquivo novo |
+| `README.md` | linha na "Estrutura" |
 
-**Limitações e trabalhos futuros (uma frase cada; vieram dos cards removidos em 03/11):**
-- A sazonalidade (semana do ano em seno e cosseno) é calculada, mas não entra no modelo principal.
-- A checagem automática de vazamento compara nomes de colunas com a lista proibida; a proteção principal é o contrato de variáveis congelado e a revisão da temporalidade de cada variável.
-- 2026 é ano parcial, com desfechos pendentes: fica fora do desenvolvimento e do teste. Aplicar o modelo congelado a 2026 é trabalho futuro.
-- O agrupamento usa PCA; UMAP é trabalho futuro.
-- Saturação e desconforto respiratório fazem parte da definição de caso, mas a ficha não registra a hora da medição.
-- Perda de olfato, perda de paladar e fadiga saíram do modelo por serem campos da era COVID (marcador de período); a linha "P + 3 sintomas" do C_14 mostra que não faziam falta.
-- Vacinação não entra no modelo, porque não há regra confiável para saber quais doses são anteriores à internação.
+#### Automação sugerida
+> [!exemplo] IA redige, pessoa confere; script de conferência (estratégia)
+> A IA monta o texto a partir dos arquivos (não de memória) e devolve, para cada frase com número, a lista "número → arquivo". Estratégia de conferência automática (script curto, só para avisar): extrair os números de `docs/limitacoes_e_rastreabilidade.md` e da apresentação e checar se aparecem nos CSV de `resultados/`.
 
-**Texto que só pode ser escrito depois da reexecução:** o parágrafo de desempenho por padrão de preenchimento do B_05 (célula 52) ainda cita a validação de 39.748 fichas, e os números do agrupamento do B_04 mudam com a lista nova de variáveis; reescreva os dois com a execução limpa (#126).
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
 
-**Acréscimos de 03/11 (v4.0, da leitura completa do repositório):**
-- **Dados e coorte, proveniência:** a base é o SIVEP-Gripe do OpenDataSUS, consolidado no `srag.parquet` da release `dados-v2` (4.666.910 linhas × 198 colunas; o SHA-256 está em `data/manifest_dados-v2.yaml`). O script que gerou o Parquet a partir dos arquivos INFLUD **não está no repositório**: diga isso numa frase.
-- **Maturidade do desfecho (#160):** a tabela por ano e a frase sobre 2025.
-- **Equidade (#55, #161):** raça/cor, zona, região e faixa etária, com o que **não** se pode concluir (a orientação diz "incluir com cautela").
-- **Referência simples (#161):** o modelo contra "só idade e sexo", em PR-AUC ÷ prevalência.
-- **Corte por região (versão mínima, decisão de 03/11):** uma frase de limitação (o professor sugeriu um corte por região; fizemos modelo único, corte global e métricas e calibração por região; o corte regional fica como trabalho futuro) e a figura do #55.
-- **Hipóteses registradas (#161):** compare o resultado do teste com a §29.38 e diga onde acertamos e onde não.
-- **Pré-escrita:** em 04/11, deixe cerca de 80% do relatório escrito com os números do `val_ref` e o marcador `[TESTE]` onde entram os números do teste. Em 05/11, só se preenchem os marcadores (o script `tabelas_relatorio.py` gera as tabelas a partir dos CSV do C_16).
+~~~text
+TAREFA: #133 · Limitações, rastreabilidade e mapa TRIPOD+AI
+
+OBJETIVO
+Redigir docs/limitacoes_e_rastreabilidade.md com base nos arquivos do projeto, citando o arquivo de origem de cada número e descrevendo só o desenho final.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- docs/decisoes.md e README.md inteiros.
+- outputs/final/blocos_g9.md e resultados/LEIA-ME.md.
+- configs/final_cohort_v1.yaml e configs/supervised.yaml.
+
+PASSOS
+1. Escreva as três seções em português claro, parágrafos curtos (explique PR-AUC, O/E e calibração na primeira vez).
+2. Depois de cada frase com número, escreva entre colchetes a origem: [arquivo · coluna/linha].
+3. Inclua as três frases obrigatórias do card e as limitações listadas.
+4. Liste ao final os números que você NÃO conseguiu ligar a um arquivo.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Todo número tem origem em arquivo fornecido.
+- O texto diz 'dependência do modelo' e 'associação', nunca 'causa'.
+- Resultado fora do previsto é descrito como achado.
+
+NÃO FAÇA
+- Não invente número, referência ou resultado.
+- Não descreva coorte provisória nem desenhos antigos.
+- Não proponha reajuste do modelo.
+
+FORMATO DA ENTREGA
+O arquivo em Markdown com a origem entre colchetes + a lista de pendências de conferência.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- manual: | O relatório tem todas as seções do esqueleto, as três frases de redação e a limitação do desenho, e descreve só o desenho final (70/15/15 e coorte definitiva).
-- manual: | Cada número do relatório foi conferido contra o arquivo citado na legenda; a lista da conferência foi colada como comentário neste card.
+- existe: `docs/limitacoes_e_rastreabilidade.md` | O documento de limitações, rastreabilidade e mapa TRIPOD+AI existe no repositório.
+- contem: `docs/limitacoes_e_rastreabilidade.md` :: `TRIPOD+AI` | O documento traz o mapa TRIPOD+AI.
+- manual: | Cada número do documento foi conferido contra o arquivo citado por uma segunda pessoa e o README aponta para o documento.
 
-## #134 · Apresentação e defesa: roteiro, slides e perguntas difíceis
+## #134 · Apresentação em PowerPoint (.pptx): entrega principal e defesa
 
 - prioridade: P1
 - situação: aberta
-- estratégia: documentar
-- marco: M8
+- estratégia: desenvolver
+- marco: Pós-G9
 - data ideal: 05/11
-- responsável: Pessoa B (2,5 h) + Pessoa A (0,25 h) + Pessoa C (0,25 h)
-- pessoas: B, A, C
-- fonte: Revisão de 03/11
-- depende de: #133
-- tags: Apresentação, Entrega
-- pilar: Valor científico-acadêmico
-- carga: 3
+- responsável: Pessoa B (dona) + Pessoa A
+- pessoas: B, A
+- fonte: Decisão de 05/11: a entrega é a apresentação em PowerPoint mais o link do GitHub completo; #134 e #187 unificados
+- depende de: #194
+- tags: apresentação, pptx, entrega, defesa
+- pilar: —
+- carga: 2.5
 - novo: não
 - professores: sim
+- arquivos: entrega/Apresentacao_SRAG.pptx
 
 ### ① Para entender
 
-A apresentação de 05/11 é uma entrega em si. Ela precisa mostrar em poucos minutos a pergunta, o desenho que protege o teste, o resultado principal (Teste A) e a leitura honesta do Teste B.
+**A entrega é composta por duas peças:** (1) o **link do GitHub** (branch `main`, completa) e (2) a **apresentação em PowerPoint**, arquivo `entrega/Apresentacao_SRAG.pptx`, que também fica no repositório. A apresentação mostra em poucos minutos a pergunta, o desenho que protege o teste, o resultado principal (**Teste A**) e a leitura honesta do **Teste B** e de 2020–2022.
+
+A banca vai perguntar sobre os pontos que mudaram nesta reta final: ter as respostas prontas (**nas notas do orador**) vale mais do que um slide a mais.
 
 ### ② Problema
 
-A banca deve perguntar justamente sobre os pontos que mudaram nesta reta final. Ter as respostas prontas vale mais do que um slide a mais.
+- O **rascunho** (roteiro, estrutura, perguntas difíceis) **pode começar agora**; os **números do teste** só entram depois do #194 (copie do `blocos_g9.md`, não redigite).
+- Sem rótulos internos nos slides (nada de "#142", "Pessoa B", "C_16", "G6" sem explicar).
+- Guarde uma **cópia em PDF** (backup caso o PowerPoint falhe na hora).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa B · **Prazo:** 05/11 (rascunho dos slides sem os números do teste em 04/11 à noite; números às 14h; ensaio às 15h) · **Começa quando:** #133
+**Dono:** Pessoa B · **Tempo:** ≈ 2 h 30 min (1 h de rascunho agora + 1 h 30 min depois do #194, com ensaio) · **Começa quando:** rascunho já; números depois do #194 · **Antes de:** #147.
 
-**Roteiro (≈ 10 slides):** pergunta e relevância · dados e coorte (funil de exclusões) · desenho (70/15/15 por grupo, Teste A, Teste B, 2020–2022) · exploração em um slide (agrupamento = idade e preenchimento) · modelos e escolha (G6) · calibração e limiar (G7, G8) · resultados nas três janelas · importância das variáveis · limitações · conclusão.
+#### Passo a passo (para a pessoa)
+1. **Rascunho agora (IA):** peça à IA o roteiro de ≈ 10 slides (bloco abaixo) com os números marcados como "⟨…⟩". Estrutura: pergunta e relevância · dados e coorte (funil de exclusões) · desenho (70/15/15 por grupo, Teste A, Teste B, 2020–2022) · exploração em um slide (agrupamento = idade e preenchimento) · modelos e escolha (G6) · calibração e limiar (G7 e G8) · **resultados nas três janelas** · **calibração por janela (O/E)** · **equidade (#55)** · limitações e trabalhos futuros · conclusão.
+2. **Depois do #194:** troque os ⟨…⟩ pelos números do `outputs\final\blocos_g9.md` e das tabelas do #55 (copie, não redigite). Resultado fora do previsto aparece como achado.
+3. **Perguntas difíceis (resposta de uma frase cada, nas NOTAS DO ORADOR do último slide):**
+   - *Vocês testaram muitos hiperparâmetros na validação: isso não infla o resultado?* Sim, na validação; por isso a regra de ganho mínimo e o orçamento fixo; o teste, aberto uma vez depois, é a medida honesta.
+   - *Por que 70/15/15 e não validação cruzada?* Base grande; a divisão por grupo evita a mesma pessoa em dois blocos.
+   - *A mesma validação escolhe e mede?* Sim, em metades disjuntas para calibrar e medir; a medida honesta é o teste, aberto uma vez.
+   - *Por que 2020–2022 só no teste?* Mede robustez a mudança de período, sem interpretação causal.
+   - *Saturação e desconforto respiratório não vazam informação do futuro?* Fazem parte da definição de caso de SRAG hospitalizado e estão na ficha de admissão (campo 34, junto com febre e tosse); limitação: a ficha não registra a hora da medição.
+   - *Por que tirar perda de olfato, perda de paladar e fadiga?* São campos da era COVID (mais de 99% em branco em 2019); marcavam o período e tirá-los não custou desempenho.
+   - *Números de versões intermediárias (por exemplo, 21,9% de óbitos)?* Eram de uma coorte preliminar, substituída pela definitiva (8,4% de óbitos); só a definitiva é usada.
+   - *Por que PCA e não UMAP no agrupamento?* Os grupos refletem idade e preenchimento; qui-quadrado e ANOVA já mostram isso; UMAP fica como trabalho futuro.
+   - *O modelo é justo entre regiões?* Tabela do #55; a sensibilidade varia de ⟨X⟩ a ⟨Y⟩ no corte global; corte regional fica como trabalho futuro.
+   - *O resultado foi pior ou melhor do que o previsto?* Hipóteses registradas antes (decisoes.md §9) e tabela de veredito; fora do previsto é achado, não motivo para reajuste.
+4. **Slide de equidade e de calibração:** use a figura `reports\figures\equidade_regiao.png` e a tabela do O/E por janela (#165). Frase: "no Teste A o O/E é ⟨x⟩; em 2020–2022 é ⟨y⟩, o modelo subestima o risco quando a prevalência sobe".
+5. **Confira os rótulos internos** (um comando; esperado: nada impresso):
+```powershell
+Copy-Item entrega\Apresentacao_SRAG.pptx $env:TEMP\apresentacao.zip -Force; Expand-Archive $env:TEMP\apresentacao.zip $env:TEMP\apresentacao_pptx -Force; Select-String -Path "$env:TEMP\apresentacao_pptx\ppt\slides\*.xml","$env:TEMP\apresentacao_pptx\ppt\notesSlides\*.xml" -Pattern "#[0-9]{2,3}|Pessoa [ABC]|C_1[1-6]|olivem85" | Select-Object -First 10
+```
+6. **Ensaio cronometrado** com A e C na plateia (15 min): cada um anota uma pergunta difícil nova e a resposta vai para as notas.
+7. **Salve e publique:** o arquivo `entrega\Apresentacao_SRAG.pptx` **e** o PDF `entrega\Apresentacao_SRAG.pdf` (um comando; `git pull` antes):
+```powershell
+git pull --ff-only; git add entrega; git commit -m "apresentacao [done:#134]"; git push
+```
+8. **Abra o arquivo pelo GitHub** (botão Download) e confirme que o PowerPoint abre e que as imagens aparecem.
 
-**Perguntas difíceis (resposta de uma frase cada, no fim do roteiro):**
-- Vocês testaram muitos hiperparâmetros na validação: isso não infla o resultado? (sim, na validação; por isso a regra de ganho mínimo, o orçamento fixo e a pré-seleção num recorte do treino no #155; o teste, aberto uma vez depois, é a medida honesta)
-- Por que 70/15/15, e não validação cruzada? (base grande; divisão por grupo evita a mesma pessoa em dois blocos; referências do #112)
-- A mesma validação escolhe e mede? (sim, em metades disjuntas para calibrar e medir; a medida honesta é o teste, aberto uma vez)
-- Por que 2020–2022 só no teste? (robustez a mudança de período, sem interpretação causal)
-- Saturação e desconforto respiratório não vazam informação do futuro? (fazem parte da definição de caso de SRAG hospitalizado e estão no campo 34 da ficha, "Sinais e Sintomas", junto com febre e tosse; limitação: a ficha não registra a hora da medição)
-- Por que tirar perda de olfato, perda de paladar e fadiga? (são campos da era COVID: 99,7% em branco em 2019; marcavam o período, e tirá-los não custou desempenho; o professor pediu para estudar antes de tirar, e a ablação é esse estudo)
-- Se alguém citar números de versões intermediárias (por exemplo, 21,9% de óbitos): eram de uma coorte preliminar, substituída pela definitiva com as regras de exclusão aprovadas (8,4% de óbitos); só a definitiva é usada.
-- Por que PCA e não UMAP no agrupamento? (um professor sugeriu UMAP; os grupos encontrados refletem idade e padrão de preenchimento, e o perfil por qui-quadrado e ANOVA já mostra isso; UMAP fica como trabalho futuro)
-- O modelo é justo entre regiões? (tabela do #55)
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| `entrega/Apresentacao_SRAG.pptx` e `.pdf` | arquivos novos |
+| `README.md` | linha na "Estrutura": `entrega/   apresentação em PowerPoint (e PDF)` (feita no #147) |
 
-A e C revisam o roteiro (15 min cada) e cada pessoa ensaia a sua parte uma vez.
+#### Automação sugerida
+> [!exemplo] IA monta o rascunho; script preenche os números (estratégia)
+> A IA gera o rascunho do `.pptx` e as respostas das perguntas difíceis a partir do `blocos_g9.md`. **Script planejado:** `gerar_pptx_rascunho.py` (python-pptx): lê `blocos_g9.md`, `calibracao_por_janela.csv` e as tabelas do #55 e preenche as tabelas e os números nos slides do modelo, para não digitar nada à mão. Só vale a pena se a equipe quiser reaproveitar; para hoje, a IA e a conferência por `Select-String` bastam.
 
-**Acréscimos de 03/11 (v4.0):**
-- **Um slide "como ler os números"**, porque a apresentação é para colegas que não conhecem o projeto: PR-AUC e "vezes o acaso" (a prevalência é 8,4%; 3,8× a 4,2× no `val_ref`), Brier e o modelo nulo (≈ 0,077) e o que é calibrar.
-- O modelo é melhor do que só usar idade e sexo? (linha de referência do #161)
-- Por que não há um corte diferente por região? (o professor sugeriu; fizemos a versão mínima: modelo único, corte global e métricas e calibração por região; o corte regional ficou como trabalho futuro por falta de tempo antes do teste; a tabela por região mostra a diferença de sensibilidade que ele tentaria corrigir)
-- O desfecho de 2025 já está fechado? (tabela do #160)
-- O modelo trata raça/cor de forma diferente? (tabelas do #55; cautela: muito "ignorado" e branco)
-- Por que não SHAP, UMAP ou validação cruzada? ("primeiro trabalho, não TCC"; base grande e validação fixa aceita pelo professor)
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #134 · Apresentação em PowerPoint (.pptx)
+
+OBJETIVO
+Montar o roteiro e o texto de ~10 slides e as respostas às perguntas difíceis (nas notas do orador), usando os números do blocos_g9.md e das tabelas de equidade, sem rótulos internos.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- outputs/final/blocos_g9.md.
+- outputs/final/calibracao_por_janela.csv e as tabelas de equidade (#55).
+- docs/decisoes.md e README.md.
+- O tempo da apresentação e o público (banca de saúde pública/IA).
+
+PASSOS
+1. Proponha o roteiro (título e mensagem de cada slide em uma frase).
+2. Escreva o texto de cada slide em no máximo 3 tópicos, com os números exatos.
+3. Responda cada pergunta difícil do card em uma frase, nas notas do orador, citando o número quando houver.
+4. Liste 3 perguntas difíceis NOVAS que a banca pode fazer sobre o teste.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Nenhum slide tem rótulo interno (#número, Pessoa A/B/C, C_xx).
+- Todo número vem do blocos_g9.md ou dos CSV.
+- Resultado fora do previsto aparece como achado.
+
+NÃO FAÇA
+- Não invente resultado.
+- Não esconda resultado fora do previsto.
+- Não proponha reajuste do modelo.
+
+FORMATO DA ENTREGA
+Tabela slide, mensagem, tópicos + respostas das perguntas.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- manual: | Os slides estão prontos, com as perguntas difíceis respondidas, e a equipe fez um ensaio completo antes da apresentação.
+- existe: `entrega/Apresentacao_SRAG.pptx` | A apresentação em PowerPoint está no repositório.
+- existe: `entrega/Apresentacao_SRAG.pdf` | A cópia em PDF da apresentação está no repositório.
+- manual: | Os slides têm os números do blocos_g9.md, as perguntas difíceis nas notas do orador, nenhum rótulo interno, e a equipe fez um ensaio completo.
 
 ## #60 · Documentar que os clusters refletem idade e preenchimento, não perfis clínicos
 
@@ -5426,6 +5982,7 @@ Com 80 mil fichas, quase todo p-valor sai abaixo de 0,05: a leitura é pelo tama
 - carga: 1
 - novo: não
 - professores: sim
+- removido: 05/11: fora do essencial de hoje; sem referência conferida no texto completo não se cita
 
 ### ① Para entender
 
@@ -6932,11 +7489,14 @@ O `OneHotEncoder` de `src/models/pipeline.py` usa `sparse_output=False`. No C2 (
 
 > [!ok] Concluída: `build_preprocessor(saida="esparsa"|"ordinal")` em `pipeline.py`. Pode **✓ Confirmar**.
 
+> [!ok] Atualizado em 05/11
+> Os critérios do ④ foram movidos para os caminhos da estrutura nova (`src/modelos.py`, `tests/test_modelos.py`, notebook 06). No painel, use **✓ Confirmar**.
+
 ### ④ Pronto quando
 
-- contem: `src/models/pipeline.py` :: `saida: SaidaPreprocessador = "esparsa"` | build_preprocessor gera matriz esparsa por padrão (CSR em float32), sem guardar os zeros do one-hot.
-- teste: `tests/test_pipeline.py` | Os testes do pipeline passam.
-- teste: `tests/test_config.py` | O teste `tests/test_config.py` precisa passar no pytest rápido. Ele importa `src/models/pipeline.py`, que pertence(m) a esta pendência, e falhou na verificação de 2026-11-03 (2 testes falharam; ex.: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\olivem85\\AppData\\Local\\Temp\\1\\srag_verificador_9mdibj0g\\repo\\). Acrescentado automaticamente pelo verificador.
+- define: `src/modelos.py` :: `build_preprocessor` | O pré-processador central existe em src/modelos.py.
+- contem: `src/modelos.py` :: `saida: SaidaPreprocessador = "esparsa"` | O pré-processador gera matriz esparsa por padrão (CSR em float32), sem guardar os zeros do one-hot.
+- teste: `tests/test_modelos.py` | Os testes dos modelos e pipelines passam.
 
 ## #62 · pyproject.toml inválido
 
@@ -7808,51 +8368,116 @@ $m = [ordered]@{'A/A_03_coorte_protocolo'='02_coorte_definitiva';'B/B_02_eda_pri
 - nao-existe: `notebooks/C/C_16_validacao_final.ipynb` | Os nomes antigos saíram do pacote.
 - manual: | O git grep por nomes antigos, Pessoa A/B/C e (#NN) nos notebooks ficou vazio (ou só com entradas históricas do decisoes.md).
 
-## #147 · Congelar e conferir o pacote entregue
+## #147 · Fechar a entrega: link do GitHub completo, README, tag e painel
 
 - prioridade: P1
 - situação: aberta
-- estratégia: documentar
-- marco: M8
+- estratégia: desenvolver
+- marco: Pós-G9
 - data ideal: 05/11
-- responsável: Pessoa A (0,75 h)
+- responsável: Pessoa A
 - pessoas: A
-- fonte: Revisão de 03/11 (absorve #149 e #130)
-- depende de: #2, #126, #133, #156, #157, #163
-- tags: Entrega, Reprodutibilidade
-- pilar: Eficiência + Documentação
-- carga: 0.75
+- fonte: Reescrito em 05/11: a entrega é o link do GitHub (main, completo) + a apresentação; a mescla na main já foi feita no #194; sem zip
+- depende de: #134, #133, #157
+- tags: entrega, link, tag, painel
+- pilar: —
+- carga: 0.5
 - novo: não
 - professores: não
-- arquivos: .gitattributes
+- arquivos: README.md
 
 ### ① Para entender
 
-Última hora de trabalho: nada de código novo. Só conferir, congelar e empacotar. Este card absorveu a reconferência dos cards concluídos (#149: as contagens do artefato 70/15/15 já foram conferidas em 03/11) e a regeneração da referência (#130).
+Última meia hora de trabalho: **nada de código novo**. Só conferir e congelar. A entrega é o **link do repositório no GitHub (branch `main`, completa)** mais a apresentação em PowerPoint, que já está em `entrega/`. A `main` foi atualizada no fim do #194; aqui conferimos que **o que a banca vai abrir** está certo.
 
 ### ② Problema
 
-Se a entrega for o link do GitHub, o que estiver no `main` naquela hora é o que a banca vê, inclusive a pasta do painel e os arquivos de status. O `.gitattributes` com `export-ignore` só vale para `git archive`.
-
-> [!decisão] Revisão de 03/11 · versão 4.0
-> O clone limpo (instalar, pytest e notebooks 00 e 01 numa pasta nova) é feito na véspera, no #163. Aqui, repita só o `git grep` de caminhos locais e confira que `resultados/` está versionada. **Script previsto:** `montar_pacote.py` (relatório primeiro: confere o que entra e o que sai do `git archive`).
+- O repositório fica **completo**, inclusive o painel (`.srag-status-local`) e os arquivos de status: nada é excluído do link.
+- O `.gitignore` não ignora `resultados/` nem `entrega/`; confira que os dois aparecem no GitHub.
+- Cards concluídos antigos podem mostrar **⚠ reconfirmar** porque os caminhos dos critérios mudaram com a limpeza. Isso **não afeta a entrega**: confira no painel e comente "reconfirmado em 05/11" nos que ainda valem. Os cards **#17** e **#124** voltam do "precisa revisão" com **✓ Confirmar** (os critérios já foram atualizados).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** 05/11, 16h às 16h45, antes da apresentação · **Começa quando:** #2, #126 e #133
+**Dono:** Pessoa A · **Tempo:** ≈ 30 min · **Começa quando:** #134, #133 e #157 prontos · **Antes de:** a apresentação.
 
-1. `git pull`; `git status` limpo. Um comando para o resumo:
+#### Passo a passo (para a pessoa)
+1. **Atualize e confira a árvore:** `git switch main; git pull --ff-only; git status --short` (sem nada).
+2. **README, seção "Estrutura":** confira que as linhas de `resultados/`, `entrega/` e `docs/limitacoes_e_rastreabilidade.md` existem (acrescente as que faltarem, uma linha cada).
+3. **Um comando de conferência** (testes rápidos e varreduras de rótulos internos e caminhos pessoais; **cada busca deve sair vazia**):
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -m "not slow" -q; .\.venv\Scripts\python.exe .srag-status-local\server.py validar; git grep -n -E "Pessoa [ABC]|\(#[0-9]{2,3}\)" -- notebooks src tests configs README.md; git grep -n -I -i -E "olivem85|OneDrive - " -- notebooks docs README.md resultados
+.\.venv\Scripts\python.exe -m pytest -q; git grep -n -E "Pessoa [ABC]|\(#[0-9]{2,3}\)" -- notebooks src tests configs README.md docs/decisoes.md; git grep -n -I -i -E "olivem85|OneDrive - " -- notebooks docs README.md resultados
 ```
-2. Regerar a referência (fecha o antigo #130): `.\.venv\Scripts\python.exe tools\update_project_reference.py --run-tests --pytest-args="-m 'not slow'"`.
-3. Pacote: crie o `.gitattributes` com `export-ignore` para `.srag-status-local/**`, `PROJECT_STATUS.md`, `PROJECT_STATUS_TEXT.md`, `docs/PROJECT_COMPLETE_REFERENCE.txt`, `docs/project_reference_md/**`, `tools/update_project_reference.py`, `tools/clean_project.py`, `tools/read_outputs.py` e `tools/perfil_celulas.py` (ferramentas internas; usam `python-docx` e `jupyter_client`, fora das dependências) e `.gitattributes`. Gere o zip: `git archive -o entrega_srag.zip HEAD`. Se a entrega for o link, crie o branch `entrega` a partir do `main` e apague nele esses mesmos arquivos.
-4. Tag: `git tag entrega-2026-11-05; git push --tags`. Commit final: `chore: pacote da entrega [done:#147]`.
+4. **Painel (3 minutos):** abra o painel, clique **🔄 Atualizar, auditar e validar** e olhe a seção **REVISÕES**. Para **#17 e #124**: **✓ Confirmar**. Para cada card concluído com ⚠ reconfirmar: confira se ainda vale e comente "reconfirmado em 05/11". Marque como **concluídos** os cards de hoje que já têm `[done:#N]` ou a confirmação.
+5. **Commit, tag e publicação** (um comando):
+```powershell
+git add -A; git commit -m "entrega final [done:#147]"; git tag entrega-2026-11-05; git push; git push --tags
+```
+6. **Conferência final no navegador:** abra o repositório no GitHub (branch `main`) e veja: último commit, `README.md` com o resultado do teste, `resultados/`, `entrega/Apresentacao_SRAG.pptx` (botão Download abre?), `docs/limitacoes_e_rastreabilidade.md` e a tag.
+7. **Envie o link** do repositório e o arquivo da apresentação, conforme a forma de entrega combinada com os professores.
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| `README.md` | linhas da "Estrutura" |
+| Painel | conclusão dos cards do dia e reconfirmações |
+
+#### Automação sugerida
+> [!exemplo] Um comando de conferência
+> O passo 3 já junta três verificações em uma linha. Estratégia para um script futuro (`conferir_entrega.py`): checar na `main` a existência de `entrega/*.pptx`, `resultados/LEIA-ME.md` e `docs/limitacoes_e_rastreabilidade.md`, falhar se achar `.env`, `*.parquet` ou nomes pessoais, e imprimir o link do repositório.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #147 · Fechar a entrega (link do GitHub e apresentação)
+
+OBJETIVO
+Conferir, sem mudar código, que a main do GitHub tem o que a banca precisa e nenhum dado ou rótulo interno indevido.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída completa do comando de conferência do passo 3.
+- O README.md.
+- A lista de arquivos de entrega/ e resultados/.
+
+PASSOS
+1. Explique cada achado das buscas (rótulos internos, caminhos pessoais) e onde corrigir (sem mudar lógica).
+2. Confira se o README descreve a estrutura final, o resultado do teste e como rodar.
+3. Entregue as linhas de PowerShell restantes (uma por linha).
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- As buscas saem vazias.
+- A tag entrega-2026-11-05 existe no GitHub.
+- entrega/Apresentacao_SRAG.pptx baixa e abre.
+
+NÃO FAÇA
+- Não altere src, notebooks nem configs nesta etapa.
+- Não use git push --force.
+
+FORMATO DA ENTREGA
+Lista curta de achados + comandos de PowerShell.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- existe: `.gitattributes` | O .gitattributes com as exclusões do pacote existe.
-- manual: | O pytest rápido passou, o painel validou sem problemas de formato, a varredura de nomes de pessoa ficou vazia e a tag entrega-2026-11-05 foi publicada.
+- existe: `entrega/Apresentacao_SRAG.pptx` | A apresentação em PowerPoint está na main.
+- existe: `resultados/LEIA-ME.md` | A pasta de resultados com índice está na main.
+- manual: | O pytest rápido passou, as varreduras de rótulos internos e caminhos pessoais saíram vazias, o repositório abre no GitHub com a apresentação e a tag entrega-2026-11-05 foi publicada.
 
 ## #148 · C_16 nos blocos: Teste A, Teste B e 2020–2022 em separado, predição em lotes e registro da abertura
 
@@ -8507,44 +9132,126 @@ Contagem nas saídas salvas do commit `863dd45`: B_02 37, B_04 58, B_05 18, C_12
 - nao-contem: `notebooks/C/C_15_calibracao_limiar.ipynb` :: `OneDrive - ` | O C_15 não mostra mais a pasta local nas saídas.
 - manual: | O git grep por olivem85 e "OneDrive - " em notebooks ficou vazio depois da execução limpa e depois do C_16.
 
-## #157 · Pôr os resultados finais no pacote: tabelas e figuras citadas no relatório (outputs/ é ignorado pelo Git)
+## #157 · Pôr os resultados finais no pacote: pasta resultados/ com as tabelas e figuras citadas no relatório
 
 - prioridade: P1
 - situação: aberta
-- estratégia: documentar
-- marco: M8
+- estratégia: desenvolver
+- marco: Pós-G9
 - data ideal: 05/11
-- responsável: Pessoa A (0,5 h)
+- responsável: Pessoa A
 - pessoas: A
-- fonte: Revisão do repositório de 03/11 (v3.3): .gitignore ignora outputs/*, reports/figures/* e data/analytical/*
-- depende de: #2, #55, #91, #155, #160
-- tags: Entrega, Reprodutibilidade, Relatório
-- pilar: Documentação + Valor científico-acadêmico
+- fonte: Reescrito em 05/11: outputs/ é ignorado pelo Git; script montar_resultados.py cobre a cópia, a limpeza de caminhos e o índice
+- depende de: #194, #55
+- tags: pacote, resultados, automatizável
+- pilar: —
 - carga: 0.5
-- novo: sim
+- novo: não
 - professores: não
+- arquivos: resultados/LEIA-ME.md
 
 ### ① Para entender
 
-O relatório cita cada número com o arquivo de origem (`outputs/tables/...`). Mas o `.gitignore` ignora `outputs/*`, `outputs/tables/*`, `outputs/predictions/*`, `reports/figures/*` e `data/analytical/*`: **nenhuma tabela, figura ou manifesto de resultado entra no repositório**, nem no zip do `git archive`. A banca só veria os números dentro das saídas salvas dos notebooks.
+A apresentação e o `docs/limitacoes_e_rastreabilidade.md` citam cada número com o arquivo de origem. Mas o `.gitignore` ignora `outputs/*`, `reports/figures/*` e `data/analytical/*`: **nenhuma tabela, figura ou manifesto de resultado entra no repositório** (nem no zip do `git archive`). A banca só veria os números dentro das saídas salvas dos notebooks.
+
+A solução é uma pasta **`resultados/`** (que **não** é ignorada) com só o que o relatório cita: tabelas agregadas, figuras e manifestos (hashes e contagens). **Dados, previsões linha a linha e qualquer `.parquet` ficam de fora**: são grandes e são dados de pacientes (mesmo públicos e anonimizados).
 
 ### ② Problema
 
-Os dados (coorte, artefato e previsões linha a linha) **não** devem ir: são grandes e são dados de pacientes, ainda que públicos e anonimizados. Vão só as tabelas agregadas, as figuras e os manifestos (hashes, contagens), que permitem conferir o que o relatório diz.
+- Os arquivos do ensaio (`11_ensaio_...`) **não** podem ir para o pacote: o script os bloqueia.
+- Todo arquivo tem de passar pela limpeza de caminhos pessoais (o script faz).
+- As legendas do relatório precisam apontar para `resultados/...` (e não para `outputs/...`).
 
 ### ③ O que fazer
 
-**Dono:** Pessoa A · **Prazo:** 05/11, 14h às 14h30 (depois do #2, #55 e #91; antes do #147) · **Script previsto:** `montar_resultados.py` (copia só o que o relatório cita, **bloqueia `.parquet` e `C6ENSAIO_*`**, tira caminhos locais dos JSON e gera o índice; começa por relatório). O que segue é o plano B.
+**Dono:** Pessoa A · **Tempo:** ≈ 25 min · **Começa quando:** #126, #189 e #55 concluídos (e #91 e #176, se feitos) · **Antes de:** #147 · **Script pronto:** `montar_resultados.py` (relatório primeiro; copia só com `--aplicar`).
 
-1. Crie a pasta `resultados/` (a `resultados/exploracao/` já existe desde o #155) e copie para ela, **sem renomear**, só o que o relatório cita: a tabela de janelas e as tabelas por ano, por grupo e de calibração do C_16 (`C6_*_janelas.csv`, `*_metricas_por_ano.csv`, `*_por_grupo_*.csv`, `*_fn_por_*.csv`, `*_ic_bootstrap.csv`, `*_matriz_confusao.csv`), as tabelas do C_15 (`C5_*_escolhas.csv` e a comparação de peso de classe), a busca do C_13, `ablacoes_val_ref.csv`, `outputs/final/maturidade_desfecho_por_ano.csv` (#160), as tabelas do #55 e do #91, os manifestos `C5_*_manifesto.json` e `C6_*_manifesto.json`, `data/analytical/manifesto_particao.json`, `manifesto_supervisionado.json` e `coorte_final.manifest.json`, e as figuras que entram no relatório (`reports/figures/...`).
-2. **Nada de `.parquet`** (previsões linha a linha e dados ficam de fora) **e nada com o prefixo `C6ENSAIO_`** (são do ensaio). Rode nos JSON o comando de caminhos locais do #156 adaptado (troque `notebooks` por `resultados` e `*.ipynb` por `*.json`) e confira com `git grep -n -i olivem85 -- resultados`.
-3. Escreva `resultados/LEIA-ME.md`: uma linha por arquivo dizendo qual notebook o gerou e em que seção do relatório aparece.
-4. `git add resultados` (a pasta não é ignorada). No relatório (#133), troque as legendas `outputs/tables/...` por `resultados/...`. Commit: `docs: resultados finais no pacote [done:#157]`.
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 já roda o `montar_resultados.py --aplicar` e faz o commit de `resultados/`. Só use os passos abaixo se ele não tiver chegado até aqui.
+
+#### Passo a passo (para a pessoa)
+1. **`git switch main; git pull --ff-only`** e **guarde o script fora do repositório** (`..\montar_resultados.py`). Rode **na máquina oficial** (é onde estão os arquivos).
+2. **Relatório** (nada é copiado): mostra cada arquivo que seria copiado, de qual notebook veio, e o que foi pulado:
+```powershell
+.\.venv\Scripts\python.exe ..\montar_resultados.py
+```
+   Confira: aparece pelo menos um `11_validacao_final_*_manifesto.json` (se não aparecer, o G9 não foi executado); **nenhum** `.parquet`; nada com `ensaio`.
+3. **Inclua o que o relatório cita e o script não conhece** (por exemplo tabelas de equidade com outro nome) com `--incluir "padrão"`; repita o passo 2.
+4. **Copie:**
+```powershell
+.\.venv\Scripts\python.exe ..\montar_resultados.py --aplicar
+```
+   Ele cria `resultados\` (com `tables\`, `final\`, `figures\` e `data\analytical\`), troca caminhos pessoais por `<REPO>` e `<HOME>` e escreve `resultados\LEIA-ME.md` (arquivo, notebook de origem, tamanho, SHA-256).
+5. **Confira** (um comando; esperado: nada impresso nas duas buscas e nenhum parquet):
+```powershell
+git grep -n -i -E "olivem85|OneDrive - " -- resultados; Get-ChildItem resultados -Recurse -Filter *.parquet
+```
+6. **Na apresentação (#134) e no `docs/limitacoes_e_rastreabilidade.md` (#133)**, use `resultados/...` (e não `outputs/...`) como origem dos números.
+7. **Publique** (um comando): `git add resultados; git commit -m "resultados no pacote [done:#157]"; git push`.
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| `docs/limitacoes_e_rastreabilidade.md` (#133) | origens apontando para `resultados/` |
+| `README.md` | acrescente na "Estrutura" a linha: `resultados/   tabelas, figuras e manifestos citados no relatório` |
+
+#### Automação sugerida
+> [!exemplo] Estratégia do script (já entregue)
+> Lista de padrões fechada (notebooks 11, 10, 09, 07 e 05, importância, razões de chances, ablações, maturidade do desfecho, curva de decisão e manifestos de `data/analytical`), com `--incluir` para extras. Bloqueia `.parquet`, `.gz`, `ensaio` e `_antigo`. Limpa caminhos. Gera o índice com a origem (pelo prefixo numérico do arquivo) e o SHA-256 (12). Trabalha numa cópia; copia só com `--aplicar`.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #157 · Pasta resultados/ do pacote
+
+OBJETIVO
+Montar resultados/ com só o que o relatório cita, sem dados pessoais, sem parquet, sem ensaio, com caminhos limpos e índice.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída do relatório do montar_resultados.py.
+- A lista de tabelas e figuras que o relatório cita (legendas).
+- O .gitignore.
+
+PASSOS
+1. Compare a lista do relatório com a do script: aponte o que o relatório cita e o script não copiaria, e o que o script copiaria sem o relatório citar.
+2. Sugira os padrões --incluir necessários.
+3. Confirme que nenhuma figura ou tabela contém dados individuais.
+4. Entregue as linhas de PowerShell em uma linha cada.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- resultados/ não tem .parquet nem ensaio.
+- git grep por olivem85 e 'OneDrive - ' sai vazio em resultados.
+- O LEIA-ME lista todos os arquivos.
+
+NÃO FAÇA
+- Não copie previsões linha a linha nem a coorte.
+- Não renomeie arquivos (a rastreabilidade depende do nome).
+
+FORMATO DA ENTREGA
+Diferenças entre as duas listas + comandos de PowerShell.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
 - existe: `resultados/LEIA-ME.md` | A pasta de resultados do pacote tem o índice dos arquivos.
-- manual: | Todas as tabelas e figuras citadas no relatório estão em resultados/, nenhum .parquet entrou e as legendas do relatório apontam para resultados/.
+- manual: | Todas as tabelas e figuras citadas na apresentação estão em resultados/, nenhum .parquet nem arquivo de ensaio entrou e o git grep de caminhos pessoais saiu vazio.
 
 ## #158 · Uma máquina oficial para a cadeia que termina no teste (artefato, manifestos e C_15 final no mesmo computador)
 
@@ -8876,6 +9583,7 @@ git grep -n -I -i -E "olivem85|OneDrive - |C:.{1,4}Users"
 - novo: sim
 - professores: não
 - arquivos: src/utils/config.py, src/utils/reproducibility.py, src/data/supervised_artifact.py, src/data/final_cohort_cli.py, tests/test_config.py
+- removido: 05/11: incorporado ao #189 (caminhos pessoais limpos no mesmo lote dos comentários, depois do G9)
 
 ### ① Para entender
 
@@ -8944,90 +9652,122 @@ git grep -n -i "OneDrive\|C:\\Users" -- notebooks data/analytical outputs/tables
 
 ---
 
-## #165 · C_16: O/E, calibração e Brier relativo por janela, e parada se a árvore Git estiver suja
+## #165 · Calibração por janela (O/E) a partir das previsões gravadas pelo notebook 11 (sem mexer no notebook)
 
 - prioridade: P1
 - situação: aberta
 - estratégia: desenvolver
-- marco: M5
-- data ideal: 04/11
-- responsável: a definir (0,75 h)
-- pessoas: Equipe
-- fonte: Revisão de 04/11: a hipótese registrada da §29.38 (O/E entre 1,5 e 3 em 2020–2022) não é calculada pelo C_16; metadata.json de 03/11 com dirty = true
-- depende de: #148
-- tags: Notebook, Teste, Calibração, Reprodutibilidade
-- pilar: Valor científico-acadêmico
-- carga: 0.75
+- marco: G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C
+- fonte: Hipótese registrada no docs/decisoes.md (§9): em 2020–2022, O/E acima de 1. Decisão de 05/11: o notebook 11 não é alterado antes do G9; o cálculo sai das previsões gravadas
+- depende de: #2
+- tags: calibração, O/E, hipóteses, pós-abertura, automatizável
+- pilar: —
+- carga: 0.3
 - novo: sim
 - professores: não
-- arquivos: notebooks/C/C_16_validacao_final.ipynb, src/evaluation/calibration.py
+- arquivos: outputs/final/calibracao_por_janela.csv, outputs/final/calibracao_por_ano.csv, outputs/final/calibracao_por_grupo.csv
 
 ### ① Para entender
 
-A §29.38 registrou, antes da abertura do teste, que no período pandêmico o modelo deve **ordenar bem** o risco, mas **subestimar o nível**: **O/E** (óbitos observados ÷ soma das probabilidades previstas) entre 1,5 e 3, porque foi calibrado com 8,4% de óbitos e a pandemia teve 26%. É o resultado mais relevante do teste do ponto de vista de saúde pública: um modelo calibrado num período e aplicado em outro.
+O `docs/decisoes.md` (§9) registrou, **antes** da abertura do teste, uma hipótese: em 2020–2022 o modelo deve **ordenar bem** o risco, mas **subestimar o nível**. Em números: a razão **O/E** (óbitos **O**bservados ÷ óbitos **E**sperados, isto é, a soma das probabilidades previstas) deve ficar **acima de 1**, porque o modelo foi calibrado com 8,4% de óbitos e a pandemia teve cerca de 26%.
 
-Hoje, porém, a tabela `janelas_df` do C_16 (célula 12) calcula `metricas_completas` mais PR-AUC ÷ prevalência, sem O/E e sem medida de calibração. A hipótese registrada **não seria conferida**.
+O notebook 11 não calcula O/E. **Não vamos alterá-lo antes do G9** (menos risco). Mas ele **grava as previsões antes de qualquer análise**: o arquivo `11_validacao_final_..._predicoes_teste.parquet` tem `bloco`, `y_true`, `y_prob`, ano, UF, região e faixa etária. O script `calibracao_pos_g9.py` calcula tudo a partir dele, **sem ler o teste de novo**.
 
-Ao mesmo tempo, os cinco registros de execução de 03/11 (B_05 e C_11 a C_15) têm `"git": {"dirty": true}`: rodaram com mudanças não commitadas. Para o C_16, que abre o teste uma única vez, isso precisa ser impossível.
+> [!decisão] Como ler as medidas
+> - **O/E** = 1: calibração perfeita no total. Acima de 1: o modelo **subestima** o risco. Abaixo de 1: **superestima**.
+> - **Inclinação** = 1 é o ideal; abaixo de 1, previsões "espalhadas demais"; acima de 1, "comprimidas demais".
+> - **ECE por quantis** = erro médio de calibração em faixas com o mesmo número de fichas.
+> - **Brier relativo** = 1 − Brier ÷ Brier do modelo nulo (que prevê a prevalência para todos).
 
 ### ② Problema
 
-- Sem O/E, inclinação de calibração e Brier relativo por janela, a §29.38 fica sem resposta.
-- O `ece` do projeto usa 10 faixas de largura fixa: com prevalência de 8%, quase todas as previsões caem nas duas primeiras faixas. O `ece_quantis` (faixas com o mesmo número de fichas) já existe em `src/evaluation/calibration.py` e é mais informativo, mas nenhum notebook o usa.
-- O intercepto de `calibracao_intercepto_inclinacao` é estimado junto com a inclinação; ele **não** é a calibração geral (*calibration-in-the-large*). Para a calibração geral, use O/E e a diferença entre média prevista e observada.
+- Sem este card a hipótese do O/E fica **sem resposta** (e não se pode reabrir o teste).
+- O arquivo de previsões **não** tem raça/cor nem zona: para esses grupos valem as tabelas que o notebook 11 já gravou (tratadas no #55).
+- O script já foi **testado com previsões sintéticas e é ensaiado no #193** com as previsões do ensaio. Aqui ele roda de verdade.
 
 ### ③ O que fazer
 
-**Tempo:** ≈ 45 min · **Antes do G9.** Testar no **modo ensaio** (`SRAG_C16_ENSAIO=1`).
+**Dono:** Pessoa C · **Tempo:** ≈ 20 min · **Começa quando:** #2 concluído (teste aberto e commit publicado) · **Antes de:** #194 · **Script pronto:** `calibracao_pos_g9.py`.
 
-1. **Imports** (célula de imports do C_16):
-```python
-from src.evaluation.calibration import calibracao_intercepto_inclinacao, ece_quantis
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 roda o `calibracao_pos_g9.py --aplicar` (este card), as tabelas, a curva, os textos do G9 e a documentação, e fecha os cards. Veja o #194.
+
+#### Passo a passo (para a pessoa)
+1. **Relatório** (nada é gravado; mostra as três janelas, o O/E por ano e o veredito da hipótese):
+```powershell
+.\.venv\Scripts\python.exe ..\calibracao_pos_g9.py
 ```
-2. **Na célula 12, dentro do laço que monta `janelas_df`**, depois de `m = metricas_completas(...)`, acrescente:
-```python
-y_j, p_j = y_por_janela[nome], p_por_janela[nome]   # use os nomes reais do notebook
-prev = float(np.mean(y_j))
-brier_nulo = prev * (1 - prev)
-_, inclinacao = calibracao_intercepto_inclinacao(y_j, p_j)
-m.update({
-    "o_e": float(np.sum(y_j) / np.sum(p_j)),
-    "media_prevista": float(np.mean(p_j)),
-    "media_observada": prev,
-    "inclinacao_calibracao": inclinacao,
-    "ece_quantis": ece_quantis(y_j, p_j, n_bins=10),
-    "brier_nulo": brier_nulo,
-    "brier_relativo": 1 - m["brier"] / brier_nulo,
-})
+   Confira que o nome do arquivo de previsões começa com `11_validacao_final_` (e **não** tem `ensaio`) e que as linhas **Teste A**, **pandemico_isolado** e **Teste B** têm os n esperados (119.245; 2.915.829; 3.035.074).
+2. **Grave** os três CSV:
+```powershell
+.\.venv\Scripts\python.exe ..\calibracao_pos_g9.py --aplicar
 ```
-   **Leitura:** O/E = 1 é calibração perfeita no total; inclinação < 1 indica previsões "espalhadas demais", > 1 "comprimidas demais"; Brier relativo > 0 indica melhor que dizer a prevalência para todos.
-3. **Por ano** (célula 16): acrescente `o_e` e `media_prevista` à tabela de calibração por ano, para mostrar a "travessia" 2019 → 2020–2022 → 2023–2025.
-4. **Parada com árvore suja** (célula que confere gates, antes de qualquer leitura do teste):
-```python
-from src.utils.reproducibility import _git_info
-_g = _git_info()
-if _g.get("dirty") and os.getenv("SRAG_ALLOW_DIRTY") != "1" and not MODO_ENSAIO:
-    raise RuntimeError(
-        "Árvore Git com mudanças não commitadas: commit antes de abrir o teste "
-        "(ou SRAG_ALLOW_DIRTY=1 com justificativa no decisoes.md)."
-    )
-print("commit:", _g.get("commit"), "| dirty:", _g.get("dirty"))
-```
-5. **Rode o ensaio** e confira que as colunas novas saem preenchidas e plausíveis (no ensaio, O/E perto de 1).
-6. Registre na §29.38, **antes do G9**, uma linha: "O/E, inclinação de calibração, ECE por quantis e Brier relativo são reportados por janela; leitura conforme a hipótese acima".
-7. Commit: `feat: calibracao por janela e trava de arvore suja no C_16 [done:#165]`.
+3. **Leia o resultado** e anote para o #194: O/E de 2020–2022 (a hipótese diz "acima de 1"), O/E do Teste A (perto de 1?) e o O/E por ano (2019, 2020 a 2022, 2023 a 2025).
+4. **Resultado fora do previsto entra como achado**, nunca como motivo para reajuste. Se o O/E de 2020–2022 não passar de 1, escreva isso como está.
+5. Os CSV ficam em `outputs\final` (pasta ignorada pelo Git); o #157 os leva para `resultados/`. Nada para commitar agora.
+
+#### Documentação que muda por causa desta tarefa
+O #194 usa estes números (o `gerar_blocos_g9.py` lê o CSV): `docs/decisoes.md` (linha de calibração por janela e a tabela de hipóteses), `README.md` (limitações, se aplicável) e o comentário do card #2.
+
+#### Automação sugerida
+> [!exemplo] Já automatizado
+> O script calcula O/E, inclinação, intercepto, ECE por quantis e Brier relativo para as três janelas, por ano (Teste B) e por região, faixa etária, sexo e UF (Teste A e 2020–2022, com a regra de supressão: menos de 100 fichas ou menos de 20 óbitos/curas).
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #165 · Calibração por janela (O/E) a partir das previsões gravadas
+
+OBJETIVO
+Rodar o calibracao_pos_g9.py sobre as previsões reais do notebook 11 e escrever a leitura em linguagem simples, comparando com a hipótese registrada antes da abertura (O/E acima de 1 em 2020–2022).
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída do relatório do calibracao_pos_g9.py.
+- docs/decisoes.md (seção 9, hipóteses).
+- outputs/final/calibracao_por_janela.csv e calibracao_por_ano.csv.
+
+PASSOS
+1. Explique, em linguagem simples, o que O/E, inclinação e ECE por quantis dizem sobre cada janela.
+2. Diga se a hipótese do O/E ficou dentro ou fora do previsto, com o número exato.
+3. Escreva uma frase para o README (limitações), SOMENTE se o O/E de 2020–2022 estiver bem acima de 1: 'Em 2020–2022 o modelo subestima o risco (O/E = x); recalibração periódica fica como trabalho futuro.'
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Todos os números citados existem nos CSV.
+- Resultado fora do previsto é descrito como achado.
+
+NÃO FAÇA
+- Não proponha reajustar modelo, calibração ou limiar.
+- Não leia o teste: use só o arquivo de previsões.
+- Não invente número.
+
+FORMATO DA ENTREGA
+Três frases de leitura + a frase de limitação (se aplicável).
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `o_e` | O C_16 calcula a razão entre óbitos observados e esperados por janela.
-- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `calibracao_intercepto_inclinacao` | O C_16 calcula a inclinação de calibração por janela.
-- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `ece_quantis` | O C_16 usa o ECE por quantis, adequado a prevalência baixa.
-- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `brier_relativo` | O C_16 reporta o Brier relativo ao modelo nulo.
-- contem: `notebooks/C/C_16_validacao_final.ipynb` :: `SRAG_ALLOW_DIRTY` | O C_16 se recusa a abrir o teste com mudanças não commitadas.
-- contem: `docs/decisoes.md` :: `Brier relativo` | A §29.38 registra, antes da abertura, as medidas de calibração por janela.
-- manual: | O ensaio do C_16 rodou com as colunas novas preenchidas.
-
----
+- existe: `outputs/final/calibracao_por_janela.csv` | A calibração por janela foi calculada a partir das previsões gravadas.
+- manual: | O O/E das três janelas e o veredito da hipótese (O/E de 2020–2022 acima de 1) foram anotados para o #194.
 
 ## #166 · C_15 final: corrigir o rótulo do veredito do peso de classe e conferir que o manifesto grava a regra do limiar
 
@@ -9046,6 +9786,7 @@ print("commit:", _g.get("commit"), "| dirty:", _g.get("dirty"))
 - novo: sim
 - professores: não
 - arquivos: notebooks/C/C_15_calibracao_limiar.ipynb
+- removido: 05/11: o rótulo do veredito já está certo no notebook 10 (sem_peso); o resto do texto antigo entra na limpeza dos Markdown (#190); o manifesto do 10 ganha o G8 aprovado na execução do #126
 
 ### ① Para entender
 
@@ -9097,6 +9838,7 @@ veredito = comparacao.loc[comparacao.groupby("finalista")["brier"].idxmin(), ["f
 - novo: sim
 - professores: não
 - arquivos: notebooks/B/B_04_eda_temporal_clustering.ipynb, notebooks/B/B_05_supervisionado_pilotos.ipynb, notebooks/C/C_14_ablacoes_variaveis.ipynb, notebooks/B/B_02_eda_primeira_passagem.ipynb
+- removido: 05/11: incorporado ao #190 (textos dos notebooks com números atuais); os notebooks mudaram de nome e de número
 
 ### ① Para entender
 
@@ -9155,6 +9897,7 @@ As saídas do B_04 e do B_05 já foram regeradas com as 30 variáveis e o `val_r
 - novo: sim
 - professores: não
 - arquivos: docs/decisoes.md
+- removido: 05/11: obsoleto: o docs/decisoes.md foi reescrito e condensado na limpeza (as §29.xx foram para docs/historico); o que falta é registrar o resultado do G9, no #194
 
 ### ① Para entender
 
@@ -9215,6 +9958,7 @@ O `decisoes.md` é a fonte do "porquê" do projeto e vai no pacote. A parte de c
 - novo: sim
 - professores: não
 - arquivos: README.md
+- removido: 05/11: incorporado ao #194 (README: resultados, tempo, memória e versões) e ao #126
 
 ### ① Para entender
 
@@ -9271,6 +10015,7 @@ O README é a porta de entrada da banca e de quem clonar o repositório. Hoje el
 - novo: sim
 - professores: não
 - arquivos: requirements-lock.txt, pyproject.toml, README.md
+- removido: 05/11: incorporado ao #195 (requirements-lock.txt e pyproject, depois do G9)
 
 ### ① Para entender
 
@@ -9320,6 +10065,7 @@ Um clone feito daqui a um ano instalaria versões mais novas de scikit-learn e p
 - novo: sim
 - professores: não
 - arquivos: configs/supervised.yaml
+- removido: 05/11: incorporado ao #189 (comentários do YAML) e ao #194 (selecao_modelos); as marcas de pessoas já não existem no YAML
 
 ### ① Para entender
 
@@ -9374,6 +10120,7 @@ git grep -n "Pessoa [ABC]\|#[0-9][0-9]" -- configs/supervised.yaml
 - novo: sim
 - professores: não
 - arquivos: notebooks/B/B_05_supervisionado_pilotos.ipynb, src/data/supervised_artifact.py, notebooks/C/C_11_pipeline_supervisionado.ipynb, notebooks/C/C_12_baseline_logistica.ipynb, notebooks/C/C_13_boosting.ipynb, notebooks/C/C_15_calibracao_limiar.ipynb, notebooks/C/C_16_validacao_final.ipynb, notebooks/A/A_03_coorte_protocolo.ipynb
+- removido: 05/11: incorporado ao #190 (textos e mensagens) e ao #192 (nomes das saídas); os rótulos #N e Pessoa X já foram removidos do código pela limpeza
 
 ### ① Para entender
 
@@ -9428,6 +10175,7 @@ git grep -n -E "#[0-9]{2,3}\b|Pessoa [ABC]|Notebook 03|\bB_0[67]\b|Fase E|\bC[2-
 - novo: sim
 - professores: não
 - arquivos: src/models/factory.py, src/models/logistic.py
+- removido: 05/11: obsoleto: a exploração de hiperparâmetros (#155) já foi concluída e o G6 aprovado
 
 ### ① Para entender
 
@@ -9485,6 +10233,7 @@ print(clf.l1_ratio, clf.solver, clf.C, clf.class_weight)
 - novo: sim
 - professores: não
 - arquivos: src/evaluation/errors.py, tests/test_errors.py, notebooks/C/C_16_validacao_final.ipynb
+- removido: 05/11: o notebook 11 e o src/ não mudam antes do G9; as regras (mínimo de óbitos, nomes legíveis, ignorado/ausente) passaram para o script do #55, depois do G9
 
 ### ① Para entender
 
@@ -9544,6 +10293,7 @@ def test_metricas_por_grupo_suprime_poucos_eventos():
 - novo: sim
 - professores: não
 - arquivos: outputs/runs
+- removido: 05/11: incorporado ao #126 (árvore limpa e suíte completa de testes)
 
 ### ① Para entender
 
@@ -9577,80 +10327,118 @@ Get-ChildItem outputs\runs -Recurse -Filter metadata.json | ForEach-Object { $j 
 
 ---
 
-## #176 · Curva de decisão (benefício líquido): utilidade do alerta por limiar no Teste A e em 2020–2022
+## #176 · Opcional: curva de decisão (benefício líquido) a partir das previsões gravadas do teste
 
-- prioridade: P3
+- prioridade: P4
 - situação: aberta
-- estratégia: explorar
-- marco: M8
+- estratégia: despriorizar
+- marco: Opcional
 - data ideal: 05/11
-- responsável: a definir (0,5 h)
-- pessoas: Equipe
-- fonte: Parecer crítico de 04/11 (recomendação 4.3); Vickers e Elkin (2006), análise de curva de decisão
-- depende de: #2
-- tags: Avaliação, Teste, Saúde pública
-- pilar: Valor científico-acadêmico
-- carga: 0.5
-- novo: sim
-- professores: sim
-- arquivos: notebooks/C/C_17_curva_decisao.ipynb, outputs/final/curva_decisao.csv
+- responsável: Pessoa B
+- pessoas: B
+- fonte: Proposta de 04/11 reescrita em 05/11; roda só sobre as previsões gravadas (sem treino, sem leitura do teste)
+- depende de: #194
+- tags: opcional, utilidade clínica, slides, automatizável
+- pilar: —
+- carga: 0.25
+- novo: não
+- professores: não
+- arquivos: outputs/final/curva_decisao.csv, reports/figures/curva_decisao.png
 
 ### ① Para entender
 
-PR-AUC e ROC-AUC dizem se o modelo **ordena** bem o risco. Não dizem se **usá-lo para alertar** é melhor do que alternativas simples. A **curva de decisão** responde a isso. Para cada limiar *t* (por exemplo, de 2% a 40%), calcula o **benefício líquido** de três estratégias:
+> [!decisão] Opcional: só se sobrar tempo depois do #147. Não conta para a entrega de hoje.
 
-- **modelo**: alertar quem tem risco ≥ *t*;
-- **alertar todos**;
-- **não alertar ninguém** (benefício 0).
+PR-AUC e ROC-AUC dizem se o modelo **ordena** bem o risco. Não dizem se **usá-lo para alertar** é melhor do que alertar todos ou ninguém. A **curva de decisão** responde: para cada limiar *t* (por exemplo, de 2% a 40%), calcula o **benefício líquido** de três estratégias (modelo, alertar todos, não alertar ninguém):
 
-A fórmula:
+`BL(t) = VP/n − FP/n × t/(1 − t)`  (VP = verdadeiros positivos, FP = falsos positivos, n = fichas)
 
-$$BL(t) = \frac{VP}{n} - \frac{FP}{n} \cdot \frac{t}{1-t}$$
-
-O fator *t* ÷ (1 − *t*) diz quanto vale um alarme falso em relação a um acerto. Escolher *t* = 10% é dizer "aceito 9 alarmes falsos para encontrar 1 óbito". O modelo é **útil** nas faixas de *t* em que sua curva fica acima das outras duas.
-
-**Em linguagem comum:** é a pergunta "se a equipe só consegue atender um certo número de alertas, o modelo ajuda mais do que alertar todo mundo?". É o padrão em modelos de risco clínico e o que uma banca de saúde pública costuma esperar.
+Escolher *t* = 10% é dizer "aceito 9 alarmes falsos para encontrar 1 óbito". O modelo é **útil** onde sua curva fica acima das outras duas. Em linguagem comum: "se a equipe só consegue atender certo número de alertas, o modelo ajuda mais do que alertar todo mundo?". É o padrão em modelos de risco clínico.
 
 ### ② Problema
 
-O projeto não tem nenhuma medida de utilidade. O limiar 0,1178 é justificado pela regra de recall ≥ 80%, mas não se mostra se, nesse ponto, usar o modelo é melhor do que alertar todos.
+- O projeto não tem nenhuma medida de **utilidade**. O limiar 0,1178 é justificado pela regra de recall ≥ 0,80, mas não se mostra se, nesse ponto, usar o modelo é melhor do que alertar todos.
+- É **descrição**, não escolha: nada é reajustado. Roda **só** sobre o arquivo de previsões gravado pelo notebook 11 (`11_validacao_final_final_<carimbo>_predicoes_teste.parquet`), sem ler o teste de novo.
+- Regra de corte: opcional; se o tempo apertar, cancele sem culpa.
 
 ### ③ O que fazer
 
-**Tempo:** ≈ 30 min · **Depois do C_16**, usando só as previsões gravadas do teste (sem reajuste; não é uma escolha, é uma descrição).
+**Dono:** Pessoa B · **Tempo:** ≈ 15 min · **Começa quando:** #194 · **Script pronto:** `curva_decisao.py` (testado com dados sintéticos; relatório primeiro).
 
-1. Crie `notebooks/C/C_17_curva_decisao.ipynb` (ou uma seção no fim do C_16 antes do fechamento, se a equipe preferir um notebook só).
-2. Leia o Parquet de previsões do C_16 (colunas: bloco, `y`, probabilidade calibrada).
-3. Função:
-```python
-import numpy as np, pandas as pd
-def curva_decisao(y, p, limiares=np.arange(0.02, 0.41, 0.01)):
-    y = np.asarray(y).astype(int); p = np.asarray(p); n = len(y); prev = y.mean()
-    linhas = []
-    for t in limiares:
-        alerta = p >= t
-        vp = int((alerta & (y == 1)).sum()); fp = int((alerta & (y == 0)).sum())
-        peso = t / (1 - t)
-        linhas.append({"limiar": round(float(t), 2),
-                       "bl_modelo": vp / n - fp / n * peso,
-                       "bl_todos": prev - (1 - prev) * peso,
-                       "bl_nenhum": 0.0,
-                       "alertas_por_100": 100 * alerta.mean()})
-    return pd.DataFrame(linhas)
+#### Passo a passo (para a pessoa)
+1. **Guarde o script fora do repositório** (`..\curva_decisao.py`).
+2. **Relatório** (nada é gravado; mostra a faixa de limiares em que o modelo é útil e o benefício no limiar 0,1178):
+```powershell
+.\.venv\Scripts\python.exe ..\curva_decisao.py
 ```
-4. Rode para o **Teste A** e para **2020–2022**; grave `outputs/final/curva_decisao.csv` (com a coluna `janela`).
-5. Figura: três linhas por janela (modelo, todos, nenhum), eixo x de 2% a 40%; marque o limiar 0,1178.
-6. **Leitura para o relatório:** "o modelo tem benefício líquido maior que alertar todos entre *t* = ⟨a⟩ e ⟨b⟩; no limiar escolhido, o benefício equivale a encontrar ⟨x⟩ óbitos a mais por 100 internações sem aumentar os alarmes falsos, em relação a alertar todos". Em 2020–2022, discuta que a prevalência maior desloca a curva de "alertar todos".
-7. **Opcional:** intervalo por bootstrap de grupos no Teste A (100 réplicas bastam).
+3. **Grave a tabela e a figura:**
+```powershell
+.\.venv\Scripts\python.exe ..\curva_decisao.py --aplicar
+```
+   Saídas: `outputs\final\curva_decisao.csv` e `reports\figures\curva_decisao.png` (três linhas por janela, com o limiar marcado).
+4. **Leitura para o relatório e para o slide (#134):** "o modelo tem benefício líquido maior que alertar todos entre *t* = ⟨a⟩ e ⟨b⟩; no limiar escolhido, gera ⟨x⟩ alertas por 100 internações". **Sem causalidade e sem custo real inventado.**
+5. Entra em `resultados/` pelo #157 (`outputs/final/curva_decisao.csv` e a figura já estão nos padrões do script).
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| Relatório (#133) | uma figura e uma frase na seção de resultados ou discussão |
+| Slides (#134) | o slide "Quando o alerta vale a pena" |
+
+#### Automação sugerida
+> [!exemplo] Script já entregue
+> Lê o arquivo de previsões mais recente do notebook 11 (sem `ensaio`), separa `test_ref` (Teste A) e `test_pandemic` (2020–2022), calcula o benefício líquido de 2% a 40% e a faixa útil, e desenha a figura.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #176 · Curva de decisão
+
+OBJETIVO
+Rodar o curva_decisao.py e escrever, em linguagem simples, a leitura da curva de decisão para o relatório e para um slide.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída do relatório do script (as duas linhas por janela).
+- O curva_decisao.csv (ou as primeiras 30 linhas de cada janela).
+
+PASSOS
+1. Explique o gráfico em 3 frases para quem não é da área (o que é benefício líquido; o que significa o modelo ficar acima das linhas).
+2. Escreva a frase de resultado: faixa de limiares em que o modelo é útil e alertas por 100 no limiar 0,1178, para o Teste A e para 2020–2022.
+3. Sugira o texto do slide e a legenda da figura, sem rótulos internos.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Os números citados existem no CSV.
+- A frase não afirma causa nem impacto real.
+
+NÃO FAÇA
+- Não invente custos clínicos.
+- Não proponha mudar o limiar.
+
+FORMATO DA ENTREGA
+Três blocos curtos: explicação, frase do relatório, texto do slide.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
 
 ### ④ Pronto quando
 
-- existe: `notebooks/C/C_17_curva_decisao.ipynb` | O notebook da curva de decisão existe.
-- contem: `notebooks/C/C_17_curva_decisao.ipynb` :: `bl_modelo` | O notebook calcula o benefício líquido do modelo.
-- notebook-executado: `notebooks/C/C_17_curva_decisao.ipynb` | O notebook rodou sem erro sobre as previsões gravadas do teste.
-- manual: | O relatório traz a figura da curva de decisão e a faixa de limiares em que o modelo é útil.
-
----
+- existe: `outputs/final/curva_decisao.csv` | A tabela da curva de decisão foi gerada.
+- manual: | O relatório e os slides trazem a figura da curva de decisão e a faixa de limiares em que o modelo é útil.
 
 ## #177 · Comparador "só idade e sexo" no Teste A, com bootstrap pareado (quanto as variáveis clínicas acrescentam fora da validação)
 
@@ -9669,6 +10457,7 @@ def curva_decisao(y, p, limiares=np.arange(0.02, 0.41, 0.01)):
 - novo: sim
 - professores: sim
 - arquivos: notebooks/C/C_16_validacao_final.ipynb, docs/decisoes.md
+- removido: 05/11: exigiria alterar o notebook 11 antes do G9 e ler o teste; vira trabalho futuro (frase no #133)
 
 ### ① Para entender
 
@@ -9728,6 +10517,7 @@ dif_auc = bootstrap_grupo(y_a, p_final_a, grupos_a, metrica="auc", prob_b=p_ref_
 - novo: sim
 - professores: sim
 - arquivos: docs/tripod_ai_mapa.md
+- removido: 05/11: incorporado ao #133 (mapa TRIPOD+AI, no passo 4)
 
 ### ① Para entender
 
@@ -9787,6 +10577,7 @@ O relatório (#133) não tem uma checagem formal de completude.
 - novo: sim
 - professores: sim
 - arquivos: tools/ancora_e_excluidos.py, outputs/final/atraso_notificacao.csv, outputs/final/excluidos_por_desfecho.csv, docs/decisoes.md
+- removido: 05/11: fora do escopo de hoje: exigiria ler a base bruta; vira frase de trabalho futuro no #133
 
 ### ① Para entender
 
@@ -9839,6 +10630,7 @@ Sem esses números, a resposta às duas perguntas fica no campo da opinião.
 - novo: sim
 - professores: não
 - arquivos: configs/supervised.yaml, docs/decisoes.md
+- removido: 05/11: fora do escopo: o artefato não grava o bloco de 2026 e exigiria reconstruí-lo; vira trabalho futuro
 
 ### ① Para entender
 
@@ -9882,6 +10674,7 @@ Sem esses números, a resposta às duas perguntas fica no campo da opinião.
 - novo: sim
 - professores: sim
 - arquivos: notebooks/C/C_16_validacao_final.ipynb
+- removido: 05/11: incorporado ao #174 (ignorado e AUSENTE como grupos com nome legível)
 
 ### ① Para entender
 
@@ -9923,6 +10716,7 @@ Uma tabela de equidade sem os grupos "ignorado" e "AUSENTE" esconde parte da pop
 - novo: sim
 - professores: não
 - arquivos: tools/diagnostico_estratos.py, docs/decisoes.md
+- removido: 05/11: fora do escopo: diagnóstico cosmético sem efeito na entrega; a explicação (estratificação caiu para ano × alvo) já está no manifesto
 
 ### ① Para entender
 
@@ -9970,6 +10764,7 @@ print(cont[cont.grupos < 5])
 - novo: sim
 - professores: não
 - arquivos: src/models/factory.py, src/data/cohort_audit.py, src/features/engineering.py, src/evaluation/leakage.py, configs/supervised.yaml, tests/test_model_pipelines.py, tests/test_leakage.py
+- removido: 05/11: fora do escopo: mexer em src/ depois do congelamento exige reexecutar tudo; vira trabalho futuro
 
 ### ① Para entender
 
@@ -10017,6 +10812,7 @@ Nenhum afeta o modelo atual, mas qualquer extensão (contexto com vacinação, n
 - novo: sim
 - professores: não
 - arquivos: src/evaluation/calibration.py, tests/test_calibration.py, src/data/final_cohort_cli.py, src/utils/hashing.py, src/data/split.py, src/utils/config.py, src/features/engineering.py, src/models/pipeline.py
+- removido: 05/11: fora do escopo: limpeza técnica de src/ já feita em parte pela limpeza; o restante é cosmético e arriscado antes do G9
 
 ### ① Para entender
 
@@ -10071,6 +10867,7 @@ Itens pequenos que não afetam resultado, mas que um avaliador de código perceb
 - novo: sim
 - professores: não
 - arquivos: notebooks/B/B_05_supervisionado_pilotos.ipynb
+- removido: 05/11: fora do escopo: diferença de 0,006 de PR-AUC no piloto; o #190 corrige o texto do notebook 05 se necessário
 
 ### ① Para entender
 
@@ -10116,6 +10913,7 @@ Faça o mesmo nos outros parâmetros lidos com `or`.
 - novo: sim
 - professores: sim
 - arquivos: docs/decisoes.md
+- removido: 05/11: incorporado ao #133 (limitações e trabalhos futuros, no passo 3)
 
 ### ① Para entender
 
@@ -10160,7 +10958,7 @@ Faltam no relatório:
 - carga: 0.25
 - novo: sim
 - professores: sim
-- arquivos: —
+- removido: 05/11: incorporado ao #134 (apresentação)
 
 ### ① Para entender
 
@@ -10181,3 +10979,1106 @@ Os resultados existiriam só em CSV e figura técnica, sem a frase que a banca e
 ### ④ Pronto quando
 
 - manual: | Os dois slides estão na apresentação, com as frases e os números do teste.
+
+## #192 · Renomear as saídas: prefixos dos arquivos gerados passam a usar o número do notebook
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pré-G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C
+- fonte: Pedido de 05/11; nomes C2 a C6, eda_01/02 e 03_pilotos são do esquema antigo; revisão do código (snapshot 978019a)
+- depende de: #188
+- tags: nomes, saídas, notebook 11, automatizável, lote
+- pilar: —
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/06_pipeline_supervisionado.ipynb, notebooks/07_baseline_logistica.ipynb, notebooks/09_ajuste_fino.ipynb, notebooks/10_calibracao_limiar.ipynb, notebooks/11_validacao_final.ipynb
+
+### ① Para entender
+
+Os arquivos que os notebooks gravam (tabelas, previsões, manifestos, figuras e a pasta de cada execução) ainda têm o **nome do esquema antigo**: `C5_calibracao_limiar_final_<data>_manifesto.json`, `C6_validacao_final_...`, `eda_02_...`. Hoje os notebooks são numerados de 01 a 11. A troca deixa tudo com o número do notebook que gerou o arquivo, o que ajuda a banca a ligar cada resultado ao notebook:
+
+| Nome antigo (prefixo) | Nome novo | Quem grava |
+|---|---|---|
+| `C2_pipeline`, pasta `outputs/C2/` | `06_pipeline_supervisionado`, pasta `outputs/06_pipeline/` | notebook 06 |
+| `C3_baseline_logistica` | `07_baseline_logistica` | notebook 07 |
+| `C4_boosting` | `09_ajuste_fino` | notebook 09 |
+| `C5_calibracao_limiar` | `10_calibracao_limiar` | notebook 10 |
+| `C6_validacao_final` | `11_validacao_final` | notebook 11 |
+| `C6ENSAIO_validacao_final` (ensaio) | `11_ensaio_validacao_final` | notebook 11 com `SRAG_ENSAIO=1` |
+| `03_pilotos_`, `03_cinco_familias_`, `03_supervisionado_pilotos`, pasta `supervisionado_03` | `05_pilotos_`, `05_cinco_familias_`, `05_supervisionado_pilotos`, `supervisionado_05` | notebook 05 |
+| `eda_01_` | `03_eda_` | notebook 03 |
+| `eda_02_` | `04_eda_` | notebook 04 |
+
+### ② Problema
+
+> [!atenção] Os dois lados precisam mudar juntos
+> O notebook 11 **procura** o manifesto do notebook 10 pelo nome (`C5_calibracao_limiar_*_manifesto.json`) e a **guarda de reabertura** procura manifestos anteriores do próprio 11 pelo nome (`C6_validacao_final_*_manifesto.json`). Se só um lado mudar:
+> - o 11 para com "Nenhum manifesto notebook 10 compatível" (erro seguro: nada é aberto); ou
+> - **pior**: a guarda de reabertura deixa de enxergar uma abertura anterior (falha silenciosa; por isso o ensaio do #193 precisa passar depois desta troca).
+
+- Os arquivos antigos que já estão em `outputs/` ficam para trás: com o prefixo novo, o notebook 11 só enxerga manifestos novos. Por isso **todos os notebooks (02 a 10) são reexecutados logo depois (#126)**, o que regera as saídas com os nomes novos.
+- **Não renomeie depois do G9.** Depois da abertura, os nomes dos arquivos do teste (`11_validacao_final_...`) já são os finais.
+- Textos que citam "C_16", "B_04" etc. (nomes de notebook antigos dentro de Markdown e mensagens) **não** são trocados por esta tarefa; entram no #190 (depois do G9).
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Tempo:** ≈ 30 min · **Começa quando:** #188 · **Antes de:** #126 · **Script pronto:** `renomear_saidas.py`, rodado pelo orquestrador `lote.py` (relatório primeiro; grava só no segundo comando).
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pre_g9.py`
+> faz o #188 e o #192 juntos: testes completos, relatório e aplicação da renomeação, conferência do notebook 11, commit (`[done:#188] [done:#192]`), push e atualização do painel. Para no primeiro erro e não faz commit se algo falhar. Testado com repositório simulado, não com o real.
+
+#### Passo a passo (para a pessoa)
+1. **Guarde os scripts fora do repositório**, na pasta acima dele (`..\lote.py`, `..\renomear_saidas.py` e os demais da pasta `scripts`). Rode sempre da **raiz do repositório**.
+2. **Relatório do lote** (nada muda; os scripts trabalham numa cópia temporária e conferem que os notebooks continuam JSON válido e o Python compila):
+```powershell
+.\.venv\Scripts\python.exe ..\lote.py relatorio --etapas renomear
+```
+   Ele grava `outputs\final\lote_relatorio.md`. **Envie esse arquivo para a IA** (bloco abaixo) antes de aplicar. Leia: (a) quantos arquivos e trocas; (b) a lista **"RESTOS PARA REVISAR NA MÃO"** (textos como "C_16" em Markdown e mensagens; ficam para o #190); (c) a linha "PULADO", que deve estar ausente.
+3. **Confira dois pontos no relatório:** `notebooks/11_validacao_final.ipynb` com trocas de `C5_calibracao_limiar` e `C6_validacao_final`; `notebooks/10_calibracao_limiar.ipynb` com trocas de `C5_calibracao_limiar`.
+4. **Aplique** (o `lote.py` só aplica se o commit for o mesmo do relatório e a árvore estiver limpa; roda o `pytest` no fim; move os arquivos antigos de `outputs/` para `outputs\_antigo`):
+```powershell
+.\.venv\Scripts\python.exe ..\lote.py aplicar --etapas renomear
+```
+5. **Confira que não sobrou nome antigo no código** (deve imprimir nada):
+```powershell
+git grep -n -E "C[2-6]ENSAIO|C[2-6]_(pipeline|baseline|boosting|calibracao|validacao)|eda_0[12]_|supervisionado_03|03_pilotos|03_cinco" -- notebooks src tests tools configs README.md docs/decisoes.md
+```
+6. **Confira o lado "quem procura" no notebook 11** (devem aparecer os nomes novos):
+```powershell
+git grep -n -E "calibracao_limiar_\*_manifesto|validacao_final_\*_manifesto|PREFIXO_BASE =" -- notebooks/11_validacao_final.ipynb
+```
+7. **Commit e publicação** (um comando):
+```powershell
+git add -A; git commit -m "renomeia saidas [done:#192]"; git push
+```
+8. **Se algo estranho aparecer** (arquivo "PULADO", muitos restos, pytest falhando), **não aplique** ou desfaça com `git checkout -- .` (os arquivos movidos para `outputs\_antigo` voltam com `Move-Item`). O G9 funciona também com os nomes antigos, mas a decisão da equipe é **manter** a renomeação.
+
+> [!atenção] Depois desta tarefa o notebook 11 só enxerga manifestos novos
+> Os notebooks 02 a 10 precisam ser reexecutados (#126) antes do ensaio (#193). Sem isso o notebook 11 para com "Nenhum manifesto notebook 10 compatível" (erro seguro: nada é aberto).
+
+#### Documentação que muda por causa desta tarefa
+Nenhuma (README e decisões já usam os nomes dos notebooks).
+
+#### Automação sugerida
+> [!exemplo] Estratégia do script (já entregue e testado)
+> Tabela de trocas literais aplicada em `notebooks/*.ipynb`, `src/`, `tests/`, `tools/`, `configs/`, `README.md` e `docs/decisoes.md` (nunca em `docs/historico`). As trocas mais longas vêm primeiro (`C6ENSAIO_validacao_final` antes de `C6_validacao_final`). Valida JSON, compilação e YAML. O que restar é listado, nunca trocado no escuro.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #192 · Renomear as saídas dos notebooks sem quebrar o notebook 11
+
+OBJETIVO
+Conferir o relatório da renomeação de prefixos (C2 a C6, eda_01/02, 03_pilotos) e dar o sinal verde para aplicar. O notebook 11 procura o manifesto do 10 por glob e a guarda de reabertura procura manifestos do próprio 11 por glob; os dois globs precisam mudar junto com os nomes.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- O arquivo outputs/final/lote_relatorio.md (relatório do lote).
+- notebooks/10_calibracao_limiar.ipynb e notebooks/11_validacao_final.ipynb, se houver dúvida.
+
+PASSOS
+1. Confirme que o notebook 11 e o notebook 10 aparecem com trocas.
+2. Para cada 'resto', decida: texto de Markdown (deixe para o #190), mensagem de erro (troque pelo nome novo) ou código (troque e explique).
+3. Confirme, lendo o relatório, que os globs viram: `10_calibracao_limiar_*_manifesto.json` (procura do 11) e `11_validacao_final_*_manifesto.json` (guarda de reabertura), e que o prefixo do ensaio `11_ensaio_validacao_final` NÃO casa com o segundo.
+4. Responda com 'pode aplicar' ou a lista do que precisa mudar antes. Entregue a linha de PowerShell de aplicação.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Nenhum arquivo PULADO no relatório.
+- O glob da guarda de reabertura não casa com o prefixo do ensaio.
+- pytest passa depois de aplicar.
+
+NÃO FAÇA
+- Não renomeie arquivos de docs/historico.
+- Não mude lógica, só nomes.
+- Não apague nada de outputs: o script move para outputs/_antigo.
+
+FORMATO DA ENTREGA
+'Pode aplicar' ou 'não aplique ainda' + motivo em até 5 linhas.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/11_validacao_final.ipynb` :: `C5_calibracao_limiar` | O notebook 11 procura o manifesto do notebook 10 pelo nome novo.
+- nao-contem: `notebooks/11_validacao_final.ipynb` :: `C6_validacao_final` | A guarda de reabertura procura os manifestos pelo nome novo.
+- contem: `notebooks/11_validacao_final.ipynb` :: `11_ensaio_validacao_final` | O ensaio do notebook 11 usa um prefixo que não aciona a guarda de reabertura.
+- nao-contem: `notebooks/10_calibracao_limiar.ipynb` :: `C5_calibracao_limiar` | O notebook 10 grava com o nome novo.
+- nao-contem: `notebooks/09_ajuste_fino.ipynb` :: `C4_boosting` | O notebook 09 grava com o nome novo.
+- nao-contem: `notebooks/07_baseline_logistica.ipynb` :: `C3_baseline_logistica` | O notebook 07 grava com o nome novo.
+- nao-contem: `notebooks/06_pipeline_supervisionado.ipynb` :: `C2_pipeline` | O notebook 06 grava com o nome novo.
+- nao-contem: `notebooks/05_supervisionado_pilotos.ipynb` :: `supervisionado_03` | A pasta de figuras do notebook 05 usa o número do notebook.
+- nao-contem: `notebooks/04_eda_temporal_agrupamento.ipynb` :: `eda_02_` | As saídas do notebook 04 usam o prefixo 04_eda_.
+- manual: | O git grep dos nomes antigos saiu vazio e o pytest passou depois da troca.
+
+## #188 · Testar a branch enxugamento e publicá-la (a mescla na main acontece depois do G9, no #194)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pré-G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C
+- fonte: Decisão de 05/11: a branch enxugamento é a versão final; mescla na main depois do G9. Snapshot 978019a
+- depende de: —
+- tags: limpeza, git, pré-G9
+- pilar: —
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: notebooks/, src/, tests/, configs/, docs/decisoes.md, README.md
+
+### ① Para entender
+
+O projeto tem hoje dois formatos. A `main` do GitHub (commit `f27ac3c`) está na estrutura antiga; a branch **`enxugamento`** (commit `978019a`) tem a estrutura final (11 notebooks numerados, `src/` com seis módulos, `README.md` e `docs/decisoes.md` curtos, histórico em `docs/historico/`).
+
+**Decisão da equipe:** a `enxugamento` é a versão final. **Todo o trabalho até o G9 acontece nela.** Ela só é mesclada na `main` **depois** do G9 documentado (último passo do #194), e a entrega é o **link do GitHub (main) completo** mais a apresentação em PowerPoint (#134).
+
+> [!atenção] Por que o painel mostra ✗ em alguns cards até a mescla
+> O verificador lê a `main`. Enquanto a mescla não acontece, os critérios que apontam para arquivos novos (por exemplo `notebooks/11_validacao_final.ipynb`) aparecem como "não atendido". Isso é esperado. Use o botão **"Conferir na minha pasta"** do card (ele lê a sua pasta de trabalho) ou confirme manualmente. Depois da mescla tudo se resolve sozinho.
+
+### ② Problema
+
+- A limpeza foi feita por scripts e **ainda não tem registro da suíte completa de testes** passando sobre ela (antes dela, 350 testes passavam).
+- Uma suíte verde é o que garante que a renomeação das saídas (#192) e o G9 (#2) partem de um código que funciona.
+- Só a Pessoa C mexe em código até o G9. A e B podem trabalhar em documentos (rascunho do #134 e da Fase 1 do #133).
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Tempo:** ≈ 30 min · **Começa quando:** agora · **Antes de:** #192 e todo o resto.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pre_g9.py`
+> o mesmo comando do #192 faz o #188 (testes completos e push da branch) antes de renomear. Veja o #192.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\rodar_testes.py`
+> roda a suíte completa de testes e guarda `outputs\final\pytest_completo.txt` (equivale ao passo 3). Depois só falta o `git push`.
+> Os scripts de fluxo foram testados com notebooks simulados, não com os reais: **se o atalho recusar ou falhar, siga os passos manuais abaixo, que continuam valendo.**
+
+#### Passo a passo (para a pessoa)
+1. **Avise o grupo:** "só a Pessoa C mexe em código e commita na `enxugamento` até o G9".
+2. **Veja onde você está** (um comando):
+```powershell
+git status -sb; git log --oneline -3; git branch -vv
+```
+   Esperado: ramo `enxugamento`, último commit `978019a Enxugamento` e árvore limpa. Se houver arquivo modificado, decida com a equipe (commit ou descarte). **Não siga com a árvore suja.**
+3. **Rode todos os testes e guarde o resultado** (um comando):
+```powershell
+New-Item -ItemType Directory -Force outputs\final | Out-Null; .\.venv\Scripts\python.exe -m pytest -m "" -q 2>&1 | Out-File -Encoding utf8 outputs\final\pytest_completo.txt; Get-Content outputs\final\pytest_completo.txt -Tail 5
+```
+   Esperado: "passed" e nenhum "failed". **Se algum falhar, não siga:** cole a mensagem na IA (bloco abaixo) e corrija o mínimo.
+4. **Publique a branch** (backup e conferência no GitHub): `git push -u origin enxugamento`.
+5. **Não mescle na `main` agora.** Isso é o passo final do #194.
+
+> [!atenção] Não rode nenhum notebook nesta etapa
+> Só testes e Git.
+
+#### Documentação que muda por causa desta tarefa
+Nenhuma.
+
+#### Automação sugerida
+> [!exemplo] Sem script novo
+> São poucos comandos. A automação é o arquivo `pytest_completo.txt`, que fica como evidência.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #188 · Testar a branch enxugamento e publicá-la
+
+OBJETIVO
+Garantir que a branch `enxugamento` passa em toda a suíte de testes e está publicada no GitHub. NÃO mesclar na main: isso só acontece depois do G9.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- Saída completa de `git status -sb`, `git log --oneline -5` e `git branch -vv`.
+- Saída completa de `pytest -m "" -q` (outputs\final\pytest_completo.txt), se houver falha.
+- O arquivo de teste que falhou e o trecho de src/ que ele importa (arquivo inteiro).
+
+PASSOS
+1. Confirme que a árvore está limpa e que o commit é 978019a (ou posterior).
+2. Se houver falha de teste: identifique a causa raiz, diga se é do teste ou do código e proponha a correção mínima (bloco completo com âncoras).
+3. Quando todos passarem: entregue UMA linha de PowerShell para publicar a branch.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- pytest completo termina sem falhas.
+- git status limpo.
+- A branch enxugamento existe no GitHub.
+
+NÃO FAÇA
+- Não rode notebooks.
+- Não mescle na main.
+- Não altere configs/supervised.yaml, docs/decisoes.md nem nada que mude resultado.
+- Não use git push --force.
+
+FORMATO DA ENTREGA
+Diagnóstico em 3 linhas + comandos de PowerShell em uma linha cada.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- manual: | O pytest completo passou na branch enxugamento e a branch foi publicada no GitHub (a mescla na main só acontece no fim do #194).
+
+## #191 · Comentar só o essencial: pontos críticos do código, com frases curtas
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 05/11
+- responsável: Pessoa B
+- pessoas: B
+- fonte: Pedido de 05/11 (comentar o código só com o essencial novamente)
+- depende de: #189
+- tags: comentários, boas práticas, IA
+- pilar: —
+- carga: 0.4
+- novo: sim
+- professores: não
+- arquivos: src/dados.py, src/modelos.py, src/avaliacao.py, src/config.py, src/registro.py, configs/supervised.yaml, notebooks/10_calibracao_limiar.ipynb, notebooks/11_validacao_final.ipynb
+
+### ① Para entender
+
+Depois de zerar os comentários (#189), colocamos de volta **só os que evitam um erro caro ou explicam uma regra que não é óbvia**. Meta: **cerca de 20 comentários no projeto inteiro**, de **uma linha**, em português simples. Um comentário só entra se responder "por que isto existe?" ou "o que quebra se alguém mexer?".
+
+**Lista dos pontos críticos** (a IA começa por ela; a pessoa aprova):
+| Onde | Ponto | Por que merece comentário |
+|---|---|---|
+| `src/dados.py::criar_group_id` | grupo = número de notificação | a mesma pessoa nunca pode cair em dois blocos |
+| `src/dados.py::atribuir_blocos_por_hash` | partição por hash, seed 42 | determinística: nunca sortear de novo |
+| `src/dados.py::_exigir_gates_para` e `load_supervised_artifact` | bloqueio do teste | `test_ref` e `test_pandemic` só abrem com G9 aprovado |
+| `src/avaliacao.py::check_leakage` | variáveis proibidas | barra colunas posteriores à admissão |
+| `src/modelos.py::build_preprocessor` | ajustado só no treino | evita vazamento da validação e do teste |
+| `src/modelos.py::calibrar` | base de calibração separada | calibrar com dados que o modelo já viu infla o resultado |
+| `src/modelos.py::escolher_limiar` | regra do limiar | maior precisão com recall ≥ mínimo, só na validação |
+| `src/modelos.py::_kwargs_do_yaml` | descarta `null` e chave desconhecida | por isso `class_weight: {}` quer dizer "sem peso" |
+| `src/config.py::_UniqueKeyLoader` | erro em chave duplicada | YAML com chave repetida não passa em silêncio |
+| `src/registro.py::Run` | grava mesmo com erro | o registro da execução nunca se perde |
+| `configs/supervised.yaml` · `gates.G9_holdout` | bloco editado pelo notebook 11 | não renomeie nem reformate |
+| `configs/supervised.yaml` · `limiar.otimo` e `models.*.class_weight` | valores copiados do notebook 10 | o notebook 11 compara com o manifesto do 10 |
+| Notebook 10 | divisão da validação em duas metades (`val_cal` e `val_meas`) | calibrar numa metade e medir na outra |
+| Notebook 11 | gates, guarda de reabertura, previsões gravadas antes das análises, marcação do G9 | por que o notebook se recusa a rodar duas vezes |
+
+### ② Problema
+
+- Sem esses poucos comentários, quem ler o código depois (ou uma IA) não sabe o que **não** pode ser mexido.
+- Comentário demais volta o problema do #189. **Regra:** no máximo **uma linha**, frase curta, português simples, sem datas, sem nome de pessoa, sem número de card.
+- Inserção por texto é frágil (as linhas mudam). O script `inserir_comentarios.py` insere **acima de uma âncora** (o texto exato de uma linha) e recusa se a âncora não for única.
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Tempo:** ≈ 25 min · **Começa quando:** #189 commitado e publicado (faça `git pull` antes) · **Script pronto:** `inserir_comentarios.py` (lê uma lista JSON; relatório numa cópia; grava só com `--aplicar`).
+
+#### Passo a passo (para a pessoa)
+1. **Peça a lista à IA** (bloco abaixo). Ela devolve um arquivo `comentarios.json` com itens `arquivo`, `ancora` (texto exato do começo da linha, por exemplo `def criar_group_id(`) e `comentario` (uma linha). Cole-o na pasta acima do repositório (`..\comentarios.json`).
+2. **Leia os comentários** (30 segundos): cada um tem uma linha? Está em português simples? Explica um porquê, não repete o código? Apague os que não servirem (basta tirar o item do JSON).
+3. **Relatório** (nada muda):
+```powershell
+.\.venv\Scripts\python.exe ..\inserir_comentarios.py ..\comentarios.json
+```
+   Esperado: "falhas: 0". Se uma âncora "casa com 0 ou 2 linhas", ajuste a âncora no JSON (use mais texto da linha).
+4. **Aplique e teste** (um comando):
+```powershell
+.\.venv\Scripts\python.exe ..\inserir_comentarios.py ..\comentarios.json --aplicar; .\.venv\Scripts\python.exe -m pytest -q; git diff --stat | Select-Object -Last 3
+```
+5. **Conferência:** `git diff` deve mostrar **só linhas adicionadas que começam com `#`** (e nada mais). Para os notebooks, o diff mostra linhas de `source` novas.
+6. **Commit:** `git add -A; git commit -m "comentarios essenciais [done:#191]"`.
+
+#### Documentação que muda por causa desta tarefa
+Nenhuma.
+
+#### Automação sugerida
+> [!exemplo] IA escolhe, script insere
+> A IA propõe a lista (julgamento), o script faz a inserção (mecânica) e a conferência é automática: a âncora precisa ser única, a AST do código não pode mudar e o YAML carregado precisa ficar igual. Nada de colar à mão em doze arquivos.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #191 · Comentar só o essencial
+
+OBJETIVO
+Propor cerca de 20 comentários de uma linha, em português simples, para os pontos críticos do projeto, no formato que o script inserir_comentarios.py aceita.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- Os arquivos src/dados.py, src/modelos.py, src/avaliacao.py, src/config.py, src/registro.py, configs/supervised.yaml, notebooks/10_calibracao_limiar.ipynb e notebooks/11_validacao_final.ipynb (versão sem comentários).
+- A tabela de pontos críticos do card #191 (peça ao usuário se não estiver na conversa).
+
+PASSOS
+1. Para cada ponto da tabela, ache a linha EXATA da função, classe, chave de YAML ou célula (copie o começo da linha como âncora; ela precisa ser única no arquivo).
+2. Escreva UM comentário de uma linha (até 100 caracteres), em português simples, que diga por que aquilo existe ou o que quebra se mudar.
+3. Se um ponto da tabela não existir mais no código, diga e pule.
+4. Entregue um único JSON: lista de {"arquivo": ..., "ancora": ..., "comentario": ...}.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Todas as âncoras aparecem uma única vez no arquivo indicado.
+- Nenhum comentário tem mais de uma linha, data, nome de pessoa ou número de card.
+- No máximo cerca de 20 itens no total.
+
+NÃO FAÇA
+- Não escreva docstrings.
+- Não mude código.
+- Não comente o óbvio (o que a linha já diz).
+
+FORMATO DA ENTREGA
+O JSON completo, dentro de um bloco de código, e uma frase dizendo quantos itens e quais pontos foram pulados.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- contem: `src/dados.py` :: `criar_group_id` | A função de grupo continua definida em src/dados.py.
+- contem: `configs/supervised.yaml` :: `G9_holdout:` | O bloco do G9 continua no formato que o notebook 11 edita.
+- manual: | O git diff do #191 mostra só linhas de comentário adicionadas (cerca de 20), cada uma de uma linha, e o pytest passou.
+
+## #189 · Limpar os comentários do projeto e os caminhos pessoais (um lote, depois da cadeia)
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 05/11
+- responsável: Pessoa B
+- pessoas: B
+- fonte: Pedido de 05/11 (projeto sem comentários) + #164 (caminhos pessoais) unificados; roda no orquestrador lote.py
+- depende de: #194
+- tags: comentários, caminhos, limpeza, automatizável, lote
+- pilar: —
+- carga: 0.5
+- novo: sim
+- professores: não
+- arquivos: src/, tests/, tools/, notebooks/, configs/, data/analytical/, outputs/
+
+### ① Para entender
+
+Duas limpezas automáticas, feitas **num só lote**, **depois** do G9 (o notebook 11 regrava os caminhos pessoais e as saídas):
+
+1. **Comentários:** o código ainda tem comentários de várias fases do projeto ("# 03/11: ...", "# <- era logistic, agora boosting", "# --- errors ---", docstrings de vários parágrafos). A decisão é **zerar** e depois recolocar só os essenciais (#191).
+2. **Caminhos pessoais:** `C:\Users\<usuário>\OneDrive - <empresa>\...` aparece nas saídas salvas dos notebooks, nos manifestos e no `metadata.json`. Vira `<REPO>` e `<HOME>`.
+
+| Tipo | Regra do script de comentários |
+|---|---|
+| `.py` (`src`, `tests`, `tools`) | tira os comentários `#`; deixa só a **primeira frase** de cada docstring |
+| `.ipynb` (`notebooks`) | o mesmo, **só nas células de código**; saídas e células Markdown não mudam |
+| `.yaml` (`configs`) | tira os comentários sem mexer nos textos de bloco do YAML |
+| Mantém | shebang, `# noqa`, `# type:`, `# pragma`, `# fmt:`, `# pylint`, `# ruff`, `# mypy` |
+
+**Isto acontece depois do G9, e é seguro:** o script confere que a árvore do código (AST) é **idêntica** à do original (só comentários e docstrings mudam). O código que abriu o teste continua o mesmo.
+
+### ② Problema
+
+> [!atenção] Dois cuidados que o script já trata, mas vale conferir
+> 1. **O bloco `G9_holdout` do YAML** permanece com a linha exata `  G9_holdout:` (o notebook 11 o procura assim; já executado, mas o formato fica).
+> 2. **Docstrings:** por padrão ficam só com a primeira frase. Para manter inteiras: `limpar_comentarios.py --docstrings manter` (fora do lote).
+
+- Cada arquivo é conferido (AST igual, YAML igual, JSON válido, `.py` compila). Se uma conferência falhar, o arquivo **fica como estava** e aparece no relatório.
+- O `lote.py` só aplica se o **commit for o mesmo do relatório** e a árvore estiver limpa; roda o `pytest` no fim.
+- O `tools/update_project_reference.py` tem mais de cem comentários e é ferramenta interna: pode ficar de fora se der trabalho.
+
+### ③ O que fazer
+
+**Dono:** Pessoa B · **Tempo:** ≈ 30 min · **Começa quando:** #194 concluído e a `main` atualizada · **Antes de:** #191 e #190 · **Scripts prontos:** `lote.py` (orquestra), `limpar_caminhos.py` e `limpar_comentarios.py`.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> o comando do pós-G9 já roda este lote (caminhos e comentários, com relatório, aplicação e pytest). Só use os passos abaixo se ele não tiver chegado até aqui.
+
+#### Passo a passo (para a pessoa)
+1. **Atualize e confira:** `git switch main; git pull --ff-only; git status --short` (sem nada).
+2. **Guarde os scripts fora do repositório** (pasta acima dele: `..\lote.py` e os demais da pasta `scripts`).
+3. **Relatório do lote** (nada muda; um arquivo só com os três relatórios: caminhos, comentários e a lista de células Markdown candidatas do #190):
+```powershell
+.\.venv\Scripts\python.exe ..\lote.py relatorio --lote pos-cadeia
+```
+   Abra `outputs\final\lote_relatorio.md`. Leia: quantos arquivos e comentários; "PULADO" (arquivo que o script não conseguiu conferir; fica como está); "AINDA APARECE nome pessoal". **Envie o arquivo para a IA** (bloco abaixo) e espere o "pode aplicar".
+4. **Aplique as duas etapas** (a ordem segura é fixa: caminhos, depois comentários; no fim roda o `pytest`):
+```powershell
+.\.venv\Scripts\python.exe ..\lote.py aplicar --etapas caminhos,comentarios
+```
+5. **Confira** (um comando; esperado: nada impresso na primeira busca; na segunda, **uma** linha do G9 e depois `0`):
+```powershell
+git grep -n -i -E "olivem85|OneDrive - |C:\\Users" -- notebooks docs README.md; git grep -n "  G9_holdout:" -- configs/supervised.yaml; .\.venv\Scripts\python.exe -c "import json,glob; print(sum(1 for f in glob.glob('notebooks/*.ipynb') for c in json.load(open(f,encoding='utf-8'))['cells'] if c['cell_type']=='code' for l in ''.join(c['source']).splitlines() if l.lstrip().startswith('#') and not l.lstrip().startswith('#!')))"
+```
+   Os arquivos de `outputs/` são ignorados pelo Git; confira também: `Select-String -Path outputs\tables\*.json,outputs\runs\*\metadata.json -Pattern "olivem85|OneDrive" | Select-Object -First 5` (deve sair vazio).
+6. **Abra um notebook** (por exemplo o 10) e confirme que as **saídas continuam lá**.
+7. **Commit e publicação** (um comando):
+```powershell
+git add -A; git commit -m "comentarios e caminhos limpos [done:#189]"; git push
+```
+8. **Desfazer, se algo parecer errado** (antes do commit): `git checkout -- .`.
+
+#### Documentação que muda por causa desta tarefa
+Nenhuma.
+
+#### Automação sugerida
+> [!exemplo] Estratégia (já entregue e testada)
+> **Comentários:** `tokenize` acha cada `#` com linha e coluna exatas (não confunde `#` dentro de texto), remove de trás para frente e compara a AST antes e depois; docstrings: `ast` dá a posição e a primeira frase substitui o bloco; notebooks: o mesmo nas células de código, com linhas `%` e `!` mascaradas, JSON regravado no mesmo formato; YAML: varredura linha a linha com estado de "dentro de bloco de texto" e conferência `yaml.safe_load(antes) == yaml.safe_load(depois)`. **Caminhos:** troca a raiz (em três grafias) por `<REPO>` e o resto de `C:\Users\<nome>` por `<HOME>`, e confere JSON/YAML. **Lote:** relatório numa cópia, carimbo do commit, aplicação em ordem fixa, `pytest` no fim.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #189 · Remover comentários e caminhos pessoais (lote)
+
+OBJETIVO
+Conferir o relatório do lote (caminhos e comentários) e dar o sinal verde para aplicar; sem mudar o comportamento do código.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- O arquivo outputs/final/lote_relatorio.md.
+- Se algum arquivo foi PULADO: o arquivo e a mensagem.
+
+PASSOS
+1. Explique o relatório em linguagem simples (arquivos, comentários, docstrings, células vazias, trocas de caminhos).
+2. Se houver PULADO ou 'AINDA APARECE': diga a causa e proponha o ajuste mínimo no script (arquivo completo se mudar).
+3. Confirme que o bloco `  G9_holdout:` do YAML permanece e que os notebooks seguem JSON válido com as saídas.
+4. Responda 'pode aplicar' ou 'não aplique ainda' + motivo. Entregue a linha de PowerShell de aplicação.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- pytest passa depois de aplicar.
+- Nenhum comentário # restante em src, tests, tools e células de código (exceto pragmas).
+- git grep por olivem85 e 'OneDrive - ' sai vazio em notebooks, docs e README.md.
+- As saídas dos notebooks não mudaram.
+
+NÃO FAÇA
+- Não mude lógica.
+- Não toque em docs/historico, .srag-status-local nem arquivos .md.
+- Não aplique se o relatório tiver PULADO sem explicação.
+
+FORMATO DA ENTREGA
+'Pode aplicar' ou 'não aplique ainda' + resumo do relatório em 5 linhas.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- nao-contem: `configs/supervised.yaml` :: `era logistic, agora boosting` | O comentário informal do finalista saiu do YAML.
+- nao-contem: `configs/supervised.yaml` :: `03/11:` | Os comentários datados saíram do YAML.
+- contem: `configs/supervised.yaml` :: `G9_holdout:` | O bloco do G9 continua no YAML, no formato que o notebook 11 edita.
+- manual: | O relatório do lote não mostrou PULADO sem explicação, o pytest passou, o git grep de caminhos pessoais saiu vazio e as saídas dos notebooks continuam salvas.
+
+## #194 · Documentar o G9 e mesclar a branch na main (passo a passo detalhado)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C
+- fonte: Pedido de 05/11 (documentar o G9 com muito detalhe); decisão de mesclar na main depois do G9; script gerar_blocos_g9.py monta os textos
+- depende de: #165
+- tags: G9, documentação, resultados, README, decisoes.md, main
+- pilar: —
+- carga: 0.9
+- novo: sim
+- professores: sim
+- arquivos: docs/decisoes.md, README.md, configs/supervised.yaml
+
+### ① Para entender
+
+Com o teste aberto, o projeto precisa **dizer o que aconteceu**, em quatro lugares, com os mesmos números, e **fechar a linha de C** mesclando a branch na `main`:
+
+1. **`docs/decisoes.md`** (§9): o resultado, a comparação com as hipóteses registradas **antes** do teste e a frase "resultado fora do previsto entra como achado, nunca como motivo para reajuste".
+2. **`README.md`**: a seção "Resultados" (hoje diz "os resultados do teste ficam no relatório final") e o "Como rodar" (tempo, memória, versões).
+3. **`configs/supervised.yaml`**: o G9 já foi marcado pelo notebook; falta corrigir `selecao_modelos`, que ainda diz que o teste **não foi consultado**.
+4. **O painel**: o comentário do card #2 com data, commit e números.
+
+O script `gerar_blocos_g9.py` lê os arquivos que o notebook 11 gravou e **escreve os textos prontos** (com a tabela das três janelas, os intervalos e o veredito de cada hipótese). A pessoa só cola nos lugares indicados e confere.
+
+### ② Problema
+
+- Se cada pessoa digitar os números à mão, aparecem divergências entre `decisoes.md`, README, relatório e slides. **Uma única fonte:** `outputs\final\blocos_g9.md`, gerado dos CSV e do manifesto.
+- O `selecao_modelos` do YAML ainda diz `teste_consultado: false` e "test_ref e test_pandemic permanecem fechados até autorização formal": depois do G9 isso fica **falso** (e é o tipo de frase que a banca lê).
+- Hipóteses são julgadas pelas **faixas registradas antes**: PR-AUC do Teste A entre 0,30 e 0,36; ROC-AUC entre 0,85 e 0,87; em 2020–2022, Brier pior que o do Teste A e O/E acima de 1. O script classifica cada uma como "dentro" ou "fora do previsto (acima/abaixo da faixa)"; o O/E vem do `calibracao_por_janela.csv` (#165).
+- Os arquivos de `outputs/` (tabelas e previsões) **não vão para o Git**. O #157 (Pessoa A) cria a pasta `resultados/` com as tabelas que o relatório cita.
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Tempo:** ≈ 55 min · **Começa quando:** #165 concluído e o backup do #2 feito · **Antes de:** todo o trabalho de A e B · **Script pronto:** `gerar_blocos_g9.py` (só lê; escreve `outputs\final\blocos_g9.md`).
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\pos_g9.py`
+> **rode na máquina oficial** (onde o G9 foi executado: ele lê `outputs/` e `data/`, que não vão para o Git). Depois que a Pessoa C terminar o G9 e publicar o commit, um comando roda o checklist `--depois`, a calibração (#165), as tabelas (#55), a curva (#176), gera os 5 blocos de texto e **aplica** os blocos em `docs/decisoes.md`, `README.md` e `configs/supervised.yaml` (passos 2 a 6 abaixo), tira comentários e caminhos (#189), monta `resultados/` (#157), roda o pytest, faz os commits (com `[done:#N]`), mescla na `main` e faz o push. Para no primeiro erro. Testado com repositório simulado, não com o real: se ele recusar, os passos manuais abaixo valem.
+
+#### Passo a passo (para a pessoa)
+1. **Gere os textos** (um comando; abre o resultado no terminal e grava o arquivo):
+```powershell
+.\.venv\Scripts\python.exe ..\gerar_blocos_g9.py
+```
+   Abra `outputs\final\blocos_g9.md` no VS Code. Ele tem **cinco blocos** (abaixo). **Confira os números do Bloco 1 com a tabela de janelas do notebook 11 salvo** (célula "Abrir o teste") e a linha "Calibração por janela" com a saída do #165.
+2. **Bloco 1 · `docs/decisoes.md`.** Cole **no fim da seção 9**, depois do item que começa com "Hipóteses registradas antes" e **antes** de `## 10. Princípios`.
+   - **Âncoras antes (não mexa):** as últimas linhas do item das hipóteses: "...porque a calibração foi feita com / prevalência de 8,4% e a pandemia tem cerca de 26%. Resultado contrário / entra no relatório como achado, nunca como motivo para reajuste."
+   - **Âncora depois (não mexa):** a linha em branco e `## 10. Princípios`.
+   - Leia a tabela de hipóteses: se alguma estiver "fora do previsto", **mantenha** a frase final (é achado). **Não reescreva a hipótese.**
+3. **Bloco 2 · `README.md`.** Na seção `## Resultados`: **apague** as duas linhas "Validação (`val_ref`): ... Os resultados do teste ficam no relatório final, depois da abertura única." e **cole** o texto do Bloco 2.
+4. **README · "Limitações".** Se o O/E de 2020–2022 estiver bem acima de 1, acrescente **uma** linha com o número real: "Em 2020–2022 o modelo subestima o risco (O/E = ⟨x⟩); recalibração periódica fica como trabalho futuro."
+5. **YAML · `selecao_modelos`.** Em `configs/supervised.yaml`, ache `teste_consultado: false` e troque por `teste_consultado: true`; na lista `observacoes`, troque a linha "test_ref e test_pandemic permanecem fechados ate autorizacao formal" por "test_ref e test_pandemic foram abertos uma unica vez em 05/11/2026 (G9)". **Não mexa** em `models`, `features`, `limiar` nem `calibracao`.
+6. **Confira o bloco do G9 no YAML** (o notebook gravou; compare com o Bloco 3): `status: executado`, `executado_em` com data e hora, `n_acessos: 1`.
+7. **Painel.** No card #2, coloque o **Bloco 5** como comentário (e conclua o card ou use `[done:#2]` no commit).
+8. **Teste, commit e publicação** (um comando):
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q; git status --short; git add -A; git commit -m "G9 documentado [done:#194]"; git push
+```
+9. **Mescle a branch na `main`** (decisão da equipe: a `enxugamento` é a versão final). **Atenção:** os cliques e o texto do painel são publicados **direto na `main`** (commits "(#status) ..."), então a `main` quase sempre está **à frente** da branch por causa deles; por isso o comando é um **merge normal**, não avanço rápido (`--ff-only` seria recusado). Um comando:
+```powershell
+git switch main; git pull --ff-only; git merge --no-edit enxugamento; git push; git log --oneline -4
+```
+   Esperado: aparece "Merge branch 'enxugamento'" (ou "Fast-forward", se ninguém clicou no painel) e o `push` termina sem erro. **Se aparecer CONFLITO** (só pode ser nos arquivos do painel, `PROJECT_STATUS.md` ou `PROJECT_STATUS_TEXT.md`), fique com a versão da `main` e conclua (dois comandos, um por vez): `git checkout --ours -- PROJECT_STATUS.md PROJECT_STATUS_TEXT.md` e depois `git add PROJECT_STATUS.md PROJECT_STATUS_TEXT.md; git commit --no-edit; git push`. Conflito em **outro** arquivo: pare e chame a IA (bloco abaixo). Depois rode `.\.venv\Scripts\python.exe -m pytest -q`. **Deste ponto em diante todo o trabalho é na `main`.**
+10. **Abra o GitHub no navegador** e confira: último commit, `README.md` com o resultado do teste, pasta `notebooks/` com o notebook 11 salvo.
+11. **Avise A e B:** "main atualizada; façam `git pull`". Ordem de trabalho no repositório (**um por vez**, sempre `git pull` antes e `git push` depois): **#191 (B)** → **#190 (A)**. #55, #133, #134 e #157 não esperam ninguém.
+
+#### Resumo: quais blocos da documentação são atualizados
+| # | Arquivo | Bloco | Origem do texto |
+|---|---|---|---|
+| 1 | `docs/decisoes.md` | §9, subseção "Resultado da abertura" | Bloco 1 do script |
+| 2 | `README.md` | "Resultados" | Bloco 2 do script |
+| 3 | `README.md` | "Limitações" (uma linha, se aplicável) | passo 4 |
+| 4 | `configs/supervised.yaml` | `selecao_modelos.teste_consultado` e observações | passo 5 |
+| 5 | `configs/supervised.yaml` | `gates.G9_holdout` | já gravado pelo notebook (conferir) |
+| 6 | Painel | comentário e conclusão do card #2 | Bloco 5 |
+| 7 | `README.md` | "Como rodar" (tempo, memória, versão, lock) | **#126** (C), já feito antes do G9 |
+| 8 | `resultados/LEIA-ME.md` | lista de arquivos da abertura | **#157** (A) |
+
+#### Automação sugerida
+> [!exemplo] Estratégia do `gerar_blocos_g9.py` (já entregue e ensaiado no #193)
+> Lê o manifesto real mais recente do notebook 11 e o `calibracao_por_janela.csv`; formata em português (vírgula decimal, milhar com ponto); julga as quatro hipóteses pelas faixas registradas; escreve cinco blocos prontos e lista os arquivos da abertura com tamanho e SHA-256 (12). Nunca altera README, decisões, YAML nem manifestos.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #194 · Documentar o G9
+
+OBJETIVO
+Colar, no lugar certo, os textos do resultado do G9 (decisoes.md, README, YAML, painel) com os mesmos números em todos os lugares, sem reinterpretar o resultado como motivo de ajuste.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- outputs\final\blocos_g9.md (saída do gerar_blocos_g9.py).
+- docs/decisoes.md (inteiro) e README.md (inteiro).
+- O trecho `selecao_modelos` do configs/supervised.yaml.
+- outputs\final\calibracao_por_janela.csv.
+
+PASSOS
+1. Mostre onde colar cada bloco com as quatro linhas antes e as quatro depois (decisoes.md §9; README Resultados e Limitações; YAML selecao_modelos).
+2. Confira se os números dos blocos batem entre si (mesma janela, mesmo n, mesma casa decimal).
+3. Escreva a frase de limitação do README SOMENTE se a hipótese de O/E ou de calibração ficou fora do previsto, usando o número real.
+4. Entregue a linha de PowerShell de teste e commit.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- decisoes.md tem a subseção 'Resultado da abertura' com as três janelas e a tabela de hipóteses.
+- README não diz mais que o resultado 'fica no relatório final'.
+- selecao_modelos.teste_consultado = true.
+- Os números de decisoes.md e README são idênticos.
+
+NÃO FAÇA
+- Não mude a redação das hipóteses registradas antes.
+- Não proponha reajustar modelo, limiar ou calibração.
+- Não invente números: use só os do blocos_g9.md.
+
+FORMATO DA ENTREGA
+Para cada arquivo: o trecho a apagar, o trecho novo e as âncoras. No fim, a linha de PowerShell.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `Resultado da abertura` | O decisoes.md registra o resultado da abertura com as três janelas e as hipóteses.
+- nao-contem: `README.md` :: `ficam no relatório final, depois da abertura única` | O README traz o resultado do teste e não aponta mais para o relatório.
+- contem: `README.md` :: `Teste aberto uma única vez` | O README descreve a abertura única do teste.
+- yaml: `configs/supervised.yaml` :: `selecao_modelos.teste_consultado` = `true` | O YAML registra que o teste foi consultado.
+- nao-contem: `configs/supervised.yaml` :: `permanecem fechados` | O YAML não diz mais que o teste continua fechado.
+- manual: | Os números do decisoes.md, do README e do comentário do card #2 são idênticos e vêm do blocos_g9.md, e a branch enxugamento foi mesclada na main (git log da main mostra o commit 'G9 documentado').
+
+## #195 · Reexecução final dos notebooks 03 a 09 e versões exatas (requirements-lock.txt)
+
+- prioridade: P2
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 05/11
+- responsável: Pessoa B (na máquina oficial)
+- pessoas: B
+- fonte: Decisão de 05/11: a cadeia completa vai para depois do G9 (#126 ficou só com o notebook 10); #170 (versões) incorporado
+- depende de: #194
+- tags: cadeia, reprodutibilidade, versões, pós-G9
+- pilar: —
+- carga: 1.0
+- novo: sim
+- professores: não
+- arquivos: notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/06_pipeline_supervisionado.ipynb, notebooks/07_baseline_logistica.ipynb, notebooks/08_ablacoes_variaveis.ipynb, notebooks/09_ajuste_fino.ipynb, requirements-lock.txt, README.md
+- removido: 05/11: incorporado ao #126 (todos os notebooks, 02 a 10, rodam antes do G9; lock, pyproject e README entram na mesma execução)
+
+### ① Para entender
+
+A banca olha o repositório. Para ela, **cada notebook deve estar salvo com as saídas da versão final do código** e o ambiente deve ser reproduzível. Hoje, os notebooks 04, 05, 06, 08 e 09 foram salvos antes das últimas mudanças em `src/`, e os 01, 02, 03 e 07 estão sem execução salva.
+
+Como isso **não afeta o G9** (o notebook 11 só usa o artefato, o YAML e o manifesto do 10), foi **movido para depois do G9**. Roda na máquina oficial (os dados estão lá), sem ninguém precisar acompanhar: **cerca de 35 a 45 minutos de máquina**.
+
+**O que não se executa, de propósito:** o **01** (baixa dados da internet), o **02** (publica a coorte e regera o artefato: mudaria o manifesto que o G9 já usou, e **apagaria o registro `test_opened`**) e o **11** (já foi aberto).
+
+### ② Problema
+
+> [!atenção] Nunca rode o notebook 02 nem o 11
+> O 02 regrava o manifesto do artefato e apaga o registro `test_opened`. O 11 reabriria o teste. O laço abaixo só lista os notebooks 03 a 09.
+
+- Cada execução grava caminhos pessoais: eles são limpos no #189 (próxima tarefa).
+- Memória: feche navegador e Teams. O laço para no primeiro erro.
+- O tempo e o pico de memória medidos entram no `README.md` (seção "Como rodar").
+
+### ③ O que fazer
+
+**Dono:** Pessoa B (na máquina oficial) · **Tempo:** ≈ 15 min de trabalho + ≈ 40 min de máquina · **Começa quando:** #194 concluído e a `main` atualizada · **Antes de:** #189, #190, #191, #157.
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\fluxo.py cadeia`
+> faz os passos 1, 3 e 5: roda os notebooks 03 a 09 (nunca o 01, o 02 nem o 11), para no primeiro erro, grava o `requirements-lock.txt` e escreve o parágrafo do README já com o tempo e o pico de memória medidos (`outputs\final\cadeia.md`).
+> Os scripts de fluxo foram testados com notebooks simulados, não com os reais: **se o atalho recusar ou falhar, siga os passos manuais abaixo, que continuam valendo.**
+
+#### Passo a passo (para a pessoa)
+1. **Atualize e confira:** `git switch main; git pull --ff-only; git status --short` (sem nada).
+2. **Combine com a Pessoa C** que a máquina fica livre por ≈ 45 min (o G9 já terminou).
+3. **Rode a cadeia** (um comando; cada notebook é executado e salvo no lugar; para no primeiro erro):
+```powershell
+foreach ($n in '03_eda_primeira_passagem','04_eda_temporal_agrupamento','05_supervisionado_pilotos','06_pipeline_supervisionado','07_baseline_logistica','08_ablacoes_variaveis','09_ajuste_fino') { .\.venv\Scripts\python.exe tools\medir_notebook.py "notebooks\$n.ipynb" --salvar-no-lugar --limite-mb 12288 --limite-s 3600; if ($LASTEXITCODE -ne 0) { Write-Host "PAROU EM $n"; break } }
+```
+   Cada linha final mostra tempo e pico de memória ("memória OK / tempo OK").
+4. **Se um notebook parar:** leia a última mensagem; se for memória, feche programas e rode só aquele (copie o laço com um nome só); se for erro de código, cole a mensagem na IA (bloco abaixo). **Não mude a lógica do estudo.**
+5. **Versões exatas** (um comando) e leitura rápida:
+```powershell
+.\.venv\Scripts\python.exe -m pip freeze --exclude-editable | Out-File -Encoding utf8 requirements-lock.txt; (Select-String -Path requirements-lock.txt -Pattern "^(scikit-learn|pandas|numpy|pyarrow)==").Line; .\.venv\Scripts\python.exe --version
+```
+6. **`pyproject.toml`:** na lista `classifiers`, **depois** da linha `"Programming Language :: Python :: 3.12",` acrescente `"Programming Language :: Python :: 3.13",` e `"Programming Language :: Python :: 3.14",`. Confira: `.\.venv\Scripts\python.exe -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('pyproject ok')"`.
+7. **README, seção "Como rodar":** acrescente **no fim** (depois da frase "Para ensaiar o 11 sem abrir o teste, use `SRAG_ENSAIO=1`."):
+```markdown
+Tempo e memória (máquina oficial): a cadeia 03 a 09 leva cerca de ⟨X⟩ min; o notebook 11, cerca de ⟨Y⟩ min com ⟨Z⟩ GB de pico. Os notebooks 01 e 02 não são reexecutados (baixam dados e regeram o artefato), por isso ficam sem saídas salvas. Testado com Python ⟨versão⟩; versões exatas em `requirements-lock.txt`.
+```
+   (⟨X⟩, ⟨Y⟩, ⟨Z⟩: `Get-Content outputs\final\performance_notebooks.csv -Tail 10`.)
+8. **Commit e publicação** (um comando; o `git status` antes deve listar só notebooks, lock, pyproject e README):
+```powershell
+git status --short; git add -A; git commit -m "cadeia 03 a 09 executada [done:#195]"; git push
+```
+
+#### Documentação que muda por causa desta tarefa
+| Onde | Bloco | O quê |
+|---|---|---|
+| `README.md` | "Como rodar" | tempo, memória, versão do Python e nome do lock |
+| `requirements-lock.txt` | arquivo novo | versões exatas |
+| `pyproject.toml` | classifiers | Python 3.13 e 3.14 |
+
+#### Automação sugerida
+> [!exemplo] O laço de PowerShell já é a automação
+> Executa na ordem, mede e para no primeiro erro. Estratégia para um script futuro (`executar_cadeia.py`): rodar o laço, gravar tempo e memória em `outputs/final/cadeia.md` e imprimir o parágrafo do README já preenchido.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #195 · Reexecução final dos notebooks 03 a 09 e versões exatas
+
+OBJETIVO
+Reexecutar os notebooks 03 a 09, salvando as saídas no lugar, e registrar as versões exatas do ambiente, sem tocar nos notebooks 01, 02 e 11.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- Saída do `git status --short` antes da cadeia.
+- As últimas 40 linhas de cada notebook que falhar.
+- outputs/final/performance_notebooks.csv.
+- A saída do pip freeze (ou requirements-lock.txt), pyproject.toml e README.md.
+
+PASSOS
+1. Se algum notebook falhou: diga a causa provável e a correção mínima SEM mudar a lógica do estudo (blocos completos com âncoras).
+2. Resuma tempo e pico de memória em uma tabela e escreva o parágrafo do README já preenchido.
+3. Aponte pacotes do lock que são ferramentas pessoais e não deveriam ir para a banca (se houver).
+4. Entregue o trecho dos classifiers do pyproject com âncoras e as linhas de PowerShell restantes (uma por linha).
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Os notebooks 03 a 09 estão salvos com todas as células executadas e sem saída de erro.
+- requirements-lock.txt tem scikit-learn==, pandas==, numpy== e pyarrow==.
+- O README tem tempo, memória e versões.
+
+NÃO FAÇA
+- Não rode os notebooks 01, 02 e 11.
+- Não edite src/, configs/ nem notebooks durante a cadeia.
+- Não troque `>=` por `==` no requirements.txt.
+
+FORMATO DA ENTREGA
+Diagnóstico curto + tabela + parágrafo do README + linhas de PowerShell.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- notebook-executado: `notebooks/03_eda_primeira_passagem.ipynb` | O notebook 03 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/04_eda_temporal_agrupamento.ipynb` | O notebook 04 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/05_supervisionado_pilotos.ipynb` | O notebook 05 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/06_pipeline_supervisionado.ipynb` | O notebook 06 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/07_baseline_logistica.ipynb` | O notebook 07 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/08_ablacoes_variaveis.ipynb` | O notebook 08 está salvo com todas as células executadas e sem erro.
+- notebook-executado: `notebooks/09_ajuste_fino.ipynb` | O notebook 09 está salvo com todas as células executadas e sem erro.
+- existe: `requirements-lock.txt` | O arquivo com as versões exatas da máquina oficial existe.
+- contem: `requirements-lock.txt` :: `scikit-learn==` | O arquivo fixa a versão do scikit-learn.
+- contem: `README.md` :: `requirements-lock.txt` | O README cita as versões exatas e o tempo da cadeia.
+
+## #190 · Enxugar as células Markdown dos notebooks (e tirar números e marcas de execuções antigas)
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 05/11
+- responsável: Pessoa A
+- pessoas: A
+- fonte: Pedido de 05/11; medição do snapshot 978019a: 112 células Markdown e ≈ 96 mil caracteres, 80% em três notebooks
+- depende de: #194
+- tags: markdown, notebooks, IA, automatizável
+- pilar: —
+- carga: 0.75
+- novo: sim
+- professores: não
+- arquivos: notebooks/03_eda_primeira_passagem.ipynb, notebooks/04_eda_temporal_agrupamento.ipynb, notebooks/05_supervisionado_pilotos.ipynb, notebooks/10_calibracao_limiar.ipynb, notebooks/11_validacao_final.ipynb
+
+### ① Para entender
+
+Os notebooks têm **112 células de texto (Markdown), com cerca de 96 mil caracteres**. Quase tudo está concentrado em três notebooks:
+
+| Notebook | Células Markdown | Caracteres | Maior célula |
+|---|---|---|---|
+| `04_eda_temporal_agrupamento` | 30 | ≈ 49.000 | ≈ 21.000 |
+| `03_eda_primeira_passagem` | 8 | ≈ 21.000 | ≈ 13.000 |
+| `05_supervisionado_pilotos` | 26 | ≈ 12.900 | ≈ 2.300 |
+| os outros oito | 48 | ≈ 13.000 | < 1.100 |
+
+A banca lê o notebook; quem ler 21 mil caracteres numa célula desiste. Meta: **cada célula com um título e no máximo 2 a 4 frases**; resultados longos viram **uma frase + o número**, e os detalhes ficam no `docs/decisoes.md` ou saem.
+
+Aproveitamos para eliminar **textos que descrevem execuções antigas** (textos de execuções antigas): "silhueta 0,392", "`val_tune`", "item #5", "O B_07 exige", "C_5/C_16", "Notebook 03" para o EDA. São números e nomes que não batem com o que está salvo.
+
+### ② Problema
+
+- Células Markdown **não afetam resultado**: este é o tipo de limpeza mais seguro. Mesmo assim, **não reescreva o texto das saídas**: os números que o texto cita têm de bater com as saídas salvas da cadeia do #126 (por isso esta tarefa vem **depois** dela).
+- Rodar de novo **não** é necessário: o script troca só o texto da célula Markdown. O código e as saídas não mudam, e o notebook continua "executado".
+- Notebooks 03 e 04 têm células enormes (provavelmente conclusões e implicações). Em vez de apagar, **resuma em um quadro curto** e mova o excesso para `docs/historico/` só se for preciso guardar.
+
+### ③ O que fazer
+
+**Dono:** Pessoa C · **Tempo:** ≈ 45 min (30 min de IA + 15 min de revisão) · **Começa quando:** a cadeia do #126 terminou e está publicada · **Script pronto:** `enxugar_markdown.py` (lista as candidatas e aplica um JSON de textos novos; relatório numa cópia).
+
+#### Passo a passo (para a pessoa)
+1. **`git switch main; git pull --ff-only`** (a Pessoa B publica o #126 antes), **árvore limpa** (`git status --short` sem nada) e **guarde o script fora do repositório** (`..\enxugar_markdown.py`; ele também roda no lote `pos-cadeia`).
+2. **Gere a lista de candidatas** (nada muda nos notebooks):
+```powershell
+.\.venv\Scripts\python.exe ..\enxugar_markdown.py
+```
+   Ele imprime uma tabela por notebook e grava `outputs\final\markdown_candidatos.json` (arquivo, id da célula, motivos e texto atual). Candidatas = células com mais de 500 caracteres ou com marcas antigas.
+3. **Entregue o `markdown_candidatos.json` à IA** (bloco abaixo; para os notebooks 04 e 03 envie **um notebook por vez**). Ela devolve um `novos.json` com `arquivo`, `id` e `texto_novo`.
+4. **Leia os textos novos** (5 minutos por notebook). Perguntas: o número citado bate com a saída da célula de cima? Sumiu alguma explicação que a banca precisa (por exemplo o aviso "clusters refletem idade e preenchimento, não perfis clínicos")? Se sim, devolva o item para a IA ou apague-o do JSON (o texto antigo fica).
+5. **Relatório do que mudaria** (nada é gravado):
+```powershell
+.\.venv\Scripts\python.exe ..\enxugar_markdown.py --aplicar-json ..\novos.json
+```
+   Leia as linhas "AVISO": "texto novo MAIOR" ou "ainda tem marca antiga".
+6. **Aplique, teste e commit** (um comando):
+```powershell
+.\.venv\Scripts\python.exe ..\enxugar_markdown.py --aplicar-json ..\novos.json --aplicar; .\.venv\Scripts\python.exe -m pytest -q; git add -A; git commit -m "markdown enxuto [done:#190]"
+```
+7. **Confira os dois pontos que a banca mais vê:** a primeira célula do notebook 04 e a última do 04 (conclusão do agrupamento) e a célula 1 do notebook 11. Cada uma com no máximo 4 frases.
+8. **Confira que nada de marca antiga sobrou** (deve imprimir nada nos notebooks):
+```powershell
+git grep -n -E "C_1[1-6]|\bB_0[0-9]\b|\bA_0[0-9]\b|item #|val_tune|Notebook 03" -- notebooks
+```
+   O JSON do notebook guarda texto em linhas; se aparecerem ocorrências em **saídas** (resultados antigos), ignore; só as de células Markdown importam.
+
+#### Documentação que muda por causa desta tarefa
+| Onde | O quê |
+|---|---|
+| `docs/historico/` | nada (só se uma explicação longa precisar ser guardada: crie `docs/historico/notebook_<n>_textos.md`) |
+| `README.md` | nada |
+
+#### Automação sugerida
+> [!exemplo] IA reescreve, script troca por `id`
+> O script identifica cada célula pelo `id` do nbformat (único e estável), recusa célula que não exista ou que não seja Markdown, avisa se o texto novo for maior ou ainda tiver marca antiga, e regrava o JSON **no mesmo formato** do arquivo (diff só nas células tocadas). A IA faz o que exige julgamento: resumir mantendo o que a banca precisa.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #190 · Enxugar as células Markdown dos notebooks
+
+OBJETIVO
+Reescrever as células Markdown candidatas para ficarem curtas (título + 2 a 4 frases), sem números de execuções antigas, sem marcas internas (C_16, B_04, #142, item #5, Notebook 03 para o EDA) e coerentes com as saídas salvas.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- O arquivo markdown_candidatos.json (ou a parte de UM notebook).
+- O notebook correspondente (para conferir os números nas saídas).
+- docs/decisoes.md (para saber o que já está registrado lá).
+
+PASSOS
+1. Para cada célula candidata: resuma mantendo (1) o que a célula de código abaixo faz, (2) a leitura do resultado em uma frase com o número exato da saída salva, (3) o aviso metodológico essencial.
+2. Troque nomes antigos pelos atuais: C_11=06, C_12=07, C_13=09, C_14=08, C_15=10, C_16=11, B_02=03, B_04=04, B_05=05, A_03=02 (use 'notebook 10', por exemplo).
+3. Não cite números de cards, pessoas, datas de execução nem versões antigas do projeto (coorte provisória, val_tune).
+4. Mantenha o título (#, ##) e a ordem das seções; mantenha tabelas pequenas se forem a leitura principal.
+5. Entregue um único JSON: lista de {"arquivo": ..., "id": ..., "texto_novo": ...}.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- Cada texto novo tem no máximo 4 frases além do título (exceto células de tabela).
+- Nenhum texto novo cita C_xx, B_xx, A_xx, #número, 'item #' ou val_tune.
+- Todo número citado existe na saída do notebook.
+
+NÃO FAÇA
+- Não mude células de código.
+- Não invente número que não esteja nas saídas.
+- Não apague o aviso de que os clusters refletem idade e preenchimento, e não perfis clínicos.
+
+FORMATO DA ENTREGA
+O JSON completo em um bloco de código + uma lista curta das células que você preferiu NÃO mudar e por quê.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/10_calibracao_limiar.ipynb` :: `ainda não foi medido` | O texto do notebook 10 não diz mais que o peso de classe ainda não foi medido.
+- nao-contem: `notebooks/10_calibracao_limiar.ipynb` :: `C_5` | O notebook 10 não usa o nome antigo de si mesmo.
+- nao-contem: `notebooks/05_supervisionado_pilotos.ipynb` :: `Notebook 03 terminou` | O notebook 05 não chama o EDA de Notebook 03.
+- nao-contem: `notebooks/05_supervisionado_pilotos.ipynb` :: `val_tune` | O notebook 05 não cita mais o bloco de validação antigo.
+- manual: | As maiores células dos notebooks 03 e 04 têm no máximo cerca de 1.500 caracteres, nenhum número citado diverge da saída salva e o notebook continua com todas as saídas.
+
+## #193 · Ensaio final do notebook 11 e checklist automático do G9 (congelamento)
+
+- prioridade: P1
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pré-G9
+- data ideal: 05/11
+- responsável: Pessoa C
+- pessoas: C, Equipe
+- fonte: Checklist do antigo #2/#81 transformado em script (checklist_g9.py); ensaio de 05/11 12h10 UTC rodou antes da limpeza
+- depende de: #126
+- tags: G9, ensaio, checklist, congelamento
+- pilar: —
+- carga: 0.4
+- novo: sim
+- professores: não
+- arquivos: notebooks/11_validacao_final.ipynb, configs/supervised.yaml, docs/decisoes.md
+
+### ① Para entender
+
+Antes de abrir o teste (que só pode ser aberto **uma vez**), fazemos **um ensaio completo do notebook 11** com um "teste de mentira": as duas metades da `val_meas` fazem o papel de `test_ref` e `test_pandemic`. O ensaio roda **todo o caminho** do G9 (treino, calibração, previsões, bootstrap, tabelas, manifesto), mas **não lê o teste, não marca o G9 e não altera o artefato**. Se algo estiver errado (nome, memória, coluna faltando, trava), descobrimos aqui, sem gastar a abertura.
+
+O ensaio também **ensaia o pós-G9**: os scripts que vão produzir O/E, calibração e a documentação (`calibracao_pos_g9.py` e `gerar_blocos_g9.py`) rodam sobre as previsões do ensaio, para termos certeza de que funcionam **antes** de abrir o teste.
+
+Depois, o script `checklist_g9.py` confere automaticamente tudo o que precisa estar certo. **Nada de código muda depois deste card.** Ele é o **congelamento**.
+
+### ② Problema
+
+- O último ensaio (05/11, 12h10 UTC) rodou **antes** da limpeza e da renomeação (#192): ele não prova nada sobre o código de agora.
+- O notebook 11 **não será alterado** antes do G9 (decisão para reduzir risco). O O/E e a calibração por janela saem **depois**, do arquivo de previsões que o próprio notebook grava (#165).
+- O `checklist_g9.py` falha o item "Ensaio feito **depois** da última mudança de código" se algum commit tocou em `src/`, no notebook 11 ou no YAML depois do ensaio.
+- O ensaio usa o prefixo `11_ensaio_validacao_final` e **não aciona** a guarda de reabertura.
+
+### ③ O que fazer
+
+**Dono:** Pessoa C (executa) + Equipe (confirma o congelamento) · **Tempo:** ≈ 25 min · **Começa quando:** #126 commitado e a árvore limpa · **Script pronto:** `checklist_g9.py` (só lê).
+
+> [!exemplo] **Atalho automático:** `.\.venv\Scripts\python.exe ..\fluxo.py ensaio`
+> faz os passos 1 a 5: confere árvore e memória, roda o ensaio com `SRAG_ENSAIO` valendo **só dentro do processo filho** (nunca fica definida no seu terminal), ensaia o pós-G9 (`calibracao_pos_g9` e `gerar_blocos_g9`), roda o checklist com testes e confere que a árvore continuou limpa.
+> Os scripts de fluxo foram testados com notebooks simulados, não com os reais: **se o atalho recusar ou falhar, siga os passos manuais abaixo, que continuam valendo.**
+
+#### Passo a passo (para a pessoa)
+1. **Árvore limpa e atualizada:** `git pull --ff-only; git status --short` (sem nada).
+2. **Libere memória** (o notebook 11 pede cerca de **14 GB livres**): feche navegador, Teams, Excel e outros notebooks.
+3. **Rode o ensaio** (um comando). Ele **não** usa `--salvar-no-lugar`: a cópia executada vai para `outputs\notebooks` e o notebook do repositório **não é alterado** (a árvore continua limpa):
+```powershell
+$env:SRAG_ENSAIO = '1'; .\.venv\Scripts\python.exe tools\medir_notebook.py notebooks\11_validacao_final.ipynb --limite-mb 14336 --limite-s 3600; Remove-Item Env:SRAG_ENSAIO
+```
+   Esperado: "MODO ENSAIO: o teste NÃO será lido" nas saídas, termina com "notebook 11 (ENSAIO) concluído" e a linha final "memória OK / tempo OK". **Nunca** esqueça de remover `SRAG_ENSAIO` (o comando acima já remove).
+4. **Ensaie o pós-G9** (dois comandos em um; usam só as previsões do ensaio; não gravam nada em `outputs\final`):
+```powershell
+.\.venv\Scripts\python.exe ..\calibracao_pos_g9.py --ensaio; .\.venv\Scripts\python.exe ..\gerar_blocos_g9.py --ensaio | Select-Object -First 30
+```
+   Esperado: a tabela das três janelas com `o_e`, `inclinacao` e `ece_quantis` preenchidos, e os blocos de texto com "ENSAIO: não é resultado do teste". Se der erro de coluna, o checklist (passo 5) aponta qual coluna falta no arquivo de previsões.
+5. **Rode o checklist** (um comando; leva alguns minutos por causa do `pytest`):
+```powershell
+.\.venv\Scripts\python.exe ..\checklist_g9.py --com-testes
+```
+   Leia a lista: `[ OK ]` tudo certo; `[AVISO]` não bloqueia mas precisa de uma decisão sua (por exemplo, "ramo sem upstream: confira o push"); `[FALHA]` **bloqueia**. Última linha: "**PODE APROVAR O G9**" ou "NÃO APROVE O G9 AINDA".
+6. **Como resolver cada FALHA mais comum:**
+
+| FALHA | O que significa | O que fazer |
+|---|---|---|
+| Árvore Git limpa | há arquivo rastreado modificado | commit (ou descarte com a equipe) e repita o passo 5 |
+| Ensaio feito DEPOIS da última mudança de código | houve commit depois do ensaio | repita o passo 3 |
+| Hash dos modelos do notebook 10 = YAML atual | `models` ou `features` mudaram depois do notebook 10 | **não mexa no YAML**; rode o notebook 10 de novo (#126, passo 2) e repita |
+| Limiar do notebook 10 = `limiar.otimo` | o YAML e o manifesto divergem | copie o limiar do manifesto (todas as casas) para `limiar.otimo` **ou** rode o 10 de novo; decida com a equipe |
+| Hipóteses do teste registradas | o `decisoes.md` não tem a frase | restaure a §9 (o texto existe no histórico do Git) |
+| Memória livre >= 14 GB | pouca memória | feche programas e repita |
+
+7. **Congelamento:** quando o checklist disser "PODE APROVAR O G9", **avise o grupo**: "código congelado". A partir daqui **ninguém mexe em `src/`, `configs/` nem nos notebooks** até o G9 terminar (exceto o bloco do G9 no #2).
+8. **Registre no card:** commit e resumo do checklist (`outputs\final\checklist_g9.md`).
+
+#### Documentação que muda por causa desta tarefa
+Nenhuma.
+
+#### Automação sugerida
+> [!exemplo] Estratégia do `checklist_g9.py` (já entregue)
+> Só lê (nunca altera o projeto). Confere: Git limpo e publicado; G6, G7 e G8 aprovados; G9 não executado; 30 variáveis e nenhuma proibida; finalista, calibração e limiar definidos; manifesto do artefato com `test_opened = false`; manifesto do notebook 10 com o mesmo `dataset_sha256`, variáveis, método, limiar e **hash dos modelos recalculado com a mesma receita do notebook 11**; nenhuma abertura anterior; ensaio válido, mais novo que o último commit de código e com `o_e`; hipóteses registradas; memória, disco e scikit-learn; `requirements-lock.txt`; e, opcionalmente, o `pytest`. Grava `outputs/final/checklist_g9.md`.
+
+#### Para a IA (copie e cole na conversa)
+<div class="aiact" style="margin:6px 0"><button type="button" style="font:inherit;font-size:.85rem;font-weight:700;border:1px solid var(--acc2);background:var(--acc2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer" onclick="var b=this,p=b.parentNode.nextElementSibling,t=p?p.innerText:'',ok=function(){b.textContent='✓ Copiado!';setTimeout(function(){b.textContent='📋 Copiar instruções para a IA'},1800)},fb=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);ok()};if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else{fb()}">📋 Copiar instruções para a IA</button></div>
+
+~~~text
+TAREFA: #193 · Ensaio final do notebook 11 e checklist do G9
+
+OBJETIVO
+Garantir que o notebook 11 roda de ponta a ponta no modo ensaio (sem abrir o teste) com o código final e que todos os itens do checklist_g9.py estão OK.
+
+MAPA ATUAL DO PROJETO (branch enxugamento, 05/11/2026)
+- Projeto acadêmico SRAG (SIVEP-Gripe): estimar o risco de óbito por SRAG na internação. Windows + PowerShell, ambiente em .venv.
+- Notebooks: 01_extracao, 02_coorte_definitiva, 03_eda_primeira_passagem, 04_eda_temporal_agrupamento, 05_supervisionado_pilotos, 06_pipeline_supervisionado, 07_baseline_logistica, 08_ablacoes_variaveis, 09_ajuste_fino, 10_calibracao_limiar, 11_validacao_final (abre o teste uma única vez).
+- Nomes antigos que ainda aparecem em textos: A_03=02, B_02=03, B_04=04, B_05=05, C_11=06, C_12=07, C_14=08, C_13=09, C_15=10, C_16=11.
+- src/: config.py, dados.py, features.py, modelos.py, avaliacao.py, registro.py. tests/: um arquivo por tema. tools/: ferramentas (medir_notebook.py executa e salva um notebook).
+- Configuração única: configs/supervised.yaml (gates G1 a G9; G9_holdout controla a abertura do teste). Decisões: docs/decisoes.md (histórico em docs/historico/).
+- Teste fechado: test_ref e test_pandemic só abrem no notebook 11, uma vez, com G9 aprovado. Nunca leia esses blocos em outro lugar.
+
+ARQUIVOS QUE VOCÊ PRECISA TER (se faltar algum, pare e peça ao usuário)
+- A saída completa do checklist_g9.py (todas as linhas).
+- As últimas 60 linhas da saída do ensaio.
+- O manifesto de ensaio mais recente (outputs/tables/11_ensaio_validacao_final_..._manifesto.json).
+- Se houver FALHA: o arquivo ou YAML envolvido.
+
+PASSOS
+1. Explique cada [FALHA] e [AVISO] em linguagem simples e diga se bloqueia o G9.
+2. Para cada FALHA, diga a causa mais provável e o comando de correção em PowerShell (uma linha). Nunca sugira mudar models ou features no YAML.
+3. Se o ensaio falhou, leia a mensagem e proponha a correção mínima no notebook 11 com âncoras. Lembre que qualquer mudança exige repetir o ensaio.
+4. No fim, diga em uma frase se 'PODE APROVAR O G9'.
+
+CRITÉRIOS DE ACEITE (verificáveis)
+- O checklist termina com 0 falhas.
+- O ensaio é mais novo que o último commit de código.
+- As janelas do ensaio têm o_e, inclinacao_calibracao, ece_quantis e brier_relativo.
+
+NÃO FAÇA
+- Não rode o notebook 11 fora do modo ensaio.
+- Não sugira SRAG_ALLOW_TEST_REOPEN nem SRAG_ALLOW_DIRTY para passar o checklist.
+- Não edite o bloco G9_holdout do YAML.
+
+FORMATO DA ENTREGA
+Tabela curta: item, resultado, causa, comando. E a frase final.
+
+REGRAS DO USUÁRIO (valem sempre)
+- Se faltar arquivo ou contexto essencial, PARE e diga exatamente o que falta. Não adivinhe e não trabalhe só com trechos.
+- Todo script começa por um relatório executado numa cópia, sem alterar o repositório. Só grava com flag explícita (--aplicar).
+- Entregue código em blocos completos, prontos para copiar e colar. Diga qual trecho substituir (mostre as 4 primeiras e as 4 últimas linhas do trecho atual), o que fica antes e depois, e o destino de tudo o que está entre as âncoras (apague, mantenha ou "o novo bloco já contém").
+- PowerShell: cada bloco em UMA linha, sem quebras. Python no terminal: sempre `.\.venv\Scripts\python.exe`. Se vários testes cabem num comando, entregue só esse comando.
+- Comentários de código: português, só o essencial, frases bem curtas. Mensagens de commit: português, bem curtas e pouco descritivas.
+- Antes de entregar, releia o que vai imprimir à procura de caracteres estranhos e artefatos de formatação.
+~~~
+
+### ④ Pronto quando
+
+- existe: `outputs/final/checklist_g9.md` | O checklist do G9 foi executado e gravado.
+- manual: | O checklist_g9.py terminou com 0 falhas (PODE APROVAR O G9), o ensaio do notebook 11 foi feito depois do último commit de código e os dois scripts do pós-G9 rodaram com --ensaio.
+- manual: | A equipe confirmou no grupo: código congelado, ninguém mexe em src, configs ou notebooks até o G9 terminar.
