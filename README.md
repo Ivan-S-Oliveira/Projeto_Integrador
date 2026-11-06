@@ -43,7 +43,10 @@ por SRAG? O alvo é `evolucao = 2` (óbito por SRAG) contra `evolucao = 1`
 ```text
 configs/     supervised.yaml, contrato da coorte e contrato de variáveis
 docs/        decisoes.md (resumo) e historico/
+docs/        limitacoes_e_rastreabilidade.md
+entrega/
 notebooks/   fluxo de 01 a 11
+resultado/
 src/         config, dados, features, modelos, avaliacao, registro
 tests/       testes do protocolo (pytest)
 ```
