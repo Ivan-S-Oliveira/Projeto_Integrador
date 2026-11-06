@@ -1,0 +1,13 @@
+{
+  "cohort_kind": "final",
+  "dataset_sha256": "763a136e12825136fb6d4e66cfb8225f9332522dec228d9f3d7033f32d997f91",
+  "teste_aberto_em_utc": "2026-11-05T21:15:27.499663+00:00",
+  "test_opened": true,
+  "limiar_final": 0.1178,
+  "limiar_metrica": "precision",
+  "finalista_escolhido": "boosting",
+  "calibracao_metodo": "sigmoid",
+  "artefatos": {
+    "predicoes_teste": "outputs/predictions/11_validacao_final_final_20261105T211527Z_predicoes_teste.parquet"
+  }
+}
