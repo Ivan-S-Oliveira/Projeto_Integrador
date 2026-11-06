@@ -1,0 +1,41 @@
+﻿coluna,nome_amigavel,grupo,uso_inicial_sugerido,preenchimento_minimo,preenchimento_maximo,preenchimento_medio,quantidade_anos_observados,amplitude_pontos_percentuais,flag_variacao_20_pp
+vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,1.3389564896755162,99.99372465895264,73.68513350951716,8,98.65476816927713,True
+fadiga,Fadiga,sintomas,modelo_a_nucleo,0.5231379056047197,83.96447152835667,63.42324234992022,8,83.44133362275196,True
+dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,0.27424410029498525,82.47032107850183,61.557547214877346,8,82.19607697820685,True
+perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,0.26963495575221236,82.095489953721,61.26168233087021,8,81.82585499796879,True
+perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,0.26733038348082594,81.90232544769898,61.17984704965127,8,81.63499506421816,True
+vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,56.11994486839009,96.03437868291701,78.0887788172418,8,39.914433814526916,True
+cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,62.544487517034256,92.59310471976401,69.35073626621144,8,30.04861720272976,True
+diarreia,Diarreia,sintomas,modelo_a_nucleo,68.5001584017792,97.60785398230088,78.34436435632698,8,29.10769558052168,True
+vomito,Vomito,sintomas,modelo_a_nucleo,69.10421136112842,97.69312315634218,78.51709556949636,8,28.58891179521376,True
+garganta,Dor de garganta,sintomas,modelo_a_nucleo,70.39013614048218,98.04111356932154,78.83865659749846,8,27.650977428839354,True
+cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,31.715772226853318,54.1572122760836,39.704602695451435,8,22.44144004923028,True
+outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,70.30211152760974,92.61845501474927,76.60487783010223,8,22.316343487139534,True
+diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,30.61369973267412,50.79016640753683,37.665179063953296,8,20.17646667486271,True
+desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,79.53278916829498,99.28327802359883,88.10642023566714,8,19.750488855303843,False
+out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,31.348414728793582,50.22018339208654,38.48958514847143,8,18.871768663292958,False
+saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,80.74642320277766,98.5227691740413,87.21273644396294,8,17.776345971263638,False
+febre,Febre,sintomas,modelo_a_nucleo,82.41102391335316,99.73036504424779,89.6647116468641,8,17.319341130894628,False
+obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,28.956854178044782,44.06992913696936,34.32500524145589,8,15.113074958924575,False
+dispneia,Dispneia,sintomas,modelo_a_nucleo,84.5467901846178,99.34319690265487,90.7383035810173,8,14.796406718037062,False
+renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,29.27132139469372,43.966174576540794,34.320132852263995,8,14.694853181847073,False
+neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,29.835292764954442,44.28749557426764,34.918385113137866,8,14.452202809313196,False
+pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,29.9882146655552,44.32905897384585,34.954197362808266,8,14.340844308290645,False
+imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,29.50587829486332,43.590359343811414,34.45052919538068,8,14.084481048948096,False
+hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,29.06608410704533,43.060913471159616,33.84011695932861,8,13.994829364114285,False
+puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,28.886106161965913,42.87659775352391,33.723788793709836,8,13.990491591557998,False
+hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,29.199459599298628,43.166515293791655,33.99727064231747,8,13.967055694493027,False
+sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,29.22130558509874,42.98917812225797,33.93530897040003,8,13.767872537159228,False
+asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,30.79824082324873,43.92050614984375,35.198216673797965,8,13.122265326595024,False
+ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,84.28995894883458,97.10315265486726,87.98786081014043,8,12.813193706032678,False
+tosse,Tosse,sintomas,modelo_a_nucleo,87.93446206117923,99.66814159292035,93.07981555152388,8,11.733679531741117,False
+cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,90.27306944301881,97.66777286135692,92.8904396101115,8,7.394703418338111,False
+cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,96.54544616519173,100.0,99.13900018537473,8,3.454553834808266,False
+sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,99.92394911504425,99.99096894033856,99.96848116026985,8,0.0670198252943095,False
+cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,100.0,100.0,100.0,8,0.0,False
+cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,100.0,100.0,100.0,8,0.0,False
+dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,100.0,100.0,100.0,8,0.0,False
+dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,100.0,100.0,100.0,8,0.0,False
+nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,100.0,100.0,100.0,8,0.0,False
+nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,100.0,100.0,100.0,8,0.0,False
+tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,100.0,100.0,100.0,8,0.0,False

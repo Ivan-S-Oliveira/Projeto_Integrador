@@ -1,0 +1,14 @@
+﻿matriz,cluster_rotulo,sexo_categoria,quantidade,percentual_cluster
+nucleo,Cluster 1,feminino,18668,49.567203016302905
+nucleo,Cluster 1,ignorado,3,0.007965588657001752
+nucleo,Cluster 1,masculino,18991,50.424831395040094
+nucleo,Cluster 2,feminino,19492,99.97948297086582
+nucleo,Cluster 2,ignorado,4,0.02051702913418137
+nucleo,Cluster 3,ignorado,4,0.01751160143595132
+nucleo,Cluster 3,masculino,22838,99.98248839856404
+ampliada,Cluster 1,feminino,17077,45.295880745868814
+ampliada,Cluster 1,ignorado,7,0.01856714676003289
+ampliada,Cluster 1,masculino,20617,54.68555210737116
+ampliada,Cluster 2,feminino,21083,49.84278588146292
+ampliada,Cluster 2,ignorado,4,0.009456488333057518
+ampliada,Cluster 2,masculino,21212,50.147757630204026

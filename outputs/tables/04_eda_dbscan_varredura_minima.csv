@@ -1,0 +1,4 @@
+﻿metodo,eps,min_samples,quantidade_registros,quantidade_clusters_sem_ruido,quantidade_ruido,percentual_ruido,silhouette_sem_ruido,calinski_harabasz_sem_ruido,davies_bouldin_sem_ruido,menor_cluster_percentual_sem_ruido,ari_dbscan_vs_kmeans
+DBSCAN,1.485594,10,8000,3,215,2.6875,0.5626757144927979,127.76836485452526,1.118179034485011,0.10276172125883108,-0.010440124977428624
+DBSCAN,1.637315,10,8000,1,89,1.1125,,,,,-0.0047571001185997075
+DBSCAN,1.813659,10,8000,1,31,0.3875,,,,,-0.001891618268252706

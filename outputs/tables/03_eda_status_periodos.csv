@@ -1,0 +1,19 @@
+﻿ano_internacao,quantidade_registros_int,percentual,status_periodo,dentro_periodo_coorte,observacao
+1917.0,4,8.570981655956511e-05,fora_periodo,False,Ano fora do período definido para a coorte
+1918.0,1,2.1427454139891278e-05,fora_periodo,False,Ano fora do período definido para a coorte
+1941.0,4,8.570981655956511e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2009.0,1,2.1427454139891278e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2011.0,1,2.1427454139891278e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2012.0,2,4.2854908279782555e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2016.0,1,2.1427454139891278e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2017.0,2,4.2854908279782555e-05,fora_periodo,False,Ano fora do período definido para a coorte
+2018.0,11,0.00023570199553880403,fora_periodo,False,Ano fora do período definido para a coorte
+2019.0,47545,1.0187683070811309,completo,True,
+2020.0,1076375,23.063975949825473,completo,True,
+2021.0,1657394,35.513733926730964,completo,True,
+2022.0,536135,11.488008125290609,completo,True,
+2023.0,265671,5.692653168799056,completo,True,
+2024.0,253367,5.429009773061833,completo,True,
+2025.0,315616,6.762847365815926,completo,True,
+2026.0,210438,4.509150594290441,incompleto,True,Ano incompleto na versão atual dos dados
+,304342,6.521274247842792,sem_data_valida,False,Registro sem dt_interna válida
