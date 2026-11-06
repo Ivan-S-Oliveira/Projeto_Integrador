@@ -101,16 +101,16 @@ configs/paths.local.json
 # Artefatos gerados pelas execuÃ§Ãµes
 # =========================================================
 
-outputs/*
+# outputs/*
 
 !outputs/.gitkeep
 !outputs/runs/
 !outputs/tables/
 !outputs/predictions/
 
-outputs/runs/*
-outputs/tables/*
-outputs/predictions/*
+# outputs/runs/*
+# outputs/tables/*
+# outputs/predictions/*
 
 !outputs/runs/.gitkeep
 !outputs/tables/.gitkeep
