@@ -1,0 +1,321 @@
+﻿ano_internacao,coluna,nome_amigavel,grupo,uso_inicial_sugerido,quantidade_registros_ano,quantidade_preenchida,quantidade_ausente,percentual_preenchido,percentual_ausente
+2019,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,43392,16823,26569,38.76981932153392,61.23018067846608
+2020,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,974415,427968,546447,43.92050614984375,56.07949385015625
+2021,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,1471091,533375,937716,36.257104421140504,63.742895578859496
+2022,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,470323,174237,296086,37.04624268853532,62.95375731146468
+2023,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,237976,74072,163904,31.125827814569533,68.87417218543047
+2024,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,226749,70734,156015,31.194845401743777,68.80515459825622
+2025,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,286837,93145,193692,32.4731467697682,67.52685323023181
+2026,asma,Asma,comorbidades_fatores_risco,modelo_a_nucleo,173945,53572,120373,30.79824082324873,69.20175917675127
+2019,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16972,26420,39.1132005899705,60.8867994100295
+2020,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,527716,446699,54.1572122760836,45.8427877239164
+2021,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,675602,795489,45.925235080630635,54.074764919369365
+2022,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,210352,259971,44.7250081327088,55.2749918672912
+2023,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,81412,156564,34.21017245436514,65.78982754563486
+2024,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,76840,149909,33.88769079466723,66.11230920533276
+2025,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,97245,189592,33.90253000833226,66.09746999166774
+2026,cardiopati,Doenca cardiovascular cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,55168,118777,31.715772226853318,68.28422777314668
+2019,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,43392,16809,26583,38.73755530973451,61.26244469026549
+2020,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,974415,494907,479508,50.79016640753683,49.20983359246317
+2021,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,1471091,629375,841716,42.782873391245005,57.217126608754995
+2022,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,470323,195119,275204,41.48617014264665,58.51382985735335
+2023,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,237976,76662,161314,32.21417285776717,67.78582714223283
+2024,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,226749,72500,154249,31.973680148534285,68.02631985146571
+2025,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,286837,93862,192975,32.72311452148781,67.27688547851218
+2026,diabetes,Diabetes mellitus,comorbidades_fatores_risco,modelo_a_nucleo,173945,53251,120694,30.61369973267412,69.38630026732588
+2019,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16641,26751,38.350387168141594,61.649612831858406
+2020,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,420621,553794,43.166515293791655,56.833484706208345
+2021,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,522599,948492,35.52458685424627,64.47541314575372
+2022,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,168523,301800,35.83133293502551,64.1686670649745
+2023,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,69845,168131,29.349598278818036,70.65040172118196
+2024,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,67215,159534,29.642909119775613,70.35709088022439
+2025,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,88671,198166,30.913375889442435,69.08662411055757
+2026,hematologi,Doenca hematologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,50791,123154,29.199459599298628,70.80054040070138
+2019,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16593,26799,38.23976769911505,61.76023230088495
+2020,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,419592,554823,43.060913471159616,56.939086528840384
+2021,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,520891,950200,35.408482547986495,64.5915174520135
+2022,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,167701,302622,35.65655942830778,64.34344057169221
+2023,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,69352,168624,29.14243453121323,70.85756546878677
+2024,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,66691,160058,29.41181659015034,70.58818340984966
+2025,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,88159,198678,30.73487729965102,69.26512270034898
+2026,hepatica,Doenca hepatica cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,50559,123386,29.06608410704533,70.93391589295467
+2019,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,43392,16729,26663,38.5531895280236,61.4468104719764
+2020,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,974415,424751,549664,43.590359343811414,56.409640656188586
+2021,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,1471091,527389,943702,35.85019553515044,64.14980446484955
+2022,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,470323,171638,298685,36.49364372994729,63.50635627005271
+2023,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,237976,71488,166488,30.04000403402024,69.95999596597976
+2024,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,226749,68530,158219,30.222845525228337,69.77715447477166
+2025,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,286837,89918,196919,31.348117572000824,68.65188242799917
+2026,imunodepre,Imunodeficiencia ou imunodepressao,comorbidades_fatores_risco,modelo_a_nucleo,173945,51324,122621,29.50587829486332,70.49412170513668
+2019,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16796,26596,38.70759587020649,61.29240412979351
+2020,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,431544,542871,44.28749557426764,55.71250442573236
+2021,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,534015,937076,36.30060954760786,63.69939045239214
+2022,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,176313,294010,37.48764147192462,62.51235852807538
+2023,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,72738,165238,30.56526708575655,69.43473291424345
+2024,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,69393,157356,30.60344257306537,69.39655742693463
+2025,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,90525,196312,31.55973601731994,68.44026398268007
+2026,neurologic,Doenca neurologica cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,51897,122048,29.835292764954442,70.16470723504555
+2019,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,43392,16565,26827,38.175239675516224,61.824760324483776
+2020,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,974415,429424,544991,44.06992913696936,55.93007086303064
+2021,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,1471091,558846,912245,37.988540477781456,62.011459522218544
+2022,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,470323,169983,300340,36.14175789829543,63.85824210170457
+2023,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,237976,69319,168657,29.128567586647392,70.87143241335261
+2024,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,226749,66749,160000,29.437395534269168,70.56260446573083
+2025,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,286837,88064,198773,30.701757444123317,69.29824255587668
+2026,obesidade,Obesidade,comorbidades_fatores_risco,modelo_a_nucleo,173945,50369,123576,28.956854178044782,71.04314582195522
+2019,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,43392,16706,26686,38.500184365781706,61.499815634218294
+2020,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,974415,489353,485062,50.22018339208654,49.77981660791346
+2021,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,1471091,640494,830597,43.53870698685534,56.46129301314466
+2022,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,470323,206348,263975,43.87367830193293,56.12632169806707
+2023,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,237976,81496,156480,34.24547013144183,65.75452986855817
+2024,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,226749,75063,151686,33.10400486881971,66.89599513118029
+2025,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,286837,94903,191934,33.08603841205981,66.9139615879402
+2026,out_morbi,Outro fator de risco?,comorbidades_fatores_risco,modelo_a_nucleo,173945,54529,119416,31.348414728793582,68.65158527120641
+2019,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16827,26565,38.77903761061947,61.22096238938053
+2020,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,431949,542466,44.32905897384585,55.67094102615415
+2021,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,534758,936333,36.35111628036607,63.64888371963393
+2022,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,175556,294767,37.32668825466754,62.67331174533246
+2023,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,72587,165389,30.5018153091068,69.4981846908932
+2024,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,69547,157202,30.671359079863635,69.32864092013637
+2025,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,90888,195949,31.686288728441586,68.31371127155842
+2026,pneumopati,Outra pneumopatia cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,52163,121782,29.9882146655552,70.0117853344448
+2019,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,43392,16605,26787,38.267422566371685,61.732577433628315
+2020,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,974415,417796,556619,42.87659775352391,57.12340224647609
+2021,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,1471091,523215,947876,35.566460538471105,64.4335394615289
+2022,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,470323,167335,302988,35.578740567652446,64.42125943234755
+2023,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,237976,68742,169234,28.886106161965913,71.11389383803409
+2024,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,226749,66059,160690,29.133094302510703,70.8669056974893
+2025,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,286837,87628,199209,30.549754738754064,69.45024526124594
+2026,puerpera,Puerpera ou parturiente,comorbidades_fatores_risco,modelo_a_nucleo,173945,50326,123619,28.932133720428872,71.06786627957112
+2019,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,43392,16556,26836,38.15449852507375,61.84550147492625
+2020,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,974415,428413,546002,43.966174576540794,56.033825423459206
+2021,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,1471091,530957,940134,36.09273661520599,63.90726338479401
+2022,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,470323,172350,297973,36.645029054500846,63.354970945499154
+2023,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,237976,70559,167417,29.649628533969814,70.35037146603018
+2024,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,226749,67515,159234,29.775214003148857,70.22478599685114
+2025,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,286837,88938,197899,31.00646011497819,68.99353988502182
+2026,renal,Doenca renal cronica,comorbidades_fatores_risco,modelo_a_nucleo,173945,50916,123029,29.27132139469372,70.72867860530627
+2019,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,43392,16693,26699,38.470224926253685,61.529775073746315
+2020,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,974415,418893,555522,42.98917812225797,57.01082187774203
+2021,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,1471091,521096,949995,35.42241778380807,64.57758221619193
+2022,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,470323,167886,302437,35.69589409831116,64.30410590168884
+2023,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,237976,69585,168391,29.240343564056882,70.75965643594311
+2024,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,226749,66956,159793,29.52868590379671,70.47131409620329
+2025,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,286837,88674,198163,30.914421779616998,69.085578220383
+2026,sind_down,Sindrome de Down,comorbidades_fatores_risco,modelo_a_nucleo,173945,50829,123116,29.22130558509874,70.77869441490125
+2019,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,43392,40178,3214,92.59310471976401,7.406895280235986
+2020,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,974415,702761,271654,72.12132407649719,27.87867592350281
+2021,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,1471091,982668,488423,66.79858689911093,33.20141310088907
+2022,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,470323,301776,168547,64.16356418886595,35.83643581113405
+2023,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,237976,154678,83298,64.9973106531751,35.002689346824894
+2024,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,226749,141819,84930,62.544487517034256,37.455512482965744
+2025,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,286837,186892,99945,65.15616883456458,34.84383116543542
+2026,cs_escol_n,Escolaridade,demografia_contexto_social,modelo_b_ampliado,173945,115554,58391,66.43134324067952,33.568656759320476
+2019,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,43392,43392,0,100.0,0.0
+2020,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,974415,974415,0,100.0,0.0
+2021,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,1471091,1471091,0,100.0,0.0
+2022,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,470323,470323,0,100.0,0.0
+2023,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,237976,237976,0,100.0,0.0
+2024,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,226749,226749,0,100.0,0.0
+2025,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,286837,286837,0,100.0,0.0
+2026,cs_gestant,Situacao gestacional,demografia_contexto_social,modelo_a_nucleo,173945,173945,0,100.0,0.0
+2019,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,43392,41893,1499,96.54544616519173,3.454553834808266
+2020,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,974415,940959,33456,96.56655531780606,3.4334446821939366
+2021,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,1471091,1471091,0,100.0,0.0
+2022,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,470323,470323,0,100.0,0.0
+2023,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,237976,237976,0,100.0,0.0
+2024,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,226749,226749,0,100.0,0.0
+2025,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,286837,286837,0,100.0,0.0
+2026,cs_raca,Raca ou cor,demografia_contexto_social,modelo_a_nucleo,173945,173945,0,100.0,0.0
+2019,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,43392,43392,0,100.0,0.0
+2020,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,974415,974415,0,100.0,0.0
+2021,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,1471091,1471091,0,100.0,0.0
+2022,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,470323,470323,0,100.0,0.0
+2023,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,237976,237976,0,100.0,0.0
+2024,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,226749,226749,0,100.0,0.0
+2025,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,286837,286837,0,100.0,0.0
+2026,cs_sexo,Sexo,demografia_contexto_social,modelo_a_nucleo,173945,173945,0,100.0,0.0
+2019,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,43392,42380,1012,97.66777286135692,2.332227138643077
+2020,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,974415,881063,93352,90.41968771006194,9.580312289938064
+2021,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,1471091,1327999,143092,90.27306944301881,9.726930556981188
+2022,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,470323,429908,40415,91.40696925304525,8.593030746954753
+2023,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,237976,221126,16850,92.91945406259454,7.080545937405461
+2024,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,226749,209267,17482,92.29015342956308,7.709846570436923
+2025,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,286837,269353,17484,93.90455206266975,6.095447937330249
+2026,cs_zona,Zona de residencia,demografia_contexto_social,modelo_a_nucleo,173945,163929,10016,94.24185805858174,5.758141941418259
+2019,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,43392,43392,0,100.0,0.0
+2020,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,974415,974415,0,100.0,0.0
+2021,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,1471091,1471091,0,100.0,0.0
+2022,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,470323,470323,0,100.0,0.0
+2023,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,237976,237976,0,100.0,0.0
+2024,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,226749,226749,0,100.0,0.0
+2025,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,286837,286837,0,100.0,0.0
+2026,nu_idade_n,Idade informada,demografia_contexto_social,modelo_a_nucleo,173945,173945,0,100.0,0.0
+2019,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,43392,43392,0,100.0,0.0
+2020,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,974415,974415,0,100.0,0.0
+2021,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,1471091,1471091,0,100.0,0.0
+2022,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,470323,470323,0,100.0,0.0
+2023,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,237976,237976,0,100.0,0.0
+2024,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,226749,226749,0,100.0,0.0
+2025,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,286837,286837,0,100.0,0.0
+2026,tp_idade,"Unidade da idade: dias, meses ou anos",demografia_contexto_social,modelo_a_nucleo,173945,173945,0,100.0,0.0
+2019,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,43392,43392,0,100.0,0.0
+2020,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,974415,974415,0,100.0,0.0
+2021,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,1471091,1471091,0,100.0,0.0
+2022,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,470323,470323,0,100.0,0.0
+2023,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,237976,237976,0,100.0,0.0
+2024,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,226749,226749,0,100.0,0.0
+2025,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,286837,286837,0,100.0,0.0
+2026,dt_interna,Data da internacao por SRAG,estrutura_coorte,estrutura_coorte,173945,173945,0,100.0,0.0
+2019,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,43392,43392,0,100.0,0.0
+2020,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,974415,974415,0,100.0,0.0
+2021,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,1471091,1471091,0,100.0,0.0
+2022,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,470323,470323,0,100.0,0.0
+2023,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,237976,237976,0,100.0,0.0
+2024,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,226749,226749,0,100.0,0.0
+2025,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,286837,286837,0,100.0,0.0
+2026,dt_sin_pri,Data dos primeiros sintomas,estrutura_coorte,estrutura_coorte,173945,173945,0,100.0,0.0
+2019,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,43392,43392,0,100.0,0.0
+2020,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,974415,974415,0,100.0,0.0
+2021,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,1471091,1471091,0,100.0,0.0
+2022,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,470323,470323,0,100.0,0.0
+2023,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,237976,237976,0,100.0,0.0
+2024,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,226749,226749,0,100.0,0.0
+2025,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,286837,286837,0,100.0,0.0
+2026,nu_notific,Numero da notificacao,estrutura_coorte,estrutura_coorte,173945,173945,0,100.0,0.0
+2019,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,43392,42135,1257,97.10315265486726,2.8968473451327412
+2020,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,974415,825155,149260,84.68209130606569,15.317908693934314
+2021,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,1471091,1239982,231109,84.28995894883458,15.710041051165419
+2022,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,470323,406434,63889,86.41593117921089,13.584068820789113
+2023,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,237976,205627,32349,86.4066124315057,13.593387568494293
+2024,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,226749,195114,31635,86.04845004829129,13.951549951708714
+2025,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,286837,254121,32716,88.59421901637515,11.405780983624851
+2026,ave_suino,"Contato direto com aves, suinos ou outro animal?",exposicao_animal,modelo_a_nucleo,173945,157181,16764,90.36247089597286,9.637529104027138
+2019,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,43392,43359,33,99.92394911504425,0.07605088495574819
+2020,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,974415,974327,88,99.99096894033856,0.00903105966143869
+2021,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,1471091,1470863,228,99.984501298696,0.015498701303997109
+2022,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,470323,470208,115,99.97554871864655,0.024451281353449872
+2023,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,237976,237919,57,99.97604800484082,0.023951995159180228
+2024,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,226749,226683,66,99.97089292565788,0.029107074342121564
+2025,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,286837,286740,97,99.96618288435593,0.03381711564406942
+2026,sg_uf,UF de residencia,geografia_residencia,modelo_b_ampliado,173945,173875,70,99.95975739457874,0.04024260542125546
+2019,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,43392,43081,311,99.28327802359883,0.7167219764011747
+2020,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,974415,833971,140444,85.58683928305702,14.413160716942983
+2021,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,1471091,1208205,262886,82.12986144296988,17.870138557030117
+2022,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,470323,374061,96262,79.53278916829498,20.467210831705017
+2023,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,237976,202420,35556,85.05899754597102,14.941002454028975
+2024,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,226749,200639,26110,88.48506498374856,11.514935016251442
+2025,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,286837,263685,23152,91.92851689286947,8.071483107130533
+2026,desc_resp,Desconforto respiratorio,sintomas,modelo_b_ampliado,173945,161501,12444,92.8460145448274,7.153985455172602
+2019,diarreia,Diarreia,sintomas,modelo_a_nucleo,43392,42354,1038,97.60785398230088,2.392146017699119
+2020,diarreia,Diarreia,sintomas,modelo_a_nucleo,974415,746128,228287,76.57189185306056,23.428108146939437
+2021,diarreia,Diarreia,sintomas,modelo_a_nucleo,1471091,1033215,437876,70.23460819215127,29.76539180784873
+2022,diarreia,Diarreia,sintomas,modelo_a_nucleo,470323,322172,148151,68.5001584017792,31.499841598220797
+2023,diarreia,Diarreia,sintomas,modelo_a_nucleo,237976,172832,65144,72.62581100615189,27.374188993848108
+2024,diarreia,Diarreia,sintomas,modelo_a_nucleo,226749,173072,53677,76.32756925058104,23.672430749418965
+2025,diarreia,Diarreia,sintomas,modelo_a_nucleo,286837,234558,52279,81.77396918807545,18.226030811924545
+2026,diarreia,Diarreia,sintomas,modelo_a_nucleo,173945,144571,29374,83.11305297651556,16.88694702348444
+2019,dispneia,Dispneia,sintomas,modelo_a_nucleo,43392,43107,285,99.34319690265487,0.6568030973451329
+2020,dispneia,Dispneia,sintomas,modelo_a_nucleo,974415,882492,91923,90.56633980388233,9.433660196117671
+2021,dispneia,Dispneia,sintomas,modelo_a_nucleo,1471091,1308396,162695,88.9405210146755,11.059478985324503
+2022,dispneia,Dispneia,sintomas,modelo_a_nucleo,470323,397643,72680,84.5467901846178,15.453209815382195
+2023,dispneia,Dispneia,sintomas,modelo_a_nucleo,237976,208607,29369,87.65883954684506,12.341160453154941
+2024,dispneia,Dispneia,sintomas,modelo_a_nucleo,226749,202664,24085,89.37812294651796,10.621877053482038
+2025,dispneia,Dispneia,sintomas,modelo_a_nucleo,286837,265473,21364,92.55186743690668,7.448132563093324
+2026,dispneia,Dispneia,sintomas,modelo_a_nucleo,173945,161631,12314,92.92075081203829,7.079249187961707
+2019,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,43392,119,43273,0.27424410029498525,99.72575589970502
+2020,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,974415,445901,528514,45.76089243289563,54.23910756710437
+2021,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,1471091,999835,471256,67.96554393983784,32.03445606016216
+2022,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,470323,318275,152048,67.67157889365394,32.328421106346056
+2023,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,237976,170931,67045,71.8269909570713,28.173009042928697
+2024,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,226749,171060,55689,75.44024449942447,24.559755500575534
+2025,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,286837,232483,54354,81.05056181733876,18.94943818266124
+2026,dor_abd,Dor abdominal,sintomas,modelo_a_nucleo,173945,143453,30492,82.47032107850183,17.529678921498174
+2019,fadiga,Fadiga,sintomas,modelo_a_nucleo,43392,227,43165,0.5231379056047197,99.47686209439529
+2020,fadiga,Fadiga,sintomas,modelo_a_nucleo,974415,457525,516890,46.953813313629205,53.046186686370795
+2021,fadiga,Fadiga,sintomas,modelo_a_nucleo,1471091,1063557,407534,72.29715904726493,27.702840952735073
+2022,fadiga,Fadiga,sintomas,modelo_a_nucleo,470323,329816,140507,70.12542444235133,29.87457555764867
+2023,fadiga,Fadiga,sintomas,modelo_a_nucleo,237976,175738,62238,73.84694254882845,26.15305745117155
+2024,fadiga,Fadiga,sintomas,modelo_a_nucleo,226749,174805,51944,77.09185046020049,22.90814953979951
+2025,fadiga,Fadiga,sintomas,modelo_a_nucleo,286837,236879,49958,82.58313955312599,17.41686044687401
+2026,fadiga,Fadiga,sintomas,modelo_a_nucleo,173945,146052,27893,83.96447152835667,16.03552847164333
+2019,febre,Febre,sintomas,modelo_a_nucleo,43392,43275,117,99.73036504424779,0.26963495575220975
+2020,febre,Febre,sintomas,modelo_a_nucleo,974415,861642,112773,88.42659441818938,11.573405581810619
+2021,febre,Febre,sintomas,modelo_a_nucleo,1471091,1234103,236988,83.89032357617577,16.109676423824226
+2022,febre,Febre,sintomas,modelo_a_nucleo,470323,387598,82725,82.41102391335316,17.588976086646838
+2023,febre,Febre,sintomas,modelo_a_nucleo,237976,206808,31168,86.90288096278617,13.09711903721383
+2024,febre,Febre,sintomas,modelo_a_nucleo,226749,204328,22421,90.11197403296156,9.888025967038445
+2025,febre,Febre,sintomas,modelo_a_nucleo,286837,265181,21656,92.45006745991627,7.549932540083731
+2026,febre,Febre,sintomas,modelo_a_nucleo,173945,162455,11490,93.39446376728276,6.605536232717242
+2019,garganta,Dor de garganta,sintomas,modelo_a_nucleo,43392,42542,850,98.04111356932154,1.9588864306784615
+2020,garganta,Dor de garganta,sintomas,modelo_a_nucleo,974415,753284,221131,77.3062812046202,22.693718795379795
+2021,garganta,Dor de garganta,sintomas,modelo_a_nucleo,1471091,1046361,424730,71.12823068049495,28.87176931950505
+2022,garganta,Dor de garganta,sintomas,modelo_a_nucleo,470323,331061,139262,70.39013614048218,29.609863859517816
+2023,garganta,Dor de garganta,sintomas,modelo_a_nucleo,237976,173679,64297,72.98172925000841,27.018270749991586
+2024,garganta,Dor de garganta,sintomas,modelo_a_nucleo,226749,172264,54485,75.9712280980291,24.0287719019709
+2025,garganta,Dor de garganta,sintomas,modelo_a_nucleo,286837,234606,52231,81.7907034308684,18.209296569131595
+2026,garganta,Dor de garganta,sintomas,modelo_a_nucleo,173945,144548,29397,83.09983040616287,16.900169593837134
+2019,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,43392,40189,3203,92.61845501474927,7.381544985250727
+2020,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,974415,743622,230793,76.31471190406552,23.68528809593448
+2021,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,1471091,1052756,418335,71.56294206136806,28.437057938631938
+2022,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,470323,330647,139676,70.30211152760974,29.69788847239026
+2023,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,237976,172592,65384,72.5249605002185,27.475039499781502
+2024,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,226749,167877,58872,74.03648968683434,25.963510313165656
+2025,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,286837,219931,66906,76.67455732698362,23.325442673016383
+2026,outro_sin,Apresentou outros sintomas?,sintomas,exploracao_texto,173945,137077,36868,78.80479461898877,21.195205381011235
+2019,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,43392,117,43275,0.26963495575221236,99.73036504424779
+2020,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,974415,450123,524292,46.194178045288716,53.805821954711284
+2021,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,1471091,1012081,459010,68.7979873440868,31.202012655913194
+2022,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,470323,313926,156397,66.7468952188177,33.2531047811823
+2023,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,237976,168775,69201,70.92101724543652,29.078982754563484
+2024,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,226749,169183,57566,74.61245694578587,25.387543054214134
+2025,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,286837,230777,56060,80.45579893807285,19.544201061927154
+2026,perd_olft,Perda do olfato,sintomas,modelo_a_nucleo,173945,142801,31144,82.095489953721,17.904510046279
+2019,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,43392,116,43276,0.26733038348082594,99.73266961651917
+2020,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,974415,449259,525156,46.10550945952186,53.89449054047814
+2021,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,1471091,1011572,459519,68.76338717319322,31.236612826806777
+2022,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,470323,313706,156617,66.70011885448936,33.29988114551064
+2023,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,237976,168676,69300,70.87941641173899,29.120583588261013
+2024,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,226749,168892,57857,74.48412120891382,25.51587879108618
+2025,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,286837,230435,56402,80.3365674581731,19.663432541826893
+2026,perd_pala,Perda do paladar,sintomas,modelo_a_nucleo,173945,142465,31480,81.90232544769898,18.097674552301015
+2019,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,43392,42751,641,98.5227691740413,1.4772308259586993
+2020,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,974415,839904,134511,86.19571743045827,13.804282569541726
+2021,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,1471091,1259960,211131,85.64799866221736,14.352001337782639
+2022,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,470323,379769,90554,80.74642320277766,19.253576797222337
+2023,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,237976,197562,40414,83.01761522170304,16.98238477829696
+2024,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,226749,193744,33005,85.44425774755346,14.555742252446535
+2025,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,286837,254586,32251,88.75633199343181,11.243668006568186
+2026,saturacao,Saturacao de oxigenio abaixo de 95%?,sintomas,modelo_a_nucleo,173945,155456,18489,89.37077811952054,10.629221880479463
+2019,tosse,Tosse,sintomas,modelo_a_nucleo,43392,43248,144,99.66814159292035,0.3318584070796504
+2020,tosse,Tosse,sintomas,modelo_a_nucleo,974415,880049,94366,90.31562527259945,9.684374727400552
+2021,tosse,Tosse,sintomas,modelo_a_nucleo,1471091,1294367,176724,87.98687504715888,12.013124952841125
+2022,tosse,Tosse,sintomas,modelo_a_nucleo,470323,413576,56747,87.93446206117923,12.065537938820768
+2023,tosse,Tosse,sintomas,modelo_a_nucleo,237976,219128,18848,92.07987360069923,7.92012639930077
+2024,tosse,Tosse,sintomas,modelo_a_nucleo,226749,213772,12977,94.27693176155132,5.7230682384486755
+2025,tosse,Tosse,sintomas,modelo_a_nucleo,286837,275397,11440,96.01167213434807,3.988327865651925
+2026,tosse,Tosse,sintomas,modelo_a_nucleo,173945,167622,6323,96.36494294173445,3.635057058265545
+2019,vomito,Vomito,sintomas,modelo_a_nucleo,43392,42391,1001,97.69312315634218,2.306876843657818
+2020,vomito,Vomito,sintomas,modelo_a_nucleo,974415,737735,236680,75.71055453785091,24.28944546214909
+2021,vomito,Vomito,sintomas,modelo_a_nucleo,1471091,1017296,453795,69.1524861480357,30.847513851964294
+2022,vomito,Vomito,sintomas,modelo_a_nucleo,470323,325013,145310,69.10421136112842,30.89578863887158
+2023,vomito,Vomito,sintomas,modelo_a_nucleo,237976,174823,63153,73.46244999495748,26.53755000504252
+2024,vomito,Vomito,sintomas,modelo_a_nucleo,226749,174785,51964,77.08303013464227,22.91696986535773
+2025,vomito,Vomito,sintomas,modelo_a_nucleo,286837,236144,50693,82.32689646035902,17.673103539640977
+2026,vomito,Vomito,sintomas,modelo_a_nucleo,173945,145425,28520,83.60401276265486,16.39598723734514
+2019,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,43392,581,42811,1.3389564896755162,98.66104351032449
+2020,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,974415,125755,848660,12.905692133228655,87.09430786677135
+2021,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,1471091,1108159,362932,75.32905850147952,24.670941498520477
+2022,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,470323,470083,240,99.94897123891452,0.05102876108547605
+2023,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,237976,237943,33,99.98613305543415,0.013866944565847916
+2024,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,226749,226729,20,99.99117967444178,0.008820325558218656
+2025,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,286837,286819,18,99.99372465895264,0.006275341047356164
+2026,vacina_cov,Recebeu vacina contra COVID-19?,vacinacao_covid,modelo_a_nucleo,173945,173923,22,99.98735232401046,0.012647675989541085
+2019,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,43392,35444,7948,81.68325958702066,18.316740412979343
+2020,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,974415,792657,181758,81.34696202336787,18.653037976632135
+2021,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,1471091,1110737,360354,75.50430258903086,24.495697410969143
+2022,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,470323,293577,176746,62.420294138283694,37.579705861716306
+2023,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,237976,133552,104424,56.11994486839009,43.88005513160991
+2024,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,226749,175486,51263,77.39218254545776,22.607817454542243
+2025,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,286837,270226,16611,94.20890610346643,5.791093896533567
+2026,vacina,Recebeu vacina contra influenza?,vacinacao_influenza,modelo_a_nucleo,173945,167047,6898,96.03437868291701,3.9656213170829915

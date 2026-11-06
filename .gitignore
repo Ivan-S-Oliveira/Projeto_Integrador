@@ -62,8 +62,8 @@ models/*.pth
 *.log
 *.tmp
 
-reports/figures/*
-reports/resultados/*
+!reports/figures/*
+!reports/resultados/*
 
 !reports/figures/.gitkeep
 !reports/resultados/.gitkeep

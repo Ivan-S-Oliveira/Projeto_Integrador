@@ -1,0 +1,71 @@
+{
+  "nome": "05_supervisionado_pilotos",
+  "utc": "2026-11-05T20:04:57.913502+00:00",
+  "commit": "82a9c90",
+  "seed": 42,
+  "yaml_sha256": "ad64a9f7f65dbcf3b87c1f498e340c370eae1d723bd88f32a35f91133d4bb2f3",
+  "status": "ok",
+  "erro": null,
+  "duracao_s": 5.599999894911889e-06,
+  "parametros": {
+    "status_coorte": "definitiva",
+    "versao_execucao": "artefato_src_v2",
+    "split": "hash_grupo_estratificado_mestre_v1",
+    "split_estratificacao": "ano × alvo (fallback)",
+    "artefato_gerado_pelo_src": false,
+    "teste_aberto": false
+  },
+  "dataset": {
+    "n_rows": 3884724,
+    "n_artefato": 675705,
+    "train_rows": 556462,
+    "valid_rows": 119243,
+    "test_rows": 3035074,
+    "linhas_quarentena": 4
+  },
+  "dataset_path": null,
+  "dataset_sha256": "763a136e12825136fb6d4e66cfb8225f9332522dec228d9f3d7033f32d997f91",
+  "features": {
+    "n_features": 30,
+    "usadas": [
+      "idade_anos",
+      "dias_sintomas_ate_internacao",
+      "sexo_categoria",
+      "cs_gestant",
+      "cs_raca",
+      "cs_zona",
+      "ave_suino",
+      "febre",
+      "tosse",
+      "garganta",
+      "dispneia",
+      "saturacao",
+      "desc_resp",
+      "diarreia",
+      "vomito",
+      "dor_abd",
+      "outro_sin",
+      "puerpera",
+      "cardiopati",
+      "hematologi",
+      "sind_down",
+      "hepatica",
+      "asma",
+      "diabetes",
+      "neurologic",
+      "pneumopati",
+      "imunodepre",
+      "renal",
+      "obesidade",
+      "out_morbi"
+    ],
+    "features_final_congelada": true
+  },
+  "metricas": {
+    "dummy_pr_auc": 0.08439908422297325,
+    "logistica_pr_auc": 0.3226900319906929,
+    "logistica_roc_auc": 0.8554784727945857,
+    "logistica_brier": 0.06505695730447769
+  },
+  "notas": "Piloto desenvolvimento sobre o artefato gerado pelo src. Particao-mestre com quatro blocos. Holdout (test_ref, test_pandemic) nao consultado. Sem tuning, calibracao ou selecao de limiar."
+}

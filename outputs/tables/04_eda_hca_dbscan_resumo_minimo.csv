@@ -1,0 +1,3 @@
+﻿metodo,matriz,quantidade_registros,quantidade_clusters,percentual_ruido,silhouette,calinski_harabasz,davies_bouldin,menor_cluster_percentual,ari_vs_kmeans,parametros,decisao
+HCA_Ward,nucleo_sem_indicadores_ausencia,5000,3,0.0,0.20748372375965118,1035.2398006178948,1.6572102759675522,5.779999999999999,0.5155312558115097,linkage=ward; k=3,nao aprofundar: comparacao minima registrada; K-Means permanece como referencia
+DBSCAN,nucleo_sem_indicadores_ausencia,8000,3,2.6875,0.5626757144927979,127.76836485452526,1.118179034485011,0.10276172125883108,-0.010440124977428624,eps=1.485594; min_samples=10,nao aprofundar: comparacao minima registrada; K-Means permanece como referencia

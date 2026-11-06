@@ -1,0 +1,11 @@
+{
+  "origem": "artefato_supervisionado",
+  "cohort_kind": "final",
+  "partition_column": "particao",
+  "n_total": 3710779,
+  "n_treino_split": 556462,
+  "n_val_split": 119243,
+  "n_teste_split": 3035074,
+  "n_treino_rotulado": 556462,
+  "n_val_rotulado": 119243
+}

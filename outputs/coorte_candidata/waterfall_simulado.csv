@@ -1,0 +1,8 @@
+﻿ordem,regra,excluidas_na_etapa,restantes_apos_etapa
+1,hospital_nao_confirmado,232253,4434657
+2,dt_interna_invalida,72016,4362641
+3,evolucao_fora_alvo_principal,447436,3915205
+4,dt_interna_antes_periodo,29,3915176
+5,dt_interna_apos_periodo,34,3915142
+6,intervalo_sintomas_negativo,20918,3894224
+7,intervalo_sintomas_maior_limite,9496,3884728

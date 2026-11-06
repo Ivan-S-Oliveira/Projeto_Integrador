@@ -1,0 +1,6 @@
+﻿coluna,data_corte_observada,quantidade_posterior_corte,menor_data_posterior_corte,maior_data_posterior_corte
+dt_interna,2026-09-28,17,2026-09-29,2026-12-29
+dose_1_cov,2026-09-28,3,2026-11-17,2026-12-23
+dose_2_cov,2026-09-28,1,2026-10-30,2026-10-30
+dose_ref,2026-09-28,1,2026-12-19,2026-12-19
+dt_antivir,2026-09-28,3,2026-09-30,2026-12-03

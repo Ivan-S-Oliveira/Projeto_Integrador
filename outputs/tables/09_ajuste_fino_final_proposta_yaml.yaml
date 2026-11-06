@@ -1,0 +1,15 @@
+# Proposta de atualização — gerada pelo C4.
+# Destino: configs/supervised.yaml
+# NÃO aplicada automaticamente; revise e cole em configs/supervised.yaml.
+# cohort_kind: final
+# g6_status: aprovado
+# metrica_principal: pr_auc
+models:
+  logistic:
+    C: 10.0
+    class_weight: null
+  boosting:
+    learning_rate: 0.05
+    max_iter: 500
+    max_depth: null
+    class_weight: null

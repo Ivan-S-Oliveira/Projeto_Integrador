@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-11-05T20:00:11.107010+00:00",
+  "status": "approved_for_comparison",
+  "candidate_sha256": "8a31c4adfa97a2073118dde8390f82d6464b31a2336c237e6366dc58256e2d91",
+  "checks": {
+    "physical_rows": 3884728,
+    "physical_columns": 199,
+    "row_groups": 28,
+    "id_registro_missing": 0,
+    "id_registro_distinct": 3884728,
+    "approved_rule_violations": {
+      "hospital_nao_confirmado": 0,
+      "dt_interna_invalida": 0,
+      "evolucao_fora_alvo_principal": 0,
+      "dt_interna_antes_periodo": 0,
+      "dt_interna_apos_periodo": 0,
+      "intervalo_sintomas_negativo": 0,
+      "intervalo_sintomas_maior_limite": 0
+    },
+    "target_missing": 0,
+    "target_values": [
+      0,
+      1
+    ]
+  },
+  "population_reconciliation": {
+    "source_rows": 4666910,
+    "excluded_rows": 782182,
+    "candidate_rows": 3884728,
+    "closed": true
+  },
+  "publication_performed": false,
+  "legacy_parity_reviewed": false,
+  "provisional_comparison_reviewed": false
+}

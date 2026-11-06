@@ -1,0 +1,11 @@
+﻿coluna,uso_nesta_eda,candidata_feature_principal,risco_temporal,justificativa,existe_no_dataframe
+evolucao,rotulo,False,desfecho,Fonte utilizada para construir o alvo. Não pode ser utilizada como preditora.,True
+dt_evoluca,auditoria,False,posterior_admissao,"Data de alta ou óbito, posterior ao ponto de previsão.",True
+dt_encerra,auditoria,False,posterior_admissao,"Data de encerramento do caso, posterior ao ponto de previsão.",True
+dt_digita,auditoria,False,administrativo,Data administrativa de inclusão do registro.,True
+antiviral,eda_sensibilidade,False,tratamento,A disponibilidade até a admissão precisa ser confirmada.,True
+tp_antivir,eda_sensibilidade,False,tratamento,Tipo de tratamento condicionado ao uso de antiviral.,True
+dt_antivir,auditoria_temporal,False,tratamento,Somente tratamentos iniciados até a admissão poderão ser avaliados em sensibilidade.,True
+trat_cov,eda_sensibilidade,False,tratamento,Pode representar decisão assistencial posterior ao ponto de previsão.,True
+tipo_trat,eda_sensibilidade,False,tratamento,Tipo de tratamento condicionado ao registro de tratamento para COVID-19.,True
+dt_trt_cov,auditoria_temporal,False,tratamento,Somente tratamentos iniciados até a admissão poderão ser avaliados em sensibilidade.,True
