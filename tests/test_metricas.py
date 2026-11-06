@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from src.avaliacao import accuracy, auc, average_precision, brier, f1, ic_bootstrap, metricas_completas, metricas_por_limiar, precision, recall
+from src.avaliacao import accuracy, auc, brier, f1, ic_bootstrap, metricas_completas, metricas_por_limiar, precision, recall
 
 
 @pytest.fixture

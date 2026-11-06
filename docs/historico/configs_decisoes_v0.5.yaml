@@ -1,3 +1,7 @@
+# Arquivo historico: nenhum codigo do projeto le este YAML.
+# Movido de configs/decisoes.yaml por nao ser lido por nenhum codigo (ver Auditoria_repo_limpo.md, item L1-04).
+# O conteudo abaixo e preservado exatamente como estava.
+
 versao: '0.5'
 status_decisoes:
   ponto_de_previsao:

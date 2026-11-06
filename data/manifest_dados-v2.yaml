@@ -74,7 +74,7 @@ particionamento:
   artefato: "partitions_master.parquet"
   coluna_grupo: "group_id"
   coluna_particao: "particao"
-  metodo: "hash_grupo_estratificado_v1"
+  metodo: "hash_grupo_estratificado_mestre_v1"
   seed: 42
   permitir_novo_sorteio: false
   grupos_disjuntos: true
@@ -101,20 +101,20 @@ fontes:
     url: "https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026"
 
 uso_no_projeto:
-  interface_leitura: "src.utils.storage.read_srag"
+  interface_leitura: "src.dados.read_srag"
   versao_configurada: "dados-v2"
   observacao: >
     Os notebooks devem acessar o dataset pela interface de storage
     do repositório, evitando caminhos locais absolutos.
   configuracao_supervisionada: "configs/supervised.yaml"
-  configuracao_metodologica: "configs/decisoes.yaml"
+  configuracao_metodologica: "docs/historico/configs_decisoes_v0.5.yaml (arquivo historico; nao lido por codigo)"
   contrato_features: "feature_contract_v1.json"
   manifesto_particao: "manifesto_particao.json"
 
 validacao:
   schema_verificado: true
   dimensoes_verificadas: true
-  notebook_validacao: "01_eda_primeira_passagem.ipynb"
+  notebook_validacao: "01_extracao.ipynb e 03_eda_primeira_passagem.ipynb"
   hash_confirmado_manualmente: true
   verificacoes_requeridas_antes_do_uso:
     - "Confirmar o SHA-256 do arquivo local."

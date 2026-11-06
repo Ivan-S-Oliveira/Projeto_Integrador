@@ -55,9 +55,14 @@ def _alvo_cfg_negativos() -> list[float]:
 SaidaPreprocessador = Literal["esparsa", "ordinal"]
 
 
+def _converter_para_float32(values):
+    """Funcao nomeada (em vez de lambda) para o pipeline poder ser salvo com pickle/joblib."""
+    return values.astype(np.float32)
+
+
 def _para_float32() -> FunctionTransformer:
     return FunctionTransformer(
-        lambda values: values.astype(np.float32),
+        _converter_para_float32,
         feature_names_out="one-to-one",
     )
 
@@ -435,6 +440,14 @@ def build_boosting_pipeline(
         categorical_features.extend(
             True
             for _ in FEATURES_CATEGORICAS
+        )
+    else:
+        warnings.warn(
+            "build_boosting_pipeline recebeu um preprocessor proprio sem mascara "
+            "categorica: o HistGradientBoostingClassifier vai tratar todas as "
+            "colunas como numericas (categorical_features=None). Se as colunas "
+            "de entrada tem categorias codificadas, passe tambem a mascara.",
+            stacklevel=2,
         )
 
     if categorical_features is not None:

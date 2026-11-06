@@ -153,6 +153,6 @@ class Monitor:
             print(f"[{self.notebook}] {nome}: {reg['duracao_s']}s | pico {reg['rss_pico_mb']} MB | {status}")
     def resumo(self): return pd.DataFrame(self.registros)
     def salvar(self):
-        pasta=self.pasta_saida or Path("outputs/performance"); pasta.mkdir(parents=True,exist_ok=True)
+        pasta=self.pasta_saida or (C.OUTPUTS_DIR / "performance"); pasta.mkdir(parents=True,exist_ok=True)
         caminho=pasta/f"{self.notebook}.csv"; self.resumo().to_csv(caminho,index=False,encoding="utf-8-sig")
         return caminho

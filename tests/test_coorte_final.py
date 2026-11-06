@@ -9,9 +9,7 @@ from src.dados import load_cohort_contract
 from src.dados import build_final_cohort_candidate
 
 
-CONTRACT_PATH = Path(
-    "configs/final_cohort_v1.yaml"
-)
+CONTRACT_PATH = Path(__file__).resolve().parents[1] / "configs" / "final_cohort_v1.yaml"
 
 
 @pytest.fixture

@@ -8,7 +8,6 @@ import pytest
 from src.dados import get_parquet, read_srag
 import numpy as np
 from src.modelos import criar_alvo_binario, filtrar_rotulos_validos
-from src import config as C
 
 
 @pytest.mark.slow

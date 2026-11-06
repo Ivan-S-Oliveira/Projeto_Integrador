@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import yaml
 import pandas as pd
 import pytest
 from src.avaliacao import LeakageError, check_leakage
@@ -232,3 +233,20 @@ def test_src_sem_funcoes_duplicadas():
         nomes = [n.name for n in arvore.body if isinstance(n, ast.FunctionDef)]
         repetidos = sorted({n for n in nomes if nomes.count(n) > 1})
         assert not repetidos, f"{arquivo.name}: funções definidas mais de uma vez: {repetidos}"
+
+
+def test_feature_contract_igual_ao_supervised_yaml():
+    """configs/feature_contract_v1.json nao pode divergir de configs/supervised.yaml
+    (ninguem mais le o contrato; sem este teste, uma mudanca no YAML passaria
+    despercebida - ver Auditoria_repo_limpo.md, item L1-05)."""
+    raiz = Path(__file__).resolve().parents[1]
+    contrato = json.loads((raiz / "configs" / "feature_contract_v1.json").read_text(encoding="utf-8"))
+    yaml_cfg = yaml.safe_load((raiz / "configs" / "supervised.yaml").read_text(encoding="utf-8"))
+    f_contrato = contrato["features"]
+    f_yaml = yaml_cfg["features"]
+    for chave in ("final", "contexto_incremental", "proibidas"):
+        assert set(f_contrato[chave]) == set(f_yaml[chave]), f"{chave} diverge entre contrato e YAML"
+    assert set(f_contrato["sensibilidade_marcador_periodo"]) == set(f_yaml["sensibilidade_marcador_periodo"])
+    assert contrato["invariants"]["teste_consultado"] is True, (
+        "O teste ja foi aberto (G9); feature_contract_v1.json deveria refletir isso."
+    )

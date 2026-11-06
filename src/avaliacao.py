@@ -385,7 +385,7 @@ def brier_decomposicao(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> dict[str, float]:
-    """Decompõe o Brier score (Murphy, 1973):"""
+    """Decompõe o Brier score em confiabilidade, resolução e incerteza (Murphy, 1973), por faixas de probabilidade. Aproximação: a soma das três partes não fecha exatamente o Brier total (falta o termo de variância dentro de cada faixa)."""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
     n = len(y)

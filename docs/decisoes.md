@@ -9,6 +9,9 @@ Estimar o risco de óbito por SRAG no momento da internação hospitalar. A
 referência temporal é `dt_interna`. Só entram no modelo informações
 plausivelmente disponíveis até a admissão.
 
+Os gates do projeto vão de G1 a G9, sem G3: essa etapa foi absorvida pelo
+G2 em 18/10 (ver `docs/historico/decisoes_completo.md`).
+
 ## 2. Dados
 
 - Fonte: SRAG 2019–2026 (Ministério da Saúde), versão `dados-v2`
@@ -44,7 +47,11 @@ As regras se sobrepõem: saem 782.182 linhas e a coorte final fica com
 ## 5. Uso dos anos e partição
 
 Partição-mestre determinística por `group_id` (hash, seed 42), estratificada
-por ano × desfecho × região, com no mínimo 5 grupos por estrato:
+por ano × desfecho × região, com no mínimo 5 grupos por estrato — com fallback
+automático para ano × desfecho quando algum estrato tem menos de 5 grupos
+(registrado como `"ano × alvo (fallback)"` no manifesto da partição; as
+prevalências dos blocos de desenvolvimento continuam dentro de ±0,5 p.p. de
+8,44% mesmo assim):
 
 | Bloco | Anos | Fração | Uso |
 |---|---|---|---|
@@ -66,9 +73,10 @@ por ano × desfecho × região, com no mínimo 5 grupos por estrato:
 
 ## 6. Variáveis
 
-- Modelo principal com 30 variáveis (`features.final`). Entraram `saturacao`
-  e `desc_resp` (fazem parte da definição de caso de SRAG e da ficha de
-  admissão; ganho de 0,0195 de PR-AUC na ablação). Saíram `perd_olft`,
+Modelo principal com 30 variáveis (features.final). Entraram saturacao
+  e desc_resp (fazem parte da definição de caso de SRAG e da ficha de
+  admissão; ganho de 0,0176 de PR-AUC na ablação, regressão logística —
+  outputs/tables/ablacoes_val_ref.csv, linha P_menos_gravidade). Saíram perd_olft,
   `perd_pala` e `fadiga`, que funcionam como marcador de período (em branco
   em mais de 99% das fichas de 2019).
 - Escolaridade, UF e vacinação (`vacina_cov_previa`, só doses pelo menos 1
@@ -104,11 +112,15 @@ por ano × desfecho × região, com no mínimo 5 grupos por estrato:
 - `test_ref` e `test_pandemic` ficam bloqueados no código até o gate G9.
 - O teste é aberto uma única vez, com tudo congelado. Depois disso o G9
   fica `executado`, o manifesto registra `test_opened` e nada mais muda.
-- Hipóteses registradas antes: Teste A com PR-AUC entre 0,30 e 0,36 e
-  ROC-AUC entre 0,85 e 0,87; em 2020–2022, Brier pior e razão
-  observado/esperado acima de 1, porque a calibração foi feita com
-  prevalência de 8,4% e a pandemia tem cerca de 26%. Resultado contrário
-  entra no relatório como achado, nunca como motivo para reajuste.
+- Hipóteses registradas antes (docs/historico/decisoes_completo.md, §29.38):
+  (1) Teste A com PR-AUC entre 0,30 e 0,36; (2) Teste A com ROC-AUC entre
+  0,85 e 0,87; (3) Teste B fica entre o Teste A e 2020–2022, mais perto de
+  2020–2022 por volume; (4) em 2020–2022, PR-AUC ÷ prevalência igual ou
+  menor que no Teste A; (5) em 2020–2022, Brier pior que no Teste A; (6) em
+  2020–2022, razão observado/esperado acima de 1 (entre 1,5 e 3), porque a
+  calibração foi feita com prevalência de 8,4% e a pandemia tem cerca de
+  26%. Resultado contrário entra no relatório como achado, nunca como
+  motivo para reajuste.
 
 ### Resultado da abertura (teste aberto uma única vez em 05/11/2026, 21:15 UTC, commit 52970fc)
 

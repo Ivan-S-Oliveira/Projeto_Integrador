@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from src.dados import PARTICOES_CANONICAS, criar_group_id, criar_particao_mestra
+from src.dados import criar_group_id, criar_particao_mestra
 
 
 def test_criar_group_id_usa_notificacao_valida_e_fallback() -> None:

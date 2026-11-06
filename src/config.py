@@ -221,12 +221,19 @@ def gate_aprovado(nome_gate: str) -> bool:
 
 def exigir_gate(nome_gate: str) -> None:
     """Levanta ``GatePendenteError`` se o gate ainda não estiver aprovado."""
-    if not gate_aprovado(nome_gate):
+    if gate_aprovado(nome_gate):
+        return
+    status_atual = _get_nested(carregar_supervised(), "gates", nome_gate, default={}).get("status")
+    if status_atual == "executado":
         raise GatePendenteError(
-            f"Gate '{nome_gate}' está pendente. "
-            f"Aprove-o em configs/supervised.yaml (status: aprovado) "
-            f"antes de rodar esta etapa."
+            f"Gate '{nome_gate}' já foi executado (não é mais 'aprovado'). "
+            f"Reabrir exige uma decisão registrada em docs/decisoes.md."
         )
+    raise GatePendenteError(
+        f"Gate '{nome_gate}' está pendente. "
+        f"Aprove-o em configs/supervised.yaml (status: aprovado) "
+        f"antes de rodar esta etapa."
+    )
 
 
 def features_finais() -> list[str]:
