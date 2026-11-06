@@ -1,4 +1,0 @@
-﻿metrica,estimativa,ic_inferior,ic_superior,nivel,repeticoes,metodo,janela
-ap,0.3636221892057733,0.3446448384629237,0.3804925672235154,0.95,50,bootstrap_por_grupo,teste_a
-auc,0.866077358725673,0.8605360804903086,0.8704519114360577,0.95,50,bootstrap_por_grupo,teste_a
-brier,0.062406759042747326,0.059959456436782674,0.06424360816521203,0.95,50,bootstrap_por_grupo,teste_a

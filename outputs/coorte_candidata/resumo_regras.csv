@@ -1,8 +1,0 @@
-﻿regra,linhas_sinalizadas,total_linhas,proporcao_fonte
-hospital_nao_confirmado,232253,4666910,0.04976590506352169
-dt_interna_invalida,304245,4666910,0.06519195784791222
-evolucao_fora_alvo_principal,530370,4666910,0.11364478852174137
-dt_interna_antes_periodo,48,4666910,1.0285177987147812e-05
-dt_interna_apos_periodo,76,4666910,1.628486514631737e-05
-intervalo_sintomas_negativo,24361,4666910,0.005219942103018914
-intervalo_sintomas_maior_limite,11708,4666910,0.0025087263306984705
