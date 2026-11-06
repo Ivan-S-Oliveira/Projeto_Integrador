@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0",
-  "status": "congelado_para_validacao_g1",
+  "status": "congelado_pos_g9",
   "source": "configs/supervised.yaml",
   "seed": 42,
   "target": {
@@ -107,7 +107,7 @@
     ]
   },
   "invariants": {
-    "teste_consultado": false,
+    "teste_consultado": true,
     "informacao_posterior_admissao_no_modelo_principal": false,
     "identificadores_como_preditores": false,
     "categorias_especiais_fundidas": false

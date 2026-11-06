@@ -20,7 +20,6 @@ def dados_limiar() -> tuple[np.ndarray, np.ndarray]:
 @pytest.fixture
 def modelo_ajustado() -> tuple[LogisticRegression, pd.DataFrame, pd.Series]:
     """``LogisticRegression`` ajustado em ``X`` 1D sintético com sinal."""
-    pytest.importorskip("sklearn.frozen")
     rng = np.random.RandomState(0)
     X = pd.DataFrame({"a": rng.randn(200)})
     y = pd.Series((X["a"] + rng.randn(200) * 0.1 > 0).astype(int))
@@ -49,6 +48,16 @@ def test_escolher_limiar_min_precision_respeitado():
     assert linha["precision"].iloc[0] >= 0.9
 
 
+def test_escolher_limiar_criterio_do_projeto_precisao_com_recall_minimo(dados_limiar):
+    """Critério real usado no projeto (docs/decisoes.md secao 8): maior precisão
+    entre os cortes com recall >= 0,80."""
+    y, p = dados_limiar
+    r = escolher_limiar(y, p, metrica="precision", min_recall=0.8)
+    tabela = r["tabela"]
+    linha = tabela[tabela["limiar"] == r["limiar"]]
+    assert linha["recall"].iloc[0] >= 0.8
+    candidatos = tabela[tabela["recall"] >= 0.8]
+    assert linha["precision"].iloc[0] == candidatos["precision"].max()
 def test_calibrar_metodo_invalido(modelo_ajustado):
     modelo, X, y = modelo_ajustado
     with pytest.raises(ValueError, match="method inválido"):
@@ -65,7 +74,6 @@ def test_calibrar_sigmoid_preserva_shape(modelo_ajustado):
 
 
 def test_calibrar_isotonic_preserva_shape():
-    pytest.importorskip("sklearn.frozen")
     rng = np.random.RandomState(1)
     X = pd.DataFrame({"a": rng.randn(500)})
     y = pd.Series((X["a"] > 0).astype(int))

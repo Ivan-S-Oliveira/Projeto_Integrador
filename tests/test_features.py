@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-from src.features import ano_mes_internacao, faixa_etaria, idade_em_anos, intervalo_sintomas_internacao, montar_features, regiao_residencia, sazonalidade, sexo_categoria
+from src.features import faixa_etaria, idade_em_anos, intervalo_sintomas_internacao, montar_features, regiao_residencia, sexo_categoria
 
 
 def test_regiao_residencia_trata_ausentes_e_invalidos() -> None:

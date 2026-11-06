@@ -1,3 +1,0 @@
-﻿matriz,silhouette_sem_indicadores_ausencia,ari_original_vs_sem_indicadores_ausencia,menor_cluster_percentual,nmi_cluster_ano,interpretacao
-nucleo,0.14187410473823547,0.08900372019766749,24.37,0.053457706861704604,Concordância baixa com a solução original (ARI 0.09); informação mútua normalizada entre cluster e ano de internação de 0.05.
-ampliada,0.1554972231388092,0.08169973495214333,47.12625,0.07687616284126711,Concordância baixa com a solução original (ARI 0.08); informação mútua normalizada entre cluster e ano de internação de 0.08.

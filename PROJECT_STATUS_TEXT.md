@@ -23,7 +23,7 @@ Projeto SRAG · Pendências
 
 ### Subtítulo
 
-Retrato de **05/11, dia da entrega**, sobre a branch `enxugamento` (a `main` recebe a branch no fim do #194). **G6, G7 e G8 aprovados; G9 pendente.** Painel **versão 7: só o essencial antes do G9, e a cadeia completa de notebooks volta para antes dele**. Restam **7 cards até a documentação do G9** (todos da Pessoa C), **8 depois** (Pessoas A e B) e **2 opcionais** (P4). Todo "③ O que fazer" tem passo a passo para a pessoa, automação sugerida (scripts com relatório antes de gravar) e bloco para a IA com botão de copiar.
+Retrato de **05/11, dia da entrega**, sobre a branch `enxugamento` (a `main` recebe a branch no fim do #194). **G6, G7 e G8 aprovados; G9 pendente.** Painel **versão 7: só o essencial antes do G9, e a cadeia completa de notebooks volta para antes dele**. Restam **7 cards até a documentação do G9** (todos da Pessoa C), **8 depois** (Pessoas A e B) e **2 opcionais** (P4). Todo "③ O que fazer" tem passo a passo para a pessoa, automação sugerida (scripts com relatório antes de gravar) e bloco para a IA com botão de copiar. **Auditoria do repositório de entrega (06/11):** 100% do código, configuração, testes, notebooks e documentação lidos linha a linha; 90 pendências catalogadas em `Auditoria_repo_limpo.md` e consolidadas nos cards **#196 a #208** (3 urgentes: #196, #197, #198). **Revisão de 06/11 (pós-correções):** 42 itens do `corrigir_pendencias.py` aplicados e confirmados no snapshot `d441c8f0942d`; notebooks 08 e 09 reexecutados; `docs/decisoes.md` atualizado manualmente; 1 regressão (F003) encontrada e já corrigida (commit `3360470`, card #209). Card novo: **#209**. Pendências reais que restam: #197 (rodar o notebook 12), #198 (.gitignore, adiado), #200 (2 ocorrências residuais), #205 (notebook 03), #207/#208 (suíte completa e destino destes arquivos). **Cards novos nesta revisão:** #209 (regressão da F003, resolvida) e #210 (resumir a documentação em Markdown — mesma lógica do #191, aplicada ao texto).
 
 **A entrega:** (1) o **link do GitHub (branch `main`, completa)** e (2) a **apresentação em PowerPoint** (#134, arquivo `entrega/Apresentacao_SRAG.pptx`).
 
@@ -5444,6 +5444,10 @@ A Pessoa B confere a mesma lista nos slides em 04/11.
 
 ### ① Para entender
 
+> **Atualização 06/11:** os notebooks 08 e 09 foram reexecutados após a correção de código (#203/#204); os números em `docs/decisoes.md` já refletem isso (ablação de saturação/desc_resp: 0,0176). O notebook `12_pos_teste.ipynb` existe (#197) mas ainda não foi executado — quando rodar, considerar incluir um resumo de O/E/ECE/curva de decisão/equidade aqui também, se fizer sentido para a narrativa de limitações.
+
+> **Achado da auditoria do repositório (notebook 04):** as tabelas descritivas de óbito por ano e por mês usam todas as fichas, inclusive `test_ref` e `test_pandemic` — declarado no próprio notebook, mas isso significa que a prevalência de óbito da pandemia (≈ 26%) foi vista antes da abertura do G9 (e usada para construir a hipótese registrada de O/E acima de 1). Nenhum desempenho de modelo foi medido no teste antes do G9 — só uma estatística pública da base. Mesmo assim, vale declarar isso como limitação, com a frase: "a prevalência anual de óbito, incluindo os anos do teste, foi descrita na exploração antes do G9; nenhuma métrica de desempenho do modelo usou o teste antes da abertura."
+
 Como a entrega é a **apresentação em PowerPoint** mais o **link do GitHub completo**, um relatório de 12 a 15 páginas deixa de ser necessário. O que a banca ainda precisa encontrar **no repositório**, num só lugar:
 
 1. **Limitações e trabalhos futuros** (escritas antes de a banca perguntar).
@@ -8378,7 +8382,7 @@ $m = [ordered]@{'A/A_03_coorte_protocolo'='02_coorte_definitiva';'B/B_02_eda_pri
 - responsável: Pessoa A
 - pessoas: A
 - fonte: Reescrito em 05/11: a entrega é o link do GitHub (main, completo) + a apresentação; a mescla na main já foi feita no #194; sem zip
-- depende de: #134, #133, #157
+- depende de: #134, #133, #157, #196, #197, #198, #209
 - tags: entrega, link, tag, painel
 - pilar: —
 - carga: 0.5
@@ -8391,6 +8395,10 @@ $m = [ordered]@{'A/A_03_coorte_protocolo'='02_coorte_definitiva';'B/B_02_eda_pri
 Última meia hora de trabalho: **nada de código novo**. Só conferir e congelar. A entrega é o **link do repositório no GitHub (branch `main`, completa)** mais a apresentação em PowerPoint, que já está em `entrega/`. A `main` foi atualizada no fim do #194; aqui conferimos que **o que a banca vai abrir** está certo.
 
 ### ② Problema
+
+- **Auditoria do repositório de entrega (código, config, testes, notebooks e docs, 100% lido):** achou 90 pendências (7 urgentes, 37 que a banca pode notar, 46 de limpeza opcional), catalogadas em `Auditoria_repo_limpo.md`. As 3 mais urgentes viraram os cards #196 (artefato pode perder o registro do G9 ao ser regerado), #197 (números do pós-teste sem código reprodutível no repositório) e #198 (`.gitignore` esconde `resultados/`; tabela quebrada no dicionário). Resolver os três antes de publicar o link final.
+
+> **Atualização 06/11:** #196, #199, #200 (quase), #201, #203, #204, #206 resolvidos via `corrigir_pendencias.py`; #209 (regressão introduzida pela própria correção, ver card novo) já corrigida e commitada (`3360470`). **Ainda faltam:** #197 (código pronto, falta rodar o notebook 12), #198 (`.gitignore`/`resultados/`, adiado por decisão), #202/#207 (rodar a suíte completa **depois** do commit `3360470`), #205 (notebook 03 ainda grava em `configs/`) e #208 (destino de `PROJECT_STATUS*.md`).
 
 - O repositório fica **completo**, inclusive o painel (`.srag-status-local`) e os arquivos de status: nada é excluído do link.
 - O `.gitignore` não ignora `resultados/` nem `entrega/`; confira que os dois aparecem no GitHub.
@@ -11263,7 +11271,7 @@ REGRAS DO USUÁRIO (valem sempre)
 - responsável: Pessoa B
 - pessoas: B
 - fonte: Pedido de 05/11 (comentar o código só com o essencial novamente)
-- depende de: #189
+- depende de: #189, #196, #202, #203, #204, #205, #209
 - tags: comentários, boas práticas, IA
 - pilar: —
 - carga: 0.4
@@ -11273,7 +11281,11 @@ REGRAS DO USUÁRIO (valem sempre)
 
 ### ① Para entender
 
-Depois de zerar os comentários (#189), colocamos de volta **só os que evitam um erro caro ou explicam uma regra que não é óbvia**. Meta: **cerca de 20 comentários no projeto inteiro**, de **uma linha**, em português simples. Um comentário só entra se responder "por que isto existe?" ou "o que quebra se alguém mexer?".
+> **Conferido na auditoria do repositório:** hoje `src/`, `tests/`, os 11 notebooks e os 3 YAMLs de configuração têm **zero** linhas de comentário. Isso apagou também duas explicações que só existiam em comentário no YAML: por que não existe G3 ("absorvido pelo G2 em 18/10") e por que `target.descartar_outros`/`temporal.coluna_estratificacao_temporal` têm a marca `# documental` (nenhum código as lê). Inclua essas duas entre os ≈ 20 comentários essenciais, e rode este card só **depois** dos cards de correção de código (#196, #202 a #205), para comentar também o que for acrescentado por eles.
+
+> **Reforçado em 06/11 (pedido explícito):** suprimir ao máximo — o número abaixo é **teto, não meta**; menos de 20 também está bom. Na dúvida, corte.
+
+Depois de zerar os comentários (#189), colocamos de volta **só os que evitam um erro caro ou explicam uma regra que não é óbvia**. Meta: **no máximo cerca de 20 comentários no projeto inteiro**, de **uma linha**, em português simples. Um comentário só entra se responder "por que isto existe?" ou "o que quebra se alguém mexer?".
 
 **Lista dos pontos críticos** (a IA começa por ela; a pessoa aprova):
 | Onde | Ponto | Por que merece comentário |
@@ -12082,3 +12094,657 @@ REGRAS DO USUÁRIO (valem sempre)
 - existe: `outputs/final/checklist_g9.md` | O checklist do G9 foi executado e gravado.
 - manual: | O checklist_g9.py terminou com 0 falhas (PODE APROVAR O G9), o ensaio do notebook 11 foi feito depois do último commit de código e os dois scripts do pós-G9 rodaram com --ensaio.
 - manual: | A equipe confirmou no grupo: código congelado, ninguém mexe em src, configs ou notebooks até o G9 terminar.
+
+---
+
+## #196 · Proteger o G9 contra regeração do artefato (guarda de reabertura)
+
+- prioridade: P1
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa C (0,75 h)
+- pessoas: C
+- fonte: Auditoria do repositório de entrega, lotes 3 e 5 (`src/dados.py::persist_supervised_artifact`, notebook 02 célula 1, notebooks 05/07/09/10)
+- depende de: —
+- tags: G9, Reprodutibilidade, Código, Urgente
+- pilar: Rigor
+- carga: 0.75
+- novo: sim
+- professores: não
+- arquivos: src/dados.py, src/config.py, notebooks/02_coorte_definitiva.ipynb, notebooks/05_supervisionado_pilotos.ipynb
+
+### ① Para entender
+
+> **Resolvida em 06/11 (lote de correções automáticas `corrigir_pendencias.py`, item F001) e confirmada no snapshot `d441c8f0942d`:** `persist_supervised_artifact` agora recusa `overwrite=True` quando o manifesto anterior já tem `test_opened: true` ou o G9 está `executado`, a menos que `SRAG_REGERAR_APOS_G9=1` seja definida — e, quando autorizado, preserva `test_opened`/`test_opened_utc`/`test_opened_by`. Notebook 02 (`GERAR_ARTEFATO`) e notebook 05 (guarda) também corrigidos juntos (ver #203 para o 05). Código real conferido linha a linha no snapshot.
+
+O README convida qualquer pessoa a clonar o repositório e rodar os notebooks na ordem. Hoje, **regerar o artefato supervisionado sempre grava `"test_opened": false`**, sem olhar o estado do gate G9. Se alguém reexecutar a cadeia depois de o G9 estar `executado`, o registro de que o teste foi aberto **desaparece silenciosamente**, e a guarda de reabertura do notebook 11 (que depende desse campo e do hash do artefato) fica mais fraca — hoje só o `status: executado` do G9 ainda protege.
+
+### ② Problema
+
+- `persist_supervised_artifact` (src/dados.py) não consulta `gates.G9_holdout` antes de sobrescrever; o notebook 02 chama com `overwrite=True` por padrão.
+- O notebook 05 **para com erro** (`RuntimeError`) se o manifesto do artefato registrar `test_opened: true` — ou seja, reexecutar 02 e depois 05 na sequência normal, com o G9 já aberto, quebra a cadeia no 05 (célula 5).
+- O G9 só é marcado `executado` na **última** célula do notebook 11: uma falha entre ler o teste e gravar o manifesto deixaria o teste lido sem registro.
+- Os manifestos gerados pelos notebooks 05, 07, 09 e 10 gravam `"teste_aberto": False` **fixo**, nunca o valor real.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 45 min · script com relatório antes de aplicar, como de costume.
+
+1. Em `persist_supervised_artifact`: se o manifesto existente tiver `test_opened: true` **ou** `gates.G9_holdout.status == "executado"`, recusar `overwrite=True` com uma mensagem clara, a menos que `SRAG_REGERAR_APOS_G9=1` esteja definida — e, quando autorizado, **preservar** `test_opened`, `test_opened_utc` e `test_opened_by` do manifesto anterior.
+2. Notebook 02, célula 1: `GERAR_ARTEFATO = False` por padrão quando `data/analytical/manifesto_supervisionado.json` já existir.
+3. Notebook 05, célula 5: trocar a parada por um aviso ("teste já aberto em …; este notebook não lê o teste") em vez de `raise`.
+4. Mover a marcação do G9 e do manifesto do artefato (notebook 11, hoje na última célula) para **logo depois** de ler o teste, antes de calcular métricas.
+5. Um teste sintético em `tests/test_artefato.py`: regerar com `test_opened: true` no manifesto anterior falha sem a variável de ambiente.
+
+### ④ Pronto quando
+
+- contem: `src/dados.py` :: `SRAG_REGERAR_APOS_G9` | A geração do artefato recusa sobrescrever depois do G9 sem autorização explícita.
+- contem: `tests/test_artefato.py` :: `regera_apos_g9` | Existe um teste cobrindo esse caminho.
+- nao-contem: `notebooks/05_supervisionado_pilotos.ipynb` :: `raise RuntimeError` próximo a `test_opened` | O notebook 05 avisa, mas não quebra, se o teste já estiver aberto.
+
+---
+
+## #197 · Notebook de pós-teste: O/E por janela e por ano, curva de decisão e equidade, sem depender de `tools/`
+
+- prioridade: P1
+- situação: em andamento
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa B (0,75 h)
+- pessoas: B
+- fonte: Auditoria do repositório de entrega, lote 5 (comparação de todos os números do README/decisoes.md contra os notebooks do repositório)
+- depende de: —
+- tags: Reprodutibilidade, Resultados, Documentação
+- pilar: Rigor
+- carga: 0.75
+- novo: sim
+- professores: sim
+- arquivos: notebooks/12_pos_teste.ipynb (novo)
+
+### ① Para entender
+
+> **Atualização 06/11:**
+> - O notebook `notebooks/12_pos_teste.ipynb` **foi criado** (15 células; conferido no snapshot `d441c8f0942d`) e já segue exatamente o desenho abaixo: só lê o parquet de previsões já gravado pelo notebook 11, nunca chama `load_supervised_artifact` com blocos de teste.
+> - **Esclarecimento importante:** o parquet `..._predicoes_teste.parquet` nunca existiu na máquina local de quem está fazendo a consolidação (ela não rodou o notebook 11 — o teste oficial foi aberto numa outra máquina da equipe, uma única vez, e as saídas foram baixadas depois). Não houve perda de dado por regeneração de artefato; foi só a ausência do arquivo local até ser baixado do colega que rodou o teste.
+> - `renomear_saidas_11.py` (script auxiliar, mesmo padrão do `corrigir_pendencias.py`: relatório → `--aplicar`) já foi rodado com sucesso depois de obter o parquet correto: **57 arquivos renomeados** em `outputs/tables/` e `outputs/predictions/` (tira o "final_final" duplicado do nome) e as referências de caminho **dentro dos 2 manifestos** do notebook 11 (real e ensaio) foram corrigidas para apontar para os nomes novos.
+> - **Falta:** executar de fato o notebook 12 na máquina oficial, para gerar as tabelas em `outputs/final/` e as figuras em `reports/figures/`. Isso está em andamento — aguardando o resultado.
+
+Vários números citados no README e no `decisoes.md` — O/E, inclinação e ECE por quantis **por janela e por ano**, a curva de decisão, as tabelas de equidade compiladas e as figuras `curva_decisao.png`/`equidade_regiao.png` — **não são produzidos por nenhum notebook deste repositório**. Eles vieram de scripts de apoio que ficam fora da entrega (`tools/`). O notebook 11 produz O/E só **por grupo**, não por janela nem por ano, e não calcula inclinação. Quem clonar o repositório não consegue refazer esses números.
+
+### ② Problema
+
+Um avaliador que tente reproduzir os resultados citados no README não encontra o código que os gera — risco real de pergunta da banca ("onde está o código disso?").
+
+### ③ O que fazer
+
+**Tempo:** ≈ 45 min. Criar `notebooks/12_pos_teste.ipynb` que:
+
+1. Lê **só as previsões já gravadas** pelo notebook 11 (`outputs/predictions/11_validacao_final_*_predicoes_teste.parquet`) — **nunca** chama `load_supervised_artifact` com os blocos de teste, então não reabre nada.
+2. Calcula, por janela (Teste A, 2020–2022, Teste B) e por ano: O/E, inclinação de calibração, ECE por quantis — reaproveitando `src/avaliacao.py` (ex.: `curva_confiabilidade`, adaptada para quantis, ou documentar a diferença de método).
+3. Calcula a curva de decisão (benefício líquido por limiar) e as tabelas de equidade por grupo.
+4. Grava tudo em `outputs/final/` e `reports/figures/`, com os mesmos nomes de arquivo já citados no README.
+
+### ④ Pronto quando
+
+- existe: `notebooks/12_pos_teste.ipynb` | O notebook existe e roda sem reabrir o teste.
+- existe: `reports/figures/curva_decisao.png` | A figura é gerada pelo próprio repositório.
+- manual: | Os números do notebook batem com os citados em `docs/decisoes.md` §9.
+
+---
+
+## #198 · `.gitignore` e dicionário: o que a banca vê ao abrir o GitHub
+
+- prioridade: P1
+- situação: parcialmente resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa B (0,2 h)
+- pessoas: B
+- fonte: Auditoria do repositório de entrega, lotes 1 e 7
+- depende de: —
+- tags: Entrega, Git, Documentação
+- pilar: Documentação
+- carga: 0.2
+- novo: sim
+- professores: sim
+- arquivos: .gitignore, docs/dicionario_variaveis.md, README.md
+
+### ① Para entender
+
+> **Atualização 06/11:** o item do dicionário quebrado (ponto 3 abaixo) foi **corrigido** (F014, confirmado no snapshot). Os dois pontos de `.gitignore` (1 e 2) **continuam em aberto por decisão explícita**: a equipe optou por tratar `.gitignore`/`resultados/` numa etapa separada, depois desta rodada de correções. Conferido no snapshot `d441c8f0942d`: `reports/figures/*`, `outputs/predictions/*` e `resultados/*` ainda bloqueiam tudo.
+
+Três correções rápidas e de alto impacto visual — são as primeiras coisas que um avaliador vê ao abrir o repositório.
+
+### ② Problema
+
+1. O README promete "as tabelas estão em `resultados/`", mas `resultados/*` está no `.gitignore`: a pasta não aparece no GitHub.
+2. `reports/figures/*` também está no `.gitignore`: as 36 figuras do projeto (incluindo as do notebook 04) provavelmente não sobem ao GitHub — confira com `git ls-files reports`.
+3. `docs/dicionario_variaveis.md`, linhas 41–46: o campo "Motivo" da variável `evolucao` tem quebras de linha dentro da célula da tabela, o que **quebra a tabela markdown no GitHub**: 8 das 36 linhas da seção 1 (de `nu_notific` a `fadiga`) deixam de ser renderizadas como tabela e aparecem como texto corrido com barras verticais.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 12 min.
+
+1. Remover a linha `resultados/*` do `.gitignore` (ou criar a pasta e versioná-la, se ainda não existir).
+2. Conferir `reports/figures/`: rodar `git ls-files reports`; se vazio, remover a regra que ignora `reports/figures/*`.
+3. No dicionário, trocar o texto da célula "Motivo" da linha `evolucao` por uma única linha, sem quebras: "Alvo principal restrito a evolucao = 1 (cura, código 0) e evolucao = 2 (óbito por SRAG, código 1); demais valores ficam fora do alvo principal."
+
+### ④ Pronto quando
+
+- nao-contem: `.gitignore` :: `resultados/*` | A pasta de resultados aparece no GitHub.
+- manual: | `git ls-files reports` lista as figuras.
+- manual: | `docs/dicionario_variaveis.md` renderiza como tabela única, sem quebra, da linha 1 à 36 da seção 1.
+
+---
+
+## #199 · `docs/decisoes.md` coerente com o código e com o histórico completo
+
+- prioridade: P2
+- situação: resolvida
+- estratégia: documentar
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa A (0,4 h)
+- pessoas: A
+- fonte: Auditoria do repositório de entrega, lotes 3 e 7 (comparação linha a linha com `src/dados.py`, `data/manifest_dados-v2.yaml` e `docs/historico/decisoes_completo.md` §29.38 e linhas 1212/1238)
+- depende de: —
+- tags: Documentação, Entrega
+- pilar: Documentação
+- carga: 0.4
+- novo: sim
+- professores: sim
+- arquivos: docs/decisoes.md, data/manifest_dados-v2.yaml
+
+### ① Para entender
+
+> **Resolvida em 06/11:** os 3 pontos de `docs/decisoes.md` foram corrigidos via `corrigir_pendencias.py` (F020 fallback da estratificação, F021 as 6 hipóteses, F022 explicação do G3) — todos conferidos, presentes no snapshot `d441c8f0942d`. O ponto 4 (`data/manifest_dados-v2.yaml`) também foi corrigido (F013). **Além disso**, o usuário reexecutou os notebooks 08 e 09 depois da correção de código (ver #203/#204) e atualizou manualmente o número da ablação de saturação/desconforto em `docs/decisoes.md` §6, de 0,0195 para **0,0176** — valor conferido contra `outputs/tables/ablacoes_val_ref.csv`, linha `P_menos_gravidade` (bate exatamente).
+> **Achado novo, menor:** a tabela "Hipótese registrada antes do teste" na seção **9** ("Resultado da abertura"), mais abaixo no mesmo arquivo, ainda lista só as 4 hipóteses antigas — ficou **outra cópia** das hipóteses, que a F021 não tocou (ela só editou a lista-intro da seção 9). Ajuste de 2 minutos: replicar as 2 linhas que faltam (Teste B e PR-AUC÷prevalência) nessa segunda tabela também.
+
+O `docs/decisoes.md` é o documento-resumo que a banca mais provavelmente lê. Três pontos ficaram incompletos ou desatualizados em relação ao código e ao histórico completo.
+
+### ② Problema
+
+1. **§5** diz que a partição é "estratificada por ano × desfecho × região", mas o código (`criar_particao_mestra`) cai para ano × desfecho se qualquer estrato tiver menos de 5 grupos, e registra isso como `"ano × alvo (fallback)"` no manifesto — a frase descreve só a intenção, não o que ocorre na prática.
+2. **§9** lista 4 das **6** hipóteses pré-registradas no histórico (§29.38): faltam "Teste B fica entre o Teste A e a pandemia" e "`test_pandemic`: PR-AUC ÷ prevalência igual ou menor que no Teste A" — exatamente a hipótese que explica por que a PR-AUC absoluta da pandemia (0,457) parece maior que a do Teste A (0,369), mas o ganho sobre o acaso é menor (1,73× contra 4,37×).
+3. **Nenhuma seção** menciona por que não existe G3 (resposta no histórico: "absorvido pelo G2 em 18/10") — pergunta fácil de a banca fazer.
+4. `data/manifest_dados-v2.yaml` cita `interface_leitura: src.utils.storage.read_srag` (hoje `src.dados.read_srag`) e `notebook_validacao: 01_eda_primeira_passagem.ipynb` (hoje dividido entre `01_extracao` e `03_eda_primeira_passagem`).
+
+### ③ O que fazer
+
+**Tempo:** ≈ 25 min.
+
+1. §5: "…estratificada por ano × desfecho × região, com fallback para ano × desfecho quando um estrato tem menos de 5 grupos (ver manifesto da partição; prevalência dos blocos de desenvolvimento manteve-se em 8,44% ± 0,01 p.p. mesmo assim)."
+2. §9: acrescentar as duas hipóteses faltantes e a faixa "(entre 1,5 e 3)" junto ao O/E.
+3. Acrescentar uma frase curta (seção 1 ou 7): "Os gates vão de G1 a G9, sem G3: a etapa foi absorvida pelo G2 em 18/10."
+4. Corrigir as duas referências em `data/manifest_dados-v2.yaml`.
+
+### ④ Pronto quando
+
+- contem: `docs/decisoes.md` :: `fallback` | A estratificação real está registrada.
+- contem: `docs/decisoes.md` :: `G3` | A ausência do G3 está explicada.
+- manual: | As 6 hipóteses do §29.38 aparecem em `docs/decisoes.md` §9.
+
+---
+
+## #200 · `docs/dicionario_variaveis.md` coerente com as 30 variáveis do modelo atual
+
+- prioridade: P2
+- situação: quase resolvida
+- estratégia: documentar
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa A (0,5 h)
+- pessoas: A
+- fonte: Auditoria do repositório de entrega, lote 7 (leitura integral das 45 linhas do dicionário contra `configs/supervised.yaml` e `src/modelos.py`)
+- depende de: #198
+- tags: Documentação
+- pilar: Documentação
+- carga: 0.5
+- novo: sim
+- professores: sim
+- arquivos: docs/dicionario_variaveis.md
+
+### ① Para entender
+
+> **Atualização 06/11:** F015 a F019 aplicados e confirmados no snapshot. **Achado novo, menor:** a correção do "199 → 198 colunas" (F015) só mirou uma ocorrência específica do texto; **sobraram 2 outras ocorrências** de "199 colunas" no mesmo arquivo (títulos das seções 1 e 2: "Variáveis do dicionário de 199 colunas do Parquet" e "Não estão no dicionário de 199 colunas do Parquet"). Resto do card (motivo de saturação/desc_resp, faixa_etária/região como "não é entrada do modelo", branco das numéricas) está correto e confirmado.
+
+O dicionário é gerado automaticamente e ficou desatualizado em relação à decisão de 03/11 (quando `saturacao` e `desc_resp` entraram no modelo) e não distingue variáveis de entrada do modelo de variáveis só de contexto ou avaliação.
+
+### ② Problema
+
+1. Linha 5: "36 do dicionário de **199** colunas do Parquet" — o Parquet tem **198** colunas.
+2. Linha 57: cita `src/features/engineering.py` — hoje é `src/features.py`.
+3. `saturacao` e `desc_resp`: motivo ainda diz "Avaliada em sensibilidade separada. Só poderá integrar uma configuração congelada se…" — as duas **já estão** no modelo principal desde 03/11.
+4. `faixa_etaria` e `regiao_residencia`: descritas como "feature do contrato principal" e "feature de contexto" — nenhuma das duas está em `features.final`; servem só para avaliação e estratificação da partição.
+5. Todas as 45 linhas (inclusive as duas numéricas, `idade_anos` e `dias_sintomas_ate_internacao`) têm a mesma frase "categoria AUSENTE" na coluna Branco — numéricas usam **mediana do treino**, não uma categoria.
+6. Não há nenhuma coluna que diga, por variável, se ela entra ou não no modelo.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 30 min. Corrigir os 5 pontos acima e acrescentar uma coluna "No modelo?" (sim / contexto / avaliação / proibida) nas 45 linhas.
+
+### ④ Pronto quando
+
+- nao-contem: `docs/dicionario_variaveis.md` :: `199 colunas` | O número de colunas está correto (198).
+- nao-contem: `docs/dicionario_variaveis.md` :: `engineering.py` | O caminho está correto.
+- nao-contem: `docs/dicionario_variaveis.md` :: `Avaliada em sensibilidade separada` | O motivo de saturação e desconforto reflete a decisão de 03/11.
+- contem: `docs/dicionario_variaveis.md` :: `No modelo?` | A tabela diz, para cada variável, se ela é entrada do modelo.
+
+---
+
+## #201 · `configs/decisoes.yaml` e `feature_contract_v1.json`: arquivar ou manter sincronizados com o YAML
+
+- prioridade: P2
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa C (0,6 h)
+- pessoas: C
+- fonte: Auditoria do repositório de entrega, lote 1 (busca por leitores destes dois arquivos em todo o código) e lote 4
+- depende de: —
+- tags: Configuração, Testes
+- pilar: Rigor
+- carga: 0.6
+- novo: sim
+- professores: não
+- arquivos: configs/decisoes.yaml, configs/feature_contract_v1.json, tests/test_protocolo.py
+
+### ① Para entender
+
+> **Resolvida em 06/11:** `feature_contract_v1.json` atualizado (`status: congelado_pos_g9`, `teste_consultado: true` — F011); `configs/decisoes.yaml` movido para `docs/historico/configs_decisoes_v0.5.yaml` (F012, confirmado presente no snapshot); teste novo `test_feature_contract_igual_ao_supervised_yaml` criado em `tests/test_protocolo.py` (F031, confirmado) e passou de verdade (rodado neste processo de validação, antes da entrega do script).
+
+Dois arquivos de configuração que **nenhum código do projeto lê**, e que por isso ficaram desatualizados sem ninguém perceber.
+
+### ② Problema
+
+- `configs/decisoes.yaml`: faixas etárias diferentes das 8 do YAML oficial; ganho mínimo de 0,01 (o real, usado e registrado, é 0,005); decisões já executadas marcadas como `proposta`; um campo (`maturidade_desfecho.resultado`) com texto de modelo não preenchido.
+- `configs/feature_contract_v1.json`: `status: congelado_para_validacao_g1` e `invariants.teste_consultado: false` — desatualizados (o teste foi aberto; o YAML tem `teste_consultado: true`). As listas de variáveis batem com o YAML hoje, mas nada garante que continuem batendo se uma mudar.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 35 min.
+
+1. `configs/decisoes.yaml`: mover para `docs/historico/` (recomendado, já que nada o lê) ou atualizar os status e o texto pendente.
+2. `feature_contract_v1.json`: atualizar `status` e `teste_consultado`; criar `tests/test_protocolo.py::test_contrato_de_variaveis_igual_ao_yaml` comparando as 5 listas do contrato com as do `supervised.yaml`.
+
+### ④ Pronto quando
+
+- existe: `tests/test_protocolo.py` :: `test_contrato_de_variaveis_igual_ao_yaml` | Um teste garante que o contrato de variáveis não diverge do YAML.
+- nao-contem: `configs/feature_contract_v1.json` :: `"teste_consultado": false` | O contrato registra que o teste foi aberto.
+
+---
+
+## #202 · Testes: cobrir o critério real do limiar e o protocolo no artefato real, por padrão
+
+- prioridade: P2
+- situação: parcialmente resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa C (0,6 h)
+- pessoas: C
+- fonte: Auditoria do repositório de entrega, lote 4 (leitura integral dos 12 arquivos de `tests/`)
+- depende de: —
+- tags: Testes, Rigor
+- pilar: Rigor
+- carga: 0.6
+- novo: sim
+- professores: não
+- arquivos: tests/test_calibracao.py, tests/test_artefato.py, tests/test_temporal.py, tests/test_protocolo.py, pyproject.toml, README.md
+
+### ① Para entender
+
+> **Atualização 06/11:** os 2 testes novos (critério real do limiar — F030 — e contrato de variáveis contra o YAML — F031) foram criados e confirmados presentes no snapshot; os 2 rodaram de verdade e passaram durante a validação do script de correção. **Falta:** rodar a suíte completa com evidência anexada (isso é o card #207, ainda aberto — `outputs/final/pytest_completo.txt` tem só 162 bytes, não é um log de execução completa).
+
+Os 98 testes existentes estão corretos, mas três lacunas de cobertura deixam sem proteção justamente as regras que mais importam para a defesa.
+
+### ② Problema
+
+1. O critério de verdade do projeto para o limiar — `escolher_limiar(metrica="precision", min_recall=0.80)` — **não tem teste**; os testes cobrem F1 e "recall com precisão mínima".
+2. Nenhum teste usa o G9 no estado real `executado`; nenhum cobre a preservação de `test_opened` ao regerar o artefato (ligado ao #196).
+3. Os 5 testes de protocolo que rodam sobre o **artefato real** (`data/analytical/`) são marcados `slow` e ficam fora do `python -m pytest` que o README recomenda — quem clona só roda os testes sintéticos.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 35 min.
+
+1. Teste novo em `test_calibracao.py`: com dados conhecidos, o limiar escolhido é o de maior precisão entre os cortes com recall ≥ 0,80.
+2. Dois testes novos (ligados ao #196): G9 `executado` bloqueia `test_ref`; regerar com `test_opened: true` falha sem autorização.
+3. README: acrescentar a linha "depois de rodar o notebook 02, `python -m pytest -m ''` roda também os testes sobre o artefato real" e orientar gravar a saída.
+
+### ④ Pronto quando
+
+- contem: `tests/test_calibracao.py` :: `recall_minimo_0_8` ou equivalente | O critério real do limiar tem teste.
+- contem: `README.md` :: `pytest -m ''` | O README explica como rodar a suíte completa.
+
+---
+
+## #203 · Notebook 08 (ablações): corrigir laço duplicado e a configuração do boosting
+
+- prioridade: P2
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa B (0,35 h)
+- pessoas: B
+- fonte: Auditoria do repositório de entrega, lote 5 (leitura de todas as células do notebook 08)
+- depende de: —
+- tags: Notebook, Código
+- pilar: Rigor
+- carga: 0.35
+- novo: sim
+- professores: não
+- arquivos: notebooks/08_ablacoes_variaveis.ipynb
+
+### ① Para entender
+
+> **Resolvida em 06/11:** o laço duplicado (F040) e a configuração desatualizada do boosting (F039) foram corrigidos no código, **e o notebook 08 foi reexecutado** pelo usuário depois da correção. Os novos `outputs/tables/ablacoes_val_ref.csv` e `ablacoes_roc_por_ano.csv` confirmam números coerentes (ex.: ganho de saturação/desc_resp = 0,0176, já refletido em `docs/decisoes.md` — ver #199). A decisão (saturação/desconforto: validade, mantidos; comorbidades recodificadas: zero mudanças, não adotado) também foi escrita na célula (F036).
+
+Um bug real de código e uma configuração inconsistente na célula de ablações, mais uma decisão que ficou com texto de modelo.
+
+### ② Problema
+
+1. Há um `for familia` dentro de outro `for familia` na tabela "por ano": a tabela salva só tem as colunas do boosting para "+3 sintomas" (faltam as da logística), e o bootstrap roda em dobro.
+2. As linhas de boosting da ablação usam `learning_rate 0,08`, 60 iterações, 31 folhas e peso `"balanced"` — não a configuração final (sem peso). O Brier dessas linhas (≈ 0,16) não é comparável ao do finalista; o `docs/decisoes.md` cita +0,0195 de ganho na ablação de saturação, mas o notebook mostra −0,0176 (execuções diferentes).
+3. A célula "Decisão proposta" ainda tem o texto-modelo "manter/retirar, porque …", sem a decisão escrita.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 20 min. Corrigir o laço (um só `for familia`); trocar a configuração do boosting por `build_finalista("boosting")` com a máscara categórica; escrever a decisão real (saturação e desconforto: validade, mantidos; comorbidades recodificadas: zero mudanças, não adotado); alinhar o número do `decisoes.md` com o resultado do notebook corrigido.
+
+### ④ Pronto quando
+
+- manual: | A tabela "por ano" tem colunas de logística e de boosting para todas as linhas.
+- nao-contem: `notebooks/08_ablacoes_variaveis.ipynb` :: `manter/retirar, porque …` | A decisão está escrita.
+
+---
+
+## #204 · Notebook 09: referência via `build_finalista` e documentação da busca
+
+- prioridade: P2
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa B (0,35 h)
+- pessoas: B
+- fonte: Auditoria do repositório de entrega, lote 5
+- depende de: —
+- tags: Notebook, Código
+- pilar: Rigor
+- carga: 0.35
+- novo: sim
+- professores: não
+- arquivos: notebooks/09_ajuste_fino.ipynb
+
+### ① Para entender
+
+> **Resolvida em 06/11:** a tabela de referência com `class_weight` ambíguo foi removida (F038) e o título corrigido (F037); **o notebook 09 foi reexecutado** pelo usuário. O manifesto novo (`09_ajuste_fino_final_manifesto.json`) confirma: boosting PR-AUC 0,36164304970341404 e logística 0,3226900319906929 — **idênticos** (4 casas decimais) aos já documentados em `docs/decisoes.md` §7 (0,3616/0,3227). A reexecução não mudou a decisão do finalista: as listas `busca_*` do YAML já têm um único valor cada desde o G6, então não há mais espaço de busca para gerar configuração diferente.
+
+O notebook diz que compara modelos "de referência" usando o YAML, mas o código não usa: a logística é forçada a `C=1` e, por causa de `{} or "balanced"`, o boosting de referência roda com peso `"balanced"` (Brier 0,154, bem diferente do finalista real, 0,063).
+
+### ② Problema
+
+A primeira tabela de referência (via `build_finalista`) e a segunda (com `{} or "balanced"`) divergem, e o texto não avisa qual vale. O título ainda diz "09 — Boosting"; a "busca" roda uma única configuração por família (as listas `busca_*` do YAML têm um valor cada) — não há erro, mas o texto sugere uma exploração que não acontece ali.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 20 min. Uma só tabela de referência, construída via `build_finalista` (sem a ambiguidade de `{} or "balanced"`); corrigir o título; acrescentar uma frase: "a exploração de hiperparâmetros ocorreu em 03–04/11 e foi congelada no YAML; esta célula confirma a configuração, não busca nela."
+
+### ④ Pronto quando
+
+- nao-contem: `notebooks/09_ajuste_fino.ipynb` :: `or "balanced"` | Não há ambiguidade de peso de classe na célula de referência.
+
+---
+
+## #205 · Notebook 10: corrigir o texto da comparação de calibração; notebook 03: não gravar em `configs/`
+
+- prioridade: P2
+- situação: parcialmente resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa B (0,45 h)
+- pessoas: B
+- fonte: Auditoria do repositório de entrega, lote 5
+- depende de: —
+- tags: Notebook, Documentação
+- pilar: Documentação
+- carga: 0.45
+- novo: sim
+- professores: não
+- arquivos: notebooks/10_calibracao_limiar.ipynb, notebooks/03_eda_primeira_passagem.ipynb
+
+### ① Para entender
+
+> **Atualização 06/11:** a parte do notebook 10 (texto da comparação sigmoid×isotônica, F041/F042) foi corrigida e confirmada no snapshot. A parte do notebook 03 (gravar em `outputs/` em vez de `configs/`) **não foi incluída** no script automático — ficou listada como "fora do escopo, exige revisão humana" (notebook de 5.691 linhas de código) e **continua pendente**.
+
+Dois ajustes de texto/código em notebooks diferentes, agrupados por serem rápidos.
+
+### ② Problema
+
+1. O Markdown do notebook 10 diz que sigmoid e isotônica "são comparados pelo Brier em `val_meas`" e que a diferença decide o método — o **código não faz essa comparação**: usa o método já congelado no YAML. O único Brier por método gravado é em `val_cal` (onde o calibrador foi ajustado: otimista). Em `val_meas`, a sigmoid ficou 0,000005 **pior** que o modelo sem calibração — o oposto do que o texto sugere.
+2. O notebook 03 (de exploração) grava duas vezes em `configs/dicionario_variaveis_v1.csv`, sobrescrevendo um arquivo de configuração versionado a partir de um notebook de EDA.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 27 min. Notebook 10: gravar em `val_meas` o Brier de cada método e do modelo sem calibração; corrigir o texto, citando que a comparação original foi feita em 05/11 (registro em `docs/historico/decisoes_completo.md`). Notebook 03: gravar em `outputs/` em vez de `configs/`; promover o CSV para `configs/` só por decisão explícita, fora do notebook.
+
+### ④ Pronto quando
+
+- manual: | O notebook 10 mostra o Brier de sigmoid, isotônica e sem calibração, todos medidos em `val_meas`.
+- nao-contem: `notebooks/03_eda_primeira_passagem.ipynb` :: `C.CONFIGS_DIR` seguido de escrita | O notebook de EDA não grava em `configs/`.
+
+---
+
+## #206 · Correções pontuais de código (mensagens, caminhos, docstrings)
+
+- prioridade: P3
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: a definir (1 h)
+- pessoas: Equipe
+- fonte: Auditoria do repositório de entrega, lotes 1 a 3 (lista completa com evidência em cada item no Auditoria_repo_limpo.md)
+- depende de: —
+- tags: Código, Limpeza
+- pilar: Eficiência
+- carga: 1
+- novo: sim
+- professores: não
+- arquivos: src/dados.py, src/modelos.py, src/avaliacao.py, src/registro.py, src/config.py
+
+### ① Para entender
+
+Oito correções pequenas e independentes, nenhuma muda um resultado, mas juntas valem a pena numa só sessão.
+
+> **Resolvida em 06/11:** todos os 8 itens abaixo (F002, F006, F007, F008, F009, F010, mais os imports limpos F023–F029) foram aplicados via `corrigir_pendencias.py` e confirmados presentes no snapshot `d441c8f0942d`.
+>
+> **Atenção — regressão encontrada e corrigida à parte, ver card novo #209:** um destes itens (F003, remoção do import `GatePendenteError` de `src/dados.py`) quebrou a importação de `tests/test_artefato.py` e de uma célula do notebook 11, porque os dois reexportam a classe através de `src.dados` (não direto de `src.config`). Foi corrigido por um script dedicado (`corrigir_F003_regressao.py`) e já está commitado (`3360470`) — o snapshot usado nesta revisão (`d441c8f0942d`) é **anterior** a esse commit de correção, por isso ainda mostra o import quebrado; confirme na próxima auditoria.
+
+### ② Problema (resumo; detalhe no Auditoria_repo_limpo.md)
+
+1. `get_parquet` nunca confere o SHA-256 do Parquet bruto contra o manifesto, mesmo aceitando o parâmetro.
+2. Pedir os blocos de teste com o G9 `executado` mostra "Gate pendente. Aprove-o" — mensagem enganosa (o bloqueio em si está certo).
+3. `Monitor` grava por padrão em `outputs/performance/` relativo ao diretório atual — vira `notebooks/outputs/…` quando chamado de dentro de um notebook.
+4. `ece()` é por faixas de largura igual; o README/decisoes.md citam "ECE por quantis" no teste (código fora da entrega) — documentar a diferença.
+5. `brier_decomposicao`: docstring cortada ("Decompõe o Brier score (Murphy, 1973):") e a conta não fecha exatamente o Brier total.
+6. `build_boosting_pipeline` com `preprocessor` próprio perde a máscara categórica sem avisar.
+7. `execute_candidate`/notebook 02: a publicação marca `publication_performed: true` mas deixa `cohort_published: false` e não grava o SHA do arquivo publicado.
+8. Mensagens em `src/dados.py` dizem "Execute o Notebook 03"/"Reconstrua no Notebook 03" — o gerador é o 02.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 1 h, oito edições pequenas e independentes — ver a correção exata de cada uma no Auditoria_repo_limpo.md, seção "Lote 1", "Lote 2" e "Lote 3" (IDs L1-07, L1-09, L2-01, L2-02, L2-03, L2-04, L3-02, L3-03).
+
+### ④ Pronto quando
+
+- nao-contem: `src/dados.py` :: `Notebook 03` | As mensagens citam o notebook certo (02).
+- contem: `src/registro.py` :: `C.OUTPUTS_DIR` | O Monitor grava sempre em `outputs/`, não importa de onde é chamado.
+
+---
+
+## #207 · Rodar a suíte completa de testes (com o artefato real) e anexar a evidência
+
+- prioridade: P3
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa C (0,15 h)
+- pessoas: C
+- fonte: Auditoria do repositório de entrega, lote 4
+- depende de: #196, #202
+- tags: Testes, Entrega
+- pilar: Rigor
+- carga: 0.15
+- novo: sim
+- professores: não
+- arquivos: outputs/final/pytest_completo.txt (local, fora do Git)
+
+### ① Para entender
+
+> **Ainda aberta, 06/11:** `outputs/final/pytest_completo.txt` tem só 162 bytes no snapshot — não é o log de uma suíte completa. Rodar isso **depois** de confirmado o commit `3360470` (correção da regressão F003 do card #206/#209), senão a coleta de `tests/test_artefato.py` falha de novo.
+
+Afirmar "98 testes passam" sem nenhuma evidência anexada é mais fraco do que rodar e guardar a saída — rápido de fazer, uma vez que #196 e #202 estejam corrigidos.
+
+### ③ O que fazer
+
+Na máquina oficial, depois de rodar o notebook 02 (para existir `data/analytical/`): um comando só, `.\.venv\Scripts\python.exe -m pytest -q -m "" 2>&1 | Tee-Object outputs\final\pytest_completo.txt`. Colar o resumo final como comentário neste card.
+
+### ④ Pronto quando
+
+- manual: | A saída da suíte completa (incluindo os testes `slow`) foi rodada sem falhas depois das correções do #196 e do #202.
+
+---
+
+## #208 · Decidir o destino de `PROJECT_STATUS.md` e `PROJECT_STATUS_TEXT.md` na entrega
+
+- prioridade: P4
+- situação: aberta
+- estratégia: decidir
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Equipe (0,1 h)
+- pessoas: Equipe
+- fonte: Auditoria do repositório de entrega, lote 1
+- depende de: —
+- tags: Entrega, Decisão
+- pilar: Documentação
+- carga: 0.1
+- novo: sim
+- professores: não
+- arquivos: PROJECT_STATUS.md, PROJECT_STATUS_TEXT.md
+
+### ① Para entender
+
+Os dois arquivos (1,1 MB juntos) ficam hoje na raiz do repositório de entrega e expõem o controle interno do projeto (nomes como "Pessoa A/B/C", números de card) a quem abrir o GitHub.
+
+### ③ O que fazer
+
+Decidir entre: manter na raiz (mostra o processo, pode ser visto como transparência); mover para `docs/historico/` (fica fora do caminho principal, mas ainda acessível); ou remover da branch de entrega (cria um `.gitignore` específico ou um branch limpo só para a entrega). Qualquer opção é aceitável; o importante é decidir e não deixar por omissão.
+
+### ④ Pronto quando
+
+- manual: | A equipe decidiu e aplicou um destino para os dois arquivos antes de publicar o link final.
+
+---
+
+## #209 · Regressão encontrada e corrigida: F003 quebrava `tests/test_artefato.py` e uma célula do notebook 11
+
+- prioridade: P1
+- situação: resolvida
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: 06/11
+- responsável: Pessoa C (0,15 h)
+- pessoas: C
+- fonte: Achado durante a revisão pós-correção de 06/11, ao comparar o snapshot `d441c8f0942d` com o estado esperado após `corrigir_pendencias.py`
+- depende de: —
+- tags: Regressão, Testes, Urgente, Resolvido
+- pilar: Rigor
+- carga: 0.15
+- novo: sim
+- professores: não
+- arquivos: src/dados.py
+
+### ① Para entender
+
+O item **F003** do lote de correções automáticas (card #206) removeu `GatePendenteError` da linha de import `from src.config import PROCESSED, get_secret, sha256_file, GatePendenteError, exigir_gate` em `src/dados.py`, classificando-a como "import sem uso" — verdade **dentro** do arquivo (nada em `src/dados.py` usa `GatePendenteError` diretamente), mas falso no projeto como um todo: `tests/test_artefato.py` e uma célula do `notebooks/11_validacao_final.ipynb` fazem `from src.dados import ... GatePendenteError ...`, contando com a **reexportação transitiva** do Python (se o módulo A faz `from X import Y`, `Y` também vira atributo de A).
+
+### ② Problema
+
+Depois da F003, `pytest` falhava na **coleta** de `tests/test_artefato.py` com `ImportError`, derrubando as 10 funções de teste daquele arquivo. A classe em si nunca foi removida (continua definida em `src/config.py`); só a reexportação em `src/dados.py` sumiu.
+
+### ③ O que foi feito
+
+Script dedicado `corrigir_F003_regressao.py` (mesmo padrão: relatório → `--aplicar`), que devolve `GatePendenteError` à linha de import e roda um smoke test (`import tests.test_artefato` de verdade) para confirmar. **Já aplicado e commitado:**
+
+```text
+APLICADO: src\dados.py corrigido (cópia .bak criada ao lado).
+Linha nova: from src.config import PROCESSED, get_secret, sha256_file, exigir_gate, GatePendenteError
+Conferindo com um import real de tests/test_artefato.py...
+OK: tests/test_artefato.py importa sem erro.
+```
+
+Commit `3360470` ("revisao dados.py"), publicado no GitHub (`main`).
+
+### ④ Pronto quando
+
+- contem: `src/dados.py` :: `exigir_gate, GatePendenteError` | A reexportação foi restaurada.
+- manual: | `import tests.test_artefato` roda sem erro (confirmado pelo smoke test do próprio script).
+- manual: | Commit `3360470` publicado na `main`.
+
+**Lição para as próximas rodadas de correção automática:** "import sem uso" precisa checar uso **no projeto inteiro** (via reexportação transitiva), não só no arquivo onde a linha está. Vale considerar isso ao reaproveitar o padrão do `corrigir_pendencias.py` em versões futuras.
+
+---
+
+## #210 · Resumir bastante a documentação em Markdown (decisoes.md, dicionário, README, markdown dos notebooks)
+
+- prioridade: P2
+- situação: aberta
+- estratégia: desenvolver
+- marco: Pós-G9
+- data ideal: a definir
+- responsável: Pessoa A (0,75 h)
+- pessoas: A
+- fonte: Pedido explícito do usuário em 06/11, na mesma linha do #191 (código): resumir bastante, bastante mesmo, o texto em Markdown
+- depende de: #191, #205
+- tags: documentação, markdown, concisão, limpeza
+- pilar: Documentação
+- carga: 0.75
+- novo: sim
+- professores: sim
+- arquivos: docs/decisoes.md, docs/dicionario_variaveis.md, README.md, notebooks/*.ipynb (células markdown)
+
+### ① Para entender
+
+Mesma lógica do #191, aplicada ao texto em vez do código: só o que ajuda a entender uma decisão ou reproduzir um passo. Escopo:
+
+1. `docs/decisoes.md` — cortar justificativas longas e repetições com o histórico; manter números e a decisão final.
+2. `docs/dicionario_variaveis.md` — a coluna "Motivo" pode ficar numa frase curta por variável (hoje várias têm 2–3 linhas).
+3. `README.md` — manter a estrutura, cortar parágrafos de contexto que já estão em `decisoes.md`.
+4. **Células Markdown dos notebooks** (03, 04, 05 e 08 têm introduções de vários parágrafos por seção) — resumir para 1–3 frases por célula: o "porquê" da etapa, não um tutorial.
+
+**Fora do escopo, de propósito:** `docs/historico/` (`decisoes_completo.md`, `README_completo.md`) — é log histórico; deve continuar completo e verboso, não resumir.
+
+### ② Problema
+
+Documentação longa demora para revisar, aumenta a chance de ficar desatualizada (foi o que aconteceu com `decisoes.md` antes das correções de 06/11 — números errados sobreviveram sem ninguém notar) e deixa menos claro o que é essencial.
+
+### ③ O que fazer
+
+**Tempo:** ≈ 45 min. Reler cada arquivo e cortar prosa, mantendo números, decisões e regras intactos. Sugestão: um primeiro corte com 2–3 exemplos de antes/depois para aprovação, depois o resto do arquivo de uma vez no mesmo padrão aprovado — evita refazer tudo se o tom não agradar de primeira.
+
+### ④ Pronto quando
+
+- manual: | `docs/decisoes.md`, o dicionário e o `README.md` ficaram visivelmente mais curtos, sem perder nenhum número ou decisão.
+- manual: | As células Markdown dos notebooks 03, 04, 05 e 08 têm no máximo poucas frases por seção.
+- nao-contem: `docs/historico/` | O histórico não foi tocado (continua completo).

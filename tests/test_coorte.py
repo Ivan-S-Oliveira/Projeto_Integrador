@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-from src.dados import CohortAuditParameters, build_approved_exclusion_mask, build_rule_overlap, build_simulated_waterfall, evaluate_audit_rules, normalize_srag_code, parse_srag_date, summarize_audit_rules, validate_audit_schema
+from src.dados import CohortAuditParameters, build_simulated_waterfall, evaluate_audit_rules, normalize_srag_code, validate_audit_schema
 from copy import deepcopy
 from pathlib import Path
 import yaml
@@ -112,7 +112,7 @@ def test_waterfall_never_increases_remaining_rows(
     assert int(remaining.iloc[-1]) >= 0
 
 
-CONTRACT_PATH = Path("configs/final_cohort_v1.yaml")
+CONTRACT_PATH = Path(__file__).resolve().parents[1] / "configs" / "final_cohort_v1.yaml"
 
 
 @pytest.fixture

@@ -22,7 +22,7 @@ import pyarrow.compute as pc
 import gc
 
 from src import config as C
-from src.config import PROCESSED, get_secret, sha256_file, GatePendenteError, exigir_gate
+from src.config import PROCESSED, get_secret, sha256_file, exigir_gate, GatePendenteError
 from src.features import montar_features, regiao_residencia
 
 
@@ -246,6 +246,19 @@ def _private_asset_url(token: str) -> str:
     return asset["url"]
 
 
+def _sha256_esperado_do_manifesto() -> str | None:
+    """SHA-256 do Parquet bruto, lido de data/manifest_dados-v2.yaml (integridade.sha256)."""
+    caminho = C.DATA_DIR / "manifest_dados-v2.yaml"
+    if not caminho.exists():
+        return None
+    try:
+        manifesto = yaml.safe_load(caminho.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return None
+    valor = (manifesto.get("integridade") or {}).get("sha256")
+    return valor.lower() if isinstance(valor, str) else None
+
+
 def get_parquet(
     force: bool = False,
     *,
@@ -256,7 +269,22 @@ def get_parquet(
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / C.PARQUET_NAME
 
+    if expected_sha256 is None:
+        expected_sha256 = _sha256_esperado_do_manifesto()
+
     if path.exists() and not force:
+        if expected_sha256:
+            conhecido = read_sha256(path)
+            if conhecido is None:
+                conhecido = sha256_file(path)
+                sha256_path(path).write_text(f"{conhecido}  {path.name}\n", encoding="utf-8")
+            if conhecido.lower() != expected_sha256.lower():
+                raise RuntimeError(
+                    f"SHA-256 de {path} não confere com o manifesto "
+                    f"({C.DATA_DIR / 'manifest_dados-v2.yaml'}). "
+                    f"Esperado {expected_sha256}, obtido {conhecido}. "
+                    f"Rode get_parquet(force=True) para baixar de novo."
+                )
         return path
 
     if force and path.exists():
@@ -272,13 +300,13 @@ def get_parquet(
             expected_magic=PARQUET_MAGIC,
             expected_sha256=expected_sha256,
         )
-    except (requests.HTTPError, RuntimeError):
+    except (requests.HTTPError, RuntimeError) as exc:
         token = _token()
         if not token:
             raise RuntimeError(
                 "Download falhou. Repositório privado ou asset inválido? "
                 "Cadastre o segredo GITHUB_TOKEN."
-            )
+            ) from exc
         digest = download_file(
             _private_asset_url(token),
             path,
@@ -1635,7 +1663,7 @@ def validate_audit_outputs(
         raise FileExistsError(
             "Já existem artefatos da auditoria:\n"
             f"{formatted_paths}\n"
-            "Use --overwrite somente após revisar "
+            "Use sobrescrever=True somente após revisar "
             "a execução anterior."
         )
 
@@ -2108,7 +2136,7 @@ def validate_candidate_preconditions(
         raise FileExistsError(
             "Já existem artefatos da candidata:\n"
             f"{formatted}\n"
-            "Use --overwrite somente após revisar a execução anterior."
+            "Use sobrescrever=True somente após revisar a execução anterior."
         )
 
 
@@ -3172,6 +3200,23 @@ def persist_supervised_artifact(
             "uma reconstrução deliberada da mesma etapa."
         )
 
+    # Protecao pos-G9 (ver docs/decisoes.md secao 9): regerar nao pode apagar
+    # o registro de que o teste ja foi aberto.
+    manifesto_anterior: dict[str, Any] = {}
+    if overwrite and manifest_path.exists():
+        try:
+            manifesto_anterior = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            manifesto_anterior = {}
+        status_g9 = (C.cfg("gates", "G9_holdout") or {}).get("status")
+        teste_ja_aberto = bool(manifesto_anterior.get("test_opened")) or status_g9 == "executado"
+        if teste_ja_aberto and os.getenv("SRAG_REGERAR_APOS_G9") != "1":
+            raise RuntimeError(
+                "O teste ja foi aberto (G9 executado ou manifesto com test_opened=true). "
+                "Regerar o artefato apagaria esse registro. Defina SRAG_REGERAR_APOS_G9=1 "
+                "para confirmar, e registre o motivo em docs/decisoes.md."
+            )
+
     frame.to_parquet(dataset_path, index=False)
 
     manifest = _build_manifest(
@@ -3187,6 +3232,10 @@ def persist_supervised_artifact(
         cohort_kind=cohort_kind,
         seed=seed,
     )
+    if manifesto_anterior.get("test_opened"):
+        manifest["test_opened"] = True
+        manifest["test_opened_utc"] = manifesto_anterior.get("test_opened_utc")
+        manifest["test_opened_by"] = manifesto_anterior.get("test_opened_by")
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2, default=str),
         encoding="utf-8",
@@ -3672,7 +3721,7 @@ def load_supervised_artifact(
 
     if not dataset_path.is_file() or not manifest_path.is_file():
         raise FileNotFoundError(
-            f"Execute o Notebook 03 adaptado para gerar "
+            f"Execute o notebook 02 para gerar "
             f"{DATASET_NAME} e {MANIFEST_NAME}."
         )
 
@@ -3681,7 +3730,7 @@ def load_supervised_artifact(
     if expected_kind and _normalizar_kind(manifest.get("cohort_kind")) != _normalizar_kind(expected_kind):
         raise RuntimeError(
             f"Artefato de coorte {manifest.get('cohort_kind')!r}, mas "
-            f"SRAG_COHORT_KIND={expected_kind!r}. Reconstrua no Notebook 03."
+            f"SRAG_COHORT_KIND={expected_kind!r}. Reconstrua rodando o notebook 02."
         )
 
     if sha256_file(dataset_path) != manifest.get("dataset_sha256"):
