@@ -134,7 +134,8 @@ O teste foi aberto com tudo congelado: Hist Gradient Boosting, 30 variáveis, ca
 
 Teste A, com intervalo de 95% por bootstrap de grupos (1000 réplicas): PR-AUC 0,369 (IC 95%: 0,359 a 0,379); ROC-AUC 0,869 (IC 95%: 0,865 a 0,872); Brier 0,0628 (IC 95%: 0,0618 a 0,0637).
 
-Calibração por janela: Teste A: O/E 0,99, inclinação 1,01, ECE por quantis 0,002; 2020–2022: O/E 1,66, inclinação 0,82, ECE por quantis 0,105; Teste B: O/E 1,64, inclinação 0,83, ECE por quantis 0,101.
+Calibração por janela: Teste A: O/E 0,99, inclinação 1,01, ECE por quantis 0,0016; 2020–2022: O/E 1,66, inclinação 0,82, ECE por quantis 0,1047; Teste B: O/E 1,64, inclinação 0,83, ECE por quantis 0,1006.
+ECE por quantis 0,105; Teste B: O/E 1,64, inclinação 0,83, ECE por quantis 0,101.
 
 | Hipótese registrada antes do teste | Resultado | Leitura |
 |---|---|---|
