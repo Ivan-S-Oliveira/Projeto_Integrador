@@ -62,8 +62,8 @@ models/*.pth
 *.log
 *.tmp
 
-!reports/figures/*
-!reports/resultados/*
+reports/figures/*
+reports/resultados/*
 
 !reports/figures/.gitkeep
 !reports/resultados/.gitkeep
@@ -104,13 +104,13 @@ configs/paths.local.json
 # outputs/*
 
 !outputs/.gitkeep
-!outputs/runs/
-!outputs/tables/
-!outputs/predictions/
+# !outputs/runs/
+# !outputs/tables/
+# !outputs/predictions/
 
-# outputs/runs/*
-# outputs/tables/*
-# outputs/predictions/*
+ outputs/runs/*
+ outputs/tables/*
+ outputs/predictions/*
 
 !outputs/runs/.gitkeep
 !outputs/tables/.gitkeep
