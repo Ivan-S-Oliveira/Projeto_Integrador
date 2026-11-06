@@ -108,10 +108,11 @@ configs/paths.local.json
 # !outputs/tables/
 # !outputs/predictions/
 
-outputs/runs/*
 outputs/tables/*
 outputs/predictions/*
 outputs/*
+
+resultados/*
 
 !outputs/runs/.gitkeep
 !outputs/tables/.gitkeep
