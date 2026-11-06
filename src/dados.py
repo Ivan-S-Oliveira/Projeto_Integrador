@@ -22,7 +22,7 @@ import pyarrow.compute as pc
 import gc
 
 from src import config as C
-from src.config import PROCESSED, get_secret, sha256_file, exigir_gate
+from src.config import PROCESSED, get_secret, sha256_file, exigir_gate, GatePendenteError
 from src.features import montar_features, regiao_residencia
 
 
