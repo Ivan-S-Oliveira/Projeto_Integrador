@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from src.avaliacao import accuracy, auc, brier, f1, ic_bootstrap, metricas_completas, metricas_por_limiar, precision, recall
+from src.avaliacao import accuracy, auc, brier, curva_confiabilidade, curva_confiabilidade_quantis, ece_quantis, f1, ic_bootstrap, mce_quantis, metricas_completas, metricas_por_limiar, precision, recall
 
 
 @pytest.fixture
@@ -75,6 +75,31 @@ def test_ic_bootstrap_deterministico(
     a = ic_bootstrap(y_true, y_prob, n_boot=50, seed=42)
     b = ic_bootstrap(y_true, y_prob, n_boot=50, seed=42)
     assert a == b
+
+
+def test_ece_quantis_dentro_do_intervalo(y_true: np.ndarray, y_prob: np.ndarray) -> None:
+    assert 0.0 <= ece_quantis(y_true, y_prob, n_bins=4) <= 1.0
+    assert 0.0 <= mce_quantis(y_true, y_prob, n_bins=4) <= 1.0
+
+
+def test_ece_quantis_robusto_a_probabilidades_repetidas() -> None:
+    """pd.unique(quantile(...)) pode colapsar bordas quando há poucos valores
+    distintos de probabilidade; a função não deve quebrar nesse caso."""
+    y = np.array([0, 0, 1, 1, 0, 1, 0, 1, 0, 1])
+    p = np.array([0.1] * 5 + [0.9] * 5)
+    assert 0.0 <= ece_quantis(y, p, n_bins=10) <= 1.0
+
+
+def test_ece_quantis_sem_bins_vazios_com_prevalencia_baixa() -> None:
+    """Com prevalência baixa, curva_confiabilidade (largura igual) tem bins
+    vazios nas faixas altas; curva_confiabilidade_quantis não deveria ter."""
+    rng = np.random.default_rng(0)
+    p = rng.beta(1, 15, 2000)
+    y = (rng.random(2000) < p).astype(int)
+    tabela_quantis = curva_confiabilidade_quantis(y, p, n_bins=10)
+    tabela_igual = curva_confiabilidade(y, p, n_bins=10)
+    assert (tabela_quantis["n"] > 0).all()
+    assert (tabela_igual["n"] == 0).any()
 
 
 def test_bootstrap_grupo_igual_ao_sklearn_com_pesos_um():

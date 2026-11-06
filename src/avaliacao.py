@@ -380,6 +380,79 @@ def mce(
     return float(gaps.max())
 
 
+def _bins_quantis(p: np.ndarray, n_bins: int) -> np.ndarray:
+    """Bordas de bin por quantil de ``p`` (mesma quantidade de amostras por bin). Bordas duplicadas (poucos valores distintos) são descartadas; o número real de bins pode ficar menor que ``n_bins``."""
+    quantis = np.linspace(0.0, 1.0, n_bins + 1)
+    edges = np.unique(np.quantile(p, quantis))
+    if edges.size < 2:
+        edges = np.array([0.0, 1.0])
+    return edges
+
+
+def curva_confiabilidade_quantis(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> pd.DataFrame:
+    """Como ``curva_confiabilidade``, mas com bordas por quantil em vez de largura igual. Recomendado quando a prevalência é baixa: faixas de largura igual ficam vazias nas faixas altas de probabilidade, e ``curva_confiabilidade_quantis`` mantém n aproximadamente igual em cada bin."""
+    y = _to_int_labels(y_true)
+    p = _to_np(y_prob)
+    edges = _bins_quantis(p, n_bins)
+    idx = np.clip(np.digitize(p, edges[1:-1], right=True), 0, edges.size - 2)
+
+    linhas: list[dict[str, float]] = []
+    for b in range(edges.size - 1):
+        m = idx == b
+        n = int(m.sum())
+
+        if n == 0:
+            linhas.append(_linha_vazia(b, edges))
+            continue
+
+        centro = float(p[m].mean())
+        freq   = float(y[m].mean())
+        linhas.append({
+            "bin_centro":    centro,
+            "freq_positiva": freq,
+            "n":             float(n),
+            "gap":           abs(freq - centro),
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def ece_quantis(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Expected Calibration Error por quantis — ver ``ece()`` para a versão por faixas de largura igual."""
+    tabela = curva_confiabilidade_quantis(y_true, y_prob, n_bins=n_bins)
+    total  = float(tabela["n"].sum())
+
+    if total == 0:
+        return float("nan")
+
+    pesos = tabela["n"] / total
+    gaps  = tabela["gap"].fillna(0.0)
+    return float((pesos * gaps).sum())
+
+
+def mce_quantis(
+    y_true: ArrayLike,
+    y_prob: ArrayLike,
+    n_bins: int = 10,
+) -> float:
+    """Maximum Calibration Error por quantis."""
+    tabela = curva_confiabilidade_quantis(y_true, y_prob, n_bins=n_bins)
+    gaps   = tabela["gap"].dropna()
+
+    if gaps.empty:
+        return float("nan")
+
+    return float(gaps.max())
+
+
 def brier_decomposicao(
     y_true: ArrayLike,
     y_prob: ArrayLike,
