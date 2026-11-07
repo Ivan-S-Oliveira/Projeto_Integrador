@@ -105,8 +105,7 @@ como **robustez temporal**, não como efeito causal da pandemia.
   entre os cortes com recall ≥ 0,80. Ambos escolhidos só na validação
   (`val_cal`) e aplicados sem reajuste em `val_meas` e no teste.
 
-Detalhes em `docs/decisoes.md`; o registro completo está em
-`docs/historico/decisoes_completo.md`.
+Detalhes em `docs/decisoes.md`; 
 
 ## Resultados
 
@@ -141,8 +140,6 @@ As tabelas completas estão em `resultados/`.
   desenvolvimento.
 - Resultados descrevem desempenho preditivo, não causalidade; o modelo não
   é ferramenta de decisão clínica.
-
-Ver `docs/limitacoes_e_rastreabilidade.md`.
 
 ## Autores
 
