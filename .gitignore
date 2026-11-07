@@ -1,215 +1,116 @@
 ﻿# =========================================================
 # Ambiente virtual
 # =========================================================
-
 .venv/
 venv/
 env/
 
-
 # =========================================================
 # Python
 # =========================================================
-
 __pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
 
-
 # =========================================================
 # Jupyter
 # =========================================================
-
 .ipynb_checkpoints/
 
-
 # =========================================================
-# Dados
+# Dados (conteúdo grande, só .gitkeep e manifestos)
 # =========================================================
-
-data/raw/*
 data/processed/*
 data/analytical/*
-data/treino/*
 
-!data/raw/.gitkeep
 !data/processed/.gitkeep
-!data/analytical/.gitkeep
-!data/treino/.gitkeep
+data/analytical/.gitkeep
+data/analytical/*.json
 
 *.parquet
 
-
 # =========================================================
-# Modelos treinados
+# Resultados e relatórios gerados
 # =========================================================
-
-models/*.pkl
-models/*.joblib
-models/*.pickle
-models/*.h5
-models/*.pt
-models/*.pth
-
-!models/.gitkeep
-
-
-# =========================================================
-# Resultados e relatÃ³rios gerados
-# =========================================================
-
 *.log
 *.tmp
 
 reports/figures/*
 reports/resultados/*
 
-!reports/figures/.gitkeep
-!reports/resultados/.gitkeep
-
-
 # =========================================================
-# VariÃ¡veis de ambiente
+# Variáveis de ambiente
 # =========================================================
-
 .env
 .env.*
 !.env.example
 
-
 # =========================================================
 # Sistema operacional
 # =========================================================
-
 .DS_Store
 Thumbs.db
-
 
 # =========================================================
 # IDEs
 # =========================================================
-
 .vscode/
 .idea/
-
-# ConfiguraÃ§Ãµes especÃ­ficas de cada computador
 configs/paths.local.json
 
-
 # =========================================================
-# Artefatos gerados pelas execuÃ§Ãµes
+# Outputs: ignora conteúdo, preserva .gitkeep e manifestos
 # =========================================================
-
-# outputs/*
-
-!outputs/.gitkeep
-# !outputs/runs/
-# !outputs/tables/
-# !outputs/predictions/
-
-outputs/tables/*
-outputs/predictions/*
 outputs/*
+outputs/.gitkeep
+outputs/runs/
+outputs/tables/
+outputs/predictions/
+outputs/runs/*
+outputs/predictions/*
+outputs/tables/*
+outputs/final/*
+outputs/coorte_candidata/*
+outputs/runs/.gitkeep
+outputs/tables/.gitkeep
+outputs/predictions/.gitkeep
+outputs/tables/*.json
+outputs/final/*.csv
+outputs/final/*.json
 
-!resultados/*
-
-!outputs/runs/.gitkeep
-!outputs/tables/.gitkeep
-!outputs/predictions/.gitkeep
-
-
-# =========================================================
-# Retratos locais do repositÃ³rio
-#
-# gerados automaticamente por tools/update_project_reference.py.
-#
-# O script gerador pode ser versionado.
-# Os retratos produzidos permanecem apenas no ambiente local.
-# =========================================================
-
-/docs/PROJECT_COMPLETE_REFERENCE.md
-/docs/PROJECT_COMPLETE_REFERENCE.json
-
-
+# Saídas do Monitor (tools/medir_notebook.py)
+**/outputs/performance/
 
 # =========================================================
+# Retratos locais do repositório (tools/update_project_reference.py)
 # =========================================================
-
-/docs/*_COMPLETE_REFERENCE.md
-/docs/*_COMPLETE_REFERENCE.json
-
-
-# =========================================================
-# Artefatos locais eventualmente gerados fora de docs
-# =========================================================
-
 .local-analysis/
-/.local-analysis/
-
-/PROJECT_COMPLETE_REFERENCE.md
-/PROJECT_COMPLETE_REFERENCE.json
-
-
-
-
-
-
-
-
-# BEGIN GENERATED LOCAL OUTPUTS
-# Resultados e referências gerados localmente
-/.local-analysis/
-/docs/PROJECT_COMPLETE_REFERENCE.md
-/docs/PROJECT_COMPLETE_REFERENCE.json
-/docs/project_reference_parts/
-/docs/part_[0-9][0-9]_of_[0-9][0-9].md
-/PROJECT_COMPLETE_REFERENCE.md
-/PROJECT_COMPLETE_REFERENCE.json
-/project_reference_parts/
-/docs/project_reference_parts/*
-docs/project_reference_parts/*
-/part_[0-9][0-9]_of_[0-9][0-9].md
-/RESULTADOS_COMPLETOS.docx
-/RESULTADOS_COMPLETOS.pdf
-/RESULTADOS_COMPILADOS.md
-/RESULTADOS_COMPILADOS.json
-/RESULTADOS_CATALOGO.csv
-/docs/RESULTADOS_COMPLETOS.docx
-/docs/RESULTADOS_COMPLETOS.pdf
-/docs/RESULTADOS_COMPILADOS.md
-/docs/RESULTADOS_COMPILADOS.json
-/docs/RESULTADOS_CATALOGO.csv
-/git_history_*.txt
-/heading_audit_*.txt
-/a11y_*.txt
-/zip_entries.txt
-/status_isolado.js
-/discrete.js
-/*status_discreto*.zip
-/*status_isolado*.zip
-# END GENERATED LOCAL OUTPUTS
-
-
-
-# BEGIN LOCAL PENDENCIAS PANEL
-# A pasta .srag-status-local NÃO é ignorada aqui: o .gitignore interno dela decide o que fica local.
-/.project-status-local/
-/SRAG_status_discreto_single_markdown/
-/.scripts/
-!/PROJECT_STATUS.md
-# END LOCAL PENDENCIAS PANEL
 docs/PROJECT_COMPLETE_REFERENCE.txt
+docs/PROJECT_COMPLETE_REFERENCE.md
+docs/PROJECT_COMPLETE_REFERENCE.json
 docs/PROJECT_COVERAGE.csv
 docs/PROJECT_FILES.jsonl
-.pytest_cache/*
-docs/project_reference_md/*
-tools/trocar_validacao_70_15_15.py
+docs/project_reference_parts/
+docs/project_reference_md/
+PROJECT_COMPLETE_REFERENCE.md
+PROJECT_COMPLETE_REFERENCE.json
+project_reference_parts/
 
-# Cópias de segurança locais e saídas de monitoramento (arquivos gerados; não versionar)
-_backup_limpeza/
-**/outputs/performance/
-!configs/dicionario_variaveis_v1.csv
+# =========================================================
+# Compilações de resultados (tools/read_outputs.py)
+# =========================================================
+RESULTADOS_COMPLETOS.docx
+RESULTADOS_COMPLETOS.pdf
+RESULTADOS_COMPILADOS.md
+RESULTADOS_COMPILADOS.json
+RESULTADOS_CATALOGO.csv
+docs/RESULTADOS_*
 
+# =========================================================
+# Cópias de segurança locais
+# =========================================================
 *.bak
 .bak/
+_backup_limpeza*/
+.pytest_cache/

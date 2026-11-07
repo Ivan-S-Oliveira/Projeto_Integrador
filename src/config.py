@@ -16,19 +16,14 @@ C = sys.modules[__name__]
 ROOT_DIR: Path = Path(__file__).resolve().parents[1]
 
 SEED         = 42
-RANDOM_STATE = SEED
 
 DATA_DIR       = ROOT_DIR / "data"
-RAW_DIR        = DATA_DIR / "raw"
 PROCESSED_DIR  = DATA_DIR / "processed"
 ANALYTICAL_DIR = DATA_DIR / "analytical"
-TREINO_DIR     = DATA_DIR / "treino"
 
 CONFIGS_DIR  = ROOT_DIR / "configs"
-MODELS_DIR   = ROOT_DIR / "models"
 OUTPUTS_DIR  = ROOT_DIR / "outputs"
 RUNS_DIR     = OUTPUTS_DIR / "runs"
-LOGS_DIR     = ROOT_DIR / "logs"
 REPORTS_DIR  = ROOT_DIR / "reports"
 FIGURES_DIR  = REPORTS_DIR / "figures"
 
@@ -41,21 +36,9 @@ GITHUB_REPO  = "Ivan-S-Oliveira/Projeto_Integrador"
 DATA_VERSION = "dados-v2"
 PARQUET_NAME = "srag.parquet"
 
-GITHUB_RELEASE_URL = (
-    f"https://github.com/{GITHUB_REPO}/releases/download/{DATA_VERSION}/"
-)
-
 HTTP_TIMEOUT    = 180
 HTTP_TENTATIVAS = 3
 HTTP_BACKOFF    = 5
-
-CSV_SEP      = ","
-CSV_ENCODING = "utf-8-sig"
-COLS         = None
-
-PARQUET_COMPRESSION = "zstd"
-CSV_CHUNKSIZE       = 500_000
-
 
 class GatePendenteError(RuntimeError):
     """Levantado quando se tenta usar um valor que depende de gate não aprovado."""
@@ -250,13 +233,10 @@ def resumo() -> str:
     linhas = [
         ("ROOT_DIR",          ROOT_DIR),
         ("DATA_DIR",          DATA_DIR),
-        ("RAW_DIR",           RAW_DIR),
         ("PROCESSED_DIR",     PROCESSED_DIR),
         ("ANALYTICAL_DIR",    ANALYTICAL_DIR),
-        ("TREINO_DIR",        TREINO_DIR),
         ("OUTPUTS_DIR",       OUTPUTS_DIR),
         ("RUNS_DIR",          RUNS_DIR),
-        ("LOGS_DIR",          LOGS_DIR),
         ("CONFIGS_DIR",       CONFIGS_DIR),
         ("SUPERVISED_YAML",   f"{SUPERVISED_YAML} ({yaml_ok})"),
         ("PARQUET_NAME",      PARQUET_NAME),
@@ -274,15 +254,13 @@ def resumo() -> str:
 
 ROOT      = C.ROOT_DIR
 DATA      = C.DATA_DIR
-RAW       = C.RAW_DIR
 PROCESSED = C.PROCESSED_DIR
-TREINO    = C.TREINO_DIR
 FIGURES   = C.FIGURES_DIR
 
 _DIRS_PADRAO = (
-    C.DATA_DIR, C.RAW_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR,
-    C.TREINO_DIR, C.CONFIGS_DIR, C.MODELS_DIR, C.OUTPUTS_DIR,
-    C.RUNS_DIR, C.LOGS_DIR, C.REPORTS_DIR, C.FIGURES_DIR,
+    C.DATA_DIR, C.PROCESSED_DIR, C.ANALYTICAL_DIR,
+    C.CONFIGS_DIR, C.OUTPUTS_DIR,
+    C.RUNS_DIR, C.REPORTS_DIR, C.FIGURES_DIR,
     C.TABLES_DIR, C.PREDICTIONS_DIR,
 )
 

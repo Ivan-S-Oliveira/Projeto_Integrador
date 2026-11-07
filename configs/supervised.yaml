@@ -12,13 +12,6 @@ target:
 
 coluna_tempo: dt_interna
 
-periodo:
-  desenvolvimento:
-  - 2019
-  - 2023
-  - 2024
-  - 2025
-
 features:
   numericas:
   - idade_anos
@@ -184,11 +177,8 @@ temporal:
   coluna_estratificacao_alvo: alvo_obito_srag
   coluna_estratificacao_geografica: regiao_residencia
   gravar_particao_na_coorte: true
-  permitir_novo_sorteio: false
   metodo_particao: hash_grupo_estratificado_mestre_v1
   min_grupos_por_estrato: 5
-  fallback_estratificacao: reduzir_geografia_e_registrar_no_manifesto
-  teste_aberto_uma_unica_vez: true
   blocos:
     train_ref:
       anos:
@@ -239,18 +229,8 @@ temporal:
     - 2026
     somente_apos_fluxo_principal: true
     permitir_reajuste: false
-  invariantes:
-    grupos_disjuntos: true
-    anos_pandemicos_exclusivos_test_pandemic: true
-    ano_2026_fora_blocos_principais: true
-    testes_fechados_ate_g9: true
-    teste_b_uniao_logica_sem_duplicacao: true
-    configuracao_congelada_entre_janelas: true
-    preprocessamento_ajustado_so_no_treino: true
 
 missingness:
-  numericas:
-    imputacao: mediana
   categoricas:
     imputacao: categoria_explicita
     valor_ausente: AUSENTE
@@ -278,22 +258,16 @@ models:
     class_weight: {}
     busca_learning_rate:
     - 0.05
-
     busca_max_iter:
     - 500
-
     busca_max_depth:
     - null
-
     busca_max_leaf_nodes:
     - 63
-
     busca_min_samples_leaf:
     - 100
-
     busca_l2_regularization:
     - 0.1
-
     busca_class_weight:
     - null
 
@@ -339,7 +313,6 @@ avaliacao:
   min_n_grupo: 100
   calibracao_por_ano: true
   bootstrap:
-    ativo: true
     repeticoes: 1000
     nivel: 0.95
     seed: 42
@@ -359,12 +332,6 @@ avaliacao:
       blocos:
       - test_pandemic
       obrigatorio: true
-
-sensibilidades:
-  temporal:
-    ativa: true
-  contexto_incremental:
-    ativa: true
 
 gates:
   G1_definicao_alvo_features:
@@ -420,24 +387,15 @@ gates:
     status: executado
     aprovado_por: equipe
     data: '2026-11-05'
-    executado_em: "2026-11-05T21:15:27.499663+00:00"
-    n_acessos: 1
+    executado_em: "2026-11-07T00:32:00.678246+00:00"
+    n_acessos: 2
 
 selecao_modelos:
   status: finalista_congelado
-  origem: pilotos
-  teste_consultado: true
   finalistas:
   - hist_gradient_boosting
   - logistic
-  nomes_execucao:
-    hist_gradient_boosting: hist_gradient_boosting_v2
-    logistic: logistica_C1_v2
   finalista_escolhido: boosting
-  familias_encerradas:
-  - decision_tree
-  - random_forest
-  criterio_principal: pr_auc
   observacoes:
   - probabilidades brutas ainda nao calibradas
   - decisao congelada em 2026-11-03

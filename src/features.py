@@ -1,5 +1,3 @@
-"""Engenharia de variáveis."""
-
 from __future__ import annotations
 
 from typing import Literal, get_args
@@ -65,7 +63,6 @@ def recodificar_comorbidades_por_fator_risco(
     *,
     comorbidades: tuple[str, ...] | None = None,
 ) -> pd.DataFrame:
-    """Recodifica comorbidade em branco quando fator_risc = não."""
     if comorbidades is None:
         comorbidades = (
             "cardiopati", "hematologi", "sind_down", "hepatica", "asma",
@@ -130,7 +127,6 @@ def _faixas_etarias() -> list[tuple[str, float, float | None]]:
 
 
 def idade_em_anos(df: pd.DataFrame) -> pd.Series:
-    """Converte nu_idade_n + tp_idade (SIVEP) em idade em anos."""
     idade = pd.to_numeric(df["nu_idade_n"], errors="coerce")
     tipo  = pd.to_numeric(df["tp_idade"],   errors="coerce")
 
@@ -149,7 +145,6 @@ def idade_em_anos(df: pd.DataFrame) -> pd.Series:
 
 
 def intervalo_sintomas_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """Deriva dias entre dt_sin_pri e dt_interna, com flags de invalidade."""
     max_dias = _intervalo_max_dias()
     politica = _intervalo_politica()
 
@@ -174,7 +169,6 @@ def sazonalidade(
     df: pd.DataFrame,
     coluna_data: str | None = None,
 ) -> pd.DataFrame:
-    """Codifica a semana ISO como par (seno, cosseno) em ``2π × (semana − 1)/52,18``."""
     if coluna_data is None:
         coluna_data = C.cfg("features", "engenharia", "coluna_sazonalidade") or "dt_sin_pri"
     if coluna_data not in df.columns:
@@ -198,7 +192,6 @@ def sazonalidade(
 
 
 def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
-    """Categoriza idade em faixas semiabertas ``[min, max)`` do YAML."""
     faixas = _faixas_etarias()
     idade  = pd.to_numeric(idade_anos, errors="coerce")
 
@@ -213,7 +206,6 @@ def faixa_etaria(idade_anos: pd.Series) -> pd.Series:
 
 
 def sexo_categoria(df: pd.DataFrame) -> pd.Series:
-    """Normaliza ``cs_sexo`` em categórica explícita."""
     sexo = df["cs_sexo"].astype("string").str.strip().str.upper()
 
     out = pd.Series("ausente", index=df.index, dtype="object")
@@ -225,7 +217,6 @@ def sexo_categoria(df: pd.DataFrame) -> pd.Series:
 
 
 def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
-    """Extrai ``ano_internacao`` e ``mes_internacao`` de ``dt_interna`` como float64."""
     dt = pd.to_datetime(df["dt_interna"], errors="coerce")
 
     return pd.DataFrame({
@@ -235,7 +226,6 @@ def ano_mes_internacao(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def regiao_residencia(sg_uf: pd.Series) -> pd.Series:
-    """Mapeia a UF de residência para região e preserva o índice."""
     if not isinstance(sg_uf, pd.Series):
         raise TypeError("sg_uf deve ser uma pandas.Series.")
 
@@ -249,7 +239,6 @@ def regiao_residencia(sg_uf: pd.Series) -> pd.Series:
 
 
 def montar_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Aplica todas as derivações e devolve cópia rasa de ``df`` com as colunas de ``COLUNAS_DERIVADAS`` adicionadas."""
     out = df.copy(deep=False)
 
     out["idade_anos"] = idade_em_anos(df).astype("float32")
@@ -277,7 +266,6 @@ def montar_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class OneHotPonderado(BaseEstimator, TransformerMixin):
-    """One-hot esparso em que cada variável pesa 1/sqrt(k) (k = categorias da variável)."""
 
     def fit(self, X, y=None):
         self.encoder_ = OneHotEncoder(handle_unknown="ignore", dtype=np.float32, sparse_output=True).fit(X)
@@ -295,7 +283,6 @@ class OneHotPonderado(BaseEstimator, TransformerMixin):
 
 
 class PreprocessadorClustering(BaseEstimator, TransformerMixin):
-    """Numéricas e categóricas lado a lado, em uma matriz esparsa."""
 
     def __init__(self, numericas, categoricas, valor_ausente="AUSENTE", equilibrar_numericas=True):
         self.numericas = numericas
@@ -349,5 +336,4 @@ class PreprocessadorClustering(BaseEstimator, TransformerMixin):
 
 
 def construir_preprocessador_clustering(numericas, categoricas, valor_ausente="AUSENTE", equilibrar_numericas=True):
-    """Pré-processador de agrupamento: numéricas padronizadas e categóricas em one-hot ponderado com AUSENTE explícito."""
     return PreprocessadorClustering(numericas, categoricas, valor_ausente, equilibrar_numericas)

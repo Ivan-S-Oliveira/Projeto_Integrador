@@ -1,5 +1,3 @@
-"""Pipelines, modelos e calibração."""
-
 from __future__ import annotations
 
 import logging
@@ -43,12 +41,10 @@ FEATURES: list[str] = FEATURES_NUMERICAS + FEATURES_CATEGORICAS
 
 
 def _alvo_cfg_positivos() -> list[float]:
-    """Códigos de ``target.positivos`` do YAML, como floats."""
     return [float(v) for v in (C.cfg("target", "positivos") or [])]
 
 
 def _alvo_cfg_negativos() -> list[float]:
-    """Códigos de ``target.negativos`` do YAML, como floats."""
     return [float(v) for v in (C.cfg("target", "negativos") or [])]
 
 
@@ -56,7 +52,6 @@ SaidaPreprocessador = Literal["esparsa", "ordinal"]
 
 
 def _converter_para_float32(values):
-    """Funcao nomeada (em vez de lambda) para o pipeline poder ser salvo com pickle/joblib."""
     return values.astype(np.float32)
 
 
@@ -70,7 +65,6 @@ def _para_float32() -> FunctionTransformer:
 def _normalizar_ausentes_categoricos(
     values: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Converte ausências pandas em valores aceitos pelo scikit-learn."""
 
     normalized = values.astype("object")
     return normalized.where(
@@ -80,7 +74,6 @@ def _normalizar_ausentes_categoricos(
 
 
 def _normalizador_categorico() -> FunctionTransformer:
-    """Cria a transformação aplicada antes da imputação categórica."""
 
     return FunctionTransformer(
         _normalizar_ausentes_categoricos,
@@ -94,7 +87,6 @@ def build_preprocessor(
     *,
     saida: SaidaPreprocessador = "esparsa",
 ) -> ColumnTransformer:
-    """Constrói o pré-processamento central dos modelos supervisionados."""
     num = list(numericas) if numericas is not None else list(FEATURES_NUMERICAS)
     cat = list(categoricas) if categoricas is not None else list(FEATURES_CATEGORICAS)
 
@@ -179,7 +171,6 @@ def criar_alvo_binario(
     positivos: Iterable[float] | None = None,
     negativos: Iterable[float] | None = None,
 ) -> pd.Series:
-    """Converte ``evolucao`` em alvo binário (``float64``, NaN onde indefinido)."""
     alvo = alvo if alvo is not None else ALVO
 
     positivos_set = {
@@ -209,7 +200,6 @@ def filtrar_rotulos_validos(
     X: pd.DataFrame,
     y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """Remove linhas em que ``y`` é NaN."""
     if not y.index.equals(X.index):
         raise ValueError("X e y precisam ter o mesmo índice.")
 
@@ -221,7 +211,6 @@ def filtrar_rotulos_validos(
 
 
 def random_state() -> int:
-    """Seed canônica do projeto (``config.SEED``)."""
     return int(C.SEED)
 
 
@@ -233,7 +222,6 @@ def build_pipeline(
     features: Iterable[str] | None = None,
     strict: bool = True,
 ) -> Pipeline:
-    """Constrói o ``Pipeline`` sklearn."""
     num = list(FEATURES_NUMERICAS)
     cat = list(FEATURES_CATEGORICAS)
 
@@ -278,7 +266,6 @@ def build_baseline_pipeline(
     strategy: DummyStrategy = "prior",
     preprocessor=None,
 ) -> Pipeline:
-    """``Pipeline`` com pré-processamento + ``DummyClassifier``."""
     pre = preprocessor if preprocessor is not None else build_preprocessor()
 
     return Pipeline([
@@ -305,7 +292,6 @@ SKLEARN_L1_RATIO_MIN = "1.8"
 
 
 def _verificar_sklearn_minima() -> None:
-    """Levanta ``RuntimeError`` se scikit-learn for anterior a 1.8."""
     try:
         instalada = metadata.version("scikit-learn")
     except metadata.PackageNotFoundError as exc:
@@ -326,7 +312,6 @@ def _verificar_sklearn_minima() -> None:
 
 
 def _penalty_do_yaml() -> Penalty | None:
-    """Lê ``models.logistic.penalty`` do YAML."""
     valor = C.cfg("models", "logistic", "penalty")
     if not valor:
         return None
@@ -339,7 +324,6 @@ def _penalty_do_yaml() -> Penalty | None:
 
 
 def _tipo_penalidade(l1_ratio: float) -> str:
-    """Classifica o ``l1_ratio`` em ``"l2"``, ``"l1"`` ou ``"elasticnet"``."""
     if l1_ratio == 0.0:
         return "l2"
     if l1_ratio == 1.0:
@@ -357,7 +341,6 @@ def build_logistic_pipeline(
     class_weight: str | dict | None = "balanced",
     preprocessor=None,
 ) -> Pipeline:
-    """``Pipeline`` de pré-processamento + ``LogisticRegression``."""
     _verificar_sklearn_minima()
 
     if not 0.0 <= l1_ratio <= 1.0:
@@ -421,7 +404,6 @@ def build_boosting_pipeline(
     class_weight: str | dict | None = "balanced",
     preprocessor=None,
 ) -> Pipeline:
-    """Constrói o pipeline ordinal do HistGradientBoostingClassifier."""
 
     categorical_features = None
 
@@ -501,7 +483,6 @@ def calibrar(
     *,
     method: MetodoCalibracao = "isotonic",
 ):
-    """Ajusta um ``CalibratedClassifierCV`` sobre um pipeline congelado."""
     if method not in _METODOS_VALIDOS:
         raise ValueError(
             f"method inválido: {method!r}. Use {sorted(_METODOS_VALIDOS)}."
@@ -538,7 +519,6 @@ def escolher_limiar(
     min_precision: float | None = None,
     min_recall: float | None = None,
 ) -> dict[str, Any]:
-    """Devolve o limiar ótimo segundo ``metrica`` e um resumo associado."""
     if metrica not in _METRICAS_VALIDAS:
         raise ValueError(
             f"metrica inválida: {metrica!r}. Use {sorted(_METRICAS_VALIDAS)}."
@@ -594,17 +574,14 @@ _CONSTRUTORES: dict[str, Any] = {
 
 
 def finalistas_aceitos() -> tuple[str, ...]:
-    """Nomes canônicos + apelidos aceitos por ``build_finalista``."""
     return tuple(sorted(_FINALISTAS_VALIDOS | set(_FINALISTA_ALIASES)))
 
 
 def resolver_finalista(nome: str) -> str:
-    """Devolve o nome canônico para ``nome`` (que pode ser um apelido)."""
     return _FINALISTA_ALIASES.get(nome, nome)
 
 
 def _kwargs_do_yaml(nome: str) -> dict[str, Any]:
-    """Lê ``models.<nome>`` do YAML e devolve só kwargs aceitos pelo construtor."""
     secao = C.cfg("models", nome)
     if not isinstance(secao, dict):
         return {}
@@ -643,7 +620,6 @@ def build_finalista(
     preprocessor=None,
     **overrides: Any,
 ) -> Pipeline:
-    """Constrói o ``Pipeline`` de um finalista pelo nome ou apelido."""
     nome = resolver_finalista(nome)
 
     if nome not in _FINALISTAS_VALIDOS:

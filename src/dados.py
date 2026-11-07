@@ -1,5 +1,3 @@
-"""Leitura dos dados, coorte, partição e artefato supervisionado."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -24,18 +22,6 @@ import gc
 from src import config as C
 from src.config import PROCESSED, get_secret, sha256_file, exigir_gate, GatePendenteError
 from src.features import montar_features, regiao_residencia
-
-
-def metadados_parquet(caminho):
-    arq=pq.ParquetFile(caminho); meta=arq.metadata
-    return {"caminho":str(caminho),"linhas":int(meta.num_rows),"colunas":int(meta.num_columns),
-            "row_groups":int(meta.num_row_groups),"nomes_colunas":list(arq.schema_arrow.names),
-            "tamanho_mb":Path(caminho).stat().st_size/1_048_576}
-
-def amostra_parquet(caminho,n=5,columns=None):
-    arq=pq.ParquetFile(caminho)
-    lote=next(arq.iter_batches(batch_size=n,columns=list(columns) if columns else None),None)
-    return pd.DataFrame(columns=columns or arq.schema_arrow.names) if lote is None else lote.to_pandas()
 
 def compactar_dataframe(df, limite_categoria=1000, colunas_texto_livre=()):
     livres=set(colunas_texto_livre)
@@ -75,17 +61,14 @@ _CHUNK: int = 8 * 1024 * 1024
 
 
 def _token() -> str | None:
-    """``GITHUB_TOKEN`` se definido; caso contrário, ``None``."""
     return get_secret("GITHUB_TOKEN", obrigatorio=False)
 
 
 def sha256_path(parquet_path: Path) -> Path:
-    """Caminho do sidecar ``.sha256`` associado a um Parquet."""
     return parquet_path.with_suffix(parquet_path.suffix + ".sha256")
 
 
 def read_sha256(parquet_path: Path) -> str | None:
-    """Lê o SHA-256 do sidecar, ou ``None`` se ele não existir."""
     sidecar = sha256_path(parquet_path)
     if not sidecar.exists():
         return None
@@ -101,7 +84,6 @@ def _abrir_stream(
     backoff: float,
     timeout: float,
 ) -> requests.Response:
-    """Abre um stream HTTP com retry linear."""
     last_exc: Exception | None = None
 
     for tentativa in range(1, tentativas + 1):
@@ -141,7 +123,6 @@ def _baixar_para_part(
     r: requests.Response,
     tmp: Path,
 ) -> tuple[str, bytes]:
-    """Streama ``r`` para ``tmp``; devolve ``(sha256_hex, primeiros_16_bytes)``."""
     h = hashlib.sha256()
     first = b""
     total = int(r.headers.get("content-length", 0))
@@ -176,7 +157,6 @@ def download_file(
     expected_magic: bytes | None = None,
     expected_sha256: str | None = None,
 ) -> str:
-    """Baixa ``url`` para ``dest`` com verificação de magic bytes e SHA-256."""
     tmp = dest.with_suffix(dest.suffix + ".part")
     tmp.unlink(missing_ok=True)
 
@@ -223,7 +203,6 @@ def download_file(
 
 
 def _private_asset_url(token: str) -> str:
-    """URL do asset Parquet via API do GitHub (repositório privado)."""
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
@@ -247,7 +226,6 @@ def _private_asset_url(token: str) -> str:
 
 
 def _sha256_esperado_do_manifesto() -> str | None:
-    """SHA-256 do Parquet bruto, lido de data/manifest_dados-v2.yaml (integridade.sha256)."""
     caminho = C.DATA_DIR / "manifest_dados-v2.yaml"
     if not caminho.exists():
         return None
@@ -264,7 +242,6 @@ def get_parquet(
     *,
     expected_sha256: str | None = None,
 ) -> Path:
-    """Devolve o caminho local do Parquet de SRAG, baixando se necessário."""
     folder = PROCESSED / C.DATA_VERSION
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / C.PARQUET_NAME
@@ -329,7 +306,6 @@ def read_srag(
     compactar: bool = False,
     colunas_texto_livre: Iterable[str] = (),
 ) -> pd.DataFrame:
-    """Lê o Parquet de SRAG como DataFrame."""
     caminho = get_parquet()
     columns_list = list(columns) if columns is not None else None
 
@@ -366,7 +342,6 @@ REQUIRED_COLUMNS: frozenset[str] = frozenset(
 
 @dataclass(frozen=True)
 class CohortAuditParameters:
-    """Parâmetros necessários para avaliar as regras populacionais."""
 
     period_start: pd.Timestamp
     period_end: pd.Timestamp
@@ -398,7 +373,6 @@ class CohortAuditParameters:
 
 @dataclass(frozen=True)
 class CohortAuditEvaluation:
-    """Resultado imutavel da avaliacao das regras."""
 
     masks: Mapping[str, pd.Series]
     normalized: pd.DataFrame
@@ -413,7 +387,6 @@ class CohortAuditEvaluation:
 
 
 def validate_audit_schema(frame: pd.DataFrame) -> None:
-    """Valida se as colunas mínimas para auditoria estão disponíveis."""
 
     if not isinstance(frame, pd.DataFrame):
         raise TypeError("frame precisa ser um pandas.DataFrame.")
@@ -428,7 +401,6 @@ def validate_audit_schema(frame: pd.DataFrame) -> None:
 
 
 def normalize_srag_code(series: pd.Series) -> pd.Series:
-    """Normaliza códigos sem fundir ausente, não, ignorado ou não se aplica."""
 
     normalized = series.astype("string").str.strip()
     normalized = normalized.str.replace(r"\.0$", "", regex=True)
@@ -449,7 +421,6 @@ def normalize_srag_code(series: pd.Series) -> pd.Series:
 
 
 def parse_srag_date(series: pd.Series) -> pd.Series:
-    """Converte datas SRAG no formato ISO e preserva inválidos como NaT."""
 
     if pd.api.types.is_datetime64_any_dtype(series.dtype):
         return pd.to_datetime(
@@ -482,7 +453,6 @@ def evaluate_audit_rules(
     frame: pd.DataFrame,
     parameters: CohortAuditParameters,
 ) -> CohortAuditEvaluation:
-    """Avalia todas as regras sem remover registros."""
 
     validate_audit_schema(frame)
 
@@ -539,7 +509,6 @@ def evaluate_audit_rules(
 def summarize_audit_rules(
     evaluation: CohortAuditEvaluation,
 ) -> pd.DataFrame:
-    """Resume cada regra sem assumir que os conjuntos são disjuntos."""
 
     rows: list[dict[str, object]] = []
 
@@ -566,7 +535,6 @@ def build_rule_overlap(
     evaluation: CohortAuditEvaluation,
     rule_order: Sequence[str] = DEFAULT_RULE_ORDER,
 ) -> pd.DataFrame:
-    """Cria uma matriz simétrica de sobreposição entre regras."""
 
     validated_order = _validate_rule_order(
         evaluation=evaluation,
@@ -597,7 +565,6 @@ def build_simulated_waterfall(
     evaluation: CohortAuditEvaluation,
     rule_order: Sequence[str] = DEFAULT_RULE_ORDER,
 ) -> pd.DataFrame:
-    """Simula exclusões sequenciais sem modificar ou devolver uma coorte."""
 
     validated_order = _validate_rule_order(
         evaluation=evaluation,
@@ -635,10 +602,8 @@ def build_approved_exclusion_mask(
     evaluation: CohortAuditEvaluation,
     approved_rule_ids: Sequence[str],
 ) -> pd.Series:
-    """Combina somente regras explicitamente aprovadas."""
 
     approved = tuple(approved_rule_ids)
-
     unknown = sorted(set(approved).difference(evaluation.masks))
 
     if unknown:
@@ -667,7 +632,6 @@ def _validate_rule_order(
     evaluation: CohortAuditEvaluation,
     rule_order: Sequence[str],
 ) -> tuple[str, ...]:
-    """Valida uma ordem de regras antes de produzir relatórios."""
 
     normalized_order = tuple(rule_order)
 
@@ -707,7 +671,6 @@ VALID_RULE_ACTIONS: frozenset[str] = frozenset(
 
 @dataclass(frozen=True)
 class CohortRuleContract:
-    """Decisão declarada para uma regra de auditoria."""
 
     rule_id: str
     action: str
@@ -724,7 +687,6 @@ class CohortRuleContract:
 
 @dataclass(frozen=True)
 class CohortContract:
-    """Contrato populacional validado da coorte."""
 
     contract_id: str
     version: int
@@ -769,7 +731,6 @@ class CohortContract:
 
 
 def load_cohort_contract(path: Path) -> CohortContract:
-    """Carrega e valida integralmente um contrato YAML."""
 
     contract_path = Path(path)
 
@@ -790,7 +751,6 @@ def load_cohort_contract(path: Path) -> CohortContract:
 
 
 def parse_cohort_contract(raw: Mapping[str, Any]) -> CohortContract:
-    """Valida um contrato já carregado e cria sua representação imutável."""
 
     contract_section = _require_mapping(raw, "contract")
     source_section = _require_mapping(raw, "source")
@@ -1177,7 +1137,6 @@ _KIND_BY_FILENAME: dict[str, str] = {
 
 @dataclass(frozen=True)
 class CohortSource:
-    """Metadados imutáveis da coorte selecionada."""
 
     kind: str
     path: str
@@ -1191,7 +1150,6 @@ class CohortSource:
 
 
 def cohort_candidates(root: Path) -> dict[str, tuple[Path, ...]]:
-    """Candidatos de coorte por tipo, na ordem de preferência."""
     analytical = root / _ANALYTICAL_DIR
     return {
         kind: tuple(analytical / name for name in names)
@@ -1205,7 +1163,6 @@ def resolve_cohort_path(
     kind: CohortKind | None = None,
     explicit_path: Path | None = None,
 ) -> tuple[str, Path]:
-    """Resolve o caminho da coorte definitiva."""
     if explicit_path is not None:
         return _resolve_explicit_path(explicit_path, requested_kind=kind)
 
@@ -1228,7 +1185,6 @@ def load_cohort(
     explicit_path: Path | None = None,
     columns: list[str] | None = None,
 ) -> tuple[pd.DataFrame, CohortSource]:
-    """Carrega a coorte selecionada e devolve dados + metadados da fonte."""
     effective_kind, path = resolve_cohort_path(
         root, kind=kind, explicit_path=explicit_path,
     )
@@ -1248,7 +1204,6 @@ def load_cohort(
 
 
 def _resolve_kind(kind: CohortKind | None) -> str:
-    """Normaliza o tipo solicitado (parâmetro ou env var)."""
     selected = (kind or os.getenv(_ENV_VAR, _DEFAULT_KIND)).lower()
     if selected in _RETIRED_KINDS:
         raise ValueError(
@@ -1264,7 +1219,6 @@ def _resolve_kind(kind: CohortKind | None) -> str:
 
 
 def _kind_from_path(path: Path) -> str:
-    """Classifica uma coorte pelo nome canônico."""
     kind = _KIND_BY_FILENAME.get(path.name.lower())
     if kind is not None:
         return kind
@@ -1276,7 +1230,6 @@ def _resolve_explicit_path(
     *,
     requested_kind: CohortKind | None,
 ) -> tuple[str, Path]:
-    """Valida o tipo pedido, a existência e o nome canônico do arquivo."""
     if requested_kind is not None:
         _resolve_kind(requested_kind)
 
@@ -1316,7 +1269,6 @@ def _not_found_message(
 
 @dataclass(frozen=True)
 class FinalCohortCandidate:
-    """Resultado da construção em memória da candidata."""
 
     frame: pd.DataFrame
     audit_evaluation: CohortAuditEvaluation
@@ -1331,7 +1283,6 @@ class FinalCohortCandidate:
 
     @property
     def exclusion_rate(self) -> float:
-        """Retorna a proporção excluída em relação à fonte."""
 
         if self.total_source_rows == 0:
             return 0.0
@@ -1346,7 +1297,6 @@ def build_final_cohort_candidate(
     frame: pd.DataFrame,
     contract: CohortContract,
 ) -> FinalCohortCandidate:
-    """Constrói uma candidata sem modificar o DataFrame recebido."""
 
     _validate_candidate_input(
         frame=frame,
@@ -1446,7 +1396,6 @@ def _validate_candidate_input(
     frame: pd.DataFrame,
     contract: CohortContract,
 ) -> None:
-    """Valida o contrato mínimo antes de avaliar qualquer regra."""
 
     if not isinstance(frame, pd.DataFrame):
         raise TypeError(
@@ -1514,7 +1463,6 @@ def _validate_candidate_output(
     contract: CohortContract,
     excluded_mask: pd.Series,
 ) -> None:
-    """Valida invariantes populacionais após as exclusões."""
 
     if len(excluded_mask) != len(source):
         raise RuntimeError(
@@ -1632,7 +1580,6 @@ DEFAULT_CONTRACT_PATH = (
 
 
 def resolve_project_path(path: Path) -> Path:
-    """Resolve caminhos relativos a partir da raiz do projeto."""
 
     normalized_path = Path(path)
 
@@ -1646,7 +1593,6 @@ def validate_audit_outputs(
     output_paths: Sequence[Path],
     overwrite: bool,
 ) -> None:
-    """Impede a substituição acidental de auditorias anteriores."""
 
     existing_paths = [
         path
@@ -1671,7 +1617,6 @@ def validate_audit_outputs(
 def build_rules_by_year(
     evaluation: CohortAuditEvaluation,
 ) -> pd.DataFrame:
-    """Resume cada regra pelo ano da internação."""
 
     years = (
         evaluation.normalized[
@@ -1714,7 +1659,6 @@ def build_rules_by_year(
 def build_rules_by_outcome(
     evaluation: CohortAuditEvaluation,
 ) -> pd.DataFrame:
-    """Resume cada regra pelo código normalizado de evolução."""
 
     outcome = (
         evaluation.normalized[
@@ -1754,7 +1698,6 @@ def build_rules_by_outcome(
 def resolve_audit_output_paths(
     contract: CohortContract,
 ) -> dict[str, Path]:
-    """Resolve todos os caminhos produzidos pelo modo de auditoria."""
 
     output_directory = resolve_project_path(
         contract.outputs[
@@ -1801,7 +1744,6 @@ def write_audit_outputs(
     rules_by_outcome: pd.DataFrame,
     output_paths: dict[str, Path],
 ) -> None:
-    """Grava os relatórios tabulares produzidos pela auditoria."""
 
     for key, path in output_paths.items():
         if key == "output_directory":
@@ -1851,7 +1793,6 @@ def build_audit_manifest(
     evaluation: CohortAuditEvaluation,
     output_paths: dict[str, Path],
 ) -> dict[str, object]:
-    """Monta o manifesto da auditoria sem alterar a fonte."""
 
     approved_exclusion_counts = {
         rule_id: int(
@@ -1921,7 +1862,7 @@ def execute_audit(
     contract_path: Path,
     overwrite: bool,
 ) -> None:
-    """Executa a auditoria real sem aplicar exclusões."""
+
 
     source_path = resolve_project_path(
         contract.source_path
@@ -2078,7 +2019,6 @@ def execute_audit(
 def resolve_candidate_output_paths(
     contract: CohortContract,
 ) -> dict[str, Path]:
-    """Resolve os arquivos produzidos pelo modo candidate."""
 
     candidate_path = resolve_project_path(
         contract.outputs["candidate_parquet"]
@@ -2106,7 +2046,6 @@ def validate_candidate_preconditions(
     output_paths: dict[str, Path],
     overwrite: bool,
 ) -> None:
-    """Recusa decisões pendentes, saídas existentes e temporários abandonados."""
 
     if contract.audit_only_rule_ids:
         raise ValueError(
@@ -2145,7 +2084,6 @@ def build_global_effective_waterfall(
     excluded_by_rule: dict[str, int],
     total_source_rows: int,
 ) -> pd.DataFrame:
-    """Consolida o waterfall efetivo acumulado entre os row groups."""
 
     remaining = total_source_rows
     rows: list[dict[str, object]] = []
@@ -2171,7 +2109,6 @@ def validate_temporary_candidate(
     expected_rows: int,
     expected_columns: int,
 ) -> dict[str, object]:
-    """Valida a candidata temporária antes da promoção do arquivo."""
 
     parquet_file = pq.ParquetFile(path)
     metadata = parquet_file.metadata
@@ -2277,7 +2214,6 @@ def execute_candidate(
     contract_path: Path,
     overwrite: bool,
 ) -> None:
-    """Materializa a candidata por row group sem criar partições ou publicar."""
 
     source_path = resolve_project_path(contract.source_path)
 
@@ -2561,7 +2497,6 @@ def execute_candidate(
 
 
 def gerar_coorte(modo: str, sobrescrever: bool = False, contrato: Path = DEFAULT_CONTRACT_PATH) -> None:
-    """Roda a auditoria ("audit") ou gera a candidata ("candidate")."""
     caminho = resolve_project_path(contrato)
     contract = load_cohort_contract(caminho)
     if modo == "audit":
@@ -2570,9 +2505,6 @@ def gerar_coorte(modo: str, sobrescrever: bool = False, contrato: Path = DEFAULT
         execute_candidate(contract=contract, contract_path=caminho, overwrite=sobrescrever)
     else:
         raise ValueError(f"Modo inválido: {modo!r}. Use 'audit' ou 'candidate'.")
-
-
-PARTICOES_CANONICAS: tuple[str, ...] = ("treino", "validacao", "teste")
 
 MASTER_BLOCKS: tuple[str, ...] = (
     "train_ref",
@@ -2591,7 +2523,6 @@ _VALORES_TEXTUAIS_AUSENTES = frozenset({"", "nan", "none", "null", "<na>"})
 
 
 def criar_group_id(df: pd.DataFrame) -> pd.Series:
-    """Cria o identificador estável usado no particionamento agrupado."""
     if "nu_notific" not in df.columns:
         raise KeyError("Coluna necessária para criar group_id ausente: 'nu_notific'")
 
@@ -2627,7 +2558,6 @@ def _hash_codes(
     estrato_grupo: np.ndarray,
     sal: str,
 ) -> np.ndarray:
-    """Ordem estável dos grupos por hash dentro de cada estrato."""
     chaves = sal + "|" + pd.Series(grupos_unicos.astype(str), dtype=object)
     hashes = pd.util.hash_pandas_object(chaves, index=False).to_numpy(dtype=np.uint64)
     return np.lexsort((hashes, estrato_grupo))
@@ -2639,7 +2569,6 @@ def _validar_estratos(
     min_grupos_por_estrato: int,
     n_blocos: int,
 ) -> tuple[np.ndarray, pd.Index, np.ndarray]:
-    """Fatoriza grupos/estratos e devolve (codigo_grupo, grupos_unicos, estrato_grupo)."""
     if grupos.isna().any():
         raise ValueError(f"'{grupos.name}' contém valores ausentes.")
     if estratos.isna().any():
@@ -2678,7 +2607,6 @@ def _posicao_no_estrato(
     estrato_grupo: np.ndarray,
     sal: str,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Devolve (posicao_dentro_do_estrato, tamanho_do_estrato) por grupo único."""
     ordem = _hash_codes(grupos_unicos, estrato_grupo, sal)
     n_grupos = len(grupos_unicos)
     tamanho_por_estrato = np.bincount(
@@ -2698,7 +2626,6 @@ def atribuir_blocos_por_hash(
     fracoes: dict[str, float],
     min_grupos_por_estrato: int = 5,
 ) -> pd.Categorical:
-    """Atribui cada grupo a um dos blocos definidos em ``fracoes``."""
     nomes = list(fracoes)
     valores = list(fracoes.values())
     if abs(sum(valores) - 1.0) > 1e-6:
@@ -2757,7 +2684,6 @@ def _estrato_inteiro(
     target_column: str,
     region_column: str | None,
 ) -> pd.Series:
-    """Códigos inteiros de (ano × alvo [× região])."""
     cod_ano, _ = pd.factorize(sub[year_column], sort=True)
     cod_alvo, _ = pd.factorize(sub[target_column], sort=True)
     cod = cod_ano.astype("int32") * 1000 + cod_alvo.astype("int32")
@@ -2778,7 +2704,6 @@ def criar_particao_mestra(
     region_column: str | None = "regiao_residencia",
     partition_column: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Materializa os quatro blocos de ``temporal.blocos`` no DataFrame."""
     partition_column = str(
         partition_column or temporal_cfg.get("coluna_particao") or "particao"
     )
@@ -2952,7 +2877,6 @@ def _normalizar_kind(kind: Any) -> str:
 
 
 def _validar_particoes_completas(observed: set[str]) -> None:
-    """Exige que ``observed`` seja exatamente um dos esquemas completos de blocos."""
     observed_fs = frozenset(observed)
     if observed_fs in _ESQUEMAS_COMPLETOS:
         return
@@ -2964,7 +2888,6 @@ def _validar_particoes_completas(observed: set[str]) -> None:
 
 
 def _particoes_por_papel() -> dict[str, tuple[str, ...]]:
-    """Mapeia o papel agregado (treino/validacao/teste) para os blocos do artefato."""
     return {
         "treino": (_BLOCK_TRAIN_REF,),
         "validacao": (_BLOCK_VAL_REF,),
@@ -3014,7 +2937,6 @@ def _resolver_grupos(
     numeric_columns: Sequence[str] | None,
     categorical_columns: Sequence[str] | None,
 ) -> tuple[list[str] | None, list[str] | None]:
-    """Resolve o par (numéricas, categóricas)."""
     if numeric_columns is None and categorical_columns is None:
         return None, None
 
@@ -3044,7 +2966,6 @@ def validate_supervised_frame(
     audit_columns: Sequence[str] | None = None,
     required_partitions: Sequence[str] | None = None,
 ) -> None:
-    """Valida schema mínimo, alvo binário e partições do dataset."""
     required = set(feature_columns) | {target_column, partition_column}
     if audit_columns:
         required |= set(audit_columns)
@@ -3086,7 +3007,6 @@ def _validate_partial_load(
     partition_column: str,
     expected_partitions: set[str],
 ) -> None:
-    """Validação mínima quando ``columns=`` restringe a leitura."""
     if frame.empty:
         raise ValueError("O dataset supervisionado não pode ser vazio.")
 
@@ -3180,7 +3100,7 @@ def persist_supervised_artifact(
     audit_columns: Sequence[str] | None = None,
     overwrite: bool = False,
 ) -> tuple[Path, Path]:
-    """Grava dataset e manifesto, exigindo um dos esquemas completos."""
+
     num, cat = _resolver_grupos(feature_columns, numeric_columns, categorical_columns)
 
     validate_supervised_frame(
@@ -3200,8 +3120,7 @@ def persist_supervised_artifact(
             "uma reconstrução deliberada da mesma etapa."
         )
 
-    # Protecao pos-G9 (ver docs/decisoes.md secao 9): regerar nao pode apagar
-    # o registro de que o teste ja foi aberto.
+
     manifesto_anterior: dict[str, Any] = {}
     if overwrite and manifest_path.exists():
         try:
@@ -3244,7 +3163,6 @@ def persist_supervised_artifact(
 
 
 def _configuracao_artefato() -> dict[str, Any]:
-    """Resolve o contrato ativo do artefato a partir do supervised.yaml."""
     config = C.carregar_supervised()
 
     features_cfg = config.get("features") or {}
@@ -3293,7 +3211,6 @@ def _configuracao_artefato() -> dict[str, Any]:
 def _colunas_auditoria_extras(
     artefato_cfg: Mapping[str, Any],
 ) -> list[str]:
-    """Colunas físicas guardadas para auditoria e análises de sensibilidade."""
     features_cfg = artefato_cfg["features_cfg"]
     feature_columns = set(artefato_cfg["feature_columns"])
     candidatas = [
@@ -3312,7 +3229,6 @@ def _colunas_auditoria_extras(
 def _colunas_fisicas_necessarias(
     artefato_cfg: Mapping[str, Any],
 ) -> list[str]:
-    """Lista colunas físicas necessárias antes da engenharia."""
     features_cfg = artefato_cfg["features_cfg"]
     engenharia_cfg = features_cfg.get("engenharia") or {}
 
@@ -3340,7 +3256,6 @@ def _construir_alvo(
     target_column: str,
     target_cfg: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Constrói o alvo binário de acordo com a configuração ativa."""
     if target_column in frame.columns:
         target = pd.to_numeric(frame[target_column], errors="coerce")
     else:
@@ -3385,7 +3300,6 @@ def _periodo_do_ano(
     anos: pd.Series,
     temporal_cfg: Mapping[str, Any],
 ) -> pd.Series:
-    """Classifica anos em compartilhado, pandêmico ou exploração."""
     blocos = temporal_cfg.get("blocos") or {}
 
     anos_pandemia = {
@@ -3416,7 +3330,6 @@ def _separar_grupos_temporais_incompativeis(
     target_column: str,
     region_column: str | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Separa grupos que não podem receber uma única partição-mestre."""
     required = {group_column, year_column, target_column}
     if region_column:
         required.add(region_column)
@@ -3473,7 +3386,6 @@ def gerar_artefato_supervisionado(
     exportar_particao: bool = True,
     overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Gera e persiste o artefato supervisionado canônico."""
     root = Path(root).resolve()
     kind_normalizado = str(cohort_kind).strip().lower()
     if kind_normalizado != "final":
@@ -3716,7 +3628,6 @@ def load_supervised_artifact(
     columns: Sequence[str] | None = None,
     partitions: Sequence[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Carrega o artefato canônico e valida hash, tipo de coorte e schema."""
     dataset_path, manifest_path = _paths(root)
 
     if not dataset_path.is_file() or not manifest_path.is_file():
@@ -3777,7 +3688,6 @@ def split_partitions(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Devolve ``(treino, validacao)`` agregando os blocos correspondentes."""
     col = manifest["partition_column"]
     papeis = _particoes_por_papel()
 
@@ -3800,7 +3710,6 @@ def holdout_partition(
     frame: pd.DataFrame,
     manifest: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Devolve o bloco de teste."""
     exigir_gate("G9_holdout")
 
     col = manifest["partition_column"]

@@ -1,9 +1,6 @@
-"""Métricas, calibração, erros e vazamento."""
-
 from __future__ import annotations
 
-from typing import Callable, Literal, Iterable, get_args
-from numpy.typing import ArrayLike
+from typing import Callable, Literal, Iterable, TypeAlias, get_args
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
@@ -21,7 +18,7 @@ from dataclasses import dataclass, field
 from src import config as C
 
 
-ArrayLike = np.ndarray | pd.Series | list
+ArrayLike: TypeAlias = np.ndarray | pd.Series | list
 
 
 def _to_np(x: ArrayLike) -> np.ndarray:
@@ -44,7 +41,6 @@ def _contagens_confusao(
 
 
 def _especificidade_de_contagens(tn: int, fp: int) -> float:
-    """``TN / (TN + FP)``; 0.0 quando não há negativo real."""
     denom = tn + fp
     return tn / denom if denom > 0 else 0.0
 
@@ -62,7 +58,6 @@ def brier(y_true: ArrayLike, y_prob: ArrayLike) -> float:
 
 
 def log_loss(y_true: ArrayLike, y_prob: ArrayLike) -> float:
-    """Log loss (entropia cruzada binária) sobre probabilidades."""
     return float(sk_log_loss(_to_int_labels(y_true), _to_np(y_prob), labels=[0, 1]))
 
 
@@ -91,7 +86,6 @@ def accuracy(y_true: ArrayLike, y_pred: ArrayLike) -> float:
 
 
 def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Especificidade = ``TN / (TN + FP)`` — recall da classe negativa."""
     _, fp, tn, _ = _contagens_confusao(
         _to_int_labels(y_true), _to_int_labels(y_pred),
     )
@@ -99,7 +93,6 @@ def especificidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
 
 
 def sensibilidade(y_true: ArrayLike, y_pred: ArrayLike) -> float:
-    """Alias semântico de ``recall`` — alinha com a chave do YAML."""
     return recall(y_true, y_pred)
 
 
@@ -108,7 +101,6 @@ def metricas_completas(
     y_prob: ArrayLike,
     limiar: float = 0.5,
 ) -> dict[str, float]:
-    """Dict com todas as métricas agregadas — pronto para ``Run.metrica(**d)``."""
     y      = _to_int_labels(y_true)
     p      = _to_np(y_prob)
     y_pred = (p >= limiar).astype(int)
@@ -136,7 +128,6 @@ def metricas_por_limiar(
     y_prob: ArrayLike,
     n_limiares: int = 101,
 ) -> pd.DataFrame:
-    """Tabela com métricas para cada limiar em ``[0.01, 0.99]``."""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
 
@@ -177,7 +168,6 @@ def ic_bootstrap(
     alpha: float = 0.05,
     seed: int = 42,
 ) -> tuple[float, float, float]:
-    """Intervalo de confiança via bootstrap percentil."""
     y = _to_int_labels(y_true)
     if n_boot is None:
         from src import config as C
@@ -207,13 +197,11 @@ def ic_bootstrap(
         float(np.quantile(validos, 1 - alpha / 2)),
     )
 def _niveis(prob: np.ndarray) -> tuple[np.ndarray, int]:
-    """Códigos inteiros dos valores distintos de ``prob`` (ordem crescente)."""
     niveis, codigos = np.unique(prob, return_inverse=True)
     return codigos.astype(np.int64), int(niveis.size)
 
 
 def _auc_ponderada(cod: np.ndarray, k: int, y: np.ndarray, w: np.ndarray) -> float:
-    """AUC com pesos, tratando empates como metade (igual ao ``roc_auc_score``)."""
     pos = np.bincount(cod, weights=w * y, minlength=k)
     neg = np.bincount(cod, weights=w * (1.0 - y), minlength=k)
     total_pos, total_neg = pos.sum(), neg.sum()
@@ -224,7 +212,6 @@ def _auc_ponderada(cod: np.ndarray, k: int, y: np.ndarray, w: np.ndarray) -> flo
 
 
 def _ap_ponderada(cod: np.ndarray, k: int, y: np.ndarray, w: np.ndarray) -> float:
-    """Average precision com pesos (igual ao ``average_precision_score``)."""
     pos = np.bincount(cod, weights=w * y, minlength=k)[::-1]
     neg = np.bincount(cod, weights=w * (1.0 - y), minlength=k)[::-1]
     tp, fp = np.cumsum(pos), np.cumsum(neg)
@@ -249,7 +236,6 @@ def bootstrap_grupo(
     alpha: float = 0.05,
     seed: int | None = None,
 ) -> dict[str, float]:
-    """Bootstrap por grupo (``group_id``) de AUC, AP ou Brier."""
     from src import config as C
 
     if metrica not in {"auc", "ap", "brier"}:
@@ -293,16 +279,14 @@ def bootstrap_grupo(
     if pb is None:
         return {"estimativa": est_a, "ic_inferior": float(inferior), "ic_superior": float(superior),
                 "n_validas": int(validos.size)}
+    assert est_b is not None
     p_bilateral = min(1.0, 2 * min(float((validos <= 0).mean()), float((validos >= 0).mean())))
     return {"estimativa_diferenca": est_a - est_b, "ic_inferior": float(inferior),
             "ic_superior": float(superior), "p_bilateral": p_bilateral, "n_validas": int(validos.size)}
 
 
-ArrayLike = np.ndarray | pd.Series | list
-
 
 def _bins_digitize(p: np.ndarray, n_bins: int) -> np.ndarray:
-    """Índice do bin (0..n_bins-1) de cada probabilidade em ``[0, 1]``."""
     edges = np.linspace(0.0, 1.0, n_bins + 1)
     return np.clip(np.digitize(p, edges[1:-1], right=True), 0, n_bins - 1)
 
@@ -321,7 +305,6 @@ def curva_confiabilidade(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> pd.DataFrame:
-    """Dados para o reliability diagram."""
     y      = _to_int_labels(y_true)
     p      = _to_np(y_prob)
     edges  = np.linspace(0.0, 1.0, n_bins + 1)
@@ -353,7 +336,6 @@ def ece(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> float:
-    """Expected Calibration Error — média ponderada dos gaps por bin."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
     total  = float(tabela["n"].sum())
 
@@ -370,7 +352,6 @@ def mce(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> float:
-    """Maximum Calibration Error — o pior gap entre os bins."""
     tabela = curva_confiabilidade(y_true, y_prob, n_bins=n_bins)
     gaps   = tabela["gap"].dropna()
 
@@ -381,7 +362,6 @@ def mce(
 
 
 def _bins_quantis(p: np.ndarray, n_bins: int) -> np.ndarray:
-    """Bordas de bin por quantil de ``p`` (mesma quantidade de amostras por bin). Bordas duplicadas (poucos valores distintos) são descartadas; o número real de bins pode ficar menor que ``n_bins``."""
     quantis = np.linspace(0.0, 1.0, n_bins + 1)
     edges = np.unique(np.quantile(p, quantis))
     if edges.size < 2:
@@ -394,7 +374,6 @@ def curva_confiabilidade_quantis(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> pd.DataFrame:
-    """Como ``curva_confiabilidade``, mas com bordas por quantil em vez de largura igual. Recomendado quando a prevalência é baixa: faixas de largura igual ficam vazias nas faixas altas de probabilidade, e ``curva_confiabilidade_quantis`` mantém n aproximadamente igual em cada bin."""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
     edges = _bins_quantis(p, n_bins)
@@ -426,7 +405,6 @@ def ece_quantis(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> float:
-    """Expected Calibration Error por quantis — ver ``ece()`` para a versão por faixas de largura igual."""
     tabela = curva_confiabilidade_quantis(y_true, y_prob, n_bins=n_bins)
     total  = float(tabela["n"].sum())
 
@@ -443,7 +421,6 @@ def mce_quantis(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> float:
-    """Maximum Calibration Error por quantis."""
     tabela = curva_confiabilidade_quantis(y_true, y_prob, n_bins=n_bins)
     gaps   = tabela["gap"].dropna()
 
@@ -458,7 +435,6 @@ def brier_decomposicao(
     y_prob: ArrayLike,
     n_bins: int = 10,
 ) -> dict[str, float]:
-    """Decompõe o Brier score em confiabilidade, resolução e incerteza (Murphy, 1973), por faixas de probabilidade. Aproximação: a soma das três partes não fecha exatamente o Brier total (falta o termo de variância dentro de cada faixa)."""
     y = _to_int_labels(y_true)
     p = _to_np(y_prob)
     n = len(y)
@@ -496,13 +472,10 @@ def brier_decomposicao(
         "n":           float(n),
     }
 
-
-ArrayLike   = np.ndarray | pd.Series | list
 CriterioTop = Literal["fp", "fn", "erro_absoluto"]
 
 
 def _validar_tamanhos(df: pd.DataFrame, y: np.ndarray) -> None:
-    """Garante que ``df`` e os rótulos têm o mesmo número de linhas."""
     if len(df) != len(y):
         raise ValueError(f"df tem {len(df)} linhas e y_true tem {len(y)}.")
 
@@ -511,7 +484,6 @@ def matriz_confusao(
     y_true: ArrayLike,
     y_pred: ArrayLike,
 ) -> pd.DataFrame:
-    """Matriz de confusão 2×2 como DataFrame."""
     y = _to_int_labels(y_true)
     p = _to_int_labels(y_pred)
 
@@ -541,20 +513,6 @@ def metricas_por_grupo(
     limiar: float = 0.5,
     min_n: int = 100,
 ) -> pd.DataFrame:
-    """
-    Métricas por categoria de ``coluna_grupo`` (ex.: ``"sg_uf"``).
-
-    Grupos com menos de ``min_n`` amostras são mantidos na tabela com
-    ``suprimido=True`` e métricas probabilísticas vazias (``n`` e
-    ``prevalencia`` continuam preenchidos).
-
-    Grupos com uma classe só (só curas ou só óbitos) devolvem ``pr_auc``,
-    ``roc_auc`` e ``brier`` vazios, sem erro.
-
-    Colunas: ``grupo, n, prevalencia, taxa_positivos, pr_auc,
-    pr_auc_sobre_prev, auc, roc_auc, brier, o_e, f1, precision, recall,
-    suprimido``.
-    """
     if coluna_grupo not in df.columns:
         raise KeyError(f"Coluna de grupo ausente: {coluna_grupo!r}")
 
@@ -643,7 +601,7 @@ def metricas_por_grupo(
 
 
 class LeakageError(RuntimeError):
-    """Erro lançado quando variáveis com vazamento são encontradas."""
+    pass
 
 
 DEFAULT_LEAKAGE_COLUMNS = frozenset({
@@ -659,7 +617,6 @@ def _resolve_forbidden_columns(
     forbidden_columns: Iterable[str] | None,
     target_column: str | None,
 ) -> set[str]:
-    """Conjunto efetivo de colunas proibidas."""
     base = (
         set(forbidden_columns)
         if forbidden_columns is not None
@@ -679,178 +636,6 @@ def check_leakage(
     forbidden_columns: Iterable[str] | None = None,
     target_column: str | None = None,
 ) -> None:
-    """Levanta ``LeakageError`` se ``X`` contiver colunas proibidas."""
     forbidden = _resolve_forbidden_columns(forbidden_columns, target_column)
     if detected := sorted(set(X.columns) & forbidden):
         raise LeakageError(f"Variáveis de leakage detectadas: {', '.join(detected)}")
-
-
-OnNat = Literal["raise", "drop"]
-_ON_NAT_VALORES = frozenset(get_args(OnNat))
-
-
-def _validar_fracao(nome: str, valor: float) -> None:
-    if not 0 < valor < 1:
-        raise ValueError(f"{nome} deve estar em (0, 1); recebido {valor!r}.")
-
-
-def _validar_coluna_tempo(df: pd.DataFrame, coluna_tempo: str) -> None:
-    if coluna_tempo not in df.columns:
-        raise KeyError(f"Coluna temporal ausente: {coluna_tempo!r}")
-    if not pd.api.types.is_datetime64_any_dtype(df[coluna_tempo]):
-        raise TypeError(
-            f"Coluna temporal {coluna_tempo!r} não é datetime "
-            f"(dtype atual: {df[coluna_tempo].dtype}). "
-            "Converta com pd.to_datetime antes do split."
-        )
-
-
-def _tratar_nat(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    on_nat: OnNat,
-) -> pd.DataFrame:
-    """Remove ``NaT`` em ``coluna_tempo`` conforme ``on_nat``."""
-    nat_mask = df[coluna_tempo].isna()
-    n_nat    = int(nat_mask.sum())
-
-    if not n_nat:
-        return df
-    if on_nat == "raise":
-        raise ValueError(
-            f"{n_nat} linha(s) com data inválida (NaT) em "
-            f"{coluna_tempo!r}. Remova-as antes ou use on_nat='drop'."
-        )
-    return df.loc[~nat_mask].reset_index(drop=True)
-
-
-def split_temporal_3way(
-    df: pd.DataFrame,
-    coluna_tempo: str,
-    frac_treino: float = 0.7,
-    frac_validacao: float = 0.15,
-    *,
-    on_nat: OnNat = "raise",
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Divide em treino / validação / holdout, **sem embaralhar**."""
-    if on_nat not in _ON_NAT_VALORES:
-        raise ValueError(
-            f"on_nat inválido: {on_nat!r}. Use {sorted(_ON_NAT_VALORES)}."
-        )
-
-    _validar_fracao("frac_treino",    frac_treino)
-    _validar_fracao("frac_validacao", frac_validacao)
-    if frac_treino + frac_validacao >= 1:
-        raise ValueError(
-            "frac_treino + frac_validacao deve ser < 1 (resto vira holdout)."
-        )
-
-    _validar_coluna_tempo(df, coluna_tempo)
-    df = _tratar_nat(df, coluna_tempo, on_nat)
-
-    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
-    n = len(ordenado)
-    if n < 3:
-        raise ValueError(f"Dataset pequeno demais para split 3-way: n={n}")
-
-    corte_treino = int(n * frac_treino)
-    corte_valid  = int(n * (frac_treino + frac_validacao))
-
-    return (
-        ordenado.iloc[:corte_treino].reset_index(drop=True),
-        ordenado.iloc[corte_treino:corte_valid].reset_index(drop=True),
-        ordenado.iloc[corte_valid:].reset_index(drop=True),
-    )
-
-
-@dataclass
-class TemporalSplit:
-    """Guarda os três blocos e controla o acesso ao holdout."""
-
-    df: pd.DataFrame
-    coluna_tempo: str
-    frac_treino: float = 0.7
-    frac_validacao: float = 0.15
-    on_nat: OnNat = "raise"
-
-    _treino: pd.DataFrame = field(init=False, repr=False)
-    _validacao: pd.DataFrame = field(init=False, repr=False)
-    _holdout: pd.DataFrame = field(init=False, repr=False)
-    _holdout_liberado: bool = field(init=False, default=False, repr=False)
-
-    def __post_init__(self) -> None:
-        tr, va, ho = split_temporal_3way(
-            self.df,
-            coluna_tempo=self.coluna_tempo,
-            frac_treino=self.frac_treino,
-            frac_validacao=self.frac_validacao,
-            on_nat=self.on_nat,
-        )
-        self._treino    = tr
-        self._validacao = va
-        self._holdout   = ho
-
-    def treino_validacao(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """``(treino, validacao)`` — único par para a fase de seleção."""
-        return self._treino, self._validacao
-
-    @property
-    def treino(self) -> pd.DataFrame:
-        return self._treino
-
-    @property
-    def validacao(self) -> pd.DataFrame:
-        return self._validacao
-
-    def concluir_selecao(self) -> None:
-        """Libera o holdout após o gate ``G9_holdout`` estar aprovado."""
-        gate   = C.cfg("gates", "G9_holdout") or {}
-        status = gate.get("status")
-        if status != "aprovado":
-            raise RuntimeError(
-                "Holdout bloqueado: gate `G9_holdout` ainda não aprovado "
-                f"(status atual: {status!r}). Feche o gate em "
-                "`configs/supervised.yaml` antes de chamar `concluir_selecao()`."
-            )
-        self._holdout_liberado = True
-
-    @property
-    def holdout_liberado(self) -> bool:
-        return self._holdout_liberado
-
-    def holdout(self) -> pd.DataFrame:
-        """Bloco de holdout."""
-        if not self._holdout_liberado:
-            raise RuntimeError(
-                "Holdout bloqueado. Chame `split.concluir_selecao()` antes."
-            )
-        return self._holdout
-
-    @property
-    def n_treino(self) -> int:
-        return len(self._treino)
-
-    @property
-    def n_validacao(self) -> int:
-        return len(self._validacao)
-
-    @property
-    def n_holdout(self) -> int:
-        return len(self._holdout)
-
-    def resumo(self) -> str:
-        """Resumo legível — bom para log no ``Run``."""
-
-        def _periodo(d: pd.DataFrame) -> str:
-            if d.empty:
-                return "vazio"
-            return f"{d[self.coluna_tempo].min()} .. {d[self.coluna_tempo].max()}"
-
-        estado = "liberado" if self._holdout_liberado else "bloqueado"
-        return (
-            f"TemporalSplit(coluna={self.coluna_tempo!r}, "
-            f"papel='sensibilidade_temporal')\n"
-            f"  treino    : {self.n_treino:>10,}  {_periodo(self._treino)}\n"
-            f"  validacao : {self.n_validacao:>10,}  {_periodo(self._validacao)}\n"
-            f"  holdout   : {self.n_holdout:>10,}  {_periodo(self._holdout)}  ({estado})"
-        )

@@ -1,5 +1,3 @@
-"""Registro simples de execuções e medição de tempo."""
-
 from __future__ import annotations
 
 import json
@@ -28,7 +26,6 @@ def _commit() -> str | None:
 
 
 def salvar_resultado(nome: str, dados: dict[str, Any], pasta_base: Path | None = None) -> Path:
-    """Grava metadata.json em outputs/runs/<data>_<nome>/."""
     base = Path(pasta_base) if pasta_base is not None else C.RUNS_DIR
     pasta = base / f"{datetime.now(timezone.utc):%Y%m%dT%H%M%S%fZ}_{nome}"
     pasta.mkdir(parents=True, exist_ok=False)
@@ -39,7 +36,6 @@ def salvar_resultado(nome: str, dados: dict[str, Any], pasta_base: Path | None =
 
 
 class Run:
-    """Registra uma execução ao sair do bloco with, mesmo com erro."""
 
     def __init__(self, modelo: str, *, seed: int | None = None, parametros: dict | None = None,
                  dataset: dict | None = None, features: dict | None = None, notas: str | None = None,
